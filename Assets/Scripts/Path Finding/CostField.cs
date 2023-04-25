@@ -1,50 +1,61 @@
-﻿using Unity.Collections;
+﻿using System;
+using Unity.Collections;
 using UnityEngine;
 public class CostField
 {
-    public readonly int Size;
-    const int _precalculationAmount = 10;
-
-    NativeArray<CostCell> _sampleCosts;
-    LinkedList<NativeArray<CostCell>> _precalculatedCosts;
-    /*public CostField(MapperCell[][] map)
+    public int Offset;
+    public NativeArray<byte> Costs;
+    public CostField(WalkabilityData walkabilityData, int offset)
     {
-        Size = map.Length;
-        _sampleCosts = new NativeArray<CostCell>(Size * Size, Allocator.Persistent);
+        WalkabilityCell[][] walkabilityMatrix = walkabilityData.WalkabilityMatrix;
+        Offset = offset;
+        int tileAmount = walkabilityData.TileAmount;
+        Costs = new NativeArray<byte>(tileAmount * tileAmount, Allocator.Persistent);
 
-        for (int r = 0; r < Size; r++)
+        //calculate costs without offset
+        for (int r = 0; r < tileAmount; r++)
         {
-            for (int c = 0; c < Size; c++)
+            for (int c = 0; c < tileAmount; c++)
             {
-                int index = r * Size + c;
-                int cost = map[r][c].Walkability == Walkability.Walkable ? 1 : int.MaxValue;
-                AdjacentData adjacents = new AdjacentData(index, Size);
-                DiagonalData diagonals = new DiagonalData(index, Size);
-                _sampleCosts[index] = new CostCell(cost, adjacents, diagonals);
+                int index = r * tileAmount + c;
+                byte cost = walkabilityMatrix[r][c].Walkability == Walkability.Walkable ? (byte)1 : byte.MaxValue;
+                Costs[index] = cost;
             }
         }
-        _precalculatedCosts = new LinkedList<NativeArray<CostCell>>();
-        for (int i = 0; i < _precalculationAmount; i++)
-        {
-            _precalculatedCosts.AddToTail(new NativeArray<CostCell>(_sampleCosts, Allocator.Persistent));
-        }
-    }*/
-    public NativeArray<CostCell> GetCosts()
-    {
-        return _precalculatedCosts.PushHeadToTail();
-    }
-}
-public struct CostCell
-{
-    public int Cost;
-    public AdjacentData Adjacents;
-    public DiagonalData Diagonals;
 
-    public CostCell(int cost, AdjacentData adjacentIndicies, DiagonalData diagonalIndicies)
-    {
-        Cost = cost;
-        Adjacents = adjacentIndicies;
-        Diagonals = diagonalIndicies;
+        //apply offset
+        ApplyOffset();
+
+        void ApplyOffset()
+        {
+            for (int r = 0; r < tileAmount; r++)
+            {
+                for (int c = 0; c < tileAmount; c++)
+                {
+                    if(walkabilityMatrix[r][c].Walkability == Walkability.Unwalkable)
+                    {
+                        ApplyOffsetFor(new Index2(r, c));
+                    }
+                }
+            }
+
+            void ApplyOffsetFor(Index2 index)
+            {
+                int minX = index.C - Offset < 0 ? 0 : index.C - Offset;
+                int maxX = index.C + Offset > tileAmount - 1 ? tileAmount - 1 : index.C + Offset;
+                int minY = index.R - Offset < 0 ? 0 : index.R - Offset;
+                int maxY = index.R + Offset > tileAmount - 1 ? tileAmount - 1 : index.R + Offset;
+
+                for (int r = minY; r <= maxY; r++)
+                {
+                    for (int c = minX; c <= maxX; c++)
+                    {
+                        int i = r * tileAmount + c;
+                        Costs[i] = byte.MaxValue;
+                    }
+                }
+            }
+        }
     }
 }
 public struct Index2
