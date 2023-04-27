@@ -12,7 +12,7 @@ public class PathfindingManager : MonoBehaviour
     private void Start()
     {
         CostFieldProducer = new CostFieldProducer(_terrainGenerator.WalkabilityData);
-        CostFieldProducer.ProduceCostFields(0,5);
+        CostFieldProducer.ProduceCostFields(0, 5, 10);
 
         TileSize = _terrainGenerator.TileSize;
         TileAmount = _terrainGenerator.TileAmount;

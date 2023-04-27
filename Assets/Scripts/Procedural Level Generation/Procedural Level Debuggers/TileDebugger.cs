@@ -11,7 +11,7 @@ internal class TileDebugger
 
     internal void DebugTiles()
     {
-        Gizmos.color = Color.black;
+        Gizmos.color = Color.gray;
         float tileSize = _terrainGenerator.TileSize;
         int tileAmount = _terrainGenerator.TileAmount;
         float yOffset = .01f;

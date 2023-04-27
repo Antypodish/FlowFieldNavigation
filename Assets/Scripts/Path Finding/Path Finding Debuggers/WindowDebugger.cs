@@ -1,8 +1,5 @@
 ﻿using UnityEngine;
-using Unity.Collections;
-using UnityEditor;
-
-public class CostFieldDebugger
+public class WindowDebugger
 {
     PathfindingManager _pathfindingManager;
 
@@ -10,7 +7,7 @@ public class CostFieldDebugger
     Vector3[] _debugVerticies;
     int[] _debugTriangles;
 
-    public CostFieldDebugger(PathfindingManager pathfindingManager)
+    public WindowDebugger(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
 
@@ -53,38 +50,26 @@ public class CostFieldDebugger
         }
     }
 
-    public void DebugCostField(int offset)
+    public void DebugWindows(int offset)
     {
-        NativeArray<Vector3> tilePositions = _pathfindingManager.TilePositions;
-        NativeArray<byte> costs = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).Costs;
-
-        for(int i = 0; i < costs.Length; i++)
-        {
-            Vector3 pos = tilePositions[i];
-            byte cost = costs[i];
-            Handles.Label(pos, cost.ToString());
-        }
-    }
-    public void DebugCostFieldWithMesh(int offset)
-    {
-        Gizmos.color = Color.black;
-        NativeArray<byte> costs = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).Costs;
+        Gizmos.color = new Color(1f, 0f, 0f, 0.3f);
         float yOffset = .02f;
         float tileSize = _pathfindingManager.TileSize;
-        int tileAmount = _pathfindingManager.TileAmount;
 
-        for (int r = 0; r < tileAmount; r++)
+        CostField costField = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset);
+        for (int i = 0; i < costField.SectorGraph.WindowNodes.Length; i++)
         {
-            for(int c = 0; c < tileAmount; c++)
+            Index2 botLeftBound = costField.SectorGraph.WindowNodes[i].Window.BottomLeftBoundary;
+            Index2 upRightBound = costField.SectorGraph.WindowNodes[i].Window.TopRightBoundary;
+            for(int r = botLeftBound.R; r <= upRightBound.R; r++)
             {
-                int index = r * tileAmount + c;
-                if (costs[index] == 1) { continue; }
+                for(int c = botLeftBound.C; c <= upRightBound.C; c++)
+                {
+                    Vector3 pos = new Vector3(c * tileSize, yOffset, r * tileSize);
+                    Gizmos.DrawMesh(_debugMesh, pos);
+                }
+            }
 
-                Vector3 pos = new Vector3(c * tileSize, yOffset, r * tileSize);
-                Gizmos.DrawMesh(_debugMesh, pos);
-            }            
         }
     }
-
-    
 }
