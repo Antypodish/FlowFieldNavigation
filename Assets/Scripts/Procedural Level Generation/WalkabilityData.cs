@@ -1,5 +1,4 @@
-﻿using Unity.VisualScripting;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class WalkabilityData
 {
@@ -17,6 +16,7 @@ public class WalkabilityData
 
         InnitializeWalkabilityMatrix();
         SimulatePerlinNoise();
+        SetEdgesUnwalkable();
 
         void InnitializeWalkabilityMatrix()
         {
@@ -24,6 +24,19 @@ public class WalkabilityData
             for (int i = 0; i < TileAmount; i++)
             {
                 WalkabilityMatrix[i] = new WalkabilityCell[TileAmount];
+            }
+        }
+        void SetEdgesUnwalkable()
+        {
+            for(int c = 0; c < tileAmount; c++)
+            {
+                WalkabilityMatrix[0][c].Walkability = Walkability.Unwalkable;
+                WalkabilityMatrix[tileAmount - 1][c].Walkability = Walkability.Unwalkable;
+            }
+            for (int r = 0; r < tileAmount; r++)
+            {
+                WalkabilityMatrix[r][0].Walkability = Walkability.Unwalkable;
+                WalkabilityMatrix[r][tileAmount - 1].Walkability = Walkability.Unwalkable;
             }
         }
     }

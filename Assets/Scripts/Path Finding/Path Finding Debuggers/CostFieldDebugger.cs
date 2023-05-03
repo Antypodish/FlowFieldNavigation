@@ -62,7 +62,7 @@ public class CostFieldDebugger
         {
             Vector3 pos = tilePositions[i];
             byte cost = costs[i];
-            Handles.Label(pos, cost.ToString());
+            //Handles.Label(pos, cost.ToString());
         }
     }
     public void DebugCostFieldWithMesh(int offset)

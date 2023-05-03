@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Text;
-using UnityEngine;
 
 public class Array<T>
 {

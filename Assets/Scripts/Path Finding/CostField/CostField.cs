@@ -1,11 +1,13 @@
-﻿using System;
+﻿using Unity.Burst;
 using Unity.Collections;
-using UnityEngine;
+using Unity.Jobs;
+
 public class CostField
 {
     public int Offset;
     public NativeArray<byte> Costs;
     public SectorGraph SectorGraph;
+    public NativeArray<DirectionData> Directions;
     public CostField(WalkabilityData walkabilityData, int offset, int sectorSize)
     {
         int tileAmount = walkabilityData.TileAmount;
@@ -16,9 +18,17 @@ public class CostField
         Costs = new NativeArray<byte>(tileAmount * tileAmount, Allocator.Persistent);
         CalculateCosts();
 
-        //create sector graph
-        SectorGraph = new SectorGraph(sectorSize, tileAmount);
+        //configure directions
+        Directions = new NativeArray<DirectionData>(Costs.Length, Allocator.Persistent);
+        CalculateDirections();
 
+
+
+        //create sector graph
+        SectorGraph = new SectorGraph(sectorSize, tileAmount, Costs, Directions);
+
+
+        //HELPERS
         void CalculateCosts()
         {
             //calculate costs without offset
@@ -54,6 +64,13 @@ public class CostField
                         }
                     }
                 }
+            }
+        }
+        void CalculateDirections()
+        {
+            for(int i = 0; i < Directions.Length; i++)
+            {
+                Directions[i] = new DirectionData(i, tileAmount);
             }
         }
     }

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Xml.XPath;
-using Unity.Collections;
-using UnityEditor;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class PathFindingDebugger : MonoBehaviour
 {
@@ -13,31 +9,32 @@ public class PathFindingDebugger : MonoBehaviour
     [SerializeField] bool _debugWindows;
     [SerializeField] bool _debugSectorWindows;
     [SerializeField] bool _debugWindowSectors;
-    [SerializeField] bool _debugTilePositions;
+    [SerializeField] bool _debugPortals;
 
 
     //debuggers
-    TilePositionDebugger _tilePositionDebugger;
     CostFieldDebugger _costFieldDebugger;
     SectorDebugger _sectorDebugger;
     WindowDebugger _windowDebugger;
     SectorGraphDebugger _sectorGraphDebugger;
+    PortalDebugger _portalDebugger;
     private void Start()
     {
-        _tilePositionDebugger = new TilePositionDebugger(_pathfindingManager);
         _costFieldDebugger = new CostFieldDebugger(_pathfindingManager);
         _sectorDebugger = new SectorDebugger(_pathfindingManager);
         _windowDebugger = new WindowDebugger(_pathfindingManager);
         _sectorGraphDebugger = new SectorGraphDebugger(_pathfindingManager);
+        _portalDebugger = new PortalDebugger(_pathfindingManager);
+
     }
     private void OnDrawGizmos()
     {
-        if (_debugTilePositions && _tilePositionDebugger != null) { _tilePositionDebugger.DebugTilePositions(); }
         if (_debugCostField && _costFieldDebugger != null) { _costFieldDebugger.DebugCostFieldWithMesh((int) _costFieldOffset); }
         if (_debugSectors && _sectorDebugger != null) { _sectorDebugger.DebugSectors((int) _costFieldOffset); }
         if( _debugWindows && _windowDebugger != null) { _windowDebugger.DebugWindows((int) _costFieldOffset); }
         if(_debugSectorWindows && _sectorGraphDebugger != null) { _sectorGraphDebugger.DebugSectorToWindow((int) _costFieldOffset); }
         if(_debugWindowSectors && _sectorGraphDebugger != null) { _sectorGraphDebugger.DebugWindowToSector((int) _costFieldOffset); }
+        if(_debugPortals && _portalDebugger != null) { _portalDebugger.DebugPortals((int) _costFieldOffset); }
     }
 
     enum CostFieldOffset : byte

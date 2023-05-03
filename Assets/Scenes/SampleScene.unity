@@ -410,7 +410,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _terrainGenerator: {fileID: 1550691738}
-  _debugTiles: 1
+  _debugTiles: 0
   _debugUnwalkableTiles: 0
 --- !u!1 &1977402419
 GameObject:
@@ -460,10 +460,10 @@ MonoBehaviour:
   _costFieldOffset: 0
   _debugCostField: 0
   _debugSectors: 0
-  _debugWindows: 1
+  _debugWindows: 0
   _debugSectorWindows: 0
-  _debugWindowSectors: 1
-  _debugTilePositions: 0
+  _debugWindowSectors: 0
+  _debugPortals: 0
 --- !u!1001 &1284591847240803008
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -709,6 +709,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Camera Pivot
+      objectReference: {fileID: 0}
+    - target: {fileID: 7273620609945919207, guid: a222553a8d76c3b4f84192d5037f50bc,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a222553a8d76c3b4f84192d5037f50bc, type: 3}

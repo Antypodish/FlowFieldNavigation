@@ -1,8 +1,4 @@
-﻿using UnityEngine;
-using System.Linq;
-using TMPro;
-
-public class CostFieldProducer
+﻿public class CostFieldProducer
 {
     WalkabilityData _walkabilityData;
     CostField[] _producedCostFields;

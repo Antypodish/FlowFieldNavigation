@@ -1,6 +1,4 @@
-﻿using Unity.VisualScripting;
-using UnityEditor;
-using UnityEngine;
+﻿using UnityEngine;
 public class ProceduralTerrainDebugger : MonoBehaviour
 {
     [SerializeField] TerrainGenerator _terrainGenerator;
