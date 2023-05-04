@@ -25,7 +25,7 @@ public class CostField
 
 
         //create sector graph
-        SectorGraph = new SectorGraph(sectorSize, tileAmount, Costs, Directions);
+        SectorGraph = new SectorGraph(sectorSize, tileAmount, offset, Costs, Directions);
 
 
         //HELPERS

@@ -14,19 +14,30 @@ public struct SectorGraph
     NativeArray<byte> _costs;
     NativeArray<DirectionData> _directions;
     AStarGrid _aStarGrid;
-    public SectorGraph(int sectorSize, int totalTileAmount, NativeArray<byte> costs, NativeArray<DirectionData> directions)
+    public SectorGraph(int sectorSize, int totalTileAmount, int costFieldOffset, NativeArray<byte> costs, NativeArray<DirectionData> directions)
     {
         int sectorMatrixSize = totalTileAmount / sectorSize;
         int sectorTotalSize = sectorMatrixSize * sectorMatrixSize;
-        
+        int windowNodesSize = sectorMatrixSize * ((sectorMatrixSize - 1) * 2);
+        int divider = 2;
+        for (int i = 0; i < costFieldOffset; i++)
+        {
+            divider *= 2;
+        }
+        int portalPerWindow = (sectorSize + divider - 1) / divider;
+        int portalNodesSize = windowNodesSize * portalPerWindow;
+        int winToSecPtrsSize = windowNodesSize * 2;
+        int secToWinPtrsSize = windowNodesSize * 2;
+        int porToPorPtrsSize = portalNodesSize * portalPerWindow * 7 - 1;
+
         //innitialize fields
         _costs = costs;
         SectorNodes = new NativeArray<SectorNode>(sectorTotalSize, Allocator.Persistent);
-        WindowNodes = new NativeArray<WindowNode>(sectorMatrixSize * ((sectorMatrixSize - 1) * 2), Allocator.Persistent);
-        PortalNodes = new NativeArray<PortalNode>(WindowNodes.Length * ((sectorSize + 2 - 1) / 2), Allocator.Persistent);
-        _winToSecPtrs = new NativeArray<int>(WindowNodes.Length * 2, Allocator.Persistent);
-        _secToWinPtrs = new NativeArray<int>(WindowNodes.Length * 2, Allocator.Persistent);
-        _porToPorPtrs = new NativeArray<PortalToPortal>(((sectorSize + 2 - 1) / 2) * 7 - 1, Allocator.Persistent);
+        WindowNodes = new NativeArray<WindowNode>(windowNodesSize, Allocator.Persistent);
+        PortalNodes = new NativeArray<PortalNode>(portalNodesSize, Allocator.Persistent);
+        _winToSecPtrs = new NativeArray<int>(winToSecPtrsSize, Allocator.Persistent);
+        _secToWinPtrs = new NativeArray<int>(secToWinPtrsSize, Allocator.Persistent);
+        _porToPorPtrs = new NativeArray<PortalToPortal>(porToPorPtrsSize, Allocator.Persistent);
         _directions = directions;
         _aStarGrid = new AStarGrid(costs, directions, totalTileAmount);
 
@@ -67,7 +78,7 @@ public struct SectorGraph
         }
         void ConfigureWindowNodes(ref NativeArray<WindowNode> windowNodes, ref NativeArray<SectorNode> helperSectorNodes, ref NativeArray<byte> helperCosts)
         {
-            int porPtrJumpFactor = (sectorSize + 2 - 1) / 2;
+            int porPtrJumpFactor = portalPerWindow;
             int windowNodesIndex = 0;
             int iterableWinToSecPtr = 0;
             for (int r = 0; r < sectorMatrixSize; r++)
@@ -276,22 +287,6 @@ public struct SectorGraph
         }
         return sectorNodes;
     }
-    /*
-    void ConfigurePorToPorPtrs()
-    {
-        for (int i = 0; i < SectorNodes.Length; i++)
-        {
-            SectorNode sectorNode = SectorNodes[i];
-            Sector sector = sectorNode.Sector;
-            NativeArray<int> portalPointers = GetPortalIndiciesOf(sectorNode);
-            for(int j = 0; j < portalPointers.Length; j++)
-            {
-                int portalPointer = portalPointers[j];
-                Portal portal = PortalNodes[portalPointer].Portal;
-            }
-            NativeArray<AStarTile> aStarTiles = _aStarGrid.GetIntegratedCostsFor(sector, )
-        }
-    }*/
     NativeArray<int> GetPortalIndiciesOf(SectorNode sectorNode)
     {
         NativeArray<int> portalIndicies;
