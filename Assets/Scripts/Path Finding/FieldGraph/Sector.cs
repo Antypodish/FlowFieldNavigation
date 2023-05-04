@@ -1,19 +1,4 @@
-﻿using Unity.Collections;
-
-public struct SectorNode
-{
-    public Sector Sector;
-    public int SecToWinPtr;
-    public int SecToWinCnt;
-
-    public SectorNode(Sector sector, int secToWinCnt, int secToWinPtr)
-    {
-        Sector = sector;
-        SecToWinCnt = secToWinCnt;
-        SecToWinPtr = secToWinPtr;
-    }
-}
-public struct Sector
+﻿public struct Sector
 {
     public Index2 StartIndex;
     public int Size;
@@ -50,5 +35,3 @@ public struct Sector
         return sector1.StartIndex != sector2.StartIndex;
     }
 }
-
-

@@ -1,11 +1,11 @@
 ﻿using Unity.Collections;
 
-public struct WindowNodes
+public struct WindowArray
 {
     public NativeArray<WindowNode> Nodes;
     public NativeArray<int> SecPtrs;
 
-    public WindowNodes(int windowNodeAmount, int sectorPointerAmount)
+    public WindowArray(int windowNodeAmount, int sectorPointerAmount)
     {
         Nodes = new NativeArray<WindowNode>(windowNodeAmount, Allocator.Persistent);
         SecPtrs = new NativeArray<int>(sectorPointerAmount, Allocator.Persistent);

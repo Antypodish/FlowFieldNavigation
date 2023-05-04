@@ -15,7 +15,7 @@ public class SectorGraphDebugger
         Gizmos.color = Color.black;
         float yOffset = 0.02f;
         float tileSize = _pathfindingManager.TileSize;
-        SectorGraph sectorGraph = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).SectorGraph;
+        FieldGraph sectorGraph = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).SectorGraph;
         NativeArray<SectorNode> sectorNodes = sectorGraph.SectorNodes.Nodes;
         for (int i = 0; i < sectorNodes.Length; i++)
         {
@@ -54,7 +54,7 @@ public class SectorGraphDebugger
         Gizmos.color = Color.black;
         float yOffset = 0.02f;
         float tileSize = _pathfindingManager.TileSize;
-        SectorGraph sectorGraph = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).SectorGraph;
+        FieldGraph sectorGraph = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).SectorGraph;
         NativeArray<WindowNode> windowNodes = sectorGraph.WindowNodes.Nodes;
         for(int i = 0; i < windowNodes.Length; i++)
         {

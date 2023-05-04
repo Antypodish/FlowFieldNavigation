@@ -6,7 +6,7 @@ public class CostField
 {
     public int Offset;
     public NativeArray<byte> Costs;
-    public SectorGraph SectorGraph;
+    public FieldGraph SectorGraph;
     public NativeArray<DirectionData> Directions;
     public CostField(WalkabilityData walkabilityData, int offset, int sectorSize)
     {
@@ -25,7 +25,7 @@ public class CostField
 
 
         //create sector graph
-        SectorGraph = new SectorGraph(sectorSize, tileAmount, offset, Costs, Directions);
+        SectorGraph = new FieldGraph(sectorSize, tileAmount, offset, Costs, Directions);
 
 
         //HELPERS

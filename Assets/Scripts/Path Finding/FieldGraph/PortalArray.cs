@@ -1,11 +1,11 @@
 ﻿using Unity.Collections;
 
-public struct PortalNodes
+public struct PortalArray
 {
     public NativeArray<PortalNode> Nodes;
     public NativeArray<PortalToPortal> PorPtrs;
 
-    public PortalNodes(int portalNodeAmount, int porToPorPtrAmount)
+    public PortalArray(int portalNodeAmount, int porToPorPtrAmount)
     {
         Nodes = new NativeArray<PortalNode>(portalNodeAmount, Allocator.Persistent);
         PorPtrs = new NativeArray<PortalToPortal>(porToPorPtrAmount, Allocator.Persistent);

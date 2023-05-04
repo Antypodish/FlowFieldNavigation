@@ -1,15 +1,15 @@
 ﻿using Unity.Collections;
 
-public struct SectorGraph
+public struct FieldGraph
 {
-    public SectorNodes SectorNodes;
-    public WindowNodes WindowNodes;
-    public PortalNodes PortalNodes;
+    public SectorArray SectorNodes;
+    public WindowArray WindowNodes;
+    public PortalArray PortalNodes;
     
     NativeArray<byte> _costs;
     NativeArray<DirectionData> _directions;
     AStarGrid _aStarGrid;
-    public SectorGraph(int sectorSize, int totalTileAmount, int costFieldOffset, NativeArray<byte> costs, NativeArray<DirectionData> directions)
+    public FieldGraph(int sectorSize, int totalTileAmount, int costFieldOffset, NativeArray<byte> costs, NativeArray<DirectionData> directions)
     {
 
         //size calculations
@@ -31,9 +31,9 @@ public struct SectorGraph
         _costs = costs;
         _directions = directions;
         _aStarGrid = new AStarGrid(_costs, _directions, totalTileAmount);
-        SectorNodes = new SectorNodes(sectorAmount, secToWinPtrAmount);
-        WindowNodes = new WindowNodes(windowAmount, winToSecPtrAmount);
-        PortalNodes = new PortalNodes(portalAmount, porToPorPtrAmount);
+        SectorNodes = new SectorArray(sectorAmount, secToWinPtrAmount);
+        WindowNodes = new WindowArray(windowAmount, winToSecPtrAmount);
+        PortalNodes = new PortalArray(portalAmount, porToPorPtrAmount);
 
         //configuring fields
         SectorNodes.ConfigureSectorNodes(totalTileAmount, sectorSize);
