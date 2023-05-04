@@ -55,7 +55,7 @@ public class SectorGraphDebugger
         float yOffset = 0.02f;
         float tileSize = _pathfindingManager.TileSize;
         SectorGraph sectorGraph = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).SectorGraph;
-        NativeArray<WindowNode> windowNodes = sectorGraph.WindowNodes;
+        NativeArray<WindowNode> windowNodes = sectorGraph.WindowNodes.Nodes;
         for(int i = 0; i < windowNodes.Length; i++)
         {
             Index2 winBotLeftIndex = windowNodes[i].Window.BottomLeftBoundary;

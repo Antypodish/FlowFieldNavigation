@@ -37,7 +37,7 @@ public struct SectorNodes
             }
         }
     }
-    public void ConfigureSectorToWindowPoiners(ref NativeArray<WindowNode> windowNodes)
+    public void ConfigureSectorToWindowPoiners(NativeArray<WindowNode> windowNodes)
     {
         int sectorSize = Nodes[0].Sector.Size;
         int secToWinPtrIterable = 0;

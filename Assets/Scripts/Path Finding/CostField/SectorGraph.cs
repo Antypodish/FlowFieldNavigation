@@ -1,230 +1,54 @@
-﻿using JetBrains.Annotations;
-using Unity.Collections;
+﻿using Unity.Collections;
 
 public struct SectorGraph
 {
     public SectorNodes SectorNodes;
-    public NativeArray<WindowNode> WindowNodes;
-    public NativeArray<PortalNode> PortalNodes;
-
-    NativeArray<int> _winToSecPtrs;
-    NativeArray<PortalToPortal> _porToPorPtrs;
+    public WindowNodes WindowNodes;
+    public PortalNodes PortalNodes;
     
     NativeArray<byte> _costs;
     NativeArray<DirectionData> _directions;
     AStarGrid _aStarGrid;
     public SectorGraph(int sectorSize, int totalTileAmount, int costFieldOffset, NativeArray<byte> costs, NativeArray<DirectionData> directions)
     {
+
+        //size calculations
         int sectorMatrixSize = totalTileAmount / sectorSize;
-        int sectorTotalSize = sectorMatrixSize * sectorMatrixSize;
-        int windowNodesSize = sectorMatrixSize * ((sectorMatrixSize - 1) * 2);
+        int sectorAmount = sectorMatrixSize * sectorMatrixSize;
+        int windowAmount = sectorMatrixSize * ((sectorMatrixSize - 1) * 2);
+        int winToSecPtrAmount = windowAmount * 2;
+        int secToWinPtrAmount = windowAmount * 2;
         int divider = 2;
         for (int i = 0; i < costFieldOffset; i++)
         {
             divider *= 2;
         }
         int portalPerWindow = (sectorSize + divider - 1) / divider;
-        int portalNodesSize = windowNodesSize * portalPerWindow;
-        int winToSecPtrsSize = windowNodesSize * 2;
-        int secToWinPtrsSize = windowNodesSize * 2;
-        int porToPorPtrsSize = portalNodesSize * portalPerWindow * 7 - 1;
+        int portalAmount = windowAmount * portalPerWindow;
+        int porToPorPtrAmount = portalAmount * (portalPerWindow * 7 - 1);
 
         //innitialize fields
         _costs = costs;
-        SectorNodes = new SectorNodes(sectorTotalSize, secToWinPtrsSize);
-        WindowNodes = new NativeArray<WindowNode>(windowNodesSize, Allocator.Persistent);
-        PortalNodes = new NativeArray<PortalNode>(portalNodesSize, Allocator.Persistent);
-        _winToSecPtrs = new NativeArray<int>(winToSecPtrsSize, Allocator.Persistent);
-        _porToPorPtrs = new NativeArray<PortalToPortal>(porToPorPtrsSize, Allocator.Persistent);
         _directions = directions;
-        _aStarGrid = new AStarGrid(costs, directions, totalTileAmount);
+        _aStarGrid = new AStarGrid(_costs, _directions, totalTileAmount);
+        SectorNodes = new SectorNodes(sectorAmount, secToWinPtrAmount);
+        WindowNodes = new WindowNodes(windowAmount, winToSecPtrAmount);
+        PortalNodes = new PortalNodes(portalAmount, porToPorPtrAmount);
 
         //configuring fields
         SectorNodes.ConfigureSectorNodes(totalTileAmount, sectorSize);
-        ConfigureWindowNodes(ref WindowNodes, ref SectorNodes.Nodes, ref _costs);
-        SectorNodes.ConfigureSectorToWindowPoiners(ref WindowNodes);
-        ConfigureWindowToSectorPointers(ref SectorNodes.Nodes, ref WindowNodes, ref _winToSecPtrs);
-        ConfigurePortalNodes(ref PortalNodes, ref WindowNodes, ref _costs, totalTileAmount);
+        WindowNodes.ConfigureWindowNodes(SectorNodes.Nodes, _costs, portalPerWindow, sectorMatrixSize, totalTileAmount);
+        SectorNodes.ConfigureSectorToWindowPoiners(WindowNodes.Nodes);
+        WindowNodes.ConfigureWindowToSectorPointers(SectorNodes.Nodes);
+        PortalNodes.ConfigurePortalNodes(WindowNodes.Nodes, _costs, totalTileAmount);
 
-        //HELPERS
-        void ConfigureWindowNodes(ref NativeArray<WindowNode> windowNodes, ref NativeArray<SectorNode> helperSectorNodes, ref NativeArray<byte> helperCosts)
-        {
-            int porPtrJumpFactor = portalPerWindow;
-            int windowNodesIndex = 0;
-            int iterableWinToSecPtr = 0;
-            for (int r = 0; r < sectorMatrixSize; r++)
-            {
-                for (int c = 0; c < sectorMatrixSize; c++)
-                {
-                    int index = r * sectorMatrixSize + c;
-                    Sector sector = helperSectorNodes[index].Sector;
-
-                    //create upper window relative to the sector
-                    if (!sector.IsOnTop(totalTileAmount))
-                    {
-                        Window window = GetUpperWindowFor(sector);
-                        windowNodes[windowNodesIndex] = new WindowNode(window, 2, iterableWinToSecPtr, windowNodesIndex * porPtrJumpFactor, totalTileAmount, helperCosts);
-                        windowNodesIndex++;
-                        iterableWinToSecPtr += 2;
-                    }
-
-                    //create right window relative to the sector
-                    if (!sector.IsOnRight(totalTileAmount))
-                    {
-                        Window window = GetRightWindowFor(sector);
-                        windowNodes[windowNodesIndex] = new WindowNode(window, 2, iterableWinToSecPtr, windowNodesIndex * porPtrJumpFactor, totalTileAmount, helperCosts);
-                        windowNodesIndex++;
-                        iterableWinToSecPtr += 2;
-                    }
-                }
-            }
-            Window GetUpperWindowFor(Sector sector)
-            {
-                Index2 bottomLeftBoundary = new Index2(sector.StartIndex.R + sector.Size - 1, sector.StartIndex.C);
-                Index2 topRightBoundary = new Index2(sector.StartIndex.R + sector.Size, sector.StartIndex.C + sector.Size - 1);
-                return new Window(bottomLeftBoundary, topRightBoundary);
-            }
-            Window GetRightWindowFor(Sector sector)
-            {
-                Index2 bottomLeftBoundary = new Index2(sector.StartIndex.R, sector.StartIndex.C + sector.Size - 1);
-                Index2 topRightBoundary = new Index2(bottomLeftBoundary.R + sector.Size - 1, bottomLeftBoundary.C + 1);
-                return new Window(bottomLeftBoundary, topRightBoundary);
-            }
-        }       
-        void ConfigureWindowToSectorPointers(ref NativeArray<SectorNode> sectorNodes, ref NativeArray<WindowNode> windowNodes, ref NativeArray<int> winToSecPointers)
-        {
-            int winToSecPtrIterable = 0;
-            for (int i = 0; i < windowNodes.Length; i++)
-            {
-                Index2 botLeft = windowNodes[i].Window.BottomLeftBoundary;
-                Index2 topRight = windowNodes[i].Window.TopRightBoundary;
-                for(int j = 0; j < sectorNodes.Length; j++)
-                {
-                    if (sectorNodes[j].Sector.ContainsIndex(botLeft))
-                    {
-                        winToSecPointers[winToSecPtrIterable++] = j;
-                    }
-                    else if (sectorNodes[j].Sector.ContainsIndex(topRight))
-                    {
-                        winToSecPointers[winToSecPtrIterable++] = j;
-                    }
-                }
-            }
-        }
-        void ConfigurePortalNodes(ref NativeArray<PortalNode> portalNodes, ref NativeArray<WindowNode> windowNodes, ref NativeArray<byte> costs, int tileAmount)
-        {
-            for (int i = 0; i < windowNodes.Length; i++)
-            {
-                Window window = windowNodes[i].Window;
-                if (window.IsHorizontal())
-                {
-                    int porPtr = windowNodes[i].PorPtr;
-                    int portalCount = 0;
-                    bool wasUnwalkable = true;
-                    Index2 bound1 = new Index2();
-                    Index2 bound2 = new Index2();
-                    int startCol = window.BottomLeftBoundary.C;
-                    int lastCol = window.TopRightBoundary.C;
-                    int row1 = window.BottomLeftBoundary.R;
-                    int row2 = window.TopRightBoundary.R;
-                    for (int j = startCol; j <= lastCol; j++)
-                    {
-                        int index1 = row1 * tileAmount + j;
-                        int index2 = row2 * tileAmount + j;
-                        if (costs[index1]!=byte.MaxValue && costs[index2] != byte.MaxValue)
-                        {
-                            if (wasUnwalkable)
-                            {
-                                bound1 = new Index2(row1, j);
-                                bound2 = new Index2(row2, j);
-                                wasUnwalkable = false;
-                            }
-                            else
-                            {
-                                bound2 = new Index2(row2, j);
-                            }
-                        }
-                        if((costs[index1] == byte.MaxValue || costs[index2] == byte.MaxValue) && !wasUnwalkable)
-                        {
-                            Portal portal = GetPortalBetween(bound1 , bound2, true);
-                            portalNodes[porPtr + portalCount] = new PortalNode(portal, i);
-                            portalCount++;
-                            wasUnwalkable = true;
-                        }
-                    }
-                    if (!wasUnwalkable)
-                    {
-                        Portal portal = GetPortalBetween(bound1, bound2, true);
-                        portalNodes[porPtr + portalCount] = new PortalNode(portal, i);
-                    }
-                }
-                else
-                {
-                    int porPtr = windowNodes[i].PorPtr;
-                    int portalCount = 0;
-                    bool wasUnwalkable = true;
-                    Index2 bound1 = new Index2();
-                    Index2 bound2 = new Index2();
-                    int startRow = window.BottomLeftBoundary.R;
-                    int lastRow = window.TopRightBoundary.R;
-                    int col1 = window.BottomLeftBoundary.C;
-                    int col2 = window.TopRightBoundary.C;
-                    for (int j = startRow; j <= lastRow; j++)
-                    {
-                        int index1 = j * tileAmount + col1;
-                        int index2 = j * tileAmount + col2;
-                        if (costs[index1] != byte.MaxValue && costs[index2] != byte.MaxValue)
-                        {
-                            if (wasUnwalkable)
-                            {
-                                bound1 = new Index2(j, col1);
-                                bound2 = new Index2(j, col2);
-                                wasUnwalkable = false;
-                            }
-                            else
-                            {
-                                bound2 = new Index2(j, col2);
-                            }
-                        }
-                        if ((costs[index1] == byte.MaxValue || costs[index2] == byte.MaxValue) && !wasUnwalkable)
-                        {
-                            Portal portal = GetPortalBetween(bound1, bound2, false);
-                            portalNodes[porPtr + portalCount] = new PortalNode(portal, i);
-                            portalCount++;
-                            wasUnwalkable = true;
-                        }
-                    }
-                    if (!wasUnwalkable)
-                    {
-                        Portal portal = GetPortalBetween(bound1, bound2, false);
-                        portalNodes[porPtr + portalCount] = new PortalNode(portal, i);
-                    }
-                }
-            }
-            Portal GetPortalBetween(Index2 boundary1, Index2 boundary2, bool isHorizontal)
-            {
-                Portal portal;
-                if (isHorizontal)
-                {
-                    int col = (boundary1.C + boundary2.C) / 2;
-                    portal = new Portal(new Index2(boundary1.R, col), new Index2(boundary2.R, col));
-                }
-                else
-                {
-                    int row = (boundary1.R + boundary2.R) / 2;
-                    portal = new Portal(new Index2(row, boundary1.C), new Index2(row, boundary2.C));
-                }
-                return portal;
-            }
-        }
-        
     }
     public WindowNode[] GetWindowNodesOf(SectorNode sectorNode)
     {
         WindowNode[] windowNodes = new WindowNode[sectorNode.SecToWinCnt];
         for(int i = sectorNode.SecToWinPtr; i < sectorNode.SecToWinPtr + sectorNode.SecToWinCnt; i++)
         {
-            windowNodes[i - sectorNode.SecToWinPtr] = WindowNodes[SectorNodes.WinPtrs[i]];
+            windowNodes[i - sectorNode.SecToWinPtr] = WindowNodes.Nodes[SectorNodes.WinPtrs[i]];
         }
         return windowNodes;
     }
@@ -233,7 +57,7 @@ public struct SectorGraph
         SectorNode[] sectorNodes = new SectorNode[windowNode.WinToSecCnt];
         for (int i = windowNode.WinToSecPtr; i < windowNode.WinToSecPtr + windowNode.WinToSecCnt; i++)
         {
-            sectorNodes[i - windowNode.WinToSecPtr] = SectorNodes.Nodes[_winToSecPtrs[i]];
+            sectorNodes[i - windowNode.WinToSecPtr] = SectorNodes.Nodes[WindowNodes.SecPtrs[i]];
         }
         return sectorNodes;
     }
@@ -243,15 +67,15 @@ public struct SectorGraph
         int portalIndexCount = 0;
         for(int i = 0; i < sectorNode.SecToWinCnt; i++)
         {
-            portalIndexCount += WindowNodes[sectorNode.SecToWinPtr + i].PorCnt;
+            portalIndexCount += WindowNodes.Nodes[sectorNode.SecToWinPtr + i].PorCnt;
         }
         portalIndicies = new NativeArray<int>(portalIndexCount, Allocator.Temp);
 
         int portalIndiciesIterable = 0;
         for(int i = 0; i < sectorNode.SecToWinCnt; i++)
         {
-            int windowPorPtr = WindowNodes[sectorNode.SecToWinPtr + i].PorPtr;
-            int windowPorCnt = WindowNodes[sectorNode.SecToWinPtr + i].PorCnt;
+            int windowPorPtr = WindowNodes.Nodes[sectorNode.SecToWinPtr + i].PorPtr;
+            int windowPorCnt = WindowNodes.Nodes[sectorNode.SecToWinPtr + i].PorCnt;
             for (int j = 0; j < windowPorCnt; j++)
             {
                 portalIndicies[portalIndiciesIterable] = windowPorPtr + i;

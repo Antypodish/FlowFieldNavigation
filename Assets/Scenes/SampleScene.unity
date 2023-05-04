@@ -458,12 +458,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _pathfindingManager: {fileID: 638972356}
   _costFieldOffset: 0
-  _debugCostField: 0
-  _debugSectors: 0
-  _debugWindows: 0
+  _debugCostField: 1
+  _debugSectors: 1
+  _debugWindows: 1
   _debugSectorWindows: 0
   _debugWindowSectors: 0
-  _debugPortals: 0
+  _debugPortals: 1
 --- !u!1001 &1284591847240803008
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -489,7 +489,7 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: TileAmount
-      value: 100
+      value: 1000
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}

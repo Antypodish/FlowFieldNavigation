@@ -13,7 +13,7 @@ public class PortalDebugger
     public void DebugPortals(int offset)
     {
         Gizmos.color = Color.cyan;
-        NativeArray<PortalNode> portalNodes = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).SectorGraph.PortalNodes;
+        NativeArray<PortalNode> portalNodes = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).SectorGraph.PortalNodes.Nodes;
         float tileSize = _pathfindingManager.TileSize;
         float yOffset = .02f;
         for(int i = 0; i < portalNodes.Length; i++)
