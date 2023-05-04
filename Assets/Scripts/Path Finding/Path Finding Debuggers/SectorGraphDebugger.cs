@@ -16,7 +16,7 @@ public class SectorGraphDebugger
         float yOffset = 0.02f;
         float tileSize = _pathfindingManager.TileSize;
         SectorGraph sectorGraph = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).SectorGraph;
-        NativeArray<SectorNode> sectorNodes = sectorGraph.SectorNodes;
+        NativeArray<SectorNode> sectorNodes = sectorGraph.SectorNodes.Nodes;
         for (int i = 0; i < sectorNodes.Length; i++)
         {
             int sectorSize = sectorNodes[i].Sector.Size;

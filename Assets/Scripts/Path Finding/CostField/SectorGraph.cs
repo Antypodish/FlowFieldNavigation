@@ -3,11 +3,10 @@ using Unity.Collections;
 
 public struct SectorGraph
 {
-    public NativeArray<SectorNode> SectorNodes;
+    public SectorNodes SectorNodes;
     public NativeArray<WindowNode> WindowNodes;
     public NativeArray<PortalNode> PortalNodes;
 
-    NativeArray<int> _secToWinPtrs;
     NativeArray<int> _winToSecPtrs;
     NativeArray<PortalToPortal> _porToPorPtrs;
     
@@ -32,50 +31,22 @@ public struct SectorGraph
 
         //innitialize fields
         _costs = costs;
-        SectorNodes = new NativeArray<SectorNode>(sectorTotalSize, Allocator.Persistent);
+        SectorNodes = new SectorNodes(sectorTotalSize, secToWinPtrsSize);
         WindowNodes = new NativeArray<WindowNode>(windowNodesSize, Allocator.Persistent);
         PortalNodes = new NativeArray<PortalNode>(portalNodesSize, Allocator.Persistent);
         _winToSecPtrs = new NativeArray<int>(winToSecPtrsSize, Allocator.Persistent);
-        _secToWinPtrs = new NativeArray<int>(secToWinPtrsSize, Allocator.Persistent);
         _porToPorPtrs = new NativeArray<PortalToPortal>(porToPorPtrsSize, Allocator.Persistent);
         _directions = directions;
         _aStarGrid = new AStarGrid(costs, directions, totalTileAmount);
 
         //configuring fields
-        ConfigureSectorNodes(ref SectorNodes);
-        ConfigureWindowNodes(ref WindowNodes, ref SectorNodes, ref _costs);
-        ConfigureSectorToWindowPoiners(ref SectorNodes, ref WindowNodes, ref _secToWinPtrs);
-        ConfigureWindowToSectorPointers(ref SectorNodes, ref WindowNodes, ref _winToSecPtrs);
+        SectorNodes.ConfigureSectorNodes(totalTileAmount, sectorSize);
+        ConfigureWindowNodes(ref WindowNodes, ref SectorNodes.Nodes, ref _costs);
+        SectorNodes.ConfigureSectorToWindowPoiners(ref WindowNodes);
+        ConfigureWindowToSectorPointers(ref SectorNodes.Nodes, ref WindowNodes, ref _winToSecPtrs);
         ConfigurePortalNodes(ref PortalNodes, ref WindowNodes, ref _costs, totalTileAmount);
 
         //HELPERS
-        void ConfigureSectorNodes(ref NativeArray<SectorNode> sectorNodes)
-        {
-            int sectorMatrixSize = totalTileAmount / sectorSize;
-            int sectorTotalSize = sectorMatrixSize * sectorMatrixSize;
-
-            sectorNodes = new NativeArray<SectorNode>(sectorTotalSize, Allocator.Persistent);
-            int iterableSecToWinPtr = 0;
-            for (int r = 0; r < sectorMatrixSize; r++)
-            {
-                for (int c = 0; c < sectorMatrixSize; c++)
-                {
-                    int index = r * sectorMatrixSize + c;
-                    Sector sect = new Sector(new Index2(r * sectorSize, c * sectorSize), sectorSize);
-                    int secToWinCnt = 4;
-                    if (sect.IsOnCorner(totalTileAmount))
-                    {
-                        secToWinCnt = 2;
-                    }
-                    else if (sect.IsOnEdge(totalTileAmount))
-                    {
-                        secToWinCnt = 3;
-                    }
-                    sectorNodes[index] = new SectorNode(sect, secToWinCnt, iterableSecToWinPtr);
-                    iterableSecToWinPtr += secToWinCnt;
-                }
-            }
-        }
         void ConfigureWindowNodes(ref NativeArray<WindowNode> windowNodes, ref NativeArray<SectorNode> helperSectorNodes, ref NativeArray<byte> helperCosts)
         {
             int porPtrJumpFactor = portalPerWindow;
@@ -120,27 +91,6 @@ public struct SectorGraph
                 return new Window(bottomLeftBoundary, topRightBoundary);
             }
         }       
-        void ConfigureSectorToWindowPoiners(ref NativeArray<SectorNode> sectorNodes, ref NativeArray<WindowNode> windowNodes, ref NativeArray<int> secToWınPointers)
-        {
-            int sectorSize = sectorNodes[0].Sector.Size;
-            int secToWinPtrIterable = 0;
-            for(int i = 0; i < sectorNodes.Length; i++)
-            {
-                Index2 sectorStartIndex = sectorNodes[i].Sector.StartIndex;
-                Index2 topWinIndex = new Index2(sectorStartIndex.R + sectorSize - 1, sectorStartIndex.C);
-                Index2 rightWinIndex = new Index2(sectorStartIndex.R, sectorStartIndex.C + sectorSize - 1);
-                Index2 botWinIndex = new Index2(sectorStartIndex.R - 1, sectorStartIndex.C);
-                Index2 leftWinIndex = new Index2(sectorStartIndex.R, sectorStartIndex.C - 1);
-                for (int j = 0; j < windowNodes.Length; j++)
-                {
-                    Window window = windowNodes[j].Window;
-                    if(window.BottomLeftBoundary == topWinIndex) { secToWınPointers[secToWinPtrIterable++] = j; }
-                    else if(window.BottomLeftBoundary == rightWinIndex) { secToWınPointers[secToWinPtrIterable++] = j; }
-                    else if(window.BottomLeftBoundary == botWinIndex) { secToWınPointers[secToWinPtrIterable++] = j; }
-                    else if(window.BottomLeftBoundary == leftWinIndex) { secToWınPointers[secToWinPtrIterable++] = j; }
-                }
-            }
-        }
         void ConfigureWindowToSectorPointers(ref NativeArray<SectorNode> sectorNodes, ref NativeArray<WindowNode> windowNodes, ref NativeArray<int> winToSecPointers)
         {
             int winToSecPtrIterable = 0;
@@ -274,7 +224,7 @@ public struct SectorGraph
         WindowNode[] windowNodes = new WindowNode[sectorNode.SecToWinCnt];
         for(int i = sectorNode.SecToWinPtr; i < sectorNode.SecToWinPtr + sectorNode.SecToWinCnt; i++)
         {
-            windowNodes[i - sectorNode.SecToWinPtr] = WindowNodes[_secToWinPtrs[i]];
+            windowNodes[i - sectorNode.SecToWinPtr] = WindowNodes[SectorNodes.WinPtrs[i]];
         }
         return windowNodes;
     }
@@ -283,7 +233,7 @@ public struct SectorGraph
         SectorNode[] sectorNodes = new SectorNode[windowNode.WinToSecCnt];
         for (int i = windowNode.WinToSecPtr; i < windowNode.WinToSecPtr + windowNode.WinToSecCnt; i++)
         {
-            sectorNodes[i - windowNode.WinToSecPtr] = SectorNodes[_winToSecPtrs[i]];
+            sectorNodes[i - windowNode.WinToSecPtr] = SectorNodes.Nodes[_winToSecPtrs[i]];
         }
         return sectorNodes;
     }

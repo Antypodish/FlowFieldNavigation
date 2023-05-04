@@ -15,15 +15,10 @@ public class SectorDebugger
         CostField costField = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset);
         float tileSize = _pathfindingManager.TileSize;
         float yOffset = .02f;
-        for(int i = 0; i < costField.SectorGraph.SectorNodes.Length; i++)
+        for(int i = 0; i < costField.SectorGraph.SectorNodes.Nodes.Length; i++)
         {
-            //Index2 index = costField.SectorGraph.SectorNodes[i].Sector.StartIndex;
-            //int size = costField.SectorGraph.SectorNodes[i].Sector.Size;
-            //Vector3 pos = new Vector3(index.C * tileSize + tileSize / 2, 0f, index.R * tileSize + tileSize / 2);
-            //Gizmos.DrawCube(pos, Vector3.one / 4);
-
-            Index2 index = costField.SectorGraph.SectorNodes[i].Sector.StartIndex;
-            int sectorSize = costField.SectorGraph.SectorNodes[i].Sector.Size;
+            Index2 index = costField.SectorGraph.SectorNodes.Nodes[i].Sector.StartIndex;
+            int sectorSize = costField.SectorGraph.SectorNodes.Nodes[i].Sector.Size;
             Vector3 botLeft = new Vector3(index.C * tileSize, yOffset, index.R * tileSize);
             Vector3 botRight = new Vector3((index.C + sectorSize) * tileSize, yOffset, index.R * tileSize);
             Vector3 topLeft = new Vector3(index.C * tileSize, yOffset, (index.R + sectorSize) * tileSize);
