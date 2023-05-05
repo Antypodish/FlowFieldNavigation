@@ -4,12 +4,14 @@ public class PathFindingDebugger : MonoBehaviour
 {
     [SerializeField] PathfindingManager _pathfindingManager;
     [SerializeField] CostFieldOffset _costFieldOffset;
-    [SerializeField] bool _debugCostField;
-    [SerializeField] bool _debugSectors;
-    [SerializeField] bool _debugWindows;
-    [SerializeField] bool _debugSectorWindows;
-    [SerializeField] bool _debugWindowSectors;
-    [SerializeField] bool _debugPortals;
+    [SerializeField] bool _costField;
+    [SerializeField] bool _sectors;
+    [SerializeField] bool _windows;
+    [SerializeField] bool _sectorWindows;
+    [SerializeField] bool _windowSectors;
+    [SerializeField] bool _portals;
+    [SerializeField] bool _portalsOnSector;
+    [SerializeField] bool _costsToPortal;
 
 
     //debuggers
@@ -25,16 +27,17 @@ public class PathFindingDebugger : MonoBehaviour
         _windowDebugger = new WindowDebugger(_pathfindingManager);
         _sectorGraphDebugger = new SectorGraphDebugger(_pathfindingManager);
         _portalDebugger = new PortalDebugger(_pathfindingManager);
-
     }
     private void OnDrawGizmos()
     {
-        if (_debugCostField && _costFieldDebugger != null) { _costFieldDebugger.DebugCostFieldWithMesh((int) _costFieldOffset); }
-        if (_debugSectors && _sectorDebugger != null) { _sectorDebugger.DebugSectors((int) _costFieldOffset); }
-        if( _debugWindows && _windowDebugger != null) { _windowDebugger.DebugWindows((int) _costFieldOffset); }
-        if(_debugSectorWindows && _sectorGraphDebugger != null) { _sectorGraphDebugger.DebugSectorToWindow((int) _costFieldOffset); }
-        if(_debugWindowSectors && _sectorGraphDebugger != null) { _sectorGraphDebugger.DebugWindowToSector((int) _costFieldOffset); }
-        if(_debugPortals && _portalDebugger != null) { _portalDebugger.DebugPortals((int) _costFieldOffset); }
+        if (_costField && _costFieldDebugger != null) { _costFieldDebugger.DebugCostFieldWithMesh((int) _costFieldOffset); }
+        if (_sectors && _sectorDebugger != null) { _sectorDebugger.DebugSectors((int) _costFieldOffset); }
+        if( _windows && _windowDebugger != null) { _windowDebugger.DebugWindows((int) _costFieldOffset); }
+        if(_sectorWindows && _sectorGraphDebugger != null) { _sectorGraphDebugger.DebugSectorToWindow((int) _costFieldOffset); }
+        if(_windowSectors && _sectorGraphDebugger != null) { _sectorGraphDebugger.DebugWindowToSector((int) _costFieldOffset); }
+        if(_portals && _portalDebugger != null) { _portalDebugger.DebugPortals((int) _costFieldOffset); }
+        if(_portalsOnSector && _portalDebugger != null) { _portalDebugger.DebugPortalsOnClickedSector((int) _costFieldOffset); }
+        if(_costsToPortal && _portalDebugger != null) { _portalDebugger.DebugCostsToClickedPortal((int) _costFieldOffset); }
     }
 
     enum CostFieldOffset : byte

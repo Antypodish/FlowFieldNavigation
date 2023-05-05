@@ -1,15 +1,16 @@
-﻿using Unity.Burst;
-using Unity.Collections;
-using Unity.Jobs;
+﻿using Unity.Collections;
 
 public class CostField
 {
     public int Offset;
     public NativeArray<byte> Costs;
-    public FieldGraph SectorGraph;
+    public FieldGraph FieldGraph;
     public NativeArray<DirectionData> Directions;
+
+    float _fieldTileSize;
     public CostField(WalkabilityData walkabilityData, int offset, int sectorSize)
     {
+        _fieldTileSize = walkabilityData.TileSize;
         int tileAmount = walkabilityData.TileAmount;
         WalkabilityCell[][] walkabilityMatrix = walkabilityData.WalkabilityMatrix;
         Offset = offset;
@@ -25,7 +26,7 @@ public class CostField
 
 
         //create sector graph
-        SectorGraph = new FieldGraph(sectorSize, tileAmount, offset, Costs, Directions);
+        FieldGraph = new FieldGraph(sectorSize, tileAmount, offset, _fieldTileSize, Costs, Directions);
 
 
         //HELPERS

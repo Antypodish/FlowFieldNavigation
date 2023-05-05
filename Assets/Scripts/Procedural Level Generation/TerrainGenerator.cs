@@ -34,7 +34,6 @@ public class TerrainGenerator : MonoBehaviour
             _mesh = new Mesh();
             _mesh.name = "Procedural Mesh";
             _meshFilter.mesh = _mesh;
-            _meshCollider.sharedMesh = _mesh;
         }
         void SetVerticies()
         {
@@ -58,6 +57,7 @@ public class TerrainGenerator : MonoBehaviour
             _mesh.vertices = _verticies;
             _mesh.triangles = _triangles;
             _mesh.RecalculateNormals();
+            _meshCollider.sharedMesh = _mesh;
         }
     }
 }

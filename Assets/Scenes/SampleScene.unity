@@ -410,7 +410,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _terrainGenerator: {fileID: 1550691738}
-  _debugTiles: 0
+  _debugTiles: 1
   _debugUnwalkableTiles: 0
 --- !u!1 &1977402419
 GameObject:
@@ -458,12 +458,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _pathfindingManager: {fileID: 638972356}
   _costFieldOffset: 0
-  _debugCostField: 1
-  _debugSectors: 1
-  _debugWindows: 1
-  _debugSectorWindows: 0
-  _debugWindowSectors: 0
-  _debugPortals: 1
+  _costField: 1
+  _sectors: 1
+  _windows: 1
+  _sectorWindows: 0
+  _windowSectors: 0
+  _portals: 1
+  _portalsOnSector: 0
+  _costsToPortal: 1
 --- !u!1001 &1284591847240803008
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -489,7 +491,7 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: TileAmount
-      value: 500
+      value: 100
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}

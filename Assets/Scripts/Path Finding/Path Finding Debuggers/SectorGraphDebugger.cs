@@ -15,8 +15,8 @@ public class SectorGraphDebugger
         Gizmos.color = Color.black;
         float yOffset = 0.02f;
         float tileSize = _pathfindingManager.TileSize;
-        FieldGraph sectorGraph = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).SectorGraph;
-        NativeArray<SectorNode> sectorNodes = sectorGraph.SectorNodes.Nodes;
+        FieldGraph sectorGraph = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).FieldGraph;
+        NativeArray<SectorNode> sectorNodes = sectorGraph.SectorArray.Nodes;
         for (int i = 0; i < sectorNodes.Length; i++)
         {
             int sectorSize = sectorNodes[i].Sector.Size;
@@ -46,7 +46,6 @@ public class SectorGraphDebugger
                 Vector3 winTopRightPos= new Vector3( winTopRightIndex.C * tileSize, yOffset, winTopRightIndex.R * tileSize);
                 Gizmos.DrawLine(sectorPos, (winBotLeftPos + winTopRightPos) / 2);
             }
-
         }
     }
     public void DebugWindowToSector(int offset)
@@ -54,8 +53,8 @@ public class SectorGraphDebugger
         Gizmos.color = Color.black;
         float yOffset = 0.02f;
         float tileSize = _pathfindingManager.TileSize;
-        FieldGraph sectorGraph = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).SectorGraph;
-        NativeArray<WindowNode> windowNodes = sectorGraph.WindowNodes.Nodes;
+        FieldGraph sectorGraph = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).FieldGraph;
+        NativeArray<WindowNode> windowNodes = sectorGraph.WindowArray.Nodes;
         for(int i = 0; i < windowNodes.Length; i++)
         {
             Index2 winBotLeftIndex = windowNodes[i].Window.BottomLeftBoundary;

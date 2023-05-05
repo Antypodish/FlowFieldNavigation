@@ -24,4 +24,8 @@
     {
         return new Index2(index / rowAmount, index % rowAmount);
     }
+    public override string ToString()
+    {
+        return "["+R+", "+C+"]";
+    }
 }
