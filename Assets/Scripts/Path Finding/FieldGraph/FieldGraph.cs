@@ -9,7 +9,7 @@ public struct FieldGraph
     
     NativeArray<byte> _costs;
     NativeArray<DirectionData> _directions;
-    AStarGrid _aStarGrid;
+    public AStarGrid _aStarGrid;
 
     int _fieldTileAmount;
     float _fieldTileSize;

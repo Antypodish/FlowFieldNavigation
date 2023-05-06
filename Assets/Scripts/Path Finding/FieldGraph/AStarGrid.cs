@@ -28,7 +28,7 @@ public struct AStarGrid
         targetTile.Enqueued = true;
         _integratedCosts[targetIndex] = targetTile;
         Enqueue(_directions[targetIndex]);
-
+        
         while (!_searchQueue.IsEmpty())
         {
             int index = _searchQueue.Dequeue();
@@ -37,7 +37,7 @@ public struct AStarGrid
             _integratedCosts[index] = tile;
             Enqueue(_directions[index]);
         }
-        return _integratedCosts;        
+        return _integratedCosts;
     }
     void Reset(Sector sector)
     {
@@ -76,14 +76,14 @@ public struct AStarGrid
         }
         if (notOnTop)
         {
-            for (int i = upperBoundIndex + _tileAmount; i < upperBoundIndex + _tileAmount - sector.Size; i--)
+            for (int i = upperBoundIndex + _tileAmount; i > upperBoundIndex + _tileAmount - sector.Size; i--)
             {
                 _integratedCosts[i] = new AStarTile(float.MaxValue, true);
             }
         }
         if (notOnRight)
         {
-            for (int i = upperBoundIndex + 1; i <= lowerBoundIndex + sector.Size; i -= _tileAmount)
+            for (int i = upperBoundIndex + 1; i >= lowerBoundIndex + sector.Size; i -= _tileAmount)
             {
                 _integratedCosts[i] = new AStarTile(float.MaxValue, true);
             }
@@ -121,26 +121,12 @@ public struct AStarGrid
             tile.Enqueued = true;
             _integratedCosts[directions.N] = tile;
         }
-        if (!_integratedCosts[directions.NE].Enqueued)
-        {
-            _searchQueue.Enqueue(directions.NE);
-            AStarTile tile = _integratedCosts[directions.NE];
-            tile.Enqueued = true;
-            _integratedCosts[directions.NE] = tile;
-        }
         if (!_integratedCosts[directions.E].Enqueued)
         {
             _searchQueue.Enqueue(directions.E);
             AStarTile tile = _integratedCosts[directions.E];
             tile.Enqueued = true;
             _integratedCosts[directions.E] = tile;
-        }
-        if (!_integratedCosts[directions.SE].Enqueued)
-        {
-            _searchQueue.Enqueue(directions.SE);
-            AStarTile tile = _integratedCosts[directions.SE];
-            tile.Enqueued = true;
-            _integratedCosts[directions.SE] = tile;
         }
         if (!_integratedCosts[directions.S].Enqueued)
         {
@@ -149,13 +135,6 @@ public struct AStarGrid
             tile.Enqueued = true;
             _integratedCosts[directions.S] = tile;
         }
-        if (!_integratedCosts[directions.SW].Enqueued)
-        {
-            _searchQueue.Enqueue(directions.SW);
-            AStarTile tile = _integratedCosts[directions.SW];
-            tile.Enqueued = true;
-            _integratedCosts[directions.SW] = tile;
-        }
         if (!_integratedCosts[directions.W].Enqueued)
         {
             _searchQueue.Enqueue(directions.W);
@@ -163,46 +142,39 @@ public struct AStarGrid
             tile.Enqueued = true;
             _integratedCosts[directions.W] = tile;
         }
-        if (!_integratedCosts[directions.NW].Enqueued)
-        {
-            _searchQueue.Enqueue(directions.NW);
-            AStarTile tile = _integratedCosts[directions.NW];
-            tile.Enqueued = true;
-            _integratedCosts[directions.NE] = tile;
-        }
     }
     float GetCost(DirectionData directions)
     {
         float costToReturn = float.MaxValue;
-        if (_integratedCosts[directions.N].IntegratedCost < costToReturn)
+        if (_integratedCosts[directions.N].IntegratedCost +1f < costToReturn)
         {
             costToReturn = _integratedCosts[directions.N].IntegratedCost + 1f;
         }
-        if (_integratedCosts[directions.NE].IntegratedCost < costToReturn)
+        if (_integratedCosts[directions.NE].IntegratedCost + 1.4f < costToReturn)
         {
             costToReturn = _integratedCosts[directions.NE].IntegratedCost + 1.4f;
         }
-        if (_integratedCosts[directions.E].IntegratedCost < costToReturn)
+        if (_integratedCosts[directions.E].IntegratedCost + 1f < costToReturn)
         {
             costToReturn = _integratedCosts[directions.E].IntegratedCost + 1f;
         }
-        if (_integratedCosts[directions.SE].IntegratedCost < costToReturn)
+        if (_integratedCosts[directions.SE].IntegratedCost + 1.4f < costToReturn)
         {
             costToReturn = _integratedCosts[directions.SE].IntegratedCost + 1.4f;
         }
-        if (_integratedCosts[directions.S].IntegratedCost < costToReturn)
+        if (_integratedCosts[directions.S].IntegratedCost + 1f < costToReturn)
         {
             costToReturn = _integratedCosts[directions.S].IntegratedCost + 1f;
         }
-        if (_integratedCosts[directions.SW].IntegratedCost < costToReturn)
+        if (_integratedCosts[directions.SW].IntegratedCost + 1.4f < costToReturn)
         {
             costToReturn = _integratedCosts[directions.SW].IntegratedCost + 1.4f;
         }
-        if (_integratedCosts[directions.W].IntegratedCost < costToReturn)
+        if (_integratedCosts[directions.W].IntegratedCost + 1f < costToReturn)
         {
             costToReturn = _integratedCosts[directions.W].IntegratedCost + 1f;
         }
-        if (_integratedCosts[directions.NW].IntegratedCost < costToReturn)
+        if (_integratedCosts[directions.NW].IntegratedCost + 1.4f < costToReturn)
         {
             costToReturn = _integratedCosts[directions.NW].IntegratedCost + 1.4f;
         }

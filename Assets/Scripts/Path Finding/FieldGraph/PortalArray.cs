@@ -1,4 +1,6 @@
 ﻿using Unity.Collections;
+using UnityEditor.Experimental.GraphView;
+using UnityEditor.PackageManager.UI;
 using UnityEngine.Analytics;
 
 public struct PortalArray
@@ -17,6 +19,14 @@ public struct PortalArray
         {
             Window window = windowNodes[i].Window;
             if (window.IsHorizontal())
+            {
+                ConfigureForHorizontal(Nodes);
+            }
+            else
+            {
+                ConfigureForVertical(Nodes);
+            }
+            void ConfigureForHorizontal(NativeArray<PortalNode> portalNodes)
             {
                 int porPtr = windowNodes[i].PorPtr;
                 int portalCount = 0;
@@ -47,7 +57,7 @@ public struct PortalArray
                     if ((costs[index1] == byte.MaxValue || costs[index2] == byte.MaxValue) && !wasUnwalkable)
                     {
                         Portal portal = GetPortalBetween(bound1, bound2, true);
-                        Nodes[porPtr + portalCount] = new PortalNode(portal, i, (porPtr + portalCount) * porToPorCnt, porToPorCnt);
+                        portalNodes[porPtr + portalCount] = new PortalNode(portal, i, (porPtr + portalCount) * porToPorCnt);
                         portalCount++;
                         wasUnwalkable = true;
                     }
@@ -55,10 +65,10 @@ public struct PortalArray
                 if (!wasUnwalkable)
                 {
                     Portal portal = GetPortalBetween(bound1, bound2, true);
-                    Nodes[porPtr + portalCount] = new PortalNode(portal, i, (porPtr + portalCount) * porToPorCnt, porToPorCnt);
+                    portalNodes[porPtr + portalCount] = new PortalNode(portal, i, (porPtr + portalCount) * porToPorCnt);
                 }
             }
-            else
+            void ConfigureForVertical(NativeArray<PortalNode> portalNodes)
             {
                 int porPtr = windowNodes[i].PorPtr;
                 int portalCount = 0;
@@ -89,7 +99,7 @@ public struct PortalArray
                     if ((costs[index1] == byte.MaxValue || costs[index2] == byte.MaxValue) && !wasUnwalkable)
                     {
                         Portal portal = GetPortalBetween(bound1, bound2, false);
-                        Nodes[porPtr + portalCount] = new PortalNode(portal, i, (porPtr + portalCount) * porToPorCnt, porToPorCnt);
+                        portalNodes[porPtr + portalCount] = new PortalNode(portal, i, (porPtr + portalCount) * porToPorCnt);
                         portalCount++;
                         wasUnwalkable = true;
                     }
@@ -97,7 +107,7 @@ public struct PortalArray
                 if (!wasUnwalkable)
                 {
                     Portal portal = GetPortalBetween(bound1, bound2, false);
-                    Nodes[porPtr + portalCount] = new PortalNode(portal, i, (porPtr + portalCount) * porToPorCnt, porToPorCnt);
+                    portalNodes[porPtr + portalCount] = new PortalNode(portal, i, (porPtr + portalCount) * porToPorCnt);
                 }
             }
         }
@@ -127,10 +137,11 @@ public struct PortalArray
             NativeArray<int> portalIndicies = sectorArray.GetPortalIndicies(sectorNodes[i], windowArray.Nodes);
             for(int j = 0; j < portalIndicies.Length; j++)
             {
+                //for each portal, set it "target" and calculate distances of others
                 PortalNode sourcePortalNode = Nodes[portalIndicies[j]];
                 Portal sourcePortal = sourcePortalNode.Portal;
-                Index2 sourceIndex2 = pickedSector.ContainsIndex(sourcePortal.Index1) ? sourcePortal.Index1 : sourcePortal.Index2;
-                NativeArray<AStarTile> integratedCosts = aStarGrid.GetIntegratedCostsFor(pickedSector, sourceIndex2);
+                Index2 sourceIndex = pickedSector.ContainsIndex(sourcePortal.Index1) ? sourcePortal.Index1 : sourcePortal.Index2;
+                NativeArray<AStarTile> integratedCosts = aStarGrid.GetIntegratedCostsFor(pickedSector, sourceIndex);
 
                 for (int k = j + 1; k < portalIndicies.Length; k++)
                 {
@@ -150,7 +161,6 @@ public struct PortalArray
                     //set for source
                     sourcePortalNode.PorToPorCnt++;
                     PorPtrs[sourcePortalNode.PorToPorPtr + sourcePortalNode.PorToPorCnt - 1] = new PortalToPortal(cost, portalIndicies[k]);
-
                 }
                 Nodes[portalIndicies[j]] = sourcePortalNode;
             }

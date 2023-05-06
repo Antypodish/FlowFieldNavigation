@@ -9,6 +9,7 @@ public class TerrainGenerator : MonoBehaviour
     [SerializeField] MeshFilter _meshFilter;
     [Header("Random Generator")]
     [SerializeField][Range(1,10)] float _resolution;    //5 good
+    [SerializeField] SimulationState _simulationState;
 
     [HideInInspector] public WalkabilityData WalkabilityData;
 
@@ -26,7 +27,7 @@ public class TerrainGenerator : MonoBehaviour
         SetTriangles();
         UpdateMesh();
 
-        WalkabilityData = new WalkabilityData(TileSize, TileAmount, _resolution);
+        WalkabilityData = new WalkabilityData(TileSize, TileAmount, _resolution, _simulationState);
 
 
         void ConfigureMesh()
@@ -60,4 +61,9 @@ public class TerrainGenerator : MonoBehaviour
             _meshCollider.sharedMesh = _mesh;
         }
     }
+}
+public enum SimulationState : byte
+{
+    PerlinNoise,
+    FullWalkable
 }

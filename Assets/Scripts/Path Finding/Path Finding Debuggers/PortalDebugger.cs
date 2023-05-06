@@ -4,6 +4,8 @@ using UnityEngine.Analytics;
 using UnityEditor;
 using System.ComponentModel;
 using Unity.VisualScripting;
+using System.Collections.Generic;
+using static UnityEditor.PlayerSettings;
 
 public class PortalDebugger
 {
@@ -53,10 +55,11 @@ public class PortalDebugger
         FieldGraph fieldGraph = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).FieldGraph;
         SetClickedPortalNode(fieldGraph);
 
+        //debug clicked portal
         Gizmos.color = Color.red;
         Gizmos.DrawSphere(GetPositionOf(_clickedPortalNode.Portal), 0.35f);
 
-        //draw costs of neighbours
+        //debug neighbours of clicked portal
         NativeArray<PortalToPortal> porPtrs = fieldGraph.PortalArray.PorPtrs;
         NativeArray<PortalNode> portalNodes = fieldGraph.PortalArray.Nodes;
 
@@ -67,31 +70,44 @@ public class PortalDebugger
             float dist = porPtrs[_clickedPortalNode.PorToPorPtr + i].Distance;
 
             SectorNode[] sectorNodesOfPortal = fieldGraph.GetSectorNodesOf(_clickedPortalNode);
-            Index2 portalIndex1 = portalNodes[index].Portal.Index1;
-            Index2 portalIndex2 = portalNodes[index].Portal.Index2;
-            Index2 pickedPortalIndex = portalIndex1;
+            Portal portal = portalNodes[index].Portal;
+            Index2 portalIndex1 = portal.Index1;
+            Index2 portalIndex2 = portal.Index2;
 
             if (sectorNodesOfPortal[0].Sector.ContainsIndex(portalIndex1))
             {
-                pickedPortalIndex = portalIndex1;
+                DrawDistanceAtIndex(portalIndex1, dist);
+                DrawDirectionOfPortal(portal, portalIndex1);
             }
             else if (sectorNodesOfPortal[0].Sector.ContainsIndex(portalIndex2))
             {
-                pickedPortalIndex = portalIndex2;
+                DrawDistanceAtIndex(portalIndex2, dist);
+                DrawDirectionOfPortal(portal, portalIndex2);
 
             }
             if (sectorNodesOfPortal[1].Sector.ContainsIndex(portalIndex1))
             {
-                pickedPortalIndex = portalIndex1;
+                DrawDistanceAtIndex(portalIndex1, dist);
+                DrawDirectionOfPortal(portal, portalIndex1);
             }
             else if (sectorNodesOfPortal[1].Sector.ContainsIndex(portalIndex2))
             {
-                pickedPortalIndex = portalIndex2;
-
+                DrawDistanceAtIndex(portalIndex2, dist);
+                DrawDirectionOfPortal(portal, portalIndex2);
             }
+        }
+        //HELPERS
+        void DrawDistanceAtIndex(Index2 index, float distance)
+        {
+            Vector3 pos = new Vector3(tileSize / 2 + tileSize * index.C, yOffset, tileSize / 2 + tileSize * index.R);
+            Handles.Label(pos, distance.ToString());
+        }
+        void DrawDirectionOfPortal(Portal portal, Index2 index)
+        {
+            Vector3 start = GetPositionOf(portal);
+            Vector3 target = new Vector3(tileSize / 2 + tileSize * index.C, yOffset, tileSize / 2 + tileSize * index.R);
 
-            Vector3 pos = new Vector3(tileSize / 2 + tileSize * pickedPortalIndex.C, yOffset, tileSize / 2 + tileSize * pickedPortalIndex.R);
-            Handles.Label(pos, dist.ToString());
+            Gizmos.DrawLine(start, target);
         }
     }
     void SetClickedSectorNode(FieldGraph fieldGraph)

@@ -5,17 +5,18 @@ public class WalkabilityData
     public float TileSize;
     public int TileAmount;
     public WalkabilityCell[][] WalkabilityMatrix;
-
     float _resolution;
 
-    public WalkabilityData(float tileSize, int tileAmount, float resolution)
+    public WalkabilityData(float tileSize, int tileAmount, float resolution, SimulationState simulationState)
     {
         TileSize = tileSize;
         TileAmount = tileAmount;
         _resolution = resolution;
 
         InnitializeWalkabilityMatrix();
-        SimulatePerlinNoise();
+
+        if(simulationState == SimulationState.FullWalkable) { SimulateFullyWalkable(); }
+        if(simulationState == SimulationState.PerlinNoise) { SimulatePerlinNoise(); }
         SetEdgesUnwalkable();
 
         void InnitializeWalkabilityMatrix()

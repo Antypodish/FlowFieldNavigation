@@ -465,7 +465,8 @@ MonoBehaviour:
   _windowSectors: 0
   _portals: 1
   _portalsOnSector: 0
-  _costsToPortal: 1
+  _costsToPortal: 0
+  _AStar: 1
 --- !u!1001 &1284591847240803008
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -497,6 +498,11 @@ PrefabInstance:
         type: 3}
       propertyPath: _resolution
       value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
+        type: 3}
+      propertyPath: _simulationState
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207641, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
