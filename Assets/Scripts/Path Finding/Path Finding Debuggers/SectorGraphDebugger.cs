@@ -1,4 +1,6 @@
-﻿using Unity.Collections;
+﻿#if (UNITY_EDITOR) 
+
+using Unity.Collections;
 using UnityEngine;
 
 public class SectorGraphDebugger
@@ -86,3 +88,5 @@ public class SectorGraphDebugger
         }
     }
 }
+
+#endif

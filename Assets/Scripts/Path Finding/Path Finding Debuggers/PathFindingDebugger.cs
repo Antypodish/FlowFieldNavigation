@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿#if (UNITY_EDITOR) 
+
+using UnityEngine;
 
 public class PathFindingDebugger : MonoBehaviour
 {
@@ -54,3 +56,4 @@ public class PathFindingDebugger : MonoBehaviour
         Five = 5
     }
 }
+#endif

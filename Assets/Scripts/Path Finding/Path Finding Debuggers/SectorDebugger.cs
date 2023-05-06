@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿#if (UNITY_EDITOR) 
+
+using UnityEngine;
 
 public class SectorDebugger
 {
@@ -30,3 +32,4 @@ public class SectorDebugger
         }
     }
 }
+#endif

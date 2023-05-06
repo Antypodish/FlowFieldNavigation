@@ -13,9 +13,7 @@ public struct SectorArray
     public void ConfigureSectorNodes(int totalTileAmount, int sectorSize)
     {
         int sectorMatrixSize = totalTileAmount / sectorSize;
-        int sectorTotalSize = sectorMatrixSize * sectorMatrixSize;
 
-        Nodes = new NativeArray<SectorNode>(sectorTotalSize, Allocator.Persistent);
         int iterableSecToWinPtr = 0;
         for (int r = 0; r < sectorMatrixSize; r++)
         {

@@ -1,4 +1,6 @@
-﻿using Unity.Collections;
+﻿#if (UNITY_EDITOR) 
+
+using Unity.Collections;
 using UnityEngine;
 
 public class TilePositionDebugger
@@ -22,3 +24,5 @@ public class TilePositionDebugger
 
     }
 }
+
+#endif

@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿#if (UNITY_EDITOR) 
+
+using UnityEngine;
 using Unity.Collections;
 using UnityEditor;
 
@@ -85,6 +87,5 @@ public class CostFieldDebugger
             }            
         }
     }
-
-    
 }
+#endif

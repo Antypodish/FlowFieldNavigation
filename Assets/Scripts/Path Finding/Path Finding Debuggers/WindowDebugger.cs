@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿#if (UNITY_EDITOR) 
+
+using UnityEngine;
 public class WindowDebugger
 {
     PathfindingManager _pathfindingManager;
@@ -73,3 +75,5 @@ public class WindowDebugger
         }
     }
 }
+
+#endif

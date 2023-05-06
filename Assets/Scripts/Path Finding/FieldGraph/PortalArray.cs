@@ -1,7 +1,4 @@
 ﻿using Unity.Collections;
-using UnityEditor.Experimental.GraphView;
-using UnityEditor.PackageManager.UI;
-using UnityEngine.Analytics;
 
 public struct PortalArray
 {
@@ -127,7 +124,7 @@ public struct PortalArray
             return portal;
         }
     }
-    public void ConfigurePortalToPortalPtrs(AStarGrid aStarGrid, SectorArray sectorArray, WindowArray windowArray, int tileAmount)
+    public void ConfigurePortalToPortalPtrs(AStarGrid aStarGrid, SectorArray sectorArray, WindowArray windowArray, NativeArray<byte> costs, NativeArray<DirectionData> directions, int tileAmount)
     {
         NativeArray<SectorNode> sectorNodes = sectorArray.Nodes;
 
@@ -141,7 +138,7 @@ public struct PortalArray
                 PortalNode sourcePortalNode = Nodes[portalIndicies[j]];
                 Portal sourcePortal = sourcePortalNode.Portal;
                 Index2 sourceIndex = pickedSector.ContainsIndex(sourcePortal.Index1) ? sourcePortal.Index1 : sourcePortal.Index2;
-                NativeArray<AStarTile> integratedCosts = aStarGrid.GetIntegratedCostsFor(pickedSector, sourceIndex);
+                NativeArray<AStarTile> integratedCosts = aStarGrid.GetIntegratedCostsFor(pickedSector, sourceIndex, costs, directions);
 
                 for (int k = j + 1; k < portalIndicies.Length; k++)
                 {

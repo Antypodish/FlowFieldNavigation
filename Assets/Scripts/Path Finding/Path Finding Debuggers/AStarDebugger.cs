@@ -1,6 +1,6 @@
-﻿
+﻿#if (UNITY_EDITOR) 
+
 using Unity.Collections;
-using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 
@@ -22,6 +22,8 @@ public class AStarDebugger
     {
         float yOffset = .2f;
         FieldGraph fieldGraph = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).FieldGraph;
+        NativeArray<byte> costs = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).Costs;
+        NativeArray<DirectionData> directions = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).Directions;
         SetClickedPortalNode(fieldGraph);
         Portal clickedPortal = _clickedPortalNode.Portal;
         AStarGrid astartGrid = fieldGraph._aStarGrid;
@@ -32,7 +34,7 @@ public class AStarDebugger
         void DebugAStarFor(Sector sector)
         {
             Index2 targetIndex = sector.ContainsIndex(clickedPortal.Index1) ? clickedPortal.Index1 : clickedPortal.Index2;
-            NativeArray<AStarTile> aStarTiles = astartGrid.GetIntegratedCostsFor(sector, targetIndex);
+            NativeArray<AStarTile> aStarTiles = astartGrid.GetIntegratedCostsFor(sector, targetIndex, costs, directions);
 
             Index2 lowerBound = sector.StartIndex;
             Index2 upperBound = new Index2(lowerBound.R + sector.Size, lowerBound.C + sector.Size);
@@ -77,5 +79,5 @@ public class AStarDebugger
             }
         }
     }
-    
 }
+#endif

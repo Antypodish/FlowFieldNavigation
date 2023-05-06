@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using Unity.Collections;
+using Unity.Burst;
+using Unity.Jobs;
 
 public struct FieldGraph
 {
@@ -15,6 +17,7 @@ public struct FieldGraph
     float _fieldTileSize;
     int _sectorTileAmount;
     int _sectorMatrixSize;
+    int _portalPerWindow;
     public FieldGraph(int sectorSize, int fieldTileAmount, int costFieldOffset, float fieldTileSize, NativeArray<byte> costs, NativeArray<DirectionData> directions)
     {
 
@@ -38,20 +41,22 @@ public struct FieldGraph
         _fieldTileSize = fieldTileSize;
         _sectorTileAmount = sectorSize;
         _sectorMatrixSize = sectorMatrixSize;
+        _portalPerWindow = portalPerWindow;
         _costs = costs;
         _directions = directions;
-        _aStarGrid = new AStarGrid(_costs, _directions, fieldTileAmount);
+        _aStarGrid = new AStarGrid(fieldTileAmount);
         SectorArray = new SectorArray(sectorAmount, secToWinPtrAmount);
         WindowArray = new WindowArray(windowAmount, winToSecPtrAmount);
         PortalArray = new PortalArray(portalAmount, porToPorPtrAmount);
-
-        //configuring fields
-        SectorArray.ConfigureSectorNodes(fieldTileAmount, sectorSize);
-        WindowArray.ConfigureWindowNodes(SectorArray.Nodes, _costs, portalPerWindow, _sectorMatrixSize, fieldTileAmount);
+    }
+    public void Configure()
+    {
+        SectorArray.ConfigureSectorNodes(_fieldTileAmount, _sectorTileAmount);
+        WindowArray.ConfigureWindowNodes(SectorArray.Nodes, _costs, _portalPerWindow, _sectorMatrixSize, _fieldTileAmount);
         SectorArray.ConfigureSectorToWindowPoiners(WindowArray.Nodes);
         WindowArray.ConfigureWindowToSectorPointers(SectorArray.Nodes);
-        PortalArray.ConfigurePortalNodes(WindowArray.Nodes, _costs, fieldTileAmount, portalPerWindow * 7 - 1);
-        PortalArray.ConfigurePortalToPortalPtrs(_aStarGrid, SectorArray, WindowArray, fieldTileAmount);
+        PortalArray.ConfigurePortalNodes(WindowArray.Nodes, _costs, _fieldTileAmount, _portalPerWindow * 8 - 2);
+        PortalArray.ConfigurePortalToPortalPtrs(_aStarGrid, SectorArray, WindowArray, _costs, _directions, _fieldTileAmount);
     }
     public WindowNode[] GetWindowNodesOf(SectorNode sectorNode)
     {
@@ -90,6 +95,22 @@ public struct FieldGraph
         int index = Index2.ToIndex(index2, _sectorTileAmount);
         return SectorArray.Nodes[index];
     }
+    
+    public void ConfigureSectorNodes() => SectorArray.ConfigureSectorNodes(_fieldTileAmount, _sectorTileAmount);
+    public void ConfigureWindowNodes() => WindowArray.ConfigureWindowNodes(SectorArray.Nodes, _costs, _portalPerWindow, _sectorMatrixSize, _fieldTileAmount);
+    public void ConfigureSectorToWindowPoiners() => SectorArray.ConfigureSectorToWindowPoiners(WindowArray.Nodes);
+    public void ConfigureWindowToSectorPointers() => WindowArray.ConfigureWindowToSectorPointers(SectorArray.Nodes);
+    public void ConfigurePortalNodes() => PortalArray.ConfigurePortalNodes(WindowArray.Nodes, _costs, _fieldTileAmount, _portalPerWindow * 8 - 2);
+    public void ConfigurePortalToPortalPtrs() => PortalArray.ConfigurePortalToPortalPtrs(_aStarGrid, SectorArray, WindowArray, _costs, _directions, _fieldTileAmount);
+}
+[BurstCompile]
+public struct FieldGraphJob : IJob
+{
+    public FieldGraph FieldGraph;
 
+    public void Execute()
+    {
+        FieldGraph.Configure();
+    }
 }
 

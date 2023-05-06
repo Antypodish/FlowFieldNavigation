@@ -466,7 +466,7 @@ MonoBehaviour:
   _portals: 1
   _portalsOnSector: 0
   _costsToPortal: 0
-  _AStar: 1
+  _AStar: 0
 --- !u!1001 &1284591847240803008
 PrefabInstance:
   m_ObjectHideFlags: 0

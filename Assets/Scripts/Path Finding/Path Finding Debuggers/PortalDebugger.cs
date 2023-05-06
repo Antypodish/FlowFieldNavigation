@@ -1,11 +1,9 @@
-﻿using UnityEngine;
+﻿#if (UNITY_EDITOR) 
+
+using UnityEngine;
 using Unity.Collections;
-using UnityEngine.Analytics;
 using UnityEditor;
-using System.ComponentModel;
-using Unity.VisualScripting;
-using System.Collections.Generic;
-using static UnityEditor.PlayerSettings;
+
 
 public class PortalDebugger
 {
@@ -157,3 +155,4 @@ public class PortalDebugger
         return (pos1 + pos2) / 2;
     }
 }
+#endif

@@ -5,41 +5,37 @@ public struct AStarGrid
 {
     int _tileAmount;
     NativeArray<AStarTile> _integratedCosts;
-    NativeArray<byte> _costs;
-    NativeArray<DirectionData> _directions;
     NativeQueue<int> _searchQueue;
     
-    public AStarGrid(NativeArray<byte> costs, NativeArray<DirectionData> directions, int tileAmount)
+    public AStarGrid(int tileAmount)
     {
         _tileAmount = tileAmount;
-        _costs = costs;
-        _directions = directions;
-        _integratedCosts = new NativeArray<AStarTile>(costs.Length, Allocator.Persistent);
+        _integratedCosts = new NativeArray<AStarTile>(tileAmount * tileAmount, Allocator.Persistent);
         _searchQueue = new NativeQueue<int>(Allocator.Persistent);
     }
 
-    public NativeArray<AStarTile> GetIntegratedCostsFor(Sector sector, Index2 target)
+    public NativeArray<AStarTile> GetIntegratedCostsFor(Sector sector, Index2 target, NativeArray<byte> costs, NativeArray<DirectionData> directions)
     {
-        Reset(sector);
+        Reset(sector, costs);
         int targetIndex = Index2.ToIndex(target, _tileAmount);
 
         AStarTile targetTile = _integratedCosts[targetIndex];
         targetTile.IntegratedCost = 0f;
         targetTile.Enqueued = true;
         _integratedCosts[targetIndex] = targetTile;
-        Enqueue(_directions[targetIndex]);
+        Enqueue(directions[targetIndex]);
         
         while (!_searchQueue.IsEmpty())
         {
             int index = _searchQueue.Dequeue();
             AStarTile tile = _integratedCosts[index];
-            tile.IntegratedCost = GetCost(_directions[index]);
+            tile.IntegratedCost = GetCost(directions[index]);
             _integratedCosts[index] = tile;
-            Enqueue(_directions[index]);
+            Enqueue(directions[index]);
         }
         return _integratedCosts;
     }
-    void Reset(Sector sector)
+    void Reset(Sector sector, NativeArray<byte> costs)
     {
         Index2 lowerBound = sector.StartIndex;
         Index2 upperBound = new Index2(sector.StartIndex.R + sector.Size -1 , sector.StartIndex.C + sector.Size - 1);
@@ -50,7 +46,7 @@ public struct AStarGrid
         {
             for(int i = r; i < r + sector.Size; i++)
             {
-                if (_costs[i] == byte.MaxValue)
+                if (costs[i] == byte.MaxValue)
                 {
                     _integratedCosts[i] = new AStarTile(float.MaxValue, true);
                     continue;

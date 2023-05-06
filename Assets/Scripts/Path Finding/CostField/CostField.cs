@@ -1,4 +1,5 @@
 ﻿using Unity.Collections;
+using Unity.Jobs;
 
 public class CostField
 {
@@ -8,6 +9,7 @@ public class CostField
     public NativeArray<DirectionData> Directions;
 
     float _fieldTileSize;
+    JobHandle _fieldGraphJobHandle;
     public CostField(WalkabilityData walkabilityData, int offset, int sectorSize)
     {
         _fieldTileSize = walkabilityData.TileSize;
@@ -73,6 +75,19 @@ public class CostField
             {
                 Directions[i] = new DirectionData(i, tileAmount);
             }
+        }
+    }
+    public void StartJobs()
+    {
+        FieldGraphJob _fieldGraphJob;
+        _fieldGraphJob = new FieldGraphJob() { FieldGraph = FieldGraph };
+        _fieldGraphJobHandle = _fieldGraphJob.Schedule();
+    }
+    public void EndJobsIfCompleted()
+    {
+        if (_fieldGraphJobHandle.IsCompleted)
+        {
+            _fieldGraphJobHandle.Complete();
         }
     }
 }
