@@ -1,4 +1,5 @@
 ﻿using Unity.Burst;
+using Unity.Collections;
 using Unity.Jobs;
 
 [BurstCompile]
@@ -6,17 +7,25 @@ public struct CostFieldEditJob : IJob
 {
     public Index2 Bound1;
     public Index2 Bound2;
-    public FieldGraph FieldGraph;
+    public NativeArray<SectorNode> SectorNodes;
+    public NativeArray<int> WinPtrs;
+    public NativeArray<WindowNode> WindowNodes;
+    public NativeArray<int> SecPtrs;
+    public NativeArray<PortalNode> PortalNodes;
+    public NativeArray<PortalToPortal> PorPtrs;
 
-    public CostFieldEditJob(FieldGraph fieldGraph, Index2 bound1, Index2 bound2)
-    {
-        FieldGraph = fieldGraph;
-        Bound1 = bound1;
-        Bound2 = bound2;
-    }
+    public AStarGrid _aStarGrid;
+    public NativeArray<byte> _costs;
+    public NativeArray<DirectionData> _directions;
+
+    public int _fieldTileAmount;
+    public float _fieldTileSize;
+    public int _sectorTileAmount;
+    public int _sectorMatrixSize;
+    public int _portalPerWindow;
+
     public void Execute()
     {
-        FieldGraph.SetUnwalkable(Bound1, Bound2);
+
     }
-}
 }

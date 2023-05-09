@@ -50,14 +50,49 @@ public struct FieldGraph
         WindowArray = new WindowArray(windowAmount, winToSecPtrAmount);
         PortalArray = new PortalArray(portalAmount, porToPorPtrAmount);
     }
-    public void Configure()
+    public FieldGraphConfigurationJob GetConfigJob()
     {
-        SectorArray.ConfigureSectorNodes(_fieldTileAmount, _sectorTileAmount);
-        WindowArray.ConfigureWindowNodes(SectorArray.Nodes, _costs, _portalPerWindow, _sectorMatrixSize, _fieldTileAmount);
-        SectorArray.ConfigureSectorToWindowPoiners(WindowArray.Nodes);
-        WindowArray.ConfigureWindowToSectorPointers(SectorArray.Nodes);
-        PortalArray.ConfigurePortalNodes(WindowArray.Nodes, _costs, _fieldTileAmount, _portalPerWindow * 8 - 2);
-        PortalArray.ConfigurePortalToPortalPtrs(_aStarGrid, SectorArray, WindowArray, _costs, _directions, _fieldTileAmount);
+        return new FieldGraphConfigurationJob()
+        {
+            SectorNodes = SectorArray.Nodes,
+            WinPtrs = SectorArray.WinPtrs,
+            WindowNodes = WindowArray.Nodes,
+            SecPtrs = WindowArray.SecPtrs,
+            PortalNodes = PortalArray.Nodes,
+            PorPtrs = PortalArray.PorPtrs,
+            _aStarGrid = _aStarGrid,
+            _costs = _costs,
+            _directions = _directions,
+
+            _fieldTileAmount = _fieldTileAmount,
+            _fieldTileSize = _fieldTileSize,
+            _sectorTileAmount = _sectorTileAmount,
+            _sectorMatrixSize = _sectorMatrixSize,
+            _portalPerWindow = _portalPerWindow
+        };
+    }
+    public CostFieldEditJob GetEditJob(Index2 bound1, Index2 bound2)
+    {
+        return new CostFieldEditJob()
+        {
+            Bound1 = bound1,
+            Bound2 = bound2,
+            SectorNodes = SectorArray.Nodes,
+            WinPtrs = SectorArray.WinPtrs,
+            WindowNodes = WindowArray.Nodes,
+            SecPtrs = WindowArray.SecPtrs,
+            PortalNodes = PortalArray.Nodes,
+            PorPtrs = PortalArray.PorPtrs,
+            _aStarGrid = _aStarGrid,
+            _costs = _costs,
+            _directions = _directions,
+
+            _fieldTileAmount = _fieldTileAmount,
+            _fieldTileSize = _fieldTileSize,
+            _sectorTileAmount = _sectorTileAmount,
+            _sectorMatrixSize = _sectorMatrixSize,
+            _portalPerWindow = _portalPerWindow
+        };
     }
     public NativeArray<WindowNode> GetWindowNodesOf(SectorNode sectorNode)
     {
@@ -136,15 +171,5 @@ public struct FieldGraph
     public void ConfigureWindowToSectorPointers() => WindowArray.ConfigureWindowToSectorPointers(SectorArray.Nodes);
     public void ConfigurePortalNodes() => PortalArray.ConfigurePortalNodes(WindowArray.Nodes, _costs, _fieldTileAmount, _portalPerWindow * 8 - 2);
     public void ConfigurePortalToPortalPtrs() => PortalArray.ConfigurePortalToPortalPtrs(_aStarGrid, SectorArray, WindowArray, _costs, _directions, _fieldTileAmount);
-}
-[BurstCompile]
-public struct FieldGraphJob : IJob
-{
-    public FieldGraph FieldGraph;
-
-    public void Execute()
-    {
-        FieldGraph.Configure();
-    }
 }
 

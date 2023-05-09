@@ -10,7 +10,7 @@ public class CostField
     public NativeArray<DirectionData> Directions;
 
     float _fieldTileSize;
-    JobHandle _fieldGraphJobHandle;
+    JobHandle _fieldGraphConfigJobHandle;
     public CostField(WalkabilityData walkabilityData, int offset, int sectorSize)
     {
         _fieldTileSize = walkabilityData.TileSize;
@@ -80,23 +80,22 @@ public class CostField
     }
     public void StartJobs()
     {
-        FieldGraphJob _fieldGraphJob;
-        _fieldGraphJob = new FieldGraphJob() { FieldGraph = FieldGraph };
-        _fieldGraphJobHandle = _fieldGraphJob.Schedule();
+        FieldGraphConfigurationJob _fieldGraphConfigJob = FieldGraph.GetConfigJob();
+        _fieldGraphConfigJobHandle = _fieldGraphConfigJob.Schedule();
     }
     public void EndJobsIfCompleted()
     {
-        if (_fieldGraphJobHandle.IsCompleted)
+        if (_fieldGraphConfigJobHandle.IsCompleted)
         {
-            _fieldGraphJobHandle.Complete();
+            _fieldGraphConfigJobHandle.Complete();
         }
     }
     public void ForceEndJob()
     {
-        _fieldGraphJobHandle.Complete();
+        _fieldGraphConfigJobHandle.Complete();
     }
     public CostFieldEditJob GetEditJob(Index2 bound1, Index2 bound2)
     {
-        return new CostFieldEditJob(FieldGraph, bound1, bound2);
+        return FieldGraph.GetEditJob(bound1, bound2);
     }
 }
