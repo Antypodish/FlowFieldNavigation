@@ -60,15 +60,15 @@ public struct FieldGraph
             SecPtrs = WindowArray.SecPtrs,
             PortalNodes = PortalArray.Nodes,
             PorPtrs = PortalArray.PorPtrs,
-            _aStarGrid = _aStarGrid,
             _costs = _costs,
             _directions = _directions,
-
             _fieldTileAmount = _fieldTileAmount,
             _fieldTileSize = _fieldTileSize,
             _sectorTileAmount = _sectorTileAmount,
             _sectorMatrixSize = _sectorMatrixSize,
-            _portalPerWindow = _portalPerWindow
+            _portalPerWindow = _portalPerWindow,
+            _integratedCosts = _aStarGrid._integratedCosts,
+            _searchQueue = _aStarGrid._searchQueue,
         };
     }
     public CostFieldEditJob GetEditJob(Index2 bound1, Index2 bound2)
@@ -172,4 +172,14 @@ public struct FieldGraph
     public void ConfigurePortalNodes() => PortalArray.ConfigurePortalNodes(WindowArray.Nodes, _costs, _fieldTileAmount, _portalPerWindow * 8 - 2);
     public void ConfigurePortalToPortalPtrs() => PortalArray.ConfigurePortalToPortalPtrs(_aStarGrid, SectorArray, WindowArray, _costs, _directions, _fieldTileAmount);
 }
+public struct AStarTile
+{
+    public bool Enqueued;
+    public float IntegratedCost;
 
+    public AStarTile(float integratedCost, bool enqueued)
+    {
+        Enqueued = enqueued;
+        IntegratedCost = integratedCost;
+    }
+}

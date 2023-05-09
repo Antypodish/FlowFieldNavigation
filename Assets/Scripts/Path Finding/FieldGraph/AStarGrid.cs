@@ -4,9 +4,9 @@ using UnityEngine;
 public struct AStarGrid
 {
     int _tileAmount;
-    NativeArray<AStarTile> _integratedCosts;
-    NativeQueue<int> _searchQueue;
-    
+    public NativeArray<AStarTile> _integratedCosts;
+    public NativeQueue<int> _searchQueue;
+
     public AStarGrid(int tileAmount)
     {
         _tileAmount = tileAmount;
@@ -28,7 +28,7 @@ public struct AStarGrid
         targetTile.Enqueued = true;
         _integratedCosts[targetIndex] = targetTile;
         Enqueue(directions[targetIndex]);
-        
+
         while (!_searchQueue.IsEmpty())
         {
             int index = _searchQueue.Dequeue();
@@ -42,13 +42,13 @@ public struct AStarGrid
     void Reset(Sector sector, NativeArray<byte> costs)
     {
         Index2 lowerBound = sector.StartIndex;
-        Index2 upperBound = new Index2(sector.StartIndex.R + sector.Size -1 , sector.StartIndex.C + sector.Size - 1);
+        Index2 upperBound = new Index2(sector.StartIndex.R + sector.Size - 1, sector.StartIndex.C + sector.Size - 1);
         int lowerBoundIndex = Index2.ToIndex(lowerBound, _tileAmount);
         int upperBoundIndex = Index2.ToIndex(upperBound, _tileAmount);
 
-        for(int r = lowerBoundIndex; r < lowerBoundIndex + sector.Size * _tileAmount; r += _tileAmount)
+        for (int r = lowerBoundIndex; r < lowerBoundIndex + sector.Size * _tileAmount; r += _tileAmount)
         {
-            for(int i = r; i < r + sector.Size; i++)
+            for (int i = r; i < r + sector.Size; i++)
             {
                 if (costs[i] == byte.MaxValue)
                 {
@@ -166,16 +166,5 @@ public struct AStarGrid
         if (wCost < costToReturn) { costToReturn = wCost; }
         if (nwCost < costToReturn) { costToReturn = nwCost; }
         return costToReturn;
-    }
-}
-public struct AStarTile
-{
-    public bool Enqueued; 
-    public float IntegratedCost;
-
-    public AStarTile(float integratedCost, bool enqueued)
-    {
-        Enqueued = enqueued;
-        IntegratedCost = integratedCost;
     }
 }
