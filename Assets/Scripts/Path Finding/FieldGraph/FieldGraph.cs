@@ -1,7 +1,8 @@
-﻿using UnityEngine;
+﻿using Unity.Burst;
 using Unity.Collections;
-using Unity.Burst;
 using Unity.Jobs;
+using UnityEngine;
+using Unity.Mathematics;
 
 public struct FieldGraph
 {
@@ -88,12 +89,46 @@ public struct FieldGraph
         return sectorNodes;
 
     }
+    public NativeArray<int> GetWindowNodeIndiciesOf(SectorNode sectorNode)
+    {
+        NativeArray<int> windowNodeIndicies = new NativeArray<int>(sectorNode.SecToWinCnt, Allocator.Temp);
+        for (int i = sectorNode.SecToWinPtr; i < sectorNode.SecToWinPtr + sectorNode.SecToWinCnt; i++)
+        {
+            windowNodeIndicies[i - sectorNode.SecToWinPtr] = SectorArray.WinPtrs[i];
+        }
+        return windowNodeIndicies;
+    }
+    public NativeArray<int> GetSectorNodeIndiciesOf(WindowNode windowNode)
+    {
+        NativeArray<int> sectorNodeIndicies = new NativeArray<int>(windowNode.WinToSecCnt, Allocator.Temp);
+        for (int i = windowNode.WinToSecPtr; i < windowNode.WinToSecPtr + windowNode.WinToSecCnt; i++)
+        {
+            sectorNodeIndicies[i - windowNode.WinToSecPtr] = WindowArray.SecPtrs[i];
+        }
+        return sectorNodeIndicies;
+    }
+    public NativeArray<int> GetSectorNodeIndiciesOf(PortalNode portal)
+    {
+        WindowNode windowNodeIndex = WindowArray.Nodes[portal.WinPtr];
+        NativeArray<int> sectorNodeIndicies = new NativeArray<int>(2, Allocator.Temp);
+
+        for (int i = windowNodeIndex.WinToSecPtr; i < windowNodeIndex.WinToSecPtr + windowNodeIndex.WinToSecCnt; i++)
+        {
+            sectorNodeIndicies[i - windowNodeIndex.WinToSecPtr] = WindowArray.SecPtrs[i];
+        }
+        return sectorNodeIndicies;
+    }
     public SectorNode GetSectorNodeAt(Vector3 pos)
     {
         float sectorSize = _sectorTileAmount * _fieldTileSize;
         Index2 index2 = new Index2(Mathf.FloorToInt(pos.z / sectorSize), Mathf.FloorToInt(pos.x / sectorSize));
         int index = Index2.ToIndex(index2, _sectorMatrixSize);
         return SectorArray.Nodes[index];
+    }
+    public void SetUnwalkable(Index2 bound1, Index2 bound2)
+    {
+        _costs[Index2.ToIndex(bound1, _fieldTileAmount)] = byte.MaxValue;
+        _costs[Index2.ToIndex(bound2, _fieldTileAmount)] = byte.MaxValue;
     }
     public void ConfigureSectorNodes() => SectorArray.ConfigureSectorNodes(_fieldTileAmount, _sectorTileAmount);
     public void ConfigureWindowNodes() => WindowArray.ConfigureWindowNodes(SectorArray.Nodes, _costs, _portalPerWindow, _sectorMatrixSize, _fieldTileAmount);

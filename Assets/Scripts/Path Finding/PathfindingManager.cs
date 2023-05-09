@@ -13,6 +13,7 @@ public class PathfindingManager : MonoBehaviour
     [HideInInspector] public int TileAmount;
     private void Start()
     {
+        JobManager = new PathfindingJobManager();
         CostFieldProducer = new CostFieldProducer(_terrainGenerator.WalkabilityData);
         CostFieldProducer.StartCostFieldProduction(0, _maxCostfieldOffset, 10);
 
@@ -21,6 +22,10 @@ public class PathfindingManager : MonoBehaviour
         TilePositions = new NativeArray<Vector3>(TileAmount * TileAmount, Allocator.Persistent);
         CalculateTilePositions();
         CostFieldProducer.ForceCompleteCostFieldProduction();
+    }
+    private void Update()
+    {
+        JobManager.Update();
     }
     void CalculateTilePositions()
     {
@@ -33,8 +38,14 @@ public class PathfindingManager : MonoBehaviour
             }
         }
     }
+
     public void SetUnwalkable(Index2 bound1, Index2 bound2)
     {
-        CostFieldProducer.SetUnwalkable(bound1, bound2);
+        int lowerRow = bound1.R < bound2.R ? bound1.R : bound2.R;
+        int upperRow = bound1.R > bound2.R ? bound1.R : bound2.R;
+        int leftmostCol = bound1.C < bound2.C ? bound1.C : bound2.C;
+        int rightmostCol = bound1.C > bound2.C ? bound1.C : bound2.C;
+        CostFieldEditJob[] editJobs = CostFieldProducer.GetEditJobs(new Index2(lowerRow, leftmostCol), new Index2(upperRow, rightmostCol));
+        JobManager.AddCostEditJob(editJobs);
     }
 }

@@ -59,6 +59,14 @@ public class Queue<T>
         _rear = (_rear + 1) % _size;
         return toReturn;
     }
+    public T Rear()
+    {
+        return _elements[(_size + _rear - 1) % _size];
+    }
+    public T Front()
+    {
+        return _elements[(_front + 1) % _size];
+    }
     public override string ToString()
     {
         StringBuilder sb = new StringBuilder();

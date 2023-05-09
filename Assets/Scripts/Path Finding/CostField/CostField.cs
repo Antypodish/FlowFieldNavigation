@@ -1,4 +1,5 @@
-﻿using Unity.Collections;
+﻿using Unity.Burst;
+using Unity.Collections;
 using Unity.Jobs;
 
 public class CostField
@@ -93,5 +94,9 @@ public class CostField
     public void ForceEndJob()
     {
         _fieldGraphJobHandle.Complete();
+    }
+    public CostFieldEditJob GetEditJob(Index2 bound1, Index2 bound2)
+    {
+        return new CostFieldEditJob(FieldGraph, bound1, bound2);
     }
 }
