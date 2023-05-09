@@ -10,6 +10,11 @@ public struct SectorArray
         Nodes = new NativeArray<SectorNode>(totalSectorAmount, Allocator.Persistent);
         WinPtrs = new NativeArray<int>(secToWinPtrsAmount, Allocator.Persistent);
     }
+    public void DisposeNatives()
+    {
+        Nodes.Dispose();
+        WinPtrs.Dispose();
+    }
     public void ConfigureSectorNodes(int totalTileAmount, int sectorSize)
     {
         int sectorMatrixSize = totalTileAmount / sectorSize;

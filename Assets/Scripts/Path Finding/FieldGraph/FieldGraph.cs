@@ -5,22 +5,22 @@ using Unity.Jobs;
 
 public struct FieldGraph
 {
+    //main graph elements
     public SectorArray SectorArray;
     public WindowArray WindowArray;
     public PortalArray PortalArray;
-    
+    AStarGrid _aStarGrid;
+
+    //helper data
     NativeArray<byte> _costs;
     NativeArray<DirectionData> _directions;
-    public AStarGrid _aStarGrid;
-
     int _fieldTileAmount;
     float _fieldTileSize;
     int _sectorTileAmount;
     int _sectorMatrixSize;
     int _portalPerWindow;
-    public FieldGraph(int sectorSize, int fieldTileAmount, int costFieldOffset, float fieldTileSize, NativeArray<byte> costs, NativeArray<DirectionData> directions)
+    public FieldGraph(NativeArray<byte> costs, NativeArray<DirectionData> directions, int sectorSize, int fieldTileAmount, int costFieldOffset, float fieldTileSize)
     {
-
         //size calculations
         int sectorMatrixSize = fieldTileAmount / sectorSize;
         int sectorAmount = sectorMatrixSize * sectorMatrixSize;
@@ -58,28 +58,28 @@ public struct FieldGraph
         PortalArray.ConfigurePortalNodes(WindowArray.Nodes, _costs, _fieldTileAmount, _portalPerWindow * 8 - 2);
         PortalArray.ConfigurePortalToPortalPtrs(_aStarGrid, SectorArray, WindowArray, _costs, _directions, _fieldTileAmount);
     }
-    public WindowNode[] GetWindowNodesOf(SectorNode sectorNode)
+    public NativeArray<WindowNode> GetWindowNodesOf(SectorNode sectorNode)
     {
-        WindowNode[] windowNodes = new WindowNode[sectorNode.SecToWinCnt];
+        NativeArray <WindowNode> windowNodes = new NativeArray<WindowNode>(sectorNode.SecToWinCnt, Allocator.Temp);
         for(int i = sectorNode.SecToWinPtr; i < sectorNode.SecToWinPtr + sectorNode.SecToWinCnt; i++)
         {
             windowNodes[i - sectorNode.SecToWinPtr] = WindowArray.Nodes[SectorArray.WinPtrs[i]];
         }
         return windowNodes;
     }
-    public SectorNode[] GetSectorNodesOf(WindowNode windowNode)
+    public NativeArray<SectorNode> GetSectorNodesOf(WindowNode windowNode)
     {
-        SectorNode[] sectorNodes = new SectorNode[windowNode.WinToSecCnt];
+        NativeArray<SectorNode> sectorNodes = new NativeArray<SectorNode>(windowNode.WinToSecCnt, Allocator.Temp);
         for (int i = windowNode.WinToSecPtr; i < windowNode.WinToSecPtr + windowNode.WinToSecCnt; i++)
         {
             sectorNodes[i - windowNode.WinToSecPtr] = SectorArray.Nodes[WindowArray.SecPtrs[i]];
         }
         return sectorNodes;
     }
-    public SectorNode[] GetSectorNodesOf(PortalNode portal)
+    public NativeArray<SectorNode> GetSectorNodesOf(PortalNode portal)
     {
         WindowNode windowNode = WindowArray.Nodes[portal.WinPtr];
-        SectorNode[] sectorNodes = new SectorNode[2];
+        NativeArray<SectorNode> sectorNodes = new NativeArray<SectorNode>(2, Allocator.Temp);
 
         for (int i = windowNode.WinToSecPtr; i < windowNode.WinToSecPtr + windowNode.WinToSecCnt; i++)
         {
@@ -92,10 +92,9 @@ public struct FieldGraph
     {
         float sectorSize = _sectorTileAmount * _fieldTileSize;
         Index2 index2 = new Index2(Mathf.FloorToInt(pos.z / sectorSize), Mathf.FloorToInt(pos.x / sectorSize));
-        int index = Index2.ToIndex(index2, _sectorTileAmount);
+        int index = Index2.ToIndex(index2, _sectorMatrixSize);
         return SectorArray.Nodes[index];
     }
-    
     public void ConfigureSectorNodes() => SectorArray.ConfigureSectorNodes(_fieldTileAmount, _sectorTileAmount);
     public void ConfigureWindowNodes() => WindowArray.ConfigureWindowNodes(SectorArray.Nodes, _costs, _portalPerWindow, _sectorMatrixSize, _fieldTileAmount);
     public void ConfigureSectorToWindowPoiners() => SectorArray.ConfigureSectorToWindowPoiners(WindowArray.Nodes);

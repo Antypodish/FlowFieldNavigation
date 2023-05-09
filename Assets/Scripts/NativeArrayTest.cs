@@ -1,42 +1,65 @@
 ﻿using System.Diagnostics;
+using Unity.Burst;
 using Unity.Collections;
+using Unity.Jobs;
+using Unity.VisualScripting;
 using UnityEngine;
 
 internal class NativeArrayTest : MonoBehaviour
 {
-    NativeArray<Vector3> m_Array;
-    NativeList<Vector3> m_List;
-
+    int size = 100 * 198 * 5;
+    NativeArray<Boolfloat> array;
     private void Start()
     {
-        m_Array = new NativeArray<Vector3>(10000000, Allocator.Persistent);
-        m_List = new NativeList<Vector3>(Allocator.Persistent);
-
-        for(int i =0; i< m_Array.Length; i++)
-        {
-            m_Array[i] = Vector3.one;
-            m_List.Add(Vector3.one);
-        }
+        array = new NativeArray<Boolfloat>(size, Allocator.Persistent);
     }
 
     private void Update()
     {
         Stopwatch sw1 = new Stopwatch();
-        sw1.Start();
-        for(int i = 0; i < m_Array.Length; i++)
-        {
-            Vector3 v3 = m_Array[i];
-        }
-        sw1.Stop();
         Stopwatch sw2 = new Stopwatch();
+
+        Allocjob aj = new Allocjob();
+        Resetjob rj = new Resetjob() { arr = array };
+        sw1.Start();
+        JobHandle ajh = aj.Schedule();
+        ajh.Complete();
+        sw1.Stop();
+
         sw2.Start();
-        for (int i = 0; i < m_List.Length; i++)
-        {
-            Vector3 v3 = m_List[i];
-        }
+        JobHandle rjh = rj.Schedule();
+        rjh.Complete();
         sw2.Stop();
 
-        UnityEngine.Debug.Log("array: " + sw1.ElapsedMilliseconds);
-        UnityEngine.Debug.Log("list: " + sw2.ElapsedMilliseconds);
+        UnityEngine.Debug.Log("allocate: " + sw1.Elapsed.TotalMilliseconds);
+        UnityEngine.Debug.Log("reset: " + sw2.Elapsed.TotalMilliseconds);
     }
+}
+[BurstCompile]
+public struct Allocjob : IJob
+{
+    public void Execute()
+    {
+        NativeArray<Boolfloat> arr = new NativeArray<Boolfloat>(100 * 198 * 5, Allocator.Temp);
+    }
+}
+[BurstCompile]
+public struct Resetjob : IJob
+{
+    public NativeArray<Boolfloat> arr;
+    public void Execute()
+    {
+        for(int i = 0; i < arr.Length; i++)
+        {
+            Boolfloat bf = arr[i];
+            bf.f = 0f;
+            bf.b = false;
+            arr[i] = bf;
+        }
+    }
+}
+public struct Boolfloat
+{
+    public bool b;
+    public float f;
 }

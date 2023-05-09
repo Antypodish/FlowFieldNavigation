@@ -39,7 +39,7 @@ public class SectorGraphDebugger
 
 
             //draw line through each window of the sector
-            WindowNode[] windowNodes = sectorGraph.GetWindowNodesOf(sectorNodes[i]);
+            NativeArray<WindowNode> windowNodes = sectorGraph.GetWindowNodesOf(sectorNodes[i]);
             for(int j = 0; j < windowNodes.Length; j++)
             {
                 Index2 winBotLeftIndex = windowNodes[j].Window.BottomLeftBoundary;
@@ -74,7 +74,7 @@ public class SectorGraphDebugger
             Gizmos.DrawLine(sqrBotRight, sqrBotLeft);
             Gizmos.DrawLine(sqrBotLeft, sqrTopLeft);
 
-            SectorNode[] sectorNodes = sectorGraph.GetSectorNodesOf(windowNodes[i]);
+            NativeArray<SectorNode> sectorNodes = sectorGraph.GetSectorNodesOf(windowNodes[i]);
             for(int j = 0; j < sectorNodes.Length; j++)
             {
                 int sectorSize = sectorNodes[j].Sector.Size;

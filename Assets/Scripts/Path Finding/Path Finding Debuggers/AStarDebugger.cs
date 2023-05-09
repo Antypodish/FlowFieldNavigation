@@ -26,8 +26,8 @@ public class AStarDebugger
         NativeArray<DirectionData> directions = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).Directions;
         SetClickedPortalNode(fieldGraph);
         Portal clickedPortal = _clickedPortalNode.Portal;
-        AStarGrid astartGrid = fieldGraph._aStarGrid;
-        SectorNode[] sectorNodesOfPortal = fieldGraph.GetSectorNodesOf(_clickedPortalNode);
+        AStarGrid astartGrid = new AStarGrid(_tileAmount);
+        NativeArray<SectorNode> sectorNodesOfPortal = fieldGraph.GetSectorNodesOf(_clickedPortalNode);
         DebugAStarFor(sectorNodesOfPortal[0].Sector);
         DebugAStarFor(sectorNodesOfPortal[1].Sector);
 

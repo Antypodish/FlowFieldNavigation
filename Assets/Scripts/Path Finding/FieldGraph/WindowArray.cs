@@ -10,6 +10,11 @@ public struct WindowArray
         Nodes = new NativeArray<WindowNode>(windowNodeAmount, Allocator.Persistent);
         SecPtrs = new NativeArray<int>(sectorPointerAmount, Allocator.Persistent);
     }
+    public void DisposeNatives()
+    {
+        Nodes.Dispose();
+        SecPtrs.Dispose();
+    }
     public void ConfigureWindowNodes(NativeArray<SectorNode> sectorNodes, NativeArray<byte> costs, int portalPerWindow, int sectorMatrixSize, int totalTileAmount)
     {
         int porPtrJumpFactor = portalPerWindow;

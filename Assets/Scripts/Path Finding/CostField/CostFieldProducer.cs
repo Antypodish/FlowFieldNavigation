@@ -19,10 +19,21 @@
     }
     public void CompleteCostFieldProduction()
     {
-        for (int i = 0; i < _producedCostFields.Length; i++)
+        for (int i = _producedCostFields.Length - 1; i >=0; i--)
         {
             _producedCostFields[i].EndJobsIfCompleted();
         }
+    }
+    public void ForceCompleteCostFieldProduction()
+    {
+        for (int i = _producedCostFields.Length - 1; i >= 0; i--)
+        {
+            _producedCostFields[i].ForceEndJob();
+        }
+    }
+    public void SetUnwalkable(Index2 bound1, Index2 bound2)
+    {
+
     }
     public CostField GetCostFieldWithOffset(int offset)
     {

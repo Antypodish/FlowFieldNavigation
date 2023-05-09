@@ -28,7 +28,7 @@ public class CostField
 
 
         //create sector graph
-        FieldGraph = new FieldGraph(sectorSize, tileAmount, offset, _fieldTileSize, Costs, Directions);
+        FieldGraph = new FieldGraph(Costs, Directions, sectorSize, tileAmount, offset, _fieldTileSize);
 
 
         //HELPERS
@@ -89,5 +89,9 @@ public class CostField
         {
             _fieldGraphJobHandle.Complete();
         }
+    }
+    public void ForceEndJob()
+    {
+        _fieldGraphJobHandle.Complete();
     }
 }

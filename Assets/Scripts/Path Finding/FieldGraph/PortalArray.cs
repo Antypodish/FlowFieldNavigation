@@ -10,6 +10,11 @@ public struct PortalArray
         Nodes = new NativeArray<PortalNode>(portalNodeAmount, Allocator.Persistent);
         PorPtrs = new NativeArray<PortalToPortal>(porToPorPtrAmount, Allocator.Persistent);
     }
+    public void DisposeNatives()
+    {
+        Nodes.Dispose();
+        PorPtrs.Dispose();
+    }
     public void ConfigurePortalNodes(NativeArray<WindowNode> windowNodes, NativeArray<byte> costs, int tileAmount, int porToPorCnt)
     {
         for (int i = 0; i < windowNodes.Length; i++)

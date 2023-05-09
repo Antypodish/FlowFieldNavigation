@@ -67,7 +67,7 @@ public class PortalDebugger
             int index = porPtrs[_clickedPortalNode.PorToPorPtr + i].Index;
             float dist = porPtrs[_clickedPortalNode.PorToPorPtr + i].Distance;
 
-            SectorNode[] sectorNodesOfPortal = fieldGraph.GetSectorNodesOf(_clickedPortalNode);
+            NativeArray<SectorNode> sectorNodesOfPortal = fieldGraph.GetSectorNodesOf(_clickedPortalNode);
             Portal portal = portalNodes[index].Portal;
             Index2 portalIndex1 = portal.Index1;
             Index2 portalIndex2 = portal.Index2;
