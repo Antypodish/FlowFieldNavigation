@@ -16,10 +16,13 @@ public struct FieldGraphConfigurationJob : IJob
     public NativeArray<byte> _costs;
     public NativeArray<DirectionData> _directions;
 
-    public int _fieldTileAmount;
+    public int _fieldRowAmount;
+    public int _fieldColAmount;
     public float _fieldTileSize;
     public int _sectorTileAmount;
-    public int _sectorMatrixSize;
+    //public int _sectorMatrixSize;
+    public int _sectorColAmount;
+    public int _sectorRowAmount;
     public int _portalPerWindow;
 
     public NativeArray<AStarTile> _integratedCosts;
@@ -28,30 +31,30 @@ public struct FieldGraphConfigurationJob : IJob
 
     public void Execute()
     {
-        ConfigureSectorNodes(_fieldTileAmount, _sectorTileAmount);
-        ConfigureWindowNodes(_portalPerWindow, _sectorMatrixSize, _fieldTileAmount);
+        ConfigureSectorNodes(_sectorTileAmount);
+        ConfigureWindowNodes(_portalPerWindow);
         ConfigureSectorToWindowPoiners();
         ConfigureWindowToSectorPointers();
-        ConfigurePortalNodes(_fieldTileAmount, _portalPerWindow * 8 - 2);
-        ConfigurePortalToPortalPtrs(_fieldTileAmount);
+        ConfigurePortalNodes(_portalPerWindow * 8 - 2);
+        ConfigurePortalToPortalPtrs();
     }
-    void ConfigureSectorNodes(int totalTileAmount, int sectorSize)
+    void ConfigureSectorNodes(int sectorSize)
     {
-        int sectorMatrixSize = totalTileAmount / sectorSize;
+        //int sectorMatrixSize = _sectorMatrixSize;
 
         int iterableSecToWinPtr = 0;
-        for (int r = 0; r < sectorMatrixSize; r++)
+        for (int r = 0; r < _sectorRowAmount; r++)
         {
-            for (int c = 0; c < sectorMatrixSize; c++)
+            for (int c = 0; c < _sectorColAmount; c++)
             {
-                int index = r * sectorMatrixSize + c;
+                int index = r * _sectorColAmount + c;
                 Sector sect = new Sector(new Index2(r * sectorSize, c * sectorSize), sectorSize);
                 int secToWinCnt = 4;
-                if (sect.IsOnCorner(totalTileAmount))
+                if (sect.IsOnCorner(_fieldColAmount, _fieldRowAmount))
                 {
                     secToWinCnt = 2;
                 }
-                else if (sect.IsOnEdge(totalTileAmount))
+                else if (sect.IsOnEdge(_fieldColAmount, _fieldRowAmount))
                 {
                     secToWinCnt = 3;
                 }
@@ -81,32 +84,32 @@ public struct FieldGraphConfigurationJob : IJob
             }
         }
     }
-    public void ConfigureWindowNodes(int portalPerWindow, int sectorMatrixSize, int totalTileAmount)
+    void ConfigureWindowNodes(int portalPerWindow)
     {
         int porPtrJumpFactor = portalPerWindow;
         int windowNodesIndex = 0;
         int iterableWinToSecPtr = 0;
-        for (int r = 0; r < sectorMatrixSize; r++)
+        for (int r = 0; r < _sectorRowAmount; r++)
         {
-            for (int c = 0; c < sectorMatrixSize; c++)
+            for (int c = 0; c < _sectorColAmount; c++)
             {
-                int index = r * sectorMatrixSize + c;
+                int index = r * _sectorColAmount + c;
                 Sector sector = SectorNodes[index].Sector;
 
                 //create upper window relative to the sector
-                if (!sector.IsOnTop(totalTileAmount))
+                if (!sector.IsOnTop(_fieldRowAmount))
                 {
                     Window window = GetUpperWindowFor(sector);
-                    WindowNodes[windowNodesIndex] = new WindowNode(window, 2, iterableWinToSecPtr, windowNodesIndex * porPtrJumpFactor, totalTileAmount, _costs);
+                    WindowNodes[windowNodesIndex] = new WindowNode(window, 2, iterableWinToSecPtr, windowNodesIndex * porPtrJumpFactor, GetPortalCountFor(window), _costs);
                     windowNodesIndex++;
                     iterableWinToSecPtr += 2;
                 }
 
                 //create right window relative to the sector
-                if (!sector.IsOnRight(totalTileAmount))
+                if (!sector.IsOnRight(_fieldColAmount))
                 {
                     Window window = GetRightWindowFor(sector);
-                    WindowNodes[windowNodesIndex] = new WindowNode(window, 2, iterableWinToSecPtr, windowNodesIndex * porPtrJumpFactor, totalTileAmount, _costs);
+                    WindowNodes[windowNodesIndex] = new WindowNode(window, 2, iterableWinToSecPtr, windowNodesIndex * porPtrJumpFactor, GetPortalCountFor(window), _costs);
                     windowNodesIndex++;
                     iterableWinToSecPtr += 2;
                 }
@@ -125,7 +128,7 @@ public struct FieldGraphConfigurationJob : IJob
             return new Window(bottomLeftBoundary, topRightBoundary);
         }
     }
-    public void ConfigureWindowToSectorPointers()
+    void ConfigureWindowToSectorPointers()
     {
         int winToSecPtrIterable = 0;
         for (int i = 0; i < WindowNodes.Length; i++)
@@ -136,17 +139,20 @@ public struct FieldGraphConfigurationJob : IJob
             {
                 if (SectorNodes[j].Sector.ContainsIndex(botLeft))
                 {
-                    SecPtrs[winToSecPtrIterable++] = j;
+                    SecPtrs[winToSecPtrIterable] = j;
                 }
                 else if (SectorNodes[j].Sector.ContainsIndex(topRight))
                 {
-                    SecPtrs[winToSecPtrIterable++] = j;
+                    SecPtrs[winToSecPtrIterable + 1] = j;
                 }
             }
+            winToSecPtrIterable += 2;
         }
     }
-    public void ConfigurePortalNodes(int tileAmount, int porToPorCnt)
+    void ConfigurePortalNodes(int porToPorCnt)
     {
+        int fieldColAmount = _fieldColAmount;
+        int fieldRowAmount = _fieldRowAmount;
         NativeArray<WindowNode> windowNodes = WindowNodes;
         NativeArray<byte> costs = _costs;
         NativeArray<PortalNode> portalNodes = PortalNodes;
@@ -175,8 +181,8 @@ public struct FieldGraphConfigurationJob : IJob
                 int row2 = window.TopRightBoundary.R;
                 for (int j = startCol; j <= lastCol; j++)
                 {
-                    int index1 = row1 * tileAmount + j;
-                    int index2 = row2 * tileAmount + j;
+                    int index1 = row1 * fieldColAmount + j;
+                    int index2 = row2 * fieldColAmount + j;
                     if (costs[index1] != byte.MaxValue && costs[index2] != byte.MaxValue)
                     {
                         if (wasUnwalkable)
@@ -217,8 +223,8 @@ public struct FieldGraphConfigurationJob : IJob
                 int col2 = window.TopRightBoundary.C;
                 for (int j = startRow; j <= lastRow; j++)
                 {
-                    int index1 = j * tileAmount + col1;
-                    int index2 = j * tileAmount + col2;
+                    int index1 = j * fieldColAmount + col1;
+                    int index2 = j * fieldColAmount + col2;
                     if (costs[index1] != byte.MaxValue && costs[index2] != byte.MaxValue)
                     {
                         if (wasUnwalkable)
@@ -263,7 +269,7 @@ public struct FieldGraphConfigurationJob : IJob
             return portal;
         }
     }
-    public void ConfigurePortalToPortalPtrs(int tileAmount)
+    void ConfigurePortalToPortalPtrs()
     {
         NativeArray<SectorNode> sectorNodes = SectorNodes;
 
@@ -284,7 +290,7 @@ public struct FieldGraphConfigurationJob : IJob
                     PortalNode targetPortalNode = PortalNodes[portalIndicies[k]];
                     Portal targetPortal = targetPortalNode.Portal;
                     Index2 targetIndex2 = pickedSector.ContainsIndex(targetPortal.Index1) ? targetPortal.Index1 : targetPortal.Index2;
-                    int targetIndex = Index2.ToIndex(targetIndex2, tileAmount);
+                    int targetIndex = Index2.ToIndex(targetIndex2, _fieldColAmount);
                     float cost = integratedCosts[targetIndex].IntegratedCost;
 
                     if (cost == float.MaxValue) { continue; }
@@ -302,7 +308,7 @@ public struct FieldGraphConfigurationJob : IJob
             }
         }
     }
-    public NativeArray<int> GetPortalIndicies(SectorNode sectorNode)
+    NativeArray<int> GetPortalIndicies(SectorNode sectorNode)
     {
         NativeArray<int> portalIndicies;
         int secToWinCnt = sectorNode.SecToWinCnt;
@@ -329,10 +335,10 @@ public struct FieldGraphConfigurationJob : IJob
         }
         return portalIndicies;
     }
-    public NativeArray<AStarTile> GetIntegratedCostsFor(Sector sector, Index2 target)
+    NativeArray<AStarTile> GetIntegratedCostsFor(Sector sector, Index2 target)
     {
         Reset(sector);
-        int targetIndex = Index2.ToIndex(target, _fieldTileAmount);
+        int targetIndex = Index2.ToIndex(target, _fieldColAmount);
 
         AStarTile targetTile = _integratedCosts[targetIndex];
         targetTile.IntegratedCost = 0f;
@@ -350,14 +356,14 @@ public struct FieldGraphConfigurationJob : IJob
         }
         return _integratedCosts;
     }
-    public void Reset(Sector sector)
+    void Reset(Sector sector)
     {
         Index2 lowerBound = sector.StartIndex;
         Index2 upperBound = new Index2(sector.StartIndex.R + sector.Size - 1, sector.StartIndex.C + sector.Size - 1);
-        int lowerBoundIndex = Index2.ToIndex(lowerBound, _fieldTileAmount);
-        int upperBoundIndex = Index2.ToIndex(upperBound, _fieldTileAmount);
+        int lowerBoundIndex = Index2.ToIndex(lowerBound, _fieldColAmount);
+        int upperBoundIndex = Index2.ToIndex(upperBound, _fieldColAmount);
 
-        for (int r = lowerBoundIndex; r < lowerBoundIndex + sector.Size * _fieldTileAmount; r += _fieldTileAmount)
+        for (int r = lowerBoundIndex; r < lowerBoundIndex + sector.Size * _fieldColAmount; r += _fieldColAmount)
         {
             for (int i = r; i < r + sector.Size; i++)
             {
@@ -374,52 +380,52 @@ public struct FieldGraphConfigurationJob : IJob
     void SetEdgesUnwalkable(Sector sector, int lowerBoundIndex, int upperBoundIndex)
     {
         bool notOnBottom = !sector.IsOnBottom();
-        bool notOnTop = !sector.IsOnTop(_fieldTileAmount);
-        bool notOnRight = !sector.IsOnRight(_fieldTileAmount);
+        bool notOnTop = !sector.IsOnTop(_fieldRowAmount);
+        bool notOnRight = !sector.IsOnRight(_fieldColAmount);
         bool notOnLeft = !sector.IsOnLeft();
         if (notOnBottom)
         {
-            for (int i = lowerBoundIndex - _fieldTileAmount; i < (lowerBoundIndex - _fieldTileAmount) + sector.Size; i++)
+            for (int i = lowerBoundIndex - _fieldColAmount; i < (lowerBoundIndex - _fieldColAmount) + sector.Size; i++)
             {
                 _integratedCosts[i] = new AStarTile(float.MaxValue, true);
             }
         }
         if (notOnTop)
         {
-            for (int i = upperBoundIndex + _fieldTileAmount; i > upperBoundIndex + _fieldTileAmount - sector.Size; i--)
+            for (int i = upperBoundIndex + _fieldColAmount; i > upperBoundIndex + _fieldColAmount - sector.Size; i--)
             {
                 _integratedCosts[i] = new AStarTile(float.MaxValue, true);
             }
         }
         if (notOnRight)
         {
-            for (int i = upperBoundIndex + 1; i >= lowerBoundIndex + sector.Size; i -= _fieldTileAmount)
+            for (int i = upperBoundIndex + 1; i >= lowerBoundIndex + sector.Size; i -= _fieldColAmount)
             {
                 _integratedCosts[i] = new AStarTile(float.MaxValue, true);
             }
         }
         if (notOnLeft)
         {
-            for (int i = lowerBoundIndex - 1; i <= upperBoundIndex - sector.Size; i += _fieldTileAmount)
+            for (int i = lowerBoundIndex - 1; i <= upperBoundIndex - sector.Size; i += _fieldColAmount)
             {
                 _integratedCosts[i] = new AStarTile(float.MaxValue, true);
             }
         }
         if (notOnRight && notOnBottom)
         {
-            _integratedCosts[lowerBoundIndex + sector.Size - _fieldTileAmount] = new AStarTile(float.MaxValue, true);
+            _integratedCosts[lowerBoundIndex + sector.Size - _fieldColAmount] = new AStarTile(float.MaxValue, true);
         }
         if (notOnRight && notOnTop)
         {
-            _integratedCosts[upperBoundIndex + _fieldTileAmount + 1] = new AStarTile(float.MaxValue, true);
+            _integratedCosts[upperBoundIndex + _fieldColAmount + 1] = new AStarTile(float.MaxValue, true);
         }
         if (notOnLeft && notOnBottom)
         {
-            _integratedCosts[lowerBoundIndex - _fieldTileAmount - 1] = new AStarTile(float.MaxValue, true);
+            _integratedCosts[lowerBoundIndex - _fieldColAmount - 1] = new AStarTile(float.MaxValue, true);
         }
         if (notOnLeft && notOnTop)
         {
-            _integratedCosts[upperBoundIndex + _fieldTileAmount - sector.Size] = new AStarTile(float.MaxValue, true);
+            _integratedCosts[upperBoundIndex + _fieldColAmount - sector.Size] = new AStarTile(float.MaxValue, true);
         }
     }
     void Enqueue(DirectionData directions)
@@ -477,5 +483,45 @@ public struct FieldGraphConfigurationJob : IJob
         if (wCost < costToReturn) { costToReturn = wCost; }
         if (nwCost < costToReturn) { costToReturn = nwCost; }
         return costToReturn;
+    }
+    int GetPortalCountFor(Window window)
+    {
+        if (window.IsHorizontal())  //if horizontal
+        {
+            int portalAmount = 0;
+            bool wasUnwalkableFlag = true;
+            int startCol = window.BottomLeftBoundary.C;
+            int lastCol = window.TopRightBoundary.C;
+            int row1 = window.BottomLeftBoundary.R;
+            int row2 = window.TopRightBoundary.R;
+            for (int i = startCol; i <= lastCol; i++)
+            {
+                int costIndex1 = row1 * _fieldColAmount + i;
+                int costIndex2 = row2 * _fieldColAmount + i;
+                if (_costs[costIndex1] == byte.MaxValue) { wasUnwalkableFlag = true; }
+                else if (_costs[costIndex2] == byte.MaxValue) { wasUnwalkableFlag = true; }
+                else if (wasUnwalkableFlag) { portalAmount++; wasUnwalkableFlag = false; }
+            }
+            return portalAmount;
+        }
+        else //if vertical
+        {
+            int portalAmount = 0;
+            bool wasUnwalkableFlag = true;
+            int startRow = window.BottomLeftBoundary.R;
+            int lastRow = window.TopRightBoundary.R;
+            int col1 = window.BottomLeftBoundary.C;
+            int col2 = window.TopRightBoundary.C;
+            for (int i = startRow; i <= lastRow; i++)
+            {
+                int costIndex1 = i * _fieldColAmount + col1;
+                int costIndex2 = i * _fieldColAmount + col2;
+                if (_costs[costIndex1] == byte.MaxValue) { wasUnwalkableFlag = true; }
+                else if (_costs[costIndex2] == byte.MaxValue) { wasUnwalkableFlag = true; }
+                else if (wasUnwalkableFlag) { portalAmount++; wasUnwalkableFlag = false; }
+            }
+            return portalAmount;
+        }
+
     }
 }

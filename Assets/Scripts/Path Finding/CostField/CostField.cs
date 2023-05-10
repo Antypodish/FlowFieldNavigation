@@ -14,12 +14,13 @@ public class CostField
     public CostField(WalkabilityData walkabilityData, int offset, int sectorSize)
     {
         _fieldTileSize = walkabilityData.TileSize;
-        int tileAmount = walkabilityData.TileAmount;
+        int rowAmount = walkabilityData.RowAmount;
+        int colAmount = walkabilityData.ColAmount;
         WalkabilityCell[][] walkabilityMatrix = walkabilityData.WalkabilityMatrix;
         Offset = offset;
 
         //configure costs
-        Costs = new NativeArray<byte>(tileAmount * tileAmount, Allocator.Persistent);
+        Costs = new NativeArray<byte>(rowAmount * colAmount, Allocator.Persistent);
         CalculateCosts();
 
         //configure directions
@@ -29,40 +30,40 @@ public class CostField
 
 
         //create sector graph
-        FieldGraph = new FieldGraph(Costs, Directions, sectorSize, tileAmount, offset, _fieldTileSize);
+        FieldGraph = new FieldGraph(Costs, Directions, sectorSize, rowAmount, colAmount, offset, _fieldTileSize);
 
 
         //HELPERS
         void CalculateCosts()
         {
             //calculate costs without offset
-            for (int r = 0; r < tileAmount; r++)
+            for (int r = 0; r < rowAmount; r++)
             {
-                for (int c = 0; c < tileAmount; c++)
+                for (int c = 0; c < colAmount; c++)
                 {
-                    int index = r * tileAmount + c;
+                    int index = r * colAmount + c;
                     byte cost = walkabilityMatrix[r][c].Walkability == Walkability.Walkable ? (byte)1 : byte.MaxValue;
                     Costs[index] = cost;
                 }
             }
             //apply offset
-            for (int r = 0; r < tileAmount; r++)
+            for (int r = 0; r < rowAmount; r++)
             {
-                for (int c = 0; c < tileAmount; c++)
+                for (int c = 0; c < colAmount; c++)
                 {
                     if (walkabilityMatrix[r][c].Walkability == Walkability.Unwalkable)
                     {
                         Index2 index = new Index2(r, c);
                         int minX = index.C - Offset < 0 ? 0 : index.C - Offset;
-                        int maxX = index.C + Offset > tileAmount - 1 ? tileAmount - 1 : index.C + Offset;
+                        int maxX = index.C + Offset > colAmount - 1 ? colAmount - 1 : index.C + Offset;
                         int minY = index.R - Offset < 0 ? 0 : index.R - Offset;
-                        int maxY = index.R + Offset > tileAmount - 1 ? tileAmount - 1 : index.R + Offset;
+                        int maxY = index.R + Offset > rowAmount - 1 ? rowAmount - 1 : index.R + Offset;
 
                         for (int row = minY; row <= maxY; row++)
                         {
                             for (int col = minX; col <= maxX; col++)
                             {
-                                int i = row * tileAmount + col;
+                                int i = row * colAmount + col;
                                 Costs[i] = byte.MaxValue;
                             }
                         }
@@ -74,7 +75,7 @@ public class CostField
         {
             for(int i = 0; i < Directions.Length; i++)
             {
-                Directions[i] = new DirectionData(i, tileAmount);
+                Directions[i] = new DirectionData(i, rowAmount, colAmount);
             }
         }
     }

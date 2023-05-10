@@ -73,13 +73,14 @@ public class CostFieldDebugger
         NativeArray<byte> costs = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).Costs;
         float yOffset = .02f;
         float tileSize = _pathfindingManager.TileSize;
-        int tileAmount = _pathfindingManager.TileAmount;
+        int rowAmount = _pathfindingManager.RowAmount;
+        int colAmount = _pathfindingManager.ColumnAmount;
 
-        for (int r = 0; r < tileAmount; r++)
+        for (int r = 0; r < rowAmount; r++)
         {
-            for(int c = 0; c < tileAmount; c++)
+            for(int c = 0; c < colAmount; c++)
             {
-                int index = r * tileAmount + c;
+                int index = r * colAmount + c;
                 if (costs[index] == 1) { continue; }
 
                 Vector3 pos = new Vector3(c * tileSize, yOffset, r * tileSize);

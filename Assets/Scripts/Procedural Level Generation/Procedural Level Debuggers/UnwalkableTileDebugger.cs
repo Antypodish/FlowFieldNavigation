@@ -65,12 +65,13 @@ internal class UnwalkableTileDebugger
         if (_walkabilityData == null) { return; }
 
         float tileSize = _terrainGenerator.TileSize;
-        int tileAmount = _terrainGenerator.TileAmount;
+        int colAmount = _terrainGenerator.ColumnAmount;
+        int rowAmount = _terrainGenerator.RowAmount;
         float yOffset = .01f;
 
-        for (int r = 0; r < tileAmount; r++)
+        for (int r = 0; r < rowAmount; r++)
         {
-            for (int c = 0; c < tileAmount; c++)
+            for (int c = 0; c < colAmount; c++)
             {
                 if (_terrainGenerator.WalkabilityData.WalkabilityMatrix[r][c].Walkability == Walkability.Walkable) { continue; }
                 Vector3 pos = _terrainGenerator.WalkabilityData.WalkabilityMatrix[r][c].CellPosition + new Vector3(0, yOffset, 0);

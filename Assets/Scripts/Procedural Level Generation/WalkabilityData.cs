@@ -3,14 +3,16 @@
 public class WalkabilityData
 {
     public float TileSize;
-    public int TileAmount;
+    public int RowAmount;
+    public int ColAmount;
     public WalkabilityCell[][] WalkabilityMatrix;
     float _resolution;
 
-    public WalkabilityData(float tileSize, int tileAmount, float resolution, SimulationState simulationState)
+    public WalkabilityData(float tileSize, int rowAmount, int colAmount, float resolution, SimulationState simulationState)
     {
+        RowAmount = rowAmount;
+        ColAmount = colAmount;
         TileSize = tileSize;
-        TileAmount = tileAmount;
         _resolution = resolution;
 
         InnitializeWalkabilityMatrix();
@@ -21,23 +23,23 @@ public class WalkabilityData
 
         void InnitializeWalkabilityMatrix()
         {
-            WalkabilityMatrix = new WalkabilityCell[TileAmount][];
-            for (int i = 0; i < TileAmount; i++)
+            WalkabilityMatrix = new WalkabilityCell[RowAmount][];
+            for (int i = 0; i < RowAmount; i++)
             {
-                WalkabilityMatrix[i] = new WalkabilityCell[TileAmount];
+                WalkabilityMatrix[i] = new WalkabilityCell[ColAmount];
             }
         }
         void SetEdgesUnwalkable()
         {
-            for(int c = 0; c < tileAmount; c++)
+            for(int c = 0; c < colAmount; c++)
             {
                 WalkabilityMatrix[0][c].Walkability = Walkability.Unwalkable;
-                WalkabilityMatrix[tileAmount - 1][c].Walkability = Walkability.Unwalkable;
+                WalkabilityMatrix[rowAmount - 1][c].Walkability = Walkability.Unwalkable;
             }
-            for (int r = 0; r < tileAmount; r++)
+            for (int r = 0; r < rowAmount; r++)
             {
                 WalkabilityMatrix[r][0].Walkability = Walkability.Unwalkable;
-                WalkabilityMatrix[r][tileAmount - 1].Walkability = Walkability.Unwalkable;
+                WalkabilityMatrix[r][colAmount - 1].Walkability = Walkability.Unwalkable;
             }
         }
     }
@@ -58,10 +60,10 @@ public class WalkabilityData
     void SimulatePerlinNoise()
     {
         //innitialize noise map
-        float[][] noiseMap = new float[TileAmount][];
+        float[][] noiseMap = new float[RowAmount][];
         for(int r = 0; r < noiseMap.Length; r++)
         {
-            noiseMap[r] = new float[TileAmount];
+            noiseMap[r] = new float[ColAmount];
             for(int c = 0; c < noiseMap[r].Length; c++)
             {
                 noiseMap[r][c] = Mathf.PerlinNoise((float)r / _resolution, (float)c / _resolution);

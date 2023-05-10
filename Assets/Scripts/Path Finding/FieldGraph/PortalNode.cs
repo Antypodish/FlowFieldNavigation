@@ -5,6 +5,7 @@
     public int PorToPorPtr;
     public int PorToPorCnt;
 
+
     public PortalNode(Portal portal, int winPtr, int porToPorPtr)
     {
         Portal = portal;

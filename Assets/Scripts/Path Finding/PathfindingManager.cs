@@ -10,7 +10,8 @@ public class PathfindingManager : MonoBehaviour
     [HideInInspector] public CostFieldProducer CostFieldProducer;
     [HideInInspector] public NativeArray<Vector3> TilePositions;
     [HideInInspector] public float TileSize;
-    [HideInInspector] public int TileAmount;
+    [HideInInspector] public int RowAmount;
+    [HideInInspector] public int ColumnAmount;
     private void Start()
     {
         JobManager = new PathfindingJobManager();
@@ -18,8 +19,9 @@ public class PathfindingManager : MonoBehaviour
         CostFieldProducer.StartCostFieldProduction(0, _maxCostfieldOffset, 10);
 
         TileSize = _terrainGenerator.TileSize;
-        TileAmount = _terrainGenerator.TileAmount;
-        TilePositions = new NativeArray<Vector3>(TileAmount * TileAmount, Allocator.Persistent);
+        RowAmount = _terrainGenerator.RowAmount;
+        ColumnAmount = _terrainGenerator.ColumnAmount;
+        TilePositions = new NativeArray<Vector3>(RowAmount * ColumnAmount, Allocator.Persistent);
         CalculateTilePositions();
         CostFieldProducer.ForceCompleteCostFieldProduction();
     }
@@ -29,11 +31,11 @@ public class PathfindingManager : MonoBehaviour
     }
     void CalculateTilePositions()
     {
-        for (int r = 0; r < TileAmount; r++)
+        for (int r = 0; r < RowAmount; r++)
         {
-            for (int c = 0; c < TileAmount; c++)
+            for (int c = 0; c < ColumnAmount; c++)
             {
-                int index = r * TileAmount + c;
+                int index = r * ColumnAmount + c;
                 TilePositions[index] = new Vector3(TileSize / 2 + c * TileSize, 0f, TileSize / 2 + r * TileSize);
             }
         }

@@ -3,14 +3,16 @@ using UnityEngine;
 
 public struct AStarGrid
 {
-    int _tileAmount;
+    int _rowAmount;
+    int _colAmount;
     public NativeArray<AStarTile> _integratedCosts;
     public NativeQueue<int> _searchQueue;
 
-    public AStarGrid(int tileAmount)
+    public AStarGrid(int rowAmount, int colAmount)
     {
-        _tileAmount = tileAmount;
-        _integratedCosts = new NativeArray<AStarTile>(tileAmount * tileAmount, Allocator.Persistent);
+        _rowAmount = rowAmount;
+        _colAmount = colAmount;
+        _integratedCosts = new NativeArray<AStarTile>(rowAmount * colAmount, Allocator.Persistent);
         _searchQueue = new NativeQueue<int>(Allocator.Persistent);
     }
     public void DisposeNatives()
@@ -21,7 +23,7 @@ public struct AStarGrid
     public NativeArray<AStarTile> GetIntegratedCostsFor(Sector sector, Index2 target, NativeArray<byte> costs, NativeArray<DirectionData> directions)
     {
         Reset(sector, costs);
-        int targetIndex = Index2.ToIndex(target, _tileAmount);
+        int targetIndex = Index2.ToIndex(target, _colAmount);
 
         AStarTile targetTile = _integratedCosts[targetIndex];
         targetTile.IntegratedCost = 0f;
@@ -43,10 +45,10 @@ public struct AStarGrid
     {
         Index2 lowerBound = sector.StartIndex;
         Index2 upperBound = new Index2(sector.StartIndex.R + sector.Size - 1, sector.StartIndex.C + sector.Size - 1);
-        int lowerBoundIndex = Index2.ToIndex(lowerBound, _tileAmount);
-        int upperBoundIndex = Index2.ToIndex(upperBound, _tileAmount);
+        int lowerBoundIndex = Index2.ToIndex(lowerBound, _colAmount);
+        int upperBoundIndex = Index2.ToIndex(upperBound, _colAmount);
 
-        for (int r = lowerBoundIndex; r < lowerBoundIndex + sector.Size * _tileAmount; r += _tileAmount)
+        for (int r = lowerBoundIndex; r < lowerBoundIndex + sector.Size * _colAmount; r += _colAmount)
         {
             for (int i = r; i < r + sector.Size; i++)
             {
@@ -63,52 +65,52 @@ public struct AStarGrid
     void SetEdgesUnwalkable(Sector sector, int lowerBoundIndex, int upperBoundIndex)
     {
         bool notOnBottom = !sector.IsOnBottom();
-        bool notOnTop = !sector.IsOnTop(_tileAmount);
-        bool notOnRight = !sector.IsOnRight(_tileAmount);
+        bool notOnTop = !sector.IsOnTop(_rowAmount);
+        bool notOnRight = !sector.IsOnRight(_colAmount);
         bool notOnLeft = !sector.IsOnLeft();
         if (notOnBottom)
         {
-            for (int i = lowerBoundIndex - _tileAmount; i < (lowerBoundIndex - _tileAmount) + sector.Size; i++)
+            for (int i = lowerBoundIndex - _colAmount; i < (lowerBoundIndex - _colAmount) + sector.Size; i++)
             {
                 _integratedCosts[i] = new AStarTile(float.MaxValue, true);
             }
         }
         if (notOnTop)
         {
-            for (int i = upperBoundIndex + _tileAmount; i > upperBoundIndex + _tileAmount - sector.Size; i--)
+            for (int i = upperBoundIndex + _colAmount; i > upperBoundIndex + _colAmount - sector.Size; i--)
             {
                 _integratedCosts[i] = new AStarTile(float.MaxValue, true);
             }
         }
         if (notOnRight)
         {
-            for (int i = upperBoundIndex + 1; i >= lowerBoundIndex + sector.Size; i -= _tileAmount)
+            for (int i = upperBoundIndex + 1; i >= lowerBoundIndex + sector.Size; i -= _colAmount)
             {
                 _integratedCosts[i] = new AStarTile(float.MaxValue, true);
             }
         }
         if (notOnLeft)
         {
-            for (int i = lowerBoundIndex - 1; i <= upperBoundIndex - sector.Size; i += _tileAmount)
+            for (int i = lowerBoundIndex - 1; i <= upperBoundIndex - sector.Size; i += _colAmount)
             {
                 _integratedCosts[i] = new AStarTile(float.MaxValue, true);
             }
         }
         if (notOnRight && notOnBottom)
         {
-            _integratedCosts[lowerBoundIndex + sector.Size - _tileAmount] = new AStarTile(float.MaxValue, true);
+            _integratedCosts[lowerBoundIndex + sector.Size - _colAmount] = new AStarTile(float.MaxValue, true);
         }
         if (notOnRight && notOnTop)
         {
-            _integratedCosts[upperBoundIndex + _tileAmount + 1] = new AStarTile(float.MaxValue, true);
+            _integratedCosts[upperBoundIndex + _colAmount + 1] = new AStarTile(float.MaxValue, true);
         }
         if (notOnLeft && notOnBottom)
         {
-            _integratedCosts[lowerBoundIndex - _tileAmount - 1] = new AStarTile(float.MaxValue, true);
+            _integratedCosts[lowerBoundIndex - _colAmount - 1] = new AStarTile(float.MaxValue, true);
         }
         if (notOnLeft && notOnTop)
         {
-            _integratedCosts[upperBoundIndex + _tileAmount - sector.Size] = new AStarTile(float.MaxValue, true);
+            _integratedCosts[upperBoundIndex + _colAmount - sector.Size] = new AStarTile(float.MaxValue, true);
         }
     }
     void Enqueue(DirectionData directions)

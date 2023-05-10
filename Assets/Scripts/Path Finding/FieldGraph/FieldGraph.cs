@@ -15,17 +15,21 @@ public struct FieldGraph
     //helper data
     NativeArray<byte> _costs;
     NativeArray<DirectionData> _directions;
-    int _fieldTileAmount;
+    int _fieldRowAmount;
+    int _fieldColAmount;
     float _fieldTileSize;
     int _sectorTileAmount;
-    int _sectorMatrixSize;
+    int _sectorMatrixRowAmount;
+    int _sectorMatrixColAmount;
     int _portalPerWindow;
-    public FieldGraph(NativeArray<byte> costs, NativeArray<DirectionData> directions, int sectorSize, int fieldTileAmount, int costFieldOffset, float fieldTileSize)
+    public FieldGraph(NativeArray<byte> costs, NativeArray<DirectionData> directions, int sectorSize, int fieldRowAmount, int fieldColAmount, int costFieldOffset, float fieldTileSize)
     {
         //size calculations
-        int sectorMatrixSize = fieldTileAmount / sectorSize;
-        int sectorAmount = sectorMatrixSize * sectorMatrixSize;
-        int windowAmount = sectorMatrixSize * ((sectorMatrixSize - 1) * 2);
+        int sectorMatrixRowAmount = fieldRowAmount / sectorSize;
+        int sectorMatrixColAmount = fieldColAmount / sectorSize;
+
+        int sectorAmount = sectorMatrixRowAmount * sectorMatrixColAmount;
+        int windowAmount = 2 * fieldColAmount * fieldRowAmount + fieldRowAmount - fieldColAmount;
         int winToSecPtrAmount = windowAmount * 2;
         int secToWinPtrAmount = windowAmount * 2;
         int divider = 2;
@@ -38,14 +42,16 @@ public struct FieldGraph
         int porToPorPtrAmount = portalAmount * (portalPerWindow * 8 - 2);
 
         //innitialize fields
-        _fieldTileAmount = fieldTileAmount;
+        _sectorMatrixColAmount = sectorMatrixColAmount;
+        _sectorMatrixRowAmount = sectorMatrixRowAmount;
+        _fieldColAmount = fieldColAmount;
+        _fieldRowAmount = fieldRowAmount;
         _fieldTileSize = fieldTileSize;
         _sectorTileAmount = sectorSize;
-        _sectorMatrixSize = sectorMatrixSize;
         _portalPerWindow = portalPerWindow;
         _costs = costs;
         _directions = directions;
-        _aStarGrid = new AStarGrid(fieldTileAmount);
+        _aStarGrid = new AStarGrid(fieldRowAmount, fieldColAmount);
         SectorArray = new SectorArray(sectorAmount, secToWinPtrAmount);
         WindowArray = new WindowArray(windowAmount, winToSecPtrAmount);
         PortalArray = new PortalArray(portalAmount, porToPorPtrAmount);
@@ -62,10 +68,12 @@ public struct FieldGraph
             PorPtrs = PortalArray.PorPtrs,
             _costs = _costs,
             _directions = _directions,
-            _fieldTileAmount = _fieldTileAmount,
+            _fieldColAmount = _fieldColAmount,
+            _fieldRowAmount = _fieldRowAmount,
             _fieldTileSize = _fieldTileSize,
             _sectorTileAmount = _sectorTileAmount,
-            _sectorMatrixSize = _sectorMatrixSize,
+            _sectorColAmount = _sectorMatrixColAmount,
+            _sectorRowAmount = _sectorMatrixRowAmount,
             _portalPerWindow = _portalPerWindow,
             _integratedCosts = _aStarGrid._integratedCosts,
             _searchQueue = _aStarGrid._searchQueue,
@@ -86,10 +94,10 @@ public struct FieldGraph
             _costs = _costs,
             _directions = _directions,
 
-            _fieldTileAmount = _fieldTileAmount,
+            _fieldTileAmount = _fieldColAmount,//*
             _fieldTileSize = _fieldTileSize,
             _sectorTileAmount = _sectorTileAmount,
-            _sectorMatrixSize = _sectorMatrixSize,
+            _sectorMatrixSize = _fieldColAmount,//*
             _portalPerWindow = _portalPerWindow,
             _integratedCosts = _aStarGrid._integratedCosts,
             _searchQueue = _aStarGrid._searchQueue,
@@ -160,13 +168,13 @@ public struct FieldGraph
     {
         float sectorSize = _sectorTileAmount * _fieldTileSize;
         Index2 index2 = new Index2(Mathf.FloorToInt(pos.z / sectorSize), Mathf.FloorToInt(pos.x / sectorSize));
-        int index = Index2.ToIndex(index2, _sectorMatrixSize);
+        int index = Index2.ToIndex(index2, _sectorMatrixColAmount);
         return SectorArray.Nodes[index];
     }
     public void SetUnwalkable(Index2 bound1, Index2 bound2)
     {
-        _costs[Index2.ToIndex(bound1, _fieldTileAmount)] = byte.MaxValue;
-        _costs[Index2.ToIndex(bound2, _fieldTileAmount)] = byte.MaxValue;
+        _costs[Index2.ToIndex(bound1, _fieldColAmount)] = byte.MaxValue;
+        _costs[Index2.ToIndex(bound2, _fieldColAmount)] = byte.MaxValue;
     }
 }
 public struct AStarTile

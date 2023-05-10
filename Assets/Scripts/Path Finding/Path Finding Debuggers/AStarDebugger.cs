@@ -9,13 +9,15 @@ public class AStarDebugger
     PathfindingManager _pathfindingManager;
     PortalNode _clickedPortalNode;
     float _tileSize;
-    int _tileAmount;
+    int _fieldRowAmount;
+    int _fieldColAmount;
 
     public AStarDebugger(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
         _tileSize = pathfindingManager.TileSize;
-        _tileAmount = pathfindingManager.TileAmount;
+        _fieldColAmount = pathfindingManager.ColumnAmount;
+        _fieldRowAmount = pathfindingManager.RowAmount;
     }
 
     public void DebugAstarForPortal(int offset)
@@ -26,7 +28,7 @@ public class AStarDebugger
         NativeArray<DirectionData> directions = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).Directions;
         SetClickedPortalNode(fieldGraph);
         Portal clickedPortal = _clickedPortalNode.Portal;
-        AStarGrid astartGrid = new AStarGrid(_tileAmount);
+        AStarGrid astartGrid = new AStarGrid(_fieldRowAmount, _fieldColAmount);
         NativeArray<SectorNode> sectorNodesOfPortal = fieldGraph.GetSectorNodesOf(_clickedPortalNode);
         DebugAStarFor(sectorNodesOfPortal[0].Sector);
         DebugAStarFor(sectorNodesOfPortal[1].Sector);
@@ -44,7 +46,7 @@ public class AStarDebugger
                 for(int c = lowerBound.C; c < upperBound.C; c++)
                 {
                     Index2 index = new Index2(r, c);
-                    float cost = aStarTiles[Index2.ToIndex(index, _tileAmount)].IntegratedCost;
+                    float cost = aStarTiles[Index2.ToIndex(index, _fieldColAmount)].IntegratedCost;
                     Vector3 pos = new Vector3(_tileSize / 2 + index.C * _tileSize, yOffset, _tileSize / 2 + index.R * _tileSize);
                     if(cost == float.MaxValue)
                     {

@@ -14,7 +14,8 @@ public class TerrainGenerator : MonoBehaviour
     [HideInInspector] public WalkabilityData WalkabilityData;
 
     public float TileSize;
-    public int TileAmount;
+    public int RowAmount;
+    public int ColumnAmount;
 
     Vector3[] _verticies = new Vector3[4];
     int[] _triangles = new int[6];
@@ -27,7 +28,7 @@ public class TerrainGenerator : MonoBehaviour
         SetTriangles();
         UpdateMesh();
 
-        WalkabilityData = new WalkabilityData(TileSize, TileAmount, _resolution, _simulationState);
+        WalkabilityData = new WalkabilityData(TileSize, RowAmount, ColumnAmount, _resolution, _simulationState);
 
 
         void ConfigureMesh()
@@ -39,8 +40,8 @@ public class TerrainGenerator : MonoBehaviour
         void SetVerticies()
         {
             _verticies[0] = Vector3.zero;
-            _verticies[1] = new Vector3(TileSize * TileAmount, 0, 0);
-            _verticies[2] = new Vector3(0, 0, TileSize * TileAmount);
+            _verticies[1] = new Vector3(TileSize * ColumnAmount, 0, 0);
+            _verticies[2] = new Vector3(0, 0, TileSize * RowAmount);
             _verticies[3] = _verticies[1] + _verticies[2];
         }
         void SetTriangles()

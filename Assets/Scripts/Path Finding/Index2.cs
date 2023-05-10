@@ -16,13 +16,13 @@
     {
         return index1.R != index2.R || index1.C != index2.C;
     }
-    public static int ToIndex(Index2 index2, int rowAmount)
+    public static int ToIndex(Index2 index2, int colAmount)
     {
-        return index2.R * rowAmount + index2.C;
+        return index2.R * colAmount + index2.C;
     }
-    public static Index2 ToIndex2(int index, int rowAmount)
+    public static Index2 ToIndex2(int index, int colAmount)
     {
-        return new Index2(index / rowAmount, index % rowAmount);
+        return new Index2(index / colAmount, index % colAmount);
     }
     public override string ToString()
     {
