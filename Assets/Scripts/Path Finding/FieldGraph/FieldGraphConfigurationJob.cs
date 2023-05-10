@@ -2,6 +2,7 @@
 using Unity.Collections;
 using Unity.Jobs;
 
+//Here, some vanilla procedural porgramming
 [BurstCompile]
 public struct FieldGraphConfigurationJob : IJob
 {
@@ -12,7 +13,6 @@ public struct FieldGraphConfigurationJob : IJob
     public NativeArray<PortalNode> PortalNodes;
     public NativeArray<PortalToPortal> PorPtrs;
     
-    //public AStarGrid _aStarGrid;
     public NativeArray<byte> _costs;
     public NativeArray<DirectionData> _directions;
 

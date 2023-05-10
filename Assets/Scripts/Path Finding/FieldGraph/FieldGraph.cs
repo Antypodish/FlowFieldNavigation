@@ -78,12 +78,11 @@ public struct FieldGraph
             Bound1 = bound1,
             Bound2 = bound2,
             SectorNodes = SectorArray.Nodes,
-            WinPtrs = SectorArray.WinPtrs,
+            SecToWinPtrs = SectorArray.WinPtrs,
             WindowNodes = WindowArray.Nodes,
-            SecPtrs = WindowArray.SecPtrs,
+            WinToSecPtrs = WindowArray.SecPtrs,
             PortalNodes = PortalArray.Nodes,
             PorPtrs = PortalArray.PorPtrs,
-            _aStarGrid = _aStarGrid,
             _costs = _costs,
             _directions = _directions,
 
@@ -91,7 +90,11 @@ public struct FieldGraph
             _fieldTileSize = _fieldTileSize,
             _sectorTileAmount = _sectorTileAmount,
             _sectorMatrixSize = _sectorMatrixSize,
-            _portalPerWindow = _portalPerWindow
+            _portalPerWindow = _portalPerWindow,
+            _integratedCosts = _aStarGrid._integratedCosts,
+            _searchQueue = _aStarGrid._searchQueue,
+            debugArray = new NativeArray<WindowPair>(1000, Allocator.Persistent),
+            windowCount = new NativeArray<int>(1, Allocator.Persistent)
         };
     }
     public NativeArray<WindowNode> GetWindowNodesOf(SectorNode sectorNode)
@@ -165,12 +168,6 @@ public struct FieldGraph
         _costs[Index2.ToIndex(bound1, _fieldTileAmount)] = byte.MaxValue;
         _costs[Index2.ToIndex(bound2, _fieldTileAmount)] = byte.MaxValue;
     }
-    public void ConfigureSectorNodes() => SectorArray.ConfigureSectorNodes(_fieldTileAmount, _sectorTileAmount);
-    public void ConfigureWindowNodes() => WindowArray.ConfigureWindowNodes(SectorArray.Nodes, _costs, _portalPerWindow, _sectorMatrixSize, _fieldTileAmount);
-    public void ConfigureSectorToWindowPoiners() => SectorArray.ConfigureSectorToWindowPoiners(WindowArray.Nodes);
-    public void ConfigureWindowToSectorPointers() => WindowArray.ConfigureWindowToSectorPointers(SectorArray.Nodes);
-    public void ConfigurePortalNodes() => PortalArray.ConfigurePortalNodes(WindowArray.Nodes, _costs, _fieldTileAmount, _portalPerWindow * 8 - 2);
-    public void ConfigurePortalToPortalPtrs() => PortalArray.ConfigurePortalToPortalPtrs(_aStarGrid, SectorArray, WindowArray, _costs, _directions, _fieldTileAmount);
 }
 public struct AStarTile
 {
