@@ -27,7 +27,8 @@ public class AStarDebugger
         NativeArray<byte> costs = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).Costs;
         NativeArray<DirectionData> directions = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).Directions;
         SetClickedPortalNode(fieldGraph);
-        Portal clickedPortal = _clickedPortalNode.Portal;
+        Portal clickedPortal1 = _clickedPortalNode.Portal1;
+        Portal clickedPortal2 = _clickedPortalNode.Portal2;
         AStarGrid astartGrid = new AStarGrid(_fieldRowAmount, _fieldColAmount);
         NativeArray<SectorNode> sectorNodesOfPortal = fieldGraph.GetSectorNodesOf(_clickedPortalNode);
         DebugAStarFor(sectorNodesOfPortal[0].Sector);
@@ -35,7 +36,7 @@ public class AStarDebugger
 
         void DebugAStarFor(Sector sector)
         {
-            Index2 targetIndex = sector.ContainsIndex(clickedPortal.Index1) ? clickedPortal.Index1 : clickedPortal.Index2;
+            Index2 targetIndex = sector.ContainsIndex(clickedPortal1.Index) ? clickedPortal1.Index : clickedPortal2.Index;
             NativeArray<AStarTile> aStarTiles = astartGrid.GetIntegratedCostsFor(sector, targetIndex, costs, directions);
 
             Index2 lowerBound = sector.StartIndex;
@@ -73,7 +74,7 @@ public class AStarDebugger
                 for (int i = 0; i < portalIndicies.Length; i++)
                 {
                     PortalNode pickedPortalNode = portalNodes[portalIndicies[i]];
-                    if (pickedPortalNode.Portal.Index1 == clickedIndex || pickedPortalNode.Portal.Index2 == clickedIndex)
+                    if (pickedPortalNode.Portal1.Index == clickedIndex || pickedPortalNode.Portal2.Index == clickedIndex)
                     {
                         _clickedPortalNode = pickedPortalNode;
                     }

@@ -1,4 +1,5 @@
-﻿using Unity.Collections;
+﻿using System.Diagnostics;
+using Unity.Collections;
 using Unity.Jobs;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -28,15 +29,7 @@ public class PathfindingJobManager
                 {
                     handle[j] = costEditJob[j].Schedule();
                 }
-                //CostEditHandles.Enqueue(JobHandle.CombineDependencies(handle));
-                JobHandle.CombineDependencies(handle).Complete();
-                NativeArray<WindowPair> windows = costEditJob[0].debugArray;
-                NativeArray<int> count = costEditJob[0].windowCount;
-                Debug.Log("count: " + count[0]);
-                for(int index = 0; index < count[0]; index++)
-                {
-                    Debug.Log("botleft: " + windows[index].Data.Window.BottomLeftBoundary + "\ntopright: " + windows[index].Data.Window.TopRightBoundary);
-                }
+                CostEditHandles.Enqueue(JobHandle.CombineDependencies(handle));
             }
             else
             {

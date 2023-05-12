@@ -29,7 +29,7 @@ public struct FieldGraph
         int sectorMatrixColAmount = fieldColAmount / sectorSize;
 
         int sectorAmount = sectorMatrixRowAmount * sectorMatrixColAmount;
-        int windowAmount = 2 * fieldColAmount * fieldRowAmount + fieldRowAmount - fieldColAmount;
+        int windowAmount = 2 * sectorMatrixColAmount * sectorMatrixRowAmount - sectorMatrixRowAmount - sectorMatrixColAmount;
         int winToSecPtrAmount = windowAmount * 2;
         int secToWinPtrAmount = windowAmount * 2;
         int divider = 2;
@@ -94,15 +94,15 @@ public struct FieldGraph
             _costs = _costs,
             _directions = _directions,
 
-            _fieldTileAmount = _fieldColAmount,//*
+            _fieldColAmount = _fieldColAmount,
+            _fieldRowAmount = _fieldRowAmount,
             _fieldTileSize = _fieldTileSize,
             _sectorTileAmount = _sectorTileAmount,
-            _sectorMatrixSize = _fieldColAmount,//*
+            _sectorMatrixColAmount = _sectorMatrixColAmount,
+            _sectorMatrixRowAmount = _sectorMatrixRowAmount,
             _portalPerWindow = _portalPerWindow,
             _integratedCosts = _aStarGrid._integratedCosts,
             _searchQueue = _aStarGrid._searchQueue,
-            debugArray = new NativeArray<WindowPair>(1000, Allocator.Persistent),
-            windowCount = new NativeArray<int>(1, Allocator.Persistent)
         };
     }
     public NativeArray<WindowNode> GetWindowNodesOf(SectorNode sectorNode)
@@ -133,7 +133,6 @@ public struct FieldGraph
             sectorNodes[i - windowNode.WinToSecPtr] = SectorArray.Nodes[WindowArray.SecPtrs[i]];
         }
         return sectorNodes;
-
     }
     public NativeArray<int> GetWindowNodeIndiciesOf(SectorNode sectorNode)
     {

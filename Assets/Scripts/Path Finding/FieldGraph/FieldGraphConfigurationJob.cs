@@ -1,6 +1,8 @@
 ﻿using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
+using UnityEditor.Experimental.GraphView;
+using UnityEngine;
 
 //Here, some vanilla procedural porgramming
 [BurstCompile]
@@ -198,16 +200,14 @@ public struct FieldGraphConfigurationJob : IJob
                     }
                     if ((costs[index1] == byte.MaxValue || costs[index2] == byte.MaxValue) && !wasUnwalkable)
                     {
-                        Portal portal = GetPortalBetween(bound1, bound2, true);
-                        portalNodes[porPtr + portalCount] = new PortalNode(portal, i, (porPtr + portalCount) * porToPorCnt);
+                        portalNodes[porPtr + portalCount] = GetPortalNodeBetween(bound1, bound2, porPtr, portalCount, i, true);
                         portalCount++;
                         wasUnwalkable = true;
                     }
                 }
                 if (!wasUnwalkable)
                 {
-                    Portal portal = GetPortalBetween(bound1, bound2, true);
-                    portalNodes[porPtr + portalCount] = new PortalNode(portal, i, (porPtr + portalCount) * porToPorCnt);
+                    portalNodes[porPtr + portalCount] = GetPortalNodeBetween(bound1, bound2, porPtr, portalCount, i, true);
                 }
             }
             void ConfigureForVertical()
@@ -240,74 +240,106 @@ public struct FieldGraphConfigurationJob : IJob
                     }
                     if ((costs[index1] == byte.MaxValue || costs[index2] == byte.MaxValue) && !wasUnwalkable)
                     {
-                        Portal portal = GetPortalBetween(bound1, bound2, false);
-                        portalNodes[porPtr + portalCount] = new PortalNode(portal, i, (porPtr + portalCount) * porToPorCnt);
+                        portalNodes[porPtr + portalCount] = GetPortalNodeBetween(bound1, bound2, porPtr, portalCount, i, false);
                         portalCount++;
                         wasUnwalkable = true;
                     }
                 }
                 if (!wasUnwalkable)
                 {
-                    Portal portal = GetPortalBetween(bound1, bound2, false);
-                    portalNodes[porPtr + portalCount] = new PortalNode(portal, i, (porPtr + portalCount) * porToPorCnt);
+                    portalNodes[porPtr + portalCount] = GetPortalNodeBetween(bound1, bound2, porPtr, portalCount, i, false); ;
                 }
             }
         }
-        Portal GetPortalBetween(Index2 boundary1, Index2 boundary2, bool isHorizontal)
+        PortalNode GetPortalNodeBetween(Index2 boundary1, Index2 boundary2, int porPtr, int portalCount, int winPtr, bool isHorizontal)
         {
-            Portal portal;
+            Portal portal1;
+            Portal portal2;
+            int por1PorToPorPtr = (porPtr + portalCount) * porToPorCnt;
+            int por2PorToPorPtr = por1PorToPorPtr + porToPorCnt / 2;
             if (isHorizontal)
             {
                 int col = (boundary1.C + boundary2.C) / 2;
-                portal = new Portal(new Index2(boundary1.R, col), new Index2(boundary2.R, col));
+                portal1 = new Portal(new Index2(boundary1.R, col), por1PorToPorPtr);
+                portal2 = new Portal(new Index2(boundary2.R, col), por2PorToPorPtr);
             }
             else
             {
                 int row = (boundary1.R + boundary2.R) / 2;
-                portal = new Portal(new Index2(row, boundary1.C), new Index2(row, boundary2.C));
+                portal1 = new Portal(new Index2(row, boundary1.C), por1PorToPorPtr);
+                portal2 = new Portal(new Index2(row, boundary2.C), por2PorToPorPtr);
             }
-            return portal;
+            return new PortalNode(portal1, portal2, winPtr);
         }
     }
     void ConfigurePortalToPortalPtrs()
     {
+
+        int sectorColAmount = _sectorColAmount;
+        int sectorTileAmount = _sectorTileAmount;
+        NativeArray<PortalNode> portalNodes = PortalNodes;
         NativeArray<SectorNode> sectorNodes = SectorNodes;
+        NativeArray<PortalToPortal> porPtrs = PorPtrs;
+        int fieldColAmount = _fieldColAmount;
 
         for (int i = 0; i < sectorNodes.Length; i++)
         {
             Sector pickedSector = sectorNodes[i].Sector;
             NativeArray<int> portalIndicies = GetPortalIndicies(sectorNodes[i]);
+            NativeArray<byte> portalDeterminationArray = GetPortalDeterminationArrayFor(portalIndicies, i);
+
             for (int j = 0; j < portalIndicies.Length; j++)
             {
                 //for each portal, set it "target" and calculate distances of others
                 PortalNode sourcePortalNode = PortalNodes[portalIndicies[j]];
-                Portal sourcePortal = sourcePortalNode.Portal;
-                Index2 sourceIndex = pickedSector.ContainsIndex(sourcePortal.Index1) ? sourcePortal.Index1 : sourcePortal.Index2;
+                Index2 sourceIndex = portalDeterminationArray[j] == 1 ? sourcePortalNode.Portal1.Index : sourcePortalNode.Portal2.Index;
                 NativeArray<AStarTile> integratedCosts = GetIntegratedCostsFor(pickedSector, sourceIndex);
 
-                for (int k = j + 1; k < portalIndicies.Length; k++)
+                CalculatePortalBounds(0, j);
+                CalculatePortalBounds(j + 1, portalIndicies.Length);
+
+                void CalculatePortalBounds(int fromInclusive, int toExclusive)
                 {
-                    PortalNode targetPortalNode = PortalNodes[portalIndicies[k]];
-                    Portal targetPortal = targetPortalNode.Portal;
-                    Index2 targetIndex2 = pickedSector.ContainsIndex(targetPortal.Index1) ? targetPortal.Index1 : targetPortal.Index2;
-                    int targetIndex = Index2.ToIndex(targetIndex2, _fieldColAmount);
-                    float cost = integratedCosts[targetIndex].IntegratedCost;
+                    for (int k = fromInclusive; k < toExclusive; k++)
+                    {
+                        PortalNode targetPortalNode = portalNodes[portalIndicies[k]];
+                        byte pickedTargetPortalNumber = portalDeterminationArray[k];
+                        Index2 targetIndex = pickedTargetPortalNumber == 1 ? targetPortalNode.Portal1.Index : targetPortalNode.Portal2.Index;
+                        int targetIndexFlat = targetIndex.R * fieldColAmount + targetIndex.C;
 
-                    if (cost == float.MaxValue) { continue; }
+                        float cost = integratedCosts[targetIndexFlat].IntegratedCost;
 
-                    //set for target
-                    targetPortalNode.PorToPorCnt++;
-                    PortalNodes[portalIndicies[k]] = targetPortalNode;
-                    PorPtrs[targetPortalNode.PorToPorPtr + targetPortalNode.PorToPorCnt - 1] = new PortalToPortal(cost, portalIndicies[j]);
+                        if (cost == float.MaxValue) { continue; }
 
-                    //set for source
-                    sourcePortalNode.PorToPorCnt++;
-                    PorPtrs[sourcePortalNode.PorToPorPtr + sourcePortalNode.PorToPorCnt - 1] = new PortalToPortal(cost, portalIndicies[k]);
+                        if (pickedTargetPortalNumber == 1)
+                        {
+                            targetPortalNode.Portal1.PorToPorCnt++;
+                            portalNodes[portalIndicies[k]] = targetPortalNode;
+                            porPtrs[targetPortalNode.Portal1.PorToPorPtr + targetPortalNode.Portal1.PorToPorCnt - 1] = new PortalToPortal(cost, portalIndicies[j]);
+                        }
+                        else
+                        {
+                            targetPortalNode.Portal2.PorToPorCnt++;
+                            portalNodes[portalIndicies[k]] = targetPortalNode;
+                            porPtrs[targetPortalNode.Portal2.PorToPorPtr + targetPortalNode.Portal2.PorToPorCnt - 1] = new PortalToPortal(cost, portalIndicies[j]);
+                        }
+                    }
                 }
-                PortalNodes[portalIndicies[j]] = sourcePortalNode;
             }
         }
+        NativeArray<byte> GetPortalDeterminationArrayFor(NativeArray<int> portalIndicies, int sectorIndex)
+        {
+            NativeArray<byte> determinationArray = new NativeArray<byte>(portalIndicies.Length, Allocator.Temp);
+            for(int i = 0; i < determinationArray.Length; i++)
+            {
+                Portal portal1 = portalNodes[portalIndicies[i]].Portal1;
+                Index2 sectorSpaceIndex = new Index2(portal1.Index.R / sectorTileAmount, portal1.Index.C / sectorTileAmount);
+                determinationArray[i] = sectorIndex == sectorSpaceIndex.R * sectorColAmount + sectorSpaceIndex.C ? (byte) 1 : (byte) 2;
+            }
+            return determinationArray;
+        }
     }
+    
     NativeArray<int> GetPortalIndicies(SectorNode sectorNode)
     {
         NativeArray<int> portalIndicies;

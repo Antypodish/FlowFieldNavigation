@@ -346,7 +346,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 638972354}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 79166ff1ecdf7ee4999fe0f898898ffb, type: 3}
   m_Name: 
@@ -523,10 +523,10 @@ MonoBehaviour:
   _windows: 1
   _sectorWindows: 0
   _windowSectors: 0
-  _portals: 1
+  _portals: 0
   _portalsOnSector: 0
-  _costsToPortal: 0
-  _AStar: 1
+  _costsToPortal: 1
+  _AStar: 0
 --- !u!1001 &1284591847240803008
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -552,7 +552,7 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: RowAmount
-      value: 50
+      value: 500
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
@@ -567,7 +567,7 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: ColumnAmount
-      value: 100
+      value: 500
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
@@ -698,6 +698,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1825739965324605910, guid: e0d1fa0b1efdac642802b5705081a344,
+        type: 3}
+      propertyPath: _maxZoom
+      value: -45
       objectReference: {fileID: 0}
     - target: {fileID: 1825739965324605910, guid: e0d1fa0b1efdac642802b5705081a344,
         type: 3}

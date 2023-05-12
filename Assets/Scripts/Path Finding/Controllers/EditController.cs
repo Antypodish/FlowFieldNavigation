@@ -9,7 +9,7 @@ public class EditController : MonoBehaviour
     Index2 _secondClicked;
     private void Update()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(1))
         {
             float tileSize = _pathfindingManager.TileSize;
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);

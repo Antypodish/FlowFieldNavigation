@@ -1,11 +1,13 @@
 ﻿public struct Portal
 {
-    public Index2 Index1;
-    public Index2 Index2;
+    public Index2 Index;
+    public int PorToPorPtr;
+    public byte PorToPorCnt;
 
-    public Portal(Index2 index1, Index2 index2)
+    public Portal(Index2 index, int porToPorPtr)
     {
-        Index1 = index1;
-        Index2 = index2;
+        Index = index;
+        PorToPorPtr = porToPorPtr;
+        PorToPorCnt = 0;
     }
 }
