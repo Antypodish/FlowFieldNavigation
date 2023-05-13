@@ -68,8 +68,8 @@ public class AStarDebugger
             if (Physics.Raycast(ray, out hit))
             {
                 Vector3 hitPos = hit.point;
-                NativeArray<int> portalIndicies = fieldGraph.SectorArray.GetPortalIndicies(fieldGraph.GetSectorNodeAt(hitPos), fieldGraph.WindowArray.Nodes);
-                NativeArray<PortalNode> portalNodes = fieldGraph.PortalArray.Nodes;
+                NativeArray<int> portalIndicies = fieldGraph.GetPortalIndicies(fieldGraph.GetSectorNodeAt(hitPos), fieldGraph.WindowNodes);
+                NativeArray<PortalNode> portalNodes = fieldGraph.PortalNodes;
                 Index2 clickedIndex = new Index2(Mathf.FloorToInt(hitPos.z / _tileSize), Mathf.FloorToInt(hitPos.x / _tileSize));
                 for (int i = 0; i < portalIndicies.Length; i++)
                 {

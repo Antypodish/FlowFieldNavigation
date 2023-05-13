@@ -17,8 +17,8 @@ public class SectorGraphDebugger
         Gizmos.color = Color.black;
         float yOffset = 0.02f;
         float tileSize = _pathfindingManager.TileSize;
-        FieldGraph sectorGraph = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).FieldGraph;
-        NativeArray<SectorNode> sectorNodes = sectorGraph.SectorArray.Nodes;
+        FieldGraph fieldGraph = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).FieldGraph;
+        NativeArray<SectorNode> sectorNodes = fieldGraph.SectorNodes;
         for (int i = 0; i < sectorNodes.Length; i++)
         {
             int sectorSize = sectorNodes[i].Sector.Size;
@@ -39,7 +39,7 @@ public class SectorGraphDebugger
 
 
             //draw line through each window of the sector
-            NativeArray<WindowNode> windowNodes = sectorGraph.GetWindowNodesOf(sectorNodes[i]);
+            NativeArray<WindowNode> windowNodes = fieldGraph.GetWindowNodesOf(sectorNodes[i]);
             for(int j = 0; j < windowNodes.Length; j++)
             {
                 Index2 winBotLeftIndex = windowNodes[j].Window.BottomLeftBoundary;
@@ -55,8 +55,8 @@ public class SectorGraphDebugger
         Gizmos.color = Color.black;
         float yOffset = 0.02f;
         float tileSize = _pathfindingManager.TileSize;
-        FieldGraph sectorGraph = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).FieldGraph;
-        NativeArray<WindowNode> windowNodes = sectorGraph.WindowArray.Nodes;
+        FieldGraph fieldGraph = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).FieldGraph;
+        NativeArray<WindowNode> windowNodes = fieldGraph.WindowNodes;
         for(int i = 0; i < windowNodes.Length; i++)
         {
             Index2 winBotLeftIndex = windowNodes[i].Window.BottomLeftBoundary;
@@ -74,7 +74,7 @@ public class SectorGraphDebugger
             Gizmos.DrawLine(sqrBotRight, sqrBotLeft);
             Gizmos.DrawLine(sqrBotLeft, sqrTopLeft);
 
-            NativeArray<SectorNode> sectorNodes = sectorGraph.GetSectorNodesOf(windowNodes[i]);
+            NativeArray<SectorNode> sectorNodes = fieldGraph.GetSectorNodesOf(windowNodes[i]);
             for(int j = 0; j < sectorNodes.Length; j++)
             {
                 int sectorSize = sectorNodes[j].Sector.Size;

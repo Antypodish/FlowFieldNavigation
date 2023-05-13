@@ -21,7 +21,6 @@ public class TilePositionDebugger
             Vector3 pos = tilePositions[i];
             Gizmos.DrawCube(pos, Vector3.one / 4);
         }
-
     }
 }
 

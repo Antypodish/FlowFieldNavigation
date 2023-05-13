@@ -22,10 +22,9 @@ public class PortalDebugger
     public void DebugPortals(int offset)
     {
         Gizmos.color = Color.cyan;
-        WindowArray windowArray = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).FieldGraph.WindowArray;
-        PortalArray portalArray = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).FieldGraph.PortalArray;
-        NativeArray<WindowNode> windowNodes = windowArray.Nodes;
-        NativeArray<PortalNode> portalNodes = portalArray.Nodes;
+        FieldGraph fieldGraph = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).FieldGraph;
+        NativeArray<WindowNode> windowNodes = fieldGraph.WindowNodes;
+        NativeArray<PortalNode> portalNodes = fieldGraph.PortalNodes;
         for(int i = 0; i < windowNodes.Length; i++)
         {
             int porPtr = windowNodes[i].PorPtr;
@@ -45,8 +44,8 @@ public class PortalDebugger
         FieldGraph fieldGraph = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).FieldGraph;
         SetClickedSectorNode(fieldGraph);
 
-        NativeArray<int> portalIndicies = fieldGraph.SectorArray.GetPortalIndicies(_clickedSectorNodes, fieldGraph.WindowArray.Nodes);
-        NativeArray<PortalNode> portalNodes = fieldGraph.PortalArray.Nodes;
+        NativeArray<int> portalIndicies = fieldGraph.GetPortalIndicies(_clickedSectorNodes, fieldGraph.WindowNodes);
+        NativeArray<PortalNode> portalNodes = fieldGraph.PortalNodes;
         for(int i = 0; i < portalIndicies.Length; i++)
         {
             PortalNode pickedPortalNode = portalNodes[portalIndicies[i]];
@@ -66,8 +65,8 @@ public class PortalDebugger
         Gizmos.DrawSphere(GetPositionOf(_clickedPortalNode), 0.35f);
 
         //debug neighbours of clicked portal
-        NativeArray<PortalToPortal> porPtrs = fieldGraph.PortalArray.PorPtrs;
-        NativeArray<PortalNode> portalNodes = fieldGraph.PortalArray.Nodes;
+        NativeArray<PortalToPortal> porPtrs = fieldGraph.PorToPorPtrs;
+        NativeArray<PortalNode> portalNodes = fieldGraph.PortalNodes;
         Gizmos.color = Color.black;
         DebugNeighboursAt(_clickedPortalNode.Portal1);
         DebugNeighboursAt(_clickedPortalNode.Portal2);
@@ -145,8 +144,8 @@ public class PortalDebugger
             if (Physics.Raycast(ray, out hit))
             {
                 Vector3 hitPos = hit.point;
-                NativeArray<int> portalIndicies = fieldGraph.SectorArray.GetPortalIndicies(fieldGraph.GetSectorNodeAt(hitPos), fieldGraph.WindowArray.Nodes);
-                NativeArray<PortalNode> portalNodes = fieldGraph.PortalArray.Nodes;
+                NativeArray<int> portalIndicies = fieldGraph.GetPortalIndicies(fieldGraph.GetSectorNodeAt(hitPos), fieldGraph.WindowNodes);
+                NativeArray<PortalNode> portalNodes = fieldGraph.PortalNodes;
                 Index2 clickedIndex = new Index2(Mathf.FloorToInt(hitPos.z / _tileSize), Mathf.FloorToInt(hitPos.x / _tileSize));
                 for (int i = 0; i < portalIndicies.Length; i++)
                 {

@@ -17,29 +17,29 @@ public class CostFieldProducer
         for(int i = 0; i < count; i++)
         {
             _producedCostFields[i] = new CostField(_walkabilityData, i + minOffset, sectorSize);
-            _producedCostFields[i].StartJobs();
+            _producedCostFields[i].ScheduleConfigurationJob();
         }
     }
     public void CompleteCostFieldProduction()
     {
         for (int i = _producedCostFields.Length - 1; i >=0; i--)
         {
-            _producedCostFields[i].EndJobsIfCompleted();
+            _producedCostFields[i].EndConfigurationJobIfCompleted();
         }
     }
     public void ForceCompleteCostFieldProduction()
     {
         for (int i = _producedCostFields.Length - 1; i >= 0; i--)
         {
-            _producedCostFields[i].ForceEndJob();
+            _producedCostFields[i].ForceCompleteConigurationJob();
         }
     }
-    public CostFieldEditJob[] GetEditJobs(Index2 bound1, Index2 bound2)
+    public CostFieldEditJob[] GetEditJobs(Index2 bound1, Index2 bound2, byte newCost)
     {
         CostFieldEditJob[] editJobs = new CostFieldEditJob[_producedCostFields.Length];
         for(int i = 0; i < editJobs.Length; i++)
         {
-            editJobs[i] = _producedCostFields[i].GetEditJob(bound1, bound2);
+            editJobs[i] = _producedCostFields[i].GetEditJob(bound1, bound2, newCost);
         }
         return editJobs;
     }

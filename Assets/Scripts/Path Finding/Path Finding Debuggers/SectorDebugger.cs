@@ -17,10 +17,10 @@ public class SectorDebugger
         CostField costField = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset);
         float tileSize = _pathfindingManager.TileSize;
         float yOffset = .02f;
-        for(int i = 0; i < costField.FieldGraph.SectorArray.Nodes.Length; i++)
+        for(int i = 0; i < costField.FieldGraph.SectorNodes.Length; i++)
         {
-            Index2 index = costField.FieldGraph.SectorArray.Nodes[i].Sector.StartIndex;
-            int sectorSize = costField.FieldGraph.SectorArray.Nodes[i].Sector.Size;
+            Index2 index = costField.FieldGraph.SectorNodes[i].Sector.StartIndex;
+            int sectorSize = costField.FieldGraph.SectorNodes[i].Sector.Size;
             Vector3 botLeft = new Vector3(index.C * tileSize, yOffset, index.R * tileSize);
             Vector3 botRight = new Vector3((index.C + sectorSize) * tileSize, yOffset, index.R * tileSize);
             Vector3 topLeft = new Vector3(index.C * tileSize, yOffset, (index.R + sectorSize) * tileSize);

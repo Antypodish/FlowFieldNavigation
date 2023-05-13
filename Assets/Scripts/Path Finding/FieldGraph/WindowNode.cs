@@ -8,7 +8,7 @@ public struct WindowNode
     public int PorPtr;
     public int PorCnt;
 
-    public WindowNode(Window window, int winToSecCnt, int winToSecPtr, int porPtr, int porCnt, NativeArray<byte> costs)
+    public WindowNode(Window window, int winToSecCnt, int winToSecPtr, int porPtr, int porCnt)
     {
         Window = window;
         WinToSecCnt = winToSecCnt;

@@ -54,19 +54,6 @@ public class CostFieldDebugger
             _debugMesh.RecalculateNormals();
         }
     }
-
-    public void DebugCostField(int offset)
-    {
-        NativeArray<Vector3> tilePositions = _pathfindingManager.TilePositions;
-        NativeArray<byte> costs = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).Costs;
-
-        for(int i = 0; i < costs.Length; i++)
-        {
-            Vector3 pos = tilePositions[i];
-            byte cost = costs[i];
-            //Handles.Label(pos, cost.ToString());
-        }
-    }
     public void DebugCostFieldWithMesh(int offset)
     {
         Gizmos.color = Color.black;

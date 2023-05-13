@@ -29,7 +29,7 @@ public class CostField
 
 
 
-        //create sector graph
+        //allocate field graph
         FieldGraph = new FieldGraph(Costs, Directions, sectorSize, rowAmount, colAmount, offset, _fieldTileSize);
 
 
@@ -79,24 +79,24 @@ public class CostField
             }
         }
     }
-    public void StartJobs()
+    public void ScheduleConfigurationJob()
     {
         FieldGraphConfigurationJob _fieldGraphConfigJob = FieldGraph.GetConfigJob();
         _fieldGraphConfigJobHandle = _fieldGraphConfigJob.Schedule();
     }
-    public void EndJobsIfCompleted()
+    public void EndConfigurationJobIfCompleted()
     {
         if (_fieldGraphConfigJobHandle.IsCompleted)
         {
             _fieldGraphConfigJobHandle.Complete();
         }
     }
-    public void ForceEndJob()
+    public void ForceCompleteConigurationJob()
     {
         _fieldGraphConfigJobHandle.Complete();
     }
-    public CostFieldEditJob GetEditJob(Index2 bound1, Index2 bound2)
+    public CostFieldEditJob GetEditJob(Index2 bound1, Index2 bound2, byte newCost)
     {
-        return FieldGraph.GetEditJob(bound1, bound2);
+        return FieldGraph.GetEditJob(bound1, bound2, newCost);
     }
 }

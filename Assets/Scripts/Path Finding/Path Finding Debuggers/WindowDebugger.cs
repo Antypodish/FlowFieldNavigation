@@ -59,10 +59,10 @@ public class WindowDebugger
         float tileSize = _pathfindingManager.TileSize;
 
         CostField costField = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset);
-        for (int i = 0; i < costField.FieldGraph.WindowArray.Nodes.Length; i++)
+        for (int i = 0; i < costField.FieldGraph.WindowNodes.Length; i++)
         {
-            Index2 botLeftBound = costField.FieldGraph.WindowArray.Nodes[i].Window.BottomLeftBoundary;
-            Index2 upRightBound = costField.FieldGraph.WindowArray.Nodes[i].Window.TopRightBoundary;
+            Index2 botLeftBound = costField.FieldGraph.WindowNodes[i].Window.BottomLeftBoundary;
+            Index2 upRightBound = costField.FieldGraph.WindowNodes[i].Window.TopRightBoundary;
             for(int r = botLeftBound.R; r <= upRightBound.R; r++)
             {
                 for(int c = botLeftBound.C; c <= upRightBound.C; c++)
