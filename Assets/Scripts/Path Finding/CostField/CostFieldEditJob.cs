@@ -40,9 +40,13 @@ public struct CostFieldEditJob : IJob
     }
     void ApplyCostUpdate()
     {
+        if (Bound1.R == 0) { Bound1.R += 1; }
+        if (Bound1.C == 0) { Bound1.C += 1; }
+        if (Bound2.R == FieldRowAmount - 1) { Bound2.R -= 1; }
+        if(Bound2.C == FieldColAmount - 1) { Bound2.C -= 1; }
+
         int bound1Flat = Bound1.R * FieldColAmount + Bound1.C;
         int bound2Flat = Bound2.R * FieldColAmount + Bound2.C;
-        int rowDif = Bound2.R - Bound1.R;
         int colDif = Bound2.C - Bound1.C;
 
         for(int r = bound1Flat; r <= bound2Flat - colDif; r += FieldColAmount)

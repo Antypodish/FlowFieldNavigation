@@ -101,7 +101,6 @@ public struct FieldGraph
             PorPtrs = PorToPorPtrs,
             Costs = _costs,
             Directions = _directions,
-
             FieldColAmount = _fieldColAmount,
             FieldRowAmount = _fieldRowAmount,
             FieldTileSize = _fieldTileSize,
@@ -177,11 +176,6 @@ public struct FieldGraph
         Index2 index2 = new Index2(Mathf.FloorToInt(pos.z / sectorSize), Mathf.FloorToInt(pos.x / sectorSize));
         int index = Index2.ToIndex(index2, _sectorMatrixColAmount);
         return SectorNodes[index];
-    }
-    public void SetUnwalkable(Index2 bound1, Index2 bound2)
-    {
-        _costs[Index2.ToIndex(bound1, _fieldColAmount)] = byte.MaxValue;
-        _costs[Index2.ToIndex(bound2, _fieldColAmount)] = byte.MaxValue;
     }
     public NativeArray<int> GetPortalIndicies(SectorNode sectorNode, NativeArray<WindowNode> windowNodes)
     {

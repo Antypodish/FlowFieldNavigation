@@ -3,7 +3,7 @@
 public class EditController : MonoBehaviour
 {
     [SerializeField] PathfindingManager _pathfindingManager;
-
+    [SerializeField] EditValue _editValue;
     bool IsAlreadyClicked = false;
     Index2 _firstClicked;
     Index2 _secondClicked;
@@ -20,7 +20,7 @@ public class EditController : MonoBehaviour
                 if (IsAlreadyClicked)
                 {
                     _secondClicked = new Index2(Mathf.FloorToInt(hitPos.z / tileSize), Mathf.FloorToInt(hitPos.x / tileSize));
-                    _pathfindingManager.SetUnwalkable(_firstClicked, _secondClicked, byte.MaxValue);
+                    _pathfindingManager.SetUnwalkable(_firstClicked, _secondClicked, (byte) _editValue);
                     IsAlreadyClicked = false;
                 }
                 else
@@ -31,4 +31,9 @@ public class EditController : MonoBehaviour
             }
         }
     }
+    private enum EditValue : byte
+    {
+        Walkable = 1,
+        Unwalkable = byte.MaxValue
+    };
 }
