@@ -7,13 +7,14 @@ public class CostField
     public int Offset;
     public NativeArray<byte> Costs;
     public FieldGraph FieldGraph;
-    public NativeArray<DirectionData> Directions;
+    NativeArray<DirectionData> Directions;
 
     float _fieldTileSize;
     JobHandle _fieldGraphConfigJobHandle;
-    public CostField(WalkabilityData walkabilityData, int offset, int sectorSize)
+    public CostField(WalkabilityData walkabilityData, NativeArray<DirectionData> directions, int offset, int sectorSize)
     {
         _fieldTileSize = walkabilityData.TileSize;
+        Directions = directions;
         int rowAmount = walkabilityData.RowAmount;
         int colAmount = walkabilityData.ColAmount;
         WalkabilityCell[][] walkabilityMatrix = walkabilityData.WalkabilityMatrix;
@@ -23,15 +24,8 @@ public class CostField
         Costs = new NativeArray<byte>(rowAmount * colAmount, Allocator.Persistent);
         CalculateCosts();
 
-        //configure directions
-        Directions = new NativeArray<DirectionData>(Costs.Length, Allocator.Persistent);
-        CalculateDirections();
-
-
-
         //allocate field graph
         FieldGraph = new FieldGraph(Costs, Directions, sectorSize, rowAmount, colAmount, offset, _fieldTileSize);
-
 
         //HELPERS
         void CalculateCosts()
@@ -69,13 +63,6 @@ public class CostField
                         }
                     }
                 }
-            }
-        }
-        void CalculateDirections()
-        {
-            for(int i = 0; i < Directions.Length; i++)
-            {
-                Directions[i] = new DirectionData(i, rowAmount, colAmount);
             }
         }
     }

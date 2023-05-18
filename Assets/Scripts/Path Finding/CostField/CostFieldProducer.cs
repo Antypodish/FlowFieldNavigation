@@ -1,14 +1,41 @@
 ﻿using Unity.Collections;
-using Unity.Jobs;
+using UnityEngine;
 
 public class CostFieldProducer
 {
     WalkabilityData _walkabilityData;
     CostField[] _producedCostFields;
 
-    public CostFieldProducer(WalkabilityData walkabilityData)
+    //utility
+    public NativeArray<DirectionData> Directions;
+    public NativeArray<LocalDirectionData> LocalDirections;
+    public CostFieldProducer(WalkabilityData walkabilityData, byte sectorTileAmount)
     {
         _walkabilityData = walkabilityData;
+
+        //calculate directions
+        Directions = new NativeArray<DirectionData>(walkabilityData.RowAmount * walkabilityData.ColAmount, Allocator.Persistent);
+        CalculateDirections();
+
+        //calculate local directions
+        LocalDirections = new NativeArray<LocalDirectionData>(sectorTileAmount * sectorTileAmount, Allocator.Persistent);
+        CalculateLocalDirections();
+
+        //HELPERS
+        void CalculateDirections()
+        {
+            for (int i = 0; i < Directions.Length; i++)
+            {
+                Directions[i] = new DirectionData(i, walkabilityData.RowAmount, walkabilityData.ColAmount);
+            }
+        }
+        void CalculateLocalDirections()
+        {
+            for (byte i = 0; i < LocalDirections.Length; i++)
+            {
+                LocalDirections[i] = new LocalDirectionData(i, sectorTileAmount);
+            }
+        }
     }
     public void StartCostFieldProduction(int minOffset, int maxOffset, int sectorSize)
     {
@@ -16,7 +43,7 @@ public class CostFieldProducer
         _producedCostFields = new CostField[count];
         for(int i = 0; i < count; i++)
         {
-            _producedCostFields[i] = new CostField(_walkabilityData, i + minOffset, sectorSize);
+            _producedCostFields[i] = new CostField(_walkabilityData, Directions, i + minOffset, sectorSize);
             _producedCostFields[i].ScheduleConfigurationJob();
         }
     }

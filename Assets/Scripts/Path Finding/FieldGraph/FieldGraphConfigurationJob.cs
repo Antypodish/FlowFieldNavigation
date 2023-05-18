@@ -15,7 +15,7 @@ public struct FieldGraphConfigurationJob : IJob
     public NativeArray<PortalNode> PortalNodes;
     public NativeArray<PortalToPortal> PorToPorPtrs;
     public NativeArray<byte> Costs;
-    public NativeArray<DirectionData> Directions;
+    [ReadOnly] public NativeArray<DirectionData> Directions;
     public int FieldRowAmount;
     public int FieldColAmount;
     public float FieldTileSize;

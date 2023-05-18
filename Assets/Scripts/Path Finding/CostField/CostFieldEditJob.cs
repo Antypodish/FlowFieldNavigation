@@ -18,7 +18,7 @@ public struct CostFieldEditJob : IJob
     public NativeArray<PortalNode> PortalNodes;
     public NativeArray<PortalToPortal> PorPtrs;
     public NativeArray<byte> Costs;
-    public NativeArray<DirectionData> Directions;
+    [ReadOnly] public NativeArray<DirectionData> Directions;
     public int FieldColAmount;
     public int FieldRowAmount;
     public float FieldTileSize;

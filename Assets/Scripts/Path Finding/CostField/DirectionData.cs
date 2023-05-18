@@ -51,4 +51,8 @@
             return false;
         }
     }
+    public string ToString()
+    {
+        return "{" + N + ", " + NE + ", " + E + ", " + SE + ", " + S + ", " + SW + ", " + W + ", " + NW + "}";
+    }
 }

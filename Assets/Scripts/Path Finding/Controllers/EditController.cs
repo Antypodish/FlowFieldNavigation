@@ -20,7 +20,7 @@ public class EditController : MonoBehaviour
                 if (IsAlreadyClicked)
                 {
                     _secondClicked = new Index2(Mathf.FloorToInt(hitPos.z / tileSize), Mathf.FloorToInt(hitPos.x / tileSize));
-                    _pathfindingManager.SetUnwalkable(_firstClicked, _secondClicked, (byte) _editValue);
+                    _pathfindingManager.EditCost(_firstClicked, _secondClicked, (byte) _editValue);
                     IsAlreadyClicked = false;
                 }
                 else

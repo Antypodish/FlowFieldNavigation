@@ -1,6 +1,12 @@
-﻿using Unity.Collections;
+﻿using System.Diagnostics;
+using TMPro;
+using Unity.Burst;
+using Unity.Collections;
+using Unity.Jobs;
+using Unity.VisualScripting;
+using UnityEditor;
 using UnityEngine;
-
+using UnityEngine.Analytics;
 public class PathfindingManager : MonoBehaviour
 {
     [SerializeField] TerrainGenerator _terrainGenerator;
@@ -8,19 +14,27 @@ public class PathfindingManager : MonoBehaviour
 
     [HideInInspector] public static PathfindingJobManager JobManager;
     [HideInInspector] public CostFieldProducer CostFieldProducer;
+    [HideInInspector] public PathProducer PathProducer;
     [HideInInspector] public NativeArray<Vector3> TilePositions;
     [HideInInspector] public float TileSize;
     [HideInInspector] public int RowAmount;
     [HideInInspector] public int ColumnAmount;
+    [HideInInspector] public byte SectorTileAmount = 10;
+
+    public static NativeArray<int> IntArray;
+    public static NativeArray<float> FloatArray;
+    public static NativeArray<int> IntSize;
+    public static NativeArray<int> FloatSize;
     private void Start()
     {
-        JobManager = new PathfindingJobManager();
-        CostFieldProducer = new CostFieldProducer(_terrainGenerator.WalkabilityData);
-        CostFieldProducer.StartCostFieldProduction(0, _maxCostfieldOffset, 10);
-
+        //!!!ORDER IS IMPORTANT!!!
         TileSize = _terrainGenerator.TileSize;
         RowAmount = _terrainGenerator.RowAmount;
         ColumnAmount = _terrainGenerator.ColumnAmount;
+        JobManager = new PathfindingJobManager();
+        CostFieldProducer = new CostFieldProducer(_terrainGenerator.WalkabilityData, SectorTileAmount);
+        CostFieldProducer.StartCostFieldProduction(0, _maxCostfieldOffset, SectorTileAmount);
+        PathProducer = new PathProducer(this);
         TilePositions = new NativeArray<Vector3>(RowAmount * ColumnAmount, Allocator.Persistent);
         CalculateTilePositions();
         CostFieldProducer.ForceCompleteCostFieldProduction();
@@ -40,8 +54,11 @@ public class PathfindingManager : MonoBehaviour
             }
         }
     }
-
-    public void SetUnwalkable(Index2 bound1, Index2 bound2, byte newCost)
+    public void SetDestination(Vector3 target)
+    {
+        PathProducer.ProducePath(target, 0);
+    }
+    public void EditCost(Index2 bound1, Index2 bound2, byte newCost)
     {
         int lowerRow = bound1.R < bound2.R ? bound1.R : bound2.R;
         int upperRow = bound1.R > bound2.R ? bound1.R : bound2.R;
@@ -49,5 +66,11 @@ public class PathfindingManager : MonoBehaviour
         int rightmostCol = bound1.C > bound2.C ? bound1.C : bound2.C;
         CostFieldEditJob[] editJobs = CostFieldProducer.GetEditJobs(new Index2(lowerRow, leftmostCol), new Index2(upperRow, rightmostCol), newCost);
         JobManager.AddCostEditJob(editJobs);
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (CostFieldProducer == null) { return; }
+        PathProducer.DebugBFS();
     }
 }

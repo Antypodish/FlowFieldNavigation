@@ -255,6 +255,7 @@ GameObject:
   - component: {fileID: 638972357}
   - component: {fileID: 638972356}
   - component: {fileID: 638972358}
+  - component: {fileID: 638972359}
   m_Layer: 0
   m_Name: Flow Field
   m_TagString: Untagged
@@ -279,6 +280,7 @@ MonoBehaviour:
   TileSize: 0
   RowAmount: 0
   ColumnAmount: 0
+  SectorTileAmount: 10
 --- !u!4 &638972357
 Transform:
   m_ObjectHideFlags: 0
@@ -302,13 +304,26 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 638972354}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 79166ff1ecdf7ee4999fe0f898898ffb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _pathfindingManager: {fileID: 638972356}
   _editValue: 1
+--- !u!114 &638972359
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 638972354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4be7334943b77f546bc0077138984241, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _pathfindingManager: {fileID: 638972356}
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -438,7 +453,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1799340796}
-  - component: {fileID: 1799340795}
   m_Layer: 0
   m_Name: test
   m_TagString: Untagged
@@ -446,18 +460,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 0
---- !u!114 &1799340795
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1799340794}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aaeb7215f50120e4fb2c97ca0e7b3054, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!4 &1799340796
 Transform:
   m_ObjectHideFlags: 0
@@ -526,7 +528,7 @@ MonoBehaviour:
   _windowSectors: 0
   _portals: 1
   _portalsOnSector: 0
-  _costsToPortal: 1
+  _costsToPortal: 0
   _AStar: 0
 --- !u!1001 &1284591847240803008
 PrefabInstance:
