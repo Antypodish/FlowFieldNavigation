@@ -10,17 +10,17 @@ using UnityEngine.Analytics;
 [BurstCompile]
 public struct FieldGraphTraversalJob : IJob
 {
+    public Vector3 SourcePosition;
     public Vector3 TargetPosition;
-    //public NativeArray<Vector3> StartingPositions;
-    public NativeArray<SectorNode> SectorNodes;
-    public NativeArray<int> SecToWinPtrs;
-    public NativeArray<WindowNode> WindowNodes;
-    //public NativeArray<int> WinToSecPtrs;
-    public NativeArray<PortalNode> PortalNodes;
-    public NativeArray<PortalToPortal> PorPtrs;
-    public NativeArray<byte> Costs;
+    [ReadOnly] public NativeArray<SectorNode> SectorNodes;
+    [ReadOnly] public NativeArray<int> SecToWinPtrs;
+    [ReadOnly] public NativeArray<WindowNode> WindowNodes;
+    [ReadOnly] public NativeArray<int> WinToSecPtrs;
+    [ReadOnly] public NativeArray<PortalNode> PortalNodes;
+    [ReadOnly] public NativeArray<PortalToPortal> PorPtrs;
+    [ReadOnly] public NativeArray<byte> Costs;
     //public NativeArray<DirectionData> Directions;
-    public NativeArray<LocalDirectionData> LocalDirections;
+    [ReadOnly] public NativeArray<LocalDirectionData> LocalDirections;
     public int FieldColAmount;
     public int FieldRowAmount;
     public float FieldTileSize;
@@ -28,18 +28,19 @@ public struct FieldGraphTraversalJob : IJob
     public int SectorMatrixColAmount;
     //public int SectorMatrixRowAmount;
     //public int PortalPerWindow;
-    //public NativeQueue<int> AStarQueue;
-    //public NativeArray<int> DebugPortalIndicies;
 
-    //Debug
     public NativeArray<int> ConnectionIndicies;
     public NativeArray<float> PortalDistances;
+    public NativeArray<PortalMark> PortalMarks;
+    public NativeList<PortalSequence> PortalSequence;
+    public NativeList<int> PickedSectors;
+    public NativeArray<bool> SectorMarks;
 
     int _targetSectorStartIndex;
     int _targetSectorIndex;
     public void Execute()
     {
-        //DATA
+        //TARGET DATA
         Index2 targetIndex = new Index2(Mathf.FloorToInt(TargetPosition.z / FieldTileSize), Mathf.FloorToInt(TargetPosition.x / FieldTileSize));
         Index2 targetSectorIndex = new Index2(targetIndex.R / SectorTileAmount, targetIndex.C / SectorTileAmount);
         int targetIndexFlat = targetIndex.R * FieldColAmount + targetIndex.C;
@@ -47,13 +48,23 @@ public struct FieldGraphTraversalJob : IJob
         Index2 targetSectorStartIndex = SectorNodes[_targetSectorIndex].Sector.StartIndex;
         _targetSectorStartIndex = targetSectorStartIndex.R * FieldColAmount + targetSectorStartIndex.C;
 
+        //SOURCE DATA
+        Index2 sourceIndex = new Index2(Mathf.FloorToInt(SourcePosition.z / FieldTileSize), Mathf.FloorToInt(SourcePosition.x / FieldTileSize));
+        Index2 sourceSectorIndex = new Index2(sourceIndex.R / SectorTileAmount, sourceIndex.C / SectorTileAmount);
+        int sourceSectorIndexFlat = sourceSectorIndex.R * SectorMatrixColAmount + sourceSectorIndex.C;
 
-        //CODE
-        NativeArray<AStarTile> integratedCosts = GetIntegratedCosts(targetIndexFlat);
+        //ALGORITHM
+        NativeArray<AStarTile> integratedCostsAtTargetSector = GetIntegratedCosts(targetIndexFlat);
         UnsafeList<int> targetPortalIndicies = GetTargetPortalIndicies(_targetSectorIndex);
-        GetIntegratedPortalCosts(integratedCosts, targetPortalIndicies);
-        
+        SetPortalDistances(integratedCostsAtTargetSector, targetPortalIndicies);
+        UnsafeList<int> sourcePortalIndicies = GetTargetPortalIndicies(sourceSectorIndexFlat);
+        for(int i = 0; i < sourcePortalIndicies.Length; i++)
+        {
+            SetPortalSequence(sourcePortalIndicies[i]);
+        }
+        PickSectorsFromPortalSequence();
     }
+
     NativeArray<AStarTile> GetIntegratedCosts(int targetIndex)
     {
         NativeArray<AStarTile> integratedCosts = new NativeArray<AStarTile>(SectorTileAmount * SectorTileAmount, Allocator.Temp);
@@ -80,22 +91,16 @@ public struct FieldGraphTraversalJob : IJob
         return portalIndicies;
     }
 
-    //Graph A*
-
-    UnsafeList<float> GetIntegratedPortalCosts(NativeArray<AStarTile> integratedCosts, UnsafeList<int> targetPortalIndicies)
+    //GRAPH BFS
+    void SetPortalDistances(NativeArray<AStarTile> integratedCosts, UnsafeList<int> targetPortalIndicies)
     {
         //HELPER DATA
         NativeArray<PortalToPortal> porPtrs = PorPtrs;
         NativeArray<PortalNode> portalNodes = PortalNodes;
-        UnsafeList<float> integratedPortalCosts = GetIntegratedCostBuffer();
-        UnsafeList<bool> queueMark = new UnsafeList<bool>(portalNodes.Length, Allocator.Temp);
-        queueMark.Length = portalNodes.Length;
+        NativeArray<float> portalDistances = PortalDistances;
+        ResetPortalDistances();
         NativeQueue<int> traversalQueue = new NativeQueue<int>(Allocator.Temp);
-
-        for (int i = 0; i < queueMark.Length; i++)
-        {
-            queueMark[i] = false;
-        }
+        NativeArray<PortalMark> portalMarks = PortalMarks;
 
         //SETTING STARTING PORTALS
         for (int i = 0; i < targetPortalIndicies.Length; i++)
@@ -104,17 +109,16 @@ public struct FieldGraphTraversalJob : IJob
             int portalLocalIndexAtSector = GetPortalLocalIndexAtSector(PortalNodes[portalNodeIndex], _targetSectorIndex, _targetSectorStartIndex);
             float integratedCost = integratedCosts[portalLocalIndexAtSector].IntegratedCost;
             if(integratedCost == float.MaxValue) { continue; }
-            integratedPortalCosts[portalNodeIndex] = integratedCost;
-            queueMark[portalNodeIndex] = true;
+            portalDistances[portalNodeIndex] = integratedCost;
+            portalMarks[portalNodeIndex] = PortalMark.BFS;
             ConnectionIndicies[portalNodeIndex] = portalNodeIndex;
-            PortalDistances[portalNodeIndex] = integratedCost;
         }
 
         //ENQUEUE NEIGHBOURS OF STARTING PORTALS
         for(int i = 0; i < targetPortalIndicies.Length; i++)
         {
             PortalNode portalNode = portalNodes[targetPortalIndicies[i]];
-            if (integratedPortalCosts[targetPortalIndicies[i]] == float.MaxValue) { continue; }
+            if (portalDistances[targetPortalIndicies[i]] == float.MaxValue) { continue; }
             EnqueueNeighbours(portalNode);
         }
 
@@ -123,25 +127,20 @@ public struct FieldGraphTraversalJob : IJob
         {
             int pickedIndex = traversalQueue.Dequeue();
             PortalNode pickedPortalNode = PortalNodes[pickedIndex];
-            IntFloat intf = GetMinCost(pickedPortalNode, pickedIndex);
-            float minCost = intf.Float;
-            int connectedIndex = intf.Int;
-            integratedPortalCosts[pickedIndex] = minCost;
+            ConnectionAndCost intf = GetMinCost(pickedPortalNode, pickedIndex);
+            float minCost = intf.Cost;
+            int connectedIndex = intf.Connection;
+            portalDistances[pickedIndex] = minCost;
             EnqueueNeighbours(pickedPortalNode);
             ConnectionIndicies[pickedIndex] = connectedIndex;
-            PortalDistances[pickedIndex] = minCost;
         }
-        return integratedPortalCosts;
 
-        UnsafeList<float> GetIntegratedCostBuffer()
+        void ResetPortalDistances()
         {
-            UnsafeList<float> integratedPortalCosts = new UnsafeList<float>(portalNodes.Length, Allocator.Temp);
-            integratedPortalCosts.Length = portalNodes.Length;
-            for(int i = 0; i < integratedPortalCosts.Length; i++)
+            for(int i = 0; i < portalDistances.Length; i++)
             {
-                integratedPortalCosts[i] = float.MaxValue;
+                portalDistances[i] = float.MaxValue;
             }
-            return integratedPortalCosts;
         }
         void EnqueueNeighbours(PortalNode portalNode)
         {
@@ -153,19 +152,19 @@ public struct FieldGraphTraversalJob : IJob
             for (int i = 0; i < por1PorCnt; i++)
             {
                 int portalIndex = porPtrs[por1PorPtr + i].Index;
-                if (queueMark[portalIndex]) { continue; }
-                queueMark[portalIndex] = true;
+                if (portalMarks[portalIndex] == PortalMark.BFS) { continue; }
+                portalMarks[portalIndex] = PortalMark.BFS;
                 traversalQueue.Enqueue(portalIndex);
             }
             for (int i = 0; i < por2PorCnt; i++)
             {
                 int portalIndex = porPtrs[por2PorPtr + i].Index;
-                if (queueMark[portalIndex]) { continue; }
-                queueMark[portalIndex] = true;
+                if (portalMarks[portalIndex] == PortalMark.BFS) { continue; }
+                portalMarks[portalIndex] = PortalMark.BFS;
                 traversalQueue.Enqueue(portalIndex);
             }
         }
-        IntFloat GetMinCost(PortalNode portalNode, int selfIndex)
+        ConnectionAndCost GetMinCost(PortalNode portalNode, int selfIndex)
         {
             int por1PorPtr = portalNode.Portal1.PorToPorPtr;
             int por1PorCnt = portalNode.Portal1.PorToPorCnt;
@@ -180,7 +179,7 @@ public struct FieldGraphTraversalJob : IJob
                 PortalToPortal portopor = porPtrs[por1PorPtr + i];
                 int porIndex = portopor.Index;
                 float distance = portopor.Distance;
-                float totalCost = distance + integratedPortalCosts[porIndex];
+                float totalCost = distance + portalDistances[porIndex];
                 if(totalCost < minCost) { minCost = totalCost; index = porIndex; }
             }
             for (int i = 0; i < por2PorCnt; i++)
@@ -189,17 +188,92 @@ public struct FieldGraphTraversalJob : IJob
                 PortalToPortal portopor = porPtrs[por2PorPtr + i];
                 int porIndex = portopor.Index;
                 float distance = portopor.Distance;
-                float totalCost = distance + integratedPortalCosts[porIndex];
+                float totalCost = distance + portalDistances[porIndex];
                 if(totalCost < minCost) { minCost = totalCost; index = porIndex; }
             }
 
-            return new IntFloat()
+            return new ConnectionAndCost()
             {
-                Int = index,
-                Float = minCost
+                Connection = index,
+                Cost = minCost
             };
         }
     }
+    void SetPortalSequence(int startingPortalIndex)
+    {
+        NativeList<PortalSequence> portalSequence = PortalSequence;
+        int portalIndex = startingPortalIndex;
+        int connectionIndex = ConnectionIndicies[startingPortalIndex];
+        while (true)
+        {
+            if (connectionIndex == portalIndex)
+            {
+                PortalSequence porSeq = new PortalSequence()
+                {
+                    PortalPtr = portalIndex,
+                    NextPortalPtrIndex = -1
+                };
+                portalSequence.Add(porSeq);
+                PortalMarks[portalIndex] = PortalMark.Walker;
+                break;
+            }
+            else if (PortalMarks[connectionIndex] == PortalMark.Walker)
+            {
+                PortalSequence porSeq = new PortalSequence()
+                {
+                    PortalPtr = portalIndex,
+                    NextPortalPtrIndex = GetIndexOf(connectionIndex)
+                };
+                portalSequence.Add(porSeq);
+                PortalMarks[portalIndex] = PortalMark.Walker;
+                break;
+            }
+            else
+            {
+                PortalSequence porSeq = new PortalSequence()
+                {
+                    PortalPtr = portalIndex,
+                    NextPortalPtrIndex = portalSequence.Length + 1
+                };
+                portalSequence.Add(porSeq);
+                PortalMarks[portalIndex] = PortalMark.Walker;
+                portalIndex = connectionIndex;
+                connectionIndex = ConnectionIndicies[portalIndex];
+            }
+
+        }
+        int GetIndexOf(int portalIndex)
+        {
+            for(int i = 0; i < portalSequence.Length; i++)
+            {
+                if (portalSequence[i].PortalPtr == portalIndex)
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+    }
+    void PickSectorsFromPortalSequence()
+    {
+        for(int i = 0; i < PortalSequence.Length; i++)
+        {
+            int portalIndex = PortalSequence[i].PortalPtr;
+            int windowIndex = PortalNodes[portalIndex].WinPtr;
+            WindowNode windowNode = WindowNodes[windowIndex];
+            int winToSecCnt = windowNode.WinToSecCnt;
+            int winToSecPtr = windowNode.WinToSecPtr;
+            for(int j = 0; j < winToSecCnt; j++)
+            {
+                int secPtr = WinToSecPtrs[j + winToSecPtr];
+                if (SectorMarks[secPtr]) { continue; }
+                PickedSectors.Add(secPtr);
+                SectorMarks[secPtr] = true;
+            }
+        }
+    }
+
+    //HELPERS
     int GetPortalLocalIndexAtSector(PortalNode portalNode, int sectorIndex, int sectorStartIndex)
     {
         Index2 index1 = portalNode.Portal1.Index;
@@ -345,9 +419,21 @@ public struct FieldGraphTraversalJob : IJob
             IsAvailable = isAvailable;
         }
     }
+    
 }
-struct IntFloat
+struct ConnectionAndCost
 {
-    public int Int;
-    public float Float;
+    public int Connection;
+    public float Cost;
+}
+public enum PortalMark : byte
+{
+    None = 0,
+    BFS = 1,
+    Walker = 2
+};
+public struct PortalSequence
+{
+    public int PortalPtr;
+    public int NextPortalPtrIndex;
 }

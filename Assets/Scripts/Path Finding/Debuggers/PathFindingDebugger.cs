@@ -35,7 +35,8 @@ public class PathFindingDebugger : MonoBehaviour
     }
     private void OnDrawGizmos()
     {
-        if (_costField && _costFieldDebugger != null) { _costFieldDebugger.DebugCostFieldWithMesh((int) _costFieldOffset); }
+        
+        if (_costField && _costFieldDebugger != null) { _costFieldDebugger.DebugCostFieldWithMesh((int)_costFieldOffset); }
         if (_sectors && _sectorDebugger != null) { _sectorDebugger.DebugSectors((int) _costFieldOffset); }
         if( _windows && _windowDebugger != null) { _windowDebugger.DebugWindows((int) _costFieldOffset); }
         if(_sectorWindows && _sectorGraphDebugger != null) { _sectorGraphDebugger.DebugSectorToWindow((int) _costFieldOffset); }

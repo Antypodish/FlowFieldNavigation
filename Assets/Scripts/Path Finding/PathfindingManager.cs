@@ -54,9 +54,9 @@ public class PathfindingManager : MonoBehaviour
             }
         }
     }
-    public void SetDestination(Vector3 target)
+    public void SetDestination(Vector3 source, Vector3 target)
     {
-        PathProducer.ProducePath(target, 0);
+        PathProducer.ProducePath(source, target, 0);
     }
     public void EditCost(Index2 bound1, Index2 bound2, byte newCost)
     {
@@ -66,11 +66,5 @@ public class PathfindingManager : MonoBehaviour
         int rightmostCol = bound1.C > bound2.C ? bound1.C : bound2.C;
         CostFieldEditJob[] editJobs = CostFieldProducer.GetEditJobs(new Index2(lowerRow, leftmostCol), new Index2(upperRow, rightmostCol), newCost);
         JobManager.AddCostEditJob(editJobs);
-    }
-
-    private void OnDrawGizmos()
-    {
-        if (CostFieldProducer == null) { return; }
-        PathProducer.DebugBFS();
     }
 }
