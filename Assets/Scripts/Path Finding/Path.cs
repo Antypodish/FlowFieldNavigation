@@ -14,4 +14,6 @@ public struct Path
     public NativeList<PortalSequence> PortalSequence;
     public NativeList<int> PickedSectors;
     public NativeArray<bool> SectorMarks;
+    public NativeArray<IntegrationTile> IntegrationField;
+    public NativeArray<FlowData> FlowField;
 }

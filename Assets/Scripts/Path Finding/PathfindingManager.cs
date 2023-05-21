@@ -54,9 +54,9 @@ public class PathfindingManager : MonoBehaviour
             }
         }
     }
-    public void SetDestination(Vector3 source, Vector3 target)
+    public void SetDestination(NativeArray<Vector3> sources, Vector3 target)
     {
-        PathProducer.ProducePath(source, target, 0);
+        PathProducer.ProducePath(sources, target, 0);
     }
     public void EditCost(Index2 bound1, Index2 bound2, byte newCost)
     {

@@ -1,9 +1,16 @@
-﻿using UnityEngine;
+﻿using Unity.Collections;
+using UnityEngine;
+using static UnityEngine.GraphicsBuffer;
 
 public class TargetSetter : MonoBehaviour
 {
-    Vector3 _source;
+    NativeList<Vector3> _sources;
+    Vector3 _target;
     [SerializeField] PathfindingManager _pathfindingManager;
+    private void Start()
+    {
+        _sources = new NativeList<Vector3>(Allocator.Persistent);
+    }
     private void Update()
     {
         if (Input.GetMouseButtonDown(0))
@@ -13,7 +20,7 @@ public class TargetSetter : MonoBehaviour
             RaycastHit hit;
             if (Physics.Raycast(ray, out hit))
             {
-                _source = hit.point;
+                _sources.Add(hit.point);
             }
         }
         if (Input.GetMouseButtonDown(1))
@@ -24,8 +31,26 @@ public class TargetSetter : MonoBehaviour
             if (Physics.Raycast(ray, out hit))
             {
                 Vector3 hitPos = hit.point;
-                _pathfindingManager.SetDestination(_source, hitPos);
+                _target = hitPos;
+                _pathfindingManager.SetDestination(_sources, _target);
             }
         }
+        if (Input.GetMouseButtonDown(2))
+        {
+            _sources.Clear();
+        }
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (!_sources.IsCreated) { return; } 
+        Gizmos.color = Color.red;
+        for(int i = 0; i < _sources.Length; i++)
+        {
+            Gizmos.DrawSphere(_sources[i], 0.4f);
+        }
+
+        Gizmos.color = Color.white;
+        Gizmos.DrawSphere(_target, 0.4f);
     }
 }
