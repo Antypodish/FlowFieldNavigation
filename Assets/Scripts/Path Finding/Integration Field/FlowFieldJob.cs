@@ -1,6 +1,8 @@
-﻿using Unity.Collections;
+﻿using Unity.Burst;
+using Unity.Collections;
 using Unity.Jobs;
 
+[BurstCompile]
 public struct FlowFieldJob : IJobParallelFor
 {
     [ReadOnly] public NativeArray<IntegrationTile> IntegrationField;
@@ -16,7 +18,7 @@ public struct FlowFieldJob : IJobParallelFor
         FlowData GetFlowDirection()
         {
             FlowData flowData = FlowData.None;
-            int cost = int.MaxValue;
+            float cost = float.MaxValue;
             if (integrationField[directionData.N].Cost < cost)
             {
                 flowData = FlowData.N;

@@ -26,7 +26,7 @@ public struct IntFieldJob : IJob
 
         int targetLocalIndex = InitialWaveFront;
         IntegrationTile targetTile = IntegrationField[targetLocalIndex];
-        targetTile.Cost = 0;
+        targetTile.Cost = 0f;
         targetTile.Mark = IntegrationMark.Wave1;
         IntegrationField[targetLocalIndex] = targetTile;
         Enqueue(DirectionData[targetLocalIndex]);
@@ -79,28 +79,36 @@ public struct IntFieldJob : IJob
                 integrationField[w] = tile;
             }
         }
-        int GetCost(DirectionData localDirections)
+        float GetCost(DirectionData directions)
         {
-            int costToReturn = int.MaxValue;
-            int nCost = integrationField[localDirections.N].Cost;
-            int eCost = integrationField[localDirections.E].Cost;
-            int sCost = integrationField[localDirections.S].Cost;
-            int wCost = integrationField[localDirections.W].Cost;
+            float costToReturn = float.MaxValue;
+            float nCost = integrationField[directions.N].Cost + 1f;
+            float eCost = integrationField[directions.E].Cost + 1f;
+            float sCost = integrationField[directions.S].Cost + 1f;
+            float wCost = integrationField[directions.W].Cost + 1f;
+            float neCost = integrationField[directions.NE].Cost + 1.4f;
+            float seCost = integrationField[directions.SE].Cost + 1.4f;
+            float swCost = integrationField[directions.SW].Cost + 1f;
+            float nwCost = integrationField[directions.NW].Cost + 1f;
 
             if (nCost < costToReturn) { costToReturn = nCost; }
             if (eCost < costToReturn) { costToReturn = eCost; }
             if (sCost < costToReturn) { costToReturn = sCost; }
             if (wCost < costToReturn) { costToReturn = wCost; }
-            return costToReturn + 1;
+            if (neCost < costToReturn) { costToReturn = neCost; }
+            if (seCost < costToReturn) { costToReturn = seCost; }
+            if (swCost < costToReturn) { costToReturn = swCost; }
+            if (nwCost < costToReturn) { costToReturn = nwCost; }
+            return costToReturn;
         }
     }
 }
 public struct IntegrationTile
 {
-    public int Cost;
+    public float Cost;
     public IntegrationMark Mark;
 
-    public IntegrationTile(int cost, IntegrationMark mark)
+    public IntegrationTile(float cost, IntegrationMark mark)
     {
         Cost = cost;
         Mark = mark;

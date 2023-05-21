@@ -71,9 +71,13 @@ public class PathProducer
         prepHandle.Complete();
 
         //BFS
+        Stopwatch sw = new Stopwatch();
+        sw.Start();
         IntFieldJob intJob = GetIntegrationJob();
         JobHandle intJobHandle = intJob.Schedule();
         intJobHandle.Complete();
+        sw.Stop();
+        UnityEngine.Debug.Log(sw.Elapsed.TotalMilliseconds);
 
         //FlowField
         FlowFieldJob flowFieldJob = GetFlowFieldJob();
@@ -223,8 +227,8 @@ public class PathProducer
         }
         void DebugCosts(int index)
         {
-            int cost = integrationField[index].Cost;
-            if (cost == int.MaxValue)
+            float cost = integrationField[index].Cost;
+            if (cost == float.MaxValue)
             {
                 return;
             }
@@ -237,7 +241,6 @@ public class PathProducer
             {
                 Handles.Label(tilePositions[index], "N");
             }
-
         }
     }
     public void DebugFlowField(NativeArray<Vector3> tilePositions)

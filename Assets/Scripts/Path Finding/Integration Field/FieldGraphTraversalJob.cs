@@ -7,7 +7,8 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Analytics;
-//[BurstCompile]
+
+[BurstCompile]
 public struct FieldGraphTraversalJob : IJob
 {
     public NativeArray<Vector3> SourcePositions;

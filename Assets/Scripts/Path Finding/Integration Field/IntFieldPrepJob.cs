@@ -16,34 +16,14 @@ public struct IntFieldPrepJob : IJobParallelFor
     [ReadOnly] public NativeArray<SectorNode> SectorNodes;
     [ReadOnly] public NativeList<int> PickedSectors;
     public void Execute(int index)
-    {
-        /*
-        Sector sector = SectorNodes[PickedSectors[index]].Sector;
-        Index2 start = sector.StartIndex;
-        int sectorSize = sector.Size;
-        int botLeftInclusive = start.R * FieldColAmount + start.C;
-        int topLeftExclusive = botLeftInclusive + (sectorSize * FieldColAmount);
-
-
-        for(int r = botLeftInclusive; r < topLeftExclusive; r+=FieldColAmount)
-        {
-            for(int i = r; i < r + sectorSize; i++)
-            {
-                IntegrationMark mark = Costs[i] == byte.MaxValue ? IntegrationMark.Absolute : IntegrationMark.None;
-                IntegrationTile intTile;
-                intTile.Mark = mark;
-                intTile.Cost = int.MaxValue;
-                IntegrationField[i] = intTile;
-            }
-        }*/
-        
+    {   
         int sectorIndex = (index / FieldColAmount / SectorTileAmount * SectorMatrixColAmount) + (index % FieldColAmount / SectorTileAmount);
         if (SectorMarks[sectorIndex])
         {
             IntegrationMark mark = Costs[index] == byte.MaxValue ? IntegrationMark.Absolute : IntegrationMark.None;
             IntegrationTile intTile;
             intTile.Mark = mark;
-            intTile.Cost = int.MaxValue;
+            intTile.Cost = float.MaxValue;
             IntegrationField[index] = intTile;
         }
     }
