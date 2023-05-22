@@ -61,12 +61,12 @@ public class CostFieldProducer
             _producedCostFields[i].ForceCompleteConigurationJob();
         }
     }
-    public CostFieldEditJob[] GetEditJobs(Index2 bound1, Index2 bound2, byte newCost)
+    public CostFieldEditJob[] GetEditJobs(BoundaryData bounds, byte newCost)
     {
         CostFieldEditJob[] editJobs = new CostFieldEditJob[_producedCostFields.Length];
         for(int i = 0; i < editJobs.Length; i++)
         {
-            editJobs[i] = _producedCostFields[i].GetEditJob(bound1, bound2, newCost);
+            editJobs[i] = _producedCostFields[i].GetEditJob(bounds, newCost);
         }
         return editJobs;
     }

@@ -86,13 +86,12 @@ public struct FieldGraph
             AStarQueue = _aStarGrid._searchQueue,
         };
     }
-    public CostFieldEditJob GetEditJob(Index2 bound1, Index2 bound2, byte newCost)
+    public CostFieldEditJob GetEditJob(BoundaryData bounds, byte newCost)
     {
         return new CostFieldEditJob()
         {
             NewCost = newCost,
-            Bound1 = bound1,
-            Bound2 = bound2,
+            Bounds = bounds,
             SectorNodes = SectorNodes,
             SecToWinPtrs = SecToWinPtrs,
             WindowNodes = WindowNodes,

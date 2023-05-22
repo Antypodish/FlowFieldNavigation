@@ -28,7 +28,6 @@ public class PathfindingJobScheduler
             ScheduleAllAwaitingPathFinding();
         }
     }
-     
     public void AddCostEditJob(CostFieldEditJob[] editJobs)
     {
         if (CostEditScheduled())

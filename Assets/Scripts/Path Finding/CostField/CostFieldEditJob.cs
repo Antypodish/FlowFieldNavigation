@@ -1,16 +1,15 @@
-﻿using Unity.Burst;
+﻿using System.Linq;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.VisualScripting;
 using UnityEngine;
 
-//Here, some vanilla procedural porgramming
 [BurstCompile]
 public struct CostFieldEditJob : IJob
 {
     public byte NewCost;
-    public Index2 Bound1;
-    public Index2 Bound2;
+    public BoundaryData Bounds;
     public NativeArray<SectorNode> SectorNodes;
     public NativeArray<int> SecToWinPtrs;
     public NativeArray<WindowNode> WindowNodes;
@@ -28,7 +27,6 @@ public struct CostFieldEditJob : IJob
     public int PortalPerWindow;
     public NativeArray<AStarTile> IntegratedCosts;
     public NativeQueue<int> AStarQueue;
-
     public void Execute()
     {
         ApplyCostUpdate();
@@ -40,14 +38,16 @@ public struct CostFieldEditJob : IJob
     }
     void ApplyCostUpdate()
     {
-        if (Bound1.R == 0) { Bound1.R += 1; }
-        if (Bound1.C == 0) { Bound1.C += 1; }
-        if (Bound2.R == FieldRowAmount - 1) { Bound2.R -= 1; }
-        if(Bound2.C == FieldColAmount - 1) { Bound2.C -= 1; }
+        Index2 botLeft = Bounds.BottomLeft;
+        Index2 topRight = Bounds.UpperRight;
+        if (botLeft.R == 0) { botLeft.R += 1; }
+        if (botLeft.C == 0) { botLeft.C += 1; }
+        if (topRight.R == FieldRowAmount - 1) { topRight.R -= 1; }
+        if(topRight.C == FieldColAmount - 1) { topRight.C -= 1; }
 
-        int bound1Flat = Bound1.R * FieldColAmount + Bound1.C;
-        int bound2Flat = Bound2.R * FieldColAmount + Bound2.C;
-        int colDif = Bound2.C - Bound1.C;
+        int bound1Flat = botLeft.R * FieldColAmount + botLeft.C;
+        int bound2Flat = topRight.R * FieldColAmount + topRight.C;
+        int colDif = topRight.C - botLeft.C;
 
         for(int r = bound1Flat; r <= bound2Flat - colDif; r += FieldColAmount)
         {
@@ -59,10 +59,12 @@ public struct CostFieldEditJob : IJob
     }
     NativeArray<int> GetSectorsBetweenBounds()
     {
-        int bottomLeftRow = Bound1.R / SectorTileAmount;
-        int bottomLeftCol = Bound1.C / SectorTileAmount;
-        int upperRightRow = Bound2.R / SectorTileAmount;
-        int upperRightCol = Bound2.C / SectorTileAmount;
+        Index2 botLeft = Bounds.BottomLeft;
+        Index2 topRight = Bounds.UpperRight;
+        int bottomLeftRow = botLeft.R / SectorTileAmount;
+        int bottomLeftCol = botLeft.C / SectorTileAmount;
+        int upperRightRow = topRight.R / SectorTileAmount;
+        int upperRightCol = topRight.C / SectorTileAmount;
 
         int bottomLeft = bottomLeftRow * SectorMatrixColAmount + bottomLeftCol;
         int upperRight = upperRightRow * SectorMatrixColAmount + upperRightCol;
@@ -72,10 +74,10 @@ public struct CostFieldEditJob : IJob
         bool isSectorOnRight = (upperRight + 1) % SectorMatrixColAmount == 0;
         bool isSectorOnLeft = bottomLeft % SectorMatrixColAmount == 0;
 
-        bool doesIntersectLowerSectors = Bound1.R % SectorTileAmount == 0;
-        bool doesIntersectUpperSectors = (Bound2.R + 1) % SectorTileAmount == 0;
-        bool doesIntersectLeftSectors = Bound1.C % SectorTileAmount == 0;
-        bool doesIntersectRightSectors = (Bound2.C + 1) % SectorTileAmount == 0;
+        bool doesIntersectLowerSectors = botLeft.R % SectorTileAmount == 0;
+        bool doesIntersectUpperSectors = (topRight.R + 1) % SectorTileAmount == 0;
+        bool doesIntersectLeftSectors = botLeft.C % SectorTileAmount == 0;
+        bool doesIntersectRightSectors = (topRight.C + 1) % SectorTileAmount == 0;
 
         int sectorRowCount = upperRightRow - bottomLeftRow + 1;
         int sectorColCount = upperRightCol - bottomLeftCol + 1;
@@ -146,10 +148,12 @@ public struct CostFieldEditJob : IJob
     }
     NativeArray<int> GetWindowsBetweenBounds(NativeArray<int> helperSectorIndicies)
     {
-        int boundLeftC = Bound1.C;
-        int boundRightC = Bound2.C;
-        int boundBotR = Bound1.R;
-        int boundTopR = Bound2.R;
+        Index2 botLeft = Bounds.BottomLeft;
+        Index2 topRight = Bounds.UpperRight;
+        int boundLeftC = botLeft.C;
+        int boundRightC = topRight.C;
+        int boundBotR = botLeft.R;
+        int boundTopR = topRight.R;
 
         NativeArray<int> windows = new NativeArray<int>(2 + helperSectorIndicies.Length * 2, Allocator.Temp);
         int windowIterable = 0;
@@ -316,14 +320,14 @@ public struct CostFieldEditJob : IJob
                     }
                     if ((costs[index1] == byte.MaxValue || costs[index2] == byte.MaxValue) && !wasUnwalkable)
                     {
-                        portalNodes[porPtr + portalCount] = GetPortalNodeBetween(bound1, bound2, porPtr, portalCount, i, false);
+                        portalNodes[porPtr + portalCount] = GetPortalNodeBetween(bound1, bound2, porPtr, portalCount, windowIndicies[i], false);
                         portalCount++;
                         wasUnwalkable = true;
                     }
                 }
                 if (!wasUnwalkable)
                 {
-                    portalNodes[porPtr + portalCount] = GetPortalNodeBetween(bound1, bound2, porPtr, portalCount, i, false);
+                    portalNodes[porPtr + portalCount] = GetPortalNodeBetween(bound1, bound2, porPtr, portalCount, windowIndicies[i], false);
                     portalCount++;
                 }
                 windowNode.PorCnt = portalCount;
@@ -364,11 +368,11 @@ public struct CostFieldEditJob : IJob
         //function
         for(int i =0; i < sectorIndicies.Length; i++)
         {
-            int index = sectorIndicies[i];
-            SectorNode pickedSectorNode = SectorNodes[index];
+            int sectorIndex = sectorIndicies[i];
+            SectorNode pickedSectorNode = SectorNodes[sectorIndex];
             Sector pickedSector = pickedSectorNode.Sector;
             NativeArray<int> portalNodeIndicies = GetPortalNodeIndicies(pickedSectorNode);
-            NativeArray<byte> portalDeterminationArray = GetPortalDeterminationArrayFor(portalNodeIndicies, index);
+            NativeArray<byte> portalDeterminationArray = GetPortalDeterminationArrayFor(portalNodeIndicies, sectorIndex);
             for (int j = 0; j < portalNodeIndicies.Length; j++)
             {
                 //for each portal, set it "target" and calculate distances of others

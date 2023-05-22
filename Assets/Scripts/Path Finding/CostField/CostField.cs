@@ -82,8 +82,8 @@ public class CostField
     {
         _fieldGraphConfigJobHandle.Complete();
     }
-    public CostFieldEditJob GetEditJob(Index2 bound1, Index2 bound2, byte newCost)
+    public CostFieldEditJob GetEditJob(BoundaryData bounds, byte newCost)
     {
-        return FieldGraph.GetEditJob(bound1, bound2, newCost);
+        return FieldGraph.GetEditJob(bounds, newCost);
     }
 }
