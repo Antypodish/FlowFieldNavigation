@@ -67,6 +67,12 @@ public class Queue<T>
     {
         return _elements[(_front + 1) % _size];
     }
+    public void Clear()
+    {
+        Count = 0;
+        _front = 0;
+        _rear = 1;
+    }
     public override string ToString()
     {
         StringBuilder sb = new StringBuilder();

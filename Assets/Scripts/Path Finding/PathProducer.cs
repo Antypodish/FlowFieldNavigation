@@ -27,7 +27,7 @@ public class PathProducer
         _sectorTileAmount = pathfindingManager.SectorTileAmount;
     }
 
-    public void ProducePath(NativeArray<Vector3> sources, Vector3 destination, int offset)
+    public FlowFieldJobPack ProducePath(NativeArray<Vector3> sources, Vector3 destination, int offset)
     {
         Index2 destinationIndex = new Index2(Mathf.FloorToInt(destination.z / _tileSize), Mathf.FloorToInt(destination.x / _tileSize));
         int destionationIndexFlat = destinationIndex.R * _columnAmount + destinationIndex.C;
@@ -54,38 +54,16 @@ public class PathProducer
             IntegrationField = integrationField,
             FlowField = flowField,
         };
-        
-        //traverse portal graph
-        FieldGraphTraversalJob traversalJob = GetTraversalJob();
-        //JobHandle traversalJobHandle = traversalJob.Schedule();
-
-        //reset field
-        IntFieldResetJob resetJob = GetResetFieldJob();
-        //JobHandle resetJobHandle = resetJob.Schedule(integrationField.Length, 512, traversalJobHandle);
-
-        //prepareField
-        IntFieldPrepJob prepJob = GetPreperationJob();
-        //JobHandle prepHandle = prepJob.Schedule(_rowAmount * _rowAmount, 1024, resetJobHandle);
-
-        //BFS
-        IntFieldJob intJob = GetIntegrationJob();
-        //JobHandle intJobHandle = intJob.Schedule(prepHandle);
-
-
-        //FlowField
-        FlowFieldJob flowFieldJob = GetFlowFieldJob();
-        //JobHandle flowFieldJobHandle = flowFieldJob.Schedule(flowField.Length, 512, intJobHandle);
-
-        FlowFieldJobPack jobPack = new FlowFieldJobPack()
+        return new FlowFieldJobPack()
         {
-            TraversalJob = traversalJob,
-            ResetJob = resetJob,
-            PrepJob = prepJob,
-            IntegrationJob = intJob,
-            FlowFieldJob = flowFieldJob
+            TraversalJob = GetTraversalJob(),
+            ResetJob = GetResetFieldJob(),
+            PrepJob = GetPreperationJob(),
+            IntegrationJob = GetIntegrationJob(),
+            FlowFieldJob = GetFlowFieldJob()
         };
-        jobPack.SchedulePack();
 
+        //HELPERS
         FieldGraphTraversalJob GetTraversalJob()
         {
             FieldGraphTraversalJob traversalJob = new FieldGraphTraversalJob()

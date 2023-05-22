@@ -12,7 +12,7 @@ public class PathfindingManager : MonoBehaviour
     [SerializeField] TerrainGenerator _terrainGenerator;
     [SerializeField] int _maxCostfieldOffset;
 
-    [HideInInspector] public static PathfindingJobManager JobManager;
+    [HideInInspector] public static PathfindingJobScheduler JobScheduler;
     [HideInInspector] public CostFieldProducer CostFieldProducer;
     [HideInInspector] public PathProducer PathProducer;
     [HideInInspector] public NativeArray<Vector3> TilePositions;
@@ -31,7 +31,7 @@ public class PathfindingManager : MonoBehaviour
         TileSize = _terrainGenerator.TileSize;
         RowAmount = _terrainGenerator.RowAmount;
         ColumnAmount = _terrainGenerator.ColumnAmount;
-        JobManager = new PathfindingJobManager();
+        JobScheduler = new PathfindingJobScheduler();
         CostFieldProducer = new CostFieldProducer(_terrainGenerator.WalkabilityData, SectorTileAmount);
         CostFieldProducer.StartCostFieldProduction(0, _maxCostfieldOffset, SectorTileAmount);
         PathProducer = new PathProducer(this);
@@ -41,7 +41,11 @@ public class PathfindingManager : MonoBehaviour
     }
     private void Update()
     {
-        JobManager.Update();
+        JobScheduler.Update();
+    }
+    private void LateUpdate()
+    {
+        JobScheduler.LateUpdate();
     }
     void CalculateTilePositions()
     {
@@ -56,7 +60,7 @@ public class PathfindingManager : MonoBehaviour
     }
     public void SetDestination(NativeArray<Vector3> sources, Vector3 target)
     {
-        PathProducer.ProducePath(sources, target, 0);
+        JobScheduler.AddPathRequestJob(PathProducer.ProducePath(sources, target, 0));
     }
     public void EditCost(Index2 bound1, Index2 bound2, byte newCost)
     {
@@ -65,6 +69,6 @@ public class PathfindingManager : MonoBehaviour
         int leftmostCol = bound1.C < bound2.C ? bound1.C : bound2.C;
         int rightmostCol = bound1.C > bound2.C ? bound1.C : bound2.C;
         CostFieldEditJob[] editJobs = CostFieldProducer.GetEditJobs(new Index2(lowerRow, leftmostCol), new Index2(upperRow, rightmostCol), newCost);
-        JobManager.AddCostEditJob(editJobs);
+        JobScheduler.AddCostEditJob(editJobs);
     }
 }
