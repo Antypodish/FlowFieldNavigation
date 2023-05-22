@@ -310,7 +310,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _pathfindingManager: {fileID: 638972356}
-  _editValue: 1
+  _editValue: 255
 --- !u!114 &638972359
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -442,7 +442,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _terrainGenerator: {fileID: 1550691738}
-  _debugTiles: 0
+  _debugTiles: 1
   _debugUnwalkableTiles: 0
 --- !u!1 &1799340794
 GameObject:
@@ -522,12 +522,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _pathfindingManager: {fileID: 638972356}
   _costFieldOffset: 0
-  _costField: 0
+  _costField: 1
   _sectors: 0
-  _windows: 0
+  _windows: 1
   _sectorWindows: 0
   _windowSectors: 0
-  _portals: 0
+  _portals: 1
   _portalsOnSector: 0
   _costsToPortal: 0
   _AStar: 0
@@ -574,7 +574,7 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: RowAmount
-      value: 1000
+      value: 100
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
@@ -589,7 +589,7 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: ColumnAmount
-      value: 1000
+      value: 100
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
@@ -724,7 +724,7 @@ PrefabInstance:
     - target: {fileID: 1825739965324605910, guid: e0d1fa0b1efdac642802b5705081a344,
         type: 3}
       propertyPath: _maxZoom
-      value: -1000
+      value: -45
       objectReference: {fileID: 0}
     - target: {fileID: 1825739965324605910, guid: e0d1fa0b1efdac642802b5705081a344,
         type: 3}
@@ -734,12 +734,12 @@ PrefabInstance:
     - target: {fileID: 1825739965324605910, guid: e0d1fa0b1efdac642802b5705081a344,
         type: 3}
       propertyPath: _zoomSensitivity
-      value: 10
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 1825739965324605910, guid: e0d1fa0b1efdac642802b5705081a344,
         type: 3}
       propertyPath: _movementSensitivity
-      value: 5
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1825739965324605910, guid: e0d1fa0b1efdac642802b5705081a344,
         type: 3}

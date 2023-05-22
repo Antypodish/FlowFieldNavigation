@@ -44,9 +44,14 @@ public class PathfindingJobManager
             }
         }
     }
+     
     public void AddCostEditJob(CostFieldEditJob[] editJobs)
     {
-        CostEditJobs.Enqueue(editJobs);
+        CostEditJobs.Enqueue(editJobs); 
+    }
+    public void AddPathRequestJob(FlowFieldJobPack jobPack)
+    {
+
     }
 
 }

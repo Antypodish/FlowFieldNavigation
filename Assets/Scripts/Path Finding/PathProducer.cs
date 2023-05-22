@@ -57,32 +57,34 @@ public class PathProducer
         
         //traverse portal graph
         FieldGraphTraversalJob traversalJob = GetTraversalJob();
-        JobHandle traversalJobHandle = traversalJob.Schedule();
-        traversalJobHandle.Complete();
+        //JobHandle traversalJobHandle = traversalJob.Schedule();
 
         //reset field
         IntFieldResetJob resetJob = GetResetFieldJob();
-        JobHandle resetJobHandle = resetJob.Schedule(integrationField.Length, 512);
-        resetJobHandle.Complete();
+        //JobHandle resetJobHandle = resetJob.Schedule(integrationField.Length, 512, traversalJobHandle);
 
         //prepareField
         IntFieldPrepJob prepJob = GetPreperationJob();
-        JobHandle prepHandle = prepJob.Schedule(_rowAmount * _rowAmount, 1024);
-        prepHandle.Complete();
+        //JobHandle prepHandle = prepJob.Schedule(_rowAmount * _rowAmount, 1024, resetJobHandle);
 
         //BFS
-        Stopwatch sw = new Stopwatch();
-        sw.Start();
         IntFieldJob intJob = GetIntegrationJob();
-        JobHandle intJobHandle = intJob.Schedule();
-        intJobHandle.Complete();
-        sw.Stop();
-        UnityEngine.Debug.Log(sw.Elapsed.TotalMilliseconds);
+        //JobHandle intJobHandle = intJob.Schedule(prepHandle);
+
 
         //FlowField
         FlowFieldJob flowFieldJob = GetFlowFieldJob();
-        JobHandle flowFieldJobHandle = flowFieldJob.Schedule(flowField.Length, 512);
-        flowFieldJobHandle.Complete();
+        //JobHandle flowFieldJobHandle = flowFieldJob.Schedule(flowField.Length, 512, intJobHandle);
+
+        FlowFieldJobPack jobPack = new FlowFieldJobPack()
+        {
+            TraversalJob = traversalJob,
+            ResetJob = resetJob,
+            PrepJob = prepJob,
+            IntegrationJob = intJob,
+            FlowFieldJob = flowFieldJob
+        };
+        jobPack.SchedulePack();
 
         FieldGraphTraversalJob GetTraversalJob()
         {
@@ -314,5 +316,4 @@ public class PathProducer
             }
         }
     }
-    
 }
