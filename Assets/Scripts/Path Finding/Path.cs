@@ -1,14 +1,11 @@
 ﻿using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
-using UnityEditor;
-using UnityEditor.Profiling.Memory.Experimental;
 using UnityEngine;
-using static UnityEngine.GraphicsBuffer;
 
-public struct Path
+public class Path
 {
-    public PathState State;
     public int Offset;
+    public PathState State;
+    public bool IsCalculated = false;
     public Vector3 Destination;
     public NativeArray<Vector3> Sources;
     public NativeArray<float> PortalDistances;
@@ -22,6 +19,7 @@ public struct Path
 
     public void Dispose()
     {
+        Sources.Dispose();
         PortalDistances.Dispose();
         ConnectionIndicies.Dispose();
         PortalMarks.Dispose();
@@ -30,11 +28,15 @@ public struct Path
         SectorMarks.Dispose();
         IntegrationField.Dispose();
         FlowField.Dispose();
-        Sources.Dispose();
+    }
+    public void SetState(PathState state)
+    {
+        State = state;
     }
 }
 public enum PathState : byte
 {
     Clean = 0,
-    Dirty = 1
+    ToBeUpdated = 1,
+    ToBeDisposed = 2,
 }

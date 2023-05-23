@@ -52,8 +52,7 @@ public class PathFindingDebugger : MonoBehaviour
         if(_costsToPortal && _portalDebugger != null) { _portalDebugger.DebugCostsToClickedPortal((int) _costFieldOffset); }
         if(_AStar && _aStarDebugger != null) { _aStarDebugger.DebugAstarForPortal((int) _costFieldOffset); }
 
-        if(_pathfindingManager.PathProducer == null) { return; }
-        PathDebugger pathDebugger = _pathfindingManager.PathProducer.GetPathDebugger();
+        PathDebugger pathDebugger = new PathDebugger(_pathfindingManager);
         if (_debugBFS && pathDebugger != null) { pathDebugger.DebugBFS(); }
         if (_debugPortalSequence && pathDebugger != null) { pathDebugger.DebugPortalSequence(); }
         if (_debugPickedSectors && pathDebugger != null) { pathDebugger.DebugPickedSectors(); }

@@ -1,4 +1,7 @@
-﻿using Unity.Collections;
+﻿#if (UNITY_EDITOR)
+
+using System;
+using Unity.Collections;
 using UnityEditor;
 using UnityEngine;
 
@@ -20,8 +23,10 @@ public class PathDebugger
     public void DebugBFS()
     {
         Gizmos.color = Color.black;
+        if (_pathProducer == null) { return; }
+        Path producedPath = _pathProducer.ProducedPaths.Last();
+        if (producedPath == null) { return; }
 
-        Path producedPath = _pathProducer.ProducedPath;
         float tileSize = _pathfindingManager.TileSize;
         FieldGraph fg = _costFieldProducer.GetCostFieldWithOffset(producedPath.Offset).FieldGraph;
         NativeArray<PortalNode> portalNodes = fg.PortalNodes;
@@ -44,8 +49,10 @@ public class PathDebugger
     public void DebugPortalSequence()
     {
         Gizmos.color = Color.black;
+        if (_pathProducer == null) { return; }
+        Path producedPath = _pathProducer.ProducedPaths.Last();
+        if (producedPath == null) { return; }
 
-        Path producedPath = _pathProducer.ProducedPath;
         float tileSize = _pathfindingManager.TileSize;
         FieldGraph fg = _costFieldProducer.GetCostFieldWithOffset(producedPath.Offset).FieldGraph;
         NativeArray<PortalNode> portalNodes = fg.PortalNodes;
@@ -58,8 +65,10 @@ public class PathDebugger
     }
     public void DebugPickedSectors()
     {
+        if (_pathProducer == null) { return; }
+        Path producedPath = _pathProducer.ProducedPaths.Last();
+        if (producedPath == null) { return; }
 
-        Path producedPath = _pathProducer.ProducedPath;
         float yOffset = 0.3f;
         Gizmos.color = Color.black;
         float tileSize = _pathfindingManager.TileSize;
@@ -82,34 +91,27 @@ public class PathDebugger
     }
     public void DebugIntegrationField(NativeArray<Vector3> tilePositions)
     {
-        Path producedPath = _pathProducer.ProducedPath;
-        float yOffset = 0.2f;
+        if (_pathProducer == null) { return; }
+        Path producedPath = _pathProducer.ProducedPaths.Last();
+        if (producedPath == null) { return; }
+
         NativeArray<IntegrationTile> integrationField = producedPath.IntegrationField;
         for (int i = 0; i < integrationField.Length; i++)
         {
-            DebugCosts(i);
-        }
-        void DebugCosts(int index)
-        {
-            float cost = integrationField[index].Cost;
+            float cost = integrationField[i].Cost;
             if (cost == float.MaxValue)
             {
-                return;
+                continue;
             }
-            Handles.Label(tilePositions[index], cost.ToString());
-        }
-        void DebugMarks(int index)
-        {
-            IntegrationMark mark = integrationField[index].Mark;
-            if (mark == IntegrationMark.None)
-            {
-                Handles.Label(tilePositions[index], "N");
-            }
+            Handles.Label(tilePositions[i], cost.ToString());
         }
     }
     public void DebugFlowField(NativeArray<Vector3> tilePositions)
     {
-        Path producedPath = _pathProducer.ProducedPath;
+        if (_pathProducer == null) { return; }
+        Path producedPath = _pathProducer.ProducedPaths.Last();
+        if(producedPath == null) { return; }
+
         float yOffset = 0.1f;
         Gizmos.color = Color.black;
         float tileSize = _tileSize;
@@ -180,3 +182,4 @@ public class PathDebugger
         }
     }
 }
+#endif

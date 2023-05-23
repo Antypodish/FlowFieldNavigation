@@ -8,7 +8,6 @@ public struct IntFieldJob : IJob
 {
     public int InitialWaveFront;
     public NativeArray<IntegrationTile> IntegrationField;
-    public NativeQueue<int> IntegrationQueue;
     [ReadOnly] public NativeArray<byte> Costs;
     [ReadOnly] public NativeArray<DirectionData> DirectionData;
     public void Execute()
@@ -20,8 +19,7 @@ public struct IntFieldJob : IJob
         //DATA
         NativeArray<byte> costs = Costs;
         NativeArray<IntegrationTile> integrationField = IntegrationField;
-        NativeQueue<int> integrationQueue = IntegrationQueue;
-
+        NativeQueue<int> integrationQueue = new NativeQueue<int>(Allocator.Temp); ;
         //CODE
 
         int targetLocalIndex = InitialWaveFront;
@@ -30,9 +28,9 @@ public struct IntFieldJob : IJob
         targetTile.Mark = IntegrationMark.Wave1;
         IntegrationField[targetLocalIndex] = targetTile;
         Enqueue(DirectionData[targetLocalIndex]);
-        while (!IntegrationQueue.IsEmpty())
+        while (!integrationQueue.IsEmpty())
         {
-            int index = IntegrationQueue.Dequeue();
+            int index = integrationQueue.Dequeue();
             IntegrationTile tile = IntegrationField[index];
             tile.Cost = GetCost(DirectionData[index]);
             IntegrationField[index] = tile;

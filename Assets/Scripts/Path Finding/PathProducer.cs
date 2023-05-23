@@ -8,7 +8,7 @@ using UnityEngine.UIElements;
 
 public class PathProducer
 {
-    public Path ProducedPath;
+    public DynamicArray<Path> ProducedPaths;
 
     PathfindingManager _pathfindingManager;
     CostFieldProducer _costFieldProducer;
@@ -25,15 +25,24 @@ public class PathProducer
         _rowAmount = pathfindingManager.RowAmount;
         _tileSize = pathfindingManager.TileSize;
         _sectorTileAmount = pathfindingManager.SectorTileAmount;
+        ProducedPaths = new DynamicArray<Path>(1);
     }
     public void Update()
     {
-        if(ProducedPath.State == PathState.Dirty)
+        for(int i = 0; i < ProducedPaths.Count; i++)
         {
-            NativeArray<Vector3> sources = new NativeArray<Vector3>(ProducedPath.Sources, Allocator.Persistent);
-            Vector3 destination = ProducedPath.Destination;
-            ProducedPath.Dispose();
-            _pathfindingManager.SetDestination(sources, destination);
+            if (ProducedPaths[i].State == PathState.ToBeUpdated)
+            {
+                NativeArray<Vector3> sources = new NativeArray<Vector3>(ProducedPaths[i].Sources, Allocator.Persistent);
+                Vector3 destination = ProducedPaths[i].Destination;
+                ProducedPaths[i].SetState(PathState.ToBeDisposed);
+                _pathfindingManager.SetDestination(sources, destination);
+            }
+            if(ProducedPaths[i].State == PathState.ToBeDisposed)
+            {
+                ProducedPaths[i].Dispose();
+                ProducedPaths.RemoveAt(i);
+            }
         }
     }
     public FlowFieldJobPack ProducePath(NativeArray<Vector3> sources, Vector3 destination, int offset)
@@ -48,10 +57,9 @@ public class PathProducer
         NativeArray<bool> sectorMarks = new NativeArray<bool>(pickedCostField.FieldGraph.SectorNodes.Length, Allocator.Persistent);
         NativeArray<PortalMark> portalMarks = new NativeArray<PortalMark>(pickedCostField.FieldGraph.PortalNodes.Length, Allocator.Persistent);
         NativeArray<IntegrationTile> integrationField = new NativeArray<IntegrationTile>(pickedCostField.Costs.Length, Allocator.Persistent);
-        NativeQueue<int> integrationQueue = new NativeQueue<int>(Allocator.Persistent);
         NativeArray<FlowData> flowField = new NativeArray<FlowData>(pickedCostField.Costs.Length, Allocator.Persistent);
 
-        ProducedPath = new Path()
+        Path producedPath = new Path()
         {
             Sources = sources,
             Destination = destination,
@@ -66,6 +74,12 @@ public class PathProducer
             IntegrationField = integrationField,
             FlowField = flowField,
         };
+        if(ProducedPaths.Count != 0)
+        {
+            ProducedPaths.Last().SetState(PathState.ToBeDisposed);
+        }
+        ProducedPaths.Add(producedPath);
+
         return new FlowFieldJobPack()
         {
             TraversalJob = GetTraversalJob(),
@@ -78,7 +92,7 @@ public class PathProducer
         //HELPERS
         FieldGraphTraversalJob GetTraversalJob()
         {
-            FieldGraphTraversalJob traversalJob = new FieldGraphTraversalJob()
+            return new FieldGraphTraversalJob()
             {
                 FieldColAmount = _columnAmount,
                 PortalNodes = pickedCostField.FieldGraph.PortalNodes,
@@ -102,16 +116,14 @@ public class PathProducer
                 SectorMarks = sectorMarks,
                 PickedSectors = pickedSectors
             };
-            return traversalJob;
         }
         IntFieldResetJob GetResetFieldJob()
         {
-            IntFieldResetJob resetJob = new IntFieldResetJob(integrationField);
-            return resetJob;
+            return new IntFieldResetJob(integrationField);
         }
         IntFieldPrepJob GetPreperationJob()
         {
-            IntFieldPrepJob prepJob = new IntFieldPrepJob()
+            return new IntFieldPrepJob()
             {
                 PickedSectors = pickedSectors,
                 FieldColAmount = _columnAmount,
@@ -123,45 +135,37 @@ public class PathProducer
                 SectorTileAmount = _pathfindingManager.SectorTileAmount,
                 SectorMatrixColAmount = _columnAmount / _sectorTileAmount
             };
-            return prepJob;
         }
         IntFieldJob GetIntegrationJob()
         {
-            IntFieldJob intJob = new IntFieldJob()
+            return new IntFieldJob()
             {
                 Costs = pickedCostField.Costs,
                 DirectionData = _costFieldProducer.Directions,
                 InitialWaveFront = destionationIndexFlat,
                 IntegrationField = integrationField,
-                IntegrationQueue = integrationQueue
             };
-            return intJob;
         }
         FlowFieldJob GetFlowFieldJob()
         {
-            FlowFieldJob flowFieldJob = new FlowFieldJob()
+            return new FlowFieldJob()
             {
                 DirectionData = _costFieldProducer.Directions,
                 FlowField = flowField,
                 IntegrationField = integrationField
             };
-            return flowFieldJob;
         }
     }
     public void MarkSectors(NativeList<int> editedSectorIndicies)
-    {
+    {/*
         NativeList<int> pickedSectors = ProducedPath.PickedSectors;
         for(int i = 0; i < editedSectorIndicies.Length; i++)
         {
             if (pickedSectors.Contains(editedSectorIndicies[i]))
             {
-                ProducedPath.State = PathState.Dirty;
+                ProducedPath.State = PathState.ToBeUpdated;
                 break;
             }
-        }
-    }
-    public PathDebugger GetPathDebugger()
-    {
-        return new PathDebugger(_pathfindingManager);
+        }*/
     }
 }

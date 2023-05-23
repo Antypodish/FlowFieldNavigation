@@ -109,6 +109,40 @@ public class DynamicArray<T>
         }
         return _array[index];
     }
+    public T Last()
+    {
+        if(_endIndex == -1)
+        {
+            return _array[0];
+        }
+        return _array[_endIndex];
+    }
+    public T First()
+    {
+        if (_endIndex == -1)
+        {
+            return _array[0];
+        }
+        return _array[0];
+    }
+    public T this[int i]
+    {
+        get { return _array[i]; }
+        set { _array[i] = value; }
+    }
+    public void RemoveAt(int index)
+    {
+        if (index == Count)
+        {
+            return;
+        }
+        for (int i = index + 1; i < Count; i++)
+        {
+            _array[i - 1] = _array[i];
+        }
+        _endIndex--;
+        Count--;
+    }
     public void Remove(T element)
     {
         int index = 0;

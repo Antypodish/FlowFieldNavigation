@@ -32,8 +32,7 @@ public class TargetSetter : MonoBehaviour
             {
                 Vector3 hitPos = hit.point;
                 _target = hitPos;
-                NativeList<Vector3> sorucesCopy = new NativeList<Vector3>(Allocator.Persistent);
-                sorucesCopy.CopyFrom(_sources);
+                NativeArray<Vector3> sorucesCopy = new NativeArray<Vector3>(_sources, Allocator.Persistent);
                 _pathfindingManager.SetDestination(sorucesCopy, _target);
             }
         }
