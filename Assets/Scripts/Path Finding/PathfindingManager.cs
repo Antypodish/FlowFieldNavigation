@@ -42,7 +42,7 @@ public class PathfindingManager : MonoBehaviour
     }
     private void LateUpdate()
     {
-        JobScheduler.LateUpdate();
+
     }
     void CalculateTilePositions()
     {

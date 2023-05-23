@@ -3,6 +3,7 @@ using Unity.Jobs;
 
 public struct FlowFieldJobPack
 {
+    public Path Path;
     public FieldGraphTraversalJob TraversalJob;
     public IntFieldResetJob ResetJob;
     public IntFieldPrepJob PrepJob;

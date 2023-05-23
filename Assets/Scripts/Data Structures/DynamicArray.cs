@@ -165,7 +165,7 @@ public class DynamicArray<T>
         _endIndex--;
         Count--;
     }
-    public void RemoveAll()
+    public void Clear()
     {
         _endIndex = -1;
         Count = 0;

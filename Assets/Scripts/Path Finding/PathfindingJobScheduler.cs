@@ -6,41 +6,42 @@ public class PathfindingJobScheduler
 {
     PathfindingManager _pathfindingManager;
 
-    Queue<JobHandle> _costEditHandles;
+    DynamicArray<JobHandle> _costEditHandles;
+    DynamicArray<NativeList<int>> _editedSectorIndicies = new DynamicArray<NativeList<int>>(10);
     DynamicArray<FlowFieldJobPack> _awitingPathFindingJobs;
+    DynamicArray<Path> _scheduledPaths;
     NativeList<JobHandle> _pathFindingJobHandles;
 
-    DynamicArray<NativeList<int>> _editedSectorIndicies = new DynamicArray<NativeList<int>>(10);
     public PathfindingJobScheduler(PathfindingManager pathfindingManager)
     {
+        _scheduledPaths = new DynamicArray<Path>(10);
         _pathfindingManager = pathfindingManager;
-        _costEditHandles = new Queue<JobHandle>(10);
+        _costEditHandles = new DynamicArray<JobHandle>(10);
         _awitingPathFindingJobs = new DynamicArray<FlowFieldJobPack>(10);
         _pathFindingJobHandles = new NativeList<JobHandle>(10, Allocator.Persistent);
     }
     public void Update()
     {
-        if (AllCostEditsCompleted())
+        if (CostEditJobsCompleted())
         {
             ScheduleAllAwaitingPathFinding();
             for(int i = 0; i < _editedSectorIndicies.Count; i++)
             {
+                _costEditHandles[i].Complete();
                 _pathfindingManager.SignalEditedSectors(_editedSectorIndicies.At(i));
             }
-            _editedSectorIndicies.RemoveAll();
+            _editedSectorIndicies.Clear();
+            _costEditHandles.Clear();
         }
-        CheckHandleCollections();
-    }
-    public void LateUpdate()
-    {
-        if (AllCostEditsCompleted())
+        for(int i = _pathFindingJobHandles.Length - 1; i >= 0; i--)
         {
-            ScheduleAllAwaitingPathFinding();
-            for (int i = 0; i < _editedSectorIndicies.Count; i++)
+            if (_pathFindingJobHandles[i].IsCompleted)
             {
-                _pathfindingManager.SignalEditedSectors(_editedSectorIndicies.At(i));
+                _pathFindingJobHandles[i].Complete();
+                _scheduledPaths[i].IsCalculated = true;
+                _scheduledPaths.RemoveAt(i);
+                _pathFindingJobHandles.RemoveAt(i);
             }
-            _editedSectorIndicies.RemoveAll();
         }
     }
     public void AddCostEditJob(CostFieldEditJob[] editJobs)
@@ -49,14 +50,14 @@ public class PathfindingJobScheduler
 
         if (CostEditScheduled())
         {
-            JobHandle lastHandle = _costEditHandles.Rear();
+            JobHandle lastHandle = _costEditHandles.Last();
             NativeArray<JobHandle> combinedHandles = new NativeArray<JobHandle>(editJobs.Length, Allocator.Temp);
             for (int j = 0; j < editJobs.Length; j++)
             {
                 combinedHandles[j] = editJobs[j].Schedule(lastHandle);
 
             }
-            _costEditHandles.Enqueue(JobHandle.CombineDependencies(combinedHandles));
+            _costEditHandles.Add(JobHandle.CombineDependencies(combinedHandles));
         }
         else if (PathFindingScheduled())
         {
@@ -66,7 +67,7 @@ public class PathfindingJobScheduler
             {
                 combinedHandles[j] = editJobs[j].Schedule(combinedPathFindingJobHandles);
             }
-            _costEditHandles.Enqueue(JobHandle.CombineDependencies(combinedHandles));
+            _costEditHandles.Add(JobHandle.CombineDependencies(combinedHandles));
         }
         else
         {
@@ -75,7 +76,7 @@ public class PathfindingJobScheduler
             {
                 combinedHandles[j] = editJobs[j].Schedule();
             }
-            _costEditHandles.Enqueue(JobHandle.CombineDependencies(combinedHandles));
+            _costEditHandles.Add(JobHandle.CombineDependencies(combinedHandles));
         }
 
     }
@@ -87,39 +88,31 @@ public class PathfindingJobScheduler
         }
         JobHandle pathFindingJobHandle = jobPack.SchedulePack();
         _pathFindingJobHandles.Add(pathFindingJobHandle);
+        _scheduledPaths.Add(jobPack.Path);
     }
-    public bool CostEditScheduled() => !_costEditHandles.Rear().IsCompleted;
+    public bool CostEditScheduled() => !_costEditHandles.Last().IsCompleted;
     public bool PathFindingScheduled() => _pathFindingJobHandles.Length != 0;
-    public bool AllCostEditsCompleted() => _costEditHandles.Rear().IsCompleted && _costEditHandles.Count != 0;
+    public bool CostEditJobsCompleted() => !_costEditHandles.IsEmpty() && _costEditHandles.Last().IsCompleted;
 
     void ScheduleAllAwaitingPathFinding()
     {
         for (int i = 0; i < _awitingPathFindingJobs.Count; i++)
         {
             _pathFindingJobHandles.Add(_awitingPathFindingJobs.At(i).SchedulePack());
+            _scheduledPaths.Add(_awitingPathFindingJobs.At(i).Path);
         }
-        _awitingPathFindingJobs.RemoveAll();
+        _awitingPathFindingJobs.Clear();
     }
-    void CheckHandleCollections()
+    bool ScheduledPathJobsCompleted()
     {
-        if (_costEditHandles.Rear().IsCompleted)
-        {
-            _costEditHandles.Clear();
-        }
-
-        bool isAllComplete = true;
-        for(int i = 0; i < _pathFindingJobHandles.Length; i++)
+        for (int i = 0; i < _pathFindingJobHandles.Length; i++)
         {
             if (!_pathFindingJobHandles[i].IsCompleted)
             {
-                isAllComplete = false;
-                break;
+                return false;
             }
         }
-        if (isAllComplete)
-        {
-            _pathFindingJobHandles.Clear();
-        }
+        return true;
     }
     public enum PathfindingJobSchedulerState : byte
     {

@@ -38,7 +38,7 @@ public class PathProducer
                 ProducedPaths[i].SetState(PathState.ToBeDisposed);
                 _pathfindingManager.SetDestination(sources, destination);
             }
-            if(ProducedPaths[i].State == PathState.ToBeDisposed)
+            if(ProducedPaths[i].State == PathState.ToBeDisposed && ProducedPaths[i].IsCalculated)
             {
                 ProducedPaths[i].Dispose();
                 ProducedPaths.RemoveAt(i);
@@ -82,6 +82,7 @@ public class PathProducer
 
         return new FlowFieldJobPack()
         {
+            Path = producedPath,
             TraversalJob = GetTraversalJob(),
             ResetJob = GetResetFieldJob(),
             PrepJob = GetPreperationJob(),
@@ -157,15 +158,17 @@ public class PathProducer
         }
     }
     public void MarkSectors(NativeList<int> editedSectorIndicies)
-    {/*
-        NativeList<int> pickedSectors = ProducedPath.PickedSectors;
-        for(int i = 0; i < editedSectorIndicies.Length; i++)
+    {
+        for(int i = 0; i < ProducedPaths.Count; i++)
         {
-            if (pickedSectors.Contains(editedSectorIndicies[i]))
+            NativeList<int> pickedSectors = ProducedPaths[i].PickedSectors;
+            for (int j = 0; j < editedSectorIndicies.Length; j++)
             {
-                ProducedPath.State = PathState.ToBeUpdated;
-                break;
+                if (pickedSectors.Contains(editedSectorIndicies[j]))
+                {
+                    ProducedPaths[i].SetState(PathState.ToBeUpdated);
+                }
             }
-        }*/
+        }
     }
 }
