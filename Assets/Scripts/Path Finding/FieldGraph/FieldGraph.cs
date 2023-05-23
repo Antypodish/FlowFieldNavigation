@@ -109,6 +109,7 @@ public struct FieldGraph
             PortalPerWindow = _portalPerWindow,
             IntegratedCosts = _aStarGrid._integratedCosts,
             AStarQueue = _aStarGrid._searchQueue,
+            EditedSectorIndicies = new NativeList<int>(Allocator.Persistent)
         };
     }
     public NativeArray<WindowNode> GetWindowNodesOf(SectorNode sectorNode)

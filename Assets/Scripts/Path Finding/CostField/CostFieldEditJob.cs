@@ -27,14 +27,15 @@ public struct CostFieldEditJob : IJob
     public int PortalPerWindow;
     public NativeArray<AStarTile> IntegratedCosts;
     public NativeQueue<int> AStarQueue;
+    public NativeList<int> EditedSectorIndicies;
     public void Execute()
     {
         ApplyCostUpdate();
-        NativeArray<int> sectorIndiciesBetweenBounds = GetSectorsBetweenBounds();
-        NativeArray<int> windowIndiciesBetweenBounds = GetWindowsBetweenBounds(sectorIndiciesBetweenBounds);
-        ResetConnectionsIn(sectorIndiciesBetweenBounds);
+        SetSectorsBetweenBounds();
+        NativeArray<int> windowIndiciesBetweenBounds = GetWindowsBetweenBounds(EditedSectorIndicies);
+        ResetConnectionsIn(EditedSectorIndicies);
         RecalcualatePortalsAt(windowIndiciesBetweenBounds);
-        RecalculatePortalConnectionsAt(sectorIndiciesBetweenBounds);
+        RecalculatePortalConnectionsAt(EditedSectorIndicies);
     }
     void ApplyCostUpdate()
     {
@@ -57,7 +58,7 @@ public struct CostFieldEditJob : IJob
             }
         }
     }
-    NativeArray<int> GetSectorsBetweenBounds()
+    void SetSectorsBetweenBounds()
     {
         Index2 botLeft = Bounds.BottomLeft;
         Index2 topRight = Bounds.UpperRight;
@@ -82,48 +83,41 @@ public struct CostFieldEditJob : IJob
         int sectorRowCount = upperRightRow - bottomLeftRow + 1;
         int sectorColCount = upperRightCol - bottomLeftCol + 1;
 
-        int sectorAmount = GetSectorAmount();
-        NativeArray<int> sectorsToReturn = new NativeArray<int>(sectorAmount, Allocator.Temp);
-
-        int sectorsToReturnIterable = 0;
         for (int r = bottomLeft; r < bottomLeft + sectorRowCount * SectorMatrixColAmount; r += SectorMatrixColAmount)
         {
             for (int i = r; i < r + sectorColCount; i++)
             {
-                sectorsToReturn[sectorsToReturnIterable++] = i;
+                EditedSectorIndicies.Add(i);
             }
         }
         if (!isSectorOnTop && doesIntersectUpperSectors)
         {
             for (int i = upperRight + SectorMatrixColAmount; i > upperRight + SectorMatrixColAmount - sectorColCount; i--)
             {
-                sectorsToReturn[sectorsToReturnIterable++] = i;
+                EditedSectorIndicies.Add(i);
             }
         }
         if (!isSectorOnBot && doesIntersectLowerSectors)
         {
             for (int i = bottomLeft - SectorMatrixColAmount; i < bottomLeft - SectorMatrixColAmount + sectorColCount; i++)
             {
-                sectorsToReturn[sectorsToReturnIterable++] = i;
+                EditedSectorIndicies.Add(i);
             }
         }
         if (!isSectorOnRight && doesIntersectRightSectors)
         {
             for (int i = upperRight + 1; i > upperRight + 1 - sectorRowCount * SectorMatrixColAmount; i -= SectorMatrixColAmount)
             {
-                sectorsToReturn[sectorsToReturnIterable++] = i;
+                EditedSectorIndicies.Add(i);
             }
         }
         if (!isSectorOnLeft && doesIntersectLeftSectors)
         {
             for (int i = bottomLeft - 1; i < bottomLeft - 1 + sectorRowCount * SectorMatrixColAmount; i += SectorMatrixColAmount)
             {
-                sectorsToReturn[sectorsToReturnIterable++] = i;
+                EditedSectorIndicies.Add(i);
             }
         }
-
-        return sectorsToReturn;
-
         int GetSectorAmount()
         {
             int amount = sectorRowCount * sectorColCount;

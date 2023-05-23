@@ -21,17 +21,13 @@ public class PathfindingManager : MonoBehaviour
     [HideInInspector] public int ColumnAmount;
     [HideInInspector] public byte SectorTileAmount = 10;
 
-    public static NativeArray<int> IntArray;
-    public static NativeArray<float> FloatArray;
-    public static NativeArray<int> IntSize;
-    public static NativeArray<int> FloatSize;
     private void Start()
     {
         //!!!ORDER IS IMPORTANT!!!
         TileSize = _terrainGenerator.TileSize;
         RowAmount = _terrainGenerator.RowAmount;
         ColumnAmount = _terrainGenerator.ColumnAmount;
-        JobScheduler = new PathfindingJobScheduler();
+        JobScheduler = new PathfindingJobScheduler(this);
         CostFieldProducer = new CostFieldProducer(_terrainGenerator.WalkabilityData, SectorTileAmount);
         CostFieldProducer.StartCostFieldProduction(0, _maxCostfieldOffset, SectorTileAmount);
         PathProducer = new PathProducer(this);
@@ -42,6 +38,7 @@ public class PathfindingManager : MonoBehaviour
     private void Update()
     {
         JobScheduler.Update();
+        PathProducer.Update();
     }
     private void LateUpdate()
     {
@@ -66,5 +63,9 @@ public class PathfindingManager : MonoBehaviour
     {
         CostFieldEditJob[] editJobs = CostFieldProducer.GetEditJobs(new BoundaryData(bound1, bound2), newCost);
         JobScheduler.AddCostEditJob(editJobs);
+    }
+    public void SignalEditedSectors(NativeList<int> editedSectorIndicies)
+    {
+        PathProducer.MarkSectors(editedSectorIndicies);
     }
 }

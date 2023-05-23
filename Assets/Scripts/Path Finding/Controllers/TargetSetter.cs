@@ -23,7 +23,7 @@ public class TargetSetter : MonoBehaviour
                 _sources.Add(hit.point);
             }
         }
-        if (Input.GetMouseButtonDown(1))
+        if (Input.GetMouseButton(1))
         {
             float tileSize = _pathfindingManager.TileSize;
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -32,7 +32,9 @@ public class TargetSetter : MonoBehaviour
             {
                 Vector3 hitPos = hit.point;
                 _target = hitPos;
-                _pathfindingManager.SetDestination(_sources, _target);
+                NativeList<Vector3> sorucesCopy = new NativeList<Vector3>(Allocator.Persistent);
+                sorucesCopy.CopyFrom(_sources);
+                _pathfindingManager.SetDestination(sorucesCopy, _target);
             }
         }
         if (Input.GetMouseButtonDown(2))

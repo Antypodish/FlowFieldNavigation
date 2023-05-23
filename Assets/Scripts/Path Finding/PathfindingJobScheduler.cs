@@ -4,32 +4,49 @@ using UnityEngine;
 
 public class PathfindingJobScheduler
 {
+    PathfindingManager _pathfindingManager;
+
     Queue<JobHandle> _costEditHandles;
     DynamicArray<FlowFieldJobPack> _awitingPathFindingJobs;
     NativeList<JobHandle> _pathFindingJobHandles;
-    public PathfindingJobScheduler()
+
+    DynamicArray<NativeList<int>> _editedSectorIndicies = new DynamicArray<NativeList<int>>(10);
+    public PathfindingJobScheduler(PathfindingManager pathfindingManager)
     {
+        _pathfindingManager = pathfindingManager;
         _costEditHandles = new Queue<JobHandle>(10);
         _awitingPathFindingJobs = new DynamicArray<FlowFieldJobPack>(10);
         _pathFindingJobHandles = new NativeList<JobHandle>(10, Allocator.Persistent);
     }
     public void Update()
     {
-        CheckHandleCollections();
         if (AllCostEditsCompleted())
         {
             ScheduleAllAwaitingPathFinding();
+            for(int i = 0; i < _editedSectorIndicies.Count; i++)
+            {
+                _pathfindingManager.SignalEditedSectors(_editedSectorIndicies.At(i));
+            }
+            _editedSectorIndicies.RemoveAll();
         }
+        CheckHandleCollections();
     }
     public void LateUpdate()
     {
         if (AllCostEditsCompleted())
         {
             ScheduleAllAwaitingPathFinding();
+            for (int i = 0; i < _editedSectorIndicies.Count; i++)
+            {
+                _pathfindingManager.SignalEditedSectors(_editedSectorIndicies.At(i));
+            }
+            _editedSectorIndicies.RemoveAll();
         }
     }
     public void AddCostEditJob(CostFieldEditJob[] editJobs)
     {
+        _editedSectorIndicies.Add(editJobs[0].EditedSectorIndicies);
+
         if (CostEditScheduled())
         {
             JobHandle lastHandle = _costEditHandles.Rear();
@@ -73,7 +90,7 @@ public class PathfindingJobScheduler
     }
     public bool CostEditScheduled() => !_costEditHandles.Rear().IsCompleted;
     public bool PathFindingScheduled() => _pathFindingJobHandles.Length != 0;
-    public bool AllCostEditsCompleted() => _costEditHandles.Rear().IsCompleted;
+    public bool AllCostEditsCompleted() => _costEditHandles.Rear().IsCompleted && _costEditHandles.Count != 0;
 
     void ScheduleAllAwaitingPathFinding()
     {

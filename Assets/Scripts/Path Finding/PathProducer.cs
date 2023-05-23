@@ -26,7 +26,16 @@ public class PathProducer
         _tileSize = pathfindingManager.TileSize;
         _sectorTileAmount = pathfindingManager.SectorTileAmount;
     }
-
+    public void Update()
+    {
+        if(ProducedPath.State == PathState.Dirty)
+        {
+            NativeArray<Vector3> sources = new NativeArray<Vector3>(ProducedPath.Sources, Allocator.Persistent);
+            Vector3 destination = ProducedPath.Destination;
+            ProducedPath.Dispose();
+            _pathfindingManager.SetDestination(sources, destination);
+        }
+    }
     public FlowFieldJobPack ProducePath(NativeArray<Vector3> sources, Vector3 destination, int offset)
     {
         Index2 destinationIndex = new Index2(Mathf.FloorToInt(destination.z / _tileSize), Mathf.FloorToInt(destination.x / _tileSize));
@@ -44,6 +53,9 @@ public class PathProducer
 
         ProducedPath = new Path()
         {
+            Sources = sources,
+            Destination = destination,
+            State = PathState.Clean,
             Offset = offset,
             PortalDistances = portalDistances,
             ConnectionIndicies = connectionIndicies,
@@ -136,162 +148,20 @@ public class PathProducer
             return flowFieldJob;
         }
     }
-    public void DebugBFS()
+    public void MarkSectors(NativeList<int> editedSectorIndicies)
     {
-        Gizmos.color = Color.black;
-
-        float tileSize = _pathfindingManager.TileSize;
-        FieldGraph fg = _costFieldProducer.GetCostFieldWithOffset(ProducedPath.Offset).FieldGraph;
-        NativeArray<PortalNode> portalNodes = fg.PortalNodes;
-        NativeArray<int> connections = ProducedPath.ConnectionIndicies;
-        NativeArray<float> distances = ProducedPath.PortalDistances;
-        for (int i = 0; i < portalNodes.Length; i++)
+        NativeList<int> pickedSectors = ProducedPath.PickedSectors;
+        for(int i = 0; i < editedSectorIndicies.Length; i++)
         {
-            PortalNode startNode = portalNodes[i];
-            if (startNode.Portal1.Index.R == 0) { continue; }
-            PortalNode endNode = portalNodes[connections[i]];
-            Vector3 start = startNode.GetPosition(tileSize) + new Vector3(0, 0.05f, 0);
-            Vector3 end = endNode.GetPosition(tileSize) + new Vector3(0, 0.05f, 0);
-            float distance = Vector3.Distance(start, end);
-            end = Vector3.MoveTowards(start, end, distance - 0.3f);
-            float cost = distances[i];
-            Gizmos.DrawLine(start, end);
-            Handles.Label(start + new Vector3(0, 0, 0.5f), cost.ToString());
-        }
-    }
-    public void DebugPortalSequence()
-    {
-        
-        Gizmos.color = Color.black;
-        float tileSize = _pathfindingManager.TileSize;
-        FieldGraph fg = _costFieldProducer.GetCostFieldWithOffset(ProducedPath.Offset).FieldGraph;
-        NativeArray<PortalNode> portalNodes = fg.PortalNodes;
-        NativeList<PortalSequence> porSeq = ProducedPath.PortalSequence;
-        
-        UnityEngine.Debug.Log(porSeq.Length);
-        for (int i = 0; i < porSeq.Length; i++)
-        {
-            PortalNode portalNode = portalNodes[porSeq[i].PortalPtr];
-            Gizmos.DrawSphere(portalNode.GetPosition(_tileSize), 0.5f);
-        }
-    }
-    public void DebugPickedSectors()
-    {
-        float yOffset = 0.3f;
-        Gizmos.color = Color.black;
-        float tileSize = _pathfindingManager.TileSize;
-        FieldGraph fg = _costFieldProducer.GetCostFieldWithOffset(ProducedPath.Offset).FieldGraph;
-        NativeArray<SectorNode> sectorNodes = fg.SectorNodes;
-        NativeArray<int> pickedSectorNodes = ProducedPath.PickedSectors;
-        for(int i = 0; i < pickedSectorNodes.Length; i++)
-        {
-            Index2 index = sectorNodes[pickedSectorNodes[i]].Sector.StartIndex;
-            int sectorSize = sectorNodes[pickedSectorNodes[i]].Sector.Size;
-            Vector3 botLeft = new Vector3(index.C * tileSize, yOffset, index.R * tileSize);
-            Vector3 botRight = new Vector3((index.C + sectorSize) * tileSize, yOffset, index.R * tileSize);
-            Vector3 topLeft = new Vector3(index.C * tileSize, yOffset, (index.R + sectorSize) * tileSize);
-            Vector3 topRight = new Vector3((index.C + sectorSize) * tileSize, yOffset, (index.R + sectorSize) * tileSize);
-            Gizmos.DrawLine(botLeft, topLeft);
-            Gizmos.DrawLine(topLeft, topRight);
-            Gizmos.DrawLine(topRight, botRight);
-            Gizmos.DrawLine(botRight, botLeft);
-        }
-    }
-    public void DebugIntegrationField(NativeArray<Vector3> tilePositions)
-    {
-        float yOffset = 0.2f;
-        NativeArray<IntegrationTile> integrationField = ProducedPath.IntegrationField;
-        for(int i = 0; i < integrationField.Length; i++)
-        {
-            DebugCosts(i);
-        }
-        void DebugCosts(int index)
-        {
-            float cost = integrationField[index].Cost;
-            if (cost == float.MaxValue)
+            if (pickedSectors.Contains(editedSectorIndicies[i]))
             {
-                return;
-            }
-            Handles.Label(tilePositions[index], cost.ToString());
-        }
-        void DebugMarks(int index)
-        {
-            IntegrationMark mark = integrationField[index].Mark;
-            if (mark == IntegrationMark.None)
-            {
-                Handles.Label(tilePositions[index], "N");
+                ProducedPath.State = PathState.Dirty;
+                break;
             }
         }
     }
-    public void DebugFlowField(NativeArray<Vector3> tilePositions)
+    public PathDebugger GetPathDebugger()
     {
-        float yOffset = 0.1f;
-        Gizmos.color = Color.black;
-        float tileSize = _tileSize;
-        NativeArray<FlowData> flowfield = ProducedPath.FlowField;
-        for(int i = 0; i < flowfield.Length; i++)
-        {
-            if (flowfield[i] == FlowData.None) { continue; }
-            DrawSquare(tilePositions[i], 0.125f);
-            DrawFlow(flowfield[i], tilePositions[i]);
-        }
-
-        void DrawSquare(Vector3 pos, float size)
-        {
-            Vector3 botLeft = new Vector3(pos.x - size / 2, yOffset, pos.z - size / 2);
-            Vector3 botRight = new Vector3(pos.x + size / 2, yOffset, pos.z - size / 2);
-            Vector3 topLeft = new Vector3(pos.x - size / 2, yOffset, pos.z + size / 2);
-            Vector3 topRight = new Vector3(pos.x + size / 2, yOffset, pos.z + size / 2);
-
-            Gizmos.DrawLine(topRight, botRight);
-            Gizmos.DrawLine(botRight, botLeft);
-            Gizmos.DrawLine(botLeft, topLeft);
-            Gizmos.DrawLine(topLeft, topRight);
-        }
-        void DrawFlow(FlowData flow, Vector3 pos)
-        {
-            pos = pos + new Vector3(0, yOffset, 0);
-
-            if (flow == FlowData.N)
-            {
-                Vector3 dir = pos + new Vector3(0, yOffset, 0.4f);
-                Gizmos.DrawLine(pos, dir);
-            }
-            else if (flow == FlowData.NE)
-            {
-                Vector3 dir = pos + new Vector3(0.4f, yOffset, 0.4f);
-                Gizmos.DrawLine(pos, dir);
-            }
-            else if (flow == FlowData.E)
-            {
-                Vector3 dir = pos + new Vector3(0.4f, yOffset, 0);
-                Gizmos.DrawLine(pos, dir);
-            }
-            else if (flow == FlowData.SE)
-            {
-                Vector3 dir = pos + new Vector3(0.4f, yOffset, -0.4f);
-                Gizmos.DrawLine(pos, dir);
-            }
-            else if (flow == FlowData.S)
-            {
-                Vector3 dir = pos + new Vector3(0, yOffset, -0.4f);
-                Gizmos.DrawLine(pos, dir);
-            }
-            else if (flow == FlowData.SW)
-            {
-                Vector3 dir = pos + new Vector3(-0.4f, yOffset, -0.4f);
-                Gizmos.DrawLine(pos, dir);
-            }
-            else if (flow == FlowData.W)
-            {
-                Vector3 dir = pos + new Vector3(-0.4f, yOffset, 0);
-                Gizmos.DrawLine(pos, dir);
-            }
-            else if (flow == FlowData.NW)
-            {
-                Vector3 dir = pos + new Vector3(-0.4f, yOffset, 0.4f);
-                Gizmos.DrawLine(pos, dir);
-            }
-        }
+        return new PathDebugger(_pathfindingManager);
     }
 }
