@@ -16,6 +16,7 @@ TODO's
 3 - Local Avoidance usin Boids algorithm. (Normal)
 4 - In order to make "real" walls, a 2d collision system, exclusive to pathfinding, will be developed. (Unknown)
 5 - Optimization, optimization, optimization!! (Eternal)
+6 - Implement LOS for pathfinding destination in order to make agent movement more natural. (Easy?)
 
 Far Future Plans:
 1 - Rewriting the system using DOTS, specifically ECS.
