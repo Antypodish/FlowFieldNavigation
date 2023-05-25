@@ -141,42 +141,42 @@ public class PathDebugger
 
             if (flow == FlowData.N)
             {
-                Vector3 dir = pos + new Vector3(0, yOffset, 0.4f);
+                Vector3 dir = pos + new Vector3(0, 0, 0.4f);
                 Gizmos.DrawLine(pos, dir);
             }
             else if (flow == FlowData.NE)
             {
-                Vector3 dir = pos + new Vector3(0.4f, yOffset, 0.4f);
+                Vector3 dir = pos + new Vector3(0.4f, 0, 0.4f);
                 Gizmos.DrawLine(pos, dir);
             }
             else if (flow == FlowData.E)
             {
-                Vector3 dir = pos + new Vector3(0.4f, yOffset, 0);
+                Vector3 dir = pos + new Vector3(0.4f, 0, 0);
                 Gizmos.DrawLine(pos, dir);
             }
             else if (flow == FlowData.SE)
             {
-                Vector3 dir = pos + new Vector3(0.4f, yOffset, -0.4f);
+                Vector3 dir = pos + new Vector3(0.4f, 0, -0.4f);
                 Gizmos.DrawLine(pos, dir);
             }
             else if (flow == FlowData.S)
             {
-                Vector3 dir = pos + new Vector3(0, yOffset, -0.4f);
+                Vector3 dir = pos + new Vector3(0, 0, -0.4f);
                 Gizmos.DrawLine(pos, dir);
             }
             else if (flow == FlowData.SW)
             {
-                Vector3 dir = pos + new Vector3(-0.4f, yOffset, -0.4f);
+                Vector3 dir = pos + new Vector3(-0.4f, 0, -0.4f);
                 Gizmos.DrawLine(pos, dir);
             }
             else if (flow == FlowData.W)
             {
-                Vector3 dir = pos + new Vector3(-0.4f, yOffset, 0);
+                Vector3 dir = pos + new Vector3(-0.4f, 0, 0);
                 Gizmos.DrawLine(pos, dir);
             }
             else if (flow == FlowData.NW)
             {
-                Vector3 dir = pos + new Vector3(-0.4f, yOffset, 0.4f);
+                Vector3 dir = pos + new Vector3(-0.4f, 0, 0.4f);
                 Gizmos.DrawLine(pos, dir);
             }
         }

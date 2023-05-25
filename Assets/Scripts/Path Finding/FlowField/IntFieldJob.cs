@@ -86,8 +86,8 @@ public struct IntFieldJob : IJob
             float wCost = integrationField[directions.W].Cost + 1f;
             float neCost = integrationField[directions.NE].Cost + 1.4f;
             float seCost = integrationField[directions.SE].Cost + 1.4f;
-            float swCost = integrationField[directions.SW].Cost + 1f;
-            float nwCost = integrationField[directions.NW].Cost + 1f;
+            float swCost = integrationField[directions.SW].Cost + 1.4f;
+            float nwCost = integrationField[directions.NW].Cost + 1.4f;
 
             if (nCost < costToReturn) { costToReturn = nCost; }
             if (eCost < costToReturn) { costToReturn = eCost; }
