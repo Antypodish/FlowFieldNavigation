@@ -1,4 +1,5 @@
-﻿using Unity.Collections;
+﻿using System.Diagnostics;
+using Unity.Collections;
 using Unity.Jobs;
 
 public struct FlowFieldJobPack
@@ -10,7 +11,6 @@ public struct FlowFieldJobPack
     public LOSJob LOSJob;
     public IntFieldJob IntegrationJob;
     public FlowFieldJob FlowFieldJob;
-
     public JobHandle SchedulePack()
     {
         JobHandle traversalJobHandle = TraversalJob.Schedule();

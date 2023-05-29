@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
@@ -19,10 +20,10 @@ public struct LOSJob : IJob
     [ReadOnly] public NativeArray<DirectionData> Directions;
     public void Execute()
     {
-        NativeQueue<int> integrationQueue = new NativeQueue<int>(Allocator.Temp);
+        NativeQueue<LOSQueueElement> integrationQueue = new NativeQueue<LOSQueueElement>(Allocator.Temp);
         LOSIntegration(integrationQueue);
     }
-    void LOSIntegration(NativeQueue<int> integrationQueue)
+    void LOSIntegration(NativeQueue<LOSQueueElement> integrationQueue)
     {
         float tileSize = TileSize;
         int initialWaveFront = InitialWaveFront;
@@ -35,15 +36,30 @@ public struct LOSJob : IJob
         NativeArray<byte> costs = Costs;
 
         int targetLocalIndex = InitialWaveFront;
+        DetermineLOSC(Directions[targetLocalIndex]);
         IntegrationTile targetTile = IntegrationField[targetLocalIndex];
-        targetTile.Mark = IntegrationMark.LOSPass;
-        targetTile.Cost = 0f;
-        IntegrationField[targetLocalIndex] = targetTile;
-        EnqueueDirections(Directions[targetLocalIndex], 0f);
+        if (targetTile.Mark != IntegrationMark.LOSBlock)
+        {
+            targetTile.Mark = IntegrationMark.LOSPass;
+            targetTile.Cost = 0f;
+            IntegrationField[targetLocalIndex] = targetTile;
+            EnqueueDirections(Directions[targetLocalIndex], 0f);
+        }
         while (!integrationQueue.IsEmpty())
         {
-            int index = integrationQueue.Dequeue();
-            EnqueueDirections(Directions[index], IntegrationField[index].Cost);
+            LOSQueueElement queueElement = integrationQueue.Dequeue();
+            int index = queueElement.Index;
+            float cost = queueElement.PreviousCost + 1;
+            DetermineLOSC(Directions[index]);
+            IntegrationTile tile = IntegrationField[index];
+            if (tile.Mark == IntegrationMark.LOSBlock) { continue; }
+            else
+            {
+                tile.Cost = cost;
+                tile.Mark = IntegrationMark.LOSPass;
+                integrationField[index] = tile;
+                EnqueueDirections(Directions[index], cost);
+            }
         }
 
         //HELPERS
@@ -63,71 +79,97 @@ public struct LOSJob : IJob
             bool eastIsRelevant = eMark == IntegrationMark.Relevant;
             bool southIsRelevant = sMark == IntegrationMark.Relevant;
             bool westIsRelevant = wMark == IntegrationMark.Relevant;
-            //COSTS
+
             byte nCost = costs[n];
             byte eCost = costs[e];
             byte sCost = costs[s];
             byte wCost = costs[w];
+            if (northIsRelevant && nCost != byte.MaxValue)
+            {
+                IntegrationTile tile = integrationField[n];
+                LOSQueueElement queueElement = new LOSQueueElement()
+                {
+                    Index = n,
+                    PreviousCost = waveCost,
+                };
+                integrationQueue.Enqueue(queueElement);
+                tile.Mark = IntegrationMark.Awaiting;
+                integrationField[n] = tile;
 
-            if (northIsRelevant)
-            {
-                if (nCost == byte.MaxValue)
-                {
-                    ApplyLOSBlockIfLOSCorner(n);
-                }
-                else
-                {
-                    integrationQueue.Enqueue(n);
-                    IntegrationTile tile = integrationField[n];
-                    tile.Cost = waveCost + 1f;
-                    tile.Mark = IntegrationMark.LOSPass;
-                    integrationField[n] = tile;
-                }
             }
-            if (eastIsRelevant)
+            if (eastIsRelevant && eCost != byte.MaxValue)
             {
-                if (eCost == byte.MaxValue)
+                IntegrationTile tile = integrationField[e];
+                LOSQueueElement queueElement = new LOSQueueElement()
                 {
-                    ApplyLOSBlockIfLOSCorner(e);
-                }
-                else
-                {
-                    integrationQueue.Enqueue(e);
-                    IntegrationTile tile = integrationField[e];
-                    tile.Cost = waveCost + 1f;
-                    tile.Mark = IntegrationMark.LOSPass;
-                    integrationField[e] = tile;
-                }
+                    Index = e,
+                    PreviousCost = waveCost,
+                };
+                integrationQueue.Enqueue(queueElement);
+                tile.Mark = IntegrationMark.Awaiting;
+                integrationField[e] = tile;
             }
-            if (southIsRelevant)
+            if (southIsRelevant && sCost != byte.MaxValue)
             {
-                if (sCost == byte.MaxValue)
+                IntegrationTile tile = integrationField[s];
+                LOSQueueElement queueElement = new LOSQueueElement()
                 {
-                    ApplyLOSBlockIfLOSCorner(s);
-                }
-                else
-                {
-                    integrationQueue.Enqueue(s);
-                    IntegrationTile tile = integrationField[s];
-                    tile.Cost = waveCost + 1f;
-                    tile.Mark = IntegrationMark.LOSPass;
-                    integrationField[s] = tile;
-                }
+                    Index = s,
+                    PreviousCost = waveCost,
+                };
+                integrationQueue.Enqueue(queueElement);
+                tile.Mark = IntegrationMark.Awaiting;
+                integrationField[s] = tile;
             }
-            if (westIsRelevant)
+            if (westIsRelevant && wCost != byte.MaxValue)
             {
-                if (wCost == byte.MaxValue)
+                IntegrationTile tile = integrationField[w];
+                LOSQueueElement queueElement = new LOSQueueElement()
                 {
-                    ApplyLOSBlockIfLOSCorner(w);
-                }
-                else
-                {
-                    integrationQueue.Enqueue(w);
-                    IntegrationTile tile = integrationField[w];
-                    tile.Cost = waveCost + 1f;
-                    tile.Mark = IntegrationMark.LOSPass;
-                    integrationField[w] = tile;
-                }
+                    Index = w,
+                    PreviousCost = waveCost,
+                };
+                integrationQueue.Enqueue(queueElement);
+                tile.Mark = IntegrationMark.Awaiting;
+                integrationField[w] = tile;
+            }
+        }
+        void DetermineLOSC(DirectionData directions)
+        {
+            int n = directions.N;
+            int e = directions.E;
+            int s = directions.S;
+            int w = directions.W;
+            //MARKS
+            IntegrationMark nMark = integrationField[n].Mark;
+            IntegrationMark eMark = integrationField[e].Mark;
+            IntegrationMark sMark = integrationField[s].Mark;
+            IntegrationMark wMark = integrationField[w].Mark;
+            //RELEVANCIES
+            bool northIsRelevant = nMark == IntegrationMark.Relevant;
+            bool eastIsRelevant = eMark == IntegrationMark.Relevant;
+            bool southIsRelevant = sMark == IntegrationMark.Relevant;
+            bool westIsRelevant = wMark == IntegrationMark.Relevant;
+
+            byte nCost = costs[n];
+            byte eCost = costs[e];
+            byte sCost = costs[s];
+            byte wCost = costs[w];
+            if (northIsRelevant && nCost == byte.MaxValue)
+            {
+                ApplyLOSBlockIfLOSCorner(n);
+            }
+            if (eastIsRelevant && eCost == byte.MaxValue)
+            {
+                ApplyLOSBlockIfLOSCorner(e);
+            }
+            if (southIsRelevant && sCost == byte.MaxValue)
+            {
+                ApplyLOSBlockIfLOSCorner(s);
+            }
+            if (westIsRelevant && wCost == byte.MaxValue)
+            {
+                ApplyLOSBlockIfLOSCorner(w);
             }
         }
         void ApplyLOSBlockIfLOSCorner(int index)
@@ -283,16 +325,18 @@ public struct LOSJob : IJob
                     float2 sourcePosition = waveFrontTilePos + new float2(-tileSize / 2, -tileSize / 2);
                     NativeList<int2> blockOffsets = GetOffsets(sourcePosition, loscPosition, out int2 stepAmount);
                     int2 step = divergent;
-                    while (!IsOutOfBounds2D(step))
+                    bool hitTheWall = false;
+                    while (!IsOutOfBounds2D(step) && !hitTheWall)
                     {
                         for (int i = 0; i < blockOffsets.Length; i++)
                         {
                             int2 offset = blockOffsets[i];
                             int2 resultingIndex = offset + step;
                             int resultingIndex1d = To1D(resultingIndex, fieldColAmount);
-                            if (IsOutOfBounds2D(offset + step)) { break; }
-                            //if (costs[resultingIndex1d] == byte.MaxValue) { continue; }
                             IntegrationTile tile = integrationField[resultingIndex1d];
+                            if (IsOutOfBounds2D(offset + step)) { break; }
+                            if (tile.Mark == IntegrationMark.Irrelevant) { hitTheWall = true; break; }
+                            if (costs[resultingIndex1d] == byte.MaxValue) { hitTheWall = true; break;  }
                             tile.Mark = IntegrationMark.LOSBlock;
                             integrationField[resultingIndex1d] = tile;
                         }
@@ -321,16 +365,18 @@ public struct LOSJob : IJob
                     float2 sourcePosition = waveFrontTilePos + new float2(-tileSize / 2, tileSize / 2);
                     NativeList<int2> blockOffsets = GetOffsets(sourcePosition, loscPosition, out int2 stepAmount);
                     int2 step = divergent;
-                    while (!IsOutOfBounds2D(step))
+                    bool hitTheWall = false;
+                    while (!IsOutOfBounds2D(step) && !hitTheWall)
                     {
                         for (int i = 0; i < blockOffsets.Length; i++)
                         {
                             int2 offset = blockOffsets[i];
                             int2 resultingIndex = offset + step;
                             int resultingIndex1d = To1D(resultingIndex, fieldColAmount);
-                            if (IsOutOfBounds2D(offset + step)) { break; }
-                            //if (costs[resultingIndex1d] == byte.MaxValue) { continue; }
                             IntegrationTile tile = integrationField[resultingIndex1d];
+                            if (IsOutOfBounds2D(offset + step)) { break; }
+                            if (tile.Mark == IntegrationMark.Irrelevant) { hitTheWall = true; break; }
+                            if (costs[resultingIndex1d] == byte.MaxValue) { hitTheWall = true; break; }
                             tile.Mark = IntegrationMark.LOSBlock;
                             integrationField[resultingIndex1d] = tile;
                         }
@@ -359,16 +405,18 @@ public struct LOSJob : IJob
                     float2 sourcePosition = waveFrontTilePos + new float2(tileSize / 2, tileSize / 2);
                     NativeList<int2> blockOffsets = GetOffsets(sourcePosition, loscPosition, out int2 stepAmount);
                     int2 step = divergent;
-                    while (!IsOutOfBounds2D(step))
+                    bool hitTheWall = false;
+                    while (!IsOutOfBounds2D(step) && !hitTheWall)
                     {
                         for (int i = 0; i < blockOffsets.Length; i++)
                         {
                             int2 offset = blockOffsets[i];
                             int2 resultingIndex = offset + step;
                             int resultingIndex1d = To1D(resultingIndex, fieldColAmount);
-                            if (IsOutOfBounds2D(offset + step)) { break; }
-                            //if (costs[resultingIndex1d] == byte.MaxValue) { continue; }
                             IntegrationTile tile = integrationField[resultingIndex1d];
+                            if (IsOutOfBounds2D(offset + step)) { break; }
+                            if (tile.Mark == IntegrationMark.Irrelevant) { hitTheWall = true; break; }
+                            if (costs[resultingIndex1d] == byte.MaxValue) { hitTheWall = true; break; }
                             tile.Mark = IntegrationMark.LOSBlock;
                             integrationField[resultingIndex1d] = tile;
                         }
@@ -397,16 +445,18 @@ public struct LOSJob : IJob
                     float2 sourcePosition = waveFrontTilePos + new float2(tileSize / 2, -tileSize / 2);
                     NativeList<int2> blockOffsets = GetOffsets(sourcePosition, loscPosition, out int2 stepAmount);
                     int2 step = divergent;
-                    while (!IsOutOfBounds2D(step))
+                    bool hitTheWall = false;
+                    while (!IsOutOfBounds2D(step) && !hitTheWall)
                     {
                         for (int i = 0; i < blockOffsets.Length; i++)
                         {
                             int2 offset = blockOffsets[i];
                             int2 resultingIndex = offset + step;
                             int resultingIndex1d = To1D(resultingIndex, fieldColAmount);
-                            if (IsOutOfBounds2D(offset + step)) { break; }
-                            //if (costs[resultingIndex1d] == byte.MaxValue) { continue; }
                             IntegrationTile tile = integrationField[resultingIndex1d];
+                            if (IsOutOfBounds2D(offset + step)) { break; }
+                            if (tile.Mark == IntegrationMark.Irrelevant) { hitTheWall = true; break; }
+                            if (costs[resultingIndex1d] == byte.MaxValue) { hitTheWall = true; break; }
                             tile.Mark = IntegrationMark.LOSBlock;
                             integrationField[resultingIndex1d] = tile;
                         }
@@ -442,4 +492,9 @@ public struct LOSJob : IJob
             return false;
         }
     }
+}
+public struct LOSQueueElement
+{
+    public int Index;
+    public float PreviousCost;
 }

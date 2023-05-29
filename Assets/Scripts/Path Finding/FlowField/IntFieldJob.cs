@@ -118,9 +118,10 @@ public struct IntegrationTile
 }
 public enum IntegrationMark : byte
 {
-    Irrelevant = 0,
-    Relevant = 1,
-    LOSPass = 3,
-    LOSBlock = 5,
-    LOSC = 6,
+    Irrelevant,
+    Relevant,
+    LOSPass,
+    LOSBlock,
+    LOSC,
+    Awaiting,
 }
