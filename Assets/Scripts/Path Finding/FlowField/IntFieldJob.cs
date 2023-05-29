@@ -1,7 +1,12 @@
 ﻿using System.Security.Cryptography.X509Certificates;
 using Unity.Burst;
+using Unity.Mathematics;
 using Unity.Collections;
 using Unity.Jobs;
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+using Unity.VisualScripting;
 
 [BurstCompile]
 public struct IntFieldJob : IJob
@@ -9,32 +14,31 @@ public struct IntFieldJob : IJob
     public int InitialWaveFront;
     public NativeArray<IntegrationTile> IntegrationField;
     [ReadOnly] public NativeArray<byte> Costs;
-    [ReadOnly] public NativeArray<DirectionData> DirectionData;
+    [ReadOnly] public NativeArray<DirectionData> Directions;
     public void Execute()
     {
-        RunBFS();
+        NativeQueue<int> integrationQueue = new NativeQueue<int>(Allocator.Temp);
+        //RunBFS(integrationQueue);
     }
-    void RunBFS()
+    void Integrate(NativeQueue<int> integrationQueue)
     {
         //DATA
-        NativeArray<byte> costs = Costs;
         NativeArray<IntegrationTile> integrationField = IntegrationField;
-        NativeQueue<int> integrationQueue = new NativeQueue<int>(Allocator.Temp); ;
         //CODE
 
         int targetLocalIndex = InitialWaveFront;
         IntegrationTile targetTile = IntegrationField[targetLocalIndex];
         targetTile.Cost = 0f;
-        targetTile.Mark = IntegrationMark.Wave1;
+        targetTile.Mark = IntegrationMark.Relevant;
         IntegrationField[targetLocalIndex] = targetTile;
-        Enqueue(DirectionData[targetLocalIndex]);
+        Enqueue(Directions[targetLocalIndex]);
         while (!integrationQueue.IsEmpty())
         {
             int index = integrationQueue.Dequeue();
             IntegrationTile tile = IntegrationField[index];
-            tile.Cost = GetCost(DirectionData[index]);
+            tile.Cost = GetCost(Directions[index]);
             IntegrationField[index] = tile;
-            Enqueue(DirectionData[index]);
+            Enqueue(Directions[index]);
         }
 
         //HELPERS
@@ -44,36 +48,36 @@ public struct IntFieldJob : IJob
             int e = directions.E;
             int s = directions.S;
             int w = directions.W;
-            bool isNorthAvailable = integrationField[n].Mark == IntegrationMark.None;
-            bool isEastAvailable = integrationField[e].Mark == IntegrationMark.None;
-            bool isSouthAvailable = integrationField[s].Mark == IntegrationMark.None;
-            bool isWestAvailable = integrationField[w].Mark == IntegrationMark.None;
+            bool isNorthAvailable = integrationField[n].Mark == IntegrationMark.Relevant;
+            bool isEastAvailable = integrationField[e].Mark == IntegrationMark.Relevant;
+            bool isSouthAvailable = integrationField[s].Mark == IntegrationMark.Relevant;
+            bool isWestAvailable = integrationField[w].Mark == IntegrationMark.Relevant;
             if (isNorthAvailable)
             {
                 integrationQueue.Enqueue(n);
                 IntegrationTile tile = integrationField[n];
-                tile.Mark = IntegrationMark.Wave1;
+                tile.Mark = IntegrationMark.Relevant;
                 integrationField[n] = tile;
             }
             if (isEastAvailable)
             {
                 integrationQueue.Enqueue(e);
                 IntegrationTile tile = integrationField[e];
-                tile.Mark = IntegrationMark.Wave1;
+                tile.Mark = IntegrationMark.Relevant;
                 integrationField[e] = tile;
             }
             if (isSouthAvailable)
             {
                 integrationQueue.Enqueue(s);
                 IntegrationTile tile = integrationField[s];
-                tile.Mark = IntegrationMark.Wave1;
+                tile.Mark = IntegrationMark.Relevant;
                 integrationField[s] = tile;
             }
             if (isWestAvailable)
             {
                 integrationQueue.Enqueue(w);
                 IntegrationTile tile = integrationField[w];
-                tile.Mark = IntegrationMark.Wave1;
+                tile.Mark = IntegrationMark.Relevant;
                 integrationField[w] = tile;
             }
         }
@@ -114,21 +118,9 @@ public struct IntegrationTile
 }
 public enum IntegrationMark : byte
 {
-    Absolute = 0,
-    None = 1,
-    Wave1 = 2,
-    Wave2 = 3,
-    Wave3 = 4,
-    Wave4 = 5,
-    Wave5 = 6,
-    Wave6 = 7,
-    Wave7 = 8,
-    Wave8 = 9,
-    Wave9 = 10,
-    Wave10 = 11,
-    Wave11 = 12,
-    Wave12 = 13,
-    Wave13 = 14,
-    Wave14 = 15,
-    Wave15 = 16,
+    Irrelevant = 0,
+    Relevant = 1,
+    LOSPass = 3,
+    LOSBlock = 5,
+    LOSC = 6,
 }

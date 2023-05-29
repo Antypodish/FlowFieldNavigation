@@ -16,9 +16,13 @@ public class Path
     public NativeArray<bool> SectorMarks;
     public NativeArray<IntegrationTile> IntegrationField;
     public NativeArray<FlowData> FlowField;
+    public NativeList<int> CornerTiles;
+    public NativeList<Vector2> CornerPos;
 
     public void Dispose()
     {
+        CornerPos.Dispose();
+        CornerTiles.Dispose();
         Sources.Dispose();
         PortalDistances.Dispose();
         ConnectionIndicies.Dispose();

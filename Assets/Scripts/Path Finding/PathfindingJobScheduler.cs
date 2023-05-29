@@ -87,6 +87,7 @@ public class PathfindingJobScheduler
             _awitingPathFindingJobs.Add(jobPack);
         }
         JobHandle pathFindingJobHandle = jobPack.SchedulePack();
+        pathFindingJobHandle.Complete();
         _pathFindingJobHandles.Add(pathFindingJobHandle);
         _scheduledPaths.Add(jobPack.Path);
     }

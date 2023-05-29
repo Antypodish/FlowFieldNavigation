@@ -7,6 +7,7 @@ public struct FlowFieldJobPack
     public FieldGraphTraversalJob TraversalJob;
     public IntFieldResetJob ResetJob;
     public IntFieldPrepJob PrepJob;
+    public LOSJob LOSJob;
     public IntFieldJob IntegrationJob;
     public FlowFieldJob FlowFieldJob;
 
@@ -15,7 +16,8 @@ public struct FlowFieldJobPack
         JobHandle traversalJobHandle = TraversalJob.Schedule();
         JobHandle resetJobHandle = ResetJob.Schedule(ResetJob.IntegrationField.Length, 512, traversalJobHandle);
         JobHandle prepHandle = PrepJob.Schedule(PrepJob.IntegrationField.Length, 1024, resetJobHandle);
-        JobHandle integrationJobHandle = IntegrationJob.Schedule(prepHandle);
+        JobHandle losHandle = LOSJob.Schedule(prepHandle);
+        JobHandle integrationJobHandle = IntegrationJob.Schedule(losHandle);
         JobHandle flowFieldJobHandle = FlowFieldJob.Schedule(FlowFieldJob.FlowField.Length, 512, integrationJobHandle);
         return flowFieldJobHandle;
     }

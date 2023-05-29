@@ -58,9 +58,13 @@ public class PathProducer
         NativeArray<PortalMark> portalMarks = new NativeArray<PortalMark>(pickedCostField.FieldGraph.PortalNodes.Length, Allocator.Persistent);
         NativeArray<IntegrationTile> integrationField = new NativeArray<IntegrationTile>(pickedCostField.Costs.Length, Allocator.Persistent);
         NativeArray<FlowData> flowField = new NativeArray<FlowData>(pickedCostField.Costs.Length, Allocator.Persistent);
+        NativeList<int> cornerTiles = new NativeList<int>(Allocator.Persistent);
+        NativeList<Vector2> cornerPositions = new NativeList<Vector2>(Allocator.Persistent);
 
         Path producedPath = new Path()
         {
+            CornerPos = cornerPositions,
+            CornerTiles = cornerTiles,
             Sources = sources,
             Destination = destination,
             State = PathState.Clean,
@@ -86,6 +90,7 @@ public class PathProducer
             TraversalJob = GetTraversalJob(),
             ResetJob = GetResetFieldJob(),
             PrepJob = GetPreperationJob(),
+            LOSJob = GetLOSJob(),
             IntegrationJob = GetIntegrationJob(),
             FlowFieldJob = GetFlowFieldJob()
         };
@@ -137,12 +142,27 @@ public class PathProducer
                 SectorMatrixColAmount = _columnAmount / _sectorTileAmount
             };
         }
+        LOSJob GetLOSJob()
+        {
+            return new LOSJob()
+            {
+                TileSize = _tileSize,
+                CornerPositions = cornerPositions,
+                FieldRowAmount = _rowAmount,
+                FieldColAmount = _columnAmount,
+                CornerTiles = cornerTiles,
+                Costs = pickedCostField.Costs,
+                Directions = _costFieldProducer.Directions,
+                InitialWaveFront = destionationIndexFlat,
+                IntegrationField = integrationField,
+            };
+        }
         IntFieldJob GetIntegrationJob()
         {
             return new IntFieldJob()
             {
                 Costs = pickedCostField.Costs,
-                DirectionData = _costFieldProducer.Directions,
+                Directions = _costFieldProducer.Directions,
                 InitialWaveFront = destionationIndexFlat,
                 IntegrationField = integrationField,
             };

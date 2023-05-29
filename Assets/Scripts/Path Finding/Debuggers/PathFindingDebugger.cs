@@ -21,6 +21,9 @@ public class PathFindingDebugger : MonoBehaviour
     [SerializeField] bool _debugPortalSequence;
     [SerializeField] bool _debugPickedSectors;
     [SerializeField] bool _debugIntegrationField;
+    [SerializeField] bool _debugLOSPass;
+    [SerializeField] bool _debugLOSCorners;
+    [SerializeField] bool _debugLOSBlocks;
     [SerializeField] bool _debugFlowField;
 
 
@@ -58,6 +61,9 @@ public class PathFindingDebugger : MonoBehaviour
         if (_debugPickedSectors && pathDebugger != null) { pathDebugger.DebugPickedSectors(); }
         if (_debugIntegrationField && pathDebugger != null) { pathDebugger.DebugIntegrationField(_pathfindingManager.TilePositions); }
         if (_debugFlowField && pathDebugger != null) { pathDebugger.DebugFlowField(_pathfindingManager.TilePositions); }
+        if (_debugLOSPass && pathDebugger != null) { pathDebugger.LOSPassDebug(_pathfindingManager.TilePositions); }
+        if (_debugLOSCorners && pathDebugger != null) { pathDebugger.LOSCornerDebug(_pathfindingManager.TilePositions); }
+        if (_debugLOSBlocks && pathDebugger != null) { pathDebugger.LOSBlockDebug(_pathfindingManager.TilePositions); }
     }
 
     enum CostFieldOffset : byte

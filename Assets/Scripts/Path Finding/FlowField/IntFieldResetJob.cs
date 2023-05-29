@@ -16,7 +16,7 @@ public struct IntFieldResetJob : IJobParallelFor
     public IntFieldResetJob(NativeArray<IntegrationTile> integrationField)
     {
         IntegrationField = integrationField;
-        resetTile = new IntegrationTile(float.MaxValue, IntegrationMark.Absolute);
+        resetTile = new IntegrationTile(float.MaxValue, IntegrationMark.Irrelevant);
     }
     public void Execute(int index)
     {

@@ -294,7 +294,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 5
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &638972358
 MonoBehaviour:
@@ -390,12 +390,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7f0954277a5e3694aa1c77d4546aa096, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!4 &1550691742 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 1284591848226207641, guid: f04ffee1160a8494782072c6bf5424ca,
-    type: 3}
-  m_PrefabInstance: {fileID: 1284591847240803008}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1709974548
 GameObject:
   m_ObjectHideFlags: 0
@@ -425,8 +419,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1550691742}
-  m_RootOrder: 0
+  m_Father: {fileID: 0}
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1709974550
 MonoBehaviour:
@@ -441,7 +435,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _terrainGenerator: {fileID: 1550691738}
-  _debugTiles: 0
+  _debugTiles: 1
   _debugUnwalkableTiles: 0
 --- !u!1 &1799340794
 GameObject:
@@ -473,7 +467,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 7
+  m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1799340797
 MonoBehaviour:
@@ -484,9 +478,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1799340794}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a16034290873b414e9e93cde67066848, type: 3}
+  m_Script: {fileID: 11500000, guid: 13e6fa7c351e2ba47b850cde3f28dc36, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  terrainGenerator: {fileID: 1550691738}
 --- !u!1 &1977402419
 GameObject:
   m_ObjectHideFlags: 0
@@ -517,7 +512,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 6
+  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1977402423
 MonoBehaviour:
@@ -538,15 +533,18 @@ MonoBehaviour:
   _windows: 1
   _sectorWindows: 0
   _windowSectors: 0
-  _portals: 1
+  _portals: 0
   _portalsOnSector: 0
   _costsToPortal: 0
   _AStar: 0
   _debugBFS: 0
   _debugPortalSequence: 0
-  _debugPickedSectors: 0
-  _debugIntegrationField: 0
-  _debugFlowField: 1
+  _debugPickedSectors: 1
+  _debugIntegrationField: 1
+  _debugLOSPass: 0
+  _debugLOSCorners: 1
+  _debugLOSBlocks: 1
+  _debugFlowField: 0
 --- !u!1001 &1284591847240803008
 PrefabInstance:
   m_ObjectHideFlags: 0

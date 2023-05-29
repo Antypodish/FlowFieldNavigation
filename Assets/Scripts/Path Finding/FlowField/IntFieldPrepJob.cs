@@ -20,9 +20,8 @@ public struct IntFieldPrepJob : IJobParallelFor
         int sectorIndex = (index / FieldColAmount / SectorTileAmount * SectorMatrixColAmount) + (index % FieldColAmount / SectorTileAmount);
         if (SectorMarks[sectorIndex])
         {
-            IntegrationMark mark = Costs[index] == byte.MaxValue ? IntegrationMark.Absolute : IntegrationMark.None;
             IntegrationTile intTile;
-            intTile.Mark = mark;
+            intTile.Mark = IntegrationMark.Relevant;
             intTile.Cost = float.MaxValue;
             IntegrationField[index] = intTile;
         }
