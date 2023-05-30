@@ -58,13 +58,11 @@ public class PathProducer
         NativeArray<PortalMark> portalMarks = new NativeArray<PortalMark>(pickedCostField.FieldGraph.PortalNodes.Length, Allocator.Persistent);
         NativeArray<IntegrationTile> integrationField = new NativeArray<IntegrationTile>(pickedCostField.Costs.Length, Allocator.Persistent);
         NativeArray<FlowData> flowField = new NativeArray<FlowData>(pickedCostField.Costs.Length, Allocator.Persistent);
-        NativeList<int> cornerTiles = new NativeList<int>(Allocator.Persistent);
-        NativeList<Vector2> cornerPositions = new NativeList<Vector2>(Allocator.Persistent);
+        NativeQueue<int> blockedWaveFronts = new NativeQueue<int>(Allocator.Persistent);
 
         Path producedPath = new Path()
         {
-            CornerPos = cornerPositions,
-            CornerTiles = cornerTiles,
+            BlockedWaveFronts = blockedWaveFronts,
             Sources = sources,
             Destination = destination,
             State = PathState.Clean,
@@ -146,11 +144,10 @@ public class PathProducer
         {
             return new LOSJob()
             {
+                BlockedWaveFronts = blockedWaveFronts,
                 TileSize = _tileSize,
-                CornerPositions = cornerPositions,
                 FieldRowAmount = _rowAmount,
                 FieldColAmount = _columnAmount,
-                CornerTiles = cornerTiles,
                 Costs = pickedCostField.Costs,
                 Directions = _costFieldProducer.Directions,
                 InitialWaveFront = destionationIndexFlat,

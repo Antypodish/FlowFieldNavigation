@@ -137,39 +137,6 @@ public class PathDebugger
             }
         }
     }
-    public void LOSCornerDebug(NativeArray<Vector3> tilePositions)
-    {
-        if (_pathProducer == null) { return; }
-        Path producedPath = _pathProducer.ProducedPaths.Last();
-        if (producedPath == null) { return; }
-        DebugCornerPositions();
-        DebugCornerTiles();
-
-        void DebugCornerTiles()
-        {
-            Gizmos.color = Color.red;
-            float tileSize = _pathfindingManager.TileSize;
-            int colAmount = _pathfindingManager.ColumnAmount;
-            NativeList<int> cornerTiles = producedPath.CornerTiles;
-            for (int i = 0; i < cornerTiles.Length; i++)
-            {
-                Index2 index = Index2.ToIndex2(cornerTiles[i], colAmount);
-                Vector3 pos = new Vector3(index.C * tileSize + tileSize / 2, 0.1f, index.R * tileSize + tileSize / 2);
-                Gizmos.DrawCube(pos, new Vector3(0.35f, 0.35f, 0.35f));
-            }
-        }
-        void DebugCornerPositions()
-        {
-            Gizmos.color = Color.cyan;
-            float tileSize = _pathfindingManager.TileSize;
-            int colAmount = _pathfindingManager.ColumnAmount;
-            NativeList<Vector2> cornerPos = producedPath.CornerPos;
-            for (int i = 0; i < cornerPos.Length; i++)
-            {
-                Gizmos.DrawSphere(new Vector3(cornerPos[i].x, 0.1f, cornerPos[i].y), 0.2f);
-            }
-        }
-    }
     public void DebugFlowField(NativeArray<Vector3> tilePositions)
     {
         if (_pathProducer == null) { return; }
