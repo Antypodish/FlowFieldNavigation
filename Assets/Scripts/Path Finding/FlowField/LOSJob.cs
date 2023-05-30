@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
@@ -57,7 +58,7 @@ public struct LOSJob : IJob
         int targetIndex = InitialWaveFront;
         DirectionData targetDirections = Directions[targetIndex];
         SetNeighbourLookupTable(targetDirections);
-        DetermineLOSC();
+        DetermineLOSC(targetIndex);
         IntegrationTile targetTile = IntegrationField[targetIndex];
         if (targetTile.Mark != IntegrationMark.LOSBlock)
         {
@@ -72,7 +73,7 @@ public struct LOSJob : IJob
             float cost = integrationField[index].Cost + 1f;
             DirectionData indexDirections = Directions[index];
             SetNeighbourLookupTable(indexDirections);
-            DetermineLOSC();
+            DetermineLOSC(index);
             IntegrationTile tile = IntegrationField[index];
             if (tile.Mark == IntegrationMark.LOSBlock) { continue; }
             else
@@ -140,36 +141,36 @@ public struct LOSJob : IJob
                 integrationField[w] = tile;
             }
         }
-        void DetermineLOSC()
+        void DetermineLOSC(int pusherIndex)
         {
             if (northIsRelevant && nCost == byte.MaxValue)
             {
-                ApplyLOSBlockIfLOSCorner(n);
+                ApplyLOSBlockIfLOSCorner(n, pusherIndex);
             }
             if (eastIsRelevant && eCost == byte.MaxValue)
             {
-                ApplyLOSBlockIfLOSCorner(e);
+                ApplyLOSBlockIfLOSCorner(e, pusherIndex);
             }
             if (southIsRelevant && sCost == byte.MaxValue)
             {
-                ApplyLOSBlockIfLOSCorner(s);
+                ApplyLOSBlockIfLOSCorner(s, pusherIndex);
             }
             if (westIsRelevant && wCost == byte.MaxValue)
             {
-                ApplyLOSBlockIfLOSCorner(w);
+                ApplyLOSBlockIfLOSCorner(w, pusherIndex);
             }
 
-            void ApplyLOSBlockIfLOSCorner(int index)
+            void ApplyLOSBlockIfLOSCorner(int cornerIndex, int pusherIndex)
             {
                 //NEIGHBOUR LOOKUP TABLE
-                int n = directionData[index].N;
-                int e = directionData[index].E;
-                int s = directionData[index].S;
-                int w = directionData[index].W;
-                int ne = directionData[index].NE;
-                int se = directionData[index].SE;
-                int sw = directionData[index].SW;
-                int nw = directionData[index].NW;
+                int n = directionData[cornerIndex].N;
+                int e = directionData[cornerIndex].E;
+                int s = directionData[cornerIndex].S;
+                int w = directionData[cornerIndex].W;
+                int ne = directionData[cornerIndex].NE;
+                int se = directionData[cornerIndex].SE;
+                int sw = directionData[cornerIndex].SW;
+                int nw = directionData[cornerIndex].NW;
                 byte nCost = costs[n];
                 byte eCost = costs[e];
                 byte sCost = costs[s];
@@ -188,10 +189,10 @@ public struct LOSJob : IJob
 
                 //CORNER LOOKUP TABLE
                 int2 source = To2D(initialWaveFront, fieldColAmount);
-                int2 cornerIndex = To2D(index, fieldColAmount);
-                int2 cornerDistance = new int2(source.x - cornerIndex.x, source.y - cornerIndex.y);
+                int2 cornerIndex2d = To2D(cornerIndex, fieldColAmount);
+                int2 cornerDistance = new int2(source.x - cornerIndex2d.x, source.y - cornerIndex2d.y);
                 int2 absCornerDistance = new int2(math.abs(cornerDistance.x), math.abs(cornerDistance.y));
-                float2 cornerPos = new float2(cornerIndex.x * tileSize + tileSize / 2, cornerIndex.y * tileSize + tileSize / 2);
+                float2 cornerPos = new float2(cornerIndex2d.x * tileSize + tileSize / 2, cornerIndex2d.y * tileSize + tileSize / 2);
                 float2 waveFrontTilePos = new float2(source.x * tileSize + tileSize / 2, source.y * tileSize + tileSize / 2);
 
                 //EVALUATE FOR EACH CORNER DIRECTION
@@ -299,13 +300,13 @@ public struct LOSJob : IJob
                         {
                             int2 resultingIndex2d = blockOffsets[i] + step;
                             int resultingIndex1d = To1D(resultingIndex2d, fieldColAmount);
-                            IntegrationTile tile = integrationField[resultingIndex1d];
                             if (IsOutOfBounds2D(resultingIndex2d)) { break; }
-                            else if (tile.Mark == IntegrationMark.Irrelevant) { stopCalculating = true; break; }
+                            IntegrationTile tile = integrationField[resultingIndex1d];
+                            if (tile.Mark == IntegrationMark.Irrelevant) { continue; }
                             else if (tile.Mark == IntegrationMark.LOSBlock) { stopCalculating = true; break; }
+                            else if (costs[resultingIndex1d] == byte.MaxValue) { stopCalculating = true; break; }
                             tile.Mark = IntegrationMark.LOSBlock;
                             integrationField[resultingIndex1d] = tile;
-                            if (costs[resultingIndex1d] == byte.MaxValue) { stopCalculating = true; break; }
                             blockedWaveFronts.Enqueue(resultingIndex1d);
                         }
                         step += stepAmount;
@@ -317,14 +318,14 @@ public struct LOSJob : IJob
                     int2 neDistance = new int2(source.x - neIndex2.x, source.y - neIndex2.y);
                     int2 absNeDistance = new int2(math.abs(neDistance.x), math.abs(neDistance.y));
                     int2 distanceDifference = new int2(absCornerDistance.x - absNeDistance.x, absCornerDistance.y - absNeDistance.y);
-                    if (distanceDifference.y * distanceDifference.x < 0) //if losc
-                    {
-                        IntegrationTile cornerTile = integrationField[index];
-                        cornerTile.Mark = IntegrationMark.LOSC;
-                        integrationField[index] = cornerTile;
-                        int2 nIndex = To2D(n, fieldColAmount);
-                        int2 eIndex = To2D(e, fieldColAmount);
-                        int2 divergent = distanceDifference.x > 0 ? nIndex : eIndex;
+                    int2 nIndex = To2D(n, fieldColAmount);
+                    int2 eIndex = To2D(e, fieldColAmount);
+                    int2 divergent = distanceDifference.x > 0 ? nIndex : eIndex;
+                    int2 convergent = distanceDifference.x > 0 ? eIndex : nIndex;
+                    int divergent1d = To1D(divergent, fieldColAmount);
+                    int convergent1d = To1D(convergent, fieldColAmount);
+                    if (distanceDifference.y * distanceDifference.x < 0 && (divergent1d == pusherIndex || convergent1d == pusherIndex)) //if losc
+                    {                        
                         float2 loscPosition = cornerPos + new float2(tileSize / 2, tileSize / 2);
                         float2 sourcePosition = waveFrontTilePos + new float2(-tileSize / 2, -tileSize / 2);
                         NativeList<int2> blockOffsets = GetOffsets(sourcePosition, loscPosition, out int2 stepAmount);
@@ -338,14 +339,14 @@ public struct LOSJob : IJob
                     int2 seDistance = new int2(source.x - seIndex2.x, source.y - seIndex2.y);
                     int2 absSeDistance = new int2(math.abs(seDistance.x), math.abs(seDistance.y));
                     int2 distanceDifference = new int2(absCornerDistance.x - absSeDistance.x, absCornerDistance.y - absSeDistance.y);
-                    if (distanceDifference.y * distanceDifference.x < 0) //if losc
-                    {
-                        IntegrationTile cornerTile = integrationField[index];
-                        cornerTile.Mark = IntegrationMark.LOSC;
-                        integrationField[index] = cornerTile;
-                        int2 sIndex = To2D(s, fieldColAmount);
-                        int2 eIndex = To2D(e, fieldColAmount);
-                        int2 divergent = distanceDifference.x > 0 ? sIndex : eIndex;
+                    int2 sIndex = To2D(s, fieldColAmount);
+                    int2 eIndex = To2D(e, fieldColAmount);
+                    int2 divergent = distanceDifference.x > 0 ? sIndex : eIndex;
+                    int2 convergent = distanceDifference.x > 0 ? eIndex : sIndex;
+                    int divergent1d = To1D(divergent, fieldColAmount);
+                    int convergent1d = To1D(convergent, fieldColAmount);
+                    if (distanceDifference.y * distanceDifference.x < 0 && (divergent1d == pusherIndex || convergent1d == pusherIndex)) //if losc
+                    {                        
                         float2 loscPosition = cornerPos + new float2(tileSize / 2, -tileSize / 2);
                         float2 sourcePosition = waveFrontTilePos + new float2(-tileSize / 2, tileSize / 2);
                         NativeList<int2> blockOffsets = GetOffsets(sourcePosition, loscPosition, out int2 stepAmount);
@@ -359,14 +360,14 @@ public struct LOSJob : IJob
                     int2 swDistance = new int2(source.x - swIndex2.x, source.y - swIndex2.y);
                     int2 absSwDistance = new int2(math.abs(swDistance.x), math.abs(swDistance.y));
                     int2 distanceDifference = new int2(absCornerDistance.x - absSwDistance.x, absCornerDistance.y - absSwDistance.y);
-                    if (distanceDifference.y * distanceDifference.x < 0) //if losc
+                    int2 sIndex = To2D(s, fieldColAmount);
+                    int2 wIndex = To2D(w, fieldColAmount);
+                    int2 divergent = distanceDifference.x > 0 ? sIndex : wIndex;
+                    int2 convergent = distanceDifference.x > 0 ? wIndex : sIndex;
+                    int divergent1d = To1D(divergent, fieldColAmount);
+                    int convergent1d = To1D(convergent, fieldColAmount);
+                    if (distanceDifference.y * distanceDifference.x < 0 && (divergent1d == pusherIndex || convergent1d == pusherIndex)) //if losc
                     {
-                        IntegrationTile cornerTile = integrationField[index];
-                        cornerTile.Mark = IntegrationMark.LOSC;
-                        integrationField[index] = cornerTile;
-                        int2 sIndex = To2D(s, fieldColAmount);
-                        int2 wIndex = To2D(w, fieldColAmount);
-                        int2 divergent = distanceDifference.x > 0 ? sIndex : wIndex;
                         float2 loscPosition = cornerPos + new float2(-tileSize / 2, -tileSize / 2);
                         float2 sourcePosition = waveFrontTilePos + new float2(tileSize / 2, tileSize / 2);
                         NativeList<int2> blockOffsets = GetOffsets(sourcePosition, loscPosition, out int2 stepAmount);
@@ -380,14 +381,14 @@ public struct LOSJob : IJob
                     int2 nwDistance = new int2(source.x - nwIndex2.x, source.y - nwIndex2.y);
                     int2 absNwDistance = new int2(math.abs(nwDistance.x), math.abs(nwDistance.y));
                     int2 distanceDifference = new int2(absCornerDistance.x - absNwDistance.x, absCornerDistance.y - absNwDistance.y);
-                    if (distanceDifference.y * distanceDifference.x < 0) //if losc
+                    int2 nIndex = To2D(n, fieldColAmount);
+                    int2 wIndex = To2D(w, fieldColAmount);
+                    int2 divergent = distanceDifference.x > 0 ? nIndex : wIndex;
+                    int2 convergent = distanceDifference.x > 0 ? wIndex : nIndex;
+                    int divergent1d = To1D(divergent, fieldColAmount);
+                    int convergent1d = To1D(convergent, fieldColAmount);
+                    if (distanceDifference.y * distanceDifference.x < 0 && (divergent1d == pusherIndex || convergent1d == pusherIndex)) //if losc
                     {
-                        IntegrationTile cornerTile = integrationField[index];
-                        cornerTile.Mark = IntegrationMark.LOSC;
-                        integrationField[index] = cornerTile;
-                        int2 nIndex = To2D(n, fieldColAmount);
-                        int2 wIndex = To2D(w, fieldColAmount);
-                        int2 divergent = distanceDifference.x > 0 ? nIndex : wIndex;
                         float2 loscPosition = cornerPos + new float2(-tileSize / 2, tileSize / 2);
                         float2 sourcePosition = waveFrontTilePos + new float2(tileSize / 2, -tileSize / 2);
                         NativeList<int2> blockOffsets = GetOffsets(sourcePosition, loscPosition, out int2 stepAmount);
