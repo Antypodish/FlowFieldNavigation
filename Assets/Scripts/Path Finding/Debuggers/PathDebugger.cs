@@ -151,6 +151,7 @@ public class PathDebugger
         {
             if (flowfield[i] == FlowData.None) { continue; }
             DrawSquare(tilePositions[i], 0.125f);
+            if (flowfield[i] == FlowData.LOS) { continue; }
             DrawFlow(flowfield[i], tilePositions[i]);
         }
 

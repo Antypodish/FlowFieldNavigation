@@ -302,10 +302,10 @@ public struct LOSJob : IJob
                             IntegrationTile tile = integrationField[resultingIndex1d];
                             if (IsOutOfBounds2D(resultingIndex2d)) { break; }
                             else if (tile.Mark == IntegrationMark.Irrelevant) { stopCalculating = true; break; }
-                            else if (costs[resultingIndex1d] == byte.MaxValue) { stopCalculating = true; break; }
                             else if (tile.Mark == IntegrationMark.LOSBlock) { stopCalculating = true; break; }
                             tile.Mark = IntegrationMark.LOSBlock;
                             integrationField[resultingIndex1d] = tile;
+                            if (costs[resultingIndex1d] == byte.MaxValue) { stopCalculating = true; break; }
                             blockedWaveFronts.Enqueue(resultingIndex1d);
                         }
                         step += stepAmount;

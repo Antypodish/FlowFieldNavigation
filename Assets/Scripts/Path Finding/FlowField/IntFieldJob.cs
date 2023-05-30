@@ -11,27 +11,22 @@ using Unity.VisualScripting;
 [BurstCompile]
 public struct IntFieldJob : IJob
 {
-    public int InitialWaveFront;
     public NativeArray<IntegrationTile> IntegrationField;
+    public NativeQueue<int> IntegrationQueue;
     [ReadOnly] public NativeArray<byte> Costs;
     [ReadOnly] public NativeArray<DirectionData> Directions;
     public void Execute()
     {
-        NativeQueue<int> integrationQueue = new NativeQueue<int>(Allocator.Temp);
-        //RunBFS(integrationQueue);
+        Integrate();
     }
-    void Integrate(NativeQueue<int> integrationQueue)
+    void Integrate()
     {
         //DATA
         NativeArray<IntegrationTile> integrationField = IntegrationField;
+        NativeArray<byte> costs = Costs;
+        NativeQueue<int> integrationQueue = IntegrationQueue;
         //CODE
 
-        int targetLocalIndex = InitialWaveFront;
-        IntegrationTile targetTile = IntegrationField[targetLocalIndex];
-        targetTile.Cost = 0f;
-        targetTile.Mark = IntegrationMark.Relevant;
-        IntegrationField[targetLocalIndex] = targetTile;
-        Enqueue(Directions[targetLocalIndex]);
         while (!integrationQueue.IsEmpty())
         {
             int index = integrationQueue.Dequeue();
@@ -48,36 +43,41 @@ public struct IntFieldJob : IJob
             int e = directions.E;
             int s = directions.S;
             int w = directions.W;
-            bool isNorthAvailable = integrationField[n].Mark == IntegrationMark.Relevant;
-            bool isEastAvailable = integrationField[e].Mark == IntegrationMark.Relevant;
-            bool isSouthAvailable = integrationField[s].Mark == IntegrationMark.Relevant;
-            bool isWestAvailable = integrationField[w].Mark == IntegrationMark.Relevant;
+            byte nCost = costs[n];
+            byte eCost = costs[e];
+            byte sCost = costs[s];
+            byte wCost = costs[w];
+            bool isNorthAvailable = integrationField[n].Mark == IntegrationMark.Relevant && nCost != byte.MaxValue;
+            bool isEastAvailable = integrationField[e].Mark == IntegrationMark.Relevant && eCost != byte.MaxValue;
+            bool isSouthAvailable = integrationField[s].Mark == IntegrationMark.Relevant && sCost != byte.MaxValue;
+            bool isWestAvailable = integrationField[w].Mark == IntegrationMark.Relevant && wCost != byte.MaxValue;
+            
             if (isNorthAvailable)
             {
                 integrationQueue.Enqueue(n);
                 IntegrationTile tile = integrationField[n];
-                tile.Mark = IntegrationMark.Relevant;
+                tile.Mark = IntegrationMark.Awaiting;
                 integrationField[n] = tile;
             }
             if (isEastAvailable)
             {
                 integrationQueue.Enqueue(e);
                 IntegrationTile tile = integrationField[e];
-                tile.Mark = IntegrationMark.Relevant;
+                tile.Mark = IntegrationMark.Awaiting;
                 integrationField[e] = tile;
             }
             if (isSouthAvailable)
             {
                 integrationQueue.Enqueue(s);
                 IntegrationTile tile = integrationField[s];
-                tile.Mark = IntegrationMark.Relevant;
+                tile.Mark = IntegrationMark.Awaiting;
                 integrationField[s] = tile;
             }
             if (isWestAvailable)
             {
                 integrationQueue.Enqueue(w);
                 IntegrationTile tile = integrationField[w];
-                tile.Mark = IntegrationMark.Relevant;
+                tile.Mark = IntegrationMark.Awaiting;
                 integrationField[w] = tile;
             }
         }

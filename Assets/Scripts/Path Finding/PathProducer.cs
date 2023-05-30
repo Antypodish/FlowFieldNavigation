@@ -158,9 +158,9 @@ public class PathProducer
         {
             return new IntFieldJob()
             {
+                IntegrationQueue = blockedWaveFronts,
                 Costs = pickedCostField.Costs,
                 Directions = _costFieldProducer.Directions,
-                InitialWaveFront = destionationIndexFlat,
                 IntegrationField = integrationField,
             };
         }

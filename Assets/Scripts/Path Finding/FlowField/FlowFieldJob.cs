@@ -17,6 +17,7 @@ public struct FlowFieldJob : IJobParallelFor
 
         FlowData GetFlowDirection()
         {
+            if (integrationField[index].Mark == IntegrationMark.LOSPass) { return FlowData.LOS; }
             FlowData flowData = FlowData.None;
             float cost = float.MaxValue;
             if (integrationField[directionData.N].Cost < cost)
@@ -74,4 +75,5 @@ public enum FlowData : byte
     SW = 6,
     W = 7,
     NW = 8,
+    LOS,
 }
