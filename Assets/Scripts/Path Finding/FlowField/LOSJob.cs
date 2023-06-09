@@ -299,13 +299,13 @@ public struct LOSJob : IJob
                         {
                             int2 resultingIndex2d = blockOffsets[i] + step;
                             int resultingIndex1d = To1D(resultingIndex2d, fieldColAmount);
-                            IntegrationTile tile = integrationField[resultingIndex1d];
                             if (IsOutOfBounds2D(resultingIndex2d)) { break; }
-                            else if (tile.Mark == IntegrationMark.Irrelevant) { stopCalculating = true; break; }
-                            else if (tile.Mark == IntegrationMark.LOSBlock) { stopCalculating = true; break; }
+                            IntegrationTile tile = integrationField[resultingIndex1d];
+                            if (tile.Mark == IntegrationMark.Irrelevant) { stopCalculating = true; break; }
+                            else if (tile.Mark == IntegrationMark.LOSBlock) { continue; }
+                            else if (costs[resultingIndex1d] == byte.MaxValue) { continue; }
                             tile.Mark = IntegrationMark.LOSBlock;
                             integrationField[resultingIndex1d] = tile;
-                            if (costs[resultingIndex1d] == byte.MaxValue) { stopCalculating = true; break; }
                             blockedWaveFronts.Enqueue(resultingIndex1d);
                         }
                         step += stepAmount;

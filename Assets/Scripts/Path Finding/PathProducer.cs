@@ -59,7 +59,6 @@ public class PathProducer
         NativeArray<IntegrationTile> integrationField = new NativeArray<IntegrationTile>(pickedCostField.Costs.Length, Allocator.Persistent);
         NativeArray<FlowData> flowField = new NativeArray<FlowData>(pickedCostField.Costs.Length, Allocator.Persistent);
         NativeQueue<int> blockedWaveFronts = new NativeQueue<int>(Allocator.Persistent);
-
         Path producedPath = new Path()
         {
             BlockedWaveFronts = blockedWaveFronts,

@@ -541,9 +541,9 @@ MonoBehaviour:
   _debugPortalSequence: 0
   _debugPickedSectors: 0
   _debugIntegrationField: 0
-  _debugLOSPass: 0
-  _debugLOSBlocks: 0
-  _debugFlowField: 1
+  _debugLOSPass: 1
+  _debugLOSBlocks: 1
+  _debugFlowField: 0
 --- !u!1001 &1284591847240803008
 PrefabInstance:
   m_ObjectHideFlags: 0
