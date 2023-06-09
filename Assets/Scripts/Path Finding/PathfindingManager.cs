@@ -55,9 +55,11 @@ public class PathfindingManager : MonoBehaviour
             }
         }
     }
-    public void SetDestination(NativeArray<Vector3> sources, Vector3 target)
+    public Path SetDestination(NativeArray<Vector3> sources, Vector3 target)
     {
-        JobScheduler.AddPathRequestJob(PathProducer.ProducePath(sources, target, 0));
+        FlowFieldJobPack pack = PathProducer.ProducePath(sources, target, 0);
+        JobScheduler.AddPathRequestJob(pack);
+        return pack.Path;
     }
     public void EditCost(Index2 bound1, Index2 bound2, byte newCost)
     {

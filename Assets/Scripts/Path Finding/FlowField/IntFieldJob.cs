@@ -33,6 +33,7 @@ public struct IntFieldJob : IJob
             IntegrationTile tile = IntegrationField[index];
             tile.Cost = GetCost(Directions[index]);
             IntegrationField[index] = tile;
+            if(tile.Cost == float.MaxValue) { continue; }
             Enqueue(Directions[index]);
         }
 
