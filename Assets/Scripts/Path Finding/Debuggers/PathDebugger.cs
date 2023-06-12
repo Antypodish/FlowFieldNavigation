@@ -1,7 +1,10 @@
 ﻿#if (UNITY_EDITOR)
 
 using System;
+using System.Linq;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
+using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
 
@@ -94,18 +97,35 @@ public class PathDebugger
         if (_pathProducer == null) { return; }
         Path producedPath = _pathProducer.ProducedPaths.Last();
         if (producedPath == null) { return; }
-        NativeArray<IntegrationTile> integrationField = producedPath.IntegrationField;
+        int fieldColAmount = _pathfindingManager.ColumnAmount / _pathfindingManager.SectorTileAmount;
+        NativeArray<SectorNode> sectorNodes = _costFieldProducer.GetCostFieldWithOffset(producedPath.Offset).FieldGraph.SectorNodes;
+        NativeArray<UnsafeList<IntegrationTile>> integrationField = producedPath.IntegrationField;
+        int sectorTileAmount = _pathfindingManager.SectorTileAmount;
         for (int i = 0; i < integrationField.Length; i++)
         {
-            float cost = integrationField[i].Cost;
-            if (integrationField[i].Mark != IntegrationMark.Irrelevant && cost != float.MaxValue)
+            int2 sectorIndex = new int2(sectorNodes[i].Sector.StartIndex.C, sectorNodes[i].Sector.StartIndex.R);
+            Vector3 sectorIndexPos = new Vector3(sectorIndex.x * _tileSize, 0f, sectorIndex.y * _tileSize);
+            if (integrationField[i].Length == 0) { continue; }
+            for(int j = 0; j < integrationField[i].Length; j++)
             {
-                Handles.Label(tilePositions[i], cost.ToString());
+                int2 localIndex = new int2(j / sectorTileAmount, j % sectorTileAmount);
+                Vector3 localIndexPos = new Vector3(localIndex.x * _tileSize, 0f, localIndex.y * _tileSize);
+                Vector3 debugPos = localIndexPos + sectorIndexPos + new Vector3(_tileSize / 2, 0.02f, _tileSize / 2);
+                float cost = integrationField[i][j].Cost;
+                if (cost == float.MaxValue)
+                {
+                    Handles.Label(debugPos, "M");
+                }
+                else
+                {
+                    Handles.Label(debugPos, cost.ToString());
+                }
             }
+            
         }
     }
     public void LOSPassDebug(NativeArray<Vector3> tilePositions)
-    {
+    {/*
         if (_pathProducer == null) { return; }
         Path producedPath = _pathProducer.ProducedPaths.Last();
         if (producedPath == null) { return; }
@@ -118,11 +138,11 @@ public class PathDebugger
                 Handles.Label(tilePositions[i], "los");
             }
         }
-
+        */
 
     }
     public void LOSBlockDebug(NativeArray<Vector3> tilePositions)
-    {
+    {/*
         if (_pathProducer == null) { return; }
         Path producedPath = _pathProducer.ProducedPaths.Last();
         if (producedPath == null) { return; }
@@ -135,7 +155,7 @@ public class PathDebugger
             {
                 Gizmos.DrawCube(tilePositions[i], new Vector3(0.3f, 0.3f, 0.3f));
             }
-        }
+        }*/
     }
     public void DebugFlowField(NativeArray<Vector3> tilePositions)
     {

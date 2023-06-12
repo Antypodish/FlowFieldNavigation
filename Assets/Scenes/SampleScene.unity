@@ -530,7 +530,7 @@ MonoBehaviour:
   _costFieldOffset: 0
   _costField: 1
   _sectors: 0
-  _windows: 1
+  _windows: 0
   _sectorWindows: 0
   _windowSectors: 0
   _portals: 0
@@ -540,9 +540,9 @@ MonoBehaviour:
   _debugBFS: 0
   _debugPortalSequence: 0
   _debugPickedSectors: 0
-  _debugIntegrationField: 0
-  _debugLOSPass: 1
-  _debugLOSBlocks: 1
+  _debugIntegrationField: 1
+  _debugLOSPass: 0
+  _debugLOSBlocks: 0
   _debugFlowField: 0
 --- !u!1001 &1284591847240803008
 PrefabInstance:

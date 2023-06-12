@@ -5,21 +5,22 @@ using System.Text;
 using System.Threading.Tasks;
 using Unity.Burst;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 
 [BurstCompile]
 public struct IntFieldResetJob : IJobParallelFor
 {
-    public NativeArray<IntegrationTile> IntegrationField;
+    public UnsafeList<IntegrationTile> IntegrationFieldSector;
 
     IntegrationTile resetTile;
-    public IntFieldResetJob(NativeArray<IntegrationTile> integrationField)
+    public IntFieldResetJob(UnsafeList<IntegrationTile> integrationFieldSector)
     {
-        IntegrationField = integrationField;
+        IntegrationFieldSector = integrationFieldSector;
         resetTile = new IntegrationTile(float.MaxValue, IntegrationMark.Irrelevant);
     }
     public void Execute(int index)
     {
-        IntegrationField[index] = resetTile;
+        IntegrationFieldSector[index] = resetTile;
     }
 }

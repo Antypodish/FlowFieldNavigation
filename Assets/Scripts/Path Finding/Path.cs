@@ -1,4 +1,5 @@
 ﻿using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -14,8 +15,7 @@ public class Path
     public NativeArray<PortalMark> PortalMarks;
     public NativeList<PortalSequence> PortalSequence;
     public NativeList<int> PickedSectors;
-    public NativeArray<bool> SectorMarks;
-    public NativeArray<IntegrationTile> IntegrationField;
+    public NativeArray<UnsafeList<IntegrationTile>> IntegrationField;
     public NativeArray<FlowData> FlowField;
     public NativeQueue<int> BlockedWaveFronts;
 
@@ -28,7 +28,10 @@ public class Path
         PortalMarks.Dispose();
         PortalSequence.Dispose();
         PickedSectors.Dispose();
-        SectorMarks.Dispose();
+        for(int i = 0; i < IntegrationField.Length; i++)
+        {
+            IntegrationField[i].Dispose();
+        }
         IntegrationField.Dispose();
         FlowField.Dispose();
     }

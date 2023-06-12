@@ -7,6 +7,7 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Analytics;
+using UnityEngine.Pool;
 
 [BurstCompile]
 public struct FieldGraphTraversalJob : IJob
@@ -31,7 +32,7 @@ public struct FieldGraphTraversalJob : IJob
     public NativeArray<PortalMark> PortalMarks;
     public NativeList<PortalSequence> PortalSequence;
     public NativeList<int> PickedSectors;
-    public NativeArray<bool> SectorMarks;
+    public NativeArray<UnsafeList<IntegrationTile>> IntegrationField;
 
     int _targetSectorStartIndex;
     int _targetSectorIndex;
@@ -257,9 +258,11 @@ public struct FieldGraphTraversalJob : IJob
             for(int j = 0; j < winToSecCnt; j++)
             {
                 int secPtr = WinToSecPtrs[j + winToSecPtr];
-                if (SectorMarks[secPtr]) { continue; }
+                if (IntegrationField[secPtr].Length == 1) { continue; }
                 PickedSectors.Add(secPtr);
-                SectorMarks[secPtr] = true;
+                UnsafeList<IntegrationTile> sector = new UnsafeList<IntegrationTile>(1, Allocator.Temp);
+                sector.Length = 1;
+                IntegrationField[secPtr] = sector;
             }
         }
     }
