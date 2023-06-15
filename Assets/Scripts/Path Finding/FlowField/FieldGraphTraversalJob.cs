@@ -31,8 +31,9 @@ public struct FieldGraphTraversalJob : IJob
     public NativeArray<float> PortalDistances;
     public NativeArray<PortalMark> PortalMarks;
     public NativeList<PortalSequence> PortalSequence;
-    public NativeList<int> PickedSectors;
-    public NativeArray<UnsafeList<IntegrationTile>> IntegrationField;
+    
+    public NativeArray<int> SectorMarks;
+    public NativeArray<int> SectorCount;
 
     int _targetSectorStartIndex;
     int _targetSectorIndex;
@@ -258,11 +259,11 @@ public struct FieldGraphTraversalJob : IJob
             for(int j = 0; j < winToSecCnt; j++)
             {
                 int secPtr = WinToSecPtrs[j + winToSecPtr];
-                if (IntegrationField[secPtr].Length == 1) { continue; }
-                PickedSectors.Add(secPtr);
-                UnsafeList<IntegrationTile> sector = new UnsafeList<IntegrationTile>(1, Allocator.Temp);
-                sector.Length = 1;
-                IntegrationField[secPtr] = sector;
+                if (SectorMarks[secPtr] != 0) { continue; }
+                int sectorCount = SectorCount[0];
+                sectorCount++;
+                SectorCount[0] = sectorCount;
+                SectorMarks[secPtr] = sectorCount;
             }
         }
     }

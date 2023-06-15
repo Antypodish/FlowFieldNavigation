@@ -447,13 +447,14 @@ GameObject:
   m_Component:
   - component: {fileID: 1799340796}
   - component: {fileID: 1799340797}
+  - component: {fileID: 1799340798}
   m_Layer: 0
   m_Name: test
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1799340796
 Transform:
   m_ObjectHideFlags: 0
@@ -476,12 +477,24 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1799340794}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 13e6fa7c351e2ba47b850cde3f28dc36, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   terrainGenerator: {fileID: 1550691738}
+--- !u!114 &1799340798
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1799340794}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c9e70d5b76aef544b91b4551a3c6705, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1977402419
 GameObject:
   m_ObjectHideFlags: 0
@@ -542,7 +555,7 @@ MonoBehaviour:
   _debugPickedSectors: 0
   _debugIntegrationField: 1
   _debugLOSPass: 0
-  _debugLOSBlocks: 0
+  _debugLOSBlocks: 1
   _debugFlowField: 0
 --- !u!1001 &1284591847240803008
 PrefabInstance:
@@ -579,7 +592,7 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: _resolution
-      value: 5
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}

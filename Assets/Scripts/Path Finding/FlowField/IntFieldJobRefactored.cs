@@ -1,15 +1,7 @@
-﻿using System.Security.Cryptography.X509Certificates;
-using Unity.Burst;
+﻿using Unity.Collections;
 using Unity.Mathematics;
-using Unity.Collections;
-using Unity.Jobs;
-using System;
-using System.Collections.Generic;
-using UnityEngine;
-using Unity.VisualScripting;
 
-[BurstCompile]
-public struct IntFieldJob : IJob
+public struct IntFieldJobRefactored
 {
     public NativeArray<IntegrationTile> IntegrationField;
     public NativeQueue<int> IntegrationQueue;
@@ -33,7 +25,7 @@ public struct IntFieldJob : IJob
             IntegrationTile tile = IntegrationField[index];
             tile.Cost = GetCost(Directions[index]);
             IntegrationField[index] = tile;
-            if(tile.Cost == float.MaxValue) { continue; }
+            if (tile.Cost == float.MaxValue) { continue; }
             Enqueue(Directions[index]);
         }
 
@@ -52,7 +44,7 @@ public struct IntFieldJob : IJob
             bool isEastAvailable = integrationField[e].Mark == IntegrationMark.Relevant && eCost != byte.MaxValue;
             bool isSouthAvailable = integrationField[s].Mark == IntegrationMark.Relevant && sCost != byte.MaxValue;
             bool isWestAvailable = integrationField[w].Mark == IntegrationMark.Relevant && wCost != byte.MaxValue;
-            
+
             if (isNorthAvailable)
             {
                 integrationQueue.Enqueue(n);
@@ -94,36 +86,15 @@ public struct IntFieldJob : IJob
             float swCost = integrationField[directions.SW].Cost + 1.4f;
             float nwCost = integrationField[directions.NW].Cost + 1.4f;
 
-            if (nCost < costToReturn) { costToReturn = nCost; }
-            if (eCost < costToReturn) { costToReturn = eCost; }
-            if (sCost < costToReturn) { costToReturn = sCost; }
-            if (wCost < costToReturn) { costToReturn = wCost; }
-            if (neCost < costToReturn) { costToReturn = neCost; }
-            if (seCost < costToReturn) { costToReturn = seCost; }
-            if (swCost < costToReturn) { costToReturn = swCost; }
-            if (nwCost < costToReturn) { costToReturn = nwCost; }
+            costToReturn = math.select(costToReturn, nCost, nCost < costToReturn);
+            costToReturn = math.select(costToReturn, eCost, eCost < costToReturn);
+            costToReturn = math.select(costToReturn, sCost, sCost < costToReturn);
+            costToReturn = math.select(costToReturn, wCost, wCost < costToReturn);
+            costToReturn = math.select(costToReturn, neCost, neCost < costToReturn);
+            costToReturn = math.select(costToReturn, seCost, seCost < costToReturn);
+            costToReturn = math.select(costToReturn, swCost, swCost < costToReturn);
+            costToReturn = math.select(costToReturn, nwCost, nwCost < costToReturn);
             return costToReturn;
         }
     }
-}
-public struct IntegrationTile
-{
-    public float Cost;
-    public IntegrationMark Mark;
-
-    public IntegrationTile(float cost, IntegrationMark mark)
-    {
-        Cost = cost;
-        Mark = mark;
-    }
-}
-public enum IntegrationMark : byte
-{
-    None = 0,
-    Irrelevant,
-    Relevant,
-    LOSPass,
-    LOSBlock,
-    LOSC,
-    Awaiting,
 }

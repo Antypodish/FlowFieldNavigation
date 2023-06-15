@@ -17,7 +17,7 @@ public struct IntFieldResetJob : IJobParallelFor
     public IntFieldResetJob(UnsafeList<IntegrationTile> integrationFieldSector)
     {
         IntegrationFieldSector = integrationFieldSector;
-        resetTile = new IntegrationTile(float.MaxValue, IntegrationMark.Irrelevant);
+        resetTile = new IntegrationTile(float.MaxValue, IntegrationMark.None);
     }
     public void Execute(int index)
     {

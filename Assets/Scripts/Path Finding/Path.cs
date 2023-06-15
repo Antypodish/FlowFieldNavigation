@@ -14,21 +14,23 @@ public class Path
     public NativeArray<int> ConnectionIndicies;
     public NativeArray<PortalMark> PortalMarks;
     public NativeList<PortalSequence> PortalSequence;
-    public NativeList<int> PickedSectors;
-    public NativeArray<UnsafeList<IntegrationTile>> IntegrationField;
+    public NativeArray<int> SectorMarks;
+    public NativeList<UnsafeList<IntegrationTile>> IntegrationField;
     public NativeArray<FlowData> FlowField;
     public NativeQueue<int> BlockedWaveFronts;
+    public NativeQueue<LocalIndex> intqueue;
 
     public void Dispose()
     {
+        intqueue.Dispose();
         BlockedWaveFronts.Dispose();
         Sources.Dispose();
         PortalDistances.Dispose();
         ConnectionIndicies.Dispose();
         PortalMarks.Dispose();
         PortalSequence.Dispose();
-        PickedSectors.Dispose();
-        for(int i = 0; i < IntegrationField.Length; i++)
+        SectorMarks.Dispose();
+        for(int i = 1; i < IntegrationField.Length; i++)
         {
             IntegrationField[i].Dispose();
         }

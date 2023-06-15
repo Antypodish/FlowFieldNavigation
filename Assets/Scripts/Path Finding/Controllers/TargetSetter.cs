@@ -48,10 +48,10 @@ public class TargetSetter : MonoBehaviour
         Gizmos.color = Color.red;
         for(int i = 0; i < _sources.Length; i++)
         {
-            Gizmos.DrawSphere(_sources[i], 0.4f);
+            Gizmos.DrawSphere(_sources[i], 0.2f);
         }
 
         Gizmos.color = Color.white;
-        Gizmos.DrawSphere(_target, 0.4f);
+        Gizmos.DrawSphere(_target, 0.2f);
     }
 }
