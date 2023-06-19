@@ -129,20 +129,34 @@ public class PathDebugger
         }
     }
     public void LOSPassDebug(NativeArray<Vector3> tilePositions)
-    {/*
+    {
         if (_pathProducer == null) { return; }
         Path producedPath = _pathProducer.ProducedPaths.Last();
         if (producedPath == null) { return; }
 
-        NativeArray<IntegrationTile> integrationField = producedPath.IntegrationField;
-        for (int i = 0; i < integrationField.Length; i++)
+        string los = "los";
+        Gizmos.color = Color.white;
+        NativeArray<int> sectorMarks = producedPath.SectorMarks;
+        NativeArray<SectorNode> sectorNodes = _costFieldProducer.GetCostFieldWithOffset(producedPath.Offset).FieldGraph.SectorNodes;
+        NativeList<UnsafeList<IntegrationTile>> integrationField = producedPath.IntegrationField;
+        int sectorTileAmount = _pathfindingManager.SectorTileAmount;
+        for (int i = 0; i < sectorMarks.Length; i++)
         {
-            if (integrationField[i].Mark == IntegrationMark.LOSPass)
+            if (sectorMarks[i] == 0) { continue; }
+            UnsafeList<IntegrationTile> integrationSector = integrationField[sectorMarks[i]];
+            for (int j = 0; j < integrationSector.Length; j++)
             {
-                Handles.Label(tilePositions[i], "los");
+                if (integrationSector[j].Mark == IntegrationMark.LOSPass)
+                {
+                    int2 sectorIndex = new int2(sectorNodes[i].Sector.StartIndex.C, sectorNodes[i].Sector.StartIndex.R);
+                    Vector3 sectorIndexPos = new Vector3(sectorIndex.x * _tileSize, 0f, sectorIndex.y * _tileSize);
+                    int2 localIndex = new int2(j % sectorTileAmount, j / sectorTileAmount);
+                    Vector3 localIndexPos = new Vector3(localIndex.x * _tileSize, 0f, localIndex.y * _tileSize);
+                    Vector3 debugPos = localIndexPos + sectorIndexPos + new Vector3(_tileSize / 2, 0.02f, _tileSize / 2);
+                    Handles.Label(debugPos, los);
+                }
             }
         }
-        */
 
     }
     public void LOSBlockDebug(NativeArray<Vector3> tilePositions)

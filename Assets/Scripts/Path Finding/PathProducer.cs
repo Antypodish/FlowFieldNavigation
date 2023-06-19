@@ -105,8 +105,8 @@ public class PathProducer
         }
         JobHandle.CombineDependencies(resetHandles).Complete();
         //LOS JOB
-        //LOSJobRefactored reflosjob = GetRefLosJob();
-        //reflosjob.Schedule().Complete();
+        LOSJobRefactored reflosjob = GetRefLosJob();
+        reflosjob.Schedule().Complete();
         //INT JOB
         IntFieldJobRefactored intjob = GetRefIntegrationJob();
         intjob.Schedule().Complete();
@@ -167,7 +167,6 @@ public class PathProducer
         {
             return new IntFieldJobRefactored()
             {
-                DestinationGeneral2d = destinationIndex,
                 IntegrationQueue = blockedWaveFronts,
                 Costs = pickedCostField.Costs,
                 IntegrationField = integrationField,

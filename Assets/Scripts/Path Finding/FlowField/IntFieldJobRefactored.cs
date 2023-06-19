@@ -9,7 +9,6 @@ using UnityEngine;
 [BurstCompile]
 public struct IntFieldJobRefactored : IJob
 {
-    public int2 DestinationGeneral2d;
     public int FieldColAmount;
     public int FieldRowAmount;
     public int SectorColAmount;
@@ -84,19 +83,6 @@ public struct IntFieldJobRefactored : IJob
         UnsafeList<IntegrationTile> swSector;
         UnsafeList<IntegrationTile> nwSector;
         ///////////////////////////////////////////////
-
-
-        int2 tarSector2d = GetSectorIndex(DestinationGeneral2d);
-        int2 tarLocal2d = GetLocalIndex(DestinationGeneral2d, new int2(tarSector2d.x * sectorColAmount, tarSector2d.y * sectorColAmount));
-        int tarSector1d = To1D(tarSector2d, sectorMatrixColAmount);
-        int tarLocal1d = To1D(tarLocal2d, sectorColAmount);
-        SetLookupTable(tarLocal1d, GetGeneralIndex1d(tarLocal1d, tarSector1d), tarSector1d);
-        UnsafeList<IntegrationTile> tarSector = integrationField[sectorMarks[tarSector1d]];
-        IntegrationTile tarTile = tarSector[tarLocal1d];
-        tarTile.Cost = 0;
-        curIntCost = 0;
-        tarSector[tarLocal1d] = tarTile;
-        Enqueue();
         //CODE
         while (!integrationQueue.IsEmpty())
         {

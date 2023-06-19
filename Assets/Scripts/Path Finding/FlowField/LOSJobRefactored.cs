@@ -98,6 +98,7 @@ public struct LOSJobRefactored : IJob
             IntegrationTile curTile = integrationSector[curLocal1d];
             if(curTile.Mark == IntegrationMark.LOSBlock) { continue; }
             curTile.Mark = IntegrationMark.LOSPass;
+            integrationSector[curLocal1d] = curTile;
             DetermineLOSC();
             EnqueueNeighbours(curCost + 1f);
         }
@@ -386,7 +387,7 @@ public struct LOSJobRefactored : IJob
                             else if (costs[resultingIndex1d] == byte.MaxValue) { continue; }
                             tile.Mark = IntegrationMark.LOSBlock;
                             resultingIndexSector[resultingLocalIndex1d] = tile;
-                            blockedWaveFronts.Enqueue(new LocalIndex1d(resultingIndex1d, resultingSectorIndex1d));
+                            blockedWaveFronts.Enqueue(new LocalIndex1d(resultingLocalIndex1d, resultingSectorIndex1d));
                         }
                         step += stepAmount;
                     }
