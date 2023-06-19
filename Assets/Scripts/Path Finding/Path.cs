@@ -17,8 +17,8 @@ public class Path
     public NativeArray<int> SectorMarks;
     public NativeList<UnsafeList<IntegrationTile>> IntegrationField;
     public NativeArray<FlowData> FlowField;
-    public NativeQueue<int> BlockedWaveFronts;
-    public NativeQueue<LocalIndex> intqueue;
+    public NativeQueue<LocalIndex1d> BlockedWaveFronts;
+    public NativeQueue<LocalIndex2d> intqueue;
 
     public void Dispose()
     {

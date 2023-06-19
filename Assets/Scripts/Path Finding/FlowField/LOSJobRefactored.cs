@@ -19,10 +19,11 @@ public struct LOSJobRefactored : IJob
     public int SectorTileAmount;
     public int SectorMatrixColAmount;
     public int SectorMatrixRowAmount;
+    [ReadOnly] public NativeArray<byte> Costs;
     public NativeArray<int> SectorMarks;
     public NativeList<UnsafeList<IntegrationTile>> IntegrationField;
-    [ReadOnly] public NativeArray<byte> Costs;
-    public NativeQueue<LocalIndex> IntegrationQueue;
+    public NativeQueue<LocalIndex2d> IntegrationQueue;
+    public NativeQueue<LocalIndex1d> BlockedWaveFronts;
     public void Execute()
     {
         //DATA
@@ -35,8 +36,9 @@ public struct LOSJobRefactored : IJob
         int2 target = Target;
         NativeArray<int> sectorMarks = SectorMarks;
         NativeList<UnsafeList<IntegrationTile>> integrationField = IntegrationField;
-        NativeQueue<LocalIndex> integrationQueue = IntegrationQueue;
+        NativeQueue<LocalIndex2d> integrationQueue = IntegrationQueue;
         NativeArray<byte> costs = Costs;
+        NativeQueue<LocalIndex1d> blockedWaveFronts = BlockedWaveFronts;
 
         ///////CURRENT INDEX LOOKUP TABLE////////
         /////////////////////////////////////////
@@ -81,7 +83,7 @@ public struct LOSJobRefactored : IJob
         UnsafeList<IntegrationTile> targetSector = IntegrationField[SectorMarks[targetSector1d]];
         IntegrationTile targetTile = targetSector[targetLocalIndex1d];
         targetTile.Cost = 0f;
-        targetTile.Mark = IntegrationMark.Awaiting;
+        targetTile.Mark = IntegrationMark.LOSPass;
         targetSector[targetLocalIndex1d] = targetTile;
         IntegrationField[SectorMarks[targetSector1d]] = targetSector;
         SetLookupTable(targetLocalIndex2d, targetSector2d);
@@ -89,9 +91,13 @@ public struct LOSJobRefactored : IJob
         EnqueueNeighbours(1f);
         while (!integrationQueue.IsEmpty())
         {
-            LocalIndex curIndex = integrationQueue.Dequeue();
+            LocalIndex2d curIndex = integrationQueue.Dequeue();
             SetLookupTable(curIndex.index, curIndex.sector);
             float curCost = integrationField[SectorMarks[curSector1d]][curLocal1d].Cost;
+            UnsafeList<IntegrationTile> integrationSector = integrationField[SectorMarks[curSector1d]];
+            IntegrationTile curTile = integrationSector[curLocal1d];
+            if(curTile.Mark == IntegrationMark.LOSBlock) { continue; }
+            curTile.Mark = IntegrationMark.LOSPass;
             DetermineLOSC();
             EnqueueNeighbours(curCost + 1f);
         }
@@ -162,7 +168,7 @@ public struct LOSJobRefactored : IJob
             UnsafeList<IntegrationTile> wSector = integrationField[sectorMarks[wSector1d]];
             if (nRelevant && nCost != byte.MaxValue)
             {
-                integrationQueue.Enqueue(new LocalIndex(nLocal2d, nSector2d));
+                integrationQueue.Enqueue(new LocalIndex2d(nLocal2d, nSector2d));
                 IntegrationTile tile = nSector[nLocal1d];
                 tile.Mark = IntegrationMark.Awaiting;
                 tile.Cost = newWaveCost;
@@ -171,7 +177,7 @@ public struct LOSJobRefactored : IJob
             }
             if (eRelevant && eCost != byte.MaxValue)
             {
-                integrationQueue.Enqueue(new LocalIndex(eLocal2d, eSector2d));
+                integrationQueue.Enqueue(new LocalIndex2d(eLocal2d, eSector2d));
                 IntegrationTile tile = eSector[eLocal1d];
                 tile.Mark = IntegrationMark.Awaiting;
                 tile.Cost = newWaveCost;
@@ -179,7 +185,7 @@ public struct LOSJobRefactored : IJob
             }
             if (sRelevant && sCost != byte.MaxValue)
             {
-                integrationQueue.Enqueue(new LocalIndex(sLocal2d, sSector2d));
+                integrationQueue.Enqueue(new LocalIndex2d(sLocal2d, sSector2d));
                 IntegrationTile tile = sSector[sLocal1d];
                 tile.Mark = IntegrationMark.Awaiting;
                 tile.Cost = newWaveCost;
@@ -187,7 +193,7 @@ public struct LOSJobRefactored : IJob
             }
             if (wRelevant && wCost != byte.MaxValue)
             {
-                integrationQueue.Enqueue(new LocalIndex(wLocal2d, wSector2d));
+                integrationQueue.Enqueue(new LocalIndex2d(wLocal2d, wSector2d));
                 IntegrationTile tile = wSector[wLocal1d];
                 tile.Mark = IntegrationMark.Awaiting;
                 tile.Cost = newWaveCost;
@@ -380,7 +386,7 @@ public struct LOSJobRefactored : IJob
                             else if (costs[resultingIndex1d] == byte.MaxValue) { continue; }
                             tile.Mark = IntegrationMark.LOSBlock;
                             resultingIndexSector[resultingLocalIndex1d] = tile;
-                            //blockedWaveFronts.Enqueue(resultingIndex1d);
+                            blockedWaveFronts.Enqueue(new LocalIndex1d(resultingIndex1d, resultingSectorIndex1d));
                         }
                         step += stepAmount;
                     }
@@ -515,12 +521,12 @@ public struct LOSJobRefactored : IJob
         }
     }
 }
-public struct LocalIndex
+public struct LocalIndex2d
 {
     public int2 index;
     public int2 sector;
 
-    public LocalIndex(int2 localIndex, int2 sectorIndex)
+    public LocalIndex2d(int2 localIndex, int2 sectorIndex)
     {
         index = localIndex;
         sector = sectorIndex;

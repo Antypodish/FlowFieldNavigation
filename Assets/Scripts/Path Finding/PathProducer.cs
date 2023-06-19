@@ -63,8 +63,8 @@ public class PathProducer
         NativeArray<PortalMark> portalMarks = new NativeArray<PortalMark>(pickedCostField.FieldGraph.PortalNodes.Length, Allocator.Persistent);
         //NativeArray<IntegrationTile> integrationField = new NativeArray<IntegrationTile>(pickedCostField.Costs.Length, Allocator.Persistent);
         NativeArray<FlowData> flowField = new NativeArray<FlowData>(pickedCostField.Costs.Length, Allocator.Persistent);
-        NativeQueue<int> blockedWaveFronts = new NativeQueue<int>(Allocator.Persistent);
-        NativeQueue<LocalIndex> intqueue = new NativeQueue<LocalIndex>(Allocator.Persistent);
+        NativeQueue<LocalIndex1d> blockedWaveFronts = new NativeQueue<LocalIndex1d>(Allocator.Persistent);
+        NativeQueue<LocalIndex2d> intqueue = new NativeQueue<LocalIndex2d>(Allocator.Persistent);
         NativeArray<int> sectorMarks = new NativeArray<int>(pickedCostField.FieldGraph.SectorNodes.Length, Allocator.Persistent);
         NativeArray<int> sectorCount = new NativeArray<int>(1, Allocator.Persistent);
         NativeList<UnsafeList<IntegrationTile>> integrationField = new NativeList<UnsafeList<IntegrationTile>>(Allocator.Persistent);
@@ -105,8 +105,11 @@ public class PathProducer
         }
         JobHandle.CombineDependencies(resetHandles).Complete();
         //LOS JOB
-        LOSJobRefactored reflosjob = GetRefLosJob();
-        reflosjob.Schedule().Complete();
+        //LOSJobRefactored reflosjob = GetRefLosJob();
+        //reflosjob.Schedule().Complete();
+        //INT JOB
+        IntFieldJobRefactored intjob = GetRefIntegrationJob();
+        intjob.Schedule().Complete();
         producedPath.IsCalculated = true;
         return producedPath;
 
@@ -157,6 +160,22 @@ public class PathProducer
                 SectorMarks = sectorMarks,
                 IntegrationField = integrationField,
                 IntegrationQueue = intqueue,
+                BlockedWaveFronts = blockedWaveFronts,
+            };
+        }
+        IntFieldJobRefactored GetRefIntegrationJob()
+        {
+            return new IntFieldJobRefactored()
+            {
+                DestinationGeneral2d = destinationIndex,
+                IntegrationQueue = blockedWaveFronts,
+                Costs = pickedCostField.Costs,
+                IntegrationField = integrationField,
+                SectorMarks = sectorMarks,
+                SectorColAmount = _sectorTileAmount,
+                SectorMatrixColAmount = _sectorMatrixColAmount,
+                FieldColAmount = _columnAmount,
+                FieldRowAmount = _rowAmount,
             };
         }
         /*

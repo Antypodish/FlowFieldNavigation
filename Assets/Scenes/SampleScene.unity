@@ -552,7 +552,7 @@ MonoBehaviour:
   _AStar: 0
   _debugBFS: 0
   _debugPortalSequence: 0
-  _debugPickedSectors: 0
+  _debugPickedSectors: 1
   _debugIntegrationField: 1
   _debugLOSPass: 0
   _debugLOSBlocks: 1
@@ -732,7 +732,7 @@ PrefabInstance:
     - target: {fileID: 1825739965324605910, guid: e0d1fa0b1efdac642802b5705081a344,
         type: 3}
       propertyPath: _maxZoom
-      value: -45
+      value: -100
       objectReference: {fileID: 0}
     - target: {fileID: 1825739965324605910, guid: e0d1fa0b1efdac642802b5705081a344,
         type: 3}
