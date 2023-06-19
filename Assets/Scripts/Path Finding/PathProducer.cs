@@ -59,16 +59,15 @@ public class PathProducer
         NativeArray<float> portalDistances = new NativeArray<float>(pickedCostField.FieldGraph.PortalNodes.Length, Allocator.Persistent);
         NativeArray<int> connectionIndicies = new NativeArray<int>(pickedCostField.FieldGraph.PortalNodes.Length, Allocator.Persistent);
         NativeList<PortalSequence> portalSequence = new NativeList<PortalSequence>(Allocator.Persistent);
-        //NativeList<int> pickedSectors = new NativeList<int>(Allocator.Persistent);
         NativeArray<PortalMark> portalMarks = new NativeArray<PortalMark>(pickedCostField.FieldGraph.PortalNodes.Length, Allocator.Persistent);
-        //NativeArray<IntegrationTile> integrationField = new NativeArray<IntegrationTile>(pickedCostField.Costs.Length, Allocator.Persistent);
-        NativeArray<FlowData> flowField = new NativeArray<FlowData>(pickedCostField.Costs.Length, Allocator.Persistent);
         NativeQueue<LocalIndex1d> blockedWaveFronts = new NativeQueue<LocalIndex1d>(Allocator.Persistent);
         NativeQueue<LocalIndex2d> intqueue = new NativeQueue<LocalIndex2d>(Allocator.Persistent);
         NativeArray<int> sectorMarks = new NativeArray<int>(pickedCostField.FieldGraph.SectorNodes.Length, Allocator.Persistent);
         NativeArray<int> sectorCount = new NativeArray<int>(1, Allocator.Persistent);
-        NativeList<UnsafeList<IntegrationTile>> integrationField = new NativeList<UnsafeList<IntegrationTile>>(Allocator.Persistent);
-        integrationField.Add(new UnsafeList<IntegrationTile>(1, Allocator.Persistent));
+        NativeList<IntegrationFieldSector> integrationField = new NativeList<IntegrationFieldSector>(Allocator.Persistent);
+        integrationField.Add(new IntegrationFieldSector());
+        NativeList<FlowFieldSector> flowField = new NativeList<FlowFieldSector>(Allocator.Persistent);
+        flowField.Add(new FlowFieldSector());
         Path producedPath = new Path()
         {
             BlockedWaveFronts = blockedWaveFronts,
@@ -94,22 +93,39 @@ public class PathProducer
         //TRAVERSAL JOB
         FieldGraphTraversalJob traversalJob = GetTraversalJob();
         traversalJob.Schedule().Complete();
+        //SECTOR PREPERATION
+        for (int i = 1; i < integrationField.Length; i++)
+        {
+            IntegrationFieldSector intSector = integrationField[i];
+            intSector.integrationSector = new UnsafeList<IntegrationTile>(_sectorTileAmount * _sectorTileAmount, Allocator.Persistent);
+            intSector.integrationSector.Length = _sectorTileAmount * _sectorTileAmount;
+            integrationField[i] = intSector;
+
+            FlowFieldSector flowSector = flowField[i];
+            flowSector.flowfieldSector = new UnsafeList<FlowData>(_sectorTileAmount * _sectorTileAmount, Allocator.Persistent);
+            flowSector.flowfieldSector.Length = _sectorTileAmount * _sectorTileAmount;
+            flowField[i] = flowSector;
+        }
         //RESET JOB
         NativeList<JobHandle> resetHandles = new NativeList<JobHandle>(Allocator.Temp);
-        for(int i = 0; i < sectorCount[0]; i++)
+        for(int i = 1; i < integrationField.Length; i++)
         {
-            UnsafeList<IntegrationTile> integrationFieldSector = new UnsafeList<IntegrationTile>(_sectorTileAmount * _sectorTileAmount, Allocator.Persistent);
-            integrationFieldSector.Length = _sectorTileAmount * _sectorTileAmount;
-            integrationField.Add(integrationFieldSector);
-            resetHandles.Add(GetResetFieldJob(integrationFieldSector).Schedule(_sectorTileAmount * _sectorTileAmount, 512));
+            resetHandles.Add(GetResetFieldJob(integrationField[i].integrationSector).Schedule(_sectorTileAmount * _sectorTileAmount, 512));
         }
         JobHandle.CombineDependencies(resetHandles).Complete();
         //LOS JOB
-        LOSJobRefactored reflosjob = GetRefLosJob();
+        LOSJob reflosjob = GetRefLosJob();
         reflosjob.Schedule().Complete();
         //INT JOB
-        IntFieldJobRefactored intjob = GetRefIntegrationJob();
+        IntFieldJob intjob = GetRefIntegrationJob();
         intjob.Schedule().Complete();
+        //FLOWFIELD JOB
+        NativeList<JobHandle> flowfieldHandles = new NativeList<JobHandle>(Allocator.Temp);
+        for (int i = 1; i < flowField.Length; i++)
+        {
+            flowfieldHandles.Add(GetFlowFieldJob(flowField[i].flowfieldSector, flowField[i].sectorIndex1d).Schedule(_sectorTileAmount * _sectorTileAmount, 512));
+        }
+        JobHandle.CombineDependencies(flowfieldHandles).Complete();
         producedPath.IsCalculated = true;
         return producedPath;
 
@@ -137,17 +153,18 @@ public class PathProducer
                 PortalDistances = portalDistances,
                 PortalSequence = portalSequence,
                 PortalMarks = portalMarks,
-                SectorCount = sectorCount,
                 SectorMarks = sectorMarks,
+                IntegrationField = integrationField,
+                FlowField = flowField,
             };
         }
         IntFieldResetJob GetResetFieldJob(UnsafeList<IntegrationTile> integrationFieldSector)
         {
             return new IntFieldResetJob(integrationFieldSector);
         }
-        LOSJobRefactored GetRefLosJob()
+        LOSJob GetRefLosJob()
         {
-            return new LOSJobRefactored()
+            return new LOSJob()
             {
                 TileSize = _tileSize,
                 FieldRowAmount = _rowAmount,
@@ -163,9 +180,9 @@ public class PathProducer
                 BlockedWaveFronts = blockedWaveFronts,
             };
         }
-        IntFieldJobRefactored GetRefIntegrationJob()
+        IntFieldJob GetRefIntegrationJob()
         {
-            return new IntFieldJobRefactored()
+            return new IntFieldJob()
             {
                 IntegrationQueue = blockedWaveFronts,
                 Costs = pickedCostField.Costs,
@@ -216,16 +233,21 @@ public class PathProducer
                 Directions = _costFieldProducer.Directions,
                 IntegrationField = integrationField,
             };
-        }
-        FlowFieldJob GetFlowFieldJob()
+        }*/
+        FlowFieldJob GetFlowFieldJob(UnsafeList<FlowData> flowfieldSector, int sectorIndex1d)
         {
             return new FlowFieldJob()
             {
-                DirectionData = _costFieldProducer.Directions,
-                FlowField = flowField,
-                IntegrationField = integrationField
+                SectorColAmount = _sectorTileAmount,
+                SectorMatrixColAmount = _sectorMatrixColAmount,
+                SectorMatrixRowAmount = _sectorMatrixRowAmount,
+                SectorRowAmount = _sectorTileAmount,
+                SectorIndex1d = sectorIndex1d,
+                SectorMarks = sectorMarks,
+                FlowSector = flowfieldSector,
+                IntegrationField = integrationField,
             };
-        }*/
+        }
     }
     public void MarkSectors(NativeList<int> editedSectorIndicies)
     {/*

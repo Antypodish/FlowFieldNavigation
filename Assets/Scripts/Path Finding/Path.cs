@@ -15,8 +15,8 @@ public class Path
     public NativeArray<PortalMark> PortalMarks;
     public NativeList<PortalSequence> PortalSequence;
     public NativeArray<int> SectorMarks;
-    public NativeList<UnsafeList<IntegrationTile>> IntegrationField;
-    public NativeArray<FlowData> FlowField;
+    public NativeList<IntegrationFieldSector> IntegrationField;
+    public NativeList<FlowFieldSector> FlowField;
     public NativeQueue<LocalIndex1d> BlockedWaveFronts;
     public NativeQueue<LocalIndex2d> intqueue;
 
@@ -32,7 +32,11 @@ public class Path
         SectorMarks.Dispose();
         for(int i = 1; i < IntegrationField.Length; i++)
         {
-            IntegrationField[i].Dispose();
+            IntegrationField[i].integrationSector.Dispose();
+        }
+        for (int i = 1; i < FlowField.Length; i++)
+        {
+            FlowField[i].flowfieldSector.Dispose();
         }
         IntegrationField.Dispose();
         FlowField.Dispose();

@@ -18,7 +18,7 @@ public struct FlowFieldJobPack
         JobHandle prepHandle = PrepJob.Schedule(PrepJob.IntegrationField.Length, 1024, resetJobHandle);
         JobHandle losHandle = LOSJob.Schedule(prepHandle);
         JobHandle integrationJobHandle = IntegrationJob.Schedule(losHandle);
-        JobHandle flowFieldJobHandle = FlowFieldJob.Schedule(FlowFieldJob.FlowField.Length, 512, integrationJobHandle);
+        JobHandle flowFieldJobHandle = FlowFieldJob.Schedule(FlowFieldJob.FlowSector.Length, 512, integrationJobHandle);
         return flowFieldJobHandle;
     }
 }

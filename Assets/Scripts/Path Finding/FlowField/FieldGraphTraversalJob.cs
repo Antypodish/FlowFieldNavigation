@@ -31,9 +31,10 @@ public struct FieldGraphTraversalJob : IJob
     public NativeArray<float> PortalDistances;
     public NativeArray<PortalMark> PortalMarks;
     public NativeList<PortalSequence> PortalSequence;
-    
+
     public NativeArray<int> SectorMarks;
-    public NativeArray<int> SectorCount;
+    public NativeList<IntegrationFieldSector> IntegrationField;
+    public NativeList<FlowFieldSector> FlowField;
 
     int _targetSectorStartIndex;
     int _targetSectorIndex;
@@ -260,10 +261,9 @@ public struct FieldGraphTraversalJob : IJob
             {
                 int secPtr = WinToSecPtrs[j + winToSecPtr];
                 if (SectorMarks[secPtr] != 0) { continue; }
-                int sectorCount = SectorCount[0];
-                sectorCount++;
-                SectorCount[0] = sectorCount;
-                SectorMarks[secPtr] = sectorCount;
+                SectorMarks[secPtr] = IntegrationField.Length;
+                IntegrationField.Add(new IntegrationFieldSector(secPtr));
+                FlowField.Add(new FlowFieldSector(secPtr));
             }
         }
     }
