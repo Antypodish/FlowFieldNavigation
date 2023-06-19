@@ -13,14 +13,12 @@ public struct IntFieldResetJob : IJobParallelFor
 {
     public UnsafeList<IntegrationTile> IntegrationFieldSector;
 
-    IntegrationTile resetTile;
     public IntFieldResetJob(UnsafeList<IntegrationTile> integrationFieldSector)
     {
         IntegrationFieldSector = integrationFieldSector;
-        resetTile = new IntegrationTile(float.MaxValue, IntegrationMark.None);
     }
     public void Execute(int index)
     {
-        IntegrationFieldSector[index] = resetTile;
+        IntegrationFieldSector[index] = new IntegrationTile(float.MaxValue, IntegrationMark.None); ;
     }
 }

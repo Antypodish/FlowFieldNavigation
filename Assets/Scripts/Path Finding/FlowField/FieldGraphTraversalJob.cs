@@ -431,7 +431,6 @@ public struct FieldGraphTraversalJob : IJob
             IsAvailable = isAvailable;
         }
     }
-    
 }
 struct ConnectionAndCost
 {

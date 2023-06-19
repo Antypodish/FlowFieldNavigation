@@ -19,12 +19,7 @@ public struct FlowFieldJob : IJobParallelFor
 
     public void Execute(int index)
     {
-        if (IntegrationField[SectorMarks[SectorIndex1d]].integrationSector[index].Mark == IntegrationMark.LOSPass)
-        {
-            FlowData flow = FlowData.LOS;
-            FlowSector[index] = flow;
-            return;
-        }
+        if (IntegrationField[SectorMarks[SectorIndex1d]].integrationSector[index].Mark == IntegrationMark.LOSPass) { FlowSector[index] = FlowData.LOS; return; }
 
         //DATA
         NativeList<IntegrationFieldSector> integrationField = IntegrationField;
@@ -175,7 +170,6 @@ public struct FlowFieldJob : IJobParallelFor
             }
 
             //SECTOR MARKS
-            int curSectorMark = sectorMarks[pickedSector1d];
             int nSectorMark = sectorMarks[nSector1d];
             int eSectorMark = sectorMarks[eSector1d];
             int sSectorMark = sectorMarks[sSector1d];

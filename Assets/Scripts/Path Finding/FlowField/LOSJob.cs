@@ -42,95 +42,102 @@ public struct LOSJob : IJob
 
         ///////CURRENT INDEX LOOKUP TABLE////////
         /////////////////////////////////////////
-        int curLocal1d = 0;
-        int curSector1d = 0;
-        int2 nLocal2d = new int2();
-        int2 eLocal2d = new int2();
-        int2 sLocal2d = new int2();
-        int2 wLocal2d = new int2();
-        int2 nSector2d = new int2();
-        int2 eSector2d = new int2();
-        int2 sSector2d = new int2();
-        int2 wSector2d = new int2();
-        int nLocal1d = 0;
-        int eLocal1d = 0;
-        int sLocal1d = 0;
-        int wLocal1d = 0;
-        int nGeneral1d = 0;
-        int eGeneral1d = 0;
-        int sGeneral1d = 0;
-        int wGeneral1d = 0;
-        int nSector1d = 0;
-        int eSector1d = 0;
-        int sSector1d = 0;
-        int wSector1d = 0;
-        byte nCost = 0;
-        byte eCost = 0;
-        byte sCost = 0;
-        byte wCost = 0;
-        bool nRelevant = false;
-        bool eRelevant = false;
-        bool sRelevant = false;
-        bool wRelevant = false;
+        int curLocal1d;
+        int curSector1d;
+        int2 nLocal2d;
+        int2 eLocal2d;
+        int2 sLocal2d;
+        int2 wLocal2d;
+        int2 nSector2d;
+        int2 eSector2d;
+        int2 sSector2d;
+        int2 wSector2d;
+        int nLocal1d;
+        int eLocal1d;
+        int sLocal1d;
+        int wLocal1d;
+        int nGeneral1d;
+        int eGeneral1d;
+        int sGeneral1d;
+        int wGeneral1d;
+        int nSector1d;
+        int eSector1d;
+        int sSector1d;
+        int wSector1d;
+        byte nCost;
+        byte eCost;
+        byte sCost;
+        byte wCost;
+        bool nRelevant;
+        bool eRelevant;
+        bool sRelevant;
+        bool wRelevant;
+        UnsafeList<IntegrationTile> nSector;
+        UnsafeList<IntegrationTile> eSector;
+        UnsafeList<IntegrationTile> sSector;
+        UnsafeList<IntegrationTile> wSector;
         ///////////////////////////////////////////
 
         //SET TARGET INDEX
         int2 targetSector2d = GetSectorIndex(Target);
         int targetSector1d = To1D(targetSector2d, SectorMatrixColAmount);
         int2 targetSectorStartIndex = new int2(targetSector2d.x * SectorTileAmount, targetSector2d.y * SectorTileAmount);
-        int2 targetLocalIndex2d = GetLocalIndex(Target, targetSectorStartIndex);
-        int targetLocalIndex1d = To1D(targetLocalIndex2d, SectorTileAmount);
+        int2 targetLocal2d = GetLocalIndex(Target, targetSectorStartIndex);
+        int targetLocal1d = To1D(targetLocal2d, SectorTileAmount);
+
         UnsafeList<IntegrationTile> targetSector = IntegrationField[SectorMarks[targetSector1d]].integrationSector;
-        IntegrationTile targetTile = targetSector[targetLocalIndex1d];
+        IntegrationTile targetTile = targetSector[targetLocal1d];
         targetTile.Cost = 0f;
         targetTile.Mark = IntegrationMark.LOSPass;
-        targetSector[targetLocalIndex1d] = targetTile;
-        SetLookupTable(targetLocalIndex2d, targetSector2d);
-        DetermineLOSC();
+        targetSector[targetLocal1d] = targetTile;
+        SetLookupTable(targetLocal2d, targetSector2d);
+        LookForLOSC();
         EnqueueNeighbours(1f);
         while (!integrationQueue.IsEmpty())
         {
             LocalIndex2d curIndex = integrationQueue.Dequeue();
             SetLookupTable(curIndex.index, curIndex.sector);
-            float curCost = integrationField[SectorMarks[curSector1d]].integrationSector[curLocal1d].Cost;
-            UnsafeList<IntegrationTile> integrationSector = integrationField[SectorMarks[curSector1d]].integrationSector;
+            int curSectorMark = SectorMarks[curSector1d];
+            float curCost = integrationField[curSectorMark].integrationSector[curLocal1d].Cost;
+            UnsafeList<IntegrationTile> integrationSector = integrationField[curSectorMark].integrationSector;
             IntegrationTile curTile = integrationSector[curLocal1d];
             if(curTile.Mark == IntegrationMark.LOSBlock) { continue; }
             curTile.Mark = IntegrationMark.LOSPass;
             integrationSector[curLocal1d] = curTile;
-            DetermineLOSC();
+            LookForLOSC();
             EnqueueNeighbours(curCost + 1f);
         }
         void SetLookupTable(int2 curLocal2d, int2 curSector2d)
         {
-
-            //data
+            //LOCAL 2D INDICIES
             nLocal2d = new int2(curLocal2d.x, curLocal2d.y + 1);
             eLocal2d = new int2(curLocal2d.x + 1, curLocal2d.y);
             sLocal2d = new int2(curLocal2d.x, curLocal2d.y - 1);
             wLocal2d = new int2(curLocal2d.x - 1, curLocal2d.y);
+
+            //SECTOR 2D INDICIES
             nSector2d = curSector2d;
             eSector2d = curSector2d;
             sSector2d = curSector2d;
             wSector2d = curSector2d;
 
-            //calculation
+            //LOCAL OVERFLOWS
             bool nOverflow = nLocal2d.y >= sectorTileAmount;
             bool eOverflow = eLocal2d.x >= sectorTileAmount;
             bool sOverflow = sLocal2d.y < 0;
             bool wOverflow = wLocal2d.x < 0;
 
-            curSector1d = To1D(curSector2d, sectorMatrixColAmount);
+            //HANDLE OVERFLOWS
             nLocal2d = math.select(nLocal2d, new int2(nLocal2d.x, 0), nOverflow);
             eLocal2d = math.select(eLocal2d, new int2(0, eLocal2d.y), eOverflow);
             sLocal2d = math.select(sLocal2d, new int2(sLocal2d.x, sectorTileAmount - 1), sOverflow);
             wLocal2d = math.select(wLocal2d, new int2(sectorTileAmount - 1, wLocal2d.y), wOverflow);
-
             nSector2d = math.select(nSector2d, new int2(nSector2d.x, nSector2d.y + 1), nOverflow);
             eSector2d = math.select(eSector2d, new int2(eSector2d.x + 1, eSector2d.y), eOverflow);
             sSector2d = math.select(sSector2d, new int2(sSector2d.x, sSector2d.y - 1), sOverflow);
             wSector2d = math.select(wSector2d, new int2(wSector2d.x - 1, wSector2d.y), wOverflow);
 
+            //LOCAL 1D INDICIES
             curLocal1d = To1D(curLocal2d, sectorTileAmount);
             nLocal1d = To1D(nLocal2d, sectorTileAmount);
             eLocal1d = To1D(eLocal2d, sectorTileAmount);
@@ -141,32 +148,45 @@ public struct LOSJob : IJob
             sSector1d = To1D(sSector2d, sectorMatrixColAmount);
             wSector1d = To1D(wSector2d, sectorMatrixColAmount);
 
+            //GENERAL 1D INDICIES
             nGeneral1d = To1D(new int2(nSector2d.x * sectorTileAmount, nSector2d.y * sectorTileAmount) + nLocal2d, fieldColAmount);
             eGeneral1d = To1D(new int2(eSector2d.x * sectorTileAmount, eSector2d.y * sectorTileAmount) + eLocal2d, fieldColAmount);
             sGeneral1d = To1D(new int2(sSector2d.x * sectorTileAmount, sSector2d.y * sectorTileAmount) + sLocal2d, fieldColAmount);
             wGeneral1d = To1D(new int2(wSector2d.x * sectorTileAmount, wSector2d.y * sectorTileAmount) + wLocal2d, fieldColAmount);
 
-            int nSectorIndex = sectorMarks[nSector1d];
-            int eSectorIndex = sectorMarks[eSector1d];
-            int sSectorIndex = sectorMarks[sSector1d];
-            int wSectorIndex = sectorMarks[wSector1d];
-            nRelevant = nSectorIndex != 0 && integrationField[nSectorIndex].integrationSector[nLocal1d].Mark == IntegrationMark.None;
-            eRelevant = eSectorIndex != 0 && integrationField[eSectorIndex].integrationSector[eLocal1d].Mark == IntegrationMark.None;
-            sRelevant = sSectorIndex != 0 && integrationField[sSectorIndex].integrationSector[sLocal1d].Mark == IntegrationMark.None;
-            wRelevant = wSectorIndex != 0 && integrationField[wSectorIndex].integrationSector[wLocal1d].Mark == IntegrationMark.None;
+            //SECTOR MARKS
+            int nSectorMark = sectorMarks[nSector1d];
+            int eSectorMark = sectorMarks[eSector1d];
+            int sSectorMark = sectorMarks[sSector1d];
+            int wSectorMark = sectorMarks[wSector1d];
 
+            //SECTORS
+            nSector = integrationField[nSectorMark].integrationSector;
+            eSector = integrationField[eSectorMark].integrationSector;
+            sSector = integrationField[sSectorMark].integrationSector;
+            wSector = integrationField[wSectorMark].integrationSector;
+
+            //RELEVANCIES
+            nRelevant = nSectorMark != 0 && integrationField[nSectorMark].integrationSector[nLocal1d].Mark == IntegrationMark.None;
+            eRelevant = eSectorMark != 0 && integrationField[eSectorMark].integrationSector[eLocal1d].Mark == IntegrationMark.None;
+            sRelevant = sSectorMark != 0 && integrationField[sSectorMark].integrationSector[sLocal1d].Mark == IntegrationMark.None;
+            wRelevant = wSectorMark != 0 && integrationField[wSectorMark].integrationSector[wLocal1d].Mark == IntegrationMark.None;
+
+            //COSTS
             nCost = costs[nGeneral1d];
             eCost = costs[eGeneral1d];
             sCost = costs[sGeneral1d];
             wCost = costs[wGeneral1d];
+
+            curSector1d = To1D(curSector2d, sectorMatrixColAmount);
         }
         void EnqueueNeighbours(float newWaveCost)
         {
-            UnsafeList<IntegrationTile> nSector = integrationField[sectorMarks[nSector1d]].integrationSector;
-            UnsafeList<IntegrationTile> eSector = integrationField[sectorMarks[eSector1d]].integrationSector;
-            UnsafeList<IntegrationTile> sSector = integrationField[sectorMarks[sSector1d]].integrationSector;
-            UnsafeList<IntegrationTile> wSector = integrationField[sectorMarks[wSector1d]].integrationSector;
-            if (nRelevant && nCost != byte.MaxValue)
+            bool nEnqueueable = nRelevant && nCost != byte.MaxValue;
+            bool eEnqueueable = eRelevant && eCost != byte.MaxValue;
+            bool sEnqueueable = sRelevant && sCost != byte.MaxValue;
+            bool wEnqueueable = wRelevant && wCost != byte.MaxValue;
+            if (nEnqueueable)
             {
                 integrationQueue.Enqueue(new LocalIndex2d(nLocal2d, nSector2d));
                 IntegrationTile tile = nSector[nLocal1d];
@@ -175,7 +195,7 @@ public struct LOSJob : IJob
                 nSector[nLocal1d] = tile;
 
             }
-            if (eRelevant && eCost != byte.MaxValue)
+            if (eEnqueueable)
             {
                 integrationQueue.Enqueue(new LocalIndex2d(eLocal2d, eSector2d));
                 IntegrationTile tile = eSector[eLocal1d];
@@ -183,7 +203,7 @@ public struct LOSJob : IJob
                 tile.Cost = newWaveCost;
                 eSector[eLocal1d] = tile;
             }
-            if (sRelevant && sCost != byte.MaxValue)
+            if (sEnqueueable)
             {
                 integrationQueue.Enqueue(new LocalIndex2d(sLocal2d, sSector2d));
                 IntegrationTile tile = sSector[sLocal1d];
@@ -191,7 +211,7 @@ public struct LOSJob : IJob
                 tile.Cost = newWaveCost;
                 sSector[sLocal1d] = tile;
             }
-            if (wRelevant && wCost != byte.MaxValue)
+            if (wEnqueueable)
             {
                 integrationQueue.Enqueue(new LocalIndex2d(wLocal2d, wSector2d));
                 IntegrationTile tile = wSector[wLocal1d];
@@ -200,7 +220,7 @@ public struct LOSJob : IJob
                 wSector[wLocal1d] = tile;
             }
         }
-        void DetermineLOSC()
+        void LookForLOSC()
         {
             if (nRelevant && nCost == byte.MaxValue)
             {
@@ -245,6 +265,7 @@ public struct LOSJob : IJob
                 sw = math.select(sw, generalIndex1d, sOverflow || wOverflow);
                 nw = math.select(nw, generalIndex1d, nOverflow || wOverflow);
 
+                //COSTS
                 byte nCost = costs[n];
                 byte eCost = costs[e];
                 byte sCost = costs[s];
@@ -272,19 +293,91 @@ public struct LOSJob : IJob
                 //EVALUATE FOR EACH CORNER DIRECTION
                 if (isCornerFromNE)
                 {
-                    CalculateForNE();
+                    int2 neIndex2 = To2D(ne, fieldColAmount);
+                    int2 neDistance = new int2(source.x - neIndex2.x, source.y - neIndex2.y);
+                    int2 absNeDistance = new int2(math.abs(neDistance.x), math.abs(neDistance.y));
+                    int2 distanceDifference = new int2(absCornerDistance.x - absNeDistance.x, absCornerDistance.y - absNeDistance.y);
+                    if (distanceDifference.y * distanceDifference.x < 0) //if losc
+                    {
+                        UnsafeList<IntegrationTile> integrationSector = integrationField[sectorMarks[sectorIndex1d]].integrationSector;
+                        IntegrationTile cornerTile = integrationSector[localIndex1d];
+                        cornerTile.Mark = IntegrationMark.LOSC;
+                        integrationSector[localIndex1d] = cornerTile;
+                        int2 nIndex = To2D(n, fieldColAmount);
+                        int2 eIndex = To2D(e, fieldColAmount);
+                        int2 divergent = distanceDifference.x > 0 ? nIndex : eIndex;
+                        float2 loscPosition = cornerPos + new float2(tileSize / 2, tileSize / 2);
+                        float2 sourcePosition = waveFrontTilePos + new float2(-tileSize / 2, -tileSize / 2);
+                        NativeList<int2> blockOffsets = GetOffsets(sourcePosition, loscPosition, out int2 stepAmount);
+                        int2 step = divergent;
+                        SetLOSBlocks(blockOffsets, step, stepAmount);
+                    }
                 }
                 if (isCornerFromSE)
                 {
-                    CalculateForSE();
+                    int2 seIndex2 = To2D(se, fieldColAmount);
+                    int2 seDistance = new int2(source.x - seIndex2.x, source.y - seIndex2.y);
+                    int2 absSeDistance = new int2(math.abs(seDistance.x), math.abs(seDistance.y));
+                    int2 distanceDifference = new int2(absCornerDistance.x - absSeDistance.x, absCornerDistance.y - absSeDistance.y);
+                    if (distanceDifference.y * distanceDifference.x < 0) //if losc
+                    {
+                        UnsafeList<IntegrationTile> integrationSector = integrationField[sectorMarks[sectorIndex1d]].integrationSector;
+                        IntegrationTile cornerTile = integrationSector[localIndex1d];
+                        cornerTile.Mark = IntegrationMark.LOSC;
+                        integrationSector[localIndex1d] = cornerTile;
+                        int2 sIndex = To2D(s, fieldColAmount);
+                        int2 eIndex = To2D(e, fieldColAmount);
+                        int2 divergent = distanceDifference.x > 0 ? sIndex : eIndex;
+                        float2 loscPosition = cornerPos + new float2(tileSize / 2, -tileSize / 2);
+                        float2 sourcePosition = waveFrontTilePos + new float2(-tileSize / 2, tileSize / 2);
+                        NativeList<int2> blockOffsets = GetOffsets(sourcePosition, loscPosition, out int2 stepAmount);
+                        int2 step = divergent;
+                        SetLOSBlocks(blockOffsets, step, stepAmount);
+                    }
                 }
                 if (isCornerFromSW)
                 {
-                    CalculateForSW();
+                    int2 swIndex2 = To2D(sw, fieldColAmount);
+                    int2 swDistance = new int2(source.x - swIndex2.x, source.y - swIndex2.y);
+                    int2 absSwDistance = new int2(math.abs(swDistance.x), math.abs(swDistance.y));
+                    int2 distanceDifference = new int2(absCornerDistance.x - absSwDistance.x, absCornerDistance.y - absSwDistance.y);
+                    if (distanceDifference.y * distanceDifference.x < 0) //if losc
+                    {
+                        UnsafeList<IntegrationTile> integrationSector = integrationField[sectorMarks[sectorIndex1d]].integrationSector;
+                        IntegrationTile cornerTile = integrationSector[localIndex1d];
+                        cornerTile.Mark = IntegrationMark.LOSC;
+                        integrationSector[localIndex1d] = cornerTile;
+                        int2 sIndex = To2D(s, fieldColAmount);
+                        int2 wIndex = To2D(w, fieldColAmount);
+                        int2 divergent = distanceDifference.x > 0 ? sIndex : wIndex;
+                        float2 loscPosition = cornerPos + new float2(-tileSize / 2, -tileSize / 2);
+                        float2 sourcePosition = waveFrontTilePos + new float2(tileSize / 2, tileSize / 2);
+                        NativeList<int2> blockOffsets = GetOffsets(sourcePosition, loscPosition, out int2 stepAmount);
+                        int2 step = divergent;
+                        SetLOSBlocks(blockOffsets, step, stepAmount);
+                    }
                 }
                 if (isCornerFromNW)
                 {
-                    CalculateForNW();
+                    int2 nwIndex2 = To2D(nw, fieldColAmount);
+                    int2 nwDistance = new int2(source.x - nwIndex2.x, source.y - nwIndex2.y);
+                    int2 absNwDistance = new int2(math.abs(nwDistance.x), math.abs(nwDistance.y));
+                    int2 distanceDifference = new int2(absCornerDistance.x - absNwDistance.x, absCornerDistance.y - absNwDistance.y);
+                    if (distanceDifference.y * distanceDifference.x < 0) //if losc
+                    {
+                        UnsafeList<IntegrationTile> integrationSector = integrationField[sectorMarks[sectorIndex1d]].integrationSector;
+                        IntegrationTile cornerTile = integrationSector[localIndex1d];
+                        cornerTile.Mark = IntegrationMark.LOSC;
+                        integrationSector[localIndex1d] = cornerTile;
+                        int2 nIndex = To2D(n, fieldColAmount);
+                        int2 wIndex = To2D(w, fieldColAmount);
+                        int2 divergent = distanceDifference.x > 0 ? nIndex : wIndex;
+                        float2 loscPosition = cornerPos + new float2(-tileSize / 2, tileSize / 2);
+                        float2 sourcePosition = waveFrontTilePos + new float2(tileSize / 2, -tileSize / 2);
+                        NativeList<int2> blockOffsets = GetOffsets(sourcePosition, loscPosition, out int2 stepAmount);
+                        int2 step = divergent;
+                        SetLOSBlocks(blockOffsets, step, stepAmount);
+                    }
                 }
 
                 //HELPERS
@@ -391,95 +484,6 @@ public struct LOSJob : IJob
                         step += stepAmount;
                     }
                 }
-                void CalculateForNE()
-                {
-                    int2 neIndex2 = To2D(ne, fieldColAmount);
-                    int2 neDistance = new int2(source.x - neIndex2.x, source.y - neIndex2.y);
-                    int2 absNeDistance = new int2(math.abs(neDistance.x), math.abs(neDistance.y));
-                    int2 distanceDifference = new int2(absCornerDistance.x - absNeDistance.x, absCornerDistance.y - absNeDistance.y);
-                    if (distanceDifference.y * distanceDifference.x < 0) //if losc
-                    {
-                        UnsafeList<IntegrationTile> integrationSector = integrationField[sectorMarks[sectorIndex1d]].integrationSector;
-                        IntegrationTile cornerTile = integrationSector[localIndex1d];
-                        cornerTile.Mark = IntegrationMark.LOSC;
-                        integrationSector[localIndex1d] = cornerTile;
-                        int2 nIndex = To2D(n, fieldColAmount);
-                        int2 eIndex = To2D(e, fieldColAmount);
-                        int2 divergent = distanceDifference.x > 0 ? nIndex : eIndex;
-                        float2 loscPosition = cornerPos + new float2(tileSize / 2, tileSize / 2);
-                        float2 sourcePosition = waveFrontTilePos + new float2(-tileSize / 2, -tileSize / 2);
-                        NativeList<int2> blockOffsets = GetOffsets(sourcePosition, loscPosition, out int2 stepAmount);
-                        int2 step = divergent;
-                        SetLOSBlocks(blockOffsets, step, stepAmount);
-                    }
-                }
-                void CalculateForSE()
-                {
-                    int2 seIndex2 = To2D(se, fieldColAmount);
-                    int2 seDistance = new int2(source.x - seIndex2.x, source.y - seIndex2.y);
-                    int2 absSeDistance = new int2(math.abs(seDistance.x), math.abs(seDistance.y));
-                    int2 distanceDifference = new int2(absCornerDistance.x - absSeDistance.x, absCornerDistance.y - absSeDistance.y);
-                    if (distanceDifference.y * distanceDifference.x < 0) //if losc
-                    {
-                        UnsafeList<IntegrationTile> integrationSector = integrationField[sectorMarks[sectorIndex1d]].integrationSector;
-                        IntegrationTile cornerTile = integrationSector[localIndex1d];
-                        cornerTile.Mark = IntegrationMark.LOSC;
-                        integrationSector[localIndex1d] = cornerTile;
-                        int2 sIndex = To2D(s, fieldColAmount);
-                        int2 eIndex = To2D(e, fieldColAmount);
-                        int2 divergent = distanceDifference.x > 0 ? sIndex : eIndex;
-                        float2 loscPosition = cornerPos + new float2(tileSize / 2, -tileSize / 2);
-                        float2 sourcePosition = waveFrontTilePos + new float2(-tileSize / 2, tileSize / 2);
-                        NativeList<int2> blockOffsets = GetOffsets(sourcePosition, loscPosition, out int2 stepAmount);
-                        int2 step = divergent;
-                        SetLOSBlocks(blockOffsets, step, stepAmount);
-                    }
-                }
-                void CalculateForSW()
-                {
-                    int2 swIndex2 = To2D(sw, fieldColAmount);
-                    int2 swDistance = new int2(source.x - swIndex2.x, source.y - swIndex2.y);
-                    int2 absSwDistance = new int2(math.abs(swDistance.x), math.abs(swDistance.y));
-                    int2 distanceDifference = new int2(absCornerDistance.x - absSwDistance.x, absCornerDistance.y - absSwDistance.y);
-                    if (distanceDifference.y * distanceDifference.x < 0) //if losc
-                    {
-                        UnsafeList<IntegrationTile> integrationSector = integrationField[sectorMarks[sectorIndex1d]].integrationSector;
-                        IntegrationTile cornerTile = integrationSector[localIndex1d];
-                        cornerTile.Mark = IntegrationMark.LOSC;
-                        integrationSector[localIndex1d] = cornerTile;
-                        int2 sIndex = To2D(s, fieldColAmount);
-                        int2 wIndex = To2D(w, fieldColAmount);
-                        int2 divergent = distanceDifference.x > 0 ? sIndex : wIndex;
-                        float2 loscPosition = cornerPos + new float2(-tileSize / 2, -tileSize / 2);
-                        float2 sourcePosition = waveFrontTilePos + new float2(tileSize / 2, tileSize / 2);
-                        NativeList<int2> blockOffsets = GetOffsets(sourcePosition, loscPosition, out int2 stepAmount);
-                        int2 step = divergent;
-                        SetLOSBlocks(blockOffsets, step, stepAmount);
-                    }
-                }
-                void CalculateForNW()
-                {
-                    int2 nwIndex2 = To2D(nw, fieldColAmount);
-                    int2 nwDistance = new int2(source.x - nwIndex2.x, source.y - nwIndex2.y);
-                    int2 absNwDistance = new int2(math.abs(nwDistance.x), math.abs(nwDistance.y));
-                    int2 distanceDifference = new int2(absCornerDistance.x - absNwDistance.x, absCornerDistance.y - absNwDistance.y);
-                    if (distanceDifference.y * distanceDifference.x < 0) //if losc
-                    {
-                        UnsafeList<IntegrationTile> integrationSector = integrationField[sectorMarks[sectorIndex1d]].integrationSector;
-                        IntegrationTile cornerTile = integrationSector[localIndex1d];
-                        cornerTile.Mark = IntegrationMark.LOSC;
-                        integrationSector[localIndex1d] = cornerTile;
-                        int2 nIndex = To2D(n, fieldColAmount);
-                        int2 wIndex = To2D(w, fieldColAmount);
-                        int2 divergent = distanceDifference.x > 0 ? nIndex : wIndex;
-                        float2 loscPosition = cornerPos + new float2(-tileSize / 2, tileSize / 2);
-                        float2 sourcePosition = waveFrontTilePos + new float2(tileSize / 2, -tileSize / 2);
-                        NativeList<int2> blockOffsets = GetOffsets(sourcePosition, loscPosition, out int2 stepAmount);
-                        int2 step = divergent;
-                        SetLOSBlocks(blockOffsets, step, stepAmount);
-                    }
-                }
-
             }
         }
         int To1D(int2 index2, int colAmount)
@@ -519,16 +523,5 @@ public struct LOSJob : IJob
             if (index.y <= 0) { return true; }
             return false;
         }
-    }
-}
-public struct LocalIndex2d
-{
-    public int2 index;
-    public int2 sector;
-
-    public LocalIndex2d(int2 localIndex, int2 sectorIndex)
-    {
-        index = localIndex;
-        sector = sectorIndex;
     }
 }

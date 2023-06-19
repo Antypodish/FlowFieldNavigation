@@ -13,9 +13,9 @@ public struct IntFieldJob : IJob
     public int FieldRowAmount;
     public int SectorColAmount;
     public int SectorMatrixColAmount;
-    public NativeArray<int> SectorMarks;
     public NativeList<IntegrationFieldSector> IntegrationField;
     public NativeQueue<LocalIndex1d> IntegrationQueue;
+    [ReadOnly] public NativeArray<int> SectorMarks;
     [ReadOnly] public NativeArray<byte> Costs;
     public void Execute()
     {
@@ -29,11 +29,9 @@ public struct IntFieldJob : IJob
         NativeArray<byte> costs = Costs;
         NativeQueue<LocalIndex1d> integrationQueue = IntegrationQueue;
         int fieldColAmount = FieldColAmount;
-        int fieldTileAmount = fieldColAmount * FieldRowAmount;
         int sectorColAmount = SectorColAmount;
         int sectorTileAmount = sectorColAmount * sectorColAmount;
         int sectorMatrixColAmount = SectorMatrixColAmount;
-        int sectorMatrixTileAmount = sectorMatrixColAmount * sectorMatrixColAmount;
 
         ///////////LOOKUP TABLE////////////////
         ///////////////////////////////////////
@@ -284,36 +282,4 @@ public struct IntFieldJob : IJob
             return To1D(sectorStartIndex + local2d, fieldColAmount);
         }
     }
-}
-public struct LocalIndex1d
-{
-    public int index;
-    public int sector;
-
-    public LocalIndex1d(int localIndex, int sectorIndex)
-    {
-        index = localIndex;
-        sector = sectorIndex;
-    }
-}
-public struct IntegrationTile
-{
-    public float Cost;
-    public IntegrationMark Mark;
-
-    public IntegrationTile(float cost, IntegrationMark mark)
-    {
-        Cost = cost;
-        Mark = mark;
-    }
-}
-public enum IntegrationMark : byte
-{
-    None = 0,
-    Irrelevant,
-    Relevant,
-    LOSPass,
-    LOSBlock,
-    LOSC,
-    Awaiting,
 }
