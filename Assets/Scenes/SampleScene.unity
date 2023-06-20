@@ -281,6 +281,8 @@ MonoBehaviour:
   RowAmount: 0
   ColumnAmount: 0
   SectorTileAmount: 10
+  SectorMatrixColAmount: 0
+  SectorMatrixRowAmount: 0
 --- !u!4 &638972357
 Transform:
   m_ObjectHideFlags: 0

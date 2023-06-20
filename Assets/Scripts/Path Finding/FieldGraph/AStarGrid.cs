@@ -20,155 +20,183 @@ public struct AStarGrid
         _integratedCosts.Dispose();
         _searchQueue.Dispose();
     }
-    public NativeArray<AStarTile> GetIntegratedCostsFor(Sector sector, Index2 target, NativeArray<byte> costs, NativeArray<DirectionData> directions)
+    public NativeArray<AStarTile> GetIntegratedCostsFor(Sector sector, Index2 target, NativeArray<byte> costs)
     {
-        Reset(sector, costs);
         int targetIndex = Index2.ToIndex(target, _colAmount);
+        NativeArray<AStarTile> integratedCosts = _integratedCosts;
+        NativeQueue<int> searchQueue = _searchQueue;
+        int colAmount = _colAmount;
+        int rowAmount = _rowAmount;
 
+        /////////////LOOKUP TABLE/////////////////
+        //////////////////////////////////////////
+        int n;
+        int e;
+        int s;
+        int w;
+        int ne;
+        int se;
+        int sw;
+        int nw;
+        //////////////////////////////////////////
+
+
+        Reset(sector, costs);
         AStarTile targetTile = _integratedCosts[targetIndex];
         targetTile.IntegratedCost = 0f;
         targetTile.Enqueued = true;
         _integratedCosts[targetIndex] = targetTile;
-        Enqueue(directions[targetIndex]);
+        SetLookupTable(targetIndex);
+        Enqueue();
 
         while (!_searchQueue.IsEmpty())
         {
             int index = _searchQueue.Dequeue();
             AStarTile tile = _integratedCosts[index];
-            tile.IntegratedCost = GetCost(directions[index]);
+            SetLookupTable(index);
+            tile.IntegratedCost = GetCost();
             _integratedCosts[index] = tile;
-            Enqueue(directions[index]);
+            Enqueue();
         }
         return _integratedCosts;
-    }
-    void Reset(Sector sector, NativeArray<byte> costs)
-    {
-        Index2 lowerBound = sector.StartIndex;
-        Index2 upperBound = new Index2(sector.StartIndex.R + sector.Size - 1, sector.StartIndex.C + sector.Size - 1);
-        int lowerBoundIndex = Index2.ToIndex(lowerBound, _colAmount);
-        int upperBoundIndex = Index2.ToIndex(upperBound, _colAmount);
 
-        for (int r = lowerBoundIndex; r < lowerBoundIndex + sector.Size * _colAmount; r += _colAmount)
+        void SetLookupTable(int index)
         {
-            for (int i = r; i < r + sector.Size; i++)
+            n = index + colAmount;
+            e = index + 1;
+            s = index - colAmount;
+            w = index - 1;
+            ne = n + 1;
+            se = s + 1;
+            sw = s - 1;
+            nw = n - 1;
+        }
+        void Reset(Sector sector, NativeArray<byte> costs)
+        {
+            Index2 lowerBound = sector.StartIndex;
+            Index2 upperBound = new Index2(sector.StartIndex.R + sector.Size - 1, sector.StartIndex.C + sector.Size - 1);
+            int lowerBoundIndex = Index2.ToIndex(lowerBound, colAmount);
+            int upperBoundIndex = Index2.ToIndex(upperBound, colAmount);
+
+            for (int r = lowerBoundIndex; r < lowerBoundIndex + sector.Size * colAmount; r += colAmount)
             {
-                if (costs[i] == byte.MaxValue)
+                for (int i = r; i < r + sector.Size; i++)
                 {
-                    _integratedCosts[i] = new AStarTile(float.MaxValue, true);
-                    continue;
+                    if (costs[i] == byte.MaxValue)
+                    {
+                        integratedCosts[i] = new AStarTile(float.MaxValue, true);
+                        continue;
+                    }
+                    integratedCosts[i] = new AStarTile(float.MaxValue, false);
                 }
-                _integratedCosts[i] = new AStarTile(float.MaxValue, false);
             }
+            SetEdgesUnwalkable(sector, lowerBoundIndex, upperBoundIndex);
         }
-        SetEdgesUnwalkable(sector, lowerBoundIndex, upperBoundIndex);
-    }
-    void SetEdgesUnwalkable(Sector sector, int lowerBoundIndex, int upperBoundIndex)
-    {
-        bool notOnBottom = !sector.IsOnBottom();
-        bool notOnTop = !sector.IsOnTop(_rowAmount);
-        bool notOnRight = !sector.IsOnRight(_colAmount);
-        bool notOnLeft = !sector.IsOnLeft();
-        if (notOnBottom)
+        void SetEdgesUnwalkable(Sector sector, int lowerBoundIndex, int upperBoundIndex)
         {
-            for (int i = lowerBoundIndex - _colAmount; i < (lowerBoundIndex - _colAmount) + sector.Size; i++)
+            bool notOnBottom = !sector.IsOnBottom();
+            bool notOnTop = !sector.IsOnTop(rowAmount);
+            bool notOnRight = !sector.IsOnRight(colAmount);
+            bool notOnLeft = !sector.IsOnLeft();
+            if (notOnBottom)
             {
-                _integratedCosts[i] = new AStarTile(float.MaxValue, true);
+                for (int i = lowerBoundIndex - colAmount; i < (lowerBoundIndex - colAmount) + sector.Size; i++)
+                {
+                    integratedCosts[i] = new AStarTile(float.MaxValue, true);
+                }
             }
-        }
-        if (notOnTop)
-        {
-            for (int i = upperBoundIndex + _colAmount; i > upperBoundIndex + _colAmount - sector.Size; i--)
+            if (notOnTop)
             {
-                _integratedCosts[i] = new AStarTile(float.MaxValue, true);
+                for (int i = upperBoundIndex + colAmount; i > upperBoundIndex + colAmount - sector.Size; i--)
+                {
+                    integratedCosts[i] = new AStarTile(float.MaxValue, true);
+                }
             }
-        }
-        if (notOnRight)
-        {
-            for (int i = upperBoundIndex + 1; i >= lowerBoundIndex + sector.Size; i -= _colAmount)
+            if (notOnRight)
             {
-                _integratedCosts[i] = new AStarTile(float.MaxValue, true);
+                for (int i = upperBoundIndex + 1; i >= lowerBoundIndex + sector.Size; i -= colAmount)
+                {
+                    integratedCosts[i] = new AStarTile(float.MaxValue, true);
+                }
             }
-        }
-        if (notOnLeft)
-        {
-            for (int i = lowerBoundIndex - 1; i <= upperBoundIndex - sector.Size; i += _colAmount)
+            if (notOnLeft)
             {
-                _integratedCosts[i] = new AStarTile(float.MaxValue, true);
+                for (int i = lowerBoundIndex - 1; i <= upperBoundIndex - sector.Size; i += colAmount)
+                {
+                    integratedCosts[i] = new AStarTile(float.MaxValue, true);
+                }
+            }
+            if (notOnRight && notOnBottom)
+            {
+                integratedCosts[lowerBoundIndex + sector.Size - colAmount] = new AStarTile(float.MaxValue, true);
+            }
+            if (notOnRight && notOnTop)
+            {
+                integratedCosts[upperBoundIndex + colAmount + 1] = new AStarTile(float.MaxValue, true);
+            }
+            if (notOnLeft && notOnBottom)
+            {
+                integratedCosts[lowerBoundIndex - colAmount - 1] = new AStarTile(float.MaxValue, true);
+            }
+            if (notOnLeft && notOnTop)
+            {
+                integratedCosts[upperBoundIndex + colAmount - sector.Size] = new AStarTile(float.MaxValue, true);
             }
         }
-        if (notOnRight && notOnBottom)
+        void Enqueue()
         {
-            _integratedCosts[lowerBoundIndex + sector.Size - _colAmount] = new AStarTile(float.MaxValue, true);
+            if (!integratedCosts[n].Enqueued)
+            {
+                searchQueue.Enqueue(n);
+                AStarTile tile = integratedCosts[n];
+                tile.Enqueued = true;
+                integratedCosts[n] = tile;
+            }
+            if (!integratedCosts[e].Enqueued)
+            {
+                searchQueue.Enqueue(e);
+                AStarTile tile = integratedCosts[e];
+                tile.Enqueued = true;
+                integratedCosts[e] = tile;
+            }
+            if (!integratedCosts[s].Enqueued)
+            {
+                searchQueue.Enqueue(s);
+                AStarTile tile = integratedCosts[s];
+                tile.Enqueued = true;
+                integratedCosts[s] = tile;
+            }
+            if (!integratedCosts[w].Enqueued)
+            {
+                searchQueue.Enqueue(w);
+                AStarTile tile = integratedCosts[w];
+                tile.Enqueued = true;
+                integratedCosts[w] = tile;
+            }
         }
-        if (notOnRight && notOnTop)
+        float GetCost()
         {
-            _integratedCosts[upperBoundIndex + _colAmount + 1] = new AStarTile(float.MaxValue, true);
-        }
-        if (notOnLeft && notOnBottom)
-        {
-            _integratedCosts[lowerBoundIndex - _colAmount - 1] = new AStarTile(float.MaxValue, true);
-        }
-        if (notOnLeft && notOnTop)
-        {
-            _integratedCosts[upperBoundIndex + _colAmount - sector.Size] = new AStarTile(float.MaxValue, true);
+            float costToReturn = float.MaxValue;
+            float nCost = integratedCosts[n].IntegratedCost + 1f;
+            float neCost = integratedCosts[ne].IntegratedCost + 1.4f;
+            float eCost = integratedCosts[e].IntegratedCost + 1f;
+            float seCost = integratedCosts[se].IntegratedCost + 1.4f;
+            float sCost = integratedCosts[s].IntegratedCost + 1f;
+            float swCost = integratedCosts[sw].IntegratedCost + 1.4f;
+            float wCost = integratedCosts[w].IntegratedCost + 1f;
+            float nwCost = integratedCosts[nw].IntegratedCost + 1.4f;
+            if (nCost < costToReturn) { costToReturn = nCost; }
+            if (neCost < costToReturn) { costToReturn = neCost; }
+            if (eCost < costToReturn) { costToReturn = eCost; }
+            if (seCost < costToReturn) { costToReturn = seCost; }
+            if (sCost < costToReturn) { costToReturn = sCost; }
+            if (swCost < costToReturn) { costToReturn = swCost; }
+            if (wCost < costToReturn) { costToReturn = wCost; }
+            if (nwCost < costToReturn) { costToReturn = nwCost; }
+            return costToReturn;
         }
     }
-    void Enqueue(DirectionData directions)
-    {
-        int n = directions.N;
-        int e = directions.E;
-        int s = directions.S;
-        int w = directions.W;
-        if (!_integratedCosts[n].Enqueued)
-        {
-            _searchQueue.Enqueue(n);
-            AStarTile tile = _integratedCosts[n];
-            tile.Enqueued = true;
-            _integratedCosts[n] = tile;
-        }
-        if (!_integratedCosts[e].Enqueued)
-        {
-            _searchQueue.Enqueue(e);
-            AStarTile tile = _integratedCosts[e];
-            tile.Enqueued = true;
-            _integratedCosts[e] = tile;
-        }
-        if (!_integratedCosts[s].Enqueued)
-        {
-            _searchQueue.Enqueue(s);
-            AStarTile tile = _integratedCosts[s];
-            tile.Enqueued = true;
-            _integratedCosts[s] = tile;
-        }
-        if (!_integratedCosts[w].Enqueued)
-        {
-            _searchQueue.Enqueue(w);
-            AStarTile tile = _integratedCosts[w];
-            tile.Enqueued = true;
-            _integratedCosts[w] = tile;
-        }
-    }
-    float GetCost(DirectionData directions)
-    {
-        float costToReturn = float.MaxValue;
-        float nCost = _integratedCosts[directions.N].IntegratedCost + 1f;
-        float neCost = _integratedCosts[directions.NE].IntegratedCost + 1.4f;
-        float eCost = _integratedCosts[directions.E].IntegratedCost + 1f;
-        float seCost = _integratedCosts[directions.SE].IntegratedCost + 1.4f;
-        float sCost = _integratedCosts[directions.S].IntegratedCost + 1f;
-        float swCost = _integratedCosts[directions.SW].IntegratedCost + 1.4f;
-        float wCost = _integratedCosts[directions.W].IntegratedCost + 1f;
-        float nwCost = _integratedCosts[directions.NW].IntegratedCost + 1.4f;
-        if (nCost < costToReturn) { costToReturn = nCost; }
-        if (neCost < costToReturn) { costToReturn = neCost; }
-        if (eCost < costToReturn) { costToReturn = eCost; }
-        if (seCost < costToReturn) { costToReturn = seCost; }
-        if (sCost < costToReturn) { costToReturn = sCost; }
-        if (swCost < costToReturn) { costToReturn = swCost; }
-        if (wCost < costToReturn) { costToReturn = wCost; }
-        if (nwCost < costToReturn) { costToReturn = nwCost; }
-        return costToReturn;
-    }
+    
 }
 public struct AStarTile
 {

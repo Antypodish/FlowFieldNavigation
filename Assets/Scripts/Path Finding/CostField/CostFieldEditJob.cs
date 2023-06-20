@@ -17,7 +17,6 @@ public struct CostFieldEditJob : IJob
     public NativeArray<PortalNode> PortalNodes;
     public NativeArray<PortalToPortal> PorPtrs;
     public NativeArray<byte> Costs;
-    [ReadOnly] public NativeArray<DirectionData> Directions;
     public int FieldColAmount;
     public int FieldRowAmount;
     public float FieldTileSize;
@@ -447,34 +446,56 @@ public struct CostFieldEditJob : IJob
     NativeArray<AStarTile> GetIntegratedCostsFor(Sector sector, Index2 target)
     {
         //DATA
-
         int fieldColAmount = FieldColAmount;
         int fieldRowAmount = FieldRowAmount;
         NativeArray<byte> costs = Costs;
         NativeArray<AStarTile> integratedCosts = IntegratedCosts;
         NativeQueue<int> aStarQueue = AStarQueue;
 
-        //CODE
+        /////////////LOOKUP TABLE/////////////////
+        //////////////////////////////////////////
+        int n;
+        int e;
+        int s;
+        int w;
+        int ne;
+        int se;
+        int sw;
+        int nw;
+        //////////////////////////////////////////
 
+        //CODE
         Reset(sector);
         int targetIndex = Index2.ToIndex(target, FieldColAmount);
         AStarTile targetTile = integratedCosts[targetIndex];
         targetTile.IntegratedCost = 0f;
         targetTile.Enqueued = true;
         integratedCosts[targetIndex] = targetTile;
-        Enqueue(Directions[targetIndex]);
+        SetLookupTable(targetIndex);
+        Enqueue();
         while (!AStarQueue.IsEmpty())
         {
             int index = AStarQueue.Dequeue();
             AStarTile tile = integratedCosts[index];
-            tile.IntegratedCost = GetCost(Directions[index]);
+            SetLookupTable(index);
+            tile.IntegratedCost = GetCost();
             integratedCosts[index] = tile;
-            Enqueue(Directions[index]);
+            Enqueue();
         }
         return integratedCosts;
 
         //HELPERS
-
+        void SetLookupTable(int index)
+        {
+            n = index + fieldColAmount;
+            e = index + 1;
+            s = index - fieldColAmount;
+            w = index - 1;
+            ne = n + 1;
+            se = s + 1;
+            sw = s - 1;
+            nw = n - 1;
+        }
         void Reset(Sector sector)
         {
             Index2 lowerBound = sector.StartIndex;
@@ -549,12 +570,8 @@ public struct CostFieldEditJob : IJob
                 }
             }
         }
-        void Enqueue(DirectionData directions)
+        void Enqueue()
         {
-            int n = directions.N;
-            int e = directions.E;
-            int s = directions.S;
-            int w = directions.W;
             if (!integratedCosts[n].Enqueued)
             {
                 aStarQueue.Enqueue(n);
@@ -584,17 +601,17 @@ public struct CostFieldEditJob : IJob
                 integratedCosts[w] = tile;
             }
         }
-        float GetCost(DirectionData directions)
+        float GetCost()
         {
             float costToReturn = float.MaxValue;
-            float nCost = integratedCosts[directions.N].IntegratedCost + 1f;
-            float neCost = integratedCosts[directions.NE].IntegratedCost + 1.4f;
-            float eCost = integratedCosts[directions.E].IntegratedCost + 1f;
-            float seCost = integratedCosts[directions.SE].IntegratedCost + 1.4f;
-            float sCost = integratedCosts[directions.S].IntegratedCost + 1f;
-            float swCost = integratedCosts[directions.SW].IntegratedCost + 1.4f;
-            float wCost = integratedCosts[directions.W].IntegratedCost + 1f;
-            float nwCost = integratedCosts[directions.NW].IntegratedCost + 1.4f;
+            float nCost = integratedCosts[n].IntegratedCost + 1f;
+            float neCost = integratedCosts[ne].IntegratedCost + 1.4f;
+            float eCost = integratedCosts[e].IntegratedCost + 1f;
+            float seCost = integratedCosts[se].IntegratedCost + 1.4f;
+            float sCost = integratedCosts[s].IntegratedCost + 1f;
+            float swCost = integratedCosts[sw].IntegratedCost + 1.4f;
+            float wCost = integratedCosts[w].IntegratedCost + 1f;
+            float nwCost = integratedCosts[nw].IntegratedCost + 1.4f;
             if (nCost < costToReturn) { costToReturn = nCost; }
             if (neCost < costToReturn) { costToReturn = neCost; }
             if (eCost < costToReturn) { costToReturn = eCost; }

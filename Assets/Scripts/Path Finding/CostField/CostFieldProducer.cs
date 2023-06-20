@@ -7,28 +7,18 @@ public class CostFieldProducer
     CostField[] _producedCostFields;
 
     //utility
-    public NativeArray<DirectionData> Directions;
     public NativeArray<LocalDirectionData> LocalDirections;
     public CostFieldProducer(WalkabilityData walkabilityData, byte sectorTileAmount)
     {
         _walkabilityData = walkabilityData;
 
         //calculate directions
-        Directions = new NativeArray<DirectionData>(walkabilityData.RowAmount * walkabilityData.ColAmount, Allocator.Persistent);
-        CalculateDirections();
 
         //calculate local directions
         LocalDirections = new NativeArray<LocalDirectionData>(sectorTileAmount * sectorTileAmount, Allocator.Persistent);
         CalculateLocalDirections();
 
         //HELPERS
-        void CalculateDirections()
-        {
-            for (int i = 0; i < Directions.Length; i++)
-            {
-                Directions[i] = new DirectionData(i, walkabilityData.RowAmount, walkabilityData.ColAmount);
-            }
-        }
         void CalculateLocalDirections()
         {
             for (byte i = 0; i < LocalDirections.Length; i++)
@@ -43,7 +33,7 @@ public class CostFieldProducer
         _producedCostFields = new CostField[count];
         for(int i = 0; i < count; i++)
         {
-            _producedCostFields[i] = new CostField(_walkabilityData, Directions, i + minOffset, sectorSize, sectorMatrixColAmount, sectorMatrixRowAmount);
+            _producedCostFields[i] = new CostField(_walkabilityData, i + minOffset, sectorSize, sectorMatrixColAmount, sectorMatrixRowAmount);
             _producedCostFields[i].ScheduleConfigurationJob();
         }
     }

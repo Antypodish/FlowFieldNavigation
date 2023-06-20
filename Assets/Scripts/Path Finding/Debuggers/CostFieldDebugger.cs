@@ -59,7 +59,7 @@ public class CostFieldDebugger
     public void DebugCostFieldWithMesh(int offset)
     {
         Gizmos.color = Color.black;
-        NativeArray<UnsafeList<byte>> costs = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).Costs;
+        NativeArray<UnsafeList<byte>> costs = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).CostsL;
         float yOffset = .02f;
         float tileSize = _pathfindingManager.TileSize;
         int sectorColAmount = _pathfindingManager.SectorTileAmount;

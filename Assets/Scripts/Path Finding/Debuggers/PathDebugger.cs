@@ -211,7 +211,10 @@ public class PathDebugger
                 int2 localIndex = new int2(j % sectorTileAmount, j / sectorTileAmount);
                 Vector3 localIndexPos = new Vector3(localIndex.x * _tileSize, 0f, localIndex.y * _tileSize);
                 Vector3 debugPos = localIndexPos + sectorIndexPos + new Vector3(_tileSize / 2, 0.02f, _tileSize / 2);
-                DrawSquare(debugPos, 0.2f);
+                if (flowSector[j] != FlowData.None)
+                {
+                    DrawSquare(debugPos, 0.2f);
+                }
                 if (flowSector[j] != FlowData.LOS)
                 {
                     DrawFlow(flowSector[j], debugPos);

@@ -56,7 +56,7 @@ public class PathProducer
         int2 destinationIndex = new int2(Mathf.FloorToInt(destination.x / _tileSize), Mathf.FloorToInt(destination.z / _tileSize));
         int destionationIndexFlat = destinationIndex.y * _columnAmount + destinationIndex.x;
         CostField pickedCostField = _costFieldProducer.GetCostFieldWithOffset(offset);
-        if (pickedCostField.costs[destionationIndexFlat] == byte.MaxValue) { return null; }
+        if (pickedCostField.CostsG[destionationIndexFlat] == byte.MaxValue) { return null; }
 
         NativeArray<float> portalDistances = new NativeArray<float>(pickedCostField.FieldGraph.PortalNodes.Length, Allocator.Persistent);
         NativeArray<int> connectionIndicies = new NativeArray<int>(pickedCostField.FieldGraph.PortalNodes.Length, Allocator.Persistent);
@@ -140,7 +140,7 @@ public class PathProducer
                 SourcePositions = sources,
                 PorPtrs = pickedCostField.FieldGraph.PorToPorPtrs,
                 SectorNodes = pickedCostField.FieldGraph.SectorNodes,
-                Costs = pickedCostField.costs,
+                Costs = pickedCostField.CostsG,
                 SectorTileAmount = _sectorTileAmount,
                 SectorMatrixColAmount = _columnAmount / _sectorTileAmount,
                 LocalDirections = _costFieldProducer.LocalDirections,
@@ -167,7 +167,7 @@ public class PathProducer
                 SectorTileAmount = _sectorTileAmount,
                 SectorMatrixColAmount = _sectorMatrixColAmount,
                 SectorMatrixRowAmount = _sectorMatrixRowAmount,
-                Costs = pickedCostField.costs,
+                Costs = pickedCostField.CostsG,
                 Target = destinationIndex,
                 SectorMarks = sectorMarks,
                 IntegrationField = integrationField,
@@ -180,7 +180,7 @@ public class PathProducer
             return new IntFieldJob()
             {
                 IntegrationQueue = blockedWaveFronts,
-                Costs = pickedCostField.costs,
+                Costs = pickedCostField.CostsG,
                 IntegrationField = integrationField,
                 SectorMarks = sectorMarks,
                 SectorColAmount = _sectorTileAmount,

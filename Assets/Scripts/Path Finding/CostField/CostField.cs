@@ -7,30 +7,28 @@ using Unity.Mathematics;
 public class CostField
 {
     public int Offset;
-    public NativeArray<byte> costs;
-    public NativeArray<UnsafeList<byte>> Costs; 
+    public NativeArray<byte> CostsG;
+    public NativeArray<UnsafeList<byte>> CostsL; 
     public FieldGraph FieldGraph;
-    NativeArray<DirectionData> Directions;
 
     float _fieldTileSize;
     JobHandle _fieldGraphConfigJobHandle;
-    public CostField(WalkabilityData walkabilityData, NativeArray<DirectionData> directions, int offset, int sectorColAmount, int sectorMatrixColAmount, int sectorMatrixRowAmount)
+    public CostField(WalkabilityData walkabilityData, int offset, int sectorColAmount, int sectorMatrixColAmount, int sectorMatrixRowAmount)
     {
         _fieldTileSize = walkabilityData.TileSize;
-        Directions = directions;
         int fieldRowAmount = walkabilityData.RowAmount;
         int fieldColAmount = walkabilityData.ColAmount;
         WalkabilityCell[][] walkabilityMatrix = walkabilityData.WalkabilityMatrix;
         Offset = offset;
 
         //configure costs
-        costs = new NativeArray<byte>(fieldRowAmount * fieldColAmount, Allocator.Persistent);
-        Costs = new NativeArray<UnsafeList<byte>>(sectorMatrixColAmount * sectorMatrixRowAmount, Allocator.Persistent);
+        CostsG = new NativeArray<byte>(fieldRowAmount * fieldColAmount, Allocator.Persistent);
+        CostsL = new NativeArray<UnsafeList<byte>>(sectorMatrixColAmount * sectorMatrixRowAmount, Allocator.Persistent);
         CalculateCosts();
         ConvertToNewCosts();
 
         //allocate field graph
-        FieldGraph = new FieldGraph(costs, Directions, sectorColAmount, fieldRowAmount, fieldColAmount, offset, _fieldTileSize);
+        FieldGraph = new FieldGraph(CostsG, sectorColAmount, fieldRowAmount, fieldColAmount, offset, _fieldTileSize);
 
         //HELPERS
         void CalculateCosts()
@@ -42,7 +40,7 @@ public class CostField
                 {
                     int index = r * fieldColAmount + c;
                     byte cost = walkabilityMatrix[r][c].Walkability == Walkability.Walkable ? (byte)1 : byte.MaxValue;
-                    costs[index] = cost;
+                    CostsG[index] = cost;
                 }
             }
             //apply offset
@@ -63,7 +61,7 @@ public class CostField
                             for (int col = minX; col <= maxX; col++)
                             {
                                 int i = row * fieldColAmount + col;
-                                costs[i] = byte.MaxValue;
+                                CostsG[i] = byte.MaxValue;
                             }
                         }
                     }
@@ -73,11 +71,11 @@ public class CostField
         void ConvertToNewCosts()
         {
             //INITIALIZE SECTORS
-            for(int i = 0; i < Costs.Length; i++)
+            for(int i = 0; i < CostsL.Length; i++)
             {
                 UnsafeList<byte> sector = new UnsafeList<byte>(sectorColAmount * sectorColAmount, Allocator.Persistent);
                 sector.Length = sectorColAmount * sectorColAmount;
-                Costs[i] = sector;
+                CostsL[i] = sector;
             }
 
             //SET COSTS
@@ -93,7 +91,7 @@ public class CostField
                     int sector1d = sector2d.y * sectorMatrixColAmount + sector2d.x;
                     int sectorDownLeft = sectorStart1d;
                     int sectorUpLeft = sectorEnd1d - sectorColAmount;
-                    UnsafeList<byte> curSector = Costs[sector1d];
+                    UnsafeList<byte> curSector = CostsL[sector1d];
                     for (int i = sectorDownLeft; i < sectorUpLeft; i += fieldColAmount)
                     {
                         for(int j = i; j < i + sectorColAmount; j++)
@@ -102,7 +100,7 @@ public class CostField
                             int2 curGeneral2d = new int2(j % fieldColAmount, j / fieldColAmount);
                             int2 curLocal2d = curGeneral2d - sectorStart2d;
                             int curLocal1d = curLocal2d.y * sectorColAmount + curLocal2d.x;
-                            byte curCost = costs[curGeneral1d];
+                            byte curCost = CostsG[curGeneral1d];
                             curSector[curLocal1d] = curCost;
                         }
                     }

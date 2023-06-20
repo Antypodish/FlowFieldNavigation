@@ -18,7 +18,6 @@ public struct FieldGraph
 
     //helper data
     NativeArray<byte> _costs;
-    NativeArray<DirectionData> _directions;
     int _fieldRowAmount;
     int _fieldColAmount;
     float _fieldTileSize;
@@ -26,7 +25,7 @@ public struct FieldGraph
     int _sectorMatrixRowAmount;
     int _sectorMatrixColAmount;
     int _portalPerWindow;
-    public FieldGraph(NativeArray<byte> costs, NativeArray<DirectionData> directions, int sectorSize, int fieldRowAmount, int fieldColAmount, int costFieldOffset, float fieldTileSize)
+    public FieldGraph(NativeArray<byte> costs, int sectorSize, int fieldRowAmount, int fieldColAmount, int costFieldOffset, float fieldTileSize)
     {
         //size calculations
         int sectorMatrixRowAmount = fieldRowAmount / sectorSize;
@@ -54,7 +53,6 @@ public struct FieldGraph
         _sectorTileAmount = sectorSize;
         _portalPerWindow = portalPerWindow;
         _costs = costs;
-        _directions = directions;
         _aStarGrid = new AStarGrid(fieldRowAmount, fieldColAmount);
         SectorNodes = new NativeArray<SectorNode>(sectorAmount, Allocator.Persistent);
         SecToWinPtrs = new NativeArray<int>(secToWinPtrAmount, Allocator.Persistent);
@@ -74,7 +72,6 @@ public struct FieldGraph
             PortalNodes = PortalNodes,
             PorToPorPtrs = PorToPorPtrs,
             Costs = _costs,
-            Directions = _directions,
             FieldColAmount = _fieldColAmount,
             FieldRowAmount = _fieldRowAmount,
             FieldTileSize = _fieldTileSize,
@@ -99,7 +96,6 @@ public struct FieldGraph
             PortalNodes = PortalNodes,
             PorPtrs = PorToPorPtrs,
             Costs = _costs,
-            Directions = _directions,
             FieldColAmount = _fieldColAmount,
             FieldRowAmount = _fieldRowAmount,
             FieldTileSize = _fieldTileSize,
