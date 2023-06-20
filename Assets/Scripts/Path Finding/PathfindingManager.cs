@@ -12,7 +12,6 @@ public class PathfindingManager : MonoBehaviour
     [SerializeField] TerrainGenerator _terrainGenerator;
     [SerializeField] int _maxCostfieldOffset;
 
-    [HideInInspector] public static PathfindingJobScheduler JobScheduler;
     [HideInInspector] public CostFieldProducer CostFieldProducer;
     [HideInInspector] public PathProducer PathProducer;
     [HideInInspector] public NativeArray<Vector3> TilePositions;
@@ -27,7 +26,6 @@ public class PathfindingManager : MonoBehaviour
         TileSize = _terrainGenerator.TileSize;
         RowAmount = _terrainGenerator.RowAmount;
         ColumnAmount = _terrainGenerator.ColumnAmount;
-        JobScheduler = new PathfindingJobScheduler(this);
         CostFieldProducer = new CostFieldProducer(_terrainGenerator.WalkabilityData, SectorTileAmount);
         CostFieldProducer.StartCostFieldProduction(0, _maxCostfieldOffset, SectorTileAmount);
         PathProducer = new PathProducer(this);
@@ -37,12 +35,7 @@ public class PathfindingManager : MonoBehaviour
     }
     private void Update()
     {
-        JobScheduler.Update();
         PathProducer.Update();
-    }
-    private void LateUpdate()
-    {
-
     }
     void CalculateTilePositions()
     {
@@ -58,14 +51,5 @@ public class PathfindingManager : MonoBehaviour
     public Path SetDestination(NativeArray<Vector3> sources, Vector3 target)
     {
         return PathProducer.ProducePath(sources, target, 0);
-    }
-    public void EditCost(Index2 bound1, Index2 bound2, byte newCost)
-    {
-        CostFieldEditJob[] editJobs = CostFieldProducer.GetEditJobs(new BoundaryData(bound1, bound2), newCost);
-        JobScheduler.AddCostEditJob(editJobs);
-    }
-    public void SignalEditedSectors(NativeList<int> editedSectorIndicies)
-    {
-        PathProducer.MarkSectors(editedSectorIndicies);
     }
 }

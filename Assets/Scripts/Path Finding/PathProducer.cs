@@ -204,18 +204,4 @@ public class PathProducer
             };
         }
     }
-    public void MarkSectors(NativeList<int> editedSectorIndicies)
-    {/*
-        for(int i = 0; i < ProducedPaths.Count; i++)
-        {
-            NativeList<int> pickedSectors = ProducedPaths[i].PickedSectors;
-            for (int j = 0; j < editedSectorIndicies.Length; j++)
-            {
-                if (pickedSectors.Contains(editedSectorIndicies[j]))
-                {
-                    ProducedPaths[i].SetState(PathState.ToBeUpdated);
-                }
-            }
-        }*/
-    }
 }
