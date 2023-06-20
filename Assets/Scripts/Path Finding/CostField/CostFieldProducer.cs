@@ -37,13 +37,13 @@ public class CostFieldProducer
             }
         }
     }
-    public void StartCostFieldProduction(int minOffset, int maxOffset, int sectorSize)
+    public void StartCostFieldProduction(int minOffset, int maxOffset, int sectorSize, int sectorMatrixColAmount, int sectorMatrixRowAmount)
     {
         int count = maxOffset - minOffset + 1;
         _producedCostFields = new CostField[count];
         for(int i = 0; i < count; i++)
         {
-            _producedCostFields[i] = new CostField(_walkabilityData, Directions, i + minOffset, sectorSize);
+            _producedCostFields[i] = new CostField(_walkabilityData, Directions, i + minOffset, sectorSize, sectorMatrixColAmount, sectorMatrixRowAmount);
             _producedCostFields[i].ScheduleConfigurationJob();
         }
     }

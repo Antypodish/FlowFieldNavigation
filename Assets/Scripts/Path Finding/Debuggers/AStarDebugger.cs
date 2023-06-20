@@ -24,7 +24,7 @@ public class AStarDebugger
     {
         float yOffset = .2f;
         FieldGraph fieldGraph = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).FieldGraph;
-        NativeArray<byte> costs = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).Costs;
+        NativeArray<byte> costs = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).costs;
         NativeArray<DirectionData> directions = _pathfindingManager.CostFieldProducer.Directions;
         SetClickedPortalNode(fieldGraph);
         Portal clickedPortal1 = _clickedPortalNode.Portal1;

@@ -19,6 +19,8 @@ public class PathfindingManager : MonoBehaviour
     [HideInInspector] public int RowAmount;
     [HideInInspector] public int ColumnAmount;
     [HideInInspector] public byte SectorTileAmount = 10;
+    [HideInInspector] public int SectorMatrixColAmount;
+    [HideInInspector] public int SectorMatrixRowAmount;
 
     private void Start()
     {
@@ -26,8 +28,10 @@ public class PathfindingManager : MonoBehaviour
         TileSize = _terrainGenerator.TileSize;
         RowAmount = _terrainGenerator.RowAmount;
         ColumnAmount = _terrainGenerator.ColumnAmount;
+        SectorMatrixColAmount = ColumnAmount / SectorTileAmount;
+        SectorMatrixRowAmount = RowAmount / SectorTileAmount;
         CostFieldProducer = new CostFieldProducer(_terrainGenerator.WalkabilityData, SectorTileAmount);
-        CostFieldProducer.StartCostFieldProduction(0, _maxCostfieldOffset, SectorTileAmount);
+        CostFieldProducer.StartCostFieldProduction(0, _maxCostfieldOffset, SectorTileAmount, SectorMatrixColAmount, SectorMatrixRowAmount);
         PathProducer = new PathProducer(this);
         TilePositions = new NativeArray<Vector3>(RowAmount * ColumnAmount, Allocator.Persistent);
         CalculateTilePositions();

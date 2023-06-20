@@ -3,6 +3,8 @@
 using UnityEngine;
 using Unity.Collections;
 using UnityEditor;
+using Unity.Collections.LowLevel.Unsafe;
+using Unity.Mathematics;
 
 public class CostFieldDebugger
 {
@@ -57,22 +59,34 @@ public class CostFieldDebugger
     public void DebugCostFieldWithMesh(int offset)
     {
         Gizmos.color = Color.black;
-        NativeArray<byte> costs = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).Costs;
+        NativeArray<UnsafeList<byte>> costs = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).Costs;
         float yOffset = .02f;
         float tileSize = _pathfindingManager.TileSize;
-        int rowAmount = _pathfindingManager.RowAmount;
-        int colAmount = _pathfindingManager.ColumnAmount;
+        int sectorColAmount = _pathfindingManager.SectorTileAmount;
+        int sectorMatrixColAmount = _pathfindingManager.SectorMatrixColAmount;
 
-        for (int r = 0; r < rowAmount; r++)
+        for(int s = 0; s < costs.Length; s++)
         {
-            for(int c = 0; c < colAmount; c++)
+            UnsafeList<byte> sector = costs[s];
+            Vector3 sectorStartPos = GetSectorStartPosition(s, sectorMatrixColAmount, sectorColAmount, tileSize);
+            for(int i = 0; i < sector.Length; i++)
             {
-                int index = r * colAmount + c;
-                if (costs[index] == 1) { continue; }
+                Vector3 indexPos = GetIndexPosition(sectorStartPos, i, sectorColAmount, tileSize);
+                if (sector[i] == 1) { continue; }
+                Gizmos.DrawMesh(_debugMesh, indexPos);
+            }
+        }
 
-                Vector3 pos = new Vector3(c * tileSize, yOffset, r * tileSize);
-                Gizmos.DrawMesh(_debugMesh, pos);
-            }            
+        Vector3 GetSectorStartPosition(int sector1d, int sectorMatrixColAmount, int sectorColAmount, float tileSize)
+        {
+            int2 sector2d = new int2(sector1d % sectorMatrixColAmount, sector1d / sectorMatrixColAmount);
+            return new Vector3(sector2d.x * sectorColAmount * tileSize, yOffset, sector2d.y * sectorColAmount * tileSize);
+        }
+        Vector3 GetIndexPosition(Vector3 sectorStartPosition, int local1d, int sectorColAmount, float tileSize)
+        {
+            int2 local2d = new int2(local1d % sectorColAmount, local1d / sectorColAmount);
+            Vector3 localIndexPos = new Vector3(local2d.x * tileSize, yOffset, local2d.y * tileSize);
+            return sectorStartPosition + localIndexPos;
         }
     }
 }
