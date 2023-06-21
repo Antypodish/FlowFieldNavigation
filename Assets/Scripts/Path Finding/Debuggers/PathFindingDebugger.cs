@@ -8,6 +8,7 @@ public class PathFindingDebugger : MonoBehaviour
     [SerializeField] CostFieldOffset _costFieldOffset;
     [Header("Field Debugger")]
     [SerializeField] bool _costField;
+    [SerializeField] bool _neighbours;
     [SerializeField] bool _sectors;
     [SerializeField] bool _windows;
     [SerializeField] bool _sectorWindows;
@@ -33,6 +34,7 @@ public class PathFindingDebugger : MonoBehaviour
     SectorGraphDebugger _sectorGraphDebugger;
     PortalDebugger _portalDebugger;
     AStarDebugger _aStarDebugger;
+    NeighborDebugger _neighborDebugger;
     private void Start()
     {
         _costFieldDebugger = new CostFieldDebugger(_pathfindingManager);
@@ -41,6 +43,8 @@ public class PathFindingDebugger : MonoBehaviour
         _sectorGraphDebugger = new SectorGraphDebugger(_pathfindingManager);
         _portalDebugger = new PortalDebugger(_pathfindingManager);
         _aStarDebugger = new AStarDebugger(_pathfindingManager);
+        _neighborDebugger = new NeighborDebugger(_pathfindingManager);
+        
     }
     private void OnDrawGizmos()
     {
@@ -53,6 +57,7 @@ public class PathFindingDebugger : MonoBehaviour
         if(_portalsOnSector && _portalDebugger != null) { _portalDebugger.DebugPortalsOnClickedSector((int) _costFieldOffset); }
         if(_costsToPortal && _portalDebugger != null) { _portalDebugger.DebugCostsToClickedPortal((int) _costFieldOffset); }
         if(_AStar && _aStarDebugger != null) { _aStarDebugger.DebugAstarForPortal((int) _costFieldOffset); }
+        if(_neighbours && _neighborDebugger != null) { _neighborDebugger.DebugNeighbours(); }
 
         PathDebugger pathDebugger = new PathDebugger(_pathfindingManager);
         if (_debugBFS && pathDebugger != null) { pathDebugger.DebugBFS(); }

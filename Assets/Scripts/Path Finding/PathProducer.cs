@@ -143,7 +143,7 @@ public class PathProducer
                 Costs = pickedCostField.CostsG,
                 SectorTileAmount = _sectorTileAmount,
                 SectorMatrixColAmount = _columnAmount / _sectorTileAmount,
-                LocalDirections = _costFieldProducer.LocalDirections,
+                LocalDirections = _costFieldProducer.SectorDirections,
                 ConnectionIndicies = connectionIndicies,
                 PortalDistances = portalDistances,
                 PortalSequence = portalSequence,

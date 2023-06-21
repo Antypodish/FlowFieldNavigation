@@ -21,7 +21,7 @@ public struct FieldGraphTraversalJob : IJob
     [ReadOnly] public NativeArray<PortalNode> PortalNodes;
     [ReadOnly] public NativeArray<PortalToPortal> PorPtrs;
     [ReadOnly] public NativeArray<byte> Costs;
-    [ReadOnly] public NativeArray<LocalDirectionData> LocalDirections;
+    [ReadOnly] public NativeArray<SectorDirectionData> LocalDirections;
     public int FieldColAmount;
     public int FieldRowAmount;
     public float FieldTileSize;
@@ -352,7 +352,7 @@ public struct FieldGraphTraversalJob : IJob
                 integratedCosts[i] = new AStarTile(cost, float.MaxValue, true);
             }
         }
-        void Enqueue(LocalDirectionData localDirections)
+        void Enqueue(SectorDirectionData localDirections)
         {
             int n = localDirections.N;
             int e = localDirections.E;
@@ -387,7 +387,7 @@ public struct FieldGraphTraversalJob : IJob
                 integratedCosts[w] = tile;
             }
         }
-        float GetCost(LocalDirectionData localDirections)
+        float GetCost(SectorDirectionData localDirections)
         {
             float costToReturn = float.MaxValue;
             float nCost = integratedCosts[localDirections.N].IntegratedCost + 1f;

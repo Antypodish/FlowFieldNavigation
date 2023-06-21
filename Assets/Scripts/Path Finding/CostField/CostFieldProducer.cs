@@ -1,4 +1,6 @@
-﻿using Unity.Collections;
+﻿using System.Diagnostics;
+using Unity.Collections;
+using Unity.Jobs;
 using UnityEngine;
 
 public class CostFieldProducer
@@ -7,24 +9,30 @@ public class CostFieldProducer
     CostField[] _producedCostFields;
 
     //utility
-    public NativeArray<LocalDirectionData> LocalDirections;
-    public CostFieldProducer(WalkabilityData walkabilityData, byte sectorTileAmount)
+    public NativeArray<LocalDirectionData1d> LocalDirections;
+    public NativeArray<SectorDirectionData> SectorDirections;
+    public CostFieldProducer(WalkabilityData walkabilityData, byte sectorTileAmount, int fieldColAmount, int fieldRowAmount, int sectorMatrixColAmount, int sectorMatrixRowAmount)
     {
         _walkabilityData = walkabilityData;
 
-        //calculate directions
-
         //calculate local directions
-        LocalDirections = new NativeArray<LocalDirectionData>(sectorTileAmount * sectorTileAmount, Allocator.Persistent);
-        CalculateLocalDirections();
-
-        //HELPERS
-        void CalculateLocalDirections()
+        LocalDirections = new NativeArray<LocalDirectionData1d>(fieldColAmount * fieldRowAmount, Allocator.Persistent);
+        LocalDirectionCalculationJob localDirCalcJob = new LocalDirectionCalculationJob()
         {
-            for (byte i = 0; i < LocalDirections.Length; i++)
-            {
-                LocalDirections[i] = new LocalDirectionData(i, sectorTileAmount);
-            }
+            FieldColAmount = fieldColAmount,
+            SectorColAmount = sectorTileAmount,
+            LocalDirections = LocalDirections,
+            SectorTileAmount = sectorTileAmount * sectorTileAmount,
+            SectorMatrixColAmount = sectorMatrixColAmount,
+            SectorMatrixRowAmount = sectorMatrixRowAmount,
+        };
+        localDirCalcJob.Schedule(LocalDirections.Length, 512).Complete();
+
+        //calculate sector directions
+        SectorDirections = new NativeArray<SectorDirectionData>(sectorTileAmount * sectorTileAmount, Allocator.Persistent);
+        for (byte i = 0; i < SectorDirections.Length; i++)
+        {
+            SectorDirections[i] = new SectorDirectionData(i, sectorTileAmount);
         }
     }
     public void StartCostFieldProduction(int minOffset, int maxOffset, int sectorSize, int sectorMatrixColAmount, int sectorMatrixRowAmount)

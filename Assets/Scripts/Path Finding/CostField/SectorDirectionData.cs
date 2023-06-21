@@ -1,5 +1,5 @@
 ﻿using Unity.Mathematics;
-public struct LocalDirectionData
+public struct SectorDirectionData
 {
     public byte N;
     public byte E;
@@ -10,7 +10,7 @@ public struct LocalDirectionData
     public byte SW;
     public byte NW;
 
-    public LocalDirectionData(byte index, byte sectorTileAmount)
+    public SectorDirectionData(byte index, byte sectorTileAmount)
     {
         Index2 form2D = new Index2(index / sectorTileAmount, index % sectorTileAmount);
         Index2 n = new Index2(form2D.R + 1, form2D.C);
