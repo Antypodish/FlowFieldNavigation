@@ -18,7 +18,7 @@ public class Path
     public NativeList<IntegrationFieldSector> IntegrationField;
     public NativeList<FlowFieldSector> FlowField;
     public NativeQueue<LocalIndex1d> BlockedWaveFronts;
-    public NativeQueue<LocalIndex2d> intqueue;
+    public NativeQueue<LocalIndex1d> intqueue;
 
     public void Dispose()
     {

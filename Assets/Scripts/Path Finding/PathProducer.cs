@@ -63,7 +63,7 @@ public class PathProducer
         NativeList<PortalSequence> portalSequence = new NativeList<PortalSequence>(Allocator.Persistent);
         NativeArray<PortalMark> portalMarks = new NativeArray<PortalMark>(pickedCostField.FieldGraph.PortalNodes.Length, Allocator.Persistent);
         NativeQueue<LocalIndex1d> blockedWaveFronts = new NativeQueue<LocalIndex1d>(Allocator.Persistent);
-        NativeQueue<LocalIndex2d> intqueue = new NativeQueue<LocalIndex2d>(Allocator.Persistent);
+        NativeQueue<LocalIndex1d> intqueue = new NativeQueue<LocalIndex1d>(Allocator.Persistent);
         NativeArray<int> sectorMarks = new NativeArray<int>(pickedCostField.FieldGraph.SectorNodes.Length, Allocator.Persistent);
         NativeList<IntegrationFieldSector> integrationField = new NativeList<IntegrationFieldSector>(Allocator.Persistent);
         integrationField.Add(new IntegrationFieldSector());
@@ -176,6 +176,7 @@ public class PathProducer
                 Costs = pickedCostField.CostsG,
                 Target = destinationIndex,
                 SectorMarks = sectorMarks,
+                Directions = pickedCostField.LocalDirections,
                 IntegrationField = integrationField,
                 IntegrationQueue = intqueue,
                 BlockedWaveFronts = blockedWaveFronts,
