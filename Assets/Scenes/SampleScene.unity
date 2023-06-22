@@ -439,64 +439,6 @@ MonoBehaviour:
   _terrainGenerator: {fileID: 1550691738}
   _debugTiles: 1
   _debugUnwalkableTiles: 0
---- !u!1 &1799340794
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1799340796}
-  - component: {fileID: 1799340797}
-  - component: {fileID: 1799340798}
-  m_Layer: 0
-  m_Name: test
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1799340796
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1799340794}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 5.139016, y: -14.917938, z: 18.637043}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 8
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1799340797
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1799340794}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 13e6fa7c351e2ba47b850cde3f28dc36, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  terrainGenerator: {fileID: 1550691738}
---- !u!114 &1799340798
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1799340794}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3c9e70d5b76aef544b91b4551a3c6705, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1977402419
 GameObject:
   m_ObjectHideFlags: 0
@@ -544,7 +486,7 @@ MonoBehaviour:
   _pathfindingManager: {fileID: 638972356}
   _costFieldOffset: 0
   _costField: 0
-  _neighbours: 1
+  _neighbours: 0
   _sectors: 0
   _windows: 0
   _sectorWindows: 0
@@ -555,7 +497,7 @@ MonoBehaviour:
   _AStar: 0
   _debugBFS: 0
   _debugPortalSequence: 0
-  _debugPickedSectors: 1
+  _debugPickedSectors: 0
   _debugIntegrationField: 0
   _debugLOSPass: 0
   _debugLOSBlocks: 0
@@ -585,7 +527,7 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: RowAmount
-      value: 120
+      value: 1000
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
@@ -600,7 +542,7 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: ColumnAmount
-      value: 120
+      value: 1000
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
@@ -735,7 +677,7 @@ PrefabInstance:
     - target: {fileID: 1825739965324605910, guid: e0d1fa0b1efdac642802b5705081a344,
         type: 3}
       propertyPath: _maxZoom
-      value: -100
+      value: -500
       objectReference: {fileID: 0}
     - target: {fileID: 1825739965324605910, guid: e0d1fa0b1efdac642802b5705081a344,
         type: 3}
@@ -750,7 +692,7 @@ PrefabInstance:
     - target: {fileID: 1825739965324605910, guid: e0d1fa0b1efdac642802b5705081a344,
         type: 3}
       propertyPath: _movementSensitivity
-      value: 1
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 1825739965324605910, guid: e0d1fa0b1efdac642802b5705081a344,
         type: 3}

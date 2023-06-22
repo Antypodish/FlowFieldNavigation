@@ -1,8 +1,8 @@
 ﻿public enum IntegrationMark : byte
 {
     None = 0,
-    LOSPass,
-    LOSBlock,
-    LOSC,
-    Awaiting,
+    LOSPass = 1,
+    LOSBlock = 2,
+    LOSC = 3,
+    Awaiting = 4,
 }

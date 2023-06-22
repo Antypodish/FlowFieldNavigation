@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using UnityEngine;
 
@@ -9,26 +10,36 @@ public class CostFieldProducer
     CostField[] _producedCostFields;
 
     //utility
-    public NativeArray<LocalDirectionData1d> LocalDirections;
+    public NativeArray<UnsafeList<LocalDirectionData1d>> LocalDirections;
     public NativeArray<SectorDirectionData> SectorDirections;
     public CostFieldProducer(WalkabilityData walkabilityData, byte sectorTileAmount, int fieldColAmount, int fieldRowAmount, int sectorMatrixColAmount, int sectorMatrixRowAmount)
     {
         _walkabilityData = walkabilityData;
 
-        //calculate local directions
-        LocalDirections = new NativeArray<LocalDirectionData1d>(fieldColAmount * fieldRowAmount, Allocator.Persistent);
-        LocalDirectionCalculationJob localDirCalcJob = new LocalDirectionCalculationJob()
+        //CALCULATE LOCAL DIRECTIONS
+        LocalDirections = new NativeArray<UnsafeList<LocalDirectionData1d>>(sectorMatrixRowAmount * sectorMatrixColAmount, Allocator.Persistent);
+        NativeList<JobHandle> localDirectionCalculationHandles = new NativeList<JobHandle>(Allocator.Temp);
+        for(int i = 0; i < LocalDirections.Length; i++)
         {
-            FieldColAmount = fieldColAmount,
-            SectorColAmount = sectorTileAmount,
-            LocalDirections = LocalDirections,
-            SectorTileAmount = sectorTileAmount * sectorTileAmount,
-            SectorMatrixColAmount = sectorMatrixColAmount,
-            SectorMatrixRowAmount = sectorMatrixRowAmount,
-        };
-        localDirCalcJob.Schedule(LocalDirections.Length, 512).Complete();
+            UnsafeList<LocalDirectionData1d> sector = new UnsafeList<LocalDirectionData1d>(sectorTileAmount * sectorTileAmount, Allocator.Persistent);
+            sector.Length = sectorTileAmount * sectorTileAmount;
+            LocalDirections[i] = sector;
 
-        //calculate sector directions
+            LocalDirectionCalculationJob localDirCalcJob = new LocalDirectionCalculationJob()
+            {
+                FieldColAmount = fieldColAmount,
+                SectorColAmount = sectorTileAmount,
+                LocalDirectionSector = sector,
+                SectorIndex1d = i,
+                SectorTileAmount = sectorTileAmount * sectorTileAmount,
+                SectorMatrixColAmount = sectorMatrixColAmount,
+                SectorMatrixRowAmount = sectorMatrixRowAmount,
+            };
+            localDirectionCalculationHandles.Add(localDirCalcJob.Schedule(sector.Length, 512));
+        }
+        JobHandle.CombineDependencies(localDirectionCalculationHandles).Complete();
+
+        //CALCULATE SECTOR DIRECTIONS
         SectorDirections = new NativeArray<SectorDirectionData>(sectorTileAmount * sectorTileAmount, Allocator.Persistent);
         for (byte i = 0; i < SectorDirections.Length; i++)
         {
@@ -41,7 +52,7 @@ public class CostFieldProducer
         _producedCostFields = new CostField[count];
         for(int i = 0; i < count; i++)
         {
-            _producedCostFields[i] = new CostField(_walkabilityData, i + minOffset, sectorSize, sectorMatrixColAmount, sectorMatrixRowAmount);
+            _producedCostFields[i] = new CostField(_walkabilityData, LocalDirections, i + minOffset, sectorSize, sectorMatrixColAmount, sectorMatrixRowAmount);
             _producedCostFields[i].ScheduleConfigurationJob();
         }
     }

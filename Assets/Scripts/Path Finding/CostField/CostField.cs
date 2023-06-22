@@ -8,12 +8,13 @@ public class CostField
 {
     public int Offset;
     public NativeArray<byte> CostsG;
-    public NativeArray<UnsafeList<byte>> CostsL; 
+    public NativeArray<UnsafeList<byte>> CostsL;
+    public NativeArray<UnsafeList<LocalDirectionData1d>> LocalDirections;
     public FieldGraph FieldGraph;
 
     float _fieldTileSize;
     JobHandle _fieldGraphConfigJobHandle;
-    public CostField(WalkabilityData walkabilityData, int offset, int sectorColAmount, int sectorMatrixColAmount, int sectorMatrixRowAmount)
+    public CostField(WalkabilityData walkabilityData, NativeArray<UnsafeList<LocalDirectionData1d>> localDirections, int offset, int sectorColAmount, int sectorMatrixColAmount, int sectorMatrixRowAmount)
     {
         _fieldTileSize = walkabilityData.TileSize;
         int fieldRowAmount = walkabilityData.RowAmount;
@@ -24,6 +25,7 @@ public class CostField
         //configure costs
         CostsG = new NativeArray<byte>(fieldRowAmount * fieldColAmount, Allocator.Persistent);
         CostsL = new NativeArray<UnsafeList<byte>>(sectorMatrixColAmount * sectorMatrixRowAmount, Allocator.Persistent);
+        LocalDirections = localDirections;
         CalculateCosts();
         ConvertToNewCosts();
 

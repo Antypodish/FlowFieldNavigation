@@ -12,7 +12,8 @@ public struct LocalDirectionCalculationJob : IJobParallelFor
     public int SectorMatrixRowAmount;
     public int SectorTileAmount;
     public int FieldColAmount;
-    [WriteOnly] public NativeArray<LocalDirectionData1d> LocalDirections;
+    public int SectorIndex1d;
+    [WriteOnly] public UnsafeList<LocalDirectionData1d> LocalDirectionSector;
     public void Execute(int index)
     {
         int sectorColAmount = SectorColAmount;
@@ -48,14 +49,8 @@ public struct LocalDirectionCalculationJob : IJobParallelFor
         bool sSectorOverflow;
         bool wSectorOverflow;
         ///////////////////////////////////////////////
-        int2 index2d = new int2(index % FieldColAmount, index / FieldColAmount);
-        int2 sector2d = index2d / SectorColAmount;
-        int2 sectorStart2d = sector2d * sectorColAmount;
-        int2 local2d = index2d - sectorStart2d;
-        int local1d = local2d.y * sectorColAmount + local2d.x;
-        int sector1d = sector2d.y * sectorMatrixColAmount + sector2d.x;
-        SetLookupTable(local1d, sector1d);
-        LocalDirections[index] = directions;
+        SetLookupTable(index, SectorIndex1d);
+        LocalDirectionSector[index] = directions;
 
         void SetLookupTable(int curLocal1d, int curSector1d)
         {

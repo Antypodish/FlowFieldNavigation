@@ -35,7 +35,7 @@ public class PathProducer
     }
     public void Update()
     {
-        for(int i = 0; i < ProducedPaths.Count; i++)
+        for (int i = 0; i < ProducedPaths.Count; i++)
         {
             if (ProducedPaths[i].State == PathState.ToBeUpdated)
             {
@@ -44,7 +44,7 @@ public class PathProducer
                 ProducedPaths[i].SetState(PathState.ToBeDisposed);
                 _pathfindingManager.SetDestination(sources, destination);
             }
-            if(ProducedPaths[i].State == PathState.ToBeDisposed && ProducedPaths[i].IsCalculated)
+            if (ProducedPaths[i].State == PathState.ToBeDisposed && ProducedPaths[i].IsCalculated)
             {
                 ProducedPaths[i].Dispose();
                 ProducedPaths.RemoveAt(i);
@@ -85,7 +85,7 @@ public class PathProducer
             intqueue = intqueue,
             SectorMarks = sectorMarks,
         };
-        if(ProducedPaths.Count != 0)
+        if (ProducedPaths.Count != 0)
         {
             ProducedPaths.Last().SetState(PathState.ToBeDisposed);
         }
@@ -106,15 +106,21 @@ public class PathProducer
             flowField[i] = flowSector;
         }
         NativeList<JobHandle> resetHandles = new NativeList<JobHandle>(Allocator.Temp);
-        for(int i = 1; i < integrationField.Length; i++)
+        for (int i = 1; i < integrationField.Length; i++)
         {
             resetHandles.Add(GetResetFieldJob(integrationField[i].integrationSector).Schedule(_sectorTileAmount * _sectorTileAmount, 512));
         }
         JobHandle resetHandle = JobHandle.CombineDependencies(resetHandles);
         LOSJob losjob = GetRefLosJob();
         JobHandle losHandle = losjob.Schedule(resetHandle);
+        losHandle.Complete();
+        Stopwatch sw = new Stopwatch();
+        sw.Start();
         IntFieldJob intjob = GetRefIntegrationJob();
         JobHandle integrationHandle = intjob.Schedule(losHandle);
+        integrationHandle.Complete();
+        sw.Stop();
+        UnityEngine.Debug.Log(sw.Elapsed.TotalMilliseconds);
         NativeList<JobHandle> flowfieldHandles = new NativeList<JobHandle>(Allocator.Temp);
         for (int i = 1; i < flowField.Length; i++)
         {
@@ -180,7 +186,8 @@ public class PathProducer
             return new IntFieldJob()
             {
                 IntegrationQueue = blockedWaveFronts,
-                Costs = pickedCostField.CostsG,
+                Costs = pickedCostField.CostsL,
+                LocalDirections = pickedCostField.LocalDirections,
                 IntegrationField = integrationField,
                 SectorMarks = sectorMarks,
                 SectorColAmount = _sectorTileAmount,
