@@ -325,6 +325,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _pathfindingManager: {fileID: 638972356}
+  _placeSourceForEachSector: 1
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
