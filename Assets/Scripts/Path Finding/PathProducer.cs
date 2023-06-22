@@ -113,14 +113,8 @@ public class PathProducer
         JobHandle resetHandle = JobHandle.CombineDependencies(resetHandles);
         LOSJob losjob = GetRefLosJob();
         JobHandle losHandle = losjob.Schedule(resetHandle);
-        losHandle.Complete();
-        Stopwatch sw = new Stopwatch();
-        sw.Start();
         IntFieldJob intjob = GetRefIntegrationJob();
         JobHandle integrationHandle = intjob.Schedule(losHandle);
-        integrationHandle.Complete();
-        sw.Stop();
-        UnityEngine.Debug.Log(sw.Elapsed.TotalMilliseconds);
         NativeList<JobHandle> flowfieldHandles = new NativeList<JobHandle>(Allocator.Temp);
         for (int i = 1; i < flowField.Length; i++)
         {

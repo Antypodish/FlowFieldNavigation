@@ -65,6 +65,14 @@ public struct LOSJob : IJob
         byte eCost;
         byte sCost;
         byte wCost;
+        float nIntCost;
+        float eIntCost;
+        float sIntCost;
+        float wIntCost;
+        float neIntCost;
+        float seIntCost;
+        float swIntCost;
+        float nwIntCost;
         bool nRelevant;
         bool eRelevant;
         bool sRelevant;
@@ -73,6 +81,10 @@ public struct LOSJob : IJob
         UnsafeList<IntegrationTile> eSector;
         UnsafeList<IntegrationTile> sSector;
         UnsafeList<IntegrationTile> wSector;
+        UnsafeList<IntegrationTile> neSector;
+        UnsafeList<IntegrationTile> seSector;
+        UnsafeList<IntegrationTile> swSector;
+        UnsafeList<IntegrationTile> nwSector;
         ///////////////////////////////////////////
 
         //SET TARGET INDEX
@@ -82,27 +94,27 @@ public struct LOSJob : IJob
         int2 targetLocal2d = GetLocalIndex(Target, targetSectorStartIndex);
         int targetLocal1d = To1D(targetLocal2d, SectorTileAmount);
 
+        SetLookupTable(targetLocal1d, targetSector1d);
         UnsafeList<IntegrationTile> targetSector = IntegrationField[SectorMarks[targetSector1d]].integrationSector;
         IntegrationTile targetTile = targetSector[targetLocal1d];
         targetTile.Cost = 0f;
         targetTile.Mark = IntegrationMark.LOSPass;
         targetSector[targetLocal1d] = targetTile;
-        SetLookupTable(targetLocal1d, targetSector1d);
         LookForLOSC();
-        EnqueueNeighbours(1f);
+        EnqueueNeighbours();
         while (!integrationQueue.IsEmpty())
         {
             LocalIndex1d curIndex = integrationQueue.Dequeue();
-            SetLookupTable(curIndex.index, curIndex.sector);
             int curSectorMark = SectorMarks[curIndex.sector];
-            float curCost = integrationField[curSectorMark].integrationSector[curIndex.index].Cost;
             UnsafeList<IntegrationTile> integrationSector = integrationField[curSectorMark].integrationSector;
             IntegrationTile curTile = integrationSector[curIndex.index];
             if(curTile.Mark == IntegrationMark.LOSBlock) { continue; }
+            SetLookupTable(curIndex.index, curIndex.sector);
             curTile.Mark = IntegrationMark.LOSPass;
+            curTile.Cost = GetCost();
             integrationSector[curIndex.index] = curTile;
             LookForLOSC();
-            EnqueueNeighbours(curCost + 1f);
+            EnqueueNeighbours();
         }
         void SetLookupTable(int curLocal1d, int curSector1d)
         {
@@ -130,18 +142,45 @@ public struct LOSJob : IJob
             int eSectorMark = sectorMarks[direction.eSector];
             int sSectorMark = sectorMarks[direction.sSector];
             int wSectorMark = sectorMarks[direction.wSector];
+            int neSectorMark = sectorMarks[direction.neSector];
+            int seSectorMark = sectorMarks[direction.seSector];
+            int swSectorMark = sectorMarks[direction.swSector];
+            int nwSectorMark = sectorMarks[direction.nwSector];
 
             //SECTORS
             nSector = integrationField[nSectorMark].integrationSector;
             eSector = integrationField[eSectorMark].integrationSector;
             sSector = integrationField[sSectorMark].integrationSector;
             wSector = integrationField[wSectorMark].integrationSector;
+            neSector = integrationField[neSectorMark].integrationSector;
+            seSector = integrationField[seSectorMark].integrationSector;
+            swSector = integrationField[swSectorMark].integrationSector;
+            nwSector = integrationField[nwSectorMark].integrationSector;
+
+            //TILES
+            IntegrationTile nTile = new IntegrationTile(float.MaxValue, IntegrationMark.None);
+            IntegrationTile eTile = new IntegrationTile(float.MaxValue, IntegrationMark.None);
+            IntegrationTile sTile = new IntegrationTile(float.MaxValue, IntegrationMark.None);
+            IntegrationTile wTile = new IntegrationTile(float.MaxValue, IntegrationMark.None);
+            IntegrationTile neTile = new IntegrationTile(float.MaxValue, IntegrationMark.None);
+            IntegrationTile seTile = new IntegrationTile(float.MaxValue, IntegrationMark.None);
+            IntegrationTile swTile = new IntegrationTile(float.MaxValue, IntegrationMark.None);
+            IntegrationTile nwTile = new IntegrationTile(float.MaxValue, IntegrationMark.None);
+
+            if (nSectorMark != 0) { nTile = nSector[direction.n]; }
+            if (eSectorMark != 0) { eTile = eSector[direction.e]; }
+            if (sSectorMark != 0) { sTile = sSector[direction.s]; }
+            if (wSectorMark != 0) { wTile = wSector[direction.w]; }
+            if (neSectorMark != 0) { neTile = neSector[direction.ne]; }
+            if (seSectorMark != 0) { seTile = seSector[direction.se]; }
+            if (swSectorMark != 0) { swTile = swSector[direction.sw]; }
+            if (nwSectorMark != 0) { nwTile = nwSector[direction.nw]; }
 
             //RELEVANCIES
-            nRelevant = nSectorMark != 0 && integrationField[nSectorMark].integrationSector[direction.n].Mark == IntegrationMark.None;
-            eRelevant = eSectorMark != 0 && integrationField[eSectorMark].integrationSector[direction.e].Mark == IntegrationMark.None;
-            sRelevant = sSectorMark != 0 && integrationField[sSectorMark].integrationSector[direction.s].Mark == IntegrationMark.None;
-            wRelevant = wSectorMark != 0 && integrationField[wSectorMark].integrationSector[direction.w].Mark == IntegrationMark.None;
+            nRelevant = nSectorMark != 0 && nTile.Mark == IntegrationMark.None;
+            eRelevant = eSectorMark != 0 && eTile.Mark == IntegrationMark.None;
+            sRelevant = sSectorMark != 0 && sTile.Mark == IntegrationMark.None;
+            wRelevant = wSectorMark != 0 && wTile.Mark == IntegrationMark.None;
 
             //COSTS
             nCost = costs[nGeneral1d];
@@ -149,8 +188,17 @@ public struct LOSJob : IJob
             sCost = costs[sGeneral1d];
             wCost = costs[wGeneral1d];
 
+            //INTEGRATED COSTS
+            nIntCost = nTile.Cost;
+            eIntCost = eTile.Cost;
+            sIntCost = sTile.Cost;
+            wIntCost = wTile.Cost;
+            neIntCost = neTile.Cost;
+            seIntCost = seTile.Cost;
+            swIntCost = swTile.Cost;
+            nwIntCost = nwTile.Cost;
         }
-        void EnqueueNeighbours(float newWaveCost)
+        void EnqueueNeighbours()
         {
             bool nEnqueueable = nRelevant && nCost != byte.MaxValue;
             bool eEnqueueable = eRelevant && eCost != byte.MaxValue;
@@ -161,7 +209,6 @@ public struct LOSJob : IJob
                 integrationQueue.Enqueue(new LocalIndex1d(direction.n, direction.nSector));
                 IntegrationTile tile = nSector[direction.n];
                 tile.Mark = IntegrationMark.Awaiting;
-                tile.Cost = newWaveCost;
                 nSector[direction.n] = tile;
 
             }
@@ -170,7 +217,6 @@ public struct LOSJob : IJob
                 integrationQueue.Enqueue(new LocalIndex1d(direction.e, direction.eSector));
                 IntegrationTile tile = eSector[direction.e];
                 tile.Mark = IntegrationMark.Awaiting;
-                tile.Cost = newWaveCost;
                 eSector[direction.e] = tile;
             }
             if (sEnqueueable)
@@ -178,7 +224,6 @@ public struct LOSJob : IJob
                 integrationQueue.Enqueue(new LocalIndex1d(direction.s, direction.sSector));
                 IntegrationTile tile = sSector[direction.s];
                 tile.Mark = IntegrationMark.Awaiting;
-                tile.Cost = newWaveCost;
                 sSector[direction.s] = tile;
             }
             if (wEnqueueable)
@@ -186,9 +231,30 @@ public struct LOSJob : IJob
                 integrationQueue.Enqueue(new LocalIndex1d(direction.w, direction.wSector));
                 IntegrationTile tile = wSector[direction.w];
                 tile.Mark = IntegrationMark.Awaiting;
-                tile.Cost = newWaveCost;
                 wSector[direction.w] = tile;
             }
+        }
+        float GetCost()
+        {
+            float costToReturn = float.MaxValue;
+            float nCost = nIntCost + 1f;
+            float eCost = eIntCost + 1f;
+            float sCost = sIntCost + 1f;
+            float wCost = wIntCost + 1f;
+            float neCost = neIntCost + 1.4f;
+            float seCost = seIntCost + 1.4f;
+            float swCost = swIntCost + 1.4f;
+            float nwCost = nwIntCost + 1.4f;
+
+            costToReturn = math.select(costToReturn, nCost, nCost < costToReturn);
+            costToReturn = math.select(costToReturn, eCost, eCost < costToReturn);
+            costToReturn = math.select(costToReturn, sCost, sCost < costToReturn);
+            costToReturn = math.select(costToReturn, wCost, wCost < costToReturn);
+            costToReturn = math.select(costToReturn, neCost, neCost < costToReturn);
+            costToReturn = math.select(costToReturn, seCost, seCost < costToReturn);
+            costToReturn = math.select(costToReturn, swCost, swCost < costToReturn);
+            costToReturn = math.select(costToReturn, nwCost, nwCost < costToReturn);
+            return costToReturn;
         }
         void LookForLOSC()
         {
