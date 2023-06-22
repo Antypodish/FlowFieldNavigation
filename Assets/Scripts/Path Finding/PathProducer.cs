@@ -116,17 +116,12 @@ public class PathProducer
         JobHandle losHandle = losjob.Schedule(resetHandle);
         IntFieldJob intjob = GetRefIntegrationJob();
         JobHandle integrationHandle = intjob.Schedule(losHandle);
-        integrationHandle.Complete();
-        Stopwatch sw = new Stopwatch();
-        sw.Start();
         NativeList<JobHandle> flowfieldHandles = new NativeList<JobHandle>(Allocator.Temp);
         for (int i = 1; i < flowField.Length; i++)
         {
             flowfieldHandles.Add(GetFlowFieldJob(flowField[i].flowfieldSector, flowField[i].sectorIndex1d).Schedule(_sectorTileAmount * _sectorTileAmount, 512, integrationHandle));
         }
         JobHandle.CombineDependencies(flowfieldHandles).Complete();
-        sw.Stop();
-        UnityEngine.Debug.Log(sw.Elapsed.TotalMilliseconds);
         producedPath.IsCalculated = true;
         return producedPath;
 
