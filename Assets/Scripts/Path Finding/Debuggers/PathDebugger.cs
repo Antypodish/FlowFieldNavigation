@@ -52,7 +52,7 @@ public class PathDebugger
     }
     public void DebugPortalSequence()
     {
-        Gizmos.color = Color.black;
+        Gizmos.color = Color.red;
         if (_pathProducer == null) { return; }
         Path producedPath = _pathProducer.ProducedPaths.Last();
         if (producedPath == null) { return; }
@@ -64,7 +64,7 @@ public class PathDebugger
         for (int i = 0; i < porSeq.Length; i++)
         {
             PortalNode portalNode = portalNodes[porSeq[i].PortalPtr];
-            Gizmos.DrawSphere(portalNode.GetPosition(_tileSize), 0.5f);
+            Gizmos.DrawSphere(portalNode.GetPosition(_tileSize), 0.25f);
         }
     }
     public void DebugPickedSectors()
