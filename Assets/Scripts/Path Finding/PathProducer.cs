@@ -38,13 +38,6 @@ public class PathProducer
     {
         for (int i = 0; i < ProducedPaths.Count; i++)
         {
-            if (ProducedPaths[i].State == PathState.ToBeUpdated)
-            {
-                NativeArray<Vector3> sources = new NativeArray<Vector3>(ProducedPaths[i].Sources, Allocator.Persistent);
-                Vector3 destination = ProducedPaths[i].Destination;
-                ProducedPaths[i].SetState(PathState.ToBeDisposed);
-                _pathfindingManager.SetDestination(sources, destination);
-            }
             if (ProducedPaths[i].State == PathState.ToBeDisposed && ProducedPaths[i].IsCalculated)
             {
                 ProducedPaths[i].Dispose();
@@ -112,9 +105,9 @@ public class PathProducer
             resetHandles.Add(GetResetFieldJob(integrationField[i].integrationSector).Schedule(_sectorTileAmount * _sectorTileAmount, 512));
         }
         JobHandle resetHandle = JobHandle.CombineDependencies(resetHandles);
-        LOSJob losjob = GetRefLosJob();
+        LOSJob losjob = GetLosJob();
         JobHandle losHandle = losjob.Schedule(resetHandle);
-        IntFieldJob intjob = GetRefIntegrationJob();
+        IntFieldJob intjob = GetIntegrationJob();
         JobHandle integrationHandle = intjob.Schedule(losHandle);
         NativeList<JobHandle> flowfieldHandles = new NativeList<JobHandle>(Allocator.Temp);
         for (int i = 1; i < flowField.Length; i++)
@@ -158,7 +151,7 @@ public class PathProducer
         {
             return new IntFieldResetJob(integrationFieldSector);
         }
-        LOSJob GetRefLosJob()
+        LOSJob GetLosJob()
         {
             return new LOSJob()
             {
@@ -177,7 +170,7 @@ public class PathProducer
                 BlockedWaveFronts = blockedWaveFronts,
             };
         }
-        IntFieldJob GetRefIntegrationJob()
+        IntFieldJob GetIntegrationJob()
         {
             return new IntFieldJob()
             {

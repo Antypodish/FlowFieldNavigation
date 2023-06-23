@@ -1,8 +1,11 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using TMPro;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
+using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
@@ -22,8 +25,11 @@ public class PathfindingManager : MonoBehaviour
     [HideInInspector] public int SectorMatrixColAmount;
     [HideInInspector] public int SectorMatrixRowAmount;
 
+    public List<FlowFieldAgent> Agents;
+    public List<Transform> AgentTransforms;
     private void Start()
     {
+
         //!!!ORDER IS IMPORTANT!!!
         TileSize = _terrainGenerator.TileSize;
         RowAmount = _terrainGenerator.RowAmount;
@@ -36,6 +42,8 @@ public class PathfindingManager : MonoBehaviour
         TilePositions = new NativeArray<Vector3>(RowAmount * ColumnAmount, Allocator.Persistent);
         CalculateTilePositions();
         CostFieldProducer.ForceCompleteCostFieldProduction();
+
+        SetFlowFieldUtilities();
     }
     private void Update()
     {
@@ -52,8 +60,40 @@ public class PathfindingManager : MonoBehaviour
             }
         }
     }
+    void SetFlowFieldUtilities()
+    {
+        FlowFieldUtilities.SectorMatrixTileAmount = SectorMatrixColAmount * SectorMatrixRowAmount;
+        FlowFieldUtilities.SectorMatrixRowAmount = SectorMatrixRowAmount;
+        FlowFieldUtilities.SectorMatrixColAmount = SectorMatrixColAmount;
+        FlowFieldUtilities.SectorColAmount = SectorTileAmount;
+        FlowFieldUtilities.SectorRowAmount = SectorTileAmount;
+        FlowFieldUtilities.SectorTileAmount = SectorTileAmount * SectorTileAmount;
+        FlowFieldUtilities.TileSize = TileSize;
+        FlowFieldUtilities.FieldColAmount = ColumnAmount;
+        FlowFieldUtilities.FieldRowAmount = RowAmount;
+        FlowFieldUtilities.FieldTileAmount = ColumnAmount * RowAmount;
+    }
     public Path SetDestination(NativeArray<Vector3> sources, Vector3 target)
     {
         return PathProducer.ProducePath(sources, target, 0);
+    }
+    public void Subscribe(FlowFieldAgent agent)
+    {
+        Agents.Add(agent);
+        AgentTransforms.Add(agent.transform);
+    }
+    public void UnSubscribe(FlowFieldAgent agent)
+    {
+        Agents.Remove(agent);
+        AgentTransforms.Remove(agent.transform);
+    }
+    public void GetIndexAtPos(Vector3 pos, out int local1d, out int sector1d)
+    {
+        int2 sector2d = new int2(Mathf.FloorToInt(pos.x / (SectorTileAmount * TileSize)), Mathf.FloorToInt(pos.z / (SectorTileAmount * TileSize)));
+        int2 general2d = new int2(Mathf.FloorToInt(pos.x / TileSize), Mathf.FloorToInt(pos.z / TileSize));
+        int2 sectorStart2d = sector2d * SectorTileAmount;
+        int2 local2d = general2d - sectorStart2d;
+        local1d = local2d.y * SectorTileAmount + local2d.x;
+        sector1d = sector2d.y * SectorMatrixColAmount + sector2d.x;
     }
 }

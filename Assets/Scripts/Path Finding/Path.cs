@@ -45,6 +45,10 @@ public class Path
     {
         State = state;
     }
+    public FlowData GetFlow(int local1d, int sector1d)
+    {
+        return FlowField[SectorMarks[sector1d]].flowfieldSector[local1d];
+    }
 }
 public enum PathState : byte
 {
