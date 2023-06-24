@@ -1,23 +1,13 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using TMPro;
-using Unity.Burst;
 using Unity.Collections;
-using Unity.Jobs;
 using Unity.Mathematics;
-using Unity.VisualScripting;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.Analytics;
 public class PathfindingManager : MonoBehaviour
 {
     [SerializeField] TerrainGenerator _terrainGenerator;
     [SerializeField] int _maxCostfieldOffset;
+    [SerializeField] float _agentUpdateFrequency;
 
-    [HideInInspector] public CostFieldProducer CostFieldProducer;
-    [HideInInspector] public PathProducer PathProducer;
-    [HideInInspector] public NativeArray<Vector3> TilePositions;
     [HideInInspector] public float TileSize;
     [HideInInspector] public int RowAmount;
     [HideInInspector] public int ColumnAmount;
@@ -25,8 +15,14 @@ public class PathfindingManager : MonoBehaviour
     [HideInInspector] public int SectorMatrixColAmount;
     [HideInInspector] public int SectorMatrixRowAmount;
 
+    public CostFieldProducer CostFieldProducer;
+    public PathProducer PathProducer;
+    public NativeArray<Vector3> TilePositions;
     public List<FlowFieldAgent> Agents;
     public List<Transform> AgentTransforms;
+
+    float _lastAgentUpdateTime = 0;
+    AgentUpdateRoutine _agentUpdateRoutine;
     private void Start()
     {
 
@@ -40,6 +36,7 @@ public class PathfindingManager : MonoBehaviour
         CostFieldProducer.StartCostFieldProduction(0, _maxCostfieldOffset, SectorTileAmount, SectorMatrixColAmount, SectorMatrixRowAmount);
         PathProducer = new PathProducer(this);
         TilePositions = new NativeArray<Vector3>(RowAmount * ColumnAmount, Allocator.Persistent);
+        _agentUpdateRoutine = new AgentUpdateRoutine();
         CalculateTilePositions();
         CostFieldProducer.ForceCompleteCostFieldProduction();
 
@@ -48,6 +45,13 @@ public class PathfindingManager : MonoBehaviour
     private void Update()
     {
         PathProducer.Update();
+        float curTime = Time.realtimeSinceStartup;
+        float deltaTime = curTime - _lastAgentUpdateTime;
+        if (deltaTime >= _agentUpdateFrequency)
+        {
+            _lastAgentUpdateTime = curTime;
+            _agentUpdateRoutine.Update(deltaTime);
+        }
     }
     void CalculateTilePositions()
     {
