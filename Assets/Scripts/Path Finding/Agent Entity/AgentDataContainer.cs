@@ -74,7 +74,7 @@ public class AgentDataContainer
         agent.AgentDataIndex = Agents.Count;
         AgentData data = new AgentData()
         {
-            Speed = agent.Speed,
+            Speed = agent.GetSpeed(),
             Destination = Vector2.zero,
             Direction = Vector2.zero,
         };

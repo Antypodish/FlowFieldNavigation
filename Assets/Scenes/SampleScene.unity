@@ -362,7 +362,7 @@ MonoBehaviour:
   _pathfindingManager: {fileID: 638972356}
   _controller: {fileID: 1638174571}
   AgentDataIndex: 0
-  Speed: 5
+  _speed: 5
 --- !u!23 &800273086
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -511,7 +511,7 @@ MonoBehaviour:
   _pathfindingManager: {fileID: 638972356}
   _controller: {fileID: 1638174571}
   AgentDataIndex: 0
-  Speed: 5
+  _speed: 5
 --- !u!23 &870546284
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -673,7 +673,7 @@ MonoBehaviour:
   _pathfindingManager: {fileID: 638972356}
   _controller: {fileID: 1638174571}
   AgentDataIndex: 0
-  Speed: 5
+  _speed: 5
 --- !u!23 &1625243052
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -866,7 +866,7 @@ MonoBehaviour:
   _pathfindingManager: {fileID: 638972356}
   _controller: {fileID: 1638174571}
   AgentDataIndex: 0
-  Speed: 5
+  _speed: 5
 --- !u!23 &1799934702
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -966,7 +966,7 @@ MonoBehaviour:
   _pathfindingManager: {fileID: 638972356}
   _controller: {fileID: 1638174571}
   AgentDataIndex: 0
-  Speed: 5
+  _speed: 5
 --- !u!23 &1814033259
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -1090,7 +1090,7 @@ MonoBehaviour:
   _AStar: 0
   _debugBFS: 0
   _debugPortalSequence: 0
-  _debugPickedSectors: 0
+  _debugPickedSectors: 1
   _debugIntegrationField: 0
   _debugLOSPass: 0
   _debugLOSBlocks: 0
@@ -1129,7 +1129,7 @@ MonoBehaviour:
   _pathfindingManager: {fileID: 638972356}
   _controller: {fileID: 1638174571}
   AgentDataIndex: 0
-  Speed: 5
+  _speed: 5
 --- !u!23 &2025286410
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -1220,7 +1220,7 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: RowAmount
-      value: 200
+      value: 220
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
@@ -1230,12 +1230,12 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: _resolution
-      value: 5
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: ColumnAmount
-      value: 200
+      value: 210
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}

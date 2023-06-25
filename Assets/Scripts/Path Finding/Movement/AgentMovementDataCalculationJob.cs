@@ -15,6 +15,7 @@ public struct AgentMovementDataCalculationJob : IJobParallelFor
     public int SectorColAmount;
     public int SectorMatrixColAmount;
     public UnsafeList<AgentMovementData> AgentMovementData;
+    [WriteOnly] public NativeArray<bool> OutOfFieldFlag;
     [ReadOnly] public NativeList<FlowFieldSector> FlowField;
     [ReadOnly] public NativeArray<int> SectorMarks;
     public void Execute(int index)
@@ -29,7 +30,19 @@ public struct AgentMovementDataCalculationJob : IJobParallelFor
         int local1d = local2d.y * SectorColAmount + local2d.x;
         int sector1d = sector2d.y * SectorMatrixColAmount + sector2d.x;
 
-        FlowData flow = FlowField[SectorMarks[sector1d]].flowfieldSector[local1d];
+        node.local1d = (ushort)local1d;
+        node.sector1d = (ushort)sector1d;
+
+        int sectorMark = SectorMarks[sector1d];
+        if (sectorMark == 0)
+        {
+            OutOfFieldFlag[0]= true;
+            node.outOfFieldFlag = true;
+            AgentMovementData[index] = node;
+            return;
+        }
+
+        FlowData flow = FlowField[sectorMark].flowfieldSector[local1d];
         switch (flow)
         {
             case FlowData.LOS:
@@ -64,8 +77,6 @@ public struct AgentMovementDataCalculationJob : IJobParallelFor
         {
             node.direction = math.normalize(node.direction);
         }
-        node.local1d = (ushort) local1d;
-        node.sector1d = (ushort) sector1d;
         AgentMovementData[index] = node;
     }
 }

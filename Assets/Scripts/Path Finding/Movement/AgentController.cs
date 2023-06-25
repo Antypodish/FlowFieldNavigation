@@ -21,6 +21,20 @@ public class AgentController : MonoBehaviour
         {
             ControlDouble();
         }
+        if (Input.GetMouseButtonDown(2))
+        {
+            float tileSize = _pathfindingManager.TileSize;
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hit;
+            if (Physics.Raycast(ray, out hit))
+            {
+                Vector3 destination = hit.point;
+                FlowFieldAgent agent = _agents[0];
+                float agentY = agent.transform.position.y;
+                destination.y = agentY;
+                agent.transform.position = destination;
+            }
+        }
     }
     void ControlSingle()
     {

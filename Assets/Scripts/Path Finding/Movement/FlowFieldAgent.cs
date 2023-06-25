@@ -8,7 +8,7 @@ public class FlowFieldAgent : MonoBehaviour
     [SerializeField] AgentController _controller;
 
     [HideInInspector] public int AgentDataIndex;
-    public float Speed;
+    [SerializeField] float _speed;
     private void Start()
     {
         _controller.Subscribe(this);
@@ -19,4 +19,6 @@ public class FlowFieldAgent : MonoBehaviour
     {
         _pathfindingManager.AgentDataContainer.SetPath(AgentDataIndex, path);
     }
+    public float GetSpeed() => _speed;
+    public void SetSpeed(float newSpeed) { _speed = newSpeed; _pathfindingManager.AgentDataContainer.SetSpeed(AgentDataIndex, newSpeed); }
 }

@@ -12,7 +12,7 @@ public class AgentUpdateRoutine
     public AgentUpdateRoutine(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
-        _dirCalculator = new AgentDirectionCalculator(_pathfindingManager.AgentDataContainer);
+        _dirCalculator = new AgentDirectionCalculator(_pathfindingManager.AgentDataContainer, _pathfindingManager);
     }
 
     public void Update(float deltaTime)

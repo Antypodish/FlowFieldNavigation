@@ -197,4 +197,35 @@ public class PathProducer
             };
         }
     }
+    public void AddSectorToPath(Path path, NativeList<int> sectorIndicies)
+    {
+        CostField pickedCostField = _costFieldProducer.GetCostFieldWithOffset(path.Offset);
+        NativeList<FlowFieldSector> tempff = new NativeList<FlowFieldSector>(0, Allocator.TempJob);
+        NativeList<IntegrationFieldSector> tempif = new NativeList<IntegrationFieldSector>(0, Allocator.TempJob);
+        tempff.CopyFrom(path.FlowField);
+        tempif.CopyFrom(path.IntegrationField);
+        FlowFieldAdditionTraversalJob travJob = GetAdditionTraversalJob();
+        travJob.Schedule().Complete();
+
+        sectorIndicies.Dispose();
+        FlowFieldAdditionTraversalJob GetAdditionTraversalJob()
+        {
+            return new FlowFieldAdditionTraversalJob()
+            {
+                SourceSectorIndicies = sectorIndicies,
+                PortalNodes = pickedCostField.FieldGraph.PortalNodes,
+                SecToWinPtrs = pickedCostField.FieldGraph.SecToWinPtrs,
+                WindowNodes = pickedCostField.FieldGraph.WindowNodes,
+                WinToSecPtrs = pickedCostField.FieldGraph.WinToSecPtrs,
+                PorPtrs = pickedCostField.FieldGraph.PorToPorPtrs,
+                SectorNodes = pickedCostField.FieldGraph.SectorNodes,
+                ConnectionIndicies = path.ConnectionIndicies,
+                PortalSequence = path.PortalSequence,
+                PortalMarks = path.PortalMarks,
+                SectorMarks = path.SectorMarks,
+                IntegrationField = tempif,
+                FlowField = tempff,
+            };
+        }
+    }
 }
