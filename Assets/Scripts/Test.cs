@@ -1,30 +1,21 @@
-﻿using Unity.Jobs;
+﻿using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
+using Unity.Jobs;
 using UnityEngine;
 
 public class Test : MonoBehaviour
 {
-    JobHandle jh;
     private void Start()
     {
-        myjob job = new myjob();
-        jh = job.Schedule();
-    }
-    private void Update()
-    {
-        Debug.Log(jh.IsCompleted);
-    }
-}
-
-struct myjob : IJob
-{
-    public void Execute()
-    {
-        for (int i = 0; i < 100000; i++)
+        UnsafeList<int> mlist = new UnsafeList<int>(4, Allocator.Persistent);
+        mlist.Add(0);
+        mlist.Add(1);
+        mlist.Add(2);
+        mlist.Add(3);
+        mlist.Add(4);
+        for(int i = 0; i < mlist.Length; i++)
         {
-            for(int j = 0; j < 1000000; j++)
-            {
-                int k = j;
-            }
+            Debug.Log(mlist[i]);
         }
     }
 }

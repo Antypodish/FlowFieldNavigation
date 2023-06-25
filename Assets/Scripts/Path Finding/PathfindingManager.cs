@@ -19,10 +19,13 @@ public class PathfindingManager : MonoBehaviour
     public PathProducer PathProducer;
     public NativeArray<Vector3> TilePositions;
     public List<FlowFieldAgent> Agents;
-    public List<Transform> AgentTransforms;
 
     float _lastAgentUpdateTime = 0;
     AgentUpdateRoutine _agentUpdateRoutine;
+    private void Awake()
+    {
+        Agents = new List<FlowFieldAgent>();
+    }
     private void Start()
     {
 
@@ -36,7 +39,7 @@ public class PathfindingManager : MonoBehaviour
         CostFieldProducer.StartCostFieldProduction(0, _maxCostfieldOffset, SectorTileAmount, SectorMatrixColAmount, SectorMatrixRowAmount);
         PathProducer = new PathProducer(this);
         TilePositions = new NativeArray<Vector3>(RowAmount * ColumnAmount, Allocator.Persistent);
-        _agentUpdateRoutine = new AgentUpdateRoutine();
+        _agentUpdateRoutine = new AgentUpdateRoutine(this);
         CalculateTilePositions();
         CostFieldProducer.ForceCompleteCostFieldProduction();
 
@@ -84,12 +87,10 @@ public class PathfindingManager : MonoBehaviour
     public void Subscribe(FlowFieldAgent agent)
     {
         Agents.Add(agent);
-        AgentTransforms.Add(agent.transform);
     }
     public void UnSubscribe(FlowFieldAgent agent)
     {
         Agents.Remove(agent);
-        AgentTransforms.Remove(agent.transform);
     }
     public void GetIndexAtPos(Vector3 pos, out int local1d, out int sector1d)
     {

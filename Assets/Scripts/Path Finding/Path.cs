@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class Path
 {
+    public int RoutineMark = -1;
+    public int Subscriber = 0;
     public int Offset;
     public PathState State;
     public bool IsCalculated = false;
@@ -40,6 +42,18 @@ public class Path
         }
         IntegrationField.Dispose();
         FlowField.Dispose();
+    }
+    public void Subscribe()
+    {
+        Subscriber++;
+    }
+    public void Unsubscribe()
+    {
+        Subscriber--;
+        if (Subscriber == 0)
+        {
+            State = PathState.ToBeDisposed;
+        }
     }
     public void SetState(PathState state)
     {

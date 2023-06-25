@@ -79,10 +79,6 @@ public class PathProducer
             intqueue = intqueue,
             SectorMarks = sectorMarks,
         };
-        if (ProducedPaths.Count != 0)
-        {
-            ProducedPaths.Last().SetState(PathState.ToBeDisposed);
-        }
         ProducedPaths.Add(producedPath);
 
         FieldGraphTraversalJob traversalJob = GetTraversalJob();

@@ -12,6 +12,7 @@ public class AgentController : MonoBehaviour
     }
     private void Update()
     {
+        int agentCount = _agents.Count;
         if (Input.GetMouseButtonDown(1))
         {
             float tileSize = _pathfindingManager.TileSize;
@@ -20,13 +21,33 @@ public class AgentController : MonoBehaviour
             if (Physics.Raycast(ray, out hit))
             {
                 Vector3 destination = hit.point;
-                NativeArray<Vector3> positions = new NativeArray<Vector3>(_agents.Count, Allocator.Persistent);
-                for(int i = 0; i < positions.Length; i++)
+                NativeArray<Vector3> positions = new NativeArray<Vector3>(agentCount / 2, Allocator.Persistent);
+                for(int i = 0; i < agentCount / 2; i++)
                 {
                     positions[i] = _agents[i].transform.position;
                 }
                 Path newPath = _pathfindingManager.SetDestination(positions, destination);
-                for(int i = 0; i < _agents.Count; i++)
+                for(int i = 0; i < agentCount / 2; i++)
+                {
+                    _agents[i].SetPath(newPath);
+                }
+            }
+        }
+        if (Input.GetMouseButtonDown(0))
+        {
+            float tileSize = _pathfindingManager.TileSize;
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hit;
+            if (Physics.Raycast(ray, out hit))
+            {
+                Vector3 destination = hit.point;
+                NativeArray<Vector3> positions = new NativeArray<Vector3>(agentCount / 2, Allocator.Persistent);
+                for (int i = agentCount / 2; i < agentCount; i++)
+                {
+                    positions[i - agentCount / 2] = _agents[i].transform.position;
+                }
+                Path newPath = _pathfindingManager.SetDestination(positions, destination);
+                for (int i = agentCount / 2; i < _agents.Count; i++)
                 {
                     _agents[i].SetPath(newPath);
                 }
