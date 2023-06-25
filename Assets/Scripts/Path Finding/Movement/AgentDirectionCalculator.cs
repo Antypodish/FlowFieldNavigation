@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Tracing;
+using System.Linq;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
@@ -12,21 +13,28 @@ public class AgentDirectionCalculator
 {
     List<FlowFieldAgent> _agents;
     List<Path> _paths;
-    NativeList<UnsafeList<DirCalcNode>> _jobData = new NativeList<UnsafeList<DirCalcNode>>(Allocator.Persistent);
+    NativeList<UnsafeList<AgentMovementData>> _jobData = new NativeList<UnsafeList<AgentMovementData>>(Allocator.Persistent);
+    NativeList<AgentMovementData> _agentData;
 
     public AgentDirectionCalculator(List<FlowFieldAgent> agents)
     {
         _agents = agents;
         _paths = new List<Path>();
+        _jobData = new NativeList<UnsafeList<AgentMovementData>>(Allocator.Persistent);
+        _agentData = new NativeList<AgentMovementData>(_agents.Count, Allocator.Persistent);
     }
     public void CalculateDirections()
     {
         SetContainers();
-        SetDirCalcNodes();
-        
+        SetAgentMovementData();
+        SendAgentDirections();
+
         //HELPERS
         void SetContainers()
         {
+            //PREPARE CONTAINER SIZES
+            _agentData.Capacity = _agents.Count;
+            _agentData.Length = _agents.Count;
             for (int i = 0; i < _paths.Count; i++)
             {
                 _paths[i].RoutineMark = -1;
@@ -37,6 +45,8 @@ public class AgentDirectionCalculator
                 _jobData[i].Dispose();
             }
             _jobData.Clear();
+            
+            //PREPARE CONTAINER CONTENT
             for (int i = 0; i < _agents.Count; i++)
             {
                 FlowFieldAgent agent = _agents[i];
@@ -44,8 +54,8 @@ public class AgentDirectionCalculator
                 if (path == null) { continue; }
                 if (path.RoutineMark == -1)
                 {
-                    UnsafeList<DirCalcNode> newPathNodes = new UnsafeList<DirCalcNode>(0, Allocator.Persistent);
-                    DirCalcNode newNode = new DirCalcNode()
+                    UnsafeList<AgentMovementData> movementData = new UnsafeList<AgentMovementData>(0, Allocator.Persistent);
+                    AgentMovementData newData = new AgentMovementData()
                     {
                         agentIndex = i,
                         pos = agent.transform.position,
@@ -53,15 +63,15 @@ public class AgentDirectionCalculator
                         local1d = 0,
                         sector1d = 0,
                     };
-                    newPathNodes.Add(newNode);
+                    movementData.Add(newData);
                     path.RoutineMark = _paths.Count;
                     _paths.Add(path);
-                    _jobData.Add(newPathNodes);
+                    _jobData.Add(movementData);
                 }
                 else
                 {
-                    UnsafeList<DirCalcNode> nodes = _jobData[path.RoutineMark];
-                    DirCalcNode newNode = new DirCalcNode()
+                    UnsafeList<AgentMovementData> movementData = _jobData[path.RoutineMark];
+                    AgentMovementData newData = new AgentMovementData()
                     {
                         agentIndex = i,
                         pos = agent.transform.position,
@@ -69,39 +79,49 @@ public class AgentDirectionCalculator
                         local1d = 0,
                         sector1d = 0,
                     };
-                    nodes.Add(newNode);
-                    _jobData[path.RoutineMark] = nodes;
+                    movementData.Add(newData);
+                    _jobData[path.RoutineMark] = movementData;
                 }
             }
         }
-        void SetDirCalcNodes()
+        void SetAgentMovementData()
         {
+            //SCHEDULE JOBS
             for (int i = 0; i < _jobData.Length; i++)
             {
-                DirectionCalculationJob dirJob = new DirectionCalculationJob()
+                AgentMovementDataCalculationJob dirJob = new AgentMovementDataCalculationJob()
                 {
                     SectorColAmount = FlowFieldUtilities.SectorColAmount,
                     SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
                     TileSize = FlowFieldUtilities.TileSize,
-                    Nodes = _jobData[i],
+                    AgentMovementData = _jobData[i],
                     FlowField = _paths[i].FlowField,
                     SectorMarks = _paths[i].SectorMarks,
                 };
                 dirJob.Schedule(_jobData[i].Length, 64).Complete();
             }
+
+            //TRANSFER JOB RESULTS TO THE BUFFER
             for (int i = 0; i < _jobData.Length; i++)
             {
-                UnsafeList<DirCalcNode> nodes = _jobData[i];
+                UnsafeList<AgentMovementData> nodes = _jobData[i];
                 for (int j = 0; j < nodes.Length; j++)
                 {
-                    DirCalcNode node = nodes[j];
-                    _agents[node.agentIndex].Direction = node.direction;
+                    AgentMovementData node = nodes[j];
+                    _agentData[node.agentIndex] = node;
                 }
+            }
+        }
+        void SendAgentDirections()
+        {
+            for(int i = 0; i < _agentData.Length; i++)
+            {
+                _agents[i].Direction = _agentData[i].direction;
             }
         }
     }
 }
-public struct DirCalcNode
+public struct AgentMovementData
 {
     public float3 pos;
     public int agentIndex;

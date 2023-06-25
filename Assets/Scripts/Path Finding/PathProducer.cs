@@ -45,9 +45,9 @@ public class PathProducer
             }
         }
     }
-    public Path ProducePath(NativeArray<Vector3> sources, Vector3 destination, int offset)
+    public Path ProducePath(NativeArray<Vector3> sources, Vector2 destination, int offset)
     {
-        int2 destinationIndex = new int2(Mathf.FloorToInt(destination.x / _tileSize), Mathf.FloorToInt(destination.z / _tileSize));
+        int2 destinationIndex = new int2(Mathf.FloorToInt(destination.x / _tileSize), Mathf.FloorToInt(destination.y / _tileSize));
         int destionationIndexFlat = destinationIndex.y * _columnAmount + destinationIndex.x;
         CostField pickedCostField = _costFieldProducer.GetCostFieldWithOffset(offset);
         if (pickedCostField.CostsG[destionationIndexFlat] == byte.MaxValue) { return null; }
@@ -60,8 +60,8 @@ public class PathProducer
         NativeQueue<LocalIndex1d> intqueue = new NativeQueue<LocalIndex1d>(Allocator.Persistent);
         NativeArray<int> sectorMarks = new NativeArray<int>(pickedCostField.FieldGraph.SectorNodes.Length, Allocator.Persistent);
         NativeList<IntegrationFieldSector> integrationField = new NativeList<IntegrationFieldSector>(Allocator.Persistent);
-        integrationField.Add(new IntegrationFieldSector());
         NativeList<FlowFieldSector> flowField = new NativeList<FlowFieldSector>(Allocator.Persistent);
+        integrationField.Add(new IntegrationFieldSector());
         flowField.Add(new FlowFieldSector());
         Path producedPath = new Path()
         {

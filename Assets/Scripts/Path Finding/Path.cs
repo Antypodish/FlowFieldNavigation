@@ -10,7 +10,7 @@ public class Path
     public int Offset;
     public PathState State;
     public bool IsCalculated = false;
-    public Vector3 Destination;
+    public Vector2 Destination;
     public NativeArray<Vector3> Sources;
     public NativeArray<float> PortalDistances;
     public NativeArray<int> ConnectionIndicies;

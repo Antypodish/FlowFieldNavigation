@@ -13,7 +13,7 @@ using UnityEngine.Pool;
 public struct FieldGraphTraversalJob : IJob
 {
     public NativeArray<Vector3> SourcePositions;
-    public Vector3 TargetPosition;
+    public Vector2 TargetPosition;
     [ReadOnly] public NativeArray<SectorNode> SectorNodes;
     [ReadOnly] public NativeArray<int> SecToWinPtrs;
     [ReadOnly] public NativeArray<WindowNode> WindowNodes;
@@ -41,7 +41,7 @@ public struct FieldGraphTraversalJob : IJob
     public void Execute()
     {
         //TARGET DATA
-        Index2 targetIndex = new Index2(Mathf.FloorToInt(TargetPosition.z / FieldTileSize), Mathf.FloorToInt(TargetPosition.x / FieldTileSize));
+        Index2 targetIndex = new Index2(Mathf.FloorToInt(TargetPosition.y / FieldTileSize), Mathf.FloorToInt(TargetPosition.x / FieldTileSize));
         Index2 targetSectorIndex = new Index2(targetIndex.R / SectorTileAmount, targetIndex.C / SectorTileAmount);
         int targetIndexFlat = targetIndex.R * FieldColAmount + targetIndex.C;
         _targetSectorIndex = targetSectorIndex.R * SectorMatrixColAmount + targetSectorIndex.C;

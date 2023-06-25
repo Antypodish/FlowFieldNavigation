@@ -6,7 +6,7 @@ public class FlowFieldAgent : MonoBehaviour
 {
     [SerializeField] PathfindingManager _pathfindingManager;
     [SerializeField] AgentController _controller;
-    [HideInInspector] public Vector3 Destination;
+    [HideInInspector] public Vector2 Destination;
     [HideInInspector] public Vector2 Direction;
     
     public float Speed;
@@ -19,6 +19,7 @@ public class FlowFieldAgent : MonoBehaviour
     }
     private void Update()
     {
+        //REFRESH PATH
         if (NewPath != null)
         {
             if (NewPath.IsCalculated)
@@ -27,15 +28,15 @@ public class FlowFieldAgent : MonoBehaviour
                 NewPath.Subscribe();
                 CurPath = NewPath;
                 Destination = NewPath.Destination;
-                Destination.y = transform.position.y;
                 NewPath = null;
             }
         }
+        //MOVE
         if(CurPath != null)
         {
             if(Direction == Vector2.zero)
             {
-                Vector3 destination = new Vector3(Destination.x, transform.position.y, Destination.z);
+                Vector3 destination = new Vector3(Destination.x, transform.position.y, Destination.y);
                 transform.position = Vector3.MoveTowards(transform.position, destination, Speed * Time.deltaTime);
             }
             else

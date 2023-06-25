@@ -82,7 +82,8 @@ public class PathfindingManager : MonoBehaviour
     }
     public Path SetDestination(NativeArray<Vector3> sources, Vector3 target)
     {
-        return PathProducer.ProducePath(sources, target, 0);
+        Vector2 target2 = new Vector2(target.x, target.z);
+        return PathProducer.ProducePath(sources, target2, 0);
     }
     public void Subscribe(FlowFieldAgent agent)
     {
@@ -91,14 +92,5 @@ public class PathfindingManager : MonoBehaviour
     public void UnSubscribe(FlowFieldAgent agent)
     {
         Agents.Remove(agent);
-    }
-    public void GetIndexAtPos(Vector3 pos, out int local1d, out int sector1d)
-    {
-        int2 sector2d = new int2(Mathf.FloorToInt(pos.x / (SectorTileAmount * TileSize)), Mathf.FloorToInt(pos.z / (SectorTileAmount * TileSize)));
-        int2 general2d = new int2(Mathf.FloorToInt(pos.x / TileSize), Mathf.FloorToInt(pos.z / TileSize));
-        int2 sectorStart2d = sector2d * SectorTileAmount;
-        int2 local2d = general2d - sectorStart2d;
-        local1d = local2d.y * SectorTileAmount + local2d.x;
-        sector1d = sector2d.y * SectorMatrixColAmount + sector2d.x;
     }
 }
