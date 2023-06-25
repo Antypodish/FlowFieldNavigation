@@ -361,8 +361,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _pathfindingManager: {fileID: 638972356}
   _controller: {fileID: 1638174571}
-  Destination: {x: 0, y: 0}
-  Direction: {x: 0, y: 0}
+  AgentDataIndex: 0
   Speed: 5
 --- !u!23 &800273086
 MeshRenderer:
@@ -511,8 +510,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _pathfindingManager: {fileID: 638972356}
   _controller: {fileID: 1638174571}
-  Destination: {x: 0, y: 0}
-  Direction: {x: 0, y: 0}
+  AgentDataIndex: 0
   Speed: 5
 --- !u!23 &870546284
 MeshRenderer:
@@ -674,8 +672,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _pathfindingManager: {fileID: 638972356}
   _controller: {fileID: 1638174571}
-  Destination: {x: 0, y: 0}
-  Direction: {x: 0, y: 0}
+  AgentDataIndex: 0
   Speed: 5
 --- !u!23 &1625243052
 MeshRenderer:
@@ -772,6 +769,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _pathfindingManager: {fileID: 638972356}
+  _control: 0
 --- !u!4 &1638174572
 Transform:
   m_ObjectHideFlags: 0
@@ -867,8 +865,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _pathfindingManager: {fileID: 638972356}
   _controller: {fileID: 1638174571}
-  Destination: {x: 0, y: 0}
-  Direction: {x: 0, y: 0}
+  AgentDataIndex: 0
   Speed: 5
 --- !u!23 &1799934702
 MeshRenderer:
@@ -968,8 +965,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _pathfindingManager: {fileID: 638972356}
   _controller: {fileID: 1638174571}
-  Destination: {x: 0, y: 0}
-  Direction: {x: 0, y: 0}
+  AgentDataIndex: 0
   Speed: 5
 --- !u!23 &1814033259
 MeshRenderer:
@@ -1132,8 +1128,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _pathfindingManager: {fileID: 638972356}
   _controller: {fileID: 1638174571}
-  Destination: {x: 0, y: 0}
-  Direction: {x: 0, y: 0}
+  AgentDataIndex: 0
   Speed: 5
 --- !u!23 &2025286410
 MeshRenderer:

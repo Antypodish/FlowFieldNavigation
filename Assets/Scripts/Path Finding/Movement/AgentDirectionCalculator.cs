@@ -11,20 +11,26 @@ using UnityEngine;
 
 public class AgentDirectionCalculator
 {
+    AgentDataContainer _agentDataContainer;
     List<FlowFieldAgent> _agents;
     List<Path> _paths;
     NativeList<UnsafeList<AgentMovementData>> _jobData = new NativeList<UnsafeList<AgentMovementData>>(Allocator.Persistent);
-    NativeList<AgentMovementData> _agentData;
+    NativeList<AgentMovementData> _agentMovementData;
 
-    public AgentDirectionCalculator(List<FlowFieldAgent> agents)
+    public AgentDirectionCalculator(AgentDataContainer agentDataContainer)
     {
-        _agents = agents;
+        _agentDataContainer = agentDataContainer;
         _paths = new List<Path>();
         _jobData = new NativeList<UnsafeList<AgentMovementData>>(Allocator.Persistent);
-        _agentData = new NativeList<AgentMovementData>(_agents.Count, Allocator.Persistent);
+        _agents = agentDataContainer.Agents;
+        _agentMovementData = new NativeList<AgentMovementData>(_agents.Count, Allocator.Persistent);
     }
     public void CalculateDirections()
     {
+        NativeList<AgentData> agentDatas = _agentDataContainer.AgentDatas;
+        List<AgentPaths> agentPaths = _agentDataContainer.AgentPaths;
+        List<Transform> agentTransforms = _agentDataContainer.AgentTransforms;
+
         SetContainers();
         SetAgentMovementData();
         SendAgentDirections();
@@ -33,8 +39,8 @@ public class AgentDirectionCalculator
         void SetContainers()
         {
             //PREPARE CONTAINER SIZES
-            _agentData.Capacity = _agents.Count;
-            _agentData.Length = _agents.Count;
+            _agentMovementData.Capacity = _agents.Count;
+            _agentMovementData.Length = _agents.Count;
             for (int i = 0; i < _paths.Count; i++)
             {
                 _paths[i].RoutineMark = -1;
@@ -45,42 +51,46 @@ public class AgentDirectionCalculator
                 _jobData[i].Dispose();
             }
             _jobData.Clear();
-            
+
             //PREPARE CONTAINER CONTENT
+            
             for (int i = 0; i < _agents.Count; i++)
             {
-                FlowFieldAgent agent = _agents[i];
-                Path path = agent.CurPath;
-                if (path == null) { continue; }
-                if (path.RoutineMark == -1)
+                int agentIndex = _agents[i].AgentDataIndex;
+                Path agentPath = agentPaths[agentIndex].CurPath;
+                Transform agentTransform = agentTransforms[agentIndex];
+                AgentData agentData = agentDatas[agentIndex];
+
+                if (agentPath == null) { continue; }
+                if (agentPath.RoutineMark == -1)
                 {
                     UnsafeList<AgentMovementData> movementData = new UnsafeList<AgentMovementData>(0, Allocator.Persistent);
                     AgentMovementData newData = new AgentMovementData()
                     {
                         agentIndex = i,
-                        pos = agent.transform.position,
-                        direction = 0,
+                        pos = agentTransform.position,
+                        direction = agentData.Direction,
                         local1d = 0,
                         sector1d = 0,
                     };
                     movementData.Add(newData);
-                    path.RoutineMark = _paths.Count;
-                    _paths.Add(path);
+                    agentPath.RoutineMark = _paths.Count;
+                    _paths.Add(agentPath);
                     _jobData.Add(movementData);
                 }
                 else
                 {
-                    UnsafeList<AgentMovementData> movementData = _jobData[path.RoutineMark];
+                    UnsafeList<AgentMovementData> movementData = _jobData[agentPath.RoutineMark];
                     AgentMovementData newData = new AgentMovementData()
                     {
                         agentIndex = i,
-                        pos = agent.transform.position,
-                        direction = 0,
+                        pos = agentTransform.position,
+                        direction = agentData.Direction,
                         local1d = 0,
                         sector1d = 0,
                     };
                     movementData.Add(newData);
-                    _jobData[path.RoutineMark] = movementData;
+                    _jobData[agentPath.RoutineMark] = movementData;
                 }
             }
         }
@@ -108,15 +118,17 @@ public class AgentDirectionCalculator
                 for (int j = 0; j < nodes.Length; j++)
                 {
                     AgentMovementData node = nodes[j];
-                    _agentData[node.agentIndex] = node;
+                    _agentMovementData[node.agentIndex] = node;
                 }
             }
         }
         void SendAgentDirections()
         {
-            for(int i = 0; i < _agentData.Length; i++)
+            for(int i = 0; i < _agentMovementData.Length; i++)
             {
-                _agents[i].Direction = _agentData[i].direction;
+                AgentData data = agentDatas[i];
+                data.Direction = _agentMovementData[i].direction;
+                agentDatas[i] = data;
             }
         }
     }

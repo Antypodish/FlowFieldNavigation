@@ -7,14 +7,12 @@ using UnityEngine;
 public class AgentUpdateRoutine
 {
     PathfindingManager _pathfindingManager;
-    List<FlowFieldAgent> _agents;
     AgentDirectionCalculator _dirCalculator;
 
     public AgentUpdateRoutine(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
-        _agents = pathfindingManager.Agents;
-        _dirCalculator = new AgentDirectionCalculator(_agents);
+        _dirCalculator = new AgentDirectionCalculator(_pathfindingManager.AgentDataContainer);
     }
 
     public void Update(float deltaTime)

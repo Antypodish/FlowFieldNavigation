@@ -17,6 +17,7 @@ public class PathfindingManager : MonoBehaviour
 
     public CostFieldProducer CostFieldProducer;
     public PathProducer PathProducer;
+    public AgentDataContainer AgentDataContainer;
     public NativeArray<Vector3> TilePositions;
     public List<FlowFieldAgent> Agents;
 
@@ -25,6 +26,7 @@ public class PathfindingManager : MonoBehaviour
     private void Awake()
     {
         Agents = new List<FlowFieldAgent>();
+        AgentDataContainer = new AgentDataContainer(this);
     }
     private void Start()
     {
@@ -48,6 +50,7 @@ public class PathfindingManager : MonoBehaviour
     private void Update()
     {
         PathProducer.Update();
+        AgentDataContainer.OnUpdate();
         float curTime = Time.realtimeSinceStartup;
         float deltaTime = curTime - _lastAgentUpdateTime;
         if (deltaTime >= _agentUpdateFrequency)
