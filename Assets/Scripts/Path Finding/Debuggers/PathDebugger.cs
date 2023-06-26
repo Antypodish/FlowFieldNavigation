@@ -118,7 +118,7 @@ public class PathDebugger
                 float cost = sector[j].Cost;
                 if (cost == float.MaxValue)
                 {
-                    continue;
+                    Handles.Label(debugPos, "M");
                 }
                 else
                 {

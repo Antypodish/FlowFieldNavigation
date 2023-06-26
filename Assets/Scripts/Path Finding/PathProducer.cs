@@ -200,12 +200,32 @@ public class PathProducer
     public void AddSectorToPath(Path path, NativeList<int> sectorIndicies)
     {
         CostField pickedCostField = _costFieldProducer.GetCostFieldWithOffset(path.Offset);
-        NativeList<FlowFieldSector> tempff = new NativeList<FlowFieldSector>(0, Allocator.TempJob);
-        NativeList<IntegrationFieldSector> tempif = new NativeList<IntegrationFieldSector>(0, Allocator.TempJob);
-        tempff.CopyFrom(path.FlowField);
-        tempif.CopyFrom(path.IntegrationField);
+        int newSectorStartIndex = path.FlowField.Length;
+        NativeList<int> connectionWindowIndicies = new NativeList<int>(Allocator.TempJob);
+        //TRAVERSAL
         FlowFieldAdditionTraversalJob travJob = GetAdditionTraversalJob();
         travJob.Schedule().Complete();
+
+        //ADDING NEW SECTORS
+        for(int i = newSectorStartIndex; i < path.FlowField.Length; i++)
+        {
+            IntegrationFieldSector intSector = path.IntegrationField[i];
+            intSector.integrationSector = new UnsafeList<IntegrationTile>(_sectorTileAmount * _sectorTileAmount, Allocator.Persistent);
+            intSector.integrationSector.Length = _sectorTileAmount * _sectorTileAmount;
+            path.IntegrationField[i] = intSector;
+
+            FlowFieldSector flowSector = path.FlowField[i];
+            flowSector.flowfieldSector = new UnsafeList<FlowData>(_sectorTileAmount * _sectorTileAmount, Allocator.Persistent);
+            flowSector.flowfieldSector.Length = _sectorTileAmount * _sectorTileAmount;
+            path.FlowField[i] = flowSector;
+        }
+        //INT RESET
+        for(int i = newSectorStartIndex; i < path.IntegrationField.Length; i++)
+        {
+            GetResetFieldJob(path.IntegrationField[i].integrationSector).Schedule(path.IntegrationField[i].integrationSector.Length, 512).Complete();
+        }
+
+
 
         sectorIndicies.Dispose();
         FlowFieldAdditionTraversalJob GetAdditionTraversalJob()
@@ -222,10 +242,15 @@ public class PathProducer
                 ConnectionIndicies = path.ConnectionIndicies,
                 PortalSequence = path.PortalSequence,
                 PortalMarks = path.PortalMarks,
+                ConnectionWindowIndicies = connectionWindowIndicies,
                 SectorMarks = path.SectorMarks,
-                IntegrationField = tempif,
-                FlowField = tempff,
+                IntegrationField = path.IntegrationField,
+                FlowField = path.FlowField,
             };
+        }
+        IntFieldResetJob GetResetFieldJob(UnsafeList<IntegrationTile> integrationFieldSector)
+        {
+            return new IntFieldResetJob(integrationFieldSector);
         }
     }
 }

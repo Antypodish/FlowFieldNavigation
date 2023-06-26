@@ -830,7 +830,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _terrainGenerator: {fileID: 1550691738}
-  _debugTiles: 1
+  _debugTiles: 0
   _debugUnwalkableTiles: 0
 --- !u!1 &1799934700
 GameObject:
@@ -1091,10 +1091,10 @@ MonoBehaviour:
   _debugBFS: 0
   _debugPortalSequence: 0
   _debugPickedSectors: 1
-  _debugIntegrationField: 0
+  _debugIntegrationField: 1
   _debugLOSPass: 0
   _debugLOSBlocks: 0
-  _debugFlowField: 1
+  _debugFlowField: 0
 --- !u!1 &2025286408
 GameObject:
   m_ObjectHideFlags: 0

@@ -196,7 +196,7 @@ public struct FieldGraphTraversalJob : IJob
         int connectionIndex = ConnectionIndicies[startingPortalIndex];
         while (true)
         {
-            if (PortalMarks[portalIndex] == PortalMark.Walker)
+            if (PortalMarks[portalIndex] == PortalMark.MainWalker)
             {
                 break;
             }
@@ -208,10 +208,10 @@ public struct FieldGraphTraversalJob : IJob
                     NextPortalPtrIndex = -1
                 };
                 portalSequence.Add(porSeq);
-                PortalMarks[portalIndex] = PortalMark.Walker;
+                PortalMarks[portalIndex] = PortalMark.MainWalker;
                 break;
             }
-            else if (PortalMarks[connectionIndex] == PortalMark.Walker)
+            else if (PortalMarks[connectionIndex] == PortalMark.MainWalker)
             {
                 PortalSequence porSeq = new PortalSequence()
                 {
@@ -219,7 +219,7 @@ public struct FieldGraphTraversalJob : IJob
                     NextPortalPtrIndex = GetIndexOf(connectionIndex)
                 };
                 portalSequence.Add(porSeq);
-                PortalMarks[portalIndex] = PortalMark.Walker;
+                PortalMarks[portalIndex] = PortalMark.MainWalker;
                 break;
             }
             else
@@ -230,7 +230,7 @@ public struct FieldGraphTraversalJob : IJob
                     NextPortalPtrIndex = portalSequence.Length + 1
                 };
                 portalSequence.Add(porSeq);
-                PortalMarks[portalIndex] = PortalMark.Walker;
+                PortalMarks[portalIndex] = PortalMark.MainWalker;
                 portalIndex = connectionIndex;
                 connectionIndex = ConnectionIndicies[portalIndex];
             }
@@ -441,7 +441,8 @@ public enum PortalMark : byte
 {
     None = 0,
     BFS = 1,
-    Walker = 2,
+    MainWalker = 2,
+    SideWalker = 3,
 };
 public struct PortalSequence
 {

@@ -17,10 +17,10 @@ public struct FlowFieldAdditionTraversalJob : IJob
     public NativeArray<int> ConnectionIndicies;
     public NativeArray<PortalMark> PortalMarks;
     public NativeList<PortalSequence> PortalSequence;
+    public NativeList<int> ConnectionWindowIndicies;
     public NativeArray<int> SectorMarks;
     public NativeList<IntegrationFieldSector> IntegrationField;
     public NativeList<FlowFieldSector> FlowField;
-
     int _newPortalSequenceStartIndex;
     public void Execute()
     {
@@ -62,49 +62,63 @@ public struct FlowFieldAdditionTraversalJob : IJob
     void SetPortalSequence(int startingPortalIndex)
     {
         NativeList<PortalSequence> portalSequence = PortalSequence;
-        int portalIndex = startingPortalIndex;
-        int connectionIndex = ConnectionIndicies[startingPortalIndex];
+        int cur = startingPortalIndex;
+        int next = ConnectionIndicies[startingPortalIndex];
         while (true)
         {
-            if (PortalMarks[portalIndex] == PortalMark.Walker)
+            if (PortalMarks[cur] == PortalMark.SideWalker)
             {
                 break;
             }
-            else if (connectionIndex == portalIndex)
+            if (PortalMarks[next] == PortalMark.SideWalker)
             {
                 PortalSequence porSeq = new PortalSequence()
                 {
-                    PortalPtr = portalIndex,
-                    NextPortalPtrIndex = -1
+                    PortalPtr = cur,
+                    NextPortalPtrIndex = GetIndexOf(next)
                 };
-                portalSequence.Add(porSeq);
-                PortalMarks[portalIndex] = PortalMark.Walker;
+                PortalSequence.Add(porSeq);
+                PortalMarks[cur] = PortalMark.MainWalker;
                 break;
             }
-            else if (PortalMarks[connectionIndex] == PortalMark.Walker)
+            if (PortalMarks[next] == PortalMark.MainWalker)
             {
                 PortalSequence porSeq = new PortalSequence()
                 {
-                    PortalPtr = portalIndex,
-                    NextPortalPtrIndex = GetIndexOf(connectionIndex)
+                    PortalPtr = cur,
+                    NextPortalPtrIndex = GetIndexOf(next)
                 };
-                portalSequence.Add(porSeq);
-                PortalMarks[portalIndex] = PortalMark.Walker;
+                PortalSequence.Add(porSeq);
+                PortalMarks[cur] = PortalMark.MainWalker;
+                PortalNode curNode = PortalNodes[cur];
+                ConnectionWindowIndicies.Add(curNode.WinPtr);
+                break;
+            }
+            if (next == cur)
+            {
+                PortalSequence porSeq = new PortalSequence()
+                {
+                    PortalPtr = cur,
+                    NextPortalPtrIndex = -1,
+                };
+                PortalSequence.Add(porSeq);
+                PortalMarks[cur] = PortalMark.MainWalker;
+                PortalNode curNode = PortalNodes[cur];
+                ConnectionWindowIndicies.Add(curNode.WinPtr);
                 break;
             }
             else
             {
                 PortalSequence porSeq = new PortalSequence()
                 {
-                    PortalPtr = portalIndex,
-                    NextPortalPtrIndex = portalSequence.Length + 1
+                    PortalPtr = cur,
+                    NextPortalPtrIndex = portalSequence.Length + 1,
                 };
-                portalSequence.Add(porSeq);
-                PortalMarks[portalIndex] = PortalMark.Walker;
-                portalIndex = connectionIndex;
-                connectionIndex = ConnectionIndicies[portalIndex];
+                PortalSequence.Add(porSeq);
+                PortalMarks[cur] = PortalMark.MainWalker;
+                cur = next;
+                next = ConnectionIndicies[next];
             }
-
         }
         int GetIndexOf(int portalIndex)
         {
