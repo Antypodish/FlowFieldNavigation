@@ -52,7 +52,7 @@ public class PathDebugger
     }
     public void DebugPortalSequence()
     {
-        Gizmos.color = Color.red;
+        
         if (_pathProducer == null) { return; }
         Path producedPath = _pathProducer.ProducedPaths.Last();
         if (producedPath == null) { return; }
@@ -63,8 +63,19 @@ public class PathDebugger
         NativeList<PortalSequence> porSeq = producedPath.PortalSequence;
         for (int i = 0; i < porSeq.Length; i++)
         {
-            PortalNode portalNode = portalNodes[porSeq[i].PortalPtr];
-            Gizmos.DrawSphere(portalNode.GetPosition(_tileSize), 0.25f);
+            Gizmos.color = Color.red;
+            PortalSequence seq = porSeq[i];
+            PortalNode portalNode = portalNodes[seq.PortalPtr];
+            Vector3 porPos = portalNode.GetPosition(_tileSize);
+            Gizmos.DrawSphere(porPos, 0.25f);
+            if(seq.NextPortalPtrIndex != -1)
+            {
+                Gizmos.color = Color.black;
+                PortalSequence nextSeq = porSeq[seq.NextPortalPtrIndex];
+                PortalNode nextNode = portalNodes[nextSeq.PortalPtr];
+                Vector3 nextPos = nextNode.GetPosition(_tileSize);
+                Gizmos.DrawLine(porPos, nextPos);
+            }
         }
     }
     public void DebugPickedSectors()

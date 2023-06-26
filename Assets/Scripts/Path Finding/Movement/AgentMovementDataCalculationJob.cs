@@ -45,6 +45,11 @@ public struct AgentMovementDataCalculationJob : IJobParallelFor
         FlowData flow = FlowField[sectorMark].flowfieldSector[local1d];
         switch (flow)
         {
+            case FlowData.None:
+                OutOfFieldFlag[0] = true;
+                node.outOfFieldFlag = true;
+                AgentMovementData[index] = node;
+                return;
             case FlowData.LOS:
                 node.direction = 0;
                 break;

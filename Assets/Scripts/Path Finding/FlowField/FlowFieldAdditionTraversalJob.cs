@@ -3,10 +3,13 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Collections;
 using UnityEngine;
 using Unity.Jobs;
+using Unity.Mathematics;
 
 [BurstCompile]
 public struct FlowFieldAdditionTraversalJob : IJob
 {
+    public int SectorColAmount;
+    public int SectorMatrixColAmount;
     public NativeArray<int> SourceSectorIndicies;
     [ReadOnly] public NativeArray<SectorNode> SectorNodes;
     [ReadOnly] public NativeArray<int> SecToWinPtrs;
@@ -17,10 +20,10 @@ public struct FlowFieldAdditionTraversalJob : IJob
     public NativeArray<int> ConnectionIndicies;
     public NativeArray<PortalMark> PortalMarks;
     public NativeList<PortalSequence> PortalSequence;
-    public NativeList<int> ConnectionWindowIndicies;
     public NativeArray<int> SectorMarks;
     public NativeList<IntegrationFieldSector> IntegrationField;
     public NativeList<FlowFieldSector> FlowField;
+    public NativeList<LocalIndex1d> IntegrationStartIndicies;
     int _newPortalSequenceStartIndex;
     public void Execute()
     {
@@ -40,6 +43,10 @@ public struct FlowFieldAdditionTraversalJob : IJob
             }
         }
         PickSectorsFromNewPortalSequences();
+        for(int i = _newPortalSequenceStartIndex; i < PortalSequence.Length; i++)
+        {
+            PortalMarks[PortalSequence[i].PortalPtr] = PortalMark.MainWalker;
+        }
     }
     UnsafeList<int> GetPortalIndicies(int targetSectorIndexF)
     {
@@ -70,7 +77,7 @@ public struct FlowFieldAdditionTraversalJob : IJob
             {
                 break;
             }
-            if (PortalMarks[next] == PortalMark.SideWalker)
+            else if (PortalMarks[next] == PortalMark.SideWalker)
             {
                 PortalSequence porSeq = new PortalSequence()
                 {
@@ -78,10 +85,10 @@ public struct FlowFieldAdditionTraversalJob : IJob
                     NextPortalPtrIndex = GetIndexOf(next)
                 };
                 PortalSequence.Add(porSeq);
-                PortalMarks[cur] = PortalMark.MainWalker;
+                PortalMarks[cur] = PortalMark.SideWalker;
                 break;
             }
-            if (PortalMarks[next] == PortalMark.MainWalker)
+            else if (PortalMarks[next] == PortalMark.MainWalker)
             {
                 PortalSequence porSeq = new PortalSequence()
                 {
@@ -89,12 +96,12 @@ public struct FlowFieldAdditionTraversalJob : IJob
                     NextPortalPtrIndex = GetIndexOf(next)
                 };
                 PortalSequence.Add(porSeq);
-                PortalMarks[cur] = PortalMark.MainWalker;
-                PortalNode curNode = PortalNodes[cur];
-                ConnectionWindowIndicies.Add(curNode.WinPtr);
+                PortalMarks[cur] = PortalMark.SideWalker;
+                LocalIndex1d empyIndex = GetNotCalculatedIndexOfPortalNode(PortalNodes[cur]);
+                if (empyIndex.index != -1) { IntegrationStartIndicies.Add(empyIndex); }
                 break;
             }
-            if (next == cur)
+            else if (next == cur)
             {
                 PortalSequence porSeq = new PortalSequence()
                 {
@@ -102,9 +109,9 @@ public struct FlowFieldAdditionTraversalJob : IJob
                     NextPortalPtrIndex = -1,
                 };
                 PortalSequence.Add(porSeq);
-                PortalMarks[cur] = PortalMark.MainWalker;
-                PortalNode curNode = PortalNodes[cur];
-                ConnectionWindowIndicies.Add(curNode.WinPtr);
+                PortalMarks[cur] = PortalMark.SideWalker;
+                LocalIndex1d empyIndex = GetNotCalculatedIndexOfPortalNode(PortalNodes[cur]);
+                if (empyIndex.index != -1) { IntegrationStartIndicies.Add(empyIndex); }
                 break;
             }
             else
@@ -115,7 +122,9 @@ public struct FlowFieldAdditionTraversalJob : IJob
                     NextPortalPtrIndex = portalSequence.Length + 1,
                 };
                 PortalSequence.Add(porSeq);
-                PortalMarks[cur] = PortalMark.MainWalker;
+                PortalMarks[cur] = PortalMark.SideWalker;
+                LocalIndex1d empyIndex = GetNotCalculatedIndexOfPortalNode(PortalNodes[cur]);
+                if(empyIndex.index != -1) { IntegrationStartIndicies.Add(empyIndex); }
                 cur = next;
                 next = ConnectionIndicies[next];
             }
@@ -150,5 +159,29 @@ public struct FlowFieldAdditionTraversalJob : IJob
                 FlowField.Add(new FlowFieldSector(secPtr));
             }
         }
+    }
+    LocalIndex1d GetNotCalculatedIndexOfPortalNode(PortalNode portalNode)
+    {
+        int2 portal1General2d = new int2(portalNode.Portal1.Index.C, portalNode.Portal1.Index.R);
+        int2 portal2General2d = new int2(portalNode.Portal2.Index.C, portalNode.Portal2.Index.R);
+        int2 portal1Sector2d = portal1General2d / SectorColAmount;
+        int2 portal2Sector2d = portal2General2d / SectorColAmount;
+        int portal1Sector1d = portal1Sector2d.y * SectorMatrixColAmount + portal1Sector2d.x;
+        int portal2Sector1d = portal2Sector2d.y * SectorMatrixColAmount + portal2Sector2d.x;
+        int2 portal1SectorStart2d = portal1Sector2d * SectorColAmount;
+        int2 portal2SectorStart2d = portal2Sector2d * SectorColAmount;
+        int2 portal1Local2d = portal1General2d - portal1SectorStart2d;
+        int2 portal2Local2d = portal2General2d - portal2SectorStart2d;
+        int portal1Local1d = portal1Local2d.y * SectorColAmount + portal1Local2d.x;
+        int portal2Local1d = portal2Local2d.y * SectorColAmount + portal2Local2d.x;
+        if (SectorMarks[portal1Sector1d] == 0 && SectorMarks[portal2Sector1d] != 0)
+        {
+            return new LocalIndex1d(portal1Local1d, portal1Sector1d);
+        }
+        else if (SectorMarks[portal2Sector1d] == 0 && SectorMarks[portal1Sector1d] != 0)
+        {
+            return new LocalIndex1d(portal2Local1d, portal2Sector1d);
+        }
+        return new LocalIndex1d(-1,-1);
     }
 }

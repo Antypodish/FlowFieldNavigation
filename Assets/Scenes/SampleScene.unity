@@ -1078,7 +1078,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _pathfindingManager: {fileID: 638972356}
   _costFieldOffset: 0
-  _costField: 1
+  _costField: 0
   _neighbours: 0
   _sectors: 0
   _windows: 0
@@ -1089,12 +1089,12 @@ MonoBehaviour:
   _costsToPortal: 0
   _AStar: 0
   _debugBFS: 0
-  _debugPortalSequence: 0
+  _debugPortalSequence: 1
   _debugPickedSectors: 1
-  _debugIntegrationField: 1
+  _debugIntegrationField: 0
   _debugLOSPass: 0
   _debugLOSBlocks: 0
-  _debugFlowField: 0
+  _debugFlowField: 1
 --- !u!1 &2025286408
 GameObject:
   m_ObjectHideFlags: 0
@@ -1220,7 +1220,7 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: RowAmount
-      value: 220
+      value: 120
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
@@ -1235,7 +1235,7 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: ColumnAmount
-      value: 210
+      value: 110
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}

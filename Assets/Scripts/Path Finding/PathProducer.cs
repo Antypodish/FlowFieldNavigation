@@ -201,7 +201,8 @@ public class PathProducer
     {
         CostField pickedCostField = _costFieldProducer.GetCostFieldWithOffset(path.Offset);
         int newSectorStartIndex = path.FlowField.Length;
-        NativeList<int> connectionWindowIndicies = new NativeList<int>(Allocator.TempJob);
+        NativeList<LocalIndex1d> integrationStartIndicies = new NativeList<LocalIndex1d>(Allocator.TempJob);  
+        
         //TRAVERSAL
         FlowFieldAdditionTraversalJob travJob = GetAdditionTraversalJob();
         travJob.Schedule().Complete();
@@ -224,14 +225,28 @@ public class PathProducer
         {
             GetResetFieldJob(path.IntegrationField[i].integrationSector).Schedule(path.IntegrationField[i].integrationSector.Length, 512).Complete();
         }
-
-
-
+        //INT
+        IntegrationFieldAdditionJob intAddJob = GetIntegrationAdditionJob();
+        JobHandle intHandle = intAddJob.Schedule();
+        intHandle.Complete();
+        
+        //FLOW FIELD
+        NativeList<JobHandle> flowfieldHandles = new NativeList<JobHandle>(Allocator.Temp);
+        for (int i = 1; i < path.FlowField.Length; i++)
+        {
+            flowfieldHandles.Add(GetFlowFieldJob(path.FlowField[i].flowfieldSector, path.FlowField[i].sectorIndex1d).Schedule(_sectorTileAmount * _sectorTileAmount, 512, intHandle));
+        }
+        JobHandle jombined = JobHandle.CombineDependencies(flowfieldHandles);
+        jombined.Complete();
         sectorIndicies.Dispose();
+        integrationStartIndicies.Dispose();
+
         FlowFieldAdditionTraversalJob GetAdditionTraversalJob()
         {
             return new FlowFieldAdditionTraversalJob()
             {
+                SectorColAmount = _sectorTileAmount,
+                SectorMatrixColAmount = _sectorMatrixColAmount,
                 SourceSectorIndicies = sectorIndicies,
                 PortalNodes = pickedCostField.FieldGraph.PortalNodes,
                 SecToWinPtrs = pickedCostField.FieldGraph.SecToWinPtrs,
@@ -242,15 +257,46 @@ public class PathProducer
                 ConnectionIndicies = path.ConnectionIndicies,
                 PortalSequence = path.PortalSequence,
                 PortalMarks = path.PortalMarks,
-                ConnectionWindowIndicies = connectionWindowIndicies,
                 SectorMarks = path.SectorMarks,
                 IntegrationField = path.IntegrationField,
                 FlowField = path.FlowField,
+                IntegrationStartIndicies = integrationStartIndicies,
             };
         }
         IntFieldResetJob GetResetFieldJob(UnsafeList<IntegrationTile> integrationFieldSector)
         {
             return new IntFieldResetJob(integrationFieldSector);
+        }
+        IntegrationFieldAdditionJob GetIntegrationAdditionJob()
+        {
+            return new IntegrationFieldAdditionJob()
+            {
+                StartIndicies = integrationStartIndicies,
+                IntegrationQueue = new NativeQueue<LocalIndex1d>(Allocator.Persistent),
+                Costs = pickedCostField.CostsL,
+                LocalDirections = pickedCostField.LocalDirections,
+                IntegrationField = path.IntegrationField,
+                SectorMarks = path.SectorMarks,
+                SectorColAmount = _sectorTileAmount,
+                SectorMatrixColAmount = _sectorMatrixColAmount,
+                FieldColAmount = _columnAmount,
+                FieldRowAmount = _rowAmount,
+            };
+        }
+        FlowFieldJob GetFlowFieldJob(UnsafeList<FlowData> flowfieldSector, int sectorIndex1d)
+        {
+            return new FlowFieldJob()
+            {
+                SectorColAmount = _sectorTileAmount,
+                SectorMatrixColAmount = _sectorMatrixColAmount,
+                SectorMatrixRowAmount = _sectorMatrixRowAmount,
+                SectorRowAmount = _sectorTileAmount,
+                SectorIndex1d = sectorIndex1d,
+                Directions = pickedCostField.LocalDirections,
+                SectorMarks = path.SectorMarks,
+                FlowSector = flowfieldSector,
+                IntegrationField = path.IntegrationField,
+            };
         }
     }
 }
