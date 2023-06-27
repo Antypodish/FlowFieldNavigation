@@ -5,4 +5,5 @@
     LOSBlock = 2,
     LOSC = 3,
     Awaiting = 4,
+    Integrated = 5,
 }

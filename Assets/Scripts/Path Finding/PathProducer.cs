@@ -47,6 +47,7 @@ public class PathProducer
     }
     public Path ProducePath(NativeArray<Vector3> sources, Vector2 destination, int offset)
     {
+        Stopwatch sw = new Stopwatch();
         int2 destinationIndex = new int2(Mathf.FloorToInt(destination.x / _tileSize), Mathf.FloorToInt(destination.y / _tileSize));
         int destionationIndexFlat = destinationIndex.y * _columnAmount + destinationIndex.x;
         CostField pickedCostField = _costFieldProducer.GetCostFieldWithOffset(offset);
@@ -80,9 +81,10 @@ public class PathProducer
             SectorMarks = sectorMarks,
         };
         ProducedPaths.Add(producedPath);
-
+        //TRAVERSAL
         FieldGraphTraversalJob traversalJob = GetTraversalJob();
         traversalJob.Schedule().Complete();
+
         for (int i = 1; i < integrationField.Length; i++)
         {
             IntegrationFieldSector intSector = integrationField[i];
@@ -95,16 +97,28 @@ public class PathProducer
             flowSector.flowfieldSector.Length = _sectorTileAmount * _sectorTileAmount;
             flowField[i] = flowSector;
         }
+
+        //INT FIELD RESET
         NativeList<JobHandle> resetHandles = new NativeList<JobHandle>(Allocator.Temp);
         for (int i = 1; i < integrationField.Length; i++)
         {
             resetHandles.Add(GetResetFieldJob(integrationField[i].integrationSector).Schedule(_sectorTileAmount * _sectorTileAmount, 512));
         }
         JobHandle resetHandle = JobHandle.CombineDependencies(resetHandles);
+        resetHandle.Complete();
+
+        //LOS
         LOSJob losjob = GetLosJob();
         JobHandle losHandle = losjob.Schedule(resetHandle);
+        losHandle.Complete();
+        sw.Start();
+
+        //INTEGRATION
         IntFieldJob intjob = GetIntegrationJob();
         JobHandle integrationHandle = intjob.Schedule(losHandle);
+        integrationHandle.Complete();
+        sw.Stop();
+
         NativeList<JobHandle> flowfieldHandles = new NativeList<JobHandle>(Allocator.Temp);
         for (int i = 1; i < flowField.Length; i++)
         {
@@ -112,6 +126,7 @@ public class PathProducer
         }
         JobHandle.CombineDependencies(flowfieldHandles).Complete();
         producedPath.IsCalculated = true;
+        UnityEngine.Debug.Log(sw.Elapsed.TotalMilliseconds);
         return producedPath;
 
         //HELPERS
