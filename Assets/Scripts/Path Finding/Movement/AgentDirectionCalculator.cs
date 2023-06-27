@@ -22,11 +22,11 @@ public class AgentDirectionCalculator
     public AgentDirectionCalculator(AgentDataContainer agentDataContainer, PathfindingManager pathfindingManager)
     {
         _agentDataContainer = agentDataContainer;
+        _agents = agentDataContainer.Agents;
+        _pathfindingManager = pathfindingManager;
         _paths = new List<Path>();
         _jobData = new NativeList<UnsafeList<AgentMovementData>>(Allocator.Persistent);
-        _agents = agentDataContainer.Agents;
         _agentMovementData = new NativeList<AgentMovementData>(_agents.Count, Allocator.Persistent);
-        _pathfindingManager = pathfindingManager;
     }
     public void CalculateDirections()
     {

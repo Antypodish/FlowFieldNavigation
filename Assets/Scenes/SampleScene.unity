@@ -1078,7 +1078,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _pathfindingManager: {fileID: 638972356}
   _costFieldOffset: 0
-  _costField: 0
+  _costField: 1
   _neighbours: 0
   _sectors: 0
   _windows: 0
@@ -1240,7 +1240,7 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: _simulationState
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207641, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
