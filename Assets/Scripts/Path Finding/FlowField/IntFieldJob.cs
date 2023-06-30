@@ -14,7 +14,7 @@ public struct IntFieldJob : IJob
     public int FieldRowAmount;
     public int SectorColAmount;
     public int SectorMatrixColAmount;
-    public NativeList<IntegrationFieldSector> IntegrationField;
+    public NativeArray<IntegrationFieldSector> IntegrationField;
     public NativeQueue<LocalIndex1d> IntegrationQueue;
     [ReadOnly] public NativeArray<int> SectorMarks;
     [ReadOnly] public NativeArray<UnsafeList<LocalDirectionData1d>> LocalDirections;
@@ -26,7 +26,7 @@ public struct IntFieldJob : IJob
     void Integrate()
     {
         //DATA
-        NativeList<IntegrationFieldSector> integrationField = IntegrationField;
+        NativeArray<IntegrationFieldSector> integrationField = IntegrationField;
         NativeArray<int> sectorMarks = SectorMarks;
         NativeArray<UnsafeList<byte>> costs = Costs;
         NativeArray<UnsafeList<LocalDirectionData1d>> localDirections = LocalDirections;
@@ -133,10 +133,10 @@ public struct IntFieldJob : IJob
             if (nwSectorMark != 0) { nwIntCost = nwSector[directions.nw].Cost; }
 
             //AVAILABILITY
-            nAvailable = nCost != byte.MaxValue && nMark != IntegrationMark.LOSPass && nMark != IntegrationMark.Awaiting && nSectorMark != 0;
-            eAvailable = eCost != byte.MaxValue && eMark != IntegrationMark.LOSPass && eMark != IntegrationMark.Awaiting && eSectorMark != 0;
-            sAvailable = sCost != byte.MaxValue && sMark != IntegrationMark.LOSPass && sMark != IntegrationMark.Awaiting && sSectorMark != 0;
-            wAvailable = wCost != byte.MaxValue && wMark != IntegrationMark.LOSPass && wMark != IntegrationMark.Awaiting && wSectorMark != 0;
+            nAvailable = nCost != byte.MaxValue && (nMark == IntegrationMark.Integrated || nMark == IntegrationMark.None) && nSectorMark != 0;
+            eAvailable = eCost != byte.MaxValue && (eMark == IntegrationMark.Integrated || eMark == IntegrationMark.None) && eSectorMark != 0;
+            sAvailable = sCost != byte.MaxValue && (sMark == IntegrationMark.Integrated || sMark == IntegrationMark.None) && sSectorMark != 0;
+            wAvailable = wCost != byte.MaxValue && (wMark == IntegrationMark.Integrated || wMark == IntegrationMark.None) && wSectorMark != 0;
         }
         void Enqueue()
         {

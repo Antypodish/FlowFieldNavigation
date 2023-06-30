@@ -512,7 +512,7 @@ public struct LOSJob : IJob
                             UnsafeList<IntegrationTile> resultingIndexSector = integrationField[sectorMarks[resultingSectorIndex1d]].integrationSector;
                             IntegrationTile tile = resultingIndexSector[resultingLocalIndex1d];
                             if (tile.Mark == IntegrationMark.LOSBlock) { continue; }
-                            else if (costs[resultingIndex1d] == byte.MaxValue) { continue; }
+                            else if (costs[resultingIndex1d] == byte.MaxValue) { stopCalculating = true; break; }
                             tile.Mark = IntegrationMark.LOSBlock;
                             resultingIndexSector[resultingLocalIndex1d] = tile;
                             blockedWaveFronts.Enqueue(new LocalIndex1d(resultingLocalIndex1d, resultingSectorIndex1d));
