@@ -58,7 +58,7 @@ public struct FieldGraph
         SecToWinPtrs = new NativeArray<int>(secToWinPtrAmount, Allocator.Persistent);
         WindowNodes = new NativeArray<WindowNode>(windowAmount, Allocator.Persistent);
         WinToSecPtrs = new NativeArray<int>(winToSecPtrAmount, Allocator.Persistent);
-        PortalNodes = new NativeArray<PortalNode>(portalAmount, Allocator.Persistent);
+        PortalNodes = new NativeArray<PortalNode>(portalAmount + 1, Allocator.Persistent);
         PorToPorPtrs = new NativeArray<PortalToPortal>(porToPorPtrAmount, Allocator.Persistent);
     }
     public FieldGraphConfigurationJob GetConfigJob()

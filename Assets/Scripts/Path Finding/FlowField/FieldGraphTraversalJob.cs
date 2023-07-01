@@ -1,4 +1,5 @@
-﻿using System;
+﻿using JetBrains.Annotations;
+using System;
 using System.Runtime.InteropServices;
 using Unity.Burst;
 using Unity.Collections;
@@ -432,6 +433,28 @@ public struct FieldGraphTraversalJob : IJob
         }
     }
 }
+//NEW
+struct PortalTraversalData
+{
+    public int portalIndex;
+    public float gCost;
+    public float hCost;
+    public float fCost;
+    public PortalTraversalMark mark;
+}
+[Flags]
+enum PortalTraversalMark : byte
+{
+    None = 0,
+    Included = 1,
+    Considered = 2,
+    Picked = 4,
+    TargetNeighbour = 8,
+}
+
+
+
+//OLD
 struct ConnectionAndCost
 {
     public int Connection;

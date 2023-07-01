@@ -11,14 +11,10 @@ using UnityEngine.UIElements;
 
 public class HeapTest : MonoBehaviour
 {
-    float timer = 0;
     private void Start()
     {
         HeapJob hj;
         hj.Schedule().Complete();
-    }
-    private void Update()
-    {
     }
 }
 [BurstCompile]
@@ -31,11 +27,6 @@ public struct HeapJob : IJob
         for(int i = count - 1; i >= 0; i--)
         {
             heap.Add(i, i, i);
-        }
-        heap.SetPriority(0, 20);
-        for (int i = 0; i < count; i++)
-        {
-            UnityEngine.Debug.Log(heap[i]);
         }
     }
 
