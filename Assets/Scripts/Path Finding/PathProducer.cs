@@ -63,6 +63,7 @@ public class PathProducer
         NativeList<FlowFieldSector> flowField = new NativeList<FlowFieldSector>(Allocator.Persistent);
         integrationField.Add(new IntegrationFieldSector());
         flowField.Add(new FlowFieldSector());
+
         Path producedPath = new Path()
         {
             BlockedWaveFronts = blockedWaveFronts,
@@ -80,14 +81,11 @@ public class PathProducer
             SectorMarks = sectorMarks,
         };
         ProducedPaths.Add(producedPath);
-
+       
         //TRAVERSAL
-        Stopwatch sw = new Stopwatch();
-        sw.Start();
         FieldGraphTraversalJob traversalJob = GetTraversalJob();
         traversalJob.Schedule().Complete();
-        sw.Stop();
-        UnityEngine.Debug.Log(sw.Elapsed.TotalMilliseconds);
+
         for (int i = 1; i < integrationField.Length; i++)
         {
             IntegrationFieldSector intSector = integrationField[i];
@@ -126,7 +124,9 @@ public class PathProducer
             flowfieldHandles.Add(GetFlowFieldJob(flowField[i].flowfieldSector, flowField[i].sectorIndex1d).Schedule(_sectorTileAmount * _sectorTileAmount, 512, integrationHandle));
         }
         JobHandle.CombineDependencies(flowfieldHandles).Complete();
+
         producedPath.IsCalculated = true;
+
         return producedPath;
 
         //HELPERS

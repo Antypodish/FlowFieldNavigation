@@ -51,7 +51,7 @@ public struct FieldGraphTraversalJob : IJob
         Index2 targetSectorStartIndex = SectorNodes[_targetSectorIndex].Sector.StartIndex;
         _targetSectorStartIndex = targetSectorStartIndex.R * FieldColAmount + targetSectorStartIndex.C;
 
-        NativeArray<AStarTile> integratedCostsAtTargetSector = GetIntegratedCosts(targetIndexFlat);
+        NativeArray<DijkstraTile> integratedCostsAtTargetSector = GetIntegratedCosts(targetIndexFlat);
         UnsafeList<int> targetSectorPortalIndicies = GetPortalIndicies(_targetSectorIndex); 
         
         //SET TARGET PORTAL DATA
@@ -69,7 +69,7 @@ public struct FieldGraphTraversalJob : IJob
 
         //START GRAPH WALKER
         UnsafeList<int> traversedIndicies = new UnsafeList<int>(10, Allocator.Temp);
-        JobHeap<int> walkerHeap = new JobHeap<int>(10000, Allocator.Temp);
+        JobHeap<int> walkerHeap = new JobHeap<int>(10, Allocator.Temp);
         for (int i = 0; i < SourcePositions.Length; i++)
         {
             Vector3 sourcePos = SourcePositions[i];
@@ -79,8 +79,9 @@ public struct FieldGraphTraversalJob : IJob
             UnsafeList<int> sourcePortalIndicies = GetPortalIndicies(sourceSectorIndexFlat);
             for(int j = 0; j < sourcePortalIndicies.Length; j++)
             {
-                RunGraphWalkerFrom(sourcePortalIndicies[j], walkerHeap, integratedCostsAtTargetSector, ref traversedIndicies);
-                SetPortalSequence(sourcePortalIndicies[j]);
+                int stoppedIndex = RunGraphWalkerFrom(sourcePortalIndicies[j], walkerHeap, integratedCostsAtTargetSector, ref traversedIndicies);
+                if(stoppedIndex == -1) { continue; }
+                SetPortalSequence(sourcePortalIndicies[j], stoppedIndex);
                 ResetTraversedIndicies(ref traversedIndicies);
             }
         }
@@ -96,11 +97,11 @@ public struct FieldGraphTraversalJob : IJob
             travData.mark &= bitsToSet;
             PortalTraversalDataArray[index] = travData;
         }
+        traversedIndicies.Clear();
     }
-    void SetPortalSequence(int sourceNodeIndex)
+    void SetPortalSequence(int sourceNodeIndex, int stoppedIndex)
     {
-        int travArrayLength = PortalTraversalDataArray.Length;
-        int originIndex = travArrayLength - 1;
+        int originIndex = stoppedIndex;
         while (originIndex != sourceNodeIndex)
         {
             PortalSequence.Add(originIndex);
@@ -111,13 +112,13 @@ public struct FieldGraphTraversalJob : IJob
         }
         PortalSequence.Add(originIndex);
     }
-    void RunGraphWalkerFrom(int sourcePortalIndex, JobHeap<int> traversalHeap, NativeArray<AStarTile> targetSectorCosts, ref UnsafeList<int> traversedIndicies)
+    int RunGraphWalkerFrom(int sourcePortalIndex, JobHeap<int> traversalHeap, NativeArray<DijkstraTile> targetSectorCosts, ref UnsafeList<int> traversedIndicies)
     {
         NativeArray<PortalNode> portalNodes = PortalNodes;
         NativeArray<PortalTraversalData> portalTraversalDataArray = PortalTraversalDataArray;
 
         PortalTraversalData curData = PortalTraversalDataArray[sourcePortalIndex];
-        if((curData.mark & PortalTraversalMark.Picked) == PortalTraversalMark.Picked) { return; }
+        if((curData.mark & PortalTraversalMark.Picked) == PortalTraversalMark.Picked) { return -1; }
         
         //SET INNITIAL MARK
         curData = new PortalTraversalData()
@@ -125,7 +126,7 @@ public struct FieldGraphTraversalJob : IJob
             fCost = 0f,
             gCost = 0f,
             hCost = 0f,
-            mark = curData.mark | PortalTraversalMark.Picked | PortalTraversalMark.Included,
+            mark = PortalTraversalMark.Picked | PortalTraversalMark.Included,
             originIndex = sourcePortalIndex,
         };
         PortalTraversalDataArray[sourcePortalIndex] = curData;
@@ -139,17 +140,17 @@ public struct FieldGraphTraversalJob : IJob
         int por2P2pCnt = curNode.Portal2.PorToPorCnt;
 
         //HANDLE NEIGHBOURS
+        traversedIndicies.Add(curNodeIndex);
         TraverseNeighbours(curData, ref traversalHeap, ref traversedIndicies, targetSectorCosts, curNodeIndex, por1P2pIdx, por1P2pIdx + por1P2pCnt);
         TraverseNeighbours(curData, ref traversalHeap, ref traversedIndicies, targetSectorCosts, curNodeIndex, por2P2pIdx, por2P2pIdx + por2P2pCnt);
         SetNextNode();
-        traversedIndicies.Add(curNodeIndex);
         while ((curData.mark & PortalTraversalMark.Picked) != PortalTraversalMark.Picked)
         {
             TraverseNeighbours(curData, ref traversalHeap, ref traversedIndicies, targetSectorCosts, curNodeIndex, por1P2pIdx, por1P2pIdx + por1P2pCnt);
             TraverseNeighbours(curData, ref traversalHeap, ref traversedIndicies, targetSectorCosts, curNodeIndex, por2P2pIdx, por2P2pIdx + por2P2pCnt);
             SetNextNode();
         }
-
+        return curNodeIndex;
         void SetNextNode()
         {
             int nextMinIndex = traversalHeap.ExtractMin();
@@ -170,7 +171,7 @@ public struct FieldGraphTraversalJob : IJob
             por2P2pCnt = curNode.Portal2.PorToPorCnt;
         }
     }
-    void TraverseNeighbours(PortalTraversalData curData, ref JobHeap<int> traversalHeap, ref UnsafeList<int> traversedIndicies, NativeArray<AStarTile> targetSectorCosts, int curNodeIndex, int from, int to)
+    void TraverseNeighbours(PortalTraversalData curData, ref JobHeap<int> traversalHeap, ref UnsafeList<int> traversedIndicies, NativeArray<DijkstraTile> targetSectorCosts, int curNodeIndex, int from, int to)
     {
         for (int i = from; i < to; i++)
         {
@@ -247,7 +248,7 @@ public struct FieldGraphTraversalJob : IJob
         int bigOne = math.max(xDif, yDif);
         return (bigOne - smallOne) * 1f + smallOne * 1.4f;
     }
-    void SetTargetNeighbourPortalData(UnsafeList<int> targetSectorPortalIndicies, NativeArray<AStarTile> integratedCostsAtTargetSector)
+    void SetTargetNeighbourPortalData(UnsafeList<int> targetSectorPortalIndicies, NativeArray<DijkstraTile> integratedCostsAtTargetSector)
     {
         for (int i = 0; i < targetSectorPortalIndicies.Length; i++)
         {
@@ -265,14 +266,14 @@ public struct FieldGraphTraversalJob : IJob
             };
         }
     }
-    float GetGCostBetweenTargetAndTargetNeighbour(int targetNeighbourIndex, NativeArray<AStarTile> targetSectorCosts)
+    float GetGCostBetweenTargetAndTargetNeighbour(int targetNeighbourIndex, NativeArray<DijkstraTile> targetSectorCosts)
     {
         int portalLocalIndexAtSector = GetPortalLocalIndexAtSector(PortalNodes[targetNeighbourIndex], _targetSectorIndex, _targetSectorStartIndex);
         return targetSectorCosts[portalLocalIndexAtSector].IntegratedCost;
     }
-    NativeArray<AStarTile> GetIntegratedCosts(int targetIndex)
+    NativeArray<DijkstraTile> GetIntegratedCosts(int targetIndex)
     {
-        NativeArray<AStarTile> integratedCosts = new NativeArray<AStarTile>(SectorTileAmount * SectorTileAmount, Allocator.Temp);
+        NativeArray<DijkstraTile> integratedCosts = new NativeArray<DijkstraTile>(SectorTileAmount * SectorTileAmount, Allocator.Temp);
         NativeQueue<int> aStarQueue = new NativeQueue<int>(Allocator.Temp);
         CalculateIntegratedCosts(integratedCosts, aStarQueue, SectorNodes[_targetSectorIndex].Sector, targetIndex);
         return integratedCosts;
@@ -335,8 +336,8 @@ public struct FieldGraphTraversalJob : IJob
         return (distanceFromSectorStart % FieldColAmount) + (SectorTileAmount * (distanceFromSectorStart / FieldColAmount));
     }
 
-    //TARGET SECTOR COST CALCULATION
-    void CalculateIntegratedCosts(NativeArray<AStarTile> integratedCosts, NativeQueue<int> aStarQueue, Sector sector, int targetIndexFlat)
+    //TARGET SECTOR COST CALCULATION WITH DIJKSTRA
+    void CalculateIntegratedCosts(NativeArray<DijkstraTile> integratedCosts, NativeQueue<int> aStarQueue, Sector sector, int targetIndexFlat)
     {
         //DATA
         int sectorTileAmount = SectorTileAmount;
@@ -348,7 +349,7 @@ public struct FieldGraphTraversalJob : IJob
 
         Reset();
         int targetLocalIndex = GetLocalIndex(targetIndexFlat);
-        AStarTile targetTile = integratedCosts[targetLocalIndex];
+        DijkstraTile targetTile = integratedCosts[targetLocalIndex];
         targetTile.IntegratedCost = 0f;
         targetTile.IsAvailable = false;
         integratedCosts[targetLocalIndex] = targetTile;
@@ -356,7 +357,7 @@ public struct FieldGraphTraversalJob : IJob
         while (!aStarQueue.IsEmpty())
         {
             int localindex = aStarQueue.Dequeue();
-            AStarTile tile = integratedCosts[localindex];
+            DijkstraTile tile = integratedCosts[localindex];
             tile.IntegratedCost = GetCost(LocalDirections[localindex]);
             integratedCosts[localindex] = tile;
             Enqueue(LocalDirections[localindex]);
@@ -372,10 +373,10 @@ public struct FieldGraphTraversalJob : IJob
                 byte cost = costs[generalIndex];
                 if(cost == byte.MaxValue)
                 {
-                    integratedCosts[i] = new AStarTile(cost, float.MaxValue, false);
+                    integratedCosts[i] = new DijkstraTile(cost, float.MaxValue, false);
                     continue;
                 }
-                integratedCosts[i] = new AStarTile(cost, float.MaxValue, true);
+                integratedCosts[i] = new DijkstraTile(cost, float.MaxValue, true);
             }
         }
         void Enqueue(SectorDirectionData localDirections)
@@ -387,28 +388,28 @@ public struct FieldGraphTraversalJob : IJob
             if (integratedCosts[n].IsAvailable)
             {
                 aStarQueue.Enqueue(n);
-                AStarTile tile = integratedCosts[n];
+                DijkstraTile tile = integratedCosts[n];
                 tile.IsAvailable = false;
                 integratedCosts[n] = tile;
             }
             if (integratedCosts[e].IsAvailable)
             {
                 aStarQueue.Enqueue(e);
-                AStarTile tile = integratedCosts[e];
+                DijkstraTile tile = integratedCosts[e];
                 tile.IsAvailable = false;
                 integratedCosts[e] = tile;
             }
             if (integratedCosts[s].IsAvailable)
             {
                 aStarQueue.Enqueue(s);
-                AStarTile tile = integratedCosts[s];
+                DijkstraTile tile = integratedCosts[s];
                 tile.IsAvailable = false;
                 integratedCosts[s] = tile;
             }
             if (integratedCosts[w].IsAvailable)
             {
                 aStarQueue.Enqueue(w);
-                AStarTile tile = integratedCosts[w];
+                DijkstraTile tile = integratedCosts[w];
                 tile.IsAvailable = false;
                 integratedCosts[w] = tile;
             }
@@ -444,13 +445,13 @@ public struct FieldGraphTraversalJob : IJob
             return (distanceFromSectorStart % fieldColAmount) + (sectorTileAmount * (distanceFromSectorStart / fieldColAmount));
         }
     }
-    struct AStarTile
+    struct DijkstraTile
     {
         public byte Cost;
         public float IntegratedCost;
         public bool IsAvailable;
 
-        public AStarTile(byte cost, float integratedCost, bool isAvailable)
+        public DijkstraTile(byte cost, float integratedCost, bool isAvailable)
         {
             Cost = cost;
             IntegratedCost = integratedCost;
