@@ -144,6 +144,7 @@ public struct FieldGraphTraversalJob : IJob
         TraverseNeighbours(curData, ref traversalHeap, ref traversedIndicies, targetSectorCosts, curNodeIndex, por1P2pIdx, por1P2pIdx + por1P2pCnt);
         TraverseNeighbours(curData, ref traversalHeap, ref traversedIndicies, targetSectorCosts, curNodeIndex, por2P2pIdx, por2P2pIdx + por2P2pCnt);
         SetNextNode();
+
         while ((curData.mark & PortalTraversalMark.Picked) != PortalTraversalMark.Picked)
         {
             TraverseNeighbours(curData, ref traversalHeap, ref traversedIndicies, targetSectorCosts, curNodeIndex, por1P2pIdx, por1P2pIdx + por1P2pCnt);
@@ -153,6 +154,7 @@ public struct FieldGraphTraversalJob : IJob
         return curNodeIndex;
         void SetNextNode()
         {
+            if (traversalHeap.IsEmpty) { return; }
             int nextMinIndex = traversalHeap.ExtractMin();
             PortalTraversalData nextMinTraversalData = portalTraversalDataArray[nextMinIndex];
             while ((nextMinTraversalData.mark & PortalTraversalMark.Considered) == PortalTraversalMark.Considered)
@@ -468,6 +470,13 @@ public struct FieldGraphTraversalJob : IJob
             get
             {
                 return _array[index].data;
+            }
+        }
+        public bool IsEmpty
+        {
+            get
+            {
+                return _array.IsEmpty;
             }
         }
         public JobHeap(int size, Allocator allocator)
