@@ -56,6 +56,7 @@ public class PathProducer
         NativeArray<int> connectionIndicies = new NativeArray<int>(pickedCostField.FieldGraph.PortalNodes.Length, Allocator.Persistent);
         NativeList<int> portalSequence = new NativeList<int>(Allocator.Persistent);
         NativeArray<PortalTraversalData> portalMarks = new NativeArray<PortalTraversalData>(pickedCostField.FieldGraph.PortalNodes.Length, Allocator.Persistent);
+        NativeArray<DijkstraTile> targetSectorCosts = new NativeArray<DijkstraTile>(_sectorTileAmount * _sectorTileAmount, Allocator.Persistent);
         NativeQueue<LocalIndex1d> blockedWaveFronts = new NativeQueue<LocalIndex1d>(Allocator.Persistent);
         NativeQueue<LocalIndex1d> intqueue = new NativeQueue<LocalIndex1d>(Allocator.Persistent);
         NativeArray<int> sectorMarks = new NativeArray<int>(pickedCostField.FieldGraph.SectorNodes.Length, Allocator.Persistent);
@@ -66,6 +67,8 @@ public class PathProducer
 
         Path producedPath = new Path()
         {
+            TargetIndex = destinationIndex,
+            TargetSectorCosts = targetSectorCosts,
             BlockedWaveFronts = blockedWaveFronts,
             Sources = sources,
             Destination = destination,
@@ -134,6 +137,8 @@ public class PathProducer
         {
             return new FieldGraphTraversalJob()
             {
+                TargetSectorCosts = targetSectorCosts,
+                TargetIndex = destinationIndex,
                 FieldColAmount = _columnAmount,
                 PortalNodes = pickedCostField.FieldGraph.PortalNodes,
                 SecToWinPtrs = pickedCostField.FieldGraph.SecToWinPtrs,
@@ -141,7 +146,6 @@ public class PathProducer
                 WinToSecPtrs = pickedCostField.FieldGraph.WinToSecPtrs,
                 FieldRowAmount = _rowAmount,
                 FieldTileSize = _tileSize,
-                TargetPosition = destination,
                 SourcePositions = sources,
                 PorPtrs = pickedCostField.FieldGraph.PorToPorPtrs,
                 SectorNodes = pickedCostField.FieldGraph.SectorNodes,
@@ -258,18 +262,20 @@ public class PathProducer
         {
             return new FlowFieldAdditionTraversalJob()
             {
+                FieldColAmount = _columnAmount,
+                TargetIndex = path.TargetIndex,
+                PortalTraversalDataArray = path.PortalTraversalDataArray,
+                NewSectors = sectorIndicies,
+                TargetSectorCosts = path.TargetSectorCosts,
                 SectorColAmount = _sectorTileAmount,
                 SectorMatrixColAmount = _sectorMatrixColAmount,
-                SourceSectorIndicies = sectorIndicies,
                 PortalNodes = pickedCostField.FieldGraph.PortalNodes,
                 SecToWinPtrs = pickedCostField.FieldGraph.SecToWinPtrs,
                 WindowNodes = pickedCostField.FieldGraph.WindowNodes,
                 WinToSecPtrs = pickedCostField.FieldGraph.WinToSecPtrs,
                 PorPtrs = pickedCostField.FieldGraph.PorToPorPtrs,
                 SectorNodes = pickedCostField.FieldGraph.SectorNodes,
-                ConnectionIndicies = path.ConnectionIndicies,
-                //PortalSequence = path.PortalSequence,
-                //PortalMarks = path.PortalTraversalDataArray,
+                PortalSequence = path.PortalSequence,
                 SectorMarks = path.SectorMarks,
                 IntegrationField = path.IntegrationField,
                 FlowField = path.FlowField,

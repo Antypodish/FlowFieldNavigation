@@ -56,7 +56,7 @@ public class PathfindingManager : MonoBehaviour
         if (deltaTime >= _agentUpdateFrequency)
         {
             _lastAgentUpdateTime = curTime;
-            //_agentUpdateRoutine.Update(deltaTime);
+            _agentUpdateRoutine.Update(deltaTime);
         }
     }
     void CalculateTilePositions()

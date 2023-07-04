@@ -10,6 +10,7 @@ public class Path
     public int Offset;
     public PathState State;
     public bool IsCalculated = false;
+    public int2 TargetIndex;
     public Vector2 Destination;
     public NativeArray<Vector3> Sources;
     public NativeArray<float> PortalDistances;
@@ -21,9 +22,10 @@ public class Path
     public NativeList<FlowFieldSector> FlowField;
     public NativeQueue<LocalIndex1d> BlockedWaveFronts;
     public NativeQueue<LocalIndex1d> intqueue;
-
+    public NativeArray<DijkstraTile> TargetSectorCosts;
     public void Dispose()
     {
+        TargetSectorCosts.Dispose();
         intqueue.Dispose();
         BlockedWaveFronts.Dispose();
         Sources.Dispose();
