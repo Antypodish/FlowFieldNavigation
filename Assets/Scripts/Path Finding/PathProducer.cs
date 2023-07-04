@@ -52,10 +52,8 @@ public class PathProducer
         CostField pickedCostField = _costFieldProducer.GetCostFieldWithOffset(offset);
         if (pickedCostField.CostsG[destionationIndexFlat] == byte.MaxValue) { return null; }
 
-        NativeArray<float> portalDistances = new NativeArray<float>(pickedCostField.FieldGraph.PortalNodes.Length, Allocator.Persistent);
-        NativeArray<int> connectionIndicies = new NativeArray<int>(pickedCostField.FieldGraph.PortalNodes.Length, Allocator.Persistent);
         NativeList<int> portalSequence = new NativeList<int>(Allocator.Persistent);
-        NativeArray<PortalTraversalData> portalMarks = new NativeArray<PortalTraversalData>(pickedCostField.FieldGraph.PortalNodes.Length, Allocator.Persistent);
+        NativeArray<PortalTraversalData> portalTraversalDataArray = new NativeArray<PortalTraversalData>(pickedCostField.FieldGraph.PortalNodes.Length, Allocator.Persistent);
         NativeArray<DijkstraTile> targetSectorCosts = new NativeArray<DijkstraTile>(_sectorTileAmount * _sectorTileAmount, Allocator.Persistent);
         NativeQueue<LocalIndex1d> blockedWaveFronts = new NativeQueue<LocalIndex1d>(Allocator.Persistent);
         NativeQueue<LocalIndex1d> intqueue = new NativeQueue<LocalIndex1d>(Allocator.Persistent);
@@ -74,10 +72,8 @@ public class PathProducer
             Destination = destination,
             State = PathState.Clean,
             Offset = offset,
-            PortalDistances = portalDistances,
-            ConnectionIndicies = connectionIndicies,
             PortalSequence = portalSequence,
-            PortalTraversalDataArray = portalMarks,
+            PortalTraversalDataArray = portalTraversalDataArray,
             IntegrationField = integrationField,
             FlowField = flowField,
             intqueue = intqueue,
@@ -121,6 +117,7 @@ public class PathProducer
         JobHandle integrationHandle = intjob.Schedule(losHandle);
         integrationHandle.Complete();
 
+        //FLOW FIELD
         NativeList<JobHandle> flowfieldHandles = new NativeList<JobHandle>(Allocator.Temp);
         for (int i = 1; i < flowField.Length; i++)
         {
@@ -157,7 +154,7 @@ public class PathProducer
                 SectorMarks = sectorMarks,
                 IntegrationField = integrationField,
                 FlowField = flowField,
-                PortalTraversalDataArray = portalMarks,
+                PortalTraversalDataArray = portalTraversalDataArray,
             };
         }
         IntFieldResetJob GetResetFieldJob(UnsafeList<IntegrationTile> integrationFieldSector)

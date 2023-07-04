@@ -42,7 +42,7 @@ public struct FlowFieldAdditionTraversalJob : IJob
 
         //START GRAPH WALKER
         UnsafeList<int> traversedIndicies = new UnsafeList<int>(10, Allocator.Temp);
-        JobHeap<int> walkerHeap = new JobHeap<int>(10, Allocator.Temp);
+        UnsafeHeap<int> walkerHeap = new UnsafeHeap<int>(10, Allocator.Temp);
         for (int i = 0; i < NewSectors.Length; i++)
         {
             int sourceSectorIndexFlat = NewSectors[i];
@@ -97,7 +97,7 @@ public struct FlowFieldAdditionTraversalJob : IJob
             if (integrationStart.index != -1) { IntegrationStartIndicies.Add(integrationStart); }
         }
     }
-    int RunGraphWalkerFrom(int sourcePortalIndex, JobHeap<int> traversalHeap, NativeArray<DijkstraTile> targetSectorCosts, ref UnsafeList<int> traversedIndicies)
+    int RunGraphWalkerFrom(int sourcePortalIndex, UnsafeHeap<int> traversalHeap, NativeArray<DijkstraTile> targetSectorCosts, ref UnsafeList<int> traversedIndicies)
     {
         NativeArray<PortalNode> portalNodes = PortalNodes;
         NativeArray<PortalTraversalData> portalTraversalDataArray = PortalTraversalDataArray;
@@ -158,7 +158,7 @@ public struct FlowFieldAdditionTraversalJob : IJob
             por2P2pCnt = curNode.Portal2.PorToPorCnt;
         }
     }
-    void TraverseNeighbours(PortalTraversalData curData, ref JobHeap<int> traversalHeap, ref UnsafeList<int> traversedIndicies, NativeArray<DijkstraTile> targetSectorCosts, int curNodeIndex, int from, int to)
+    void TraverseNeighbours(PortalTraversalData curData, ref UnsafeHeap<int> traversalHeap, ref UnsafeList<int> traversedIndicies, NativeArray<DijkstraTile> targetSectorCosts, int curNodeIndex, int from, int to)
     {
         for (int i = from; i < to; i++)
         {
@@ -302,8 +302,6 @@ public struct FlowFieldAdditionTraversalJob : IJob
         }
         return new LocalIndex1d(-1, -1);
     }
-
-    //HELPERS
     int GetPortalLocalIndexAtSector(PortalNode portalNode, int sectorIndex, int sectorStartIndex)
     {
         Index2 index1 = portalNode.Portal1.Index;
@@ -324,7 +322,7 @@ public struct FlowFieldAdditionTraversalJob : IJob
     }
 
     //HEAP
-    public struct JobHeap<T> where T : unmanaged
+    public struct UnsafeHeap<T> where T : unmanaged
     {
         public UnsafeList<HeapElement<T>> _array;
         public T this[int index]
@@ -341,7 +339,7 @@ public struct FlowFieldAdditionTraversalJob : IJob
                 return _array.IsEmpty;
             }
         }
-        public JobHeap(int size, Allocator allocator)
+        public UnsafeHeap(int size, Allocator allocator)
         {
             _array = new UnsafeList<HeapElement<T>>(size, allocator);
         }

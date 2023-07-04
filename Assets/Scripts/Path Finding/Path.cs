@@ -13,8 +13,6 @@ public class Path
     public int2 TargetIndex;
     public Vector2 Destination;
     public NativeArray<Vector3> Sources;
-    public NativeArray<float> PortalDistances;
-    public NativeArray<int> ConnectionIndicies;
     public NativeArray<PortalTraversalData> PortalTraversalDataArray;
     public NativeList<int> PortalSequence;
     public NativeArray<int> SectorMarks;
@@ -25,12 +23,10 @@ public class Path
     public NativeArray<DijkstraTile> TargetSectorCosts;
     public void Dispose()
     {
+        Sources.Dispose();
         TargetSectorCosts.Dispose();
         intqueue.Dispose();
         BlockedWaveFronts.Dispose();
-        Sources.Dispose();
-        PortalDistances.Dispose();
-        ConnectionIndicies.Dispose();
         PortalTraversalDataArray.Dispose();
         PortalSequence.Dispose();
         SectorMarks.Dispose();

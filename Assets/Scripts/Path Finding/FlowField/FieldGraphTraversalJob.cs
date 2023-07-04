@@ -68,7 +68,7 @@ public struct FieldGraphTraversalJob : IJob
 
         //START GRAPH WALKER
         UnsafeList<int> traversedIndicies = new UnsafeList<int>(10, Allocator.Temp);
-        JobHeap<int> walkerHeap = new JobHeap<int>(10, Allocator.Temp);
+        UnsafeHeap<int> walkerHeap = new UnsafeHeap<int>(10, Allocator.Temp);
         for (int i = 0; i < SourcePositions.Length; i++)
         {
             Vector3 sourcePos = SourcePositions[i];
@@ -111,7 +111,7 @@ public struct FieldGraphTraversalJob : IJob
         }
         PortalSequence.Add(originIndex);
     }
-    int RunGraphWalkerFrom(int sourcePortalIndex, JobHeap<int> traversalHeap, NativeArray<DijkstraTile> targetSectorCosts, ref UnsafeList<int> traversedIndicies)
+    int RunGraphWalkerFrom(int sourcePortalIndex, UnsafeHeap<int> traversalHeap, NativeArray<DijkstraTile> targetSectorCosts, ref UnsafeList<int> traversedIndicies)
     {
         NativeArray<PortalNode> portalNodes = PortalNodes;
         NativeArray<PortalTraversalData> portalTraversalDataArray = PortalTraversalDataArray;
@@ -172,7 +172,7 @@ public struct FieldGraphTraversalJob : IJob
             por2P2pCnt = curNode.Portal2.PorToPorCnt;
         }
     }
-    void TraverseNeighbours(PortalTraversalData curData, ref JobHeap<int> traversalHeap, ref UnsafeList<int> traversedIndicies, NativeArray<DijkstraTile> targetSectorCosts, int curNodeIndex, int from, int to)
+    void TraverseNeighbours(PortalTraversalData curData, ref UnsafeHeap<int> traversalHeap, ref UnsafeList<int> traversedIndicies, NativeArray<DijkstraTile> targetSectorCosts, int curNodeIndex, int from, int to)
     {
         for (int i = from; i < to; i++)
         {
@@ -448,7 +448,7 @@ public struct FieldGraphTraversalJob : IJob
         }
     }
     //HEAP
-    public struct JobHeap<T> where T : unmanaged
+    public struct UnsafeHeap<T> where T : unmanaged
     {
         public UnsafeList<HeapElement<T>> _array;
         public T this[int index]
@@ -465,7 +465,7 @@ public struct FieldGraphTraversalJob : IJob
                 return _array.IsEmpty;
             }
         }
-        public JobHeap(int size, Allocator allocator)
+        public UnsafeHeap(int size, Allocator allocator)
         {
             _array = new UnsafeList<HeapElement<T>>(size, allocator);
         }
@@ -596,7 +596,6 @@ public struct FieldGraphTraversalJob : IJob
         }
     }
 }
-//NEW
 public struct PortalTraversalData
 {
     public int originIndex;
@@ -626,16 +625,4 @@ public enum PortalTraversalMark : byte
     Considered = 2,
     Picked = 4,
     TargetNeighbour = 8,
-}
-public enum PortalMark : byte
-{
-    None = 0,
-    BFS = 1,
-    MainWalker = 2,
-    SideWalker = 3,
-};
-public struct PortalSequence
-{
-    public int PortalPtr;
-    public int NextPortalPtrIndex;
 }
