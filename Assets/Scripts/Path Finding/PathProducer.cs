@@ -54,8 +54,8 @@ public class PathProducer
 
         NativeArray<float> portalDistances = new NativeArray<float>(pickedCostField.FieldGraph.PortalNodes.Length, Allocator.Persistent);
         NativeArray<int> connectionIndicies = new NativeArray<int>(pickedCostField.FieldGraph.PortalNodes.Length, Allocator.Persistent);
-        NativeList<PortalSequence> portalSequence = new NativeList<PortalSequence>(Allocator.Persistent);
-        NativeArray<PortalMark> portalMarks = new NativeArray<PortalMark>(pickedCostField.FieldGraph.PortalNodes.Length, Allocator.Persistent);
+        NativeList<int> portalSequence = new NativeList<int>(Allocator.Persistent);
+        NativeArray<PortalTraversalData> portalMarks = new NativeArray<PortalTraversalData>(pickedCostField.FieldGraph.PortalNodes.Length, Allocator.Persistent);
         NativeQueue<LocalIndex1d> blockedWaveFronts = new NativeQueue<LocalIndex1d>(Allocator.Persistent);
         NativeQueue<LocalIndex1d> intqueue = new NativeQueue<LocalIndex1d>(Allocator.Persistent);
         NativeArray<int> sectorMarks = new NativeArray<int>(pickedCostField.FieldGraph.SectorNodes.Length, Allocator.Persistent);
@@ -73,17 +73,21 @@ public class PathProducer
             PortalDistances = portalDistances,
             ConnectionIndicies = connectionIndicies,
             PortalSequence = portalSequence,
-            PortalMarks = portalMarks,
+            PortalTraversalDataArray = portalMarks,
             IntegrationField = integrationField,
             FlowField = flowField,
             intqueue = intqueue,
             SectorMarks = sectorMarks,
         };
         ProducedPaths.Add(producedPath);
+
         //TRAVERSAL
+        Stopwatch sw = new Stopwatch();
+        sw.Start();
         FieldGraphTraversalJob traversalJob = GetTraversalJob();
         traversalJob.Schedule().Complete();
-
+        sw.Stop();
+        UnityEngine.Debug.Log(sw.Elapsed.TotalMilliseconds);
         for (int i = 1; i < integrationField.Length; i++)
         {
             IntegrationFieldSector intSector = integrationField[i];
@@ -145,13 +149,11 @@ public class PathProducer
                 SectorTileAmount = _sectorTileAmount,
                 SectorMatrixColAmount = _columnAmount / _sectorTileAmount,
                 LocalDirections = _costFieldProducer.SectorDirections,
-                ConnectionIndicies = connectionIndicies,
-                PortalDistances = portalDistances,
                 PortalSequence = portalSequence,
-                PortalMarks = portalMarks,
                 SectorMarks = sectorMarks,
                 IntegrationField = integrationField,
                 FlowField = flowField,
+                PortalTraversalDataArray = portalMarks,
             };
         }
         IntFieldResetJob GetResetFieldJob(UnsafeList<IntegrationTile> integrationFieldSector)
@@ -266,8 +268,8 @@ public class PathProducer
                 PorPtrs = pickedCostField.FieldGraph.PorToPorPtrs,
                 SectorNodes = pickedCostField.FieldGraph.SectorNodes,
                 ConnectionIndicies = path.ConnectionIndicies,
-                PortalSequence = path.PortalSequence,
-                PortalMarks = path.PortalMarks,
+                //PortalSequence = path.PortalSequence,
+                //PortalMarks = path.PortalTraversalDataArray,
                 SectorMarks = path.SectorMarks,
                 IntegrationField = path.IntegrationField,
                 FlowField = path.FlowField,

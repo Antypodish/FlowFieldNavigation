@@ -24,9 +24,8 @@ public class PathDebugger
         _tileSize = pathfindingManager.TileSize;
     }
 
-    public void DebugBFS()
+    public void DebugPortalTraversalMarks()
     {
-        Gizmos.color = Color.black;
         if (_pathProducer == null) { return; }
         Path producedPath = _pathProducer.ProducedPaths.Last();
         if (producedPath == null) { return; }
@@ -34,25 +33,44 @@ public class PathDebugger
         float tileSize = _pathfindingManager.TileSize;
         FieldGraph fg = _costFieldProducer.GetCostFieldWithOffset(producedPath.Offset).FieldGraph;
         NativeArray<PortalNode> portalNodes = fg.PortalNodes;
-        NativeArray<int> connections = producedPath.ConnectionIndicies;
-        NativeArray<float> distances = producedPath.PortalDistances;
-        for (int i = 0; i < portalNodes.Length; i++)
+        NativeArray<PortalTraversalData> portalTraversalDataArray = producedPath.PortalTraversalDataArray;
+        for(int i = 0; i < portalNodes.Length; i++)
         {
-            PortalNode startNode = portalNodes[i];
-            if (startNode.Portal1.Index.R == 0) { continue; }
-            PortalNode endNode = portalNodes[connections[i]];
-            Vector3 start = startNode.GetPosition(tileSize) + new Vector3(0, 0.05f, 0);
-            Vector3 end = endNode.GetPosition(tileSize) + new Vector3(0, 0.05f, 0);
-            float distance = Vector3.Distance(start, end);
-            end = Vector3.MoveTowards(start, end, distance - 0.3f);
-            float cost = distances[i];
-            Gizmos.DrawLine(start, end);
-            Handles.Label(start + new Vector3(0, 0, 0.5f), cost.ToString());
+            PortalTraversalData travData = portalTraversalDataArray[i];
+            PortalNode node = portalNodes[i];
+            if ((travData.mark & PortalTraversalMark.Picked) == PortalTraversalMark.Picked)
+            {
+                Gizmos.color = Color.blue;
+                Vector3 portalPos = node.GetPosition(tileSize);
+                Gizmos.DrawSphere(portalPos, 0.5f);
+                Handles.Label(portalPos + new Vector3(0,0 , 0.75f), i.ToString());
+            }
+            else if ((travData.mark & PortalTraversalMark.TargetNeighbour) == PortalTraversalMark.TargetNeighbour)
+            {
+                Gizmos.color = Color.magenta;
+                Vector3 portalPos = node.GetPosition(tileSize);
+                Gizmos.DrawSphere(portalPos, 0.5f);
+                Handles.Label(portalPos + new Vector3(0, 0, 0.75f), i.ToString());
+            }
+            else if ((travData.mark & PortalTraversalMark.Considered) == PortalTraversalMark.Considered)
+            {
+                Gizmos.color = Color.red;
+                Vector3 portalPos = node.GetPosition(tileSize);
+                Gizmos.DrawSphere(portalPos, 0.5f);
+                Handles.Label(portalPos + new Vector3(0, 0, 0.75f), i.ToString());
+            }
+            else if ((travData.mark & PortalTraversalMark.Included) == PortalTraversalMark.Included)
+            {
+                Gizmos.color = Color.yellow;
+                Vector3 portalPos = node.GetPosition(tileSize);
+                Gizmos.DrawSphere(portalPos, 0.5f);
+                Handles.Label(portalPos + new Vector3(0, 0, 0.75f), i.ToString());
+            }
         }
     }
     public void DebugPortalSequence()
     {
-        
+        /*
         if (_pathProducer == null) { return; }
         Path producedPath = _pathProducer.ProducedPaths.Last();
         if (producedPath == null) { return; }
@@ -76,7 +94,7 @@ public class PathDebugger
                 Vector3 nextPos = nextNode.GetPosition(_tileSize);
                 Gizmos.DrawLine(porPos, nextPos);
             }
-        }
+        }*/ 
     }
     public void DebugPickedSectors()
     {

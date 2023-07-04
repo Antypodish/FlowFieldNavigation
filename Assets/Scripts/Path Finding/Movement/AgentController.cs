@@ -39,7 +39,7 @@ public class AgentController : MonoBehaviour
     void ControlSingle()
     {
         int agentCount = _agents.Count;
-        if (Input.GetMouseButtonDown(1))
+        if (Input.GetMouseButton(1))
         {
             float tileSize = _pathfindingManager.TileSize;
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -63,7 +63,7 @@ public class AgentController : MonoBehaviour
     void ControlDouble()
     {
         int agentCount = _agents.Count;
-        if (Input.GetMouseButtonDown(1))
+        if (Input.GetMouseButton(1))
         {
             float tileSize = _pathfindingManager.TileSize;
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -83,7 +83,7 @@ public class AgentController : MonoBehaviour
                 }
             }
         }
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButton(0))
         {
             float tileSize = _pathfindingManager.TileSize;
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);

@@ -14,8 +14,8 @@ public class Path
     public NativeArray<Vector3> Sources;
     public NativeArray<float> PortalDistances;
     public NativeArray<int> ConnectionIndicies;
-    public NativeArray<PortalMark> PortalMarks;
-    public NativeList<PortalSequence> PortalSequence;
+    public NativeArray<PortalTraversalData> PortalTraversalDataArray;
+    public NativeList<int> PortalSequence;
     public NativeArray<int> SectorMarks;
     public NativeList<IntegrationFieldSector> IntegrationField;
     public NativeList<FlowFieldSector> FlowField;
@@ -29,7 +29,7 @@ public class Path
         Sources.Dispose();
         PortalDistances.Dispose();
         ConnectionIndicies.Dispose();
-        PortalMarks.Dispose();
+        PortalTraversalDataArray.Dispose();
         PortalSequence.Dispose();
         SectorMarks.Dispose();
         for(int i = 1; i < IntegrationField.Length; i++)

@@ -492,7 +492,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1433703517}
-  - component: {fileID: 1433703518}
   m_Layer: 0
   m_Name: test
   m_TagString: Untagged
@@ -515,18 +514,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 10
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1433703518
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1433703515}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5540f57c5d744fb47a7a991fcc460e54, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &1550691738 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
@@ -678,23 +665,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _pathfindingManager: {fileID: 638972356}
   _costFieldOffset: 0
-  _costField: 1
+  _costField: 0
   _neighbours: 0
   _sectors: 0
-  _windows: 1
+  _windows: 0
   _sectorWindows: 0
   _windowSectors: 0
   _portals: 0
   _portalsOnSector: 0
   _costsToPortal: 0
   _AStar: 0
-  _debugBFS: 1
+  _debugPortalTraversalMarks: 1
   _debugPortalSequence: 0
   _debugPickedSectors: 0
   _debugIntegrationField: 0
   _debugLOSPass: 0
   _debugLOSBlocks: 0
-  _debugFlowField: 0
+  _debugFlowField: 1
 --- !u!1001 &1284591847240803008
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -720,7 +707,7 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: RowAmount
-      value: 110
+      value: 1000
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
@@ -735,7 +722,7 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: ColumnAmount
-      value: 120
+      value: 1000
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
@@ -880,7 +867,7 @@ PrefabInstance:
     - target: {fileID: 1825739965324605910, guid: e0d1fa0b1efdac642802b5705081a344,
         type: 3}
       propertyPath: _zoomSensitivity
-      value: 3
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 1825739965324605910, guid: e0d1fa0b1efdac642802b5705081a344,
         type: 3}

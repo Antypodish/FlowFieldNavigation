@@ -18,7 +18,7 @@ public class PathFindingDebugger : MonoBehaviour
     [SerializeField] bool _costsToPortal;
     [SerializeField] bool _AStar;
     [Header("PathDebugger")]
-    [SerializeField] bool _debugBFS;
+    [SerializeField] bool _debugPortalTraversalMarks;
     [SerializeField] bool _debugPortalSequence;
     [SerializeField] bool _debugPickedSectors;
     [SerializeField] bool _debugIntegrationField;
@@ -60,7 +60,7 @@ public class PathFindingDebugger : MonoBehaviour
         if(_neighbours && _neighborDebugger != null) { _neighborDebugger.DebugNeighbours(); }
 
         PathDebugger pathDebugger = new PathDebugger(_pathfindingManager);
-        if (_debugBFS && pathDebugger != null) { pathDebugger.DebugBFS(); }
+        if (_debugPortalTraversalMarks && pathDebugger != null) { pathDebugger.DebugPortalTraversalMarks(); }
         if (_debugPortalSequence && pathDebugger != null) { pathDebugger.DebugPortalSequence(); }
         if (_debugPickedSectors && pathDebugger != null) { pathDebugger.DebugPickedSectors(); }
         if (_debugIntegrationField && pathDebugger != null) { pathDebugger.DebugIntegrationField(_pathfindingManager.TilePositions); }
