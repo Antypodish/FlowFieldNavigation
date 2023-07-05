@@ -25,6 +25,7 @@ public struct FieldGraphTraversalJob : IJob
     public NativeArray<Vector3> SourcePositions;
     public NativeArray<PortalTraversalData> PortalTraversalDataArray;
     public NativeList<int> PortalSequence;
+    public NativeList<int> PortalSequenceBorders;
     public NativeArray<int> SectorMarks;
     public NativeList<IntegrationFieldSector> IntegrationField;
     public NativeList<FlowFieldSector> FlowField;
@@ -67,6 +68,7 @@ public struct FieldGraphTraversalJob : IJob
         SetTargetNeighbourPortalData(targetSectorPortalIndicies, TargetSectorCosts);
 
         //START GRAPH WALKER
+        PortalSequenceBorders.Add(0);
         UnsafeList<int> traversedIndicies = new UnsafeList<int>(10, Allocator.Temp);
         UnsafeHeap<int> walkerHeap = new UnsafeHeap<int>(10, Allocator.Temp);
         for (int i = 0; i < SourcePositions.Length; i++)
@@ -110,6 +112,7 @@ public struct FieldGraphTraversalJob : IJob
             originIndex = nextPortalData.originIndex;
         }
         PortalSequence.Add(originIndex);
+        PortalSequenceBorders.Add(PortalSequence.Length);
     }
     int RunGraphWalkerFrom(int sourcePortalIndex, UnsafeHeap<int> traversalHeap, NativeArray<DijkstraTile> targetSectorCosts, ref UnsafeList<int> traversedIndicies)
     {

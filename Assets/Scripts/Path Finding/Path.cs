@@ -21,8 +21,11 @@ public class Path
     public NativeQueue<LocalIndex1d> BlockedWaveFronts;
     public NativeQueue<LocalIndex1d> intqueue;
     public NativeArray<DijkstraTile> TargetSectorCosts;
+    public NativeList<int> PortalSequenceBorders;
+
     public void Dispose()
     {
+        PortalSequenceBorders.Dispose();
         Sources.Dispose();
         TargetSectorCosts.Dispose();
         intqueue.Dispose();

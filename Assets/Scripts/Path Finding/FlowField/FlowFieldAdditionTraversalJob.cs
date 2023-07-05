@@ -16,6 +16,7 @@ public struct FlowFieldAdditionTraversalJob : IJob
     public NativeList<LocalIndex1d> IntegrationStartIndicies;
     public NativeArray<PortalTraversalData> PortalTraversalDataArray;
     public NativeList<int> PortalSequence;
+    public NativeList<int> PortalSequenceBorders;
     public NativeArray<int> SectorMarks;
     public NativeList<IntegrationFieldSector> IntegrationField;
     public NativeList<FlowFieldSector> FlowField;
@@ -79,23 +80,27 @@ public struct FlowFieldAdditionTraversalJob : IJob
             {
                 LocalIndex1d integrationStart = GetNotCalculatedIndexOfPortalNode(PortalNodes[originIndex]);
                 if (integrationStart.index != -1)
-                { 
+                {
+                    Debug.Log(integrationStart.sector);
                     IntegrationStartIndicies.Add(integrationStart);
-                    isIntegrationStartFound = true;
                 }
             }
+            PortalSequence.Add(originIndex);
             PortalTraversalData nextPortalData = PortalTraversalDataArray[originIndex];
             nextPortalData.mark |= PortalTraversalMark.Picked;
             PortalTraversalDataArray[originIndex] = nextPortalData;
             originIndex = nextPortalData.originIndex;
-            PortalSequence.Add(originIndex);
         }
         PortalSequence.Add(originIndex);
         if (!isIntegrationStartFound)
         {
             LocalIndex1d integrationStart = GetNotCalculatedIndexOfPortalNode(PortalNodes[originIndex]);
-            if (integrationStart.index != -1) { IntegrationStartIndicies.Add(integrationStart); }
+            if (integrationStart.index != -1)
+            {
+                Debug.Log(integrationStart.sector);
+                IntegrationStartIndicies.Add(integrationStart); }
         }
+        PortalSequenceBorders.Add(PortalSequence.Length);
     }
     int RunGraphWalkerFrom(int sourcePortalIndex, UnsafeHeap<int> traversalHeap, NativeArray<DijkstraTile> targetSectorCosts, ref UnsafeList<int> traversedIndicies)
     {
