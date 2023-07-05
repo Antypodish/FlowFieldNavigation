@@ -111,20 +111,21 @@ public class PathProducer
         resetHandle.Complete();
 
         //LOS
-        //LOSJob losjob = GetLosJob();
-        //obHandle losHandle = losjob.Schedule(resetHandle);
-        //losHandle.Complete();
+        LOSJob losjob = GetLosJob();
+        JobHandle losHandle = losjob.Schedule(resetHandle);
+        losHandle.Complete();
         sw.Start();
+
         //INTEGRATION
-        IntFieldJob intjob = GetIntegrationJob();
-        JobHandle integrationHandle = intjob.Schedule();
-        integrationHandle.Complete();
+        //IntFieldJob intjob = GetIntegrationJob();
+        //JobHandle integrationHandle = intjob.Schedule();
+        //integrationHandle.Complete();
         sw.Stop();
         //FLOW FIELD
         NativeList<JobHandle> flowfieldHandles = new NativeList<JobHandle>(Allocator.Temp);
         for (int i = 1; i < flowField.Length; i++)
         {
-            flowfieldHandles.Add(GetFlowFieldJob(flowField[i].flowfieldSector, flowField[i].sectorIndex1d).Schedule(_sectorTileAmount * _sectorTileAmount, 512, integrationHandle));
+            flowfieldHandles.Add(GetFlowFieldJob(flowField[i].flowfieldSector, flowField[i].sectorIndex1d).Schedule(_sectorTileAmount * _sectorTileAmount, 512));
         }
         JobHandle.CombineDependencies(flowfieldHandles).Complete();
 

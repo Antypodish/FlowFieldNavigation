@@ -64,21 +64,6 @@ public struct IntFieldJob : IJob
         UnsafeList<IntegrationTile> nwSector;
         ///////////////////////////////////////////////
         //CODE
-
-        int2 targetSector2d = GetSectorIndex(Target);
-        int targetSector1d = To1D(targetSector2d, SectorMatrixColAmount);
-        int2 targetSectorStartIndex = new int2(targetSector2d.x * SectorColAmount, targetSector2d.y * SectorColAmount);
-        int2 targetLocal2d = GetLocalIndex(Target, targetSectorStartIndex);
-        int targetLocal1d = To1D(targetLocal2d, SectorColAmount);
-
-        SetLookupTable(targetLocal1d, targetSector1d);
-        IntegrationTile startTile = curSector[targetLocal1d];
-        startTile.Cost = 0f;
-        startTile.Mark = IntegrationMark.Integrated;
-        curIntCost = 0f;
-        curSector[targetLocal1d] = startTile;
-        Enqueue();
-
         while (!integrationQueue.IsEmpty())
         {
             LocalIndex1d cur = integrationQueue.Dequeue();

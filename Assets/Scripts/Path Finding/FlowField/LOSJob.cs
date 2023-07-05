@@ -77,6 +77,14 @@ public struct LOSJob : IJob
         bool eRelevant;
         bool sRelevant;
         bool wRelevant;
+        IntegrationTile nTile;
+        IntegrationTile eTile;
+        IntegrationTile sTile;
+        IntegrationTile wTile;
+        IntegrationTile neTile;
+        IntegrationTile seTile;
+        IntegrationTile swTile;
+        IntegrationTile nwTile;
         UnsafeList<IntegrationTile> nSector;
         UnsafeList<IntegrationTile> eSector;
         UnsafeList<IntegrationTile> sSector;
@@ -110,10 +118,12 @@ public struct LOSJob : IJob
             IntegrationTile curTile = integrationSector[curIndex.index];
             if(curTile.Mark == IntegrationMark.LOSBlock) { continue; }
             SetLookupTable(curIndex.index, curIndex.sector);
+            LookForLOSC();
+            curTile = integrationSector[curIndex.index];
+            if (curTile.Mark == IntegrationMark.LOSBlock) { continue; }
             curTile.Mark = IntegrationMark.LOSPass;
             curTile.Cost = GetCost();
             integrationSector[curIndex.index] = curTile;
-            LookForLOSC();
             EnqueueNeighbours();
         }
         void SetLookupTable(int curLocal1d, int curSector1d)
@@ -158,14 +168,14 @@ public struct LOSJob : IJob
             nwSector = integrationField[nwSectorMark].integrationSector;
 
             //TILES
-            IntegrationTile nTile = new IntegrationTile(float.MaxValue, IntegrationMark.None);
-            IntegrationTile eTile = new IntegrationTile(float.MaxValue, IntegrationMark.None);
-            IntegrationTile sTile = new IntegrationTile(float.MaxValue, IntegrationMark.None);
-            IntegrationTile wTile = new IntegrationTile(float.MaxValue, IntegrationMark.None);
-            IntegrationTile neTile = new IntegrationTile(float.MaxValue, IntegrationMark.None);
-            IntegrationTile seTile = new IntegrationTile(float.MaxValue, IntegrationMark.None);
-            IntegrationTile swTile = new IntegrationTile(float.MaxValue, IntegrationMark.None);
-            IntegrationTile nwTile = new IntegrationTile(float.MaxValue, IntegrationMark.None);
+            nTile = new IntegrationTile(float.MaxValue, IntegrationMark.None);
+            eTile = new IntegrationTile(float.MaxValue, IntegrationMark.None);
+            sTile = new IntegrationTile(float.MaxValue, IntegrationMark.None);
+            wTile = new IntegrationTile(float.MaxValue, IntegrationMark.None);
+            neTile = new IntegrationTile(float.MaxValue, IntegrationMark.None);
+            seTile = new IntegrationTile(float.MaxValue, IntegrationMark.None);
+            swTile = new IntegrationTile(float.MaxValue, IntegrationMark.None);
+            nwTile = new IntegrationTile(float.MaxValue, IntegrationMark.None);
 
             if (nSectorMark != 0) { nTile = nSector[direction.n]; }
             if (eSectorMark != 0) { eTile = eSector[direction.e]; }
@@ -200,10 +210,10 @@ public struct LOSJob : IJob
         }
         void EnqueueNeighbours()
         {
-            bool nEnqueueable = nRelevant && nCost != byte.MaxValue;
-            bool eEnqueueable = eRelevant && eCost != byte.MaxValue;
-            bool sEnqueueable = sRelevant && sCost != byte.MaxValue;
-            bool wEnqueueable = wRelevant && wCost != byte.MaxValue;
+            bool nEnqueueable = nRelevant && nCost != byte.MaxValue && nTile.Mark != IntegrationMark.LOSBlock;
+            bool eEnqueueable = eRelevant && eCost != byte.MaxValue && nTile.Mark != IntegrationMark.LOSBlock;
+            bool sEnqueueable = sRelevant && sCost != byte.MaxValue && nTile.Mark != IntegrationMark.LOSBlock;
+            bool wEnqueueable = wRelevant && wCost != byte.MaxValue && nTile.Mark != IntegrationMark.LOSBlock;
             if (nEnqueueable)
             {
                 integrationQueue.Enqueue(new LocalIndex1d(direction.n, direction.nSector));
@@ -530,7 +540,7 @@ public struct LOSJob : IJob
         {
             return new int2(index % colAmount, index / colAmount);
         }
-        int2 GetSectorIndex(int2 index)
+        int2 GetSectorIndex(int2 index) 
         {
             return new int2(index.x / sectorTileAmount, index.y / sectorTileAmount);
         }

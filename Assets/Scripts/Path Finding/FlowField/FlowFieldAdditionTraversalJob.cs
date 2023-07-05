@@ -81,7 +81,6 @@ public struct FlowFieldAdditionTraversalJob : IJob
                 LocalIndex1d integrationStart = GetNotCalculatedIndexOfPortalNode(PortalNodes[originIndex]);
                 if (integrationStart.index != -1)
                 {
-                    Debug.Log(integrationStart.sector);
                     IntegrationStartIndicies.Add(integrationStart);
                 }
             }
@@ -97,7 +96,6 @@ public struct FlowFieldAdditionTraversalJob : IJob
             LocalIndex1d integrationStart = GetNotCalculatedIndexOfPortalNode(PortalNodes[originIndex]);
             if (integrationStart.index != -1)
             {
-                Debug.Log(integrationStart.sector);
                 IntegrationStartIndicies.Add(integrationStart); }
         }
         PortalSequenceBorders.Add(PortalSequence.Length);

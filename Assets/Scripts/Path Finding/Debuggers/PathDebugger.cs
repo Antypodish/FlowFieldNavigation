@@ -144,11 +144,7 @@ public class PathDebugger
                 Vector3 localIndexPos = new Vector3(localIndex.x * _tileSize, 0f, localIndex.y * _tileSize);
                 Vector3 debugPos = localIndexPos + sectorIndexPos + new Vector3(_tileSize / 2, 0.02f, _tileSize / 2);
                 float cost = sector[j].Cost;
-                if (cost == float.MaxValue)
-                {
-                    Handles.Label(debugPos, "M");
-                }
-                else
+                if (cost != float.MaxValue)
                 {
                     Handles.Label(debugPos, cost.ToString());
                 }
