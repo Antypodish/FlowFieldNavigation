@@ -117,9 +117,9 @@ public class PathProducer
         sw.Start();
 
         //INTEGRATION
-        //IntFieldJob intjob = GetIntegrationJob();
-        //JobHandle integrationHandle = intjob.Schedule();
-        //integrationHandle.Complete();
+        IntFieldJob intjob = GetIntegrationJob();
+        JobHandle integrationHandle = intjob.Schedule();
+        integrationHandle.Complete();
         sw.Stop();
         //FLOW FIELD
         NativeList<JobHandle> flowfieldHandles = new NativeList<JobHandle>(Allocator.Temp);
@@ -130,7 +130,7 @@ public class PathProducer
         JobHandle.CombineDependencies(flowfieldHandles).Complete();
 
         producedPath.IsCalculated = true;
-        //UnityEngine.Debug.Log(sw.Elapsed.TotalMilliseconds);
+        UnityEngine.Debug.Log(sw.Elapsed.TotalMilliseconds);
         return producedPath;
 
         //HELPERS
