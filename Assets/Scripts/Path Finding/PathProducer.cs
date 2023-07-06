@@ -115,7 +115,7 @@ public class PathProducer
         JobHandle losHandle = losjob.Schedule(resetHandle);
         losHandle.Complete();
         sw.Start();
-
+        
         //INTEGRATION
         IntFieldJob intjob = GetIntegrationJob();
         JobHandle integrationHandle = intjob.Schedule();
@@ -128,7 +128,7 @@ public class PathProducer
             flowfieldHandles.Add(GetFlowFieldJob(flowField[i].flowfieldSector, flowField[i].sectorIndex1d).Schedule(_sectorTileAmount * _sectorTileAmount, 512));
         }
         JobHandle.CombineDependencies(flowfieldHandles).Complete();
-
+        
         producedPath.IsCalculated = true;
         UnityEngine.Debug.Log(sw.Elapsed.TotalMilliseconds);
         return producedPath;

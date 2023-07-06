@@ -69,7 +69,6 @@ public struct IntFieldJob : IJob
             LocalIndex1d cur = integrationQueue.Dequeue();
             SetLookupTable(cur.index, cur.sector);
             float newCost = GetCost();
-            if ((curIntCost - newCost) < 1f) { continue; }
             IntegrationTile tile = curSector[cur.index];
             tile.Cost = newCost;
             tile.Mark = IntegrationMark.Integrated;
