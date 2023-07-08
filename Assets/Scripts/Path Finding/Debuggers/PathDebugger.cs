@@ -106,7 +106,7 @@ public class PathDebugger
         float tileSize = _pathfindingManager.TileSize;
         FieldGraph fg = _costFieldProducer.GetCostFieldWithOffset(producedPath.Offset).FieldGraph;
         NativeArray<SectorNode> sectorNodes = fg.SectorNodes;
-        NativeArray<int> sectorMarks = producedPath.SectorMarks;
+        NativeArray<int> sectorMarks = producedPath.SectorToPicked;
         for (int i = 0; i < sectorMarks.Length; i++)
         {
             if (sectorMarks[i] == 0) { continue; }
@@ -127,23 +127,24 @@ public class PathDebugger
         if (_pathProducer == null) { return; }
         Path producedPath = _pathProducer.ProducedPaths.Last();
         if (producedPath == null) { return; }
-        int fieldColAmount = _pathfindingManager.ColumnAmount / _pathfindingManager.SectorTileAmount;
+        int sectorColAmount = _pathfindingManager.SectorTileAmount;
+        int sectorTileAmount = sectorColAmount * sectorColAmount;
         NativeArray<SectorNode> sectorNodes = _costFieldProducer.GetCostFieldWithOffset(producedPath.Offset).FieldGraph.SectorNodes;
-        NativeArray<int> sectorMarks = producedPath.SectorMarks;
-        NativeArray<IntegrationFieldSector> integrationField = producedPath.IntegrationField;
-        int sectorTileAmount = _pathfindingManager.SectorTileAmount;
+        NativeArray<int> sectorMarks = producedPath.SectorToPicked;
+        NativeArray<IntegrationTile> integrationField = producedPath.IntegrationField;
         for (int i = 0; i < sectorMarks.Length; i++)
         {
             if (sectorMarks[i] == 0) { continue; }
-            UnsafeList<IntegrationTile> sector = integrationField[sectorMarks[i]].integrationSector;
+            int pickedStartIndex = sectorMarks[i];
             int2 sectorIndex = new int2(sectorNodes[i].Sector.StartIndex.C, sectorNodes[i].Sector.StartIndex.R);
             Vector3 sectorIndexPos = new Vector3(sectorIndex.x * _tileSize, 0f, sectorIndex.y * _tileSize);
-            for(int j = 0; j < sector.Length; j++)
+            for (int j = pickedStartIndex; j < pickedStartIndex + sectorTileAmount; j++)
             {
-                int2 localIndex = new int2(j % sectorTileAmount, j / sectorTileAmount);
-                Vector3 localIndexPos = new Vector3(localIndex.x * _tileSize, 0f, localIndex.y * _tileSize);
+                int local1d = (j - 1) % sectorTileAmount;
+                int2 local2d = new int2(local1d % sectorColAmount, local1d / sectorColAmount);
+                Vector3 localIndexPos = new Vector3(local2d.x * _tileSize, 0f, local2d.y * _tileSize);
                 Vector3 debugPos = localIndexPos + sectorIndexPos + new Vector3(_tileSize / 2, 0.02f, _tileSize / 2);
-                float cost = sector[j].Cost;
+                float cost = integrationField[j].Cost;
                 if (cost != float.MaxValue)
                 {
                     Handles.Label(debugPos, cost.ToString());
@@ -160,22 +161,24 @@ public class PathDebugger
 
         string los = "los";
         Gizmos.color = Color.white;
-        NativeArray<int> sectorMarks = producedPath.SectorMarks;
+        NativeArray<int> sectorMarks = producedPath.SectorToPicked;
         NativeArray<SectorNode> sectorNodes = _costFieldProducer.GetCostFieldWithOffset(producedPath.Offset).FieldGraph.SectorNodes;
-        NativeList<IntegrationFieldSector> integrationField = producedPath.IntegrationField;
-        int sectorTileAmount = _pathfindingManager.SectorTileAmount;
+        NativeList<IntegrationTile> integrationField = producedPath.IntegrationField;
+        int sectorColAmount = _pathfindingManager.SectorTileAmount;
+        int sectorTileAmount = sectorColAmount * sectorColAmount;
         for (int i = 0; i < sectorMarks.Length; i++)
         {
             if (sectorMarks[i] == 0) { continue; }
-            UnsafeList<IntegrationTile> integrationSector = integrationField[sectorMarks[i]].integrationSector;
-            for (int j = 0; j < integrationSector.Length; j++)
+            int pickedStartIndex = sectorMarks[i];
+            for (int j = pickedStartIndex; j < pickedStartIndex + sectorTileAmount; j++)
             {
-                if (integrationSector[j].Mark == IntegrationMark.LOSPass)
+                if (integrationField[j].Mark == IntegrationMark.LOSPass)
                 {
                     int2 sectorIndex = new int2(sectorNodes[i].Sector.StartIndex.C, sectorNodes[i].Sector.StartIndex.R);
                     Vector3 sectorIndexPos = new Vector3(sectorIndex.x * _tileSize, 0f, sectorIndex.y * _tileSize);
-                    int2 localIndex = new int2(j % sectorTileAmount, j / sectorTileAmount);
-                    Vector3 localIndexPos = new Vector3(localIndex.x * _tileSize, 0f, localIndex.y * _tileSize);
+                    int local1d = (j - 1) % sectorTileAmount;
+                    int2 local2d = new int2(local1d % sectorColAmount, local1d / sectorColAmount);
+                    Vector3 localIndexPos = new Vector3(local2d.x * _tileSize, 0f, local2d.y * _tileSize);
                     Vector3 debugPos = localIndexPos + sectorIndexPos + new Vector3(_tileSize / 2, 0.02f, _tileSize / 2);
                     Handles.Label(debugPos, los);
                 }
@@ -190,22 +193,24 @@ public class PathDebugger
         if (producedPath == null) { return; }
 
         Gizmos.color = Color.white;
-        NativeArray<int> sectorMarks = producedPath.SectorMarks;
+        NativeArray<int> sectorMarks = producedPath.SectorToPicked;
         NativeArray<SectorNode> sectorNodes = _costFieldProducer.GetCostFieldWithOffset(producedPath.Offset).FieldGraph.SectorNodes;
-        NativeList<IntegrationFieldSector> integrationField = producedPath.IntegrationField;
-        int sectorTileAmount = _pathfindingManager.SectorTileAmount;
+        NativeList<IntegrationTile> integrationField = producedPath.IntegrationField;
+        int sectorColAmount = _pathfindingManager.SectorTileAmount;
+        int sectorTileAmount = sectorColAmount * sectorColAmount;
         for (int i = 0; i < sectorMarks.Length; i++)
         {
             if (sectorMarks[i] == 0) { continue; }
-            UnsafeList<IntegrationTile> integrationSector = integrationField[sectorMarks[i]].integrationSector;
-            for(int j = 0; j < integrationSector.Length; j++)
+            int pickedStartIndex = sectorMarks[i];
+            for (int j = pickedStartIndex; j < pickedStartIndex + sectorTileAmount; j++)
             {
-                if (integrationSector[j].Mark == IntegrationMark.LOSBlock)
+                if (integrationField[j].Mark == IntegrationMark.LOSBlock)
                 {
                     int2 sectorIndex = new int2(sectorNodes[i].Sector.StartIndex.C, sectorNodes[i].Sector.StartIndex.R);
                     Vector3 sectorIndexPos = new Vector3(sectorIndex.x * _tileSize, 0f, sectorIndex.y * _tileSize);
-                    int2 localIndex = new int2(j % sectorTileAmount, j / sectorTileAmount);
-                    Vector3 localIndexPos = new Vector3(localIndex.x * _tileSize, 0f, localIndex.y * _tileSize);
+                    int local1d = (j - 1) % sectorTileAmount;
+                    int2 local2d = new int2(local1d % sectorColAmount, local1d / sectorColAmount);
+                    Vector3 localIndexPos = new Vector3(local2d.x * _tileSize, 0f, local2d.y * _tileSize);
                     Vector3 debugPos = localIndexPos + sectorIndexPos + new Vector3(_tileSize / 2, 0.02f, _tileSize / 2);
                     Gizmos.DrawCube(debugPos, new Vector3(0.3f, 0.3f, 0.3f));
                 }
@@ -220,28 +225,30 @@ public class PathDebugger
 
         float yOffset = 0.2f;
         Gizmos.color = Color.black;
-        NativeArray<int> sectorMarks = producedPath.SectorMarks;
+        NativeArray<int> sectorMarks = producedPath.SectorToPicked;
         NativeArray<SectorNode> sectorNodes = _costFieldProducer.GetCostFieldWithOffset(producedPath.Offset).FieldGraph.SectorNodes;
-        NativeList<FlowFieldSector> flowField = producedPath.FlowField;
-        int sectorTileAmount = _pathfindingManager.SectorTileAmount;
+        NativeList<FlowData> flowField = producedPath.FlowField;
+        int sectorColAmount = _pathfindingManager.SectorTileAmount;
+        int sectorTileAmount = sectorColAmount * sectorColAmount;
         for (int i = 0; i < sectorMarks.Length; i++)
         {
             if (sectorMarks[i] == 0) { continue; }
-            UnsafeList<FlowData> flowSector = flowField[sectorMarks[i]].flowfieldSector;
-            for (int j = 0; j < flowSector.Length; j++)
+            int pickedStartIndex = sectorMarks[i];
+            for (int j = pickedStartIndex; j < pickedStartIndex + sectorTileAmount; j++)
             {
                 int2 sectorIndex = new int2(sectorNodes[i].Sector.StartIndex.C, sectorNodes[i].Sector.StartIndex.R);
                 Vector3 sectorIndexPos = new Vector3(sectorIndex.x * _tileSize, 0f, sectorIndex.y * _tileSize);
-                int2 localIndex = new int2(j % sectorTileAmount, j / sectorTileAmount);
-                Vector3 localIndexPos = new Vector3(localIndex.x * _tileSize, 0f, localIndex.y * _tileSize);
+                int local1d = (j - 1) % sectorTileAmount;
+                int2 local2d = new int2(local1d % sectorColAmount, local1d / sectorColAmount);
+                Vector3 localIndexPos = new Vector3(local2d.x * _tileSize, 0f, local2d.y * _tileSize);
                 Vector3 debugPos = localIndexPos + sectorIndexPos + new Vector3(_tileSize / 2, 0.02f, _tileSize / 2);
-                if (flowSector[j] != FlowData.None)
+                if (flowField[j] != FlowData.None)
                 {
                     DrawSquare(debugPos, 0.2f);
                 }
-                if (flowSector[j] != FlowData.LOS)
+                if (flowField[j] != FlowData.LOS)
                 {
-                    DrawFlow(flowSector[j], debugPos);
+                    DrawFlow(flowField[j], debugPos);
                 }
             }
         }

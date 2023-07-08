@@ -11,14 +11,10 @@ using Unity.Jobs;
 [BurstCompile]
 public struct IntFieldResetJob : IJobParallelFor
 {
-    public UnsafeList<IntegrationTile> IntegrationFieldSector;
+    public NativeArray<IntegrationTile> IntegrationField;
 
-    public IntFieldResetJob(UnsafeList<IntegrationTile> integrationFieldSector)
-    {
-        IntegrationFieldSector = integrationFieldSector;
-    }
     public void Execute(int index)
     {
-        IntegrationFieldSector[index] = new IntegrationTile(float.MaxValue, IntegrationMark.None); ;
+        IntegrationField[index] = new IntegrationTile(float.MaxValue, IntegrationMark.None); ;
     }
 }

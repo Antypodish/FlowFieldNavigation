@@ -112,7 +112,7 @@ public class AgentDirectionCalculator
                     TileSize = FlowFieldUtilities.TileSize,
                     AgentMovementData = data,
                     FlowField = _paths[i].FlowField,
-                    SectorMarks = _paths[i].SectorMarks,
+                    SectorMarks = _paths[i].SectorToPicked,
                     OutOfFieldFlag = outOfFieldFlag,
                 };
                 dirJob.Schedule(_jobData[i].Length, 64).Complete();

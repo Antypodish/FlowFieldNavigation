@@ -15,9 +15,10 @@ public class Path
     public NativeArray<Vector3> Sources;
     public NativeArray<PortalTraversalData> PortalTraversalDataArray;
     public NativeList<int> PortalSequence;
-    public NativeArray<int> SectorMarks;
-    public NativeList<IntegrationFieldSector> IntegrationField;
-    public NativeList<FlowFieldSector> FlowField;
+    public NativeArray<int> SectorToPicked;
+    public NativeList<int> PickedToSector;
+    public NativeList<IntegrationTile> IntegrationField;
+    public NativeList<FlowData> FlowField;
     public NativeQueue<LocalIndex1d> BlockedWaveFronts;
     public NativeQueue<LocalIndex1d> intqueue;
     public NativeArray<DijkstraTile> TargetSectorCosts;
@@ -25,6 +26,7 @@ public class Path
 
     public void Dispose()
     {
+        PickedToSector.Dispose();
         PortalSequenceBorders.Dispose();
         Sources.Dispose();
         TargetSectorCosts.Dispose();
@@ -32,15 +34,7 @@ public class Path
         BlockedWaveFronts.Dispose();
         PortalTraversalDataArray.Dispose();
         PortalSequence.Dispose();
-        SectorMarks.Dispose();
-        for(int i = 1; i < IntegrationField.Length; i++)
-        {
-            IntegrationField[i].integrationSector.Dispose();
-        }
-        for (int i = 1; i < FlowField.Length; i++)
-        {
-            FlowField[i].flowfieldSector.Dispose();
-        }
+        SectorToPicked.Dispose();
         IntegrationField.Dispose();
         FlowField.Dispose();
     }
@@ -62,7 +56,7 @@ public class Path
     }
     public FlowData GetFlow(int local1d, int sector1d)
     {
-        return FlowField[SectorMarks[sector1d]].flowfieldSector[local1d];
+        return FlowField[SectorToPicked[sector1d] + local1d];
     }
 }
 public enum PathState : byte

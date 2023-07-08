@@ -15,7 +15,7 @@ public struct IntFieldJob : IJob
     public int FieldRowAmount;
     public int SectorColAmount;
     public int SectorMatrixColAmount;
-    public NativeArray<IntegrationFieldSector> IntegrationField;
+    public NativeList<IntegrationTile> IntegrationField;
     public NativeQueue<LocalIndex1d> IntegrationQueue;
     [ReadOnly] public NativeArray<int> SectorMarks;
     [ReadOnly] public NativeArray<UnsafeList<byte>> Costs;
@@ -30,7 +30,7 @@ public struct IntFieldJob : IJob
         int sectorMatrixColAmount = SectorMatrixColAmount;
         int fieldColAmount = FieldColAmount;
         int sectorTileAmount = SectorColAmount * sectorColAmount;
-        NativeArray<IntegrationFieldSector> integrationField = IntegrationField;
+        NativeArray<IntegrationTile> integrationField = IntegrationField;
         NativeArray<int> sectorMarks = SectorMarks;
         NativeArray<UnsafeList<byte>> costs = Costs;
         NativeQueue<LocalIndex1d> integrationQueue = IntegrationQueue;
@@ -53,6 +53,15 @@ public struct IntFieldJob : IJob
         int seSector1d;
         int swSector1d;
         int nwSector1d;
+        int curSectorMark;
+        int nSectorMark;
+        int eSectorMark;
+        int sSectorMark;
+        int wSectorMark;
+        int neSectorMark;
+        int seSectorMark;
+        int swSectorMark;
+        int nwSectorMark;
         byte nCost;
         byte eCost;
         byte sCost;
@@ -70,15 +79,6 @@ public struct IntFieldJob : IJob
         bool eAvailable;
         bool sAvailable;
         bool wAvailable;
-        UnsafeList<IntegrationTile> curSector;
-        UnsafeList<IntegrationTile> nSector;
-        UnsafeList<IntegrationTile> eSector;
-        UnsafeList<IntegrationTile> sSector;
-        UnsafeList<IntegrationTile> wSector;
-        UnsafeList<IntegrationTile> neSector;
-        UnsafeList<IntegrationTile> seSector;
-        UnsafeList<IntegrationTile> swSector;
-        UnsafeList<IntegrationTile> nwSector;
         ///////////////////////////////////////////////
         //CODE
         while (!integrationQueue.IsEmpty())
@@ -86,11 +86,11 @@ public struct IntFieldJob : IJob
             LocalIndex1d cur = integrationQueue.Dequeue();
             SetLookupTable(cur.index, cur.sector);
             float newCost = GetCost();
-            IntegrationTile tile = curSector[cur.index];
+            IntegrationTile tile = integrationField[curSectorMark + cur.index];
             tile.Cost = newCost;
             tile.Mark = IntegrationMark.Integrated;
             curIntCost = newCost;
-            curSector[cur.index] = tile;
+            integrationField[curSectorMark + cur.index] = tile;
             Enqueue();
         }
         //HELPERS
@@ -147,15 +147,15 @@ public struct IntFieldJob : IJob
             wCost = costs[wSector1d][wLocal1d];
 
             //SECTOR MARKS
-            int curSectorMark = sectorMarks[curSector1d];
-            int nSectorMark = sectorMarks[nSector1d];
-            int eSectorMark = sectorMarks[eSector1d];
-            int sSectorMark = sectorMarks[sSector1d];
-            int wSectorMark = sectorMarks[wSector1d];
-            int neSectorMark = sectorMarks[neSector1d];
-            int seSectorMark = sectorMarks[seSector1d];
-            int swSectorMark = sectorMarks[swSector1d];
-            int nwSectorMark = sectorMarks[nwSector1d];
+            curSectorMark = sectorMarks[curSector1d];
+            nSectorMark = sectorMarks[nSector1d];
+            eSectorMark = sectorMarks[eSector1d];
+            sSectorMark = sectorMarks[sSector1d];
+            wSectorMark = sectorMarks[wSector1d];
+            neSectorMark = sectorMarks[neSector1d];
+            seSectorMark = sectorMarks[seSector1d];
+            swSectorMark = sectorMarks[swSector1d];
+            nwSectorMark = sectorMarks[nwSector1d];
 
 
             IntegrationMark nMark = IntegrationMark.None;
@@ -164,7 +164,7 @@ public struct IntFieldJob : IJob
             IntegrationMark wMark = IntegrationMark.None;
 
             //INTEGRATED COSTS
-            curIntCost = integrationField[curSectorMark].integrationSector[curLocal1d].Cost;
+            curIntCost = integrationField[curSectorMark + curLocal1d].Cost;
             nIntCost = curIntCost;
             eIntCost = curIntCost;
             sIntCost = curIntCost;
@@ -174,24 +174,14 @@ public struct IntFieldJob : IJob
             swIntCost = curIntCost;
             nwIntCost = curIntCost;
 
-            curSector = integrationField[curSectorMark].integrationSector;
-            nSector = integrationField[nSectorMark].integrationSector;
-            eSector = integrationField[eSectorMark].integrationSector;
-            sSector = integrationField[sSectorMark].integrationSector;
-            wSector = integrationField[wSectorMark].integrationSector;
-            neSector = integrationField[neSectorMark].integrationSector;
-            seSector = integrationField[seSectorMark].integrationSector;
-            swSector = integrationField[swSectorMark].integrationSector;
-            nwSector = integrationField[nwSectorMark].integrationSector;
-
-            if (nSectorMark != 0) { nIntCost = nSector[nLocal1d].Cost; nMark = nSector[nLocal1d].Mark; }
-            if (eSectorMark != 0) { eIntCost = eSector[eLocal1d].Cost; eMark = eSector[eLocal1d].Mark; }
-            if (sSectorMark != 0) { sIntCost = sSector[sLocal1d].Cost; sMark = sSector[sLocal1d].Mark; }
-            if (wSectorMark != 0) { wIntCost = wSector[wLocal1d].Cost; wMark = wSector[wLocal1d].Mark; }
-            if (neSectorMark != 0) { neIntCost = neSector[neLocal1d].Cost; }
-            if (seSectorMark != 0) { seIntCost = seSector[seLocal1d].Cost; }
-            if (swSectorMark != 0) { swIntCost = swSector[swLocal1d].Cost; }
-            if (nwSectorMark != 0) { nwIntCost = nwSector[nwLocal1d].Cost; }
+            if (nSectorMark != 0) { nIntCost = integrationField[nSectorMark + nLocal1d].Cost; nMark = integrationField[nSectorMark + nLocal1d].Mark; }
+            if (eSectorMark != 0) { eIntCost = integrationField[eSectorMark + eLocal1d].Cost; eMark = integrationField[eSectorMark + eLocal1d].Mark; }
+            if (sSectorMark != 0) { sIntCost = integrationField[sSectorMark + sLocal1d].Cost; sMark = integrationField[sSectorMark + sLocal1d].Mark; }
+            if (wSectorMark != 0) { wIntCost = integrationField[wSectorMark + wLocal1d].Cost; wMark = integrationField[wSectorMark + wLocal1d].Mark; }
+            if (neSectorMark != 0) { neIntCost = integrationField[neSectorMark + neLocal1d].Cost; }
+            if (seSectorMark != 0) { seIntCost = integrationField[seSectorMark + seLocal1d].Cost; }
+            if (swSectorMark != 0) { swIntCost = integrationField[swSectorMark + swLocal1d].Cost; }
+            if (nwSectorMark != 0) { nwIntCost = integrationField[nwSectorMark + nwLocal1d].Cost; }
 
             //AVAILABILITY
             nAvailable = nCost != byte.MaxValue && (nMark == IntegrationMark.Integrated || nMark == IntegrationMark.None) && nSectorMark != 0;
@@ -207,30 +197,30 @@ public struct IntFieldJob : IJob
             float wDif = wIntCost - curIntCost;
             if (nAvailable && nDif > 2f)
             {
-                IntegrationTile tile = nSector[nLocal1d];
+                IntegrationTile tile = integrationField[nSectorMark + nLocal1d];
                 tile.Mark = IntegrationMark.Awaiting;
-                nSector[nLocal1d] = tile;
+                integrationField[nSectorMark + nLocal1d] = tile;
                 integrationQueue.Enqueue(new LocalIndex1d(nLocal1d, nSector1d));
             }
             if (eAvailable && eDif > 2f)
             {
-                IntegrationTile tile = eSector[eLocal1d];
+                IntegrationTile tile = integrationField[eSectorMark + eLocal1d];
                 tile.Mark = IntegrationMark.Awaiting;
-                eSector[eLocal1d] = tile;
+                integrationField[eSectorMark + eLocal1d] = tile;
                 integrationQueue.Enqueue(new LocalIndex1d(eLocal1d, eSector1d));
             }
             if (sAvailable && sDif > 2f)
             {
-                IntegrationTile tile = sSector[sLocal1d];
+                IntegrationTile tile = integrationField[sSectorMark + sLocal1d];
                 tile.Mark = IntegrationMark.Awaiting;
-                sSector[sLocal1d] = tile;
+                integrationField[sSectorMark + sLocal1d] = tile;
                 integrationQueue.Enqueue(new LocalIndex1d(sLocal1d, sSector1d));
             }
             if (wAvailable && wDif > 2f)
             {
-                IntegrationTile tile = wSector[wLocal1d];
+                IntegrationTile tile = integrationField[wSectorMark + wLocal1d];
                 tile.Mark = IntegrationMark.Awaiting;
-                wSector[wLocal1d] = tile;
+                integrationField[wSectorMark + wLocal1d] = tile;
                 integrationQueue.Enqueue(new LocalIndex1d(wLocal1d, wSector1d));
             }
         }

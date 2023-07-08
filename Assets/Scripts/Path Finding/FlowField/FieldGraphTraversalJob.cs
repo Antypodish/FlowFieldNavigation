@@ -19,16 +19,17 @@ public struct FieldGraphTraversalJob : IJob
     public int FieldColAmount;
     public int FieldRowAmount;
     public float FieldTileSize;
-    public int SectorTileAmount;
+    public int SectorColAmount;
     public int SectorMatrixColAmount;
 
     public NativeArray<Vector3> SourcePositions;
     public NativeArray<PortalTraversalData> PortalTraversalDataArray;
     public NativeList<int> PortalSequence;
     public NativeList<int> PortalSequenceBorders;
-    public NativeArray<int> SectorMarks;
-    public NativeList<IntegrationFieldSector> IntegrationField;
-    public NativeList<FlowFieldSector> FlowField;
+    public NativeArray<int> SectorToPicked;
+    public NativeList<int> PickedToSector;
+    public NativeList<IntegrationTile> IntegrationField;
+    public NativeList<FlowData> FlowField;
     public NativeArray<DijkstraTile> TargetSectorCosts;
 
     [ReadOnly] public NativeArray<SectorNode> SectorNodes;
@@ -45,9 +46,9 @@ public struct FieldGraphTraversalJob : IJob
     public void Execute()
     {
         //TARGET DATA
-        int2 targetSectorIndex2d = new int2(TargetIndex.x / SectorTileAmount, TargetIndex.y / SectorTileAmount);
+        int2 targetSectorIndex2d = new int2(TargetIndex.x / SectorColAmount, TargetIndex.y / SectorColAmount);
         _targetSectorIndex1d = targetSectorIndex2d.y * SectorMatrixColAmount + targetSectorIndex2d.x;
-        int2 _targetSectorStartIndex2d = targetSectorIndex2d * SectorTileAmount;
+        int2 _targetSectorStartIndex2d = targetSectorIndex2d * SectorColAmount;
         _targetSectorStartIndex1d = _targetSectorStartIndex2d.y * FieldColAmount + _targetSectorStartIndex2d.x;
         int targetGeneralIndex1d = TargetIndex.y * FieldColAmount + TargetIndex.x;
 
@@ -75,7 +76,7 @@ public struct FieldGraphTraversalJob : IJob
         {
             Vector3 sourcePos = SourcePositions[i];
             Index2 sourceIndex = new Index2(Mathf.FloorToInt(sourcePos.z / FieldTileSize), Mathf.FloorToInt(sourcePos.x / FieldTileSize));
-            Index2 sourceSectorIndex = new Index2(sourceIndex.R / SectorTileAmount, sourceIndex.C / SectorTileAmount);
+            Index2 sourceSectorIndex = new Index2(sourceIndex.R / SectorColAmount, sourceIndex.C / SectorColAmount);
             int sourceSectorIndexFlat = sourceSectorIndex.R * SectorMatrixColAmount + sourceSectorIndex.C;
             UnsafeList<int> sourcePortalIndicies = GetPortalIndicies(sourceSectorIndexFlat);
             for(int j = 0; j < sourcePortalIndicies.Length; j++)
@@ -278,7 +279,7 @@ public struct FieldGraphTraversalJob : IJob
     }
     NativeArray<DijkstraTile> GetIntegratedCosts(int targetIndex)
     {
-        NativeArray<DijkstraTile> integratedCosts = new NativeArray<DijkstraTile>(SectorTileAmount * SectorTileAmount, Allocator.Temp);
+        NativeArray<DijkstraTile> integratedCosts = new NativeArray<DijkstraTile>(SectorColAmount * SectorColAmount, Allocator.Temp);
         NativeQueue<int> aStarQueue = new NativeQueue<int>(Allocator.Temp);
         CalculateIntegratedCosts(integratedCosts, aStarQueue, SectorNodes[_targetSectorIndex1d].Sector, targetIndex);
         return integratedCosts;
@@ -303,7 +304,9 @@ public struct FieldGraphTraversalJob : IJob
     }
     void PickSectorsFromPortalSequence()
     {
-        for(int i = 0; i < PortalSequence.Length; i++)
+        int sectorTileAmount = SectorColAmount * SectorColAmount;
+        int pickedSectorAmount = 0;
+        for (int i = 0; i < PortalSequence.Length; i++)
         {
             int portalIndex = PortalSequence[i];
             int windowIndex = PortalNodes[portalIndex].WinPtr;
@@ -313,12 +316,14 @@ public struct FieldGraphTraversalJob : IJob
             for(int j = 0; j < winToSecCnt; j++)
             {
                 int secPtr = WinToSecPtrs[j + winToSecPtr];
-                if (SectorMarks[secPtr] != 0) { continue; }
-                SectorMarks[secPtr] = IntegrationField.Length;
-                IntegrationField.Add(new IntegrationFieldSector(secPtr));
-                FlowField.Add(new FlowFieldSector(secPtr));
+                if (SectorToPicked[secPtr] != 0) { continue; }
+                SectorToPicked[secPtr] = pickedSectorAmount * sectorTileAmount + 1;
+                PickedToSector.Add(secPtr);
+                pickedSectorAmount++;
             }
         }
+        IntegrationField.Length = pickedSectorAmount * sectorTileAmount + 1;
+        FlowField.Length = pickedSectorAmount * sectorTileAmount + 1;
     }
 
     //HELPERS
@@ -326,7 +331,7 @@ public struct FieldGraphTraversalJob : IJob
     {
         Index2 index1 = portalNode.Portal1.Index;
         int index1Flat = index1.R * FieldColAmount + index1.C;
-        int index1SectorIndex = (index1.R / SectorTileAmount) * SectorMatrixColAmount + (index1.C / SectorTileAmount);
+        int index1SectorIndex = (index1.R / SectorColAmount) * SectorMatrixColAmount + (index1.C / SectorColAmount);
         if(sectorIndex == index1SectorIndex)
         {
             return GetLocalIndex(index1Flat, sectorStartIndex);
@@ -338,14 +343,14 @@ public struct FieldGraphTraversalJob : IJob
     int GetLocalIndex(int index, int sectorStartIndexF)
     {
         int distanceFromSectorStart = index - sectorStartIndexF;
-        return (distanceFromSectorStart % FieldColAmount) + (SectorTileAmount * (distanceFromSectorStart / FieldColAmount));
+        return (distanceFromSectorStart % FieldColAmount) + (SectorColAmount * (distanceFromSectorStart / FieldColAmount));
     }
 
     //TARGET SECTOR COST CALCULATION WITH DIJKSTRA
     void CalculateIntegratedCosts(NativeArray<DijkstraTile> integratedCosts, NativeQueue<int> aStarQueue, Sector sector, int targetIndexFlat)
     {
         //DATA
-        int sectorTileAmount = SectorTileAmount;
+        int sectorTileAmount = SectorColAmount;
         int fieldColAmount = FieldColAmount;
         int sectorStartIndexFlat = sector.StartIndex.R * fieldColAmount + sector.StartIndex.C;
         NativeArray<byte> costs = Costs;

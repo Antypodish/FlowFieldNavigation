@@ -677,7 +677,7 @@ MonoBehaviour:
   _AStar: 0
   _debugPortalTraversalMarks: 1
   _debugPortalSequence: 1
-  _debugPickedSectors: 1
+  _debugPickedSectors: 0
   _debugIntegrationField: 0
   _debugLOSPass: 0
   _debugLOSBlocks: 0
