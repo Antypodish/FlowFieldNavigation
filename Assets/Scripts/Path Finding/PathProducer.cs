@@ -109,18 +109,17 @@ public class PathProducer
         }
         JobHandle resetHandle = JobHandle.CombineDependencies(resetHandles);
         resetHandle.Complete();
-        sw.Start();
 
         //LOS
         LOSJob losjob = GetLosJob();
         JobHandle losHandle = losjob.Schedule(resetHandle);
         losHandle.Complete();
-        sw.Stop();
 
         //INTEGRATION
         IntFieldJob intjob = GetIntegrationJob();
         JobHandle integrationHandle = intjob.Schedule();
         integrationHandle.Complete();
+        sw.Start();
         //FLOW FIELD
         NativeList<JobHandle> flowfieldHandles = new NativeList<JobHandle>(Allocator.Temp);
         for (int i = 1; i < flowField.Length; i++)
@@ -128,7 +127,8 @@ public class PathProducer
             flowfieldHandles.Add(GetFlowFieldJob(flowField[i].flowfieldSector, flowField[i].sectorIndex1d).Schedule(_sectorTileAmount * _sectorTileAmount, 512));
         }
         JobHandle.CombineDependencies(flowfieldHandles).Complete();
-        
+        sw.Stop();
+
         producedPath.IsCalculated = true;
         UnityEngine.Debug.Log(sw.Elapsed.TotalMilliseconds);
         return producedPath;
@@ -209,7 +209,6 @@ public class PathProducer
                 SectorMatrixRowAmount = _sectorMatrixRowAmount,
                 SectorRowAmount = _sectorTileAmount,
                 SectorIndex1d = sectorIndex1d,
-                Directions = pickedCostField.LocalDirections,
                 SectorMarks = sectorMarks,
                 FlowSector = flowfieldSector,
                 IntegrationField = integrationField,
@@ -314,7 +313,6 @@ public class PathProducer
                 SectorMatrixRowAmount = _sectorMatrixRowAmount,
                 SectorRowAmount = _sectorTileAmount,
                 SectorIndex1d = sectorIndex1d,
-                Directions = pickedCostField.LocalDirections,
                 SectorMarks = path.SectorMarks,
                 FlowSector = flowfieldSector,
                 IntegrationField = path.IntegrationField,
