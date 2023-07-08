@@ -18,7 +18,7 @@ public struct LOSJob : IJob
     public float TileSize;
     public int FieldColAmount;
     public int FieldRowAmount;
-    public int SectorTileAmount;
+    public int SectorColAmount;
     public int SectorMatrixColAmount;
     public int SectorMatrixRowAmount;
     [ReadOnly] public NativeArray<byte> Costs;
@@ -30,7 +30,8 @@ public struct LOSJob : IJob
     public void Execute()
     {
         //DATA
-        int sectorTileAmount = SectorTileAmount;
+        int sectorColAmount = SectorColAmount;
+        int sectorTileAmount = sectorColAmount * sectorColAmount;
         int sectorMatrixColAmount = SectorMatrixColAmount;
         int fieldColAmount = FieldColAmount;
         int fieldRowAmount = FieldRowAmount;
@@ -46,9 +47,22 @@ public struct LOSJob : IJob
 
         ///////CURRENT INDEX LOOKUP TABLE////////
         /////////////////////////////////////////
-        LocalDirectionData1d direction;
-        int curLocal1d;
-        int curSector1d;
+        int nLocal1d;
+        int eLocal1d;
+        int sLocal1d;
+        int wLocal1d;
+        int neLocal1d;
+        int seLocal1d;
+        int swLocal1d;
+        int nwLocal1d;
+        int nSector1d;
+        int eSector1d;
+        int sSector1d;
+        int wSector1d;
+        int neSector1d;
+        int seSector1d;
+        int swSector1d;
+        int nwSector1d;
         int2 nLocal2d;
         int2 eLocal2d;
         int2 sLocal2d;
@@ -98,9 +112,9 @@ public struct LOSJob : IJob
         //SET TARGET INDEX
         int2 targetSector2d = GetSectorIndex(Target);
         int targetSector1d = To1D(targetSector2d, SectorMatrixColAmount);
-        int2 targetSectorStartIndex = new int2(targetSector2d.x * SectorTileAmount, targetSector2d.y * SectorTileAmount);
+        int2 targetSectorStartIndex = new int2(targetSector2d.x * SectorColAmount, targetSector2d.y * SectorColAmount);
         int2 targetLocal2d = GetLocalIndex(Target, targetSectorStartIndex);
-        int targetLocal1d = To1D(targetLocal2d, SectorTileAmount);
+        int targetLocal1d = To1D(targetLocal2d, SectorColAmount);
 
         SetLookupTable(targetLocal1d, targetSector1d);
         UnsafeList<IntegrationTile> targetSector = IntegrationField[SectorMarks[targetSector1d]].integrationSector;
@@ -128,18 +142,60 @@ public struct LOSJob : IJob
         }
         void SetLookupTable(int curLocal1d, int curSector1d)
         {
-            direction = directions[curSector1d][curLocal1d];
+            nLocal1d = curLocal1d + sectorColAmount;
+            eLocal1d = curLocal1d + 1;
+            sLocal1d = curLocal1d - sectorColAmount;
+            wLocal1d = curLocal1d - 1;
+            neLocal1d = nLocal1d + 1;
+            seLocal1d = sLocal1d + 1;
+            swLocal1d = sLocal1d - 1;
+            nwLocal1d = nLocal1d - 1;
+
+            //OVERFLOWS
+            bool nLocalOverflow = nLocal1d >= sectorTileAmount;
+            bool eLocalOverflow = (eLocal1d % sectorColAmount) == 0;
+            bool sLocalOverflow = sLocal1d < 0;
+            bool wLocalOverflow = (curLocal1d % sectorColAmount) == 0;
+
+            //SECTOR INDICIES
+            nSector1d = math.select(curSector1d, curSector1d + sectorMatrixColAmount, nLocalOverflow);
+            eSector1d = math.select(curSector1d, curSector1d + 1, eLocalOverflow);
+            sSector1d = math.select(curSector1d, curSector1d - sectorMatrixColAmount, sLocalOverflow);
+            wSector1d = math.select(curSector1d, curSector1d - 1, wLocalOverflow);
+            neSector1d = math.select(curSector1d, curSector1d + sectorMatrixColAmount, nLocalOverflow);
+            neSector1d = math.select(neSector1d, neSector1d + 1, eLocalOverflow);
+            seSector1d = math.select(curSector1d, curSector1d - sectorMatrixColAmount, sLocalOverflow);
+            seSector1d = math.select(seSector1d, seSector1d + 1, eLocalOverflow);
+            swSector1d = math.select(curSector1d, curSector1d - sectorMatrixColAmount, sLocalOverflow);
+            swSector1d = math.select(swSector1d, swSector1d - 1, wLocalOverflow);
+            nwSector1d = math.select(curSector1d, curSector1d + sectorMatrixColAmount, nLocalOverflow);
+            nwSector1d = math.select(nwSector1d, nwSector1d - 1, wLocalOverflow);
+
+
+            nLocal1d = math.select(nLocal1d, curLocal1d - (sectorColAmount * sectorColAmount - sectorColAmount), nLocalOverflow);
+            eLocal1d = math.select(eLocal1d, curLocal1d - sectorColAmount + 1, eLocalOverflow);
+            sLocal1d = math.select(sLocal1d, curLocal1d + (sectorColAmount * sectorColAmount - sectorColAmount), sLocalOverflow);
+            wLocal1d = math.select(wLocal1d, curLocal1d + sectorColAmount - 1, wLocalOverflow);
+            neLocal1d = math.select(neLocal1d, neLocal1d - (sectorColAmount * sectorColAmount), nLocalOverflow);
+            neLocal1d = math.select(neLocal1d, neLocal1d - sectorColAmount, eLocalOverflow);
+            seLocal1d = math.select(seLocal1d, seLocal1d + (sectorColAmount * sectorColAmount), sLocalOverflow);
+            seLocal1d = math.select(seLocal1d, seLocal1d - sectorColAmount, eLocalOverflow);
+            swLocal1d = math.select(swLocal1d, swLocal1d + (sectorColAmount * sectorColAmount), sLocalOverflow);
+            swLocal1d = math.select(swLocal1d, swLocal1d + sectorColAmount, wLocalOverflow);
+            nwLocal1d = math.select(nwLocal1d, nwLocal1d - (sectorColAmount * sectorColAmount), nLocalOverflow);
+            nwLocal1d = math.select(nwLocal1d, nwLocal1d + sectorColAmount, wLocalOverflow);
+
             //LOCAL 2D INDICIES
-            nLocal2d = To2D(direction.n, sectorTileAmount);
-            eLocal2d = To2D(direction.e, sectorTileAmount);
-            sLocal2d = To2D(direction.s, sectorTileAmount);
-            wLocal2d = To2D(direction.w, sectorTileAmount);
+            nLocal2d = To2D(nLocal1d, sectorColAmount);
+            eLocal2d = To2D(eLocal1d, sectorColAmount);
+            sLocal2d = To2D(sLocal1d, sectorColAmount);
+            wLocal2d = To2D(wLocal1d, sectorColAmount);
 
             //SECTOR 2D INDICIES
-            nSector2d = To2D(direction.nSector, sectorMatrixColAmount);
-            eSector2d = To2D(direction.eSector, sectorMatrixColAmount);
-            sSector2d = To2D(direction.sSector, sectorMatrixColAmount);
-            wSector2d = To2D(direction.wSector, sectorMatrixColAmount);
+            nSector2d = To2D(nSector1d, sectorMatrixColAmount);
+            eSector2d = To2D(eSector1d, sectorMatrixColAmount);
+            sSector2d = To2D(sSector1d, sectorMatrixColAmount);
+            wSector2d = To2D(wSector1d, sectorMatrixColAmount);
 
             //GENERAL 1D INDICIES
             nGeneral1d = GetGeneral1d(nLocal2d, nSector2d);
@@ -148,14 +204,14 @@ public struct LOSJob : IJob
             wGeneral1d = GetGeneral1d(wLocal2d, wSector2d);
 
             //SECTOR MARKS
-            int nSectorMark = sectorMarks[direction.nSector];
-            int eSectorMark = sectorMarks[direction.eSector];
-            int sSectorMark = sectorMarks[direction.sSector];
-            int wSectorMark = sectorMarks[direction.wSector];
-            int neSectorMark = sectorMarks[direction.neSector];
-            int seSectorMark = sectorMarks[direction.seSector];
-            int swSectorMark = sectorMarks[direction.swSector];
-            int nwSectorMark = sectorMarks[direction.nwSector];
+            int nSectorMark = sectorMarks[nSector1d];
+            int eSectorMark = sectorMarks[eSector1d];
+            int sSectorMark = sectorMarks[sSector1d];
+            int wSectorMark = sectorMarks[wSector1d];
+            int neSectorMark = sectorMarks[neSector1d];
+            int seSectorMark = sectorMarks[seSector1d];
+            int swSectorMark = sectorMarks[swSector1d];
+            int nwSectorMark = sectorMarks[nwSector1d];
 
             //SECTORS
             nSector = integrationField[nSectorMark].integrationSector;
@@ -177,14 +233,14 @@ public struct LOSJob : IJob
             swTile = new IntegrationTile(float.MaxValue, IntegrationMark.None);
             nwTile = new IntegrationTile(float.MaxValue, IntegrationMark.None);
 
-            if (nSectorMark != 0) { nTile = nSector[direction.n]; }
-            if (eSectorMark != 0) { eTile = eSector[direction.e]; }
-            if (sSectorMark != 0) { sTile = sSector[direction.s]; }
-            if (wSectorMark != 0) { wTile = wSector[direction.w]; }
-            if (neSectorMark != 0) { neTile = neSector[direction.ne]; }
-            if (seSectorMark != 0) { seTile = seSector[direction.se]; }
-            if (swSectorMark != 0) { swTile = swSector[direction.sw]; }
-            if (nwSectorMark != 0) { nwTile = nwSector[direction.nw]; }
+            if (nSectorMark != 0) { nTile = nSector[nLocal1d]; }
+            if (eSectorMark != 0) { eTile = eSector[eLocal1d]; }
+            if (sSectorMark != 0) { sTile = sSector[sLocal1d]; }
+            if (wSectorMark != 0) { wTile = wSector[wLocal1d]; }
+            if (neSectorMark != 0) { neTile = neSector[neLocal1d]; }
+            if (seSectorMark != 0) { seTile = seSector[seLocal1d]; }
+            if (swSectorMark != 0) { swTile = swSector[swLocal1d]; }
+            if (nwSectorMark != 0) { nwTile = nwSector[nwLocal1d]; }
 
             //RELEVANCIES
             nRelevant = nSectorMark != 0 && nTile.Mark == IntegrationMark.None;
@@ -216,32 +272,31 @@ public struct LOSJob : IJob
             bool wEnqueueable = wRelevant && wCost != byte.MaxValue && nTile.Mark != IntegrationMark.LOSBlock;
             if (nEnqueueable)
             {
-                integrationQueue.Enqueue(new LocalIndex1d(direction.n, direction.nSector));
-                IntegrationTile tile = nSector[direction.n];
+                integrationQueue.Enqueue(new LocalIndex1d(nLocal1d, nSector1d));
+                IntegrationTile tile = nSector[nLocal1d];
                 tile.Mark = IntegrationMark.Awaiting;
-                nSector[direction.n] = tile;
-
+                nSector[nLocal1d] = tile;
             }
             if (eEnqueueable)
             {
-                integrationQueue.Enqueue(new LocalIndex1d(direction.e, direction.eSector));
-                IntegrationTile tile = eSector[direction.e];
+                integrationQueue.Enqueue(new LocalIndex1d(eLocal1d, eSector1d));
+                IntegrationTile tile = eSector[eLocal1d];
                 tile.Mark = IntegrationMark.Awaiting;
-                eSector[direction.e] = tile;
+                eSector[eLocal1d] = tile;
             }
             if (sEnqueueable)
             {
-                integrationQueue.Enqueue(new LocalIndex1d(direction.s, direction.sSector));
-                IntegrationTile tile = sSector[direction.s];
+                integrationQueue.Enqueue(new LocalIndex1d(sLocal1d, sSector1d));
+                IntegrationTile tile = sSector[sLocal1d];
                 tile.Mark = IntegrationMark.Awaiting;
-                sSector[direction.s] = tile;
+                sSector[sLocal1d] = tile;
             }
             if (wEnqueueable)
             {
-                integrationQueue.Enqueue(new LocalIndex1d(direction.w, direction.wSector));
-                IntegrationTile tile = wSector[direction.w];
+                integrationQueue.Enqueue(new LocalIndex1d(wLocal1d, wSector1d));
+                IntegrationTile tile = wSector[wLocal1d];
                 tile.Mark = IntegrationMark.Awaiting;
-                wSector[direction.w] = tile;
+                wSector[wLocal1d] = tile;
             }
         }
         float GetCost()
@@ -270,19 +325,19 @@ public struct LOSJob : IJob
         {
             if (nRelevant && nCost == byte.MaxValue)
             {
-                ApplyLOSBlockIfLOSCorner(nGeneral1d, direction.n, direction.nSector);
+                ApplyLOSBlockIfLOSCorner(nGeneral1d, nLocal1d, nSector1d);
             }
             if (eRelevant && eCost == byte.MaxValue)
             {
-                ApplyLOSBlockIfLOSCorner(eGeneral1d, direction.e, direction.eSector);
+                ApplyLOSBlockIfLOSCorner(eGeneral1d, eLocal1d, eSector1d);
             }
             if (sRelevant && sCost == byte.MaxValue)
             {
-                ApplyLOSBlockIfLOSCorner(sGeneral1d, direction.s, direction.sSector);
+                ApplyLOSBlockIfLOSCorner(sGeneral1d, sLocal1d, sSector1d);
             }
             if (wRelevant && wCost == byte.MaxValue)
             {
-                ApplyLOSBlockIfLOSCorner(wGeneral1d, direction.w, direction.wSector);
+                ApplyLOSBlockIfLOSCorner(wGeneral1d, wLocal1d, wSector1d);
             }
 
             void ApplyLOSBlockIfLOSCorner(int generalIndex1d, int localIndex1d, int sectorIndex1d)
@@ -517,8 +572,8 @@ public struct LOSJob : IJob
                             int2 resultingSectorIndex2d = GetSectorIndex(resultingIndex2d);
                             int resultingSectorIndex1d = To1D(resultingSectorIndex2d, sectorMatrixColAmount);
                             if (sectorMarks[resultingSectorIndex1d] == 0) { stopCalculating = true; break; }
-                            int2 resultingLocalIndex2d = GetLocalIndex(resultingIndex2d, new int2(resultingSectorIndex2d.x * sectorTileAmount, resultingSectorIndex2d.y * sectorTileAmount));
-                            int resultingLocalIndex1d = To1D(resultingLocalIndex2d, sectorTileAmount);
+                            int2 resultingLocalIndex2d = GetLocalIndex(resultingIndex2d, new int2(resultingSectorIndex2d.x * sectorColAmount, resultingSectorIndex2d.y * sectorColAmount));
+                            int resultingLocalIndex1d = To1D(resultingLocalIndex2d, sectorColAmount);
                             UnsafeList<IntegrationTile> resultingIndexSector = integrationField[sectorMarks[resultingSectorIndex1d]].integrationSector;
                             IntegrationTile tile = resultingIndexSector[resultingLocalIndex1d];
                             if (tile.Mark == IntegrationMark.LOSBlock) { continue; }
@@ -542,7 +597,7 @@ public struct LOSJob : IJob
         }
         int2 GetSectorIndex(int2 index) 
         {
-            return new int2(index.x / sectorTileAmount, index.y / sectorTileAmount);
+            return new int2(index.x / sectorColAmount, index.y / sectorColAmount);
         }
         int2 GetLocalIndex(int2 index, int2 sectorStartIndex)
         {
@@ -550,7 +605,7 @@ public struct LOSJob : IJob
         }
         int2 GetSectorStartIndex(int2 sectorIndex)
         {
-            return new int2(sectorIndex.x * sectorTileAmount, sectorIndex.y * sectorTileAmount);
+            return new int2(sectorIndex.x * sectorColAmount, sectorIndex.y * sectorColAmount);
         }
         int GetGeneral1d(int2 local2d, int2 sector2d)
         {

@@ -109,18 +109,18 @@ public class PathProducer
         }
         JobHandle resetHandle = JobHandle.CombineDependencies(resetHandles);
         resetHandle.Complete();
+        sw.Start();
 
         //LOS
         LOSJob losjob = GetLosJob();
         JobHandle losHandle = losjob.Schedule(resetHandle);
         losHandle.Complete();
-        sw.Start();
-        
+        sw.Stop();
+
         //INTEGRATION
         IntFieldJob intjob = GetIntegrationJob();
         JobHandle integrationHandle = intjob.Schedule();
         integrationHandle.Complete();
-        sw.Stop();
         //FLOW FIELD
         NativeList<JobHandle> flowfieldHandles = new NativeList<JobHandle>(Allocator.Temp);
         for (int i = 1; i < flowField.Length; i++)
@@ -173,7 +173,7 @@ public class PathProducer
                 TileSize = _tileSize,
                 FieldRowAmount = _rowAmount,
                 FieldColAmount = _columnAmount,
-                SectorTileAmount = _sectorTileAmount,
+                SectorColAmount = _sectorTileAmount,
                 SectorMatrixColAmount = _sectorMatrixColAmount,
                 SectorMatrixRowAmount = _sectorMatrixRowAmount,
                 Costs = pickedCostField.CostsG,
