@@ -295,7 +295,6 @@ public class PathProducer
                 StartIndicies = integrationStartIndicies,
                 IntegrationQueue = new NativeQueue<LocalIndex1d>(Allocator.Persistent),
                 Costs = pickedCostField.CostsL,
-                LocalDirections = pickedCostField.LocalDirections,
                 IntegrationField = path.IntegrationField,
                 SectorMarks = path.SectorMarks,
                 SectorColAmount = _sectorTileAmount,
