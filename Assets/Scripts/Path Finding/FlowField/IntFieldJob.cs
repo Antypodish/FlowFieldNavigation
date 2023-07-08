@@ -205,28 +205,28 @@ public struct IntFieldJob : IJob
             float eDif = eIntCost - curIntCost;
             float sDif = sIntCost - curIntCost;
             float wDif = wIntCost - curIntCost;
-            if (nAvailable && nDif > 1f)
+            if (nAvailable && nDif > 2f)
             {
                 IntegrationTile tile = nSector[nLocal1d];
                 tile.Mark = IntegrationMark.Awaiting;
                 nSector[nLocal1d] = tile;
                 integrationQueue.Enqueue(new LocalIndex1d(nLocal1d, nSector1d));
             }
-            if (eAvailable && eDif > 1f)
+            if (eAvailable && eDif > 2f)
             {
                 IntegrationTile tile = eSector[eLocal1d];
                 tile.Mark = IntegrationMark.Awaiting;
                 eSector[eLocal1d] = tile;
                 integrationQueue.Enqueue(new LocalIndex1d(eLocal1d, eSector1d));
             }
-            if (sAvailable && sDif > 1f)
+            if (sAvailable && sDif > 2f)
             {
                 IntegrationTile tile = sSector[sLocal1d];
                 tile.Mark = IntegrationMark.Awaiting;
                 sSector[sLocal1d] = tile;
                 integrationQueue.Enqueue(new LocalIndex1d(sLocal1d, sSector1d));
             }
-            if (wAvailable && wDif > 1f)
+            if (wAvailable && wDif > 2f)
             {
                 IntegrationTile tile = wSector[wLocal1d];
                 tile.Mark = IntegrationMark.Awaiting;
@@ -256,32 +256,5 @@ public struct IntFieldJob : IJob
             costToReturn = math.select(costToReturn, nwCost, nwCost < costToReturn);
             return costToReturn;
         }
-    }
-    int To1D(int2 index2, int colAmount)
-    {
-        return index2.y * colAmount + index2.x;
-    }
-    int2 To2D(int index, int colAmount)
-    {
-        return new int2(index % colAmount, index / colAmount);
-    }
-    int2 GetSectorIndex(int2 index)
-    {
-        return new int2(index.x / SectorColAmount, index.y / SectorColAmount);
-    }
-    int2 GetLocalIndex(int2 index, int2 sectorStartIndex)
-    {
-        return index - sectorStartIndex;
-    }
-    int2 GetSectorStartIndex(int2 sectorIndex)
-    {
-        return new int2(sectorIndex.x * SectorColAmount, sectorIndex.y * SectorColAmount);
-    }
-    int GetGeneral1d(int2 local2d, int2 sector2d)
-    {
-        int2 sectorStart = GetSectorStartIndex(sector2d);
-        int2 general2d = local2d + sectorStart;
-        int general1d = To1D(general2d, FieldColAmount);
-        return general1d;
     }
 }
