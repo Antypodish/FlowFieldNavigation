@@ -48,7 +48,6 @@ public class PathProducer
     public Path ProducePath(NativeArray<Vector3> sources, Vector2 destination, int offset)
     {
         Stopwatch sw = new Stopwatch();
-        sw.Start();
         int2 destinationIndex = new int2(Mathf.FloorToInt(destination.x / _tileSize), Mathf.FloorToInt(destination.y / _tileSize));
         int destionationIndexFlat = destinationIndex.y * _columnAmount + destinationIndex.x;
         CostField pickedCostField = _costFieldProducer.GetCostFieldWithOffset(offset);
@@ -84,17 +83,17 @@ public class PathProducer
             SectorToPicked = sectorToPicked,
         };
         ProducedPaths.Add(producedPath);
-       
+
         //TRAVERSAL
         FieldGraphTraversalJob traversalJob = GetTraversalJob();
         traversalJob.Schedule().Complete();
-        
+
         //INT FIELD RESET
         IntFieldResetJob resetJob = GetResetFieldJob();
         JobHandle resetHandle = resetJob.Schedule(integrationField.Length, 32);
         resetHandle.Complete();
 
-        
+
         //LOS
         LOSJob losjob = GetLosJob();
         JobHandle losHandle = losjob.Schedule();
@@ -104,13 +103,15 @@ public class PathProducer
         IntFieldJob intjob = GetIntegrationJob();
         JobHandle integrationHandle = intjob.Schedule();
         integrationHandle.Complete();
+        sw.Start();
 
         //FLOW FIELD
         FlowFieldJob ffJob = GetFlowFieldJob();
         JobHandle ffHandle = ffJob.Schedule(flowField.Length, 256);
         ffHandle.Complete();
-        producedPath.IsCalculated = true;
         sw.Stop();
+
+        producedPath.IsCalculated = true;
         UnityEngine.Debug.Log(sw.Elapsed.TotalMilliseconds);
         return producedPath;
 
