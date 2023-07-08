@@ -18,7 +18,6 @@ public struct IntFieldJob : IJob
     public NativeArray<IntegrationFieldSector> IntegrationField;
     public NativeQueue<LocalIndex1d> IntegrationQueue;
     [ReadOnly] public NativeArray<int> SectorMarks;
-    [ReadOnly] public NativeArray<UnsafeList<LocalDirectionData1d>> LocalDirections;
     [ReadOnly] public NativeArray<UnsafeList<byte>> Costs;
     public void Execute()
     {
@@ -27,15 +26,33 @@ public struct IntFieldJob : IJob
     void Integrate()
     {
         //DATA
+        int sectorColAmount = SectorColAmount;
+        int sectorMatrixColAmount = SectorMatrixColAmount;
+        int fieldColAmount = FieldColAmount;
+        int sectorTileAmount = SectorColAmount * sectorColAmount;
         NativeArray<IntegrationFieldSector> integrationField = IntegrationField;
         NativeArray<int> sectorMarks = SectorMarks;
         NativeArray<UnsafeList<byte>> costs = Costs;
-        NativeArray<UnsafeList<LocalDirectionData1d>> localDirections = LocalDirections;
         NativeQueue<LocalIndex1d> integrationQueue = IntegrationQueue;
 
         ///////////LOOKUP TABLE////////////////
         ///////////////////////////////////////
-        LocalDirectionData1d directions;
+        int nLocal1d;
+        int eLocal1d;
+        int sLocal1d;
+        int wLocal1d;
+        int neLocal1d;
+        int seLocal1d;
+        int swLocal1d;
+        int nwLocal1d;
+        int nSector1d;
+        int eSector1d;
+        int sSector1d;
+        int wSector1d;
+        int neSector1d;
+        int seSector1d;
+        int swSector1d;
+        int nwSector1d;
         byte nCost;
         byte eCost;
         byte sCost;
@@ -79,23 +96,72 @@ public struct IntFieldJob : IJob
         //HELPERS
         void SetLookupTable(int curLocal1d, int curSector1d)
         {
-            directions = localDirections[curSector1d][curLocal1d];
+            //LOCAL INDICIES
+            nLocal1d = curLocal1d + sectorColAmount;
+            eLocal1d = curLocal1d + 1;
+            sLocal1d = curLocal1d - sectorColAmount;
+            wLocal1d = curLocal1d - 1;
+            neLocal1d = nLocal1d + 1;
+            seLocal1d = sLocal1d + 1;
+            swLocal1d = sLocal1d - 1;
+            nwLocal1d = nLocal1d - 1;
+
+            //OVERFLOWS
+            bool nLocalOverflow = nLocal1d >= sectorTileAmount;
+            bool eLocalOverflow = (eLocal1d % sectorColAmount) == 0;
+            bool sLocalOverflow = sLocal1d < 0;
+            bool wLocalOverflow = (curLocal1d % sectorColAmount) == 0;
+
+            //SECTOR INDICIES
+            nSector1d = math.select(curSector1d, curSector1d + sectorMatrixColAmount, nLocalOverflow);
+            eSector1d = math.select(curSector1d, curSector1d + 1, eLocalOverflow);
+            sSector1d = math.select(curSector1d, curSector1d - sectorMatrixColAmount, sLocalOverflow);
+            wSector1d = math.select(curSector1d, curSector1d - 1, wLocalOverflow);
+            neSector1d = math.select(curSector1d, curSector1d + sectorMatrixColAmount, nLocalOverflow);
+            neSector1d = math.select(neSector1d, neSector1d + 1, eLocalOverflow);
+            seSector1d = math.select(curSector1d, curSector1d - sectorMatrixColAmount, sLocalOverflow);
+            seSector1d = math.select(seSector1d, seSector1d + 1, eLocalOverflow);
+            swSector1d = math.select(curSector1d, curSector1d - sectorMatrixColAmount, sLocalOverflow);
+            swSector1d = math.select(swSector1d, swSector1d - 1, wLocalOverflow);
+            nwSector1d = math.select(curSector1d, curSector1d + sectorMatrixColAmount, nLocalOverflow);
+            nwSector1d = math.select(nwSector1d, nwSector1d - 1, wLocalOverflow);
+
+
+            nLocal1d = math.select(nLocal1d, curLocal1d - (sectorColAmount * sectorColAmount - sectorColAmount), nLocalOverflow);
+            eLocal1d = math.select(eLocal1d, curLocal1d - sectorColAmount + 1, eLocalOverflow);
+            sLocal1d = math.select(sLocal1d, curLocal1d + (sectorColAmount * sectorColAmount - sectorColAmount), sLocalOverflow);
+            wLocal1d = math.select(wLocal1d, curLocal1d + sectorColAmount - 1, wLocalOverflow);
+            neLocal1d = math.select(neLocal1d, neLocal1d - (sectorColAmount * sectorColAmount), nLocalOverflow);
+            neLocal1d = math.select(neLocal1d, neLocal1d - sectorColAmount, eLocalOverflow);
+            seLocal1d = math.select(seLocal1d, seLocal1d + (sectorColAmount * sectorColAmount), sLocalOverflow);
+            seLocal1d = math.select(seLocal1d, seLocal1d - sectorColAmount, eLocalOverflow);
+            swLocal1d = math.select(swLocal1d, swLocal1d + (sectorColAmount * sectorColAmount), sLocalOverflow);
+            swLocal1d = math.select(swLocal1d, swLocal1d + sectorColAmount, wLocalOverflow);
+            nwLocal1d = math.select(nwLocal1d, nwLocal1d - (sectorColAmount * sectorColAmount), nLocalOverflow);
+            nwLocal1d = math.select(nwLocal1d, nwLocal1d + sectorColAmount, wLocalOverflow);
+
             //COSTS
-            nCost = costs[directions.nSector][directions.n];
-            eCost = costs[directions.eSector][directions.e];
-            sCost = costs[directions.sSector][directions.s];
-            wCost = costs[directions.wSector][directions.w];
+            nCost = costs[nSector1d][nLocal1d];
+            eCost = costs[eSector1d][eLocal1d];
+            sCost = costs[sSector1d][sLocal1d];
+            wCost = costs[wSector1d][wLocal1d];
 
             //SECTOR MARKS
             int curSectorMark = sectorMarks[curSector1d];
-            int nSectorMark = sectorMarks[directions.nSector];
-            int eSectorMark = sectorMarks[directions.eSector];
-            int sSectorMark = sectorMarks[directions.sSector];
-            int wSectorMark = sectorMarks[directions.wSector];
-            int neSectorMark = sectorMarks[directions.neSector];
-            int seSectorMark = sectorMarks[directions.seSector];
-            int swSectorMark = sectorMarks[directions.swSector];
-            int nwSectorMark = sectorMarks[directions.nwSector];
+            int nSectorMark = sectorMarks[nSector1d];
+            int eSectorMark = sectorMarks[eSector1d];
+            int sSectorMark = sectorMarks[sSector1d];
+            int wSectorMark = sectorMarks[wSector1d];
+            int neSectorMark = sectorMarks[neSector1d];
+            int seSectorMark = sectorMarks[seSector1d];
+            int swSectorMark = sectorMarks[swSector1d];
+            int nwSectorMark = sectorMarks[nwSector1d];
+
+
+            IntegrationMark nMark = IntegrationMark.None;
+            IntegrationMark eMark = IntegrationMark.None;
+            IntegrationMark sMark = IntegrationMark.None;
+            IntegrationMark wMark = IntegrationMark.None;
 
             //INTEGRATED COSTS
             curIntCost = integrationField[curSectorMark].integrationSector[curLocal1d].Cost;
@@ -118,19 +184,14 @@ public struct IntFieldJob : IJob
             swSector = integrationField[swSectorMark].integrationSector;
             nwSector = integrationField[nwSectorMark].integrationSector;
 
-            IntegrationMark nMark = IntegrationMark.None;
-            IntegrationMark eMark = IntegrationMark.None;
-            IntegrationMark sMark = IntegrationMark.None;
-            IntegrationMark wMark = IntegrationMark.None;
-
-            if (nSectorMark != 0) { nIntCost = nSector[directions.n].Cost; nMark = nSector[directions.n].Mark; }
-            if (eSectorMark != 0) { eIntCost = eSector[directions.e].Cost; eMark = eSector[directions.e].Mark; }
-            if (sSectorMark != 0) { sIntCost = sSector[directions.s].Cost; sMark = sSector[directions.s].Mark; }
-            if (wSectorMark != 0) { wIntCost = wSector[directions.w].Cost; wMark = wSector[directions.w].Mark; }
-            if (neSectorMark != 0) { neIntCost = neSector[directions.ne].Cost; }
-            if (seSectorMark != 0) { seIntCost = seSector[directions.se].Cost; }
-            if (swSectorMark != 0) { swIntCost = swSector[directions.sw].Cost; }
-            if (nwSectorMark != 0) { nwIntCost = nwSector[directions.nw].Cost; }
+            if (nSectorMark != 0) { nIntCost = nSector[nLocal1d].Cost; nMark = nSector[nLocal1d].Mark; }
+            if (eSectorMark != 0) { eIntCost = eSector[eLocal1d].Cost; eMark = eSector[eLocal1d].Mark; }
+            if (sSectorMark != 0) { sIntCost = sSector[sLocal1d].Cost; sMark = sSector[sLocal1d].Mark; }
+            if (wSectorMark != 0) { wIntCost = wSector[wLocal1d].Cost; wMark = wSector[wLocal1d].Mark; }
+            if (neSectorMark != 0) { neIntCost = neSector[neLocal1d].Cost; }
+            if (seSectorMark != 0) { seIntCost = seSector[seLocal1d].Cost; }
+            if (swSectorMark != 0) { swIntCost = swSector[swLocal1d].Cost; }
+            if (nwSectorMark != 0) { nwIntCost = nwSector[nwLocal1d].Cost; }
 
             //AVAILABILITY
             nAvailable = nCost != byte.MaxValue && (nMark == IntegrationMark.Integrated || nMark == IntegrationMark.None) && nSectorMark != 0;
@@ -146,31 +207,31 @@ public struct IntFieldJob : IJob
             float wDif = wIntCost - curIntCost;
             if (nAvailable && nDif > 1f)
             {
-                IntegrationTile tile = nSector[directions.n];
+                IntegrationTile tile = nSector[nLocal1d];
                 tile.Mark = IntegrationMark.Awaiting;
-                nSector[directions.n] = tile;
-                integrationQueue.Enqueue(new LocalIndex1d(directions.n, directions.nSector));
+                nSector[nLocal1d] = tile;
+                integrationQueue.Enqueue(new LocalIndex1d(nLocal1d, nSector1d));
             }
             if (eAvailable && eDif > 1f)
             {
-                IntegrationTile tile = eSector[directions.e];
+                IntegrationTile tile = eSector[eLocal1d];
                 tile.Mark = IntegrationMark.Awaiting;
-                eSector[directions.e] = tile;
-                integrationQueue.Enqueue(new LocalIndex1d(directions.e, directions.eSector));
+                eSector[eLocal1d] = tile;
+                integrationQueue.Enqueue(new LocalIndex1d(eLocal1d, eSector1d));
             }
             if (sAvailable && sDif > 1f)
             {
-                IntegrationTile tile = sSector[directions.s];
+                IntegrationTile tile = sSector[sLocal1d];
                 tile.Mark = IntegrationMark.Awaiting;
-                sSector[directions.s] = tile;
-                integrationQueue.Enqueue(new LocalIndex1d(directions.s, directions.sSector));
+                sSector[sLocal1d] = tile;
+                integrationQueue.Enqueue(new LocalIndex1d(sLocal1d, sSector1d));
             }
             if (wAvailable && wDif > 1f)
             {
-                IntegrationTile tile = wSector[directions.w];
+                IntegrationTile tile = wSector[wLocal1d];
                 tile.Mark = IntegrationMark.Awaiting;
-                wSector[directions.w] = tile;
-                integrationQueue.Enqueue(new LocalIndex1d(directions.w, directions.wSector));
+                wSector[wLocal1d] = tile;
+                integrationQueue.Enqueue(new LocalIndex1d(wLocal1d, wSector1d));
             }
         }
         float GetCost()

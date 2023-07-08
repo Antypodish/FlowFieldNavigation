@@ -192,7 +192,6 @@ public class PathProducer
                 Target = destinationIndex,
                 IntegrationQueue = blockedWaveFronts,
                 Costs = pickedCostField.CostsL,
-                LocalDirections = pickedCostField.LocalDirections,
                 IntegrationField = integrationField,
                 SectorMarks = sectorMarks,
                 SectorColAmount = _sectorTileAmount,
