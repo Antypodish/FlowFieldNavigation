@@ -9,7 +9,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 
 [BurstCompile]
-public struct IntFieldResetJob : IJobParallelFor
+public struct IntegrationFieldResetJob : IJobParallelFor
 {
     public NativeArray<IntegrationTile> IntegrationField;
 

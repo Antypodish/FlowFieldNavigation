@@ -20,18 +20,19 @@ public class Path
     public NativeList<IntegrationTile> IntegrationField;
     public NativeList<FlowData> FlowField;
     public NativeQueue<LocalIndex1d> BlockedWaveFronts;
-    public NativeQueue<LocalIndex1d> intqueue;
     public NativeArray<DijkstraTile> TargetSectorCosts;
     public NativeList<int> PortalSequenceBorders;
 
+    public void DisposeTemp()
+    {
+        BlockedWaveFronts.Dispose();
+    }
     public void Dispose()
     {
         PickedToSector.Dispose();
         PortalSequenceBorders.Dispose();
         Sources.Dispose();
         TargetSectorCosts.Dispose();
-        intqueue.Dispose();
-        BlockedWaveFronts.Dispose();
         PortalTraversalDataArray.Dispose();
         PortalSequence.Dispose();
         SectorToPicked.Dispose();

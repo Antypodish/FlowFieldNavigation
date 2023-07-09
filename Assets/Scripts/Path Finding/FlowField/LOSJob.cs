@@ -25,7 +25,6 @@ public struct LOSJob : IJob
     [ReadOnly] public NativeArray<UnsafeList<LocalDirectionData1d>> Directions;
     public NativeArray<int> SectorToPicked;
     public NativeList<IntegrationTile> IntegrationField;
-    public NativeQueue<LocalIndex1d> IntegrationQueue;
     public NativeQueue<LocalIndex1d> BlockedWaveFronts;
     public void Execute()
     {
@@ -40,7 +39,7 @@ public struct LOSJob : IJob
         int2 target = Target;
         NativeArray<int> sectorToPicked = SectorToPicked;
         NativeList<IntegrationTile> integrationField = IntegrationField;
-        NativeQueue<LocalIndex1d> integrationQueue = IntegrationQueue;
+        NativeQueue<LocalIndex1d> waveFrontQueue = new NativeQueue<LocalIndex1d>(Allocator.Temp);
         NativeArray<byte> costs = Costs;
         NativeQueue<LocalIndex1d> blockedWaveFronts = BlockedWaveFronts;
 
@@ -123,9 +122,9 @@ public struct LOSJob : IJob
         integrationField[targetSectorMark + targetLocal1d] = targetTile;
         LookForLOSC();
         EnqueueNeighbours();
-        while (!integrationQueue.IsEmpty())
+        while (!waveFrontQueue.IsEmpty())
         {
-            LocalIndex1d curIndex = integrationQueue.Dequeue();
+            LocalIndex1d curIndex = waveFrontQueue.Dequeue();
             int curSectorMark = SectorToPicked[curIndex.sector];
             IntegrationTile curTile = integrationField[curSectorMark + curIndex.index];
             if(curTile.Mark == IntegrationMark.LOSBlock) { continue; }
@@ -260,28 +259,28 @@ public struct LOSJob : IJob
             bool wEnqueueable = wRelevant && wCost != byte.MaxValue && nTile.Mark != IntegrationMark.LOSBlock;
             if (nEnqueueable)
             {
-                integrationQueue.Enqueue(new LocalIndex1d(nLocal1d, nSector1d));
+                waveFrontQueue.Enqueue(new LocalIndex1d(nLocal1d, nSector1d));
                 IntegrationTile tile = integrationField[nSectorMark + nLocal1d];
                 tile.Mark = IntegrationMark.Awaiting;
                 integrationField[nSectorMark + nLocal1d] = tile;
             }
             if (eEnqueueable)
             {
-                integrationQueue.Enqueue(new LocalIndex1d(eLocal1d, eSector1d));
+                waveFrontQueue.Enqueue(new LocalIndex1d(eLocal1d, eSector1d));
                 IntegrationTile tile = integrationField[eSectorMark + eLocal1d];
                 tile.Mark = IntegrationMark.Awaiting;
                 integrationField[eSectorMark + eLocal1d] = tile;
             }
             if (sEnqueueable)
             {
-                integrationQueue.Enqueue(new LocalIndex1d(sLocal1d, sSector1d));
+                waveFrontQueue.Enqueue(new LocalIndex1d(sLocal1d, sSector1d));
                 IntegrationTile tile = integrationField[sSectorMark + sLocal1d];
                 tile.Mark = IntegrationMark.Awaiting;
                 integrationField[sSectorMark + sLocal1d] = tile;
             }
             if (wEnqueueable)
             {
-                integrationQueue.Enqueue(new LocalIndex1d(wLocal1d, wSector1d));
+                waveFrontQueue.Enqueue(new LocalIndex1d(wLocal1d, wSector1d));
                 IntegrationTile tile = integrationField[wSectorMark + wLocal1d];
                 tile.Mark = IntegrationMark.Awaiting;
                 integrationField[wSectorMark + wLocal1d] = tile;

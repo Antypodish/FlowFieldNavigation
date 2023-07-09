@@ -16,7 +16,6 @@ public struct IntegrationFieldAdditionJob : IJob
     public NativeList<IntegrationTile> IntegrationFieldAddition;
     public NativeList<FlowData> FlowField;
     public NativeList<FlowData> FlowFieldAddition;
-    public NativeQueue<LocalIndex1d> IntegrationQueue;
     [ReadOnly] public NativeArray<int> SectorToPicked;
     [ReadOnly] public NativeArray<UnsafeList<byte>> Costs;
     public void Execute()
@@ -31,7 +30,7 @@ public struct IntegrationFieldAdditionJob : IJob
         NativeArray<IntegrationTile> integrationField = IntegrationField;
         NativeArray<int> sectorMarks = SectorToPicked;
         NativeArray<UnsafeList<byte>> costs = Costs;
-        NativeQueue<LocalIndex1d> integrationQueue = IntegrationQueue;
+        NativeQueue<LocalIndex1d> integrationQueue = new NativeQueue<LocalIndex1d>(Allocator.Temp);
         int fieldColAmount = FieldColAmount;
         int sectorColAmount = SectorColAmount;
         int sectorTileAmount = sectorColAmount * sectorColAmount;

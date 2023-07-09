@@ -8,7 +8,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 
 [BurstCompile]
-public struct IntFieldJob : IJob
+public struct IntegrationFieldJob : IJob
 {
     public int2 Target;
     public int FieldColAmount;
@@ -16,7 +16,7 @@ public struct IntFieldJob : IJob
     public int SectorColAmount;
     public int SectorMatrixColAmount;
     public NativeList<IntegrationTile> IntegrationField;
-    public NativeQueue<LocalIndex1d> IntegrationQueue;
+    public NativeQueue<LocalIndex1d> WaveFrontQueue;
     [ReadOnly] public NativeArray<int> SectorMarks;
     [ReadOnly] public NativeArray<UnsafeList<byte>> Costs;
     public void Execute()
@@ -33,7 +33,7 @@ public struct IntFieldJob : IJob
         NativeArray<IntegrationTile> integrationField = IntegrationField;
         NativeArray<int> sectorMarks = SectorMarks;
         NativeArray<UnsafeList<byte>> costs = Costs;
-        NativeQueue<LocalIndex1d> integrationQueue = IntegrationQueue;
+        NativeQueue<LocalIndex1d> integrationQueue = WaveFrontQueue;
 
         ///////////LOOKUP TABLE////////////////
         ///////////////////////////////////////

@@ -411,7 +411,7 @@ MonoBehaviour:
   _pathfindingManager: {fileID: 638972356}
   _controller: {fileID: 1638174571}
   AgentDataIndex: 0
-  _speed: 0
+  _speed: 7
 --- !u!23 &870546284
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -707,7 +707,7 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: RowAmount
-      value: 120
+      value: 310
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
@@ -722,7 +722,7 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: ColumnAmount
-      value: 130
+      value: 320
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
