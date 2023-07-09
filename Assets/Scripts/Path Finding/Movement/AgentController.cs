@@ -7,6 +7,7 @@ public class AgentController : MonoBehaviour
     [SerializeField] PathfindingManager _pathfindingManager;
     [SerializeField] ControlState _control;
     List<FlowFieldAgent> _agents;
+    Vector3 _destination;
     private void Awake()
     {
         _agents = new List<FlowFieldAgent>();
@@ -46,13 +47,13 @@ public class AgentController : MonoBehaviour
             RaycastHit hit;
             if (Physics.Raycast(ray, out hit))
             {
-                Vector3 destination = hit.point;
+                _destination = hit.point;
                 NativeArray<Vector3> positions = new NativeArray<Vector3>(agentCount, Allocator.Persistent);
                 for (int i = 0; i < agentCount; i++)
                 {
                     positions[i] = _agents[i].transform.position;
                 }
-                Path newPath = _pathfindingManager.SetDestination(positions, destination);
+                Path newPath = _pathfindingManager.SetDestination(positions, _destination);
                 for (int i = 0; i < agentCount; i++)
                 {
                     _agents[i].SetPath(newPath);
@@ -70,13 +71,13 @@ public class AgentController : MonoBehaviour
             RaycastHit hit;
             if (Physics.Raycast(ray, out hit))
             {
-                Vector3 destination = hit.point;
+                _destination = hit.point;
                 NativeArray<Vector3> positions = new NativeArray<Vector3>(agentCount / 2, Allocator.Persistent);
                 for (int i = 0; i < agentCount / 2; i++)
                 {
                     positions[i] = _agents[i].transform.position;
                 }
-                Path newPath = _pathfindingManager.SetDestination(positions, destination);
+                Path newPath = _pathfindingManager.SetDestination(positions, _destination);
                 for (int i = 0; i < agentCount / 2; i++)
                 {
                     _agents[i].SetPath(newPath);
@@ -90,13 +91,13 @@ public class AgentController : MonoBehaviour
             RaycastHit hit;
             if (Physics.Raycast(ray, out hit))
             {
-                Vector3 destination = hit.point;
+                _destination = hit.point;
                 NativeArray<Vector3> positions = new NativeArray<Vector3>(agentCount / 2, Allocator.Persistent);
                 for (int i = agentCount / 2; i < agentCount; i++)
                 {
                     positions[i - agentCount / 2] = _agents[i].transform.position;
                 }
-                Path newPath = _pathfindingManager.SetDestination(positions, destination);
+                Path newPath = _pathfindingManager.SetDestination(positions, _destination);
                 for (int i = agentCount / 2; i < _agents.Count; i++)
                 {
                     _agents[i].SetPath(newPath);
@@ -113,5 +114,10 @@ public class AgentController : MonoBehaviour
     {
         Single,
         Double,
+    }
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.white;
+        Gizmos.DrawSphere(_destination, .25f);
     }
 }

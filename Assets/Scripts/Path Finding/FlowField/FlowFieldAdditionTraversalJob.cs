@@ -12,14 +12,16 @@ public struct FlowFieldAdditionTraversalJob : IJob
     public int FieldColAmount;
     public int SectorColAmount;
     public int SectorMatrixColAmount;
+    public int ExistingPickedFieldLength;
 
     public NativeList<LocalIndex1d> IntegrationStartIndicies;
     public NativeArray<PortalTraversalData> PortalTraversalDataArray;
     public NativeList<int> PortalSequence;
     public NativeList<int> PortalSequenceBorders;
-    public NativeArray<int> SectorMarks;
-    public NativeList<IntegrationFieldSector> IntegrationField;
-    public NativeList<FlowFieldSector> FlowField;
+    public NativeArray<int> SectorToPicked;
+    public NativeList<int> PickedToSector;
+    public NativeList<IntegrationTile> IntegrationFieldAddition;
+    public NativeList<FlowData> FlowFieldAddition;
 
     [ReadOnly] public NativeArray<SectorNode> SectorNodes;
     [ReadOnly] public NativeArray<int> SecToWinPtrs;
@@ -264,6 +266,10 @@ public struct FlowFieldAdditionTraversalJob : IJob
     }
     void PickSectorsFromPortalSequence()
     {
+        int sectorTileAmount = SectorColAmount * SectorColAmount;
+        int existingPickedFieldLength = ExistingPickedFieldLength;
+        int newSectorCount = 0;
+
         for (int i = _newSequenceStartIndex; i < PortalSequence.Length; i++)
         {
             int portalIndex = PortalSequence[i];
@@ -274,12 +280,14 @@ public struct FlowFieldAdditionTraversalJob : IJob
             for (int j = 0; j < winToSecCnt; j++)
             {
                 int secPtr = WinToSecPtrs[j + winToSecPtr];
-                if (SectorMarks[secPtr] != 0) { continue; }
-                SectorMarks[secPtr] = IntegrationField.Length;
-                IntegrationField.Add(new IntegrationFieldSector(secPtr));
-                FlowField.Add(new FlowFieldSector(secPtr));
+                if (SectorToPicked[secPtr] != 0) { continue; }
+                SectorToPicked[secPtr] = existingPickedFieldLength + (newSectorCount * sectorTileAmount);
+                PickedToSector.Add(secPtr);
+                newSectorCount++;
             }
         }
+        IntegrationFieldAddition.Length = newSectorCount * sectorTileAmount;
+        FlowFieldAddition.Length = newSectorCount * sectorTileAmount;
     }
     LocalIndex1d GetNotCalculatedIndexOfPortalNode(PortalNode portalNode)
     {
@@ -295,11 +303,11 @@ public struct FlowFieldAdditionTraversalJob : IJob
         int2 portal2Local2d = portal2General2d - portal2SectorStart2d;
         int portal1Local1d = portal1Local2d.y * SectorColAmount + portal1Local2d.x;
         int portal2Local1d = portal2Local2d.y * SectorColAmount + portal2Local2d.x;
-        if (SectorMarks[portal1Sector1d] == 0 && SectorMarks[portal2Sector1d] != 0)
+        if (SectorToPicked[portal1Sector1d] == 0 && SectorToPicked[portal2Sector1d] != 0)
         {
             return new LocalIndex1d(portal1Local1d, portal1Sector1d);
         }
-        else if (SectorMarks[portal2Sector1d] == 0 && SectorMarks[portal1Sector1d] != 0)
+        else if (SectorToPicked[portal2Sector1d] == 0 && SectorToPicked[portal1Sector1d] != 0)
         {
             return new LocalIndex1d(portal2Local1d, portal2Sector1d);
         }
