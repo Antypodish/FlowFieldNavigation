@@ -75,6 +75,13 @@ public struct PortalNodeAdditionTraversalJob : IJob
     {
         bool isIntegrationStartFound = false;
         int originIndex = stoppedIndex;
+        if (originIndex == PortalTraversalDataArray.Length - 1)
+        {
+            PortalTraversalData nextPortalData = PortalTraversalDataArray[originIndex];
+            nextPortalData.mark |= PortalTraversalMark.Picked;
+            PortalTraversalDataArray[originIndex] = nextPortalData;
+            originIndex = nextPortalData.originIndex;
+        }
         while (originIndex != sourceNodeIndex)
         {
             if (!isIntegrationStartFound)
