@@ -4,6 +4,7 @@ using Unity.Jobs;
 using UnityEngine;
 using Unity.Mathematics;
 using System;
+using Unity.Collections.LowLevel.Unsafe;
 
 public struct FieldGraph
 {
@@ -17,7 +18,8 @@ public struct FieldGraph
     AStarGrid _aStarGrid;
 
     //helper data
-    NativeArray<byte> _costs;
+    NativeArray<UnsafeList<byte>> _costsL;
+    NativeArray<byte> _costsG;
     int _fieldRowAmount;
     int _fieldColAmount;
     float _fieldTileSize;
@@ -25,7 +27,7 @@ public struct FieldGraph
     int _sectorMatrixRowAmount;
     int _sectorMatrixColAmount;
     int _portalPerWindow;
-    public FieldGraph(NativeArray<byte> costs, int sectorSize, int fieldRowAmount, int fieldColAmount, int costFieldOffset, float fieldTileSize)
+    public FieldGraph(NativeArray<byte> costsG, NativeArray<UnsafeList<byte>> costsL, int sectorSize, int fieldRowAmount, int fieldColAmount, int costFieldOffset, float fieldTileSize)
     {
         //size calculations
         int sectorMatrixRowAmount = fieldRowAmount / sectorSize;
@@ -52,7 +54,8 @@ public struct FieldGraph
         _fieldTileSize = fieldTileSize;
         _sectorTileAmount = sectorSize;
         _portalPerWindow = portalPerWindow;
-        _costs = costs;
+        _costsG = costsG;
+        _costsL = costsL;
         _aStarGrid = new AStarGrid(fieldRowAmount, fieldColAmount);
         SectorNodes = new NativeArray<SectorNode>(sectorAmount, Allocator.Persistent);
         SecToWinPtrs = new NativeArray<int>(secToWinPtrAmount, Allocator.Persistent);
@@ -71,7 +74,7 @@ public struct FieldGraph
             WinToSecPtrs = WinToSecPtrs,
             PortalNodes = PortalNodes,
             PorToPorPtrs = PorToPorPtrs,
-            Costs = _costs,
+            Costs = _costsG,
             FieldColAmount = _fieldColAmount,
             FieldRowAmount = _fieldRowAmount,
             FieldTileSize = _fieldTileSize,
@@ -95,11 +98,12 @@ public struct FieldGraph
             WinToSecPtrs = WinToSecPtrs,
             PortalNodes = PortalNodes,
             PorPtrs = PorToPorPtrs,
-            Costs = _costs,
+            CostsL = _costsL,
+            CostsG = _costsG,
             FieldColAmount = _fieldColAmount,
             FieldRowAmount = _fieldRowAmount,
             FieldTileSize = _fieldTileSize,
-            SectorTileAmount = _sectorTileAmount,
+            SectorColAmount = _sectorTileAmount,
             SectorMatrixColAmount = _sectorMatrixColAmount,
             SectorMatrixRowAmount = _sectorMatrixRowAmount,
             PortalPerWindow = _portalPerWindow,

@@ -1,7 +1,9 @@
 ﻿using System.Linq;
 using Unity.Burst;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
+using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -16,19 +18,24 @@ public struct CostFieldEditJob : IJob
     public NativeArray<int> WinToSecPtrs;
     public NativeArray<PortalNode> PortalNodes;
     public NativeArray<PortalToPortal> PorPtrs;
-    public NativeArray<byte> Costs;
+    public NativeArray<UnsafeList<byte>> CostsL;
+    public NativeArray<byte> CostsG;
     public int FieldColAmount;
     public int FieldRowAmount;
     public float FieldTileSize;
-    public int SectorTileAmount;
+    public int SectorColAmount;
     public int SectorMatrixColAmount;
     public int SectorMatrixRowAmount;
     public int PortalPerWindow;
     public NativeArray<AStarTile> IntegratedCosts;
     public NativeQueue<int> AStarQueue;
     public NativeList<int> EditedSectorIndicies;
+
+
+    int _sectorTileAmount;
     public void Execute()
     {
+        _sectorTileAmount = SectorColAmount * SectorColAmount;
         ApplyCostUpdate();
         SetSectorsBetweenBounds();
         NativeArray<int> windowIndiciesBetweenBounds = GetWindowsBetweenBounds(EditedSectorIndicies);
@@ -38,6 +45,9 @@ public struct CostFieldEditJob : IJob
     }
     void ApplyCostUpdate()
     {
+        int sectorColAmount = SectorColAmount;
+        int sectorMatrixColAmount = SectorMatrixColAmount;
+        //APPLY FOR GENERAL COST FIELD
         Index2 botLeft = Bounds.BottomLeft;
         Index2 topRight = Bounds.UpperRight;
         if (botLeft.R == 0) { botLeft.R += 1; }
@@ -53,18 +63,65 @@ public struct CostFieldEditJob : IJob
         {
             for(int i = r; i <= r + colDif; i++)
             {
-                Costs[i] = NewCost;
+                CostsG[i] = NewCost;
             }
+        }
+
+        //APPLY FOR LOCAL COST FIELD
+        int eastCount = topRight.C - botLeft.C;
+        int northCount = topRight.R - botLeft.R;
+        int sectorTileAmount = SectorColAmount * SectorColAmount;
+        LocalIndex1d localBotLeft = GetLocalIndex(botLeft);
+        LocalIndex1d startLocal1d = localBotLeft;
+        LocalIndex1d curLocalIndex = localBotLeft;
+        UnsafeList<byte> costSector;
+        for(int i = 0; i <= northCount; i++)
+        {
+            for(int j = 0; j <= eastCount; j++)
+            {
+                costSector = CostsL[curLocalIndex.sector];
+                costSector[curLocalIndex.index] = NewCost;
+                curLocalIndex = GetEast(curLocalIndex);
+            }
+            startLocal1d = GetNorth(startLocal1d);
+            curLocalIndex = startLocal1d;
+        }
+
+        LocalIndex1d GetLocalIndex(Index2 index)
+        {
+            int2 general2d = new int2(index.C, index.R);
+            int2 sector2d = general2d / sectorColAmount;
+            int sector1d = sector2d.y * sectorMatrixColAmount + sector2d.x;
+            int2 sectorStart2d = sector2d * sectorColAmount;
+            int2 local2d = general2d - sectorStart2d;
+            int local1d = local2d.y * sectorColAmount + local2d.x;
+            return new LocalIndex1d(local1d, sector1d);
+        }
+        LocalIndex1d GetEast(LocalIndex1d local)
+        {
+            int eLocal1d = local.index + 1;
+            bool eLocalOverflow = (eLocal1d % sectorColAmount) == 0;
+            int eSector1d = math.select(local.sector, local.sector + 1, eLocalOverflow);
+            eLocal1d = math.select(eLocal1d, local.index - sectorColAmount + 1, eLocalOverflow);
+            return new LocalIndex1d(eLocal1d, eSector1d);
+        }
+        LocalIndex1d GetNorth(LocalIndex1d local)
+        {
+            int nLocal1d = local.index + sectorColAmount;
+            bool nLocalOverflow = nLocal1d >= sectorTileAmount;
+            int nSector1d = math.select(local.sector, local.sector + sectorMatrixColAmount, nLocalOverflow);
+            nLocal1d = math.select(nLocal1d, local.index - (sectorColAmount * sectorColAmount - sectorColAmount), nLocalOverflow);
+            return new LocalIndex1d(nLocal1d, nSector1d);
         }
     }
     void SetSectorsBetweenBounds()
     {
         Index2 botLeft = Bounds.BottomLeft;
         Index2 topRight = Bounds.UpperRight;
-        int bottomLeftRow = botLeft.R / SectorTileAmount;
-        int bottomLeftCol = botLeft.C / SectorTileAmount;
-        int upperRightRow = topRight.R / SectorTileAmount;
-        int upperRightCol = topRight.C / SectorTileAmount;
+        int bottomLeftRow = botLeft.R / SectorColAmount;
+        int bottomLeftCol = botLeft.C / SectorColAmount;
+        int upperRightRow = topRight.R / SectorColAmount;
+        int upperRightCol = topRight.C / SectorColAmount;
 
         int bottomLeft = bottomLeftRow * SectorMatrixColAmount + bottomLeftCol;
         int upperRight = upperRightRow * SectorMatrixColAmount + upperRightCol;
@@ -74,10 +131,10 @@ public struct CostFieldEditJob : IJob
         bool isSectorOnRight = (upperRight + 1) % SectorMatrixColAmount == 0;
         bool isSectorOnLeft = bottomLeft % SectorMatrixColAmount == 0;
 
-        bool doesIntersectLowerSectors = botLeft.R % SectorTileAmount == 0;
-        bool doesIntersectUpperSectors = (topRight.R + 1) % SectorTileAmount == 0;
-        bool doesIntersectLeftSectors = botLeft.C % SectorTileAmount == 0;
-        bool doesIntersectRightSectors = (topRight.C + 1) % SectorTileAmount == 0;
+        bool doesIntersectLowerSectors = botLeft.R % SectorColAmount == 0;
+        bool doesIntersectUpperSectors = (topRight.R + 1) % SectorColAmount == 0;
+        bool doesIntersectLeftSectors = botLeft.C % SectorColAmount == 0;
+        bool doesIntersectRightSectors = (topRight.C + 1) % SectorColAmount == 0;
 
         int sectorRowCount = upperRightRow - bottomLeftRow + 1;
         int sectorColCount = upperRightCol - bottomLeftCol + 1;
@@ -205,7 +262,7 @@ public struct CostFieldEditJob : IJob
                 for (int k = 0; k < pickedWindowNode.PorCnt; k++)
                 {
                     PortalNode pickedPortalNode = PortalNodes[pickedWinToPorPtr + k];
-                    int portal1SectorspaceFlatIndex = (pickedPortalNode.Portal1.Index.R / SectorTileAmount) * SectorMatrixColAmount + (pickedPortalNode.Portal1.Index.C / SectorTileAmount);
+                    int portal1SectorspaceFlatIndex = (pickedPortalNode.Portal1.Index.R / SectorColAmount) * SectorMatrixColAmount + (pickedPortalNode.Portal1.Index.C / SectorColAmount);
                     if (portal1SectorspaceFlatIndex == pickedSectorIndex)
                     {
                         pickedPortalNode.Portal1.PorToPorCnt = 0;
@@ -223,7 +280,7 @@ public struct CostFieldEditJob : IJob
     {
         int porToPorCnt = PortalPerWindow * 8 - 2;
         int fieldColAmount = FieldColAmount;
-        NativeArray<byte> costs = Costs;
+        NativeArray<byte> costs = CostsG;
         NativeArray<PortalNode> portalNodes = PortalNodes;
 
         for (int i = 0; i < windowIndicies.Length; i++)
@@ -351,7 +408,7 @@ public struct CostFieldEditJob : IJob
     {
         //data
         int sectorMatrixColAmount = SectorMatrixColAmount;
-        int sectorTileAmount = SectorTileAmount;
+        int sectorTileAmount = SectorColAmount;
         NativeArray<WindowNode> windowNodes = WindowNodes;
         NativeArray<int> secToWinPtrs = SecToWinPtrs;
         NativeArray<PortalNode> portalNodes = PortalNodes;
@@ -448,7 +505,7 @@ public struct CostFieldEditJob : IJob
         //DATA
         int fieldColAmount = FieldColAmount;
         int fieldRowAmount = FieldRowAmount;
-        NativeArray<byte> costs = Costs;
+        NativeArray<byte> costs = CostsG;
         NativeArray<AStarTile> integratedCosts = IntegratedCosts;
         NativeQueue<int> aStarQueue = AStarQueue;
 

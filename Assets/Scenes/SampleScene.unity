@@ -254,8 +254,7 @@ GameObject:
   m_Component:
   - component: {fileID: 638972357}
   - component: {fileID: 638972356}
-  - component: {fileID: 638972358}
-  - component: {fileID: 638972359}
+  - component: {fileID: 638972360}
   m_Layer: 0
   m_Name: Flow Field
   m_TagString: Untagged
@@ -300,34 +299,20 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &638972358
+--- !u!114 &638972360
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 638972354}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 79166ff1ecdf7ee4999fe0f898898ffb, type: 3}
+  m_Script: {fileID: 11500000, guid: 79c747831bf0fa445aa51749547e29a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _pathfindingManager: {fileID: 638972356}
-  _editValue: 255
---- !u!114 &638972359
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 638972354}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4be7334943b77f546bc0077138984241, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _pathfindingManager: {fileID: 638972356}
-  _placeSourceForEachSector: 0
+  _cost: 255
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -630,7 +615,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _terrainGenerator: {fileID: 1550691738}
-  _debugTiles: 0
+  _debugTiles: 1
   _debugUnwalkableTiles: 0
 --- !u!1 &1977402419
 GameObject:

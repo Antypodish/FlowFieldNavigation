@@ -30,7 +30,7 @@ public class CostField
         ConvertToNewCosts();
 
         //allocate field graph
-        FieldGraph = new FieldGraph(CostsG, sectorColAmount, fieldRowAmount, fieldColAmount, offset, _fieldTileSize);
+        FieldGraph = new FieldGraph(CostsG, CostsL, sectorColAmount, fieldRowAmount, fieldColAmount, offset, _fieldTileSize);
 
         //HELPERS
         void CalculateCosts()

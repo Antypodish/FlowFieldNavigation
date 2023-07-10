@@ -56,7 +56,7 @@ public class PathfindingManager : MonoBehaviour
         if (deltaTime >= _agentUpdateFrequency)
         {
             _lastAgentUpdateTime = curTime;
-            _pathfindingUpdateRoutine.Update(deltaTime);
+            _pathfindingUpdateRoutine.RoutineUpdate(deltaTime);
         }
     }
     private void LateUpdate()
@@ -91,6 +91,10 @@ public class PathfindingManager : MonoBehaviour
     {
         Vector2 target2 = new Vector2(target.x, target.z);
         return PathProducer.ProducePath(sources, target2, 0);
+    }
+    public void EditCost(int2 startingPoint, int2 endPoint, byte newCost)
+    {
+        _pathfindingUpdateRoutine.RequestCostEdit(startingPoint, endPoint, newCost);
     }
     public void Subscribe(FlowFieldAgent agent)
     {
