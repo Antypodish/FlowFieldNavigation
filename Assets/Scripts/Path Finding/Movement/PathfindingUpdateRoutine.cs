@@ -4,12 +4,12 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 using UnityEngine;
 
-public class AgentUpdateRoutine
+public class PathfindingUpdateRoutine
 {
     PathfindingManager _pathfindingManager;
     AgentDirectionCalculator _dirCalculator;
 
-    public AgentUpdateRoutine(PathfindingManager pathfindingManager)
+    public PathfindingUpdateRoutine(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
         _dirCalculator = new AgentDirectionCalculator(_pathfindingManager.AgentDataContainer, _pathfindingManager);
@@ -18,5 +18,9 @@ public class AgentUpdateRoutine
     public void Update(float deltaTime)
     {
         _dirCalculator.CalculateDirections();
+    }
+    public void LateUpdate(float deltaTime)
+    {
+
     }
 }

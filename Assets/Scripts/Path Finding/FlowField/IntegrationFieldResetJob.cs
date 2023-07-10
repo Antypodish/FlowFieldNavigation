@@ -15,6 +15,6 @@ public struct IntegrationFieldResetJob : IJobParallelFor
 
     public void Execute(int index)
     {
-        IntegrationField[index] = new IntegrationTile(float.MaxValue, IntegrationMark.None); ;
+        IntegrationField[index] = new IntegrationTile(float.MaxValue, IntegrationMark.None);
     }
 }

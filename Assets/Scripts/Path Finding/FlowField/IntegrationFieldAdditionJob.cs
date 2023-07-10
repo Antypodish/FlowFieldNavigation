@@ -12,16 +12,11 @@ public struct IntegrationFieldAdditionJob : IJob
     public int FieldRowAmount;
     public int SectorColAmount;
     public int SectorMatrixColAmount;
-    public NativeList<IntegrationTile> IntegrationField;
-    public NativeList<IntegrationTile> IntegrationFieldAddition;
-    public NativeList<FlowData> FlowField;
-    public NativeList<FlowData> FlowFieldAddition;
+    public NativeArray<IntegrationTile> IntegrationField;
     [ReadOnly] public NativeArray<int> SectorToPicked;
     [ReadOnly] public NativeArray<UnsafeList<byte>> Costs;
     public void Execute()
     {
-        IntegrationField.AddRange(IntegrationFieldAddition);
-        FlowField.AddRange(FlowFieldAddition);
         Integrate();
     }
     void Integrate()

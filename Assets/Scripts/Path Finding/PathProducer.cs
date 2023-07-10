@@ -183,8 +183,7 @@ public class PathProducer
     {
         CostField pickedCostField = _costFieldProducer.GetCostFieldWithOffset(path.Offset);
         NativeList<LocalIndex1d> integrationStartIndicies = new NativeList<LocalIndex1d>(Allocator.TempJob);  
-        NativeList<IntegrationTile> integrationFieldAddition = new NativeList<IntegrationTile>(Allocator.TempJob);
-        NativeList<FlowData> flowFieldAddition = new NativeList<FlowData>(Allocator.TempJob);
+        NativeArray<int> newFlowFieldLength = new NativeArray<int>(1, Allocator.TempJob);
 
         //TRAVERSAL
         PortalNodeAdditionTraversalJob travJob = new PortalNodeAdditionTraversalJob()
@@ -206,39 +205,42 @@ public class PathProducer
             PortalSequence = path.PortalSequence,
             SectorToPicked = path.SectorToPicked,
             PickedToSector = path.PickedToSector,
-            IntegrationFieldAddition = integrationFieldAddition,
-            FlowFieldAddition = flowFieldAddition,
             IntegrationStartIndicies = integrationStartIndicies,
-            ExistingPickedFieldLength = path.FlowField.Length,
+            ExistingFlowFieldLength = path.FlowField.Length,
+            NewFlowFieldLength = newFlowFieldLength,
         };
         travJob.Schedule().Complete();
 
-        //INT RESET
-        IntegrationFieldResetJob resetJob = new IntegrationFieldResetJob()
-        {
-            IntegrationField = integrationFieldAddition,
-        };
-        JobHandle resetHandle = resetJob.Schedule(integrationFieldAddition.Length, 32);
-        resetHandle.Complete();
+        //RESIZING FLOW FIELD
+        NativeArray<FlowData> oldFlowField = path.FlowField;
+        NativeArray<IntegrationTile> oldIntegrationField = path.IntegrationField;
+        NativeArray<FlowData> newFlowField = new NativeArray<FlowData>(newFlowFieldLength[0], Allocator.Persistent);
+        NativeArray<IntegrationTile> newIntegrationField = new NativeArray<IntegrationTile>(newFlowFieldLength[0], Allocator.Persistent);
+        path.FlowField = newFlowField;
+        path.IntegrationField = newIntegrationField;
 
+        FlowFieldExtensionJob extensionJob = new FlowFieldExtensionJob()
+        {
+            oldFieldLength = oldFlowField.Length,
+            OldFlowField = oldFlowField,
+            OldIntegrationField = oldIntegrationField,
+            NewFlowField = newFlowField,
+            NewIntegrationField = newIntegrationField
+        };
+        
         //INT
         IntegrationFieldAdditionJob intAddJob = new IntegrationFieldAdditionJob()
         {
             StartIndicies = integrationStartIndicies,
             Costs = pickedCostField.CostsL,
             IntegrationField = path.IntegrationField,
-            IntegrationFieldAddition = integrationFieldAddition,
-            FlowField = path.FlowField,
-            FlowFieldAddition = flowFieldAddition,
             SectorToPicked = path.SectorToPicked,
             SectorColAmount = _sectorTileAmount,
             SectorMatrixColAmount = _sectorMatrixColAmount,
             FieldColAmount = _columnAmount,
             FieldRowAmount = _rowAmount,
         };
-        JobHandle intHandle = intAddJob.Schedule();
-        intHandle.Complete();
-
+        
         //FLOW FIELD
         FlowFieldJob ffJob = new FlowFieldJob()
         {
@@ -252,12 +254,16 @@ public class PathProducer
             FlowField = path.FlowField,
             IntegrationField = path.IntegrationField,
         };
-        JobHandle ffHandle = ffJob.Schedule(path.FlowField.Length, 256);
+
+        JobHandle extensionHandle = extensionJob.Schedule(newFlowFieldLength[0], 32);
+        JobHandle intHandle = intAddJob.Schedule(extensionHandle);
+        JobHandle ffHandle = ffJob.Schedule(path.FlowField.Length, 256, intHandle);
         ffHandle.Complete();
 
         sectorIndicies.Dispose();
         integrationStartIndicies.Dispose();
-        integrationFieldAddition.Dispose();
-        flowFieldAddition.Dispose();
+        newFlowFieldLength.Dispose();
+        oldFlowField.Dispose();
+        oldIntegrationField.Dispose();
     }
 }

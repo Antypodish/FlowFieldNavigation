@@ -22,7 +22,7 @@ public class PathfindingManager : MonoBehaviour
     public List<FlowFieldAgent> Agents;
 
     float _lastAgentUpdateTime = 0;
-    AgentUpdateRoutine _agentUpdateRoutine;
+    PathfindingUpdateRoutine _pathfindingUpdateRoutine;
     private void Awake()
     {
         Agents = new List<FlowFieldAgent>();
@@ -41,7 +41,7 @@ public class PathfindingManager : MonoBehaviour
         CostFieldProducer.StartCostFieldProduction(0, _maxCostfieldOffset, SectorTileAmount, SectorMatrixColAmount, SectorMatrixRowAmount);
         PathProducer = new PathProducer(this);
         TilePositions = new NativeArray<Vector3>(RowAmount * ColumnAmount, Allocator.Persistent);
-        _agentUpdateRoutine = new AgentUpdateRoutine(this);
+        _pathfindingUpdateRoutine = new PathfindingUpdateRoutine(this);
         CalculateTilePositions();
         CostFieldProducer.ForceCompleteCostFieldProduction();
 
@@ -56,8 +56,12 @@ public class PathfindingManager : MonoBehaviour
         if (deltaTime >= _agentUpdateFrequency)
         {
             _lastAgentUpdateTime = curTime;
-            _agentUpdateRoutine.Update(deltaTime);
+            _pathfindingUpdateRoutine.Update(deltaTime);
         }
+    }
+    private void LateUpdate()
+    {
+        
     }
     void CalculateTilePositions()
     {
