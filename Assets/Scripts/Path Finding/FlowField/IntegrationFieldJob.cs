@@ -15,7 +15,7 @@ public struct IntegrationFieldJob : IJob
     public int FieldRowAmount;
     public int SectorColAmount;
     public int SectorMatrixColAmount;
-    public NativeList<IntegrationTile> IntegrationField;
+    public NativeArray<IntegrationTile> IntegrationField;
     public NativeQueue<LocalIndex1d> WaveFrontQueue;
     [ReadOnly] public NativeArray<int> SectorMarks;
     [ReadOnly] public NativeArray<UnsafeList<byte>> Costs;

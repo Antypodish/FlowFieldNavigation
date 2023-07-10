@@ -28,9 +28,8 @@ public struct PortalNodeTraversalJob : IJob
     public NativeList<int> PortalSequenceBorders;
     public NativeArray<int> SectorToPicked;
     public NativeList<int> PickedToSector;
-    public NativeList<IntegrationTile> IntegrationField;
-    public NativeList<FlowData> FlowField;
     public NativeArray<DijkstraTile> TargetSectorCosts;
+    public NativeArray<int> FlowFieldLength;
 
     [ReadOnly] public NativeArray<SectorNode> SectorNodes;
     [ReadOnly] public NativeArray<int> SecToWinPtrs;
@@ -329,8 +328,7 @@ public struct PortalNodeTraversalJob : IJob
                 pickedSectorAmount++;
             }
         }
-        IntegrationField.Length = pickedSectorAmount * sectorTileAmount + 1;
-        FlowField.Length = pickedSectorAmount * sectorTileAmount + 1;
+        FlowFieldLength[0] = pickedSectorAmount * sectorTileAmount + 1;
     }
 
     //HELPERS

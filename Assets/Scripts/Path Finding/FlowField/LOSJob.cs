@@ -24,7 +24,7 @@ public struct LOSJob : IJob
     [ReadOnly] public NativeArray<byte> Costs;
     [ReadOnly] public NativeArray<UnsafeList<LocalDirectionData1d>> Directions;
     public NativeArray<int> SectorToPicked;
-    public NativeList<IntegrationTile> IntegrationField;
+    public NativeArray<IntegrationTile> IntegrationField;
     public NativeQueue<LocalIndex1d> BlockedWaveFronts;
     public void Execute()
     {
@@ -38,7 +38,7 @@ public struct LOSJob : IJob
         float tileSize = TileSize;
         int2 target = Target;
         NativeArray<int> sectorToPicked = SectorToPicked;
-        NativeList<IntegrationTile> integrationField = IntegrationField;
+        NativeArray<IntegrationTile> integrationField = IntegrationField;
         NativeQueue<LocalIndex1d> waveFrontQueue = new NativeQueue<LocalIndex1d>(Allocator.Temp);
         NativeArray<byte> costs = Costs;
         NativeQueue<LocalIndex1d> blockedWaveFronts = BlockedWaveFronts;
