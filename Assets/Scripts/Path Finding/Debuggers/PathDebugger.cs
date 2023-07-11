@@ -106,7 +106,7 @@ public class PathDebugger
         float tileSize = _pathfindingManager.TileSize;
         FieldGraph fg = _costFieldProducer.GetCostFieldWithOffset(producedPath.Offset).FieldGraph;
         NativeArray<SectorNode> sectorNodes = fg.SectorNodes;
-        NativeArray<int> sectorMarks = producedPath.SectorToPicked;
+        UnsafeList<int> sectorMarks = producedPath.SectorToPicked;
         for (int i = 0; i < sectorMarks.Length; i++)
         {
             if (sectorMarks[i] == 0) { continue; }
@@ -130,7 +130,7 @@ public class PathDebugger
         int sectorColAmount = _pathfindingManager.SectorTileAmount;
         int sectorTileAmount = sectorColAmount * sectorColAmount;
         NativeArray<SectorNode> sectorNodes = _costFieldProducer.GetCostFieldWithOffset(producedPath.Offset).FieldGraph.SectorNodes;
-        NativeArray<int> sectorMarks = producedPath.SectorToPicked;
+        UnsafeList<int> sectorMarks = producedPath.SectorToPicked;
         NativeArray<IntegrationTile> integrationField = producedPath.IntegrationField;
         for (int i = 0; i < sectorMarks.Length; i++)
         {
@@ -161,7 +161,7 @@ public class PathDebugger
 
         string los = "los";
         Gizmos.color = Color.white;
-        NativeArray<int> sectorMarks = producedPath.SectorToPicked;
+        UnsafeList<int> sectorMarks = producedPath.SectorToPicked;
         NativeArray<SectorNode> sectorNodes = _costFieldProducer.GetCostFieldWithOffset(producedPath.Offset).FieldGraph.SectorNodes;
         NativeArray<IntegrationTile> integrationField = producedPath.IntegrationField;
         int sectorColAmount = _pathfindingManager.SectorTileAmount;
@@ -193,7 +193,7 @@ public class PathDebugger
         if (producedPath == null) { return; }
 
         Gizmos.color = Color.white;
-        NativeArray<int> sectorMarks = producedPath.SectorToPicked;
+        UnsafeList<int> sectorMarks = producedPath.SectorToPicked;
         NativeArray<SectorNode> sectorNodes = _costFieldProducer.GetCostFieldWithOffset(producedPath.Offset).FieldGraph.SectorNodes;
         NativeArray<IntegrationTile> integrationField = producedPath.IntegrationField;
         int sectorColAmount = _pathfindingManager.SectorTileAmount;
@@ -225,7 +225,7 @@ public class PathDebugger
 
         float yOffset = 0.2f;
         Gizmos.color = Color.black;
-        NativeArray<int> sectorMarks = producedPath.SectorToPicked;
+        UnsafeList<int> sectorMarks = producedPath.SectorToPicked;
         NativeArray<SectorNode> sectorNodes = _costFieldProducer.GetCostFieldWithOffset(producedPath.Offset).FieldGraph.SectorNodes;
         UnsafeList<FlowData> flowField = producedPath.FlowField;
         int sectorColAmount = _pathfindingManager.SectorTileAmount;

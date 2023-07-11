@@ -17,7 +17,7 @@ public struct IntegrationFieldJob : IJob
     public int SectorMatrixColAmount;
     public NativeArray<IntegrationTile> IntegrationField;
     public NativeQueue<LocalIndex1d> WaveFrontQueue;
-    [ReadOnly] public NativeArray<int> SectorMarks;
+    [ReadOnly] public UnsafeList<int> SectorMarks;
     [ReadOnly] public NativeArray<UnsafeList<byte>> Costs;
     public void Execute()
     {
@@ -31,7 +31,7 @@ public struct IntegrationFieldJob : IJob
         int fieldColAmount = FieldColAmount;
         int sectorTileAmount = SectorColAmount * sectorColAmount;
         NativeArray<IntegrationTile> integrationField = IntegrationField;
-        NativeArray<int> sectorMarks = SectorMarks;
+        UnsafeList<int> sectorMarks = SectorMarks;
         NativeArray<UnsafeList<byte>> costs = Costs;
         NativeQueue<LocalIndex1d> integrationQueue = WaveFrontQueue;
 

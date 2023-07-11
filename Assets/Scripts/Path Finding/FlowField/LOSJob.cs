@@ -23,7 +23,7 @@ public struct LOSJob : IJob
     public int SectorMatrixRowAmount;
     [ReadOnly] public NativeArray<byte> Costs;
     [ReadOnly] public NativeArray<UnsafeList<LocalDirectionData1d>> Directions;
-    public NativeArray<int> SectorToPicked;
+    public UnsafeList<int> SectorToPicked;
     public NativeArray<IntegrationTile> IntegrationField;
     public NativeQueue<LocalIndex1d> BlockedWaveFronts;
     public void Execute()
@@ -37,7 +37,7 @@ public struct LOSJob : IJob
         int field1dSize = fieldColAmount * FieldRowAmount;
         float tileSize = TileSize;
         int2 target = Target;
-        NativeArray<int> sectorToPicked = SectorToPicked;
+        UnsafeList<int> sectorToPicked = SectorToPicked;
         NativeArray<IntegrationTile> integrationField = IntegrationField;
         NativeQueue<LocalIndex1d> waveFrontQueue = new NativeQueue<LocalIndex1d>(Allocator.Temp);
         NativeArray<byte> costs = Costs;

@@ -1,6 +1,9 @@
 ﻿using Mono.Cecil;
+using System.Diagnostics;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
+using Unity.VisualScripting;
 using Unity.VisualScripting.Antlr3.Runtime.Tree;
 using UnityEditor;
 using UnityEngine;
@@ -9,50 +12,21 @@ internal class jobtest : MonoBehaviour
 {
     private void Start()
     {
-        NativeArray<int> ints = new NativeArray<int>(1000, Allocator.Persistent);
-        myjob mj = new myjob()
-        {
-            ints = ints
-        };
-        JobHandle mjh = mj.Schedule();
-
-        myparalleljob mpj1 = new myparalleljob()
-        {
-            ints = ints
-        };
-        JobHandle mpj1h = mpj1.Schedule(ints.Length, 1, mjh);
-
-        myparalleljob mpj2 = new myparalleljob()
-        {
-            ints = ints
-        };
-        mpj2.Schedule(ints.Length, 512, mpj1h);
     }
     private void Update()
     {
-        
-    }
-}
-
-struct myjob : IJob
-{
-    public NativeArray<int> ints;
-
-    public void Execute()
-    {
-        for(int i = 0; i < ints.Length; i++)
-        {
-            ints[i] = i;
-        }
-    }
-}
-struct myparalleljob : IJobParallelFor
-{
-    public NativeArray<int> ints;
-    public void Execute(int index)
-    {
-        int i = ints[index];
-        i *= i;
-        ints[index] = i;
+        Stopwatch sw1 = new Stopwatch();
+        Stopwatch sw2 = new Stopwatch();
+        sw1.Start();
+        UnsafeList<int> ul = new UnsafeList<int>(10000, Allocator.Persistent);
+        ul.Length = 10000;
+        sw1.Stop();
+        sw2.Start();
+        NativeArray<int> na = new NativeArray<int>(10000, Allocator.Persistent);
+        sw2.Stop();
+        UnityEngine.Debug.Log("unsafe: " + sw1.Elapsed.TotalMilliseconds);
+        UnityEngine.Debug.Log("native: " + sw2.Elapsed.TotalMilliseconds);
+        ul.Dispose();
+        na.Dispose();
     }
 }

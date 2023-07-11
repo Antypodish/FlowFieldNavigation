@@ -26,7 +26,7 @@ public struct PortalNodeTraversalJob : IJob
     public NativeArray<PortalTraversalData> PortalTraversalDataArray;
     public NativeList<int> PortalSequence;
     public NativeList<int> PortalSequenceBorders;
-    public NativeArray<int> SectorToPicked;
+    public UnsafeList<int> SectorToPicked;
     public NativeList<int> PickedToSector;
     public NativeArray<DijkstraTile> TargetSectorCosts;
     public NativeArray<int> FlowFieldLength;

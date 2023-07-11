@@ -15,7 +15,7 @@ public class Path
     public NativeArray<Vector3> Sources;
     public NativeArray<PortalTraversalData> PortalTraversalDataArray;
     public NativeList<int> PortalSequence;
-    public NativeArray<int> SectorToPicked;
+    public UnsafeList<int> SectorToPicked;
     public NativeList<int> PickedToSector;
     public NativeArray<IntegrationTile> IntegrationField;
     public UnsafeList<FlowData> FlowField;

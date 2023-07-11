@@ -13,7 +13,7 @@ public struct IntegrationFieldAdditionJob : IJob
     public int SectorColAmount;
     public int SectorMatrixColAmount;
     public NativeArray<IntegrationTile> IntegrationField;
-    [ReadOnly] public NativeArray<int> SectorToPicked;
+    [ReadOnly] public UnsafeList<int> SectorToPicked;
     [ReadOnly] public NativeArray<UnsafeList<byte>> Costs;
     public void Execute()
     {
@@ -23,7 +23,7 @@ public struct IntegrationFieldAdditionJob : IJob
     {
         //DATA
         NativeArray<IntegrationTile> integrationField = IntegrationField;
-        NativeArray<int> sectorMarks = SectorToPicked;
+        UnsafeList<int> sectorMarks = SectorToPicked;
         NativeArray<UnsafeList<byte>> costs = Costs;
         NativeQueue<LocalIndex1d> integrationQueue = new NativeQueue<LocalIndex1d>(Allocator.Temp);
         int fieldColAmount = FieldColAmount;

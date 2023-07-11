@@ -58,11 +58,18 @@ public class PathProducer
         NativeArray<PortalTraversalData> portalTraversalDataArray = new NativeArray<PortalTraversalData>(pickedCostField.FieldGraph.PortalNodes.Length, Allocator.Persistent);
         NativeArray<DijkstraTile> targetSectorCosts = new NativeArray<DijkstraTile>(_sectorTileAmount * _sectorTileAmount, Allocator.Persistent);
         NativeQueue<LocalIndex1d> blockedWaveFronts = new NativeQueue<LocalIndex1d>(Allocator.TempJob);
-        NativeArray<int> sectorToPicked = new NativeArray<int>(pickedCostField.FieldGraph.SectorNodes.Length, Allocator.Persistent);
+        UnsafeList<int> sectorToPicked = new UnsafeList<int>(pickedCostField.FieldGraph.SectorNodes.Length, Allocator.Persistent);
+        sectorToPicked.Length = pickedCostField.FieldGraph.SectorNodes.Length;
         NativeList<int> pickedToSector = new NativeList<int>(Allocator.Persistent);
         NativeArray<int> flowFieldLength = new NativeArray<int>(1, Allocator.TempJob);
         NativeArray<IntegrationTile> integrationField;
         UnsafeList<FlowData> flowField;
+
+        //CLEARING SECTOR TO PICKED
+        UnsafeListDefaultSetterJob<int> clearer = new UnsafeListDefaultSetterJob<int>()
+        {
+            List = sectorToPicked,
+        };
 
         //TRAVERSAL
         PortalNodeTraversalJob traversalJob = new PortalNodeTraversalJob()
@@ -91,7 +98,9 @@ public class PathProducer
             PortalTraversalDataArray = portalTraversalDataArray,
         };
 
-        JobHandle traversalHandle = traversalJob.Schedule();
+        //INTERMEDIATE STEP
+        JobHandle clearerHandle = clearer.Schedule();
+        JobHandle traversalHandle = traversalJob.Schedule(clearerHandle);
         traversalHandle.Complete();
         flowField = new UnsafeList<FlowData>(flowFieldLength[0], Allocator.Persistent);
         flowField.Length = flowFieldLength[0];
@@ -177,7 +186,6 @@ public class PathProducer
 
         producedPath.IsCalculated = true;
         producedPath.DisposeTemp();
-
         return producedPath;
     }
     public void AddSectorToPath(Path path, NativeList<int> sectorIndicies)
