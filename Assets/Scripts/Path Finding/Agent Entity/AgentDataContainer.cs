@@ -4,14 +4,15 @@ using System.Diagnostics;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
+using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.Jobs;
 
 public class AgentDataContainer
 {
     public List<FlowFieldAgent> Agents;
-    public List<Transform> AgentTransforms;
-    public NativeList<AgentData> AgentDatas;
-    public List<AgentPaths> AgentPaths;
+    public TransformAccessArray AgentTransforms;
+    public List<AgentData> AgentDataList;
 
     PathfindingManager _pathfindingManager;
 
@@ -19,9 +20,8 @@ public class AgentDataContainer
     {
         _pathfindingManager = manager;
         Agents = new List<FlowFieldAgent>();
-        AgentTransforms = new List<Transform>();
-        AgentDatas = new NativeList<AgentData>(Allocator.Persistent);
-        AgentPaths = new List<AgentPaths>();
+        AgentTransforms = new TransformAccessArray(0);
+        AgentDataList = new List<AgentData>();
     }
     public void OnStart()
     {
@@ -31,25 +31,23 @@ public class AgentDataContainer
     {
         for(int i = 0; i < Agents.Count; i++)
         {
-            AgentPaths paths = AgentPaths[i];
-            AgentData data = AgentDatas[i];
+            AgentData data = AgentDataList[i];
             Transform transform = AgentTransforms[i];
             //REFRESH PATH
-            if (paths.NewPath != null)
+            if (data.NewPath != null)
             {
-                if (paths.NewPath.IsCalculated)
+                if (data.NewPath.IsCalculated)
                 {
-                    if (paths.CurPath != null) { paths.CurPath.Unsubscribe(); }
-                    paths.NewPath.Subscribe();
-                    paths.CurPath = paths.NewPath;
-                    data.Destination = paths.NewPath.Destination;
-                    paths.NewPath = null;
-                    AgentPaths[i] = paths;
-                    AgentDatas[i] = data;
+                    if (data.CurPath != null) { data.CurPath.Unsubscribe(); }
+                    data.NewPath.Subscribe();
+                    data.CurPath = data.NewPath;
+                    data.Destination = data.NewPath.Destination;
+                    data.NewPath = null;
+                    AgentDataList[i] = data;
                 }
             }
             //MOVE
-            if (paths.CurPath != null)
+            if (data.CurPath != null)
             {
                 if (data.Direction == Vector2.zero)
                 {
@@ -77,41 +75,38 @@ public class AgentDataContainer
             Speed = agent.GetSpeed(),
             Destination = Vector2.zero,
             Direction = Vector2.zero,
-        };
-        AgentPaths paths = new AgentPaths()
-        {
             CurPath = null,
             NewPath = null,
         };
-
         Agents.Add(agent);
         AgentTransforms.Add(agent.transform);
-        AgentDatas.Add(data);
-        AgentPaths.Add(paths);
+        AgentDataList.Add(data);
     }
     public void UnSubscribe(FlowFieldAgent agent)
     {
         int agentIndex = agent.AgentDataIndex;
-        Agents.RemoveAt(agentIndex);
-        AgentTransforms.RemoveAt(agentIndex);
-        AgentDatas.RemoveAt(agentIndex);
-        AgentPaths.RemoveAt(agentIndex);
-        for(int i = agentIndex; i < Agents.Count; i++)
-        {
-            Agents[i].AgentDataIndex--;
-        }
+        Agents.RemoveAtSwapBack(agentIndex);
+        AgentTransforms.RemoveAtSwapBack(agentIndex);
+        AgentDataList.RemoveAtSwapBack(agentIndex);
+        Agents[agentIndex].AgentDataIndex = agentIndex;
     }
     public void SetPath(int agentIndex, Path newPath)
     {
-        AgentPaths paths = AgentPaths[agentIndex];
-        paths.NewPath = newPath;
-        AgentPaths[agentIndex] = paths;
+        AgentData data = AgentDataList[agentIndex];
+        data.NewPath = newPath;
+        AgentDataList[agentIndex] = data;
     }
     public void SetSpeed(int agentIndex, float newSpeed)
     {
-        AgentData data = AgentDatas[agentIndex];
+        AgentData data = AgentDataList[agentIndex];
         data.Speed = newSpeed;
-        AgentDatas[agentIndex] = data;
+        AgentDataList[agentIndex] = data;
+    }
+    public void SetDirection(int agentIndex, Vector2 direction)
+    {
+        AgentData data = AgentDataList[agentIndex];
+        data.Direction = direction;
+        AgentDataList[agentIndex] = data;
     }
 }
 public struct AgentData
@@ -119,9 +114,6 @@ public struct AgentData
     public float Speed;
     public Vector2 Destination;
     public Vector2 Direction;
-}
-public struct AgentPaths
-{
     public Path CurPath;
     public Path NewPath;
 }

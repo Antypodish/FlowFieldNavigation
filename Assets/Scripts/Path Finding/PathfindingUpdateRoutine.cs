@@ -19,7 +19,7 @@ public class PathfindingUpdateRoutine
     }
 
     public void RoutineUpdate(float deltaTime)
-    {
+    {/*
         //COMPLETE ALL SCHEDULED JOBS
         for(int i = 0; i < scheduledJobs.Count; i++)
         {
@@ -49,8 +49,8 @@ public class PathfindingUpdateRoutine
             scheduledJobs.Add(combinedHandle);
             editHandles.Clear();
         }
-        costEditRequests.Clear();
-        //_dirCalculator.CalculateDirections();
+        costEditRequests.Clear();*/
+        _dirCalculator.CalculateDirections();
     }
     public void RequestCostEdit(int2 startingPoint, int2 endPoint, byte newCost)
     {

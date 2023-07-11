@@ -6,82 +6,79 @@ using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEditor.Profiling.Memory.Experimental;
 using UnityEngine;
+using UnityEngine.Jobs;
 using UnityEngine.SocialPlatforms;
 
 [BurstCompile]
-public struct AgentMovementDataCalculationJob : IJobParallelFor
+public struct AgentMovementDataCalculationJob : IJobParallelForTransform
 {
     public float TileSize;
     public int SectorColAmount;
     public int SectorMatrixColAmount;
-    public UnsafeList<AgentMovementData> AgentMovementData;
-    [WriteOnly] public NativeArray<bool> OutOfFieldFlag;
-    [ReadOnly] public UnsafeList<FlowData> FlowField;
-    [ReadOnly] public UnsafeList<int> SectorMarks;
-    public void Execute(int index)
-    {
-        AgentMovementData node = AgentMovementData[index];
-        float3 nodePos3 = node.pos;
+    public NativeArray<AgentMovementData> AgentMovementData;
 
-        int2 sector2d = new int2((int)math.floor(nodePos3.x / (SectorColAmount * TileSize)), (int)math.floor(nodePos3.z / (SectorColAmount * TileSize)));
-        int2 general2d = new int2((int)math.floor(nodePos3.x / TileSize), (int)math.floor(nodePos3.z / TileSize));
+    public void Execute(int index, TransformAccess transform)
+    {
+        AgentMovementData data = AgentMovementData[index];
+        data.Position = transform.position;
+        if(data.SectorToPicked.Length == 0) { return; }
+        int2 sector2d = new int2((int)math.floor(data.Position.x / (SectorColAmount * TileSize)), (int)math.floor(data.Position.z / (SectorColAmount * TileSize)));
+        int2 general2d = new int2((int)math.floor(data.Position.x / TileSize), (int)math.floor(data.Position.z / TileSize));
         int2 sectorStart2d = sector2d * SectorColAmount;
         int2 local2d = general2d - sectorStart2d;
         int local1d = local2d.y * SectorColAmount + local2d.x;
         int sector1d = sector2d.y * SectorMatrixColAmount + sector2d.x;
 
-        node.local1d = (ushort)local1d;
-        node.sector1d = (ushort)sector1d;
+        data.Local1d = (ushort)local1d;
+        data.Sector1d = (ushort)sector1d;
 
-        int sectorMark = SectorMarks[sector1d];
+        int sectorMark = data.SectorToPicked[sector1d];
         if (sectorMark == 0)
         {
-            OutOfFieldFlag[0]= true;
-            node.outOfFieldFlag = true;
-            AgentMovementData[index] = node;
+            data.OutOfFieldFlag = true;
+            AgentMovementData[index] = data;
             return;
         }
 
-        FlowData flow = FlowField[sectorMark + local1d];
+        FlowData flow = data.FlowField[sectorMark + local1d];
         switch (flow)
         {
             case FlowData.None:
-                OutOfFieldFlag[0] = true;
-                node.outOfFieldFlag = true;
-                AgentMovementData[index] = node;
+                data.OutOfFieldFlag = true;
+                AgentMovementData[index] = data;
                 return;
             case FlowData.LOS:
-                node.direction = 0;
+                data.Direction = 0;
                 break;
             case FlowData.N:
-                node.direction = new float2(0f, 1f);
+                data.Direction = new float2(0f, 1f);
                 break;
             case FlowData.E:
-                node.direction = new float2(1f, 0f);
+                data.Direction = new float2(1f, 0f);
                 break;
             case FlowData.S:
-                node.direction = new float2(0f, -1f);
+                data.Direction = new float2(0f, -1f);
                 break;
             case FlowData.W:
-                node.direction = new float2(-1f, 0f);
+                data.Direction = new float2(-1f, 0f);
                 break;
             case FlowData.NE:
-                node.direction = new float2(1f, 1f);
+                data.Direction = new float2(1f, 1f);
                 break;
             case FlowData.SE:
-                node.direction = new float2(1f, -1f);
+                data.Direction = new float2(1f, -1f);
                 break;
             case FlowData.SW:
-                node.direction = new float2(-1f, -1f);
+                data.Direction = new float2(-1f, -1f);
                 break;
             case FlowData.NW:
-                node.direction = new float2(-1f, 1f);
+                data.Direction = new float2(-1f, 1f);
                 break;
         }
         if(flow != FlowData.LOS)
         {
-            node.direction = math.normalize(node.direction);
+            data.Direction = math.normalize(data.Direction);
         }
-        AgentMovementData[index] = node;
+        AgentMovementData[index] = data;
     }
 }
