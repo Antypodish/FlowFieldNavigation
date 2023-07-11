@@ -1,5 +1,6 @@
 ﻿using Unity.Burst;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 
 [BurstCompile]
@@ -7,10 +8,10 @@ public struct FlowFieldExtensionJob : IJobParallelFor
 {
     public int oldFieldLength;
 
-    [ReadOnly] public NativeArray<FlowData> OldFlowField;
+    [ReadOnly] public UnsafeList<FlowData> OldFlowField;
     [ReadOnly] public NativeArray<IntegrationTile> OldIntegrationField;
     
-    [WriteOnly] public NativeArray<FlowData> NewFlowField;
+    [WriteOnly] public UnsafeList<FlowData> NewFlowField;
     [WriteOnly] public NativeArray<IntegrationTile> NewIntegrationField;
     public void Execute(int index)
     {

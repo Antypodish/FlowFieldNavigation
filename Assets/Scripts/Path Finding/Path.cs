@@ -18,7 +18,7 @@ public class Path
     public NativeArray<int> SectorToPicked;
     public NativeList<int> PickedToSector;
     public NativeArray<IntegrationTile> IntegrationField;
-    public NativeArray<FlowData> FlowField;
+    public UnsafeList<FlowData> FlowField;
     public NativeQueue<LocalIndex1d> BlockedWaveFronts;
     public NativeArray<DijkstraTile> TargetSectorCosts;
     public NativeList<int> PortalSequenceBorders;

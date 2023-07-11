@@ -16,7 +16,7 @@ public struct FlowFieldJob : IJobParallelFor
     [ReadOnly] public NativeArray<int> SectorToPicked;
     [ReadOnly] public NativeArray<int> PickedToSector;
     [ReadOnly] public NativeArray<IntegrationTile> IntegrationField;
-    [WriteOnly] public NativeArray<FlowData> FlowField;
+    [WriteOnly] public UnsafeList<FlowData> FlowField;
 
     public void Execute(int index)
     {

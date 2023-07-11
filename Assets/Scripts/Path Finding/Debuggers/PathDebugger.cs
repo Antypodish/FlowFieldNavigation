@@ -227,7 +227,7 @@ public class PathDebugger
         Gizmos.color = Color.black;
         NativeArray<int> sectorMarks = producedPath.SectorToPicked;
         NativeArray<SectorNode> sectorNodes = _costFieldProducer.GetCostFieldWithOffset(producedPath.Offset).FieldGraph.SectorNodes;
-        NativeArray<FlowData> flowField = producedPath.FlowField;
+        UnsafeList<FlowData> flowField = producedPath.FlowField;
         int sectorColAmount = _pathfindingManager.SectorTileAmount;
         int sectorTileAmount = sectorColAmount * sectorColAmount;
         for (int i = 0; i < sectorMarks.Length; i++)

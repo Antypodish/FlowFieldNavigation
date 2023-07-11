@@ -62,7 +62,7 @@ public class PathProducer
         NativeList<int> pickedToSector = new NativeList<int>(Allocator.Persistent);
         NativeArray<int> flowFieldLength = new NativeArray<int>(1, Allocator.TempJob);
         NativeArray<IntegrationTile> integrationField;
-        NativeArray<FlowData> flowField;
+        UnsafeList<FlowData> flowField;
 
         //TRAVERSAL
         PortalNodeTraversalJob traversalJob = new PortalNodeTraversalJob()
@@ -93,7 +93,8 @@ public class PathProducer
 
         JobHandle traversalHandle = traversalJob.Schedule();
         traversalHandle.Complete();
-        flowField = new NativeArray<FlowData>(flowFieldLength[0], Allocator.Persistent);
+        flowField = new UnsafeList<FlowData>(flowFieldLength[0], Allocator.Persistent);
+        flowField.Length = flowFieldLength[0];
         integrationField = new NativeArray<IntegrationTile>(flowFieldLength[0], Allocator.Persistent);
 
         //PATH CREATION
@@ -212,9 +213,10 @@ public class PathProducer
         travJob.Schedule().Complete();
 
         //RESIZING FLOW FIELD
-        NativeArray<FlowData> oldFlowField = path.FlowField;
+        UnsafeList<FlowData> oldFlowField = path.FlowField;
         NativeArray<IntegrationTile> oldIntegrationField = path.IntegrationField;
-        NativeArray<FlowData> newFlowField = new NativeArray<FlowData>(newFlowFieldLength[0], Allocator.Persistent);
+        UnsafeList<FlowData> newFlowField = new UnsafeList<FlowData>(newFlowFieldLength[0], Allocator.Persistent);
+        newFlowField.Length = newFlowFieldLength[0];
         NativeArray<IntegrationTile> newIntegrationField = new NativeArray<IntegrationTile>(newFlowFieldLength[0], Allocator.Persistent);
         path.FlowField = newFlowField;
         path.IntegrationField = newIntegrationField;

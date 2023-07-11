@@ -396,7 +396,7 @@ MonoBehaviour:
   _pathfindingManager: {fileID: 638972356}
   _controller: {fileID: 1638174571}
   AgentDataIndex: 0
-  _speed: 7
+  _speed: 0
 --- !u!23 &870546284
 MeshRenderer:
   m_ObjectHideFlags: 0
