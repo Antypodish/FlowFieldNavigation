@@ -12,7 +12,8 @@ public class AgentDataContainer
 {
     public List<FlowFieldAgent> Agents;
     public TransformAccessArray AgentTransforms;
-    public List<AgentData> AgentDataList;
+    public NativeList<AgentData> AgentDataList;
+    public List<AgentPath> Paths;
 
     PathfindingManager _pathfindingManager;
 
@@ -20,52 +21,9 @@ public class AgentDataContainer
     {
         _pathfindingManager = manager;
         Agents = new List<FlowFieldAgent>();
+        Paths = new List<AgentPath>();
         AgentTransforms = new TransformAccessArray(0);
-        AgentDataList = new List<AgentData>();
-    }
-    public void OnStart()
-    {
-
-    }
-    public void OnUpdate()
-    {
-        for(int i = 0; i < Agents.Count; i++)
-        {
-            AgentData data = AgentDataList[i];
-            Transform transform = AgentTransforms[i];
-            //REFRESH PATH
-            if (data.NewPath != null)
-            {
-                if (data.NewPath.IsCalculated)
-                {
-                    if (data.CurPath != null) { data.CurPath.Unsubscribe(); }
-                    data.NewPath.Subscribe();
-                    data.CurPath = data.NewPath;
-                    data.Destination = data.NewPath.Destination;
-                    data.NewPath = null;
-                    AgentDataList[i] = data;
-                }
-            }
-            //MOVE
-            if (data.CurPath != null)
-            {
-                if (data.Direction == Vector2.zero)
-                {
-                    Vector3 destination = new Vector3(data.Destination.x, transform.position.y, data.Destination.y);
-                    transform.position = Vector3.MoveTowards(transform.position, destination, data.Speed * Time.deltaTime);
-                }
-                else
-                {
-                    Vector3 direction = new Vector3(data.Direction.x, 0f, data.Direction.y);
-                    transform.position += direction * data.Speed * Time.deltaTime;
-                }
-            }
-        }
-
-    }
-    public void OnTimedUpdate(float deltaTime)
-    {
-
+        AgentDataList = new NativeList<AgentData>(Allocator.Persistent);
     }
     public void Subscribe(FlowFieldAgent agent)
     {
@@ -75,10 +33,9 @@ public class AgentDataContainer
             Speed = agent.GetSpeed(),
             Destination = Vector2.zero,
             Direction = Vector2.zero,
-            CurPath = null,
-            NewPath = null,
         };
         Agents.Add(agent);
+        Paths.Add(new AgentPath());
         AgentTransforms.Add(agent.transform);
         AgentDataList.Add(data);
     }
@@ -86,15 +43,16 @@ public class AgentDataContainer
     {
         int agentIndex = agent.AgentDataIndex;
         Agents.RemoveAtSwapBack(agentIndex);
+        Paths.RemoveAtSwapBack(agentIndex);
         AgentTransforms.RemoveAtSwapBack(agentIndex);
         AgentDataList.RemoveAtSwapBack(agentIndex);
         Agents[agentIndex].AgentDataIndex = agentIndex;
     }
     public void SetPath(int agentIndex, Path newPath)
     {
-        AgentData data = AgentDataList[agentIndex];
-        data.NewPath = newPath;
-        AgentDataList[agentIndex] = data;
+        AgentPath path = Paths[agentIndex];
+        path.NewPath = newPath;
+        Paths[agentIndex] = path;
     }
     public void SetSpeed(int agentIndex, float newSpeed)
     {
@@ -112,8 +70,11 @@ public class AgentDataContainer
 public struct AgentData
 {
     public float Speed;
-    public Vector2 Destination;
-    public Vector2 Direction;
+    public float2 Destination;
+    public float2 Direction;
+}
+public struct AgentPath
+{
     public Path CurPath;
     public Path NewPath;
 }

@@ -48,7 +48,7 @@ public struct AgentMovementDataCalculationJob : IJobParallelForTransform
                 AgentMovementData[index] = data;
                 return;
             case FlowData.LOS:
-                data.Direction = 0;
+                data.Direction = -1f;
                 break;
             case FlowData.N:
                 data.Direction = new float2(0f, 1f);

@@ -27,17 +27,20 @@ public class AgentDirectionCalculator
     }
     public void CalculateDirections()
     {
-        List<AgentData> agentDataList = _agentDataContainer.AgentDataList;
+        Stopwatch sw = new Stopwatch();
+        sw.Start();
+        NativeList<AgentData> agentDataList = _agentDataContainer.AgentDataList;
+        List<AgentPath> pathList = _agentDataContainer.Paths;
         TransformAccessArray agentTransforms = _agentDataContainer.AgentTransforms;
 
         //CLEAR
         _agentMovementData.Clear();
-        _agentMovementData.Length = agentDataList.Count;
+        _agentMovementData.Length = agentDataList.Length;
 
         //FILL
-        for (int i = 0; i < agentDataList.Count; i++)
+        for (int i = 0; i < agentDataList.Length; i++)
         {
-            Path curPath = agentDataList[i].CurPath;
+            Path curPath = pathList[i].CurPath;
 
             if(curPath == null)
             {
@@ -82,6 +85,8 @@ public class AgentDirectionCalculator
         {
             _agentDataContainer.SetDirection(i, _agentMovementData[i].Direction);
         }
+        sw.Stop();
+        UnityEngine.Debug.Log(sw.Elapsed.TotalMilliseconds);
     }
 }
 public struct AgentMovementData
