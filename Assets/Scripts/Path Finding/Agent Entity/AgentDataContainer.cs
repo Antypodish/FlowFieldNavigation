@@ -1,6 +1,7 @@
 ﻿using JetBrains.Annotations;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
@@ -65,6 +66,15 @@ public class AgentDataContainer
         AgentData data = AgentDataList[agentIndex];
         data.Direction = direction;
         AgentDataList[agentIndex] = data;
+    }
+    public void SetDirection(NativeArray<AgentMovementData> agentMovementData)
+    {
+        AgentDirectionSetJob directionSetJob = new AgentDirectionSetJob()
+        {
+            AgentDataDataArray = AgentDataList,
+            MovementDataArray = agentMovementData,
+        };
+        directionSetJob.Schedule().Complete();
     }
 }
 public struct AgentData

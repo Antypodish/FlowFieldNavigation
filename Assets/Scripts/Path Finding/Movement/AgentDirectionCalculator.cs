@@ -17,32 +17,30 @@ public class AgentDirectionCalculator
     AgentDataContainer _agentDataContainer;
     PathfindingManager _pathfindingManager;
 
-    NativeList<AgentMovementData> _agentMovementData;
+    NativeList<AgentMovementData> _agentMovementDataList;
 
     public AgentDirectionCalculator(AgentDataContainer agentDataContainer, PathfindingManager pathfindingManager)
     {
         _agentDataContainer = agentDataContainer;
         _pathfindingManager = pathfindingManager;
-        _agentMovementData = new NativeList<AgentMovementData>(_agentDataContainer.Agents.Count, Allocator.Persistent);
+        _agentMovementDataList = new NativeList<AgentMovementData>(_agentDataContainer.Agents.Count, Allocator.Persistent);
     }
     public void CalculateDirections()
     {
-        Stopwatch sw = new Stopwatch();
-        sw.Start();
         NativeList<AgentData> agentDataList = _agentDataContainer.AgentDataList;
         List<AgentPath> pathList = _agentDataContainer.Paths;
         TransformAccessArray agentTransforms = _agentDataContainer.AgentTransforms;
 
         //CLEAR
-        _agentMovementData.Clear();
-        _agentMovementData.Length = agentDataList.Length;
+        _agentMovementDataList.Clear();
+        _agentMovementDataList.Length = agentDataList.Length;
 
         //FILL
         for (int i = 0; i < agentDataList.Length; i++)
         {
             Path curPath = pathList[i].CurPath;
 
-            if(curPath == null)
+            if (curPath == null)
             {
                 AgentMovementData data = new AgentMovementData()
                 {
@@ -52,7 +50,7 @@ public class AgentDirectionCalculator
                     Sector1d = 0,
                     OutOfFieldFlag = false,
                 };
-                _agentMovementData[i] = data;
+                _agentMovementDataList[i] = data;
             }
             else
             {
@@ -66,7 +64,7 @@ public class AgentDirectionCalculator
                     FlowField = curPath.FlowField,
                     SectorToPicked = curPath.SectorToPicked,
                 };
-                _agentMovementData[i] = data;
+                _agentMovementDataList[i] = data;
             }
         }
 
@@ -76,17 +74,16 @@ public class AgentDirectionCalculator
             TileSize = _pathfindingManager.TileSize,
             SectorColAmount = _pathfindingManager.SectorTileAmount,
             SectorMatrixColAmount = _pathfindingManager.SectorMatrixColAmount,
-            AgentMovementData = _agentMovementData,
+            AgentMovementData = _agentMovementDataList,
         };
         movementDataJob.Schedule(agentTransforms).Complete();
 
         //SEND DIRECTIONS
-        for(int i = 0; i < _agentMovementData.Length; i++)
-        {
-            _agentDataContainer.SetDirection(i, _agentMovementData[i].Direction);
-        }
-        sw.Stop();
-        UnityEngine.Debug.Log(sw.Elapsed.TotalMilliseconds);
+        SendDirections();
+    }
+    public void SendDirections()
+    {
+        _agentDataContainer.SetDirection(_agentMovementDataList);
     }
 }
 public struct AgentMovementData
