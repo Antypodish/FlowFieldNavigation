@@ -122,7 +122,7 @@ public class PathDebugger
             Gizmos.DrawLine(botRight, botLeft);
         }
     }
-    public void DebugIntegrationField(NativeArray<Vector3> tilePositions)
+    public void DebugIntegrationField()
     {
         if (_pathProducer == null) { return; }
         Path producedPath = _pathProducer.ProducedPaths.Last();
@@ -153,7 +153,7 @@ public class PathDebugger
             
         }
     }
-    public void LOSPassDebug(NativeArray<Vector3> tilePositions)
+    public void LOSPassDebug()
     {
         if (_pathProducer == null) { return; }
         Path producedPath = _pathProducer.ProducedPaths.Last();
@@ -186,7 +186,7 @@ public class PathDebugger
         }
 
     }
-    public void LOSBlockDebug(NativeArray<Vector3> tilePositions)
+    public void LOSBlockDebug()
     {
         if (_pathProducer == null) { return; }
         Path producedPath = _pathProducer.ProducedPaths.Last();
@@ -217,7 +217,7 @@ public class PathDebugger
             } 
         }
     }
-    public void DebugFlowField(NativeArray<Vector3> tilePositions)
+    public void DebugFlowField()
     {
         if (_pathProducer == null) { return; }
         Path producedPath = _pathProducer.ProducedPaths.Last();

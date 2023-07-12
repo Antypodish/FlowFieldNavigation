@@ -8,7 +8,6 @@ public class PathFindingDebugger : MonoBehaviour
     [SerializeField] CostFieldOffset _costFieldOffset;
     [Header("Field Debugger")]
     [SerializeField] bool _costField;
-    [SerializeField] bool _neighbours;
     [SerializeField] bool _sectors;
     [SerializeField] bool _windows;
     [SerializeField] bool _sectorWindows;
@@ -34,7 +33,6 @@ public class PathFindingDebugger : MonoBehaviour
     SectorGraphDebugger _sectorGraphDebugger;
     PortalDebugger _portalDebugger;
     AStarDebugger _aStarDebugger;
-    NeighborDebugger _neighborDebugger;
     private void Start()
     {
         _costFieldDebugger = new CostFieldDebugger(_pathfindingManager);
@@ -43,7 +41,6 @@ public class PathFindingDebugger : MonoBehaviour
         _sectorGraphDebugger = new SectorGraphDebugger(_pathfindingManager);
         _portalDebugger = new PortalDebugger(_pathfindingManager);
         _aStarDebugger = new AStarDebugger(_pathfindingManager);
-        _neighborDebugger = new NeighborDebugger(_pathfindingManager);
         
     }
     private void OnDrawGizmos()
@@ -57,16 +54,15 @@ public class PathFindingDebugger : MonoBehaviour
         if(_portalsOnSector && _portalDebugger != null) { _portalDebugger.DebugPortalsOnClickedSector((int) _costFieldOffset); }
         if(_costsToPortal && _portalDebugger != null) { _portalDebugger.DebugCostsToClickedPortal((int) _costFieldOffset); }
         if(_AStar && _aStarDebugger != null) { _aStarDebugger.DebugAstarForPortal((int) _costFieldOffset); }
-        if(_neighbours && _neighborDebugger != null) { _neighborDebugger.DebugNeighbours(); }
 
         PathDebugger pathDebugger = new PathDebugger(_pathfindingManager);
         if (_debugPortalTraversalMarks && pathDebugger != null) { pathDebugger.DebugPortalTraversalMarks(); }
         if (_debugPortalSequence && pathDebugger != null) { pathDebugger.DebugPortalSequence(); }
         if (_debugPickedSectors && pathDebugger != null) { pathDebugger.DebugPickedSectors(); }
-        if (_debugIntegrationField && pathDebugger != null) { pathDebugger.DebugIntegrationField(_pathfindingManager.TilePositions); }
-        if (_debugFlowField && pathDebugger != null) { pathDebugger.DebugFlowField(_pathfindingManager.TilePositions); }
-        if (_debugLOSPass && pathDebugger != null) { pathDebugger.LOSPassDebug(_pathfindingManager.TilePositions); }
-        if (_debugLOSBlocks && pathDebugger != null) { pathDebugger.LOSBlockDebug(_pathfindingManager.TilePositions); }
+        if (_debugIntegrationField && pathDebugger != null) { pathDebugger.DebugIntegrationField(); }
+        if (_debugFlowField && pathDebugger != null) { pathDebugger.DebugFlowField(); }
+        if (_debugLOSPass && pathDebugger != null) { pathDebugger.LOSPassDebug(); }
+        if (_debugLOSBlocks && pathDebugger != null) { pathDebugger.LOSBlockDebug(); }
     }
 
     enum CostFieldOffset : byte

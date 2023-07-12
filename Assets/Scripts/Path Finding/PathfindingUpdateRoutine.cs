@@ -4,17 +4,20 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
+using static UnityEngine.GraphicsBuffer;
 
 public class PathfindingUpdateRoutine
 {
     PathfindingManager _pathfindingManager;
     AgentDirectionCalculator _dirCalculator;
+    PathProducer _pathProducer;
 
     List<CostFieldEditJob[]> costEditRequests = new List<CostFieldEditJob[]>();
     List<JobHandle> scheduledJobs = new List<JobHandle>();
-    public PathfindingUpdateRoutine(PathfindingManager pathfindingManager)
+    public PathfindingUpdateRoutine(PathfindingManager pathfindingManager, PathProducer pathProducer)
     {
         _pathfindingManager = pathfindingManager;
+        _pathProducer = pathProducer;
         _dirCalculator = new AgentDirectionCalculator(_pathfindingManager.AgentDataContainer, _pathfindingManager);
     }
 
@@ -26,7 +29,7 @@ public class PathfindingUpdateRoutine
             scheduledJobs[i].Complete();
         }
         scheduledJobs.Clear();
-
+        
         //SCHEDULE COST EDITS
         NativeList<JobHandle> editHandles = new NativeList<JobHandle>(Allocator.Temp);
         for (int i = 0; i < costEditRequests.Count; i++)
@@ -58,5 +61,9 @@ public class PathfindingUpdateRoutine
         Index2 b2 = new Index2(endPoint.y, endPoint.x);
         CostFieldEditJob[] costEditJobs = _pathfindingManager.CostFieldProducer.GetEditJobs(new BoundaryData(b1, b2), newCost);
         costEditRequests.Add(costEditJobs);
+    }
+    public Path RequestPath(NativeArray<Vector3> sources, Vector2 destination, int offset)
+    {
+        return _pathProducer.ProducePath(sources, destination, offset);
     }
 }

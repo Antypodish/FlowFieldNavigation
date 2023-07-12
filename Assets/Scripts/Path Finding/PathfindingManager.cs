@@ -18,7 +18,6 @@ public class PathfindingManager : MonoBehaviour
     public CostFieldProducer CostFieldProducer;
     public PathProducer PathProducer;
     public AgentDataContainer AgentDataContainer;
-    public NativeArray<Vector3> TilePositions;
     public List<FlowFieldAgent> Agents;
 
     float _lastAgentUpdateTime = 0;
@@ -41,10 +40,8 @@ public class PathfindingManager : MonoBehaviour
         CostFieldProducer = new CostFieldProducer(_terrainGenerator.WalkabilityData, SectorTileAmount, ColumnAmount, RowAmount, SectorMatrixColAmount, SectorMatrixRowAmount);
         CostFieldProducer.StartCostFieldProduction(0, _maxCostfieldOffset, SectorTileAmount, SectorMatrixColAmount, SectorMatrixRowAmount);
         PathProducer = new PathProducer(this);
-        TilePositions = new NativeArray<Vector3>(RowAmount * ColumnAmount, Allocator.Persistent);
-        _pathfindingUpdateRoutine = new PathfindingUpdateRoutine(this);
+        _pathfindingUpdateRoutine = new PathfindingUpdateRoutine(this, PathProducer);
         _agentUpdater = new AgentUpdater(AgentDataContainer, this);
-        CalculateTilePositions();
         CostFieldProducer.ForceCompleteCostFieldProduction();
 
         SetFlowFieldUtilities();
@@ -59,21 +56,6 @@ public class PathfindingManager : MonoBehaviour
         {
             _lastAgentUpdateTime = curTime;
             _pathfindingUpdateRoutine.RoutineUpdate(deltaTime);
-        }
-    }
-    private void LateUpdate()
-    {
-        
-    }
-    void CalculateTilePositions()
-    {
-        for (int r = 0; r < RowAmount; r++)
-        {
-            for (int c = 0; c < ColumnAmount; c++)
-            {
-                int index = r * ColumnAmount + c;
-                TilePositions[index] = new Vector3(TileSize / 2 + c * TileSize, 0f, TileSize / 2 + r * TileSize);
-            }
         }
     }
     void SetFlowFieldUtilities()
@@ -92,7 +74,7 @@ public class PathfindingManager : MonoBehaviour
     public Path SetDestination(NativeArray<Vector3> sources, Vector3 target)
     {
         Vector2 target2 = new Vector2(target.x, target.z);
-        return PathProducer.ProducePath(sources, target2, 0);
+        return _pathfindingUpdateRoutine.RequestPath(sources, target2, 0);
     }
     public void EditCost(int2 startingPoint, int2 endPoint, byte newCost)
     {
