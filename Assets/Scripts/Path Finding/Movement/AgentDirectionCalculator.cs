@@ -25,7 +25,7 @@ public class AgentDirectionCalculator
         _pathfindingManager = pathfindingManager;
         _agentMovementDataList = new NativeList<AgentMovementData>(_agentDataContainer.Agents.Count, Allocator.Persistent);
     }
-    public void CalculateDirections()
+    public AgentMovementDataCalculationJob CalculateDirections(out TransformAccessArray transformsToSchedule)
     {
         NativeList<AgentData> agentDataList = _agentDataContainer.AgentDataList;
         List<AgentPath> pathList = _agentDataContainer.Paths;
@@ -67,19 +67,16 @@ public class AgentDirectionCalculator
                 _agentMovementDataList[i] = data;
             }
         }
-
-        //SCHEDULE JOB
-        AgentMovementDataCalculationJob movementDataJob = new AgentMovementDataCalculationJob()
+        
+        //RETRUN JOB
+        transformsToSchedule = agentTransforms;
+        return new AgentMovementDataCalculationJob()
         {
             TileSize = _pathfindingManager.TileSize,
             SectorColAmount = _pathfindingManager.SectorTileAmount,
             SectorMatrixColAmount = _pathfindingManager.SectorMatrixColAmount,
             AgentMovementData = _agentMovementDataList,
         };
-        movementDataJob.Schedule(agentTransforms).Complete();
-
-        //SEND DIRECTIONS
-        SendDirections();
     }
     public void SendDirections()
     {

@@ -1,40 +1,39 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.Jobs;
 using static UnityEngine.GraphicsBuffer;
 
 public class PathfindingUpdateRoutine
 {
     PathfindingManager _pathfindingManager;
     AgentDirectionCalculator _dirCalculator;
-    PathProducer _pathProducer;
 
     List<CostFieldEditJob[]> costEditRequests = new List<CostFieldEditJob[]>();
-    List<JobHandle> scheduledJobs = new List<JobHandle>();
+    NativeList<JobHandle> scheduledJobs;
     public PathfindingUpdateRoutine(PathfindingManager pathfindingManager, PathProducer pathProducer)
     {
         _pathfindingManager = pathfindingManager;
-        _pathProducer = pathProducer;
         _dirCalculator = new AgentDirectionCalculator(_pathfindingManager.AgentDataContainer, _pathfindingManager);
+        scheduledJobs = new NativeList<JobHandle>(Allocator.Persistent);
     }
 
     public void RoutineUpdate(float deltaTime)
-    {/*
+    {
         //COMPLETE ALL SCHEDULED JOBS
-        for(int i = 0; i < scheduledJobs.Count; i++)
-        {
-            scheduledJobs[i].Complete();
-        }
+        JobHandle.CompleteAll(scheduledJobs);
+        _dirCalculator.SendDirections();
         scheduledJobs.Clear();
         
         //SCHEDULE COST EDITS
         NativeList<JobHandle> editHandles = new NativeList<JobHandle>(Allocator.Temp);
         for (int i = 0; i < costEditRequests.Count; i++)
         {
-            if (scheduledJobs.Count == 0)
+            if (scheduledJobs.Length == 0)
             {
                 for (int j = 0; j < costEditRequests[i].Length; j++)
                 {
@@ -45,15 +44,19 @@ public class PathfindingUpdateRoutine
             {
                 for (int j = 0; j < costEditRequests[i].Length; j++)
                 {
-                    editHandles.Add(costEditRequests[i][j].Schedule(scheduledJobs[scheduledJobs.Count - 1]));
+                    editHandles.Add(costEditRequests[i][j].Schedule(scheduledJobs[scheduledJobs.Length - 1]));
                 }
             }
             JobHandle combinedHandle = JobHandle.CombineDependencies(editHandles);
             scheduledJobs.Add(combinedHandle);
             editHandles.Clear();
         }
-        costEditRequests.Clear();*/
-        _dirCalculator.CalculateDirections();
+        costEditRequests.Clear();
+
+        //SCHEDULE MOVEMENT DATA CALCULATION
+        AgentMovementDataCalculationJob movDataJob = _dirCalculator.CalculateDirections(out TransformAccessArray transformsToSchedule);
+        if (scheduledJobs.IsEmpty) { scheduledJobs.Add(movDataJob.Schedule(transformsToSchedule)); }
+        else { scheduledJobs.Add(movDataJob.Schedule(transformsToSchedule, scheduledJobs[scheduledJobs.Length - 1])); }
     }
     public void RequestCostEdit(int2 startingPoint, int2 endPoint, byte newCost)
     {
@@ -64,6 +67,6 @@ public class PathfindingUpdateRoutine
     }
     public Path RequestPath(NativeArray<Vector3> sources, Vector2 destination, int offset)
     {
-        return _pathProducer.ProducePath(sources, destination, offset);
+        return _pathfindingManager.PathProducer.ProducePath(sources, destination, offset);
     }
 }
