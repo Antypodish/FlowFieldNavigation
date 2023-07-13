@@ -40,7 +40,7 @@ public class AgentController : MonoBehaviour
     void ControlSingle()
     {
         int agentCount = _agents.Count;
-        if (Input.GetMouseButton(1))
+        if (Input.GetMouseButtonDown(1))
         {
             float tileSize = _pathfindingManager.TileSize;
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);

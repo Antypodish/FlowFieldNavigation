@@ -27,8 +27,9 @@ public class PathDebugger
     public void DebugPortalTraversalMarks()
     {
         if (_pathProducer == null) { return; }
+        if(_pathProducer.ProducedPaths.Count == 0) { return; }
         Path producedPath = _pathProducer.ProducedPaths.Last();
-        if (producedPath == null) { return; }
+        if (!producedPath.IsCalculated) { return; }
 
         float tileSize = _pathfindingManager.TileSize;
         FieldGraph fg = _costFieldProducer.GetCostFieldWithOffset(producedPath.Offset).FieldGraph;
@@ -71,8 +72,9 @@ public class PathDebugger
     public void DebugPortalSequence()
     {
         if (_pathProducer == null) { return; }
+        if (_pathProducer.ProducedPaths.Count == 0) { return; }
         Path producedPath = _pathProducer.ProducedPaths.Last();
-        if (producedPath == null) { return; }
+        if (!producedPath.IsCalculated) { return; }
 
         float tileSize = _pathfindingManager.TileSize;
         FieldGraph fg = _costFieldProducer.GetCostFieldWithOffset(producedPath.Offset).FieldGraph;
@@ -98,8 +100,9 @@ public class PathDebugger
     public void DebugPickedSectors()
     {
         if (_pathProducer == null) { return; }
+        if (_pathProducer.ProducedPaths.Count == 0) { return; }
         Path producedPath = _pathProducer.ProducedPaths.Last();
-        if (producedPath == null) { return; }
+        if (!producedPath.IsCalculated) { return; }
 
         float yOffset = 0.3f;
         Gizmos.color = Color.black;
@@ -125,8 +128,9 @@ public class PathDebugger
     public void DebugIntegrationField()
     {
         if (_pathProducer == null) { return; }
+        if (_pathProducer.ProducedPaths.Count == 0) { return; }
         Path producedPath = _pathProducer.ProducedPaths.Last();
-        if (producedPath == null) { return; }
+        if (!producedPath.IsCalculated) { return; }
         int sectorColAmount = _pathfindingManager.SectorTileAmount;
         int sectorTileAmount = sectorColAmount * sectorColAmount;
         NativeArray<SectorNode> sectorNodes = _costFieldProducer.GetCostFieldWithOffset(producedPath.Offset).FieldGraph.SectorNodes;
@@ -156,8 +160,9 @@ public class PathDebugger
     public void LOSPassDebug()
     {
         if (_pathProducer == null) { return; }
+        if (_pathProducer.ProducedPaths.Count == 0) { return; }
         Path producedPath = _pathProducer.ProducedPaths.Last();
-        if (producedPath == null) { return; }
+        if (!producedPath.IsCalculated) { return; }
 
         string los = "los";
         Gizmos.color = Color.white;
@@ -189,8 +194,9 @@ public class PathDebugger
     public void LOSBlockDebug()
     {
         if (_pathProducer == null) { return; }
+        if (_pathProducer.ProducedPaths.Count == 0) { return; }
         Path producedPath = _pathProducer.ProducedPaths.Last();
-        if (producedPath == null) { return; }
+        if (!producedPath.IsCalculated) { return; }
 
         Gizmos.color = Color.white;
         UnsafeList<int> sectorMarks = producedPath.SectorToPicked;
@@ -220,8 +226,9 @@ public class PathDebugger
     public void DebugFlowField()
     {
         if (_pathProducer == null) { return; }
+        if (_pathProducer.ProducedPaths.Count == 0) { return; }
         Path producedPath = _pathProducer.ProducedPaths.Last();
-        if (producedPath == null) { return; }
+        if (!producedPath.IsCalculated) { return; }
 
         float yOffset = 0.2f;
         Gizmos.color = Color.black;

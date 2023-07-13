@@ -18,7 +18,8 @@ public struct AgentMovementUpdateJob : IJobParallelForTransform
         if (data.Direction.x == -1f && data.Direction.y == -1f)
         {
             float3 destination = new float3(data.Destination.x, transform.position.y, data.Destination.y);
-            transform.position = Vector3.MoveTowards(transform.position, destination, data.Speed * DeltaTime);
+            Vector3 pos = Vector3.MoveTowards(transform.position, destination, data.Speed * DeltaTime);
+            transform.position = pos;
         }
         else
         {
