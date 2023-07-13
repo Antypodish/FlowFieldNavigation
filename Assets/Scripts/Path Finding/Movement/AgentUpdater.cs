@@ -34,7 +34,6 @@ public class AgentUpdater
                 if (agentPath.NewPath.IsCalculated)
                 {
                     if (agentPath.CurPath != null) { agentPath.CurPath.Unsubscribe(); }
-                    agentPath.NewPath.Subscribe();
                     agentPath.CurPath = agentPath.NewPath;
                     data.Destination = agentPath.NewPath.Destination;
                     agentPath.NewPath = null;

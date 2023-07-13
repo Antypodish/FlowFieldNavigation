@@ -102,7 +102,10 @@ public class PathfindingUpdateRoutine
     public Path RequestPath(NativeArray<Vector3> sources, Vector2 destination, int offset)
     {
         PortalTraversalJobPack portalTravJobPack = _pathfindingManager.PathProducer.GetPortalTraversalJobPack(sources, destination, offset);
-        travJobPackList.Add(portalTravJobPack);
+        if(portalTravJobPack.Path != null)
+        {
+            travJobPackList.Add(portalTravJobPack);
+        }
         return portalTravJobPack.Path;
     }
 }

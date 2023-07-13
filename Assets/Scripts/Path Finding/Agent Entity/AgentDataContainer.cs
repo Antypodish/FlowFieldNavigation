@@ -52,7 +52,9 @@ public class AgentDataContainer
     public void SetPath(int agentIndex, Path newPath)
     {
         AgentPath path = Paths[agentIndex];
+        if (path.NewPath != null) { path.NewPath.Unsubscribe(); }
         path.NewPath = newPath;
+        newPath.Subscribe();
         Paths[agentIndex] = path;
     }
     public void SetSpeed(int agentIndex, float newSpeed)

@@ -40,7 +40,7 @@ public class AgentController : MonoBehaviour
     void ControlSingle()
     {
         int agentCount = _agents.Count;
-        if (Input.GetMouseButtonDown(1))
+        if (Input.GetMouseButton(1))
         {
             float tileSize = _pathfindingManager.TileSize;
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -54,6 +54,7 @@ public class AgentController : MonoBehaviour
                     positions[i] = _agents[i].transform.position;
                 }
                 Path newPath = _pathfindingManager.SetDestination(positions, _destination);
+                if (newPath == null) { positions.Dispose(); return; }
                 for (int i = 0; i < agentCount; i++)
                 {
                     _agents[i].SetPath(newPath);
@@ -64,7 +65,7 @@ public class AgentController : MonoBehaviour
     void ControlDouble()
     {
         int agentCount = _agents.Count;
-        if (Input.GetMouseButton(1))
+        if (Input.GetMouseButtonDown(1))
         {
             float tileSize = _pathfindingManager.TileSize;
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -78,6 +79,7 @@ public class AgentController : MonoBehaviour
                     positions[i] = _agents[i].transform.position;
                 }
                 Path newPath = _pathfindingManager.SetDestination(positions, _destination);
+                if (newPath == null) { positions.Dispose(); return; }
                 for (int i = 0; i < agentCount / 2; i++)
                 {
                     _agents[i].SetPath(newPath);
@@ -98,6 +100,7 @@ public class AgentController : MonoBehaviour
                     positions[i - agentCount / 2] = _agents[i].transform.position;
                 }
                 Path newPath = _pathfindingManager.SetDestination(positions, _destination);
+                if (newPath == null) { positions.Dispose(); return; }
                 for (int i = agentCount / 2; i < _agents.Count; i++)
                 {
                     _agents[i].SetPath(newPath);
