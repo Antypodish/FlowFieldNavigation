@@ -3,7 +3,6 @@ using Unity.Jobs;
 
 public struct PortalTraversalJobPack
 {
-    public UnsafeListDefaultSetterJob<int> ClearJob;
     public PortalNodeTraversalJob PortalTravJob;
     public Path Path;
 
@@ -11,7 +10,7 @@ public struct PortalTraversalJobPack
     {
         return new PortalTraversalHandle()
         {
-            Handle = PortalTravJob.Schedule(ClearJob.Schedule(dependancy)),
+            Handle = PortalTravJob.Schedule(dependancy),
             path = Path,
         };
     }
@@ -19,7 +18,7 @@ public struct PortalTraversalJobPack
     {
         return new PortalTraversalHandle()
         {
-            Handle = PortalTravJob.Schedule(ClearJob.Schedule()),
+            Handle = PortalTravJob.Schedule(),
             path = Path,
         };
     }

@@ -61,16 +61,10 @@ public class PathProducer
         NativeArray<PortalTraversalData> portalTraversalDataArray = new NativeArray<PortalTraversalData>(pickedCostField.FieldGraph.PortalNodes.Length, Allocator.Persistent);
         NativeArray<DijkstraTile> targetSectorCosts = new NativeArray<DijkstraTile>(_sectorTileAmount * _sectorTileAmount, Allocator.Persistent);
         NativeQueue<LocalIndex1d> blockedWaveFronts = new NativeQueue<LocalIndex1d>(Allocator.Persistent);
-        UnsafeList<int> sectorToPicked = new UnsafeList<int>(pickedCostField.FieldGraph.SectorNodes.Length, Allocator.Persistent);
+        UnsafeList<int> sectorToPicked = new UnsafeList<int>(pickedCostField.FieldGraph.SectorNodes.Length, Allocator.Persistent, NativeArrayOptions.ClearMemory);
         sectorToPicked.Length = pickedCostField.FieldGraph.SectorNodes.Length;
         NativeList<int> pickedToSector = new NativeList<int>(Allocator.Persistent);
         NativeArray<int> flowFieldLength = new NativeArray<int>(1, Allocator.Persistent);
-
-        //CLEARING SECTOR TO PICKED
-        UnsafeListDefaultSetterJob<int> clearer = new UnsafeListDefaultSetterJob<int>()
-        {
-            List = sectorToPicked,
-        };
 
         //TRAVERSAL
         PortalNodeTraversalJob traversalJob = new PortalNodeTraversalJob()
@@ -120,7 +114,6 @@ public class PathProducer
 
         return new PortalTraversalJobPack
         {
-            ClearJob = clearer,
             PortalTravJob = traversalJob,
             Path = producedPath,
         };
