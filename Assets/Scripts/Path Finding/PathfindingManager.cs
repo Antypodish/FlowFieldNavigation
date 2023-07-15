@@ -49,7 +49,6 @@ public class PathfindingManager : MonoBehaviour
     private void Update()
     {
         _agentUpdater.OnUpdate();
-        PathProducer.Update();
         float curTime = Time.realtimeSinceStartup;
         float deltaTime = curTime - _lastAgentUpdateTime;
         if (deltaTime >= _agentUpdateFrequency)

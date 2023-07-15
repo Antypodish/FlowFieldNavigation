@@ -13,7 +13,6 @@ using static UnityEngine.GraphicsBuffer;
 public class PathfindingUpdateRoutine
 {
     PathfindingManager _pathfindingManager;
-    AgentDirectionCalculator _dirCalculator;
     RoutineSchedulingTree _schedulingTree;
 
     List<CostFieldEditJob[]> _costEditRequests;
@@ -24,30 +23,26 @@ public class PathfindingUpdateRoutine
         _pathfindingManager = pathfindingManager;
         _schedulingTree = new RoutineSchedulingTree(pathfindingManager);
 
-        _dirCalculator = new AgentDirectionCalculator(_pathfindingManager.AgentDataContainer, _pathfindingManager);
         _costEditRequests = new List<CostFieldEditJob[]>();
         _portalTravJobs = new List<PortalTraversalJobPack>();
     }
     public void RoutineUpdate(float deltaTime)
     {
-        //COMPLETE ALL SCHEDULED JOBS
-        _schedulingTree.ForceCompleteAll(_dirCalculator);
+        //FORCE COMPLETE JOBS FROM PREVIOUS UPDATE
+        _schedulingTree.ForceCompleteAll();
 
-        //SCHEDULE COST EDITS
+        _pathfindingManager.PathProducer.Update();
+
+        //SCHEDULE NEW JOBS
         _schedulingTree.AddCostEditHandles(_costEditRequests);
         _costEditRequests.Clear();
-
-        //SCHEDULE MOVEMENT DATA CALCULATION
-        AgentMovementDataCalculationJob movDataJob = _dirCalculator.CalculateDirections(out TransformAccessArray transformsToSchedule);
-        _schedulingTree.AddMovementDataCalculationHandle(ref movDataJob, transformsToSchedule);
-
-        //SCHEDULE PORTAL TRAVERSAL JOBS
+        _schedulingTree.AddMovementDataCalculationHandle();
         _schedulingTree.AddPortalTraversalHandles(_portalTravJobs);
         _portalTravJobs.Clear();
     }
     public void IntermediateLateUpdate()
     {
-        _schedulingTree.TryCompletePredecessorJobs(ref _dirCalculator._agentMovementDataList);
+        _schedulingTree.TryCompletePredecessorJobs();
     }
     public void RequestCostEdit(int2 startingPoint, int2 endPoint, byte newCost)
     {

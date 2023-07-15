@@ -122,7 +122,7 @@ public class PathProducer
             Path = producedPath,
         };
     }
-    public FlowFieldHandle ScheduleFlowFieldJob(Path path)
+    public FlowFieldHandle SchedulePathProductionJob(Path path)
     {
         CostField pickedCostField = _costFieldProducer.GetCostFieldWithOffset(path.Offset);
         NativeArray<int> flowFieldLength = path.FlowFieldLength;
@@ -192,7 +192,7 @@ public class PathProducer
             path = path,
         };
     }
-    public void SetPortalAdditionHandles(NativeList<AgentMovementData> movDataArray, List<PortalAdditionTraversalHandle> portalAdditionTraversalHandles)
+    public void SetPortalAdditionTraversalHandles(NativeList<AgentMovementData> movDataArray, List<PortalAdditionTraversalHandle> portalAdditionTraversalHandles)
     {
         for(int i = 0; i < ProducedPaths.Count; i++)
         {
@@ -230,6 +230,66 @@ public class PathProducer
             }
         }
     }
+    public JobHandle SchedulePathAdditionJob(Path path)
+    {
+        CostField pickedCostField = _costFieldProducer.GetCostFieldWithOffset(path.Offset);
+
+        //RESIZING FLOW FIELD
+        UnsafeList<FlowData> oldFlowField = path.FlowField;
+        NativeArray<IntegrationTile> oldIntegrationField = path.IntegrationField;
+        UnsafeList<FlowData> newFlowField = new UnsafeList<FlowData>(path.FlowFieldAdditionLength[0], Allocator.Persistent);
+        newFlowField.Length = path.FlowFieldAdditionLength[0];
+        NativeArray<IntegrationTile> newIntegrationField = new NativeArray<IntegrationTile>(path.FlowFieldAdditionLength[0], Allocator.Persistent);
+        path.FlowField = newFlowField;
+        path.IntegrationField = newIntegrationField;
+
+        
+
+        FlowFieldExtensionJob extensionJob = new FlowFieldExtensionJob()
+        {
+            oldFieldLength = oldFlowField.Length,
+            OldFlowField = oldFlowField,
+            OldIntegrationField = oldIntegrationField,
+            NewFlowField = newFlowField,
+            NewIntegrationField = newIntegrationField
+        };
+
+        //INT
+        IntegrationFieldAdditionJob intAddJob = new IntegrationFieldAdditionJob()
+        {
+            StartIndicies = path.IntegrationStartIndicies,
+            Costs = pickedCostField.CostsL,
+            IntegrationField = path.IntegrationField,
+            SectorToPicked = path.SectorToPicked,
+            SectorColAmount = _sectorTileAmount,
+            SectorMatrixColAmount = _sectorMatrixColAmount,
+            FieldColAmount = _columnAmount,
+            FieldRowAmount = _rowAmount,
+        };
+
+        //FLOW FIELD
+        FlowFieldJob ffJob = new FlowFieldJob()
+        {
+            SectorTileAmount = _sectorTileAmount * _sectorTileAmount,
+            SectorColAmount = _sectorTileAmount,
+            SectorMatrixColAmount = _sectorMatrixColAmount,
+            SectorMatrixRowAmount = _sectorMatrixRowAmount,
+            SectorRowAmount = _sectorTileAmount,
+            SectorToPicked = path.SectorToPicked,
+            PickedToSector = path.PickedToSector,
+            FlowField = path.FlowField,
+            IntegrationField = path.IntegrationField,
+        };
+
+        JobHandle extensionHandle = extensionJob.Schedule(newFlowField.Length, 32);
+        JobHandle intHandle = intAddJob.Schedule(extensionHandle);
+        JobHandle ffHandle = ffJob.Schedule(newFlowField.Length, 256, intHandle);
+
+        return ffHandle;
+        //oldFlowField.Dispose();
+        //oldIntegrationField.Dispose();
+    }
+    
     public void AddSectorToPath(Path path, NativeList<int> sectorIndicies)
     {
         CostField pickedCostField = _costFieldProducer.GetCostFieldWithOffset(path.Offset);
