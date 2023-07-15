@@ -226,7 +226,6 @@ public class PathProducer
                     NewFlowFieldLength = path.NewFlowFieldLength,
                 };
                 PortalAdditionTraversalHandle handle = new PortalAdditionTraversalHandle(travJob.Schedule(), path);
-                handle.Handle.Complete();
                 portalAdditionTraversalHandles.Add(handle);
             }
         }

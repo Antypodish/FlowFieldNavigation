@@ -73,13 +73,16 @@ public class RoutineSchedulingTree
     public void TryCompletePredecessorJobs()
     {
         //HANDLE PORTAL TRAVERSALS
-        for (int i = 0; i < _porTravHandles.Count; i++)
+        for (int i = _porTravHandles.Count - 1; i >= 0; i--)
         {
             PortalTraversalHandle handle = _porTravHandles[i];
-            handle.Complete();
-            _pathProdCalcHandles.Add(_pathfindingManager.PathProducer.SchedulePathProductionJob(handle.path));
+            if (handle.Handle.IsCompleted)
+            {
+                handle.Complete();
+                _pathProdCalcHandles.Add(_pathfindingManager.PathProducer.SchedulePathProductionJob(handle.path));
+                _porTravHandles.RemoveAtSwapBack(i);
+            }
         }
-        _porTravHandles.Clear();
 
         //HANDLE MOVEMENT DATA CALCULATION
         if (_movDataCalcHandle.Count == 1)
