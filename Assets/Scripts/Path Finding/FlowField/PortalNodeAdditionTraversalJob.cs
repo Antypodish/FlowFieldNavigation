@@ -13,6 +13,7 @@ public struct PortalNodeAdditionTraversalJob : IJob
     public int SectorColAmount;
     public int SectorMatrixColAmount;
     public int ExistingFlowFieldLength;
+    public int PathId;
 
     public NativeList<LocalIndex1d> IntegrationStartIndicies;
     public NativeArray<PortalTraversalData> PortalTraversalDataArray;
@@ -22,6 +23,7 @@ public struct PortalNodeAdditionTraversalJob : IJob
     public NativeList<int> PickedToSector;
     public NativeArray<int> NewFlowFieldLength;
 
+    [ReadOnly] public NativeArray<AgentMovementData> AgentMovementDataArray;
     [ReadOnly] public NativeArray<SectorNode> SectorNodes;
     [ReadOnly] public NativeArray<int> SecToWinPtrs;
     [ReadOnly] public NativeArray<WindowNode> WindowNodes;
@@ -29,13 +31,26 @@ public struct PortalNodeAdditionTraversalJob : IJob
     [ReadOnly] public NativeArray<PortalNode> PortalNodes;
     [ReadOnly] public NativeArray<PortalToPortal> PorPtrs;
     [ReadOnly] public NativeArray<DijkstraTile> TargetSectorCosts;
-    [ReadOnly] public NativeList<int> NewSectors;
     
     int _targetSectorStartIndex1d;
     int _targetSectorIndex1d;
     int _newSequenceStartIndex;
     public void Execute()
     {
+        NewFlowFieldLength[0] = 0;
+
+        //SET NEW SECTORS
+        NativeList<int> newSectorIndicies = new NativeList<int>(Allocator.Temp);
+        for(int i = 0; i < AgentMovementDataArray.Length; i++)
+        {
+            AgentMovementData movData = AgentMovementDataArray[i];
+            if(movData.OutOfFieldFlag && movData.PathId == PathId)
+            {
+                newSectorIndicies.Add(movData.Sector1d);
+            }
+        }
+
+        //CALCULATE TARGET INDEX
         _newSequenceStartIndex = PortalSequence.Length;
         int2 targetSectorIndex2d = new int2(TargetIndex.x / SectorColAmount, TargetIndex.y / SectorColAmount);
         _targetSectorIndex1d = targetSectorIndex2d.y * SectorMatrixColAmount + targetSectorIndex2d.x;
@@ -45,9 +60,9 @@ public struct PortalNodeAdditionTraversalJob : IJob
         //START GRAPH WALKER
         UnsafeList<int> traversedIndicies = new UnsafeList<int>(10, Allocator.Temp);
         UnsafeHeap<int> walkerHeap = new UnsafeHeap<int>(10, Allocator.Temp);
-        for (int i = 0; i < NewSectors.Length; i++)
+        for (int i = 0; i < newSectorIndicies.Length; i++)
         {
-            int sourceSectorIndexFlat = NewSectors[i];
+            int sourceSectorIndexFlat = newSectorIndicies[i];
             UnsafeList<int> sourcePortalIndicies = GetPortalIndicies(sourceSectorIndexFlat);
             for (int j = 0; j < sourcePortalIndicies.Length; j++)
             {

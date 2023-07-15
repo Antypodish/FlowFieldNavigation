@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class Path
 {
-    public int RoutineMark = -1;
+    public int Id;
     public int Subscriber = 0;
     public int Offset;
     public PathState State;
@@ -23,8 +23,12 @@ public class Path
     public NativeArray<DijkstraTile> TargetSectorCosts;
     public NativeList<int> PortalSequenceBorders;
     public NativeArray<int> FlowFieldLength;
+    public NativeList<LocalIndex1d> IntegrationStartIndicies;
+    public NativeArray<int> FlowFieldAdditionLength;
     public void Dispose()
     {
+        FlowFieldAdditionLength.Dispose();
+        IntegrationStartIndicies.Dispose();
         BlockedWaveFronts.Dispose();
         FlowFieldLength.Dispose();
         PickedToSector.Dispose();

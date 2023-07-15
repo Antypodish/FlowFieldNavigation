@@ -38,11 +38,12 @@ public class PathProducer
     }
     public void Update()
     {
-        for (int i = 0; i < ProducedPaths.Count; i++)
+        for (int i = ProducedPaths.Count - 1; i >= 0; i--)
         {
             if (ProducedPaths[i].State == PathState.ToBeDisposed && ProducedPaths[i].IsCalculated)
             {
                 ProducedPaths[i].Dispose();
+                ProducedPaths[ProducedPaths.Count - 1].Id = i;
                 ProducedPaths.RemoveAtSwapBack(i);
             }
         }
@@ -95,6 +96,7 @@ public class PathProducer
 
         Path producedPath = new Path()
         {
+            Id = ProducedPaths.Count,
             BlockedWaveFronts = blockedWaveFronts,
             PickedToSector = pickedToSector,
             PortalSequenceBorders = portalSequenceBorders,
@@ -108,6 +110,8 @@ public class PathProducer
             PortalTraversalDataArray = portalTraversalDataArray,
             SectorToPicked = sectorToPicked,
             FlowFieldLength = flowFieldLength,
+            IntegrationStartIndicies = new NativeList<LocalIndex1d>(Allocator.Persistent),
+            FlowFieldAdditionLength = new NativeArray<int>(1, Allocator.Persistent),
         };
 
         ProducedPaths.Add(producedPath);
@@ -188,6 +192,44 @@ public class PathProducer
             path = path,
         };
     }
+    public void SetPortalAdditionHandles(NativeList<AgentMovementData> movDataArray, List<PortalAdditionTraversalHandle> portalAdditionTraversalHandles)
+    {
+        for(int i = 0; i < ProducedPaths.Count; i++)
+        {
+            Path path = ProducedPaths[i];
+            if(path.IsCalculated && path.State != PathState.ToBeDisposed)
+            {
+                CostField pickedCostField = _costFieldProducer.GetCostFieldWithOffset(path.Offset);
+                PortalNodeAdditionTraversalJob travJob = new PortalNodeAdditionTraversalJob()
+                {
+                    PortalSequenceBorders = path.PortalSequenceBorders,
+                    FieldColAmount = _columnAmount,
+                    TargetIndex = path.TargetIndex,
+                    PortalTraversalDataArray = path.PortalTraversalDataArray,
+                    TargetSectorCosts = path.TargetSectorCosts,
+                    SectorColAmount = _sectorTileAmount,
+                    SectorMatrixColAmount = _sectorMatrixColAmount,
+                    PortalNodes = pickedCostField.FieldGraph.PortalNodes,
+                    SecToWinPtrs = pickedCostField.FieldGraph.SecToWinPtrs,
+                    WindowNodes = pickedCostField.FieldGraph.WindowNodes,
+                    WinToSecPtrs = pickedCostField.FieldGraph.WinToSecPtrs,
+                    PorPtrs = pickedCostField.FieldGraph.PorToPorPtrs,
+                    SectorNodes = pickedCostField.FieldGraph.SectorNodes,
+                    PortalSequence = path.PortalSequence,
+                    SectorToPicked = path.SectorToPicked,
+                    PickedToSector = path.PickedToSector,
+                    IntegrationStartIndicies = path.IntegrationStartIndicies,
+                    ExistingFlowFieldLength = path.FlowField.Length,
+                    AgentMovementDataArray = movDataArray,
+                    PathId = path.Id,
+                    NewFlowFieldLength = path.FlowFieldAdditionLength,
+                };
+                PortalAdditionTraversalHandle handle = new PortalAdditionTraversalHandle(travJob.Schedule(), path);
+                handle.Handle.Complete();
+                portalAdditionTraversalHandles.Add(handle);
+            }
+        }
+    }
     public void AddSectorToPath(Path path, NativeList<int> sectorIndicies)
     {
         CostField pickedCostField = _costFieldProducer.GetCostFieldWithOffset(path.Offset);
@@ -201,7 +243,7 @@ public class PathProducer
             FieldColAmount = _columnAmount,
             TargetIndex = path.TargetIndex,
             PortalTraversalDataArray = path.PortalTraversalDataArray,
-            NewSectors = sectorIndicies,
+            //NewSectors = sectorIndicies,
             TargetSectorCosts = path.TargetSectorCosts,
             SectorColAmount = _sectorTileAmount,
             SectorMatrixColAmount = _sectorMatrixColAmount,

@@ -17,7 +17,7 @@ public class AgentDirectionCalculator
     AgentDataContainer _agentDataContainer;
     PathfindingManager _pathfindingManager;
 
-    NativeList<AgentMovementData> _agentMovementDataList;
+    public NativeList<AgentMovementData> _agentMovementDataList;
 
     public AgentDirectionCalculator(AgentDataContainer agentDataContainer, PathfindingManager pathfindingManager)
     {
@@ -49,6 +49,7 @@ public class AgentDirectionCalculator
                     Local1d = 0,
                     Sector1d = 0,
                     OutOfFieldFlag = false,
+                    PathId = -1,
                 };
                 _agentMovementDataList[i] = data;
             }
@@ -63,6 +64,7 @@ public class AgentDirectionCalculator
                     OutOfFieldFlag = false,
                     FlowField = curPath.FlowField,
                     SectorToPicked = curPath.SectorToPicked,
+                    PathId = curPath.Id,
                 };
                 _agentMovementDataList[i] = data;
             }
@@ -92,4 +94,5 @@ public struct AgentMovementData
     public bool OutOfFieldFlag;
     public UnsafeList<FlowData> FlowField;
     public UnsafeList<int> SectorToPicked;
+    public int PathId;
 }
