@@ -34,10 +34,10 @@ public class PathfindingUpdateRoutine
         _pathfindingManager.PathProducer.Update();
 
         //SCHEDULE NEW JOBS
-        _schedulingTree.AddCostEditHandles(_costEditRequests);
+        JobHandle costEditHandle = _schedulingTree.ScheduleCostEditRequests(_costEditRequests);
         _costEditRequests.Clear();
-        _schedulingTree.AddMovementDataCalculationHandle();
-        _schedulingTree.AddPortalTraversalHandles(_portalTravJobs);
+        _schedulingTree.AddMovementDataCalculationHandle(costEditHandle);
+        _schedulingTree.AddPortalTraversalHandles(_portalTravJobs, costEditHandle);
         _portalTravJobs.Clear();
     }
     public void IntermediateLateUpdate()

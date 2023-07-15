@@ -243,7 +243,6 @@ public class PathProducer
         path.FlowField = newFlowField;
         path.IntegrationField = newIntegrationField;
 
-        
 
         FlowFieldExtensionJob extensionJob = new FlowFieldExtensionJob()
         {
