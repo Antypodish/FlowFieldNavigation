@@ -17,17 +17,17 @@ public class Path
     public NativeList<int> PortalSequence;
     public UnsafeList<int> SectorToPicked;
     public NativeList<int> PickedToSector;
-    public NativeArray<IntegrationTile> IntegrationField;
+    public NativeList<IntegrationTile> IntegrationField;
     public UnsafeList<FlowData> FlowField;
     public NativeQueue<LocalIndex1d> BlockedWaveFronts;
     public NativeArray<DijkstraTile> TargetSectorCosts;
     public NativeList<int> PortalSequenceBorders;
     public NativeArray<int> FlowFieldLength;
     public NativeList<LocalIndex1d> IntegrationStartIndicies;
-    public NativeArray<int> FlowFieldAdditionLength;
+    public NativeArray<int> NewFlowFieldLength;
     public void Dispose()
     {
-        FlowFieldAdditionLength.Dispose();
+        NewFlowFieldLength.Dispose();
         IntegrationStartIndicies.Dispose();
         BlockedWaveFronts.Dispose();
         FlowFieldLength.Dispose();

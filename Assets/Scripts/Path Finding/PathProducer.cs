@@ -111,7 +111,7 @@ public class PathProducer
             SectorToPicked = sectorToPicked,
             FlowFieldLength = flowFieldLength,
             IntegrationStartIndicies = new NativeList<LocalIndex1d>(Allocator.Persistent),
-            FlowFieldAdditionLength = new NativeArray<int>(1, Allocator.Persistent),
+            NewFlowFieldLength = new NativeArray<int>(1, Allocator.Persistent),
         };
 
         ProducedPaths.Add(producedPath);
@@ -128,7 +128,8 @@ public class PathProducer
         NativeArray<int> flowFieldLength = path.FlowFieldLength;
         path.FlowField = new UnsafeList<FlowData>(flowFieldLength[0], Allocator.Persistent);
         path.FlowField.Length = flowFieldLength[0];
-        path.IntegrationField = new NativeArray<IntegrationTile>(flowFieldLength[0], Allocator.Persistent);
+        path.IntegrationField = new NativeList<IntegrationTile>(flowFieldLength[0], Allocator.Persistent);
+        path.IntegrationField.Length = flowFieldLength[0];
         int2 destinationIndex = path.TargetIndex;
 
         //INT FIELD RESET
@@ -222,7 +223,7 @@ public class PathProducer
                     ExistingFlowFieldLength = path.FlowField.Length,
                     AgentMovementDataArray = movDataArray,
                     PathId = path.Id,
-                    NewFlowFieldLength = path.FlowFieldAdditionLength,
+                    NewFlowFieldLength = path.NewFlowFieldLength,
                 };
                 PortalAdditionTraversalHandle handle = new PortalAdditionTraversalHandle(travJob.Schedule(), path);
                 handle.Handle.Complete();
@@ -235,22 +236,14 @@ public class PathProducer
         CostField pickedCostField = _costFieldProducer.GetCostFieldWithOffset(path.Offset);
 
         //RESIZING FLOW FIELD
-        UnsafeList<FlowData> oldFlowField = path.FlowField;
-        NativeArray<IntegrationTile> oldIntegrationField = path.IntegrationField;
-        UnsafeList<FlowData> newFlowField = new UnsafeList<FlowData>(path.FlowFieldAdditionLength[0], Allocator.Persistent);
-        newFlowField.Length = path.FlowFieldAdditionLength[0];
-        NativeArray<IntegrationTile> newIntegrationField = new NativeArray<IntegrationTile>(path.FlowFieldAdditionLength[0], Allocator.Persistent);
-        path.FlowField = newFlowField;
-        path.IntegrationField = newIntegrationField;
+        int oldFieldLength = path.FlowField.Length;
+        path.FlowField.Resize(path.NewFlowFieldLength[0], NativeArrayOptions.UninitializedMemory);
+        path.IntegrationField.Resize(path.NewFlowFieldLength[0], NativeArrayOptions.UninitializedMemory);
 
-
-        FlowFieldExtensionJob extensionJob = new FlowFieldExtensionJob()
+        IntegrationFieldExtensionJob extensionJob = new IntegrationFieldExtensionJob()
         {
-            oldFieldLength = oldFlowField.Length,
-            OldFlowField = oldFlowField,
-            OldIntegrationField = oldIntegrationField,
-            NewFlowField = newFlowField,
-            NewIntegrationField = newIntegrationField
+            oldFieldLength = oldFieldLength,
+            NewIntegrationField = path.IntegrationField,
         };
 
         //INT
@@ -280,101 +273,10 @@ public class PathProducer
             IntegrationField = path.IntegrationField,
         };
 
-        JobHandle extensionHandle = extensionJob.Schedule(newFlowField.Length, 32);
-        JobHandle intHandle = intAddJob.Schedule(extensionHandle);
-        JobHandle ffHandle = ffJob.Schedule(newFlowField.Length, 256, intHandle);
-
-        return ffHandle;
-        //oldFlowField.Dispose();
-        //oldIntegrationField.Dispose();
-    }
-    
-    public void AddSectorToPath(Path path, NativeList<int> sectorIndicies)
-    {
-        CostField pickedCostField = _costFieldProducer.GetCostFieldWithOffset(path.Offset);
-        NativeList<LocalIndex1d> integrationStartIndicies = new NativeList<LocalIndex1d>(Allocator.TempJob);  
-        NativeArray<int> newFlowFieldLength = new NativeArray<int>(1, Allocator.TempJob);
-
-        //TRAVERSAL
-        PortalNodeAdditionTraversalJob travJob = new PortalNodeAdditionTraversalJob()
-        {
-            PortalSequenceBorders = path.PortalSequenceBorders,
-            FieldColAmount = _columnAmount,
-            TargetIndex = path.TargetIndex,
-            PortalTraversalDataArray = path.PortalTraversalDataArray,
-            //NewSectors = sectorIndicies,
-            TargetSectorCosts = path.TargetSectorCosts,
-            SectorColAmount = _sectorTileAmount,
-            SectorMatrixColAmount = _sectorMatrixColAmount,
-            PortalNodes = pickedCostField.FieldGraph.PortalNodes,
-            SecToWinPtrs = pickedCostField.FieldGraph.SecToWinPtrs,
-            WindowNodes = pickedCostField.FieldGraph.WindowNodes,
-            WinToSecPtrs = pickedCostField.FieldGraph.WinToSecPtrs,
-            PorPtrs = pickedCostField.FieldGraph.PorToPorPtrs,
-            SectorNodes = pickedCostField.FieldGraph.SectorNodes,
-            PortalSequence = path.PortalSequence,
-            SectorToPicked = path.SectorToPicked,
-            PickedToSector = path.PickedToSector,
-            IntegrationStartIndicies = integrationStartIndicies,
-            ExistingFlowFieldLength = path.FlowField.Length,
-            NewFlowFieldLength = newFlowFieldLength,
-        };
-        travJob.Schedule().Complete();
-
-        //RESIZING FLOW FIELD
-        UnsafeList<FlowData> oldFlowField = path.FlowField;
-        NativeArray<IntegrationTile> oldIntegrationField = path.IntegrationField;
-        UnsafeList<FlowData> newFlowField = new UnsafeList<FlowData>(newFlowFieldLength[0], Allocator.Persistent);
-        newFlowField.Length = newFlowFieldLength[0];
-        NativeArray<IntegrationTile> newIntegrationField = new NativeArray<IntegrationTile>(newFlowFieldLength[0], Allocator.Persistent);
-        path.FlowField = newFlowField;
-        path.IntegrationField = newIntegrationField;
-
-        FlowFieldExtensionJob extensionJob = new FlowFieldExtensionJob()
-        {
-            oldFieldLength = oldFlowField.Length,
-            OldFlowField = oldFlowField,
-            OldIntegrationField = oldIntegrationField,
-            NewFlowField = newFlowField,
-            NewIntegrationField = newIntegrationField
-        };
-        
-        //INT
-        IntegrationFieldAdditionJob intAddJob = new IntegrationFieldAdditionJob()
-        {
-            StartIndicies = integrationStartIndicies,
-            Costs = pickedCostField.CostsL,
-            IntegrationField = path.IntegrationField,
-            SectorToPicked = path.SectorToPicked,
-            SectorColAmount = _sectorTileAmount,
-            SectorMatrixColAmount = _sectorMatrixColAmount,
-            FieldColAmount = _columnAmount,
-            FieldRowAmount = _rowAmount,
-        };
-        
-        //FLOW FIELD
-        FlowFieldJob ffJob = new FlowFieldJob()
-        {
-            SectorTileAmount = _sectorTileAmount * _sectorTileAmount,
-            SectorColAmount = _sectorTileAmount,
-            SectorMatrixColAmount = _sectorMatrixColAmount,
-            SectorMatrixRowAmount = _sectorMatrixRowAmount,
-            SectorRowAmount = _sectorTileAmount,
-            SectorToPicked = path.SectorToPicked,
-            PickedToSector = path.PickedToSector,
-            FlowField = path.FlowField,
-            IntegrationField = path.IntegrationField,
-        };
-
-        JobHandle extensionHandle = extensionJob.Schedule(newFlowFieldLength[0], 32);
+        JobHandle extensionHandle = extensionJob.Schedule();
         JobHandle intHandle = intAddJob.Schedule(extensionHandle);
         JobHandle ffHandle = ffJob.Schedule(path.FlowField.Length, 256, intHandle);
-        ffHandle.Complete();
 
-        sectorIndicies.Dispose();
-        integrationStartIndicies.Dispose();
-        newFlowFieldLength.Dispose();
-        oldFlowField.Dispose();
-        oldIntegrationField.Dispose();
+        return ffHandle;
     }
 }

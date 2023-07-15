@@ -150,12 +150,4 @@ public class RoutineSchedulingTree
         //SEND DIRECTIONS
         _dirCalculator.SendDirections();
     }
-    void Reset()
-    {
-        _pathAddTravHandles.Clear();
-        _porTravHandles.Clear();
-        _movDataCalcHandle.Clear();
-        _pathProdCalcHandles.Clear();
-        _pathAdditionHandles.Clear();
-    }
 }

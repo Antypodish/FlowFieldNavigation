@@ -1,29 +1,19 @@
-﻿using Unity.Burst;
+﻿using System;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 
 [BurstCompile]
-public struct FlowFieldExtensionJob : IJobParallelFor
+public struct IntegrationFieldExtensionJob : IJob
 {
     public int oldFieldLength;
-
-    [ReadOnly] public UnsafeList<FlowData> OldFlowField;
-    [ReadOnly] public NativeArray<IntegrationTile> OldIntegrationField;
-    
-    [WriteOnly] public UnsafeList<FlowData> NewFlowField;
     [WriteOnly] public NativeArray<IntegrationTile> NewIntegrationField;
-    public void Execute(int index)
+    public void Execute()
     {
-        if(index < oldFieldLength)
+        for (int i = oldFieldLength; i < NewIntegrationField.Length; i++)
         {
-            NewFlowField[index] = OldFlowField[index];
-            NewIntegrationField[index] = OldIntegrationField[index];
+            NewIntegrationField[i] = new IntegrationTile(float.MaxValue, IntegrationMark.None);
         }
-        else
-        {
-            NewIntegrationField[index] = new IntegrationTile(float.MaxValue, IntegrationMark.None);
-        }
-        
     }
 }
