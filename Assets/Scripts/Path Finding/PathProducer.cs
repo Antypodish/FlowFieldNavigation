@@ -193,7 +193,7 @@ public class PathProducer
             Path = path,
         };
     }
-    public void SetPortalAdditionTraversalHandles(NativeList<AgentMovementData> movDataArray, List<PathHandle> portalAdditionTraversalHandles)
+    public void SetPortalAdditionTraversalHandles(NativeList<AgentMovementData> movDataArray, List<PathHandle> portalAdditionTraversalHandles, JobHandle dependency)
     {
         for(int i = 0; i < ProducedPaths.Count; i++)
         {
@@ -227,7 +227,7 @@ public class PathProducer
                 };
                 PathHandle handle = new PathHandle()
                 {
-                    Handle = travJob.Schedule(),
+                    Handle = travJob.Schedule(dependency),
                     Path = path,
                 };
                 portalAdditionTraversalHandles.Add(handle);

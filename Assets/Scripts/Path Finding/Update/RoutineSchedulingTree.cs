@@ -70,6 +70,10 @@ public class RoutineSchedulingTree
         }
         portalTravJobs.Clear();
     }
+    public void SetPortalAdditionTraversalHandles()
+    {
+        _pathfindingManager.PathProducer.SetPortalAdditionTraversalHandles(_dirCalculator._agentMovementDataList, _pathAddTravHandles, _movDataCalcHandle[0]);
+    }
     public void TryCompletePredecessorJobs()
     {
         //HANDLE PORTAL TRAVERSALS
@@ -84,15 +88,10 @@ public class RoutineSchedulingTree
             }
         }
 
-        //HANDLE MOVEMENT DATA CALCULATION
-        if (_movDataCalcHandle.Count == 1)
+        if (_movDataCalcHandle.Count != 0 && _movDataCalcHandle[0].IsCompleted)
         {
-            if (_movDataCalcHandle[0].IsCompleted)
-            {
-                _movDataCalcHandle[0].Complete();
-                _pathfindingManager.PathProducer.SetPortalAdditionTraversalHandles(_dirCalculator._agentMovementDataList, _pathAddTravHandles);
-                _movDataCalcHandle.Clear();
-            }
+            _movDataCalcHandle[0].Complete();
+            _movDataCalcHandle.Clear();
         }
 
         //HANDLE PORTAL ADD TRAVERSALS
@@ -114,7 +113,7 @@ public class RoutineSchedulingTree
         if(_movDataCalcHandle.Count == 1)
         {
             _movDataCalcHandle[0].Complete();
-            _pathfindingManager.PathProducer.SetPortalAdditionTraversalHandles(_dirCalculator._agentMovementDataList, _pathAddTravHandles);
+            _pathfindingManager.PathProducer.SetPortalAdditionTraversalHandles(_dirCalculator._agentMovementDataList, _pathAddTravHandles, _movDataCalcHandle[0]);
             _movDataCalcHandle.Clear();
         }
 
