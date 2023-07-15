@@ -11,12 +11,12 @@ public class RoutineSchedulingTree
     PathfindingManager _pathfindingManager;
     AgentDirectionCalculator _dirCalculator;
 
-    List<FlowFieldHandle> _pathProdCalcHandles;
+    List<PathHandle> _pathProdCalcHandles;
     NativeList<JobHandle> _pathAdditionHandles;
 
     //PREDECESSOR HANDLES (Handles having successors wich depens on the output of these jobs)
-    List<PortalTraversalHandle> _porTravHandles;
-    List<PortalAdditionTraversalHandle> _pathAddTravHandles;
+    List<PathHandle> _porTravHandles;
+    List<PathHandle> _pathAddTravHandles;
     List<JobHandle> _movDataCalcHandle;
 
     public RoutineSchedulingTree(PathfindingManager pathfindingManager)
@@ -24,10 +24,10 @@ public class RoutineSchedulingTree
         _pathfindingManager = pathfindingManager;
         _dirCalculator = new AgentDirectionCalculator(pathfindingManager.AgentDataContainer, pathfindingManager);
 
-        _porTravHandles = new List<PortalTraversalHandle>();
-        _pathAddTravHandles = new List<PortalAdditionTraversalHandle>();
+        _porTravHandles = new List<PathHandle>();
+        _pathAddTravHandles = new List<PathHandle>();
         _movDataCalcHandle = new List<JobHandle>();
-        _pathProdCalcHandles = new List<FlowFieldHandle>();
+        _pathProdCalcHandles = new List<PathHandle>();
         _pathAdditionHandles = new NativeList<JobHandle>(Allocator.Persistent);
     }
 
@@ -75,11 +75,11 @@ public class RoutineSchedulingTree
         //HANDLE PORTAL TRAVERSALS
         for (int i = _porTravHandles.Count - 1; i >= 0; i--)
         {
-            PortalTraversalHandle handle = _porTravHandles[i];
+            PathHandle handle = _porTravHandles[i];
             if (handle.Handle.IsCompleted)
             {
-                handle.Complete();
-                _pathProdCalcHandles.Add(_pathfindingManager.PathProducer.SchedulePathProductionJob(handle.path));
+                handle.Handle.Complete();
+                _pathProdCalcHandles.Add(_pathfindingManager.PathProducer.SchedulePathProductionJob(handle.Path));
                 _porTravHandles.RemoveAtSwapBack(i);
             }
         }
@@ -98,7 +98,7 @@ public class RoutineSchedulingTree
         //HANDLE PORTAL ADD TRAVERSALS
         for (int i = _pathAddTravHandles.Count - 1; i >= 0; i--)
         {
-            PortalAdditionTraversalHandle handle = _pathAddTravHandles[i];
+            PathHandle handle = _pathAddTravHandles[i];
             if (handle.Handle.IsCompleted)
             {
                 handle.Handle.Complete();
@@ -121,25 +121,25 @@ public class RoutineSchedulingTree
         //FOCE COMTPLETE PATH PRODUCTION TRAVERSALS
         for (int i = 0; i < _porTravHandles.Count; i++)
         {
-            PortalTraversalHandle handle = _porTravHandles[i];
-            handle.Complete();
-            _pathProdCalcHandles.Add(_pathfindingManager.PathProducer.SchedulePathProductionJob(handle.path));
+            PathHandle handle = _porTravHandles[i];
+            handle.Handle.Complete();
+            _pathProdCalcHandles.Add(_pathfindingManager.PathProducer.SchedulePathProductionJob(handle.Path));
         }
         _porTravHandles.Clear();
 
         //FORCE COMTPLETE PATH PRODUCTIONS
         for (int i = 0; i < _pathProdCalcHandles.Count; i++)
         {
-            FlowFieldHandle handle = _pathProdCalcHandles[i];
+            PathHandle handle = _pathProdCalcHandles[i];
             handle.Handle.Complete();
-            handle.path.IsCalculated = true;
+            handle.Path.IsCalculated = true;
         }
         _pathProdCalcHandles.Clear();
 
         //FORCE COMPLETE PATH ADDITION TRAVERSALS
         for (int i = _pathAddTravHandles.Count - 1; i >= 0; i--)
         {
-            PortalAdditionTraversalHandle handle = _pathAddTravHandles[i];
+            PathHandle handle = _pathAddTravHandles[i];
             handle.Handle.Complete();
             JobHandle additionHandle = _pathfindingManager.PathProducer.SchedulePathAdditionJob(handle.Path);
             _pathAdditionHandles.Add(additionHandle);

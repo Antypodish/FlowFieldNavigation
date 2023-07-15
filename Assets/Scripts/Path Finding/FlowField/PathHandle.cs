@@ -1,7 +1,7 @@
 ﻿using Unity.Jobs;
 
-public struct FlowFieldHandle
+public struct PathHandle
 {
     public JobHandle Handle;
-    public Path path;
+    public Path Path;
 }
