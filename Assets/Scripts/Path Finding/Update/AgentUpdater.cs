@@ -1,9 +1,6 @@
 ﻿
 using System.Collections.Generic;
-using System.Diagnostics;
 using Unity.Collections;
-using Unity.Mathematics;
-using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.Jobs;
 

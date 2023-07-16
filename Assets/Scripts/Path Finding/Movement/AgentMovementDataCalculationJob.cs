@@ -1,13 +1,8 @@
 ﻿using Unity.Burst;
 using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
-using Unity.Jobs;
 using Unity.Mathematics;
-using Unity.VisualScripting;
-using UnityEditor.Profiling.Memory.Experimental;
-using UnityEngine;
+
 using UnityEngine.Jobs;
-using UnityEngine.SocialPlatforms;
 
 [BurstCompile]
 public struct AgentMovementDataCalculationJob : IJobParallelForTransform
