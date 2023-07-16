@@ -6,7 +6,6 @@ public class TerrainGenerator : MonoBehaviour
 {
     [SerializeField] MeshCollider _fieldMeshCollider;
     [SerializeField] MeshFilter _fieldMeshFilter;
-    [SerializeField] MeshFilter _obstacleMeshFilter;
     [Header("Random Generator")]
     [SerializeField][Range(1,20)] float _resolution;    //5 good
     [SerializeField] SimulationState _simulationState;
@@ -54,7 +53,7 @@ public class TerrainGenerator : MonoBehaviour
         _fieldMesh.RecalculateNormals();
         _fieldMeshCollider.sharedMesh = _fieldMesh;
 
-        obsGenerator = new ObstacleGenerator(this, _obstacleMeshFilter, WalkabilityData, _obstacleMat);
+        obsGenerator = new ObstacleGenerator(this, WalkabilityData, _obstacleMat);
         obsGenerator.CreateMesh();
     }
 }

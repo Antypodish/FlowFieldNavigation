@@ -9,7 +9,7 @@ public class ObstacleGenerator
     WalkabilityData _walkabilityData;
     Material _obstacleMat;
     List<GameObject> obstacleObjects;
-    public ObstacleGenerator(TerrainGenerator terrainGenerator, MeshFilter obstacleMeshFilter, WalkabilityData walkabilityData, Material obstacleMat)
+    public ObstacleGenerator(TerrainGenerator terrainGenerator, WalkabilityData walkabilityData, Material obstacleMat)
     {
         _terrainGenerator = terrainGenerator;
         _walkabilityData = walkabilityData;
@@ -88,7 +88,10 @@ public class ObstacleGenerator
         obj.transform.localPosition = new Vector3(0, 0.01f, 0);
         obj.AddComponent<MeshFilter>();
         obj.AddComponent<MeshRenderer>();
-        obj.GetComponent<MeshRenderer>().material = _obstacleMat;
+        MeshRenderer renderer = obj.GetComponent<MeshRenderer>();
+        renderer.material = _obstacleMat;
+        renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        renderer.receiveShadows = false;
         obj.GetComponent<MeshFilter>().mesh = mesh;
         return obj;
     }
