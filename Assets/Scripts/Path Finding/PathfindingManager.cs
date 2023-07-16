@@ -18,14 +18,12 @@ public class PathfindingManager : MonoBehaviour
     public CostFieldProducer CostFieldProducer;
     public PathProducer PathProducer;
     public AgentDataContainer AgentDataContainer;
-    public List<FlowFieldAgent> Agents;
 
     float _lastAgentUpdateTime = 0;
     PathfindingUpdateRoutine _pathfindingUpdateRoutine;
     AgentUpdater _agentUpdater;
     private void Awake()
     {
-        Agents = new List<FlowFieldAgent>();
         AgentDataContainer = new AgentDataContainer(this);
     }
     private void Start()
@@ -85,10 +83,18 @@ public class PathfindingManager : MonoBehaviour
     }
     public void Subscribe(FlowFieldAgent agent)
     {
-        Agents.Add(agent);
+        AgentDataContainer.Subscribe(agent);
     }
     public void UnSubscribe(FlowFieldAgent agent)
     {
-        Agents.Remove(agent);
+        AgentDataContainer.UnSubscribe(agent);
+    }
+    public void SetPath(int agentIndex, Path newPath)
+    {
+        AgentDataContainer.SetPath(agentIndex, newPath);
+    }
+    public List<FlowFieldAgent> GetAllAgents()
+    {
+        return AgentDataContainer.Agents;
     }
 }

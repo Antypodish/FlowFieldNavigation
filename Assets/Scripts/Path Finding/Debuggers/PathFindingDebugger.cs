@@ -7,7 +7,6 @@ public class PathFindingDebugger : MonoBehaviour
     [SerializeField] PathfindingManager _pathfindingManager;
     [SerializeField] CostFieldOffset _costFieldOffset;
     [Header("Field Debugger")]
-    [SerializeField] bool _costField;
     [SerializeField] bool _sectors;
     [SerializeField] bool _windows;
     [SerializeField] bool _sectorWindows;
@@ -35,7 +34,6 @@ public class PathFindingDebugger : MonoBehaviour
     AStarDebugger _aStarDebugger;
     private void Start()
     {
-        _costFieldDebugger = new CostFieldDebugger(_pathfindingManager);
         _sectorDebugger = new SectorDebugger(_pathfindingManager);
         _windowDebugger = new WindowDebugger(_pathfindingManager);
         _sectorGraphDebugger = new SectorGraphDebugger(_pathfindingManager);
@@ -45,7 +43,6 @@ public class PathFindingDebugger : MonoBehaviour
     }
     private void OnDrawGizmos()
     {
-        if (_costField && _costFieldDebugger != null) { _costFieldDebugger.DebugCostFieldWithMesh((int)_costFieldOffset); }
         if (_sectors && _sectorDebugger != null) { _sectorDebugger.DebugSectors((int) _costFieldOffset); }
         if( _windows && _windowDebugger != null) { _windowDebugger.DebugWindows((int) _costFieldOffset); }
         if(_sectorWindows && _sectorGraphDebugger != null) { _sectorGraphDebugger.DebugSectorToWindow((int) _costFieldOffset); }
