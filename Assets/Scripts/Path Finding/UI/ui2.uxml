@@ -1,0 +1,20 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:VisualElement name="Main" style="flex-grow: 1; flex-direction: column-reverse; align-items: flex-start; justify-content: space-between;">
+        <ui:VisualElement name="Bottom" style="height: 200px; width: 100%; top: auto; bottom: 3%; color: rgb(0, 0, 0); background-color: rgba(0, 0, 0, 0); flex-direction: row-reverse; align-items: center; justify-content: center; padding-left: 0; -unity-text-outline-color: rgb(0, 0, 0); border-left-color: rgba(0, 0, 0, 0); border-right-color: rgba(0, 0, 0, 0); border-top-color: rgba(0, 0, 0, 0); border-bottom-color: rgba(0, 0, 0, 0);">
+            <ui:VisualElement name="Panel" style="width: 25%; height: 100%; background-color: rgba(77, 51, 47, 0.57); right: 35%; flex-direction: row; align-items: center; justify-content: center; -unity-text-outline-color: rgb(0, 0, 0); -unity-text-outline-width: 0; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0); border-left-width: 3px; border-right-width: 3px; border-top-width: 3px; border-bottom-width: 3px; padding-left: 10px; padding-right: 10px; opacity: 1;">
+                <ui:VisualElement name="QContainer" style="height: 100%; width: 75px; margin-right: 10px; -unity-text-outline-color: rgba(0, 0, 0, 0); background-color: rgba(0, 0, 0, 0); align-items: center; justify-content: center; opacity: 1;">
+                    <ui:VisualElement name="QImage" style="width: 75px; height: 75px; color: rgb(255, 0, 0); background-color: rgb(255, 0, 0);" />
+                    <ui:Label text="Single Selection" display-tooltip-when-elided="true" name="QText" style="color: rgb(255, 255, 255); white-space: normal; -unity-text-align: upper-center;" />
+                </ui:VisualElement>
+                <ui:VisualElement name="WContainer" style="height: 100%; width: 75px; margin-right: 10px; -unity-text-outline-color: rgba(0, 0, 0, 0); background-color: rgba(0, 0, 0, 0); align-items: center; justify-content: center; opacity: 1;">
+                    <ui:VisualElement name="WImage" style="width: 75px; height: 75px; color: rgb(255, 0, 0); background-color: rgb(255, 0, 0);" />
+                    <ui:Label text="Multi Selection" display-tooltip-when-elided="true" name="WText" style="color: rgb(255, 255, 255); white-space: normal; -unity-text-align: upper-center;" />
+                </ui:VisualElement>
+                <ui:VisualElement name="EContainer" style="height: 100%; width: 75px; margin-right: 10px; -unity-text-outline-color: rgba(0, 0, 0, 0); background-color: rgba(0, 0, 0, 0); align-items: center; justify-content: center; opacity: 1;">
+                    <ui:VisualElement name="EImage" style="width: 75px; height: 75px; color: rgb(255, 0, 0); background-color: rgb(255, 0, 0);" />
+                    <ui:Label text="Add Agent" display-tooltip-when-elided="true" name="EText" style="color: rgb(255, 255, 255); white-space: normal; -unity-text-align: upper-center;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -1,0 +1,12 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:VisualElement name="MainElement" style="flex-direction: column-reverse; justify-content: flex-start; align-items: stretch; height: 880px; flex-grow: 1;">
+        <ui:VisualElement name="HotkeyContainer" style="height: 20%; bottom: auto; flex-direction: row; align-items: center; justify-content: flex-start; padding-left: 5%; padding-right: 5%; top: 0; background-color: rgba(0, 0, 0, 0);">
+            <ui:VisualElement name="HotkeyQ" style="background-color: rgb(255, 0, 0); height: 100%; width: 100px; margin-right: 20px; justify-content: center; align-items: center; flex-direction: column;">
+                <ui:VisualElement name="QImage" style="width: 75px; height: 75px; background-color: rgb(10, 35, 241); justify-content: center;" />
+                <ui:VisualElement name="QTextContainer" style="width: 100px; height: 75px; background-color: rgb(248, 221, 221); align-items: center; padding-top: 10px;">
+                    <ui:Label text="SINGLE SELECTION" display-tooltip-when-elided="true" style="color: rgb(0, 0, 0); white-space: normal; -unity-text-align: upper-center; font-size: 15px; -unity-font-style: normal; -unity-font: resource(&apos;FlatSkin/Font/Roboto-MediumItalic&apos;); -unity-text-outline-width: 0; -unity-text-outline-color: rgb(0, 0, 0); letter-spacing: 1px; word-spacing: 0; -unity-paragraph-spacing: 0; background-color: rgba(0, 0, 0, 0);" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
