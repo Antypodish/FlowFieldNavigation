@@ -3,24 +3,30 @@ using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerDebugController : MonoBehaviour
 {
     [SerializeField] PathfindingManager _pathfindingManager;
     [SerializeField] Material _normalAgentMaterial;
     [SerializeField] Material _selectedAgentMaterial;
+    [SerializeField] Image _selectionBox;
 
     AgentControlSelector _agentControlSelector;
 
     private void Start()
     {
-        _agentControlSelector = new AgentControlSelector(_selectedAgentMaterial, _normalAgentMaterial);
+        _agentControlSelector = new AgentControlSelector(_selectedAgentMaterial, _normalAgentMaterial, _selectionBox);
     }
     private void Update()
     {
         if (Input.GetMouseButtonDown(0))
         {
             _agentControlSelector.StartSelection(Input.mousePosition);
+        }
+        if (Input.GetMouseButton(0))
+        {
+            _agentControlSelector.ContinueSelection(Input.mousePosition);
         }
         else if (Input.GetMouseButtonUp(0))
         {

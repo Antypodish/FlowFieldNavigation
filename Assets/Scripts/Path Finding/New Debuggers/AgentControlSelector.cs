@@ -3,6 +3,7 @@ using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class AgentControlSelector
 {
@@ -15,17 +16,26 @@ public class AgentControlSelector
     Material _selectedAgentMaterial;
     Material _normalAgentMaterial;
     Vector3 _startMousePos;
+    Image _selectionBox;
 
-    public AgentControlSelector(Material selectedAgentMaterial, Material normalAgentMaterial)
+    public AgentControlSelector(Material selectedAgentMaterial, Material normalAgentMaterial, Image selectionBox)
     {
         _selectedAgents = new List<FlowFieldAgent>();
         _selectedAgentMaterial = selectedAgentMaterial;
         _normalAgentMaterial = normalAgentMaterial;
+        _selectionBox = selectionBox;
+        _selectionBox.rectTransform.sizeDelta = Vector3.zero;
     }
 
     public void StartSelection(Vector3 mousePosition)
     {
         _startMousePos = mousePosition;
+    }
+    public void ContinueSelection(Vector3 mousePosition)
+    {
+        //RESIZE RECTANGLE
+        _selectionBox.transform.position = (_startMousePos + mousePosition) / 2;
+        _selectionBox.rectTransform.sizeDelta = new Vector2(Mathf.Abs(_startMousePos.x - mousePosition.x), Mathf.Abs(_startMousePos.y - mousePosition.y));
     }
     public void EndSelection(Vector3 mousePosition, Camera cam, List<FlowFieldAgent> allAgents)
     {
@@ -62,5 +72,7 @@ public class AgentControlSelector
             _selectedAgents.Add(agent);
             agent.gameObject.GetComponent<MeshRenderer>().material = _selectedAgentMaterial;
         }
+
+        _selectionBox.rectTransform.sizeDelta = Vector3.zero;
     }
 }
