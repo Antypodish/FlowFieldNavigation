@@ -1,5 +1,6 @@
 ﻿public static class FlowFieldUtilities
 {
+    public static bool DebugMode;
     public static float TileSize;
     public static int SectorColAmount;
     public static int SectorRowAmount;

@@ -16,16 +16,10 @@ internal class jobtest : MonoBehaviour
 {
     private void Update()
     {
-        List<int> list = new List<int>();
-        list.Add(1);
-        list.Add(2);
-        list.Add(3);
-        list.Add(4);
-        list.Add(5);
-        list.Add(6);
-        list.Add(7);
-        list.Add(8);
-        list.Add(9);
-        list.Add(10);
+        GL.Begin(GL.LINES);
+        GL.Color(Color.white);
+        GL.Vertex3(0, 0, 0);
+        GL.Vertex3(1, 0, 0);
+        GL.End();
     }
 }

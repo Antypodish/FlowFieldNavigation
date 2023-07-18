@@ -30,7 +30,7 @@ public class CostFieldDebugger
         for(int i = 0; i < costs.Length; i++)
         {
             byte cost = costs[i];
-            if(cost == 1) { continue; }
+            if(cost == byte.MaxValue) { continue; }
             int col = i % fieldColAmount;
             int row = i / fieldColAmount;
             Vector3 pos = new Vector3(col * tileSize, yOffset, row * tileSize);

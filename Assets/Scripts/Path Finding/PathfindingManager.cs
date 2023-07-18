@@ -61,6 +61,7 @@ public class PathfindingManager : MonoBehaviour
     }
     void SetFlowFieldUtilities()
     {
+        FlowFieldUtilities.DebugMode = false;
         FlowFieldUtilities.SectorMatrixTileAmount = SectorMatrixColAmount * SectorMatrixRowAmount;
         FlowFieldUtilities.SectorMatrixRowAmount = SectorMatrixRowAmount;
         FlowFieldUtilities.SectorMatrixColAmount = SectorMatrixColAmount;
