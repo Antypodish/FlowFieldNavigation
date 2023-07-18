@@ -1,0 +1,12 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:VisualElement name="MainElement" style="flex-grow: 1; align-items: auto; justify-content: space-between; flex-direction: row-reverse;">
+        <ui:VisualElement name="RightAligner" style="background-color: rgba(0, 0, 0, 0); width: 300px; height: 100%; border-left-color: rgba(0, 0, 0, 0); border-right-color: rgba(0, 0, 0, 0); border-top-color: rgba(0, 0, 0, 0); border-bottom-color: rgba(0, 0, 0, 0); border-left-width: 3px; border-right-width: 3px; border-top-width: 3px; border-bottom-width: 3px;">
+            <ui:VisualElement name="TogglePanel" style="height: 150px; width: 100%; background-color: rgb(72, 60, 60); border-left-width: 3px; border-right-width: 3px; border-top-width: 3px; border-bottom-width: 3px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0);">
+                <ui:Toggle label="Debug CostField" name="CostFieldToggle" style="color: rgb(255, 255, 255);" />
+                <ui:Toggle label="Debug FlowField" name="FlowFieldToggle" style="color: rgb(255, 255, 255);" />
+                <ui:Toggle label="Debug IntegrationField" name="IntegrationFieldToggle" style="font-size: 14px; color: rgb(255, 255, 255);" />
+                <ui:Toggle label="Debug Portal Sequence" name="PortalSequenceToggle" style="font-size: 14px; color: rgb(255, 255, 255);" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -27,6 +27,17 @@ public class AgentControlSelector
         _selectionBox.rectTransform.sizeDelta = Vector3.zero;
     }
 
+    public void SelectAgentPointed()
+    {
+        DeselectAll();
+        GameObject obj = GetPointedObject();
+        FlowFieldAgent agent = obj.GetComponent<FlowFieldAgent>();
+        if (agent != null)
+        {
+            _selectedAgents.Add(agent);
+            agent.GetComponent<MeshRenderer>().material = _selectedAgentMaterial;
+        }
+    }
     public void StartSelection(Vector3 mousePosition)
     {
         _startMousePos = mousePosition;
@@ -39,12 +50,7 @@ public class AgentControlSelector
     }
     public void EndSelection(Vector3 mousePosition, Camera cam, List<FlowFieldAgent> allAgents)
     {
-        //UNSELECT OLD
-        for (int i = 0; i < _selectedAgents.Count; i++)
-        {
-            _selectedAgents[i].GetComponent<MeshRenderer>().material = _normalAgentMaterial;
-        }
-        _selectedAgents.Clear();
+        DeselectAll();
 
         //GET SCREEN POSITIONS
         NativeArray<float3> sceenPositions = new NativeArray<float3>(allAgents.Count, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
@@ -74,5 +80,24 @@ public class AgentControlSelector
         }
 
         _selectionBox.rectTransform.sizeDelta = Vector3.zero;
+    }
+    public void ForceStopSelection()
+    {
+        _selectionBox.rectTransform.sizeDelta = Vector3.zero;
+    }
+    public void DeselectAll()
+    {
+        for (int i = 0; i < _selectedAgents.Count; i++)
+        {
+            _selectedAgents[i].GetComponent<MeshRenderer>().material = _normalAgentMaterial;
+        }
+        _selectedAgents.Clear();
+    }
+    GameObject GetPointedObject()
+    {
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit;
+        Physics.Raycast(ray, out hit);
+        return hit.collider.gameObject;
     }
 }

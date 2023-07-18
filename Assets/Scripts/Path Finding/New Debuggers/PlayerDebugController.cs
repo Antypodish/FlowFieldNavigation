@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Unity.Burst.CompilerServices;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -13,26 +14,42 @@ public class PlayerDebugController : MonoBehaviour
     [SerializeField] Image _selectionBox;
 
     AgentControlSelector _agentControlSelector;
+    ControllerState _state;
 
     private void Start()
     {
         _agentControlSelector = new AgentControlSelector(_selectedAgentMaterial, _normalAgentMaterial, _selectionBox);
+        _state = ControllerState.Single;
     }
     private void Update()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetKeyDown(KeyCode.Q))
         {
-            _agentControlSelector.StartSelection(Input.mousePosition);
+            _state = _state == ControllerState.Single ? ControllerState.Multi : ControllerState.Single;
+            _agentControlSelector.ForceStopSelection();
         }
-        if (Input.GetMouseButton(0))
+        if (_state == ControllerState.Single)
         {
-            _agentControlSelector.ContinueSelection(Input.mousePosition);
+            if (Input.GetMouseButtonDown(0))
+            {
+                _agentControlSelector.SelectAgentPointed();
+            }
         }
-        else if (Input.GetMouseButtonUp(0))
+        else
         {
-            _agentControlSelector.EndSelection(Input.mousePosition, Camera.main, _pathfindingManager.GetAllAgents());
+            if (Input.GetMouseButtonDown(0))
+            {
+                _agentControlSelector.StartSelection(Input.mousePosition);
+            }
+            if (Input.GetMouseButton(0))
+            {
+                _agentControlSelector.ContinueSelection(Input.mousePosition);
+            }
+            else if (Input.GetMouseButtonUp(0))
+            {
+                _agentControlSelector.EndSelection(Input.mousePosition, Camera.main, _pathfindingManager.GetAllAgents());
+            }
         }
-
         if (Input.GetMouseButtonDown(1))
         {
             SetDestination();
@@ -60,4 +77,10 @@ public class PlayerDebugController : MonoBehaviour
             }
         }
     }
+
+    enum ControllerState : byte
+    {
+        Single,
+        Multi
+    };
 }
