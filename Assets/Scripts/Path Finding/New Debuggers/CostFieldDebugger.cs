@@ -1,7 +1,9 @@
 ﻿using Mono.Cecil;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.SocialPlatforms;
 
 public class CostFieldDebugger
 {
@@ -21,20 +23,29 @@ public class CostFieldDebugger
         if(agent == null) { return; }
         float tileSize = _pathfindingManager.TileSize;
         float yOffset = 0.001f;
-        int fieldColAmount = _pathfindingManager.ColumnAmount;
+        int sectorColAmount = _pathfindingManager.SectorTileAmount;
+        int sectorMatrixColAmount = _pathfindingManager.SectorMatrixColAmount;
 
         Path path = agent.GetPath();
         if(path == null) { return; }
         CostField costField = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(path.Offset);
-        NativeArray<byte> costs = costField.CostsG;
-        for(int i = 0; i < costs.Length; i++)
+        UnsafeList<int> sectorToPicked = path.SectorToPicked;
+        NativeArray<UnsafeList<byte>> costs = costField.CostsL;
+        for(int i = 0; i < sectorToPicked.Length; i++)
         {
-            byte cost = costs[i];
-            if(cost == byte.MaxValue) { continue; }
-            int col = i % fieldColAmount;
-            int row = i / fieldColAmount;
-            Vector3 pos = new Vector3(col * tileSize, yOffset, row * tileSize);
-            Graphics.DrawMesh(_mesh, pos, Quaternion.identity, _meshMat, 1);
+            if(sectorToPicked[i] == 0) { continue; }
+            UnsafeList<byte> pickedSector = costs[i];
+            int2 sectorIndex2d = new int2(i % sectorMatrixColAmount, i / sectorMatrixColAmount);
+            int2 sectorStartIndex = sectorIndex2d * sectorColAmount;
+            for (int j = 0; j < pickedSector.Length; j++)
+            {
+                byte cost = pickedSector[j];
+                if (cost == byte.MaxValue) { continue; }
+                int2 local2d = new int2(j % sectorColAmount, j / sectorColAmount);
+                int2 general2d = local2d + sectorStartIndex;
+                Vector3 pos = new Vector3(general2d.x * tileSize, yOffset, general2d.y * tileSize);
+                Graphics.DrawMesh(_mesh, pos, Quaternion.identity, _meshMat, 1);
+            }
         }
     }
     void ConfigMesh()
