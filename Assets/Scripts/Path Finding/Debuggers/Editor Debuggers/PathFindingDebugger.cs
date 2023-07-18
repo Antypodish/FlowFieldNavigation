@@ -26,7 +26,7 @@ public class PathFindingDebugger : MonoBehaviour
 
 
     //debuggers
-    CostFieldDebugger _costFieldDebugger;
+    BuildCostFieldDebugger _costFieldDebugger;
     SectorDebugger _sectorDebugger;
     WindowDebugger _windowDebugger;
     SectorGraphDebugger _sectorGraphDebugger;

@@ -11,7 +11,7 @@ public class AgentSelectionController : MonoBehaviour
     [SerializeField] Material _normalAgentMaterial;
     [SerializeField] Material _selectedAgentMaterial;
     [SerializeField] Image _selectionBox;
-    [SerializeField] PathDebuggingController _pathDebuggingController;
+    [SerializeField] BuildPathDebuggingController _pathDebuggingController;
 
     AgentBoundSelector _agentSelector;
     ControllerState _state;
@@ -31,11 +31,15 @@ public class AgentSelectionController : MonoBehaviour
         {
             if (Input.GetMouseButtonDown(0))
             {
-                DeselectAllAgents();
-                _agentSelector.SelectPointedObject(SelectedAgents);
-                SetMaterialOfAgents(SelectedAgents, _selectedAgentMaterial);
-                if(SelectedAgents.Count == 1) { _pathDebuggingController.SetAgentToDebug(SelectedAgents[0]); }
-                else { _pathDebuggingController.SetAgentToDebug(null); }
+                FlowFieldAgent selectedAgent = _agentSelector.GetPointedObject();
+                if(selectedAgent != null)
+                {
+                    DeselectAllAgents();
+                    SelectedAgents.Add(selectedAgent);
+                    SetMaterialOfAgents(SelectedAgents, _selectedAgentMaterial);
+                    _pathDebuggingController.SetAgentToDebug(selectedAgent);
+                }
+                
             }
         }
         else
@@ -66,7 +70,7 @@ public class AgentSelectionController : MonoBehaviour
         List<FlowFieldAgent> agents = SelectedAgents;
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
-        if (Physics.Raycast(ray, out hit))
+        if (Physics.Raycast(ray, out hit, float.PositiveInfinity, 8))
         {
             Vector3 destination = hit.point;
             NativeArray<Vector3> positions = new NativeArray<Vector3>(agents.Count, Allocator.Persistent);

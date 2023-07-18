@@ -3,7 +3,7 @@ using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 
-public class FlowFieldDebugger
+public class BuildFlowFieldDebugger
 {
     PathfindingManager _pathfindingManager;
     public void Debug(FlowFieldAgent agent)

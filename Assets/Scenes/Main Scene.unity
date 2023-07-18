@@ -1217,6 +1217,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 194451664, guid: f04ffee1160a8494782072c6bf5424ca, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 194451668, guid: f04ffee1160a8494782072c6bf5424ca, type: 3}
       propertyPath: m_CastShadows
       value: 0
@@ -1654,14 +1658,29 @@ PrefabInstance:
       objectReference: {fileID: 1861988047}
     - target: {fileID: 7696368590267340441, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}
+      propertyPath: _losDebugMaterial
+      value: 
+      objectReference: {fileID: 2100000, guid: 2f6ec457b75e53a4da74ed1928d95e0a, type: 2}
+    - target: {fileID: 7696368590267340441, guid: 6171110bace36bb42a195b4ce00d2d41,
+        type: 3}
       propertyPath: _pathfindingManager
       value: 
       objectReference: {fileID: 638972356}
     - target: {fileID: 7696368590267340441, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}
+      propertyPath: _targetDebugMaterial
+      value: 
+      objectReference: {fileID: 2100000, guid: a6ff3fae43440d442acd36b69d5c3abd, type: 2}
+    - target: {fileID: 7696368590267340441, guid: 6171110bace36bb42a195b4ce00d2d41,
+        type: 3}
       propertyPath: _costFieldDebugMaterial
       value: 
       objectReference: {fileID: 2100000, guid: 448dcf7e6f0048740b94ed066f9588e1, type: 2}
+    - target: {fileID: 7696368590267340441, guid: 6171110bace36bb42a195b4ce00d2d41,
+        type: 3}
+      propertyPath: _portalSequenceDebugMaterial
+      value: 
+      objectReference: {fileID: 2100000, guid: 7cbd2662d0224744a844a202d924150a, type: 2}
     - target: {fileID: 7696368590267340441, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}
       propertyPath: _integrationFieldDebugMaterial

@@ -15,15 +15,15 @@ public class AgentBoundSelector
         _selectionBox = selectionBox;
         _selectionBox.rectTransform.sizeDelta = Vector3.zero;
     }
-    public void SelectPointedObject(List<FlowFieldAgent> selected)
+    public FlowFieldAgent GetPointedObject()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit))
         {
-            FlowFieldAgent agent = hit.collider.GetComponent<FlowFieldAgent>();
-            if (agent != null) { selected.Add(agent); }
+            return hit.collider.GetComponent<FlowFieldAgent>();
         }
+        return null;
     }
     public void StartBoxSelection(Vector3 mousePosition)
     {

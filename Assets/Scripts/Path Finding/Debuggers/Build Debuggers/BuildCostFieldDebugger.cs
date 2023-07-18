@@ -5,24 +5,23 @@ using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.SocialPlatforms;
 
-public class CostFieldDebugger
+public class BuildCostFieldDebugger
 {
     PathfindingManager _pathfindingManager;
     Mesh _mesh;
     Material _meshMat;
 
-    public CostFieldDebugger(PathfindingManager pathfindingManager, Material _costDebugMaterial)
+    public BuildCostFieldDebugger(PathfindingManager pathfindingManager, Material _costDebugMaterial)
     {
         _pathfindingManager = pathfindingManager;
         _meshMat = _costDebugMaterial;
     }
 
-    public void Debug(FlowFieldAgent agent)
+    public void Debug(FlowFieldAgent agent, float offset)
     {
         if(_mesh == null) { ConfigMesh(); }
         if(agent == null) { return; }
         float tileSize = _pathfindingManager.TileSize;
-        float yOffset = 0.001f;
         int sectorColAmount = _pathfindingManager.SectorTileAmount;
         int sectorMatrixColAmount = _pathfindingManager.SectorMatrixColAmount;
 
@@ -43,7 +42,7 @@ public class CostFieldDebugger
                 if (cost == byte.MaxValue) { continue; }
                 int2 local2d = new int2(j % sectorColAmount, j / sectorColAmount);
                 int2 general2d = local2d + sectorStartIndex;
-                Vector3 pos = new Vector3(general2d.x * tileSize, yOffset, general2d.y * tileSize);
+                Vector3 pos = new Vector3(general2d.x * tileSize, offset, general2d.y * tileSize);
                 Graphics.DrawMesh(_mesh, pos, Quaternion.identity, _meshMat, 1);
             }
         }
