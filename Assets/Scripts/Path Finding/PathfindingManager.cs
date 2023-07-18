@@ -93,6 +93,10 @@ public class PathfindingManager : MonoBehaviour
     {
         AgentDataContainer.SetPath(agentIndex, newPath);
     }
+    public Path GetPath(int agentIndex)
+    {
+        return AgentDataContainer.GetPath(agentIndex);
+    }
     public List<FlowFieldAgent> GetAllAgents()
     {
         return AgentDataContainer.Agents;

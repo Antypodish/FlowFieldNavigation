@@ -58,6 +58,10 @@ public class AgentDataContainer
         newPath.Subscribe();
         Paths[agentIndex] = path;
     }
+    public Path GetPath(int agentIndex)
+    {
+        return Paths[agentIndex].CurPath;
+    }
     public void SetSpeed(int agentIndex, float newSpeed)
     {
         AgentData data = AgentDataList[agentIndex];
