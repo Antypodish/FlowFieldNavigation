@@ -14,12 +14,13 @@ using UnityEngine.Jobs;
 
 internal class jobtest : MonoBehaviour
 {
+
+    private void Start()
+    {
+
+    }
     private void Update()
     {
-        GL.Begin(GL.LINES);
-        GL.Color(Color.white);
-        GL.Vertex3(0, 0, 0);
-        GL.Vertex3(1, 0, 0);
-        GL.End();
+
     }
 }

@@ -9,7 +9,8 @@ using Unity.Burst;
 public struct AgentMovementUpdateJob : IJobParallelForTransform
 {
     public float DeltaTime;
-    public NativeArray<AgentData> AgentDataArray;
+    [ReadOnly] public NativeArray<AgentData> AgentDataArray;
+    [WriteOnly] public NativeArray<Vector3> AgentPositions;
     public void Execute(int index, TransformAccess transform)
     {
         AgentData data = AgentDataArray[index];
@@ -18,14 +19,17 @@ public struct AgentMovementUpdateJob : IJobParallelForTransform
         if (data.Direction.x == -1f && data.Direction.y == -1f)
         {
             float3 destination = new float3(data.Destination.x, transform.position.y, data.Destination.y);
-            Vector3 pos = Vector3.MoveTowards(transform.position, destination, data.Speed * DeltaTime);
-            transform.position = pos;
+            Vector3 newPos = Vector3.MoveTowards(transform.position, destination, data.Speed * DeltaTime);
+            transform.position = newPos;
+            AgentPositions[index] = newPos;
         }
         else
         {
             float3 direction = new float3(data.Direction.x, 0f, data.Direction.y);
             float3 pos = transform.position;
-            transform.position = pos + (direction * data.Speed * DeltaTime);
+            float3 newPos = pos + (direction * data.Speed * DeltaTime);
+            transform.position = newPos;
+            AgentPositions[index] = newPos;
         }
     }
 }

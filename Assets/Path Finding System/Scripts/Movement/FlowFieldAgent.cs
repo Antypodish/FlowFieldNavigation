@@ -8,10 +8,13 @@ public class FlowFieldAgent : MonoBehaviour
     [SerializeField] PathfindingManager _pathfindingManager;
 
     [HideInInspector] public int AgentDataIndex;
+    [HideInInspector] public Transform Transform { get; private set; }
+
     [SerializeField] float _speed;
     private void Start()
     {
         _pathfindingManager.Subscribe(this);
+        Transform = transform;
     }
     public void SetPath(Path path)
     {

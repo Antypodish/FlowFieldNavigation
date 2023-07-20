@@ -15,6 +15,7 @@ public class AgentDataContainer
     public List<FlowFieldAgent> Agents;
     public TransformAccessArray AgentTransforms;
     public NativeList<AgentData> AgentDataList;
+    public NativeList<Vector3> AgentPositions;
     public List<AgentPath> Paths;
 
     PathfindingManager _pathfindingManager;
@@ -26,6 +27,7 @@ public class AgentDataContainer
         Paths = new List<AgentPath>();
         AgentTransforms = new TransformAccessArray(0);
         AgentDataList = new NativeList<AgentData>(Allocator.Persistent);
+        AgentPositions = new NativeList<Vector3>(Allocator.Persistent);
     }
     public void Subscribe(FlowFieldAgent agent)
     {
@@ -40,6 +42,7 @@ public class AgentDataContainer
         Paths.Add(new AgentPath());
         AgentTransforms.Add(agent.transform);
         AgentDataList.Add(data);
+        AgentPositions.Add(agent.transform.position);
     }
     public void UnSubscribe(FlowFieldAgent agent)
     {
@@ -48,6 +51,7 @@ public class AgentDataContainer
         Paths.RemoveAtSwapBack(agentIndex);
         AgentTransforms.RemoveAtSwapBack(agentIndex);
         AgentDataList.RemoveAtSwapBack(agentIndex);
+        AgentPositions.RemoveAtSwapBack(agentIndex);
         Agents[agentIndex].AgentDataIndex = agentIndex;
     }
     public void SetPath(int agentIndex, Path newPath)
@@ -88,7 +92,7 @@ public class AgentDataContainer
         NativeArray<float2> positions = new NativeArray<float2>(agents.Count, Allocator.Persistent);
         for(int i = 0; i < agents.Count; i++)
         {
-            Vector3 pos3d = agents[i].transform.position;
+            Vector3 pos3d = AgentPositions[agents[i].AgentDataIndex];
             positions[i] = new float2(pos3d.x, pos3d.z);
         }
         return positions;

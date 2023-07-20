@@ -44,6 +44,7 @@ public class AgentUpdater
         {
             DeltaTime = Time.deltaTime,
             AgentDataArray = agentDataList,
+            AgentPositions = _agentDataContainer.AgentPositions,
         };
         movJob.Schedule(agentTransforms).Complete();
     }
