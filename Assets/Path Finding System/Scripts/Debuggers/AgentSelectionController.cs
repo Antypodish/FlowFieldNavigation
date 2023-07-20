@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using TMPro;
 using Unity.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngineInternal;
 
 public class AgentSelectionController : MonoBehaviour
 {
@@ -72,6 +74,20 @@ public class AgentSelectionController : MonoBehaviour
         {
             SetDestination();
         }
+        if (Input.GetMouseButtonDown(2) && SelectedAgents.Count != 0)
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hit;
+            if (Physics.Raycast(ray, out hit, float.PositiveInfinity, 8))
+            {
+                Transform agentTransform = SelectedAgents[0].transform;
+                Vector3 pos = agentTransform.position;
+                Vector3 hitpos = hit.point;
+                pos.x = hitpos.x;
+                pos.z = hitpos.z;
+                agentTransform.position = pos;
+            }
+        }
     }
     void SetDestination()
     {
@@ -81,13 +97,13 @@ public class AgentSelectionController : MonoBehaviour
         if (Physics.Raycast(ray, out hit, float.PositiveInfinity, 8))
         {
             Vector3 destination = hit.point;
-            NativeArray<Vector3> positions = new NativeArray<Vector3>(agents.Count, Allocator.Persistent);
-            for (int i = 0; i < agents.Count; i++)
-            {
-                positions[i] = agents[i].transform.position;
-            }
-            Path newPath = _pathfindingManager.SetDestination(positions, destination);
-            if (newPath == null) { positions.Dispose(); return; }
+
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            Path newPath = _pathfindingManager.SetDestination(agents, destination);
+            sw.Stop();
+            UnityEngine.Debug.Log(sw.Elapsed.TotalMilliseconds);
+            if (newPath == null) { return; }
             for (int i = 0; i < agents.Count; i++)
             {
                 agents[i].SetPath(newPath);

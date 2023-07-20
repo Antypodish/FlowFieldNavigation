@@ -83,6 +83,16 @@ public class AgentDataContainer
         };
         directionSetJob.Schedule().Complete();
     }
+    public NativeArray<float2> GetPositionsOf(List<FlowFieldAgent> agents)
+    {
+        NativeArray<float2> positions = new NativeArray<float2>(agents.Count, Allocator.Persistent);
+        for(int i = 0; i < agents.Count; i++)
+        {
+            Vector3 pos3d = agents[i].transform.position;
+            positions[i] = new float2(pos3d.x, pos3d.z);
+        }
+        return positions;
+    }
 }
 public struct AgentData
 {

@@ -73,8 +73,10 @@ public class PathfindingManager : MonoBehaviour
         FlowFieldUtilities.FieldRowAmount = RowAmount;
         FlowFieldUtilities.FieldTileAmount = ColumnAmount * RowAmount;
     }
-    public Path SetDestination(NativeArray<Vector3> sources, Vector3 target)
+    public Path SetDestination(List<FlowFieldAgent> agents, Vector3 target)
     {
+        if(agents.Count == 0) { UnityEngine.Debug.Log("Agent list passed is empty"); return null; }
+        NativeArray<float2> sources = AgentDataContainer.GetPositionsOf(agents);
         Vector2 target2 = new Vector2(target.x, target.z);
         return _pathfindingUpdateRoutine.RequestPath(sources, target2, 0);
     }

@@ -114,6 +114,7 @@ public class RoutineSchedulingTree
             _movDataCalcHandle.Clear();
         }
 
+        List<Path> calculated = new List<Path>();
         //HANDLE PORTAL ADD TRAVERSALS
         for (int i = _porAddTravHandles.Count - 1; i >= 0; i--)
         {
@@ -142,7 +143,6 @@ public class RoutineSchedulingTree
         if(_movDataCalcHandle.Count == 1)
         {
             _movDataCalcHandle[0].Complete();
-            _pathfindingManager.PathProducer.SetPortalAdditionTraversalHandles(_dirCalculator._agentMovementDataList, _porAddTravHandles, _movDataCalcHandle[0]);
             _movDataCalcHandle.Clear();
         }
 
@@ -164,7 +164,7 @@ public class RoutineSchedulingTree
         }
         _pathProdCalcHandles.Clear();
 
-        //FORCE COMPLETE PATH ADDITION TRAVERSALS
+        //FORCE COMPLETE PORTAL ADDITION TRAVERSALS
         for (int i = _porAddTravHandles.Count - 1; i >= 0; i--)
         {
             PathHandle handle = _porAddTravHandles[i];

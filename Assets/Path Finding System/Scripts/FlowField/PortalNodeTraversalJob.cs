@@ -1,4 +1,5 @@
 ﻿using JetBrains.Annotations;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -22,7 +23,7 @@ public struct PortalNodeTraversalJob : IJob
     public int SectorColAmount;
     public int SectorMatrixColAmount;
 
-    public NativeArray<Vector3> SourcePositions;
+    public NativeArray<float2> SourcePositions;
     public NativeArray<PortalTraversalData> PortalTraversalDataArray;
     public NativeList<int> PortalSequence;
     public NativeList<int> PortalSequenceBorders;
@@ -73,10 +74,12 @@ public struct PortalNodeTraversalJob : IJob
         UnsafeHeap<int> walkerHeap = new UnsafeHeap<int>(10, Allocator.Temp);
         for (int i = 0; i < SourcePositions.Length; i++)
         {
-            Vector3 sourcePos = SourcePositions[i];
-            Index2 sourceIndex = new Index2(Mathf.FloorToInt(sourcePos.z / FieldTileSize), Mathf.FloorToInt(sourcePos.x / FieldTileSize));
-            Index2 sourceSectorIndex = new Index2(sourceIndex.R / SectorColAmount, sourceIndex.C / SectorColAmount);
-            int sourceSectorIndexFlat = sourceSectorIndex.R * SectorMatrixColAmount + sourceSectorIndex.C;
+            float2 sourcePos = SourcePositions[i];
+
+            int2 sourceIndex = new int2((int)math.floor(sourcePos.x / FieldTileSize), (int)math.floor(sourcePos.y / FieldTileSize));
+            int2 sourceSectorIndex = sourceIndex / SectorColAmount;
+
+            int sourceSectorIndexFlat = sourceSectorIndex.y * SectorMatrixColAmount + sourceSectorIndex.x;
             UnsafeList<int> sourcePortalIndicies = GetPortalIndicies(sourceSectorIndexFlat);
             for(int j = 0; j < sourcePortalIndicies.Length; j++)
             {

@@ -12,7 +12,7 @@ public class Path
     public bool IsCalculated = false;
     public int2 TargetIndex;
     public Vector2 Destination;
-    public NativeArray<Vector3> Sources;
+    public NativeArray<float2> Sources;
     public NativeArray<PortalTraversalData> PortalTraversalDataArray;
     public NativeList<int> PortalSequence;
     public UnsafeList<int> SectorToPicked;

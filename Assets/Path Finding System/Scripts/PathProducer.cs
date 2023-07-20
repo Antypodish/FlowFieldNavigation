@@ -48,7 +48,7 @@ public class PathProducer
             }
         }
     }
-    public PortalTraversalJobPack GetPortalTraversalJobPack(NativeArray<Vector3> sources, Vector2 destination, int offset)
+    public PortalTraversalJobPack GetPortalTraversalJobPack(NativeArray<float2> sources, Vector2 destination, int offset)
     {
         int2 destinationIndex = new int2(Mathf.FloorToInt(destination.x / _tileSize), Mathf.FloorToInt(destination.y / _tileSize));
         int destionationIndexFlat = destinationIndex.y * _columnAmount + destinationIndex.x;

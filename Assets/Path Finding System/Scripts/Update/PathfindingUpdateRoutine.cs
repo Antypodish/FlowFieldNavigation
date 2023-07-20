@@ -46,7 +46,7 @@ public class PathfindingUpdateRoutine
         CostFieldEditJob[] costEditJobs = _pathfindingManager.CostFieldProducer.GetEditJobs(new BoundaryData(b1, b2), newCost);
         _costEditRequests.Add(costEditJobs);
     }
-    public Path RequestPath(NativeArray<Vector3> sources, Vector2 destination, int offset)
+    public Path RequestPath(NativeArray<float2> sources, Vector2 destination, int offset)
     {
         PortalTraversalJobPack portalTravJobPack = _pathfindingManager.PathProducer.GetPortalTraversalJobPack(sources, destination, offset);
         if(portalTravJobPack.Path != null)
