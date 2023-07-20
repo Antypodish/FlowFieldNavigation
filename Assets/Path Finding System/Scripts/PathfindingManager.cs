@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
@@ -88,6 +89,7 @@ public class PathfindingManager : MonoBehaviour
         }
         int offset = Mathf.FloorToInt(maxRadius);
 
+        //CREATE PATH
         Path newPath = _pathfindingUpdateRoutine.RequestPath(sources, target2, offset);
         if (newPath == null) { return; }
         for(int i = 0; i < agents.Count; i++)

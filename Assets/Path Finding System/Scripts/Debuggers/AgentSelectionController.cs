@@ -8,9 +8,10 @@ using UnityEngineInternal;
 
 public class AgentSelectionController : MonoBehaviour
 {
-    public List<FlowFieldAgent> SelectedAgents;
+    [HideInInspector] public List<FlowFieldAgent> SelectedAgents;
     [HideInInspector] public FlowFieldAgent DebuggableAgent;
 
+    [SerializeField] int _startingAgentCount;
     [SerializeField] GameObject _agentPrefab;
     [SerializeField] PathfindingManager _pathfindingManager;
     [SerializeField] Material _normalAgentMaterial;
@@ -20,14 +21,23 @@ public class AgentSelectionController : MonoBehaviour
     AgentBoundSelector _agentSelector;
     AgentFactory _agentFactory;
     ControllerState _state;
+
+    int _agentsToCreate = 0;
     private void Start()
     {
+        _agentsToCreate = _startingAgentCount;
         _agentSelector = new AgentBoundSelector(_selectionBox);
         _agentFactory = new AgentFactory(_agentPrefab, _pathfindingManager);
         _state = ControllerState.SingleSelection;
     }
     private void Update()
     {
+        for (int i = 0; i < _agentsToCreate; i++)
+        {
+            _agentFactory.AddAgent(new Vector3(10, 10, 10));
+        }
+        _agentsToCreate= 0;
+
         if (Input.GetKeyDown(KeyCode.Q))
         {
             _state = ControllerState.SingleSelection;
