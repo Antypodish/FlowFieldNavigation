@@ -9,28 +9,42 @@ using UnityEngineInternal;
 public class AgentSelectionController : MonoBehaviour
 {
     public List<FlowFieldAgent> SelectedAgents;
-    public FlowFieldAgent DebuggableAgent;
+    [HideInInspector] public FlowFieldAgent DebuggableAgent;
 
+    [SerializeField] GameObject _agentPrefab;
     [SerializeField] PathfindingManager _pathfindingManager;
     [SerializeField] Material _normalAgentMaterial;
     [SerializeField] Material _selectedAgentMaterial;
     [SerializeField] Image _selectionBox;
 
     AgentBoundSelector _agentSelector;
+    AgentFactory _agentFactory;
     ControllerState _state;
     private void Start()
     {
         _agentSelector = new AgentBoundSelector(_selectionBox);
-        _state = ControllerState.Single;
+        _agentFactory = new AgentFactory(_agentPrefab, _pathfindingManager);
+        _state = ControllerState.SingleSelection;
     }
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Q))
         {
-            _state = _state == ControllerState.Single ? ControllerState.Multi : ControllerState.Single;
+            _state = ControllerState.SingleSelection;
             _agentSelector.ForceStopSelection();
         }
-        if (_state == ControllerState.Single)
+        else if (Input.GetKeyDown(KeyCode.W))
+        {
+            _state = ControllerState.MultiSelection;
+            _agentSelector.ForceStopSelection();
+        }
+        else if (Input.GetKeyDown(KeyCode.A))
+        {
+            _state = ControllerState.AgentAddition;
+            _agentSelector.ForceStopSelection();
+        }
+
+        if (_state == ControllerState.SingleSelection)
         {
             if (Input.GetMouseButtonDown(0))
             {
@@ -45,7 +59,7 @@ public class AgentSelectionController : MonoBehaviour
                 
             }
         }
-        else
+        else if (_state == ControllerState.MultiSelection)
         {
             if (Input.GetMouseButtonDown(0))
             {
@@ -67,6 +81,18 @@ public class AgentSelectionController : MonoBehaviour
                 else
                 {
                     DebuggableAgent = null;
+                }
+            }
+        }
+        else if(_state == ControllerState.AgentAddition)
+        {
+            if (Input.GetMouseButton(0))
+            {
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                RaycastHit hit;
+                if (Physics.Raycast(ray, out hit, float.PositiveInfinity, 8))
+                {
+                    _agentFactory.AddAgent(hit.point);
                 }
             }
         }
@@ -99,10 +125,7 @@ public class AgentSelectionController : MonoBehaviour
             Vector3 destination = hit.point;
 
             Stopwatch sw = new Stopwatch();
-            sw.Start();
             Path newPath = _pathfindingManager.SetDestination(agents, destination);
-            sw.Stop();
-            UnityEngine.Debug.Log(sw.Elapsed.TotalMilliseconds);
             if (newPath == null) { return; }
             for (int i = 0; i < agents.Count; i++)
             {
@@ -127,7 +150,8 @@ public class AgentSelectionController : MonoBehaviour
     }
     enum ControllerState : byte
     {
-        Single,
-        Multi
+        SingleSelection,
+        MultiSelection,
+        AgentAddition,
     };
 }

@@ -104,4 +104,8 @@ public class PathfindingManager : MonoBehaviour
     {
         return AgentDataContainer.Agents;
     }
+    public int GetAgentCount()
+    {
+        return AgentDataContainer.Agents.Count;
+    }
 }

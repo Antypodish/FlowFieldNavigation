@@ -5,14 +5,16 @@ using UnityEngine.Timeline;
 
 public class FlowFieldAgent : MonoBehaviour
 {
-    [SerializeField] PathfindingManager _pathfindingManager;
+    PathfindingManager _pathfindingManager;
+    public float Speed;
+    public float LandOffset;
 
     [HideInInspector] public int AgentDataIndex;
-    [HideInInspector] public Transform Transform { get; private set; }
+    [HideInInspector] public Transform Transform;
 
-    [SerializeField] float _speed;
     private void Start()
     {
+        _pathfindingManager = GameObject.FindObjectOfType<PathfindingManager>();
         _pathfindingManager.Subscribe(this);
         Transform = transform;
     }
@@ -24,6 +26,6 @@ public class FlowFieldAgent : MonoBehaviour
     {
         return _pathfindingManager.GetPath(AgentDataIndex);
     }
-    public float GetSpeed() => _speed;
-    public void SetSpeed(float newSpeed) { _speed = newSpeed; _pathfindingManager.AgentDataContainer.SetSpeed(AgentDataIndex, newSpeed); }
+    public float GetSpeed() => Speed;
+    public void SetSpeed(float newSpeed) { Speed = newSpeed; _pathfindingManager.AgentDataContainer.SetSpeed(AgentDataIndex, newSpeed); }
 }

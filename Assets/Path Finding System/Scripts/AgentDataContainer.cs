@@ -47,6 +47,7 @@ public class AgentDataContainer
     public void UnSubscribe(FlowFieldAgent agent)
     {
         int agentIndex = agent.AgentDataIndex;
+        agent.AgentDataIndex = -1;
         Agents.RemoveAtSwapBack(agentIndex);
         Paths.RemoveAtSwapBack(agentIndex);
         AgentTransforms.RemoveAtSwapBack(agentIndex);

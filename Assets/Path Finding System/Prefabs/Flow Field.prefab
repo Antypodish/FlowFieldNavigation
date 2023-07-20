@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &2828686871073884702
+--- !u!1 &8734084087089525702
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 2828686871073884697}
-  - component: {fileID: 2828686871073884696}
-  - component: {fileID: 2828686871073884692}
+  - component: {fileID: 8734084087089525697}
+  - component: {fileID: 8734084087089525708}
+  - component: {fileID: 8734084087838304231}
   m_Layer: 0
   m_Name: Flow Field
   m_TagString: Untagged
@@ -18,13 +18,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 2147483647
   m_IsActive: 1
---- !u!4 &2828686871073884697
+--- !u!4 &8734084087089525697
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2828686871073884702}
+  m_GameObject: {fileID: 8734084087089525702}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
@@ -33,38 +33,38 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2828686871073884696
+--- !u!114 &8734084087089525708
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2828686871073884702}
+  m_GameObject: {fileID: 8734084087089525702}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ac7b491296234724cac301101daaf0e2, type: 3}
+  m_Script: {fileID: 11500000, guid: 79c747831bf0fa445aa51749547e29a6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _pathfindingManager: {fileID: 0}
+  _cost: 255
+--- !u!114 &8734084087838304231
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8734084087089525702}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f4a9a76c0d5a394781edaab628a2f0a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _terrainGenerator: {fileID: 0}
   _maxCostfieldOffset: 5
-  _agentUpdateFrequency: 0.016
+  _agentUpdateFrequency: 0.008
   TileSize: 0
   RowAmount: 0
   ColumnAmount: 0
   SectorTileAmount: 10
   SectorMatrixColAmount: 0
   SectorMatrixRowAmount: 0
---- !u!114 &2828686871073884692
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2828686871073884702}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 79c747831bf0fa445aa51749547e29a6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _pathfindingManager: {fileID: 2828686871073884696}
-  _cost: 255
