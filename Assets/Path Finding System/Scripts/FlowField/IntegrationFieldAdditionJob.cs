@@ -81,6 +81,7 @@ public struct IntegrationFieldAdditionJob : IJob
         {
             integrationQueue.Enqueue(StartIndicies[i]);
         }
+        StartIndicies.Clear();
         while (!integrationQueue.IsEmpty())
         {
             LocalIndex1d cur = integrationQueue.Dequeue();

@@ -114,17 +114,21 @@ public class RoutineSchedulingTree
             _movDataCalcHandle.Clear();
         }
 
-        List<Path> calculated = new List<Path>();
         //HANDLE PORTAL ADD TRAVERSALS
         for (int i = _porAddTravHandles.Count - 1; i >= 0; i--)
         {
             PathHandle handle = _porAddTravHandles[i];
+
             if (handle.Handle.IsCompleted)
             {
                 handle.Handle.Complete();
-                JobHandle additionHandle = _pathfindingManager.PathProducer.SchedulePathAdditionJob(handle.Path);
-                _pathAdditionHandles.Add(additionHandle);
                 _porAddTravHandles.RemoveAtSwapBack(i);
+
+                if(handle.Path.IntegrationStartIndicies.Length != 0)
+                {
+                    JobHandle additionHandle = _pathfindingManager.PathProducer.SchedulePathAdditionJob(handle.Path);
+                    _pathAdditionHandles.Add(additionHandle);
+                }
             }
         }
 
