@@ -9,12 +9,15 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 
 [BurstCompile]
-public struct IntegrationFieldResetJob : IJobParallelFor
+public struct IntegrationFieldResetJob : IJob
 {
     public NativeArray<IntegrationTile> IntegrationField;
 
-    public void Execute(int index)
+    public void Execute()
     {
-        IntegrationField[index] = new IntegrationTile(float.MaxValue, IntegrationMark.None);
+        for(int i = 0; i < IntegrationField.Length; i++)
+        {
+            IntegrationField[i] = new IntegrationTile(float.MaxValue, IntegrationMark.None);
+        }
     }
 }

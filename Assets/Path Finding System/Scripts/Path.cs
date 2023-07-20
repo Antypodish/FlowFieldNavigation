@@ -35,7 +35,6 @@ public class Path
         PortalSequenceBorders.Dispose();
         Sources.Dispose();
         TargetSectorCosts.Dispose();
-        PortalTraversalDataArray.Dispose();
         PortalSequence.Dispose();
         SectorToPicked.Dispose();
         IntegrationField.Dispose();

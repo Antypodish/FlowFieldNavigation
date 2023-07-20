@@ -76,7 +76,7 @@ public class PathfindingManager : MonoBehaviour
     }
     public void SetDestination(List<FlowFieldAgent> agents, Vector3 target)
     {
-        if(agents.Count == 0) { UnityEngine.Debug.Log("Agent list passed is empty"); return; }
+        
         NativeArray<float2> sources = AgentDataContainer.GetPositionsOf(agents);
         Vector2 target2 = new Vector2(target.x, target.z);
 
@@ -88,16 +88,16 @@ public class PathfindingManager : MonoBehaviour
             maxRadius = radius > maxRadius ? radius : maxRadius;
         }
         int offset = Mathf.FloorToInt(maxRadius);
-
         
+        if (agents.Count == 0) { UnityEngine.Debug.Log("Agent list passed is empty"); return; }
         //CREATE PATH
         Path newPath = _pathfindingUpdateRoutine.RequestPath(sources, target2, offset);
-        
         if (newPath == null) { return; }
         for(int i = 0; i < agents.Count; i++)
         {
             agents[i].SetPath(newPath);
         }
+        
     }
     public void EditCost(int2 startingPoint, int2 endPoint, byte newCost)
     {

@@ -17,6 +17,7 @@ public class PathProducer
 
     PathfindingManager _pathfindingManager;
     CostFieldProducer _costFieldProducer;
+    PathPreallocator _preallocator;
     int _columnAmount;
     int _rowAmount;
     float _tileSize;
@@ -35,6 +36,7 @@ public class PathProducer
         _sectorMatrixColAmount = _columnAmount / _sectorTileAmount;
         _sectorMatrixRowAmount = _rowAmount / _sectorTileAmount;
         ProducedPaths = new List<Path>(1);
+        _preallocator = new PathPreallocator(_costFieldProducer);
     }
     public void Update()
     {
@@ -43,6 +45,7 @@ public class PathProducer
             if (ProducedPaths[i].State == PathState.ToBeDisposed && ProducedPaths[i].IsCalculated)
             {
                 ProducedPaths[i].Dispose();
+                _preallocator.Send(ProducedPaths[i].PortalTraversalDataArray, ProducedPaths[i].Offset);
                 ProducedPaths[ProducedPaths.Count - 1].Id = i;
                 ProducedPaths.RemoveAtSwapBack(i);
             }
@@ -50,6 +53,7 @@ public class PathProducer
     }
     public PortalTraversalJobPack GetPortalTraversalJobPack(NativeArray<float2> sources, Vector2 destination, int offset)
     {
+        
         int2 destinationIndex = new int2(Mathf.FloorToInt(destination.x / _tileSize), Mathf.FloorToInt(destination.y / _tileSize));
         int destionationIndexFlat = destinationIndex.y * _columnAmount + destinationIndex.x;
         CostField pickedCostField = _costFieldProducer.GetCostFieldWithOffset(offset);
@@ -59,14 +63,13 @@ public class PathProducer
 
         NativeList<int> portalSequence = new NativeList<int>(Allocator.Persistent);
         NativeList<int> portalSequenceBorders = new NativeList<int>(Allocator.Persistent);
-        NativeArray<PortalTraversalData> portalTraversalDataArray = new NativeArray<PortalTraversalData>(pickedCostField.FieldGraph.PortalNodes.Length, Allocator.Persistent);
+        NativeArray<PortalTraversalData> portalTraversalDataArray = _preallocator.GetPortalTraversalDataArray(offset);
         NativeArray<DijkstraTile> targetSectorCosts = new NativeArray<DijkstraTile>(_sectorTileAmount * _sectorTileAmount, Allocator.Persistent);
         NativeQueue<LocalIndex1d> blockedWaveFronts = new NativeQueue<LocalIndex1d>(Allocator.Persistent);
         UnsafeList<int> sectorToPicked = new UnsafeList<int>(pickedCostField.FieldGraph.SectorNodes.Length, Allocator.Persistent, NativeArrayOptions.ClearMemory);
         sectorToPicked.Length = pickedCostField.FieldGraph.SectorNodes.Length;
         NativeList<int> pickedToSector = new NativeList<int>(Allocator.Persistent);
         NativeArray<int> flowFieldLength = new NativeArray<int>(1, Allocator.Persistent);
-
         //TRAVERSAL
         PortalNodeTraversalJob traversalJob = new PortalNodeTraversalJob()
         {
@@ -123,6 +126,7 @@ public class PathProducer
     }
     public PathHandle SchedulePathProductionJob(Path path)
     {
+
         CostField pickedCostField = _costFieldProducer.GetCostFieldWithOffset(path.Offset);
         NativeArray<int> flowFieldLength = path.FlowFieldLength;
         path.FlowField = new UnsafeList<FlowData>(flowFieldLength[0], Allocator.Persistent);
@@ -182,7 +186,7 @@ public class PathProducer
             IntegrationField = path.IntegrationField,
         };
 
-        JobHandle resetHandle = resetJob.Schedule(resetJob.IntegrationField.Length, 32);
+        JobHandle resetHandle = resetJob.Schedule();
         JobHandle losHandle = losjob.Schedule(resetHandle);
         JobHandle integrationHandle = intjob.Schedule(losHandle);
 

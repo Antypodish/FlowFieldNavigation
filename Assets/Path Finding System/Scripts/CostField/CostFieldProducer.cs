@@ -79,6 +79,10 @@ public class CostFieldProducer
         }
         return editJobs;
     }
+    public CostField[] GetAllCostFields()
+    {
+        return _producedCostFields;
+    }
     public CostField GetCostFieldWithOffset(int offset)
     {
         for(int i = 0; i < _producedCostFields.Length; i++)
