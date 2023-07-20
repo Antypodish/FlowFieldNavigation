@@ -37,6 +37,7 @@ public class AgentDataContainer
             Speed = agent.GetSpeed(),
             Destination = Vector2.zero,
             Direction = Vector2.zero,
+            Radius = agent.GetRadius(),
         };
         Agents.Add(agent);
         Paths.Add(new AgentPath());
@@ -104,6 +105,7 @@ public struct AgentData
     public float Speed;
     public float2 Destination;
     public float2 Direction;
+    public float Radius;
 }
 public struct AgentPath
 {

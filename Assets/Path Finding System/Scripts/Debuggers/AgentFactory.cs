@@ -15,6 +15,6 @@ public class AgentFactory
     {
         GameObject obj = GameObject.Instantiate(AgentPrefab);
         FlowFieldAgent flowFieldAgentComponent = obj.GetComponent<FlowFieldAgent>();
-        obj.transform.position = new Vector3(position.x, flowFieldAgentComponent.LandOffset, position.z);
+        obj.transform.position = new Vector3(position.x, flowFieldAgentComponent.GetLandOffset(), position.z);
     }
 }

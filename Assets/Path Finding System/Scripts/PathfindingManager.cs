@@ -73,12 +73,27 @@ public class PathfindingManager : MonoBehaviour
         FlowFieldUtilities.FieldRowAmount = RowAmount;
         FlowFieldUtilities.FieldTileAmount = ColumnAmount * RowAmount;
     }
-    public Path SetDestination(List<FlowFieldAgent> agents, Vector3 target)
+    public void SetDestination(List<FlowFieldAgent> agents, Vector3 target)
     {
-        if(agents.Count == 0) { UnityEngine.Debug.Log("Agent list passed is empty"); return null; }
+        if(agents.Count == 0) { UnityEngine.Debug.Log("Agent list passed is empty"); return; }
         NativeArray<float2> sources = AgentDataContainer.GetPositionsOf(agents);
         Vector2 target2 = new Vector2(target.x, target.z);
-        return _pathfindingUpdateRoutine.RequestPath(sources, target2, 0);
+
+        //DETERMINE MIN OFFSET
+        float maxRadius = 0;
+        for(int i = 0; i < agents.Count; i++)
+        {
+            float radius = agents[i].GetRadius();
+            maxRadius = radius > maxRadius ? radius : maxRadius;
+        }
+        int offset = Mathf.FloorToInt(maxRadius);
+
+        Path newPath = _pathfindingUpdateRoutine.RequestPath(sources, target2, offset);
+        if (newPath == null) { return; }
+        for(int i = 0; i < agents.Count; i++)
+        {
+            agents[i].SetPath(newPath);
+        }
     }
     public void EditCost(int2 startingPoint, int2 endPoint, byte newCost)
     {

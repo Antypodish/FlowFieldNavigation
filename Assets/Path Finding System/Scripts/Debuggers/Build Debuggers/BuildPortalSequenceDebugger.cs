@@ -19,8 +19,6 @@ public class BuildPortalSequenceDebugger
         if (_mesh == null) { ConfigMesh(); }
         if (agent == null) { return; }
         float tileSize = _pathfindingManager.TileSize;
-        int sectorColAmount = _pathfindingManager.SectorTileAmount;
-        int sectorMatrixColAmount = _pathfindingManager.SectorMatrixColAmount;
 
         Path path = agent.GetPath();
         if (path == null) { return; }

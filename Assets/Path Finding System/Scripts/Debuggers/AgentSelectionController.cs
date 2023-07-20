@@ -123,14 +123,7 @@ public class AgentSelectionController : MonoBehaviour
         if (Physics.Raycast(ray, out hit, float.PositiveInfinity, 8))
         {
             Vector3 destination = hit.point;
-
-            Stopwatch sw = new Stopwatch();
-            Path newPath = _pathfindingManager.SetDestination(agents, destination);
-            if (newPath == null) { return; }
-            for (int i = 0; i < agents.Count; i++)
-            {
-                agents[i].SetPath(newPath);
-            }
+            _pathfindingManager.SetDestination(agents, destination);
         }
     }
     void DeselectAllAgents()
