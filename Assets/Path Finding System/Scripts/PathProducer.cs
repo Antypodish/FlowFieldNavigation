@@ -115,7 +115,6 @@ public class PathProducer
         };
 
         ProducedPaths.Add(producedPath);
-
         return new PortalTraversalJobPack
         {
             PortalTravJob = traversalJob,

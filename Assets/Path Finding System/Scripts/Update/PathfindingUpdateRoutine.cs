@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -48,8 +49,9 @@ public class PathfindingUpdateRoutine
     }
     public Path RequestPath(NativeArray<float2> sources, Vector2 destination, int offset)
     {
+        
         PortalTraversalJobPack portalTravJobPack = _pathfindingManager.PathProducer.GetPortalTraversalJobPack(sources, destination, offset);
-        if(portalTravJobPack.Path != null)
+        if (portalTravJobPack.Path != null)
         {
             _portalTravJobs.Add(portalTravJobPack);
         }
