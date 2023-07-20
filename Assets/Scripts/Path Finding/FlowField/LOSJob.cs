@@ -254,9 +254,10 @@ public struct LOSJob : IJob
         void EnqueueNeighbours()
         {
             bool nEnqueueable = nRelevant && nCost != byte.MaxValue && nTile.Mark != IntegrationMark.LOSBlock;
-            bool eEnqueueable = eRelevant && eCost != byte.MaxValue && nTile.Mark != IntegrationMark.LOSBlock;
-            bool sEnqueueable = sRelevant && sCost != byte.MaxValue && nTile.Mark != IntegrationMark.LOSBlock;
-            bool wEnqueueable = wRelevant && wCost != byte.MaxValue && nTile.Mark != IntegrationMark.LOSBlock;
+            bool eEnqueueable = eRelevant && eCost != byte.MaxValue && eTile.Mark != IntegrationMark.LOSBlock;
+            bool sEnqueueable = sRelevant && sCost != byte.MaxValue && sTile.Mark != IntegrationMark.LOSBlock;
+            bool wEnqueueable = wRelevant && wCost != byte.MaxValue && wTile.Mark != IntegrationMark.LOSBlock;
+
             if (nEnqueueable)
             {
                 waveFrontQueue.Enqueue(new LocalIndex1d(nLocal1d, nSector1d));

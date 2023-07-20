@@ -4,7 +4,7 @@ using Unity.Collections;
 using UnityEditor;
 using UnityEngine;
 
-public class AStarDebugger
+public class EditorAStarDebugger
 {
     PathfindingManager _pathfindingManager;
     PortalNode _clickedPortalNode;
@@ -12,7 +12,7 @@ public class AStarDebugger
     int _fieldRowAmount;
     int _fieldColAmount;
 
-    public AStarDebugger(PathfindingManager pathfindingManager)
+    public EditorAStarDebugger(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
         _tileSize = pathfindingManager.TileSize;

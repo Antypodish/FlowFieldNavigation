@@ -9,14 +9,14 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Analytics;
 
-public class PathDebugger
+public class EditorPathDebugger
 {
     PathProducer _pathProducer;
     PathfindingManager _pathfindingManager;
     CostFieldProducer _costFieldProducer;
     float _tileSize;
 
-    public PathDebugger(PathfindingManager pathfindingManager)
+    public EditorPathDebugger(PathfindingManager pathfindingManager)
     {
         _pathProducer = pathfindingManager.PathProducer;
         _pathfindingManager = pathfindingManager;
@@ -24,11 +24,11 @@ public class PathDebugger
         _tileSize = pathfindingManager.TileSize;
     }
 
-    public void DebugPortalTraversalMarks()
+    public void DebugPortalTraversalMarks(FlowFieldAgent agent)
     {
         if (_pathProducer == null) { return; }
         if(_pathProducer.ProducedPaths.Count == 0) { return; }
-        Path producedPath = _pathProducer.ProducedPaths.Last();
+        Path producedPath = agent.GetPath();
         if (!producedPath.IsCalculated) { return; }
 
         float tileSize = _pathfindingManager.TileSize;
@@ -69,11 +69,11 @@ public class PathDebugger
             }
         }
     }
-    public void DebugPortalSequence()
+    public void DebugPortalSequence(FlowFieldAgent agent)
     {
         if (_pathProducer == null) { return; }
         if (_pathProducer.ProducedPaths.Count == 0) { return; }
-        Path producedPath = _pathProducer.ProducedPaths.Last();
+        Path producedPath = agent.GetPath();
         if (!producedPath.IsCalculated) { return; }
 
         float tileSize = _pathfindingManager.TileSize;
@@ -97,11 +97,11 @@ public class PathDebugger
             }
         }
     }
-    public void DebugPickedSectors()
+    public void DebugPickedSectors(FlowFieldAgent agent)
     {
         if (_pathProducer == null) { return; }
         if (_pathProducer.ProducedPaths.Count == 0) { return; }
-        Path producedPath = _pathProducer.ProducedPaths.Last();
+        Path producedPath = agent.GetPath();
         if (!producedPath.IsCalculated) { return; }
 
         float yOffset = 0.3f;
@@ -125,11 +125,11 @@ public class PathDebugger
             Gizmos.DrawLine(botRight, botLeft);
         }
     }
-    public void DebugIntegrationField()
+    public void DebugIntegrationField(FlowFieldAgent agent)
     {
         if (_pathProducer == null) { return; }
         if (_pathProducer.ProducedPaths.Count == 0) { return; }
-        Path producedPath = _pathProducer.ProducedPaths.Last();
+        Path producedPath = agent.GetPath();
         if (!producedPath.IsCalculated) { return; }
         int sectorColAmount = _pathfindingManager.SectorTileAmount;
         int sectorTileAmount = sectorColAmount * sectorColAmount;
@@ -157,11 +157,11 @@ public class PathDebugger
             
         }
     }
-    public void LOSPassDebug()
+    public void LOSPassDebug(FlowFieldAgent agent)
     {
         if (_pathProducer == null) { return; }
         if (_pathProducer.ProducedPaths.Count == 0) { return; }
-        Path producedPath = _pathProducer.ProducedPaths.Last();
+        Path producedPath = agent.GetPath();
         if (!producedPath.IsCalculated) { return; }
 
         string los = "los";
@@ -191,11 +191,11 @@ public class PathDebugger
         }
 
     }
-    public void LOSBlockDebug()
+    public void LOSBlockDebug(FlowFieldAgent agent)
     {
         if (_pathProducer == null) { return; }
         if (_pathProducer.ProducedPaths.Count == 0) { return; }
-        Path producedPath = _pathProducer.ProducedPaths.Last();
+        Path producedPath = agent.GetPath();
         if (!producedPath.IsCalculated) { return; }
 
         Gizmos.color = Color.white;
@@ -223,11 +223,11 @@ public class PathDebugger
             } 
         }
     }
-    public void DebugFlowField()
+    public void DebugFlowField(FlowFieldAgent agent)
     {
         if (_pathProducer == null) { return; }
         if (_pathProducer.ProducedPaths.Count == 0) { return; }
-        Path producedPath = _pathProducer.ProducedPaths.Last();
+        Path producedPath = agent.GetPath();
         if (!producedPath.IsCalculated) { return; }
 
         float yOffset = 0.2f;

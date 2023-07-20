@@ -7,11 +7,12 @@ using UnityEngine.UI;
 public class AgentSelectionController : MonoBehaviour
 {
     public List<FlowFieldAgent> SelectedAgents;
+    public FlowFieldAgent DebuggableAgent;
+
     [SerializeField] PathfindingManager _pathfindingManager;
     [SerializeField] Material _normalAgentMaterial;
     [SerializeField] Material _selectedAgentMaterial;
     [SerializeField] Image _selectionBox;
-    [SerializeField] BuildPathDebuggingController _pathDebuggingController;
 
     AgentBoundSelector _agentSelector;
     ControllerState _state;
@@ -37,7 +38,7 @@ public class AgentSelectionController : MonoBehaviour
                     DeselectAllAgents();
                     SelectedAgents.Add(selectedAgent);
                     SetMaterialOfAgents(SelectedAgents, _selectedAgentMaterial);
-                    _pathDebuggingController.SetAgentToDebug(selectedAgent);
+                    DebuggableAgent = selectedAgent;
                 }
                 
             }
@@ -57,7 +58,14 @@ public class AgentSelectionController : MonoBehaviour
                 DeselectAllAgents();
                 _agentSelector.GetAgentsInBox(Input.mousePosition, Camera.main, _pathfindingManager.GetAllAgents(), SelectedAgents);
                 SetMaterialOfAgents(SelectedAgents, _selectedAgentMaterial);
-                _pathDebuggingController.SetAgentToDebug(null);
+                if(SelectedAgents.Count == 1)
+                {
+                    DebuggableAgent = SelectedAgents[0];
+                }
+                else
+                {
+                    DebuggableAgent = null;
+                }
             }
         }
         if (Input.GetMouseButtonDown(1) && SelectedAgents.Count != 0)

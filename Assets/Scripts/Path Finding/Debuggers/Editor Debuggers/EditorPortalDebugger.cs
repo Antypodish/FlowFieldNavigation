@@ -6,14 +6,14 @@ using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 
 
-public class PortalDebugger
+public class EditorPortalDebugger
 {
     PathfindingManager _pathfindingManager;
 
     SectorNode _clickedSectorNodes;
     PortalNode _clickedPortalNode;
     float _tileSize;
-    public PortalDebugger(PathfindingManager pathfindingManager)
+    public EditorPortalDebugger(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
         _tileSize = _pathfindingManager.TileSize;

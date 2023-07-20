@@ -2,11 +2,12 @@
 
 using UnityEngine;
 
-public class PathFindingDebugger : MonoBehaviour
+public class EditorDebuggingController : MonoBehaviour
 {
     [SerializeField] PathfindingManager _pathfindingManager;
-    [SerializeField] CostFieldOffset _costFieldOffset;
+    [SerializeField] AgentSelectionController _agentSelectionController;
     [Header("Field Debugger")]
+    [SerializeField] CostFieldOffset _costFieldOffset;
     [SerializeField] bool _sectors;
     [SerializeField] bool _windows;
     [SerializeField] bool _sectorWindows;
@@ -26,23 +27,28 @@ public class PathFindingDebugger : MonoBehaviour
 
 
     //debuggers
-    BuildCostFieldDebugger _costFieldDebugger;
-    SectorDebugger _sectorDebugger;
-    WindowDebugger _windowDebugger;
-    SectorGraphDebugger _sectorGraphDebugger;
-    PortalDebugger _portalDebugger;
-    AStarDebugger _aStarDebugger;
+    EditorSectorDebugger _sectorDebugger;
+    EditorWindowDebugger _windowDebugger;
+    EditorSectorGraphDebugger _sectorGraphDebugger;
+    EditorPortalDebugger _portalDebugger;
+    EditorAStarDebugger _aStarDebugger;
+    EditorPathDebugger _pathDebugger;
     private void Start()
     {
-        _sectorDebugger = new SectorDebugger(_pathfindingManager);
-        _windowDebugger = new WindowDebugger(_pathfindingManager);
-        _sectorGraphDebugger = new SectorGraphDebugger(_pathfindingManager);
-        _portalDebugger = new PortalDebugger(_pathfindingManager);
-        _aStarDebugger = new AStarDebugger(_pathfindingManager);
+        _sectorDebugger = new EditorSectorDebugger(_pathfindingManager);
+        _windowDebugger = new EditorWindowDebugger(_pathfindingManager);
+        _sectorGraphDebugger = new EditorSectorGraphDebugger(_pathfindingManager);
+        _portalDebugger = new EditorPortalDebugger(_pathfindingManager);
+        _aStarDebugger = new EditorAStarDebugger(_pathfindingManager);
         
+    }
+    private void Update()
+    {
+        if(_pathDebugger == null) { _pathDebugger = new EditorPathDebugger(_pathfindingManager); }
     }
     private void OnDrawGizmos()
     {
+
         if (_sectors && _sectorDebugger != null) { _sectorDebugger.DebugSectors((int) _costFieldOffset); }
         if( _windows && _windowDebugger != null) { _windowDebugger.DebugWindows((int) _costFieldOffset); }
         if(_sectorWindows && _sectorGraphDebugger != null) { _sectorGraphDebugger.DebugSectorToWindow((int) _costFieldOffset); }
@@ -52,14 +58,16 @@ public class PathFindingDebugger : MonoBehaviour
         if(_costsToPortal && _portalDebugger != null) { _portalDebugger.DebugCostsToClickedPortal((int) _costFieldOffset); }
         if(_AStar && _aStarDebugger != null) { _aStarDebugger.DebugAstarForPortal((int) _costFieldOffset); }
 
-        PathDebugger pathDebugger = new PathDebugger(_pathfindingManager);
-        if (_debugPortalTraversalMarks && pathDebugger != null) { pathDebugger.DebugPortalTraversalMarks(); }
-        if (_debugPortalSequence && pathDebugger != null) { pathDebugger.DebugPortalSequence(); }
-        if (_debugPickedSectors && pathDebugger != null) { pathDebugger.DebugPickedSectors(); }
-        if (_debugIntegrationField && pathDebugger != null) { pathDebugger.DebugIntegrationField(); }
-        if (_debugFlowField && pathDebugger != null) { pathDebugger.DebugFlowField(); }
-        if (_debugLOSPass && pathDebugger != null) { pathDebugger.LOSPassDebug(); }
-        if (_debugLOSBlocks && pathDebugger != null) { pathDebugger.LOSBlockDebug(); }
+        if(_agentSelectionController == null) { return; }
+        FlowFieldAgent _agentToDebug = _agentSelectionController.DebuggableAgent;
+        if(_agentToDebug == null) { return; }
+        if (_debugPortalTraversalMarks && _pathDebugger != null) { _pathDebugger.DebugPortalTraversalMarks(_agentToDebug); }
+        if (_debugPortalSequence && _pathDebugger != null) { _pathDebugger.DebugPortalSequence(_agentToDebug); }
+        if (_debugPickedSectors && _pathDebugger != null) { _pathDebugger.DebugPickedSectors(_agentToDebug); }
+        if (_debugIntegrationField && _pathDebugger != null) { _pathDebugger.DebugIntegrationField(_agentToDebug); }
+        if (_debugFlowField && _pathDebugger != null) { _pathDebugger.DebugFlowField(_agentToDebug); }
+        if (_debugLOSPass && _pathDebugger != null) { _pathDebugger.LOSPassDebug(_agentToDebug); }
+        if (_debugLOSBlocks && _pathDebugger != null) { _pathDebugger.LOSBlockDebug(_agentToDebug); }
     }
 
     enum CostFieldOffset : byte

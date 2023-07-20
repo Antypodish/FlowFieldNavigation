@@ -3,11 +3,11 @@
 using Unity.Collections;
 using UnityEngine;
 
-public class SectorGraphDebugger
+public class EditorSectorGraphDebugger
 {
     PathfindingManager _pathfindingManager;
 
-    public SectorGraphDebugger(PathfindingManager pathfindingManager)
+    public EditorSectorGraphDebugger(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
     }

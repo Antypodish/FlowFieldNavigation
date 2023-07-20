@@ -225,18 +225,6 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 7273620610725417557}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &405679296 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 7696368590267340441, guid: 6171110bace36bb42a195b4ce00d2d41,
-    type: 3}
-  m_PrefabInstance: {fileID: 5571130921982071616}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8a9336e84e816e048acbb45881385986, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -601,6 +589,24 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &983938240 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7273620610478753682, guid: a222553a8d76c3b4f84192d5037f50bc,
+    type: 3}
+  m_PrefabInstance: {fileID: 7273620610725417557}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &983938241
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 983938240}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29c1bad45720ec6408e866276ca4e2af, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1056397738 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1933429514973160621, guid: 27a8c665012399a4d9efed919b301bdb,
@@ -1119,18 +1125,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 27a8c665012399a4d9efed919b301bdb, type: 3}
---- !u!114 &1861988047 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 1861988047, guid: 6171110bace36bb42a195b4ce00d2d41,
-    type: 3}
-  m_PrefabInstance: {fileID: 5571130921982071616}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1001 &730032215382111635
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1576,26 +1570,32 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
+      propertyPath: _debugLOSPass
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
+      propertyPath: _debugLOSBlocks
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
+      propertyPath: _pathfindingManager
+      value: 
+      objectReference: {fileID: 638972356}
+    - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
+      propertyPath: _debugIntegrationField
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1633507769824742795, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}
       propertyPath: m_Name
       value: FlowFieldController
-      objectReference: {fileID: 0}
-    - target: {fileID: 1633507769824742795, guid: 6171110bace36bb42a195b4ce00d2d41,
-        type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5571130920343903277, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}
       propertyPath: _pathfindingManager
       value: 
       objectReference: {fileID: 638972356}
-    - target: {fileID: 5571130920343903277, guid: 6171110bace36bb42a195b4ce00d2d41,
-        type: 3}
-      propertyPath: _pathDebuggingController
-      value: 
-      objectReference: {fileID: 405679296}
     - target: {fileID: 7314432835859767064, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}
       propertyPath: m_RootOrder
@@ -1653,39 +1653,9 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7696368590267340441, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}
-      propertyPath: _debugUIDoc
-      value: 
-      objectReference: {fileID: 1861988047}
-    - target: {fileID: 7696368590267340441, guid: 6171110bace36bb42a195b4ce00d2d41,
-        type: 3}
-      propertyPath: _losDebugMaterial
-      value: 
-      objectReference: {fileID: 2100000, guid: 2f6ec457b75e53a4da74ed1928d95e0a, type: 2}
-    - target: {fileID: 7696368590267340441, guid: 6171110bace36bb42a195b4ce00d2d41,
-        type: 3}
       propertyPath: _pathfindingManager
       value: 
       objectReference: {fileID: 638972356}
-    - target: {fileID: 7696368590267340441, guid: 6171110bace36bb42a195b4ce00d2d41,
-        type: 3}
-      propertyPath: _targetDebugMaterial
-      value: 
-      objectReference: {fileID: 2100000, guid: a6ff3fae43440d442acd36b69d5c3abd, type: 2}
-    - target: {fileID: 7696368590267340441, guid: 6171110bace36bb42a195b4ce00d2d41,
-        type: 3}
-      propertyPath: _costFieldDebugMaterial
-      value: 
-      objectReference: {fileID: 2100000, guid: 448dcf7e6f0048740b94ed066f9588e1, type: 2}
-    - target: {fileID: 7696368590267340441, guid: 6171110bace36bb42a195b4ce00d2d41,
-        type: 3}
-      propertyPath: _portalSequenceDebugMaterial
-      value: 
-      objectReference: {fileID: 2100000, guid: 7cbd2662d0224744a844a202d924150a, type: 2}
-    - target: {fileID: 7696368590267340441, guid: 6171110bace36bb42a195b4ce00d2d41,
-        type: 3}
-      propertyPath: _integrationFieldDebugMaterial
-      value: 
-      objectReference: {fileID: 2100000, guid: 4f8e1f222957d1f499ae0830185aef99, type: 2}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
 --- !u!1001 &7273620610725417557

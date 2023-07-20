@@ -2,11 +2,11 @@
 
 using UnityEngine;
 
-public class SectorDebugger
+public class EditorSectorDebugger
 {
     PathfindingManager _pathfindingManager;
 
-    public SectorDebugger(PathfindingManager pathfindingManager)
+    public EditorSectorDebugger(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
     }

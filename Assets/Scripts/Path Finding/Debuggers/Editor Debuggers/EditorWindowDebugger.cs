@@ -1,7 +1,7 @@
 ﻿#if (UNITY_EDITOR) 
 
 using UnityEngine;
-public class WindowDebugger
+public class EditorWindowDebugger
 {
     PathfindingManager _pathfindingManager;
 
@@ -9,7 +9,7 @@ public class WindowDebugger
     Vector3[] _debugVerticies;
     int[] _debugTriangles;
 
-    public WindowDebugger(PathfindingManager pathfindingManager)
+    public EditorWindowDebugger(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
 

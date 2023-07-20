@@ -5,13 +5,13 @@ using UnityEngine.UIElements;
 public class BuildPathDebuggingController : MonoBehaviour
 {
     [SerializeField] PathfindingManager _pathfindingManager;
+    [SerializeField] AgentSelectionController _agentSelectionController;
     [SerializeField] UIDocument _debugUIDoc;
     [SerializeField] Material _costFieldDebugMaterial;
     [SerializeField] Material _integrationFieldDebugMaterial;
     [SerializeField] Material _portalSequenceDebugMaterial;
     [SerializeField] Material _losDebugMaterial;
     [SerializeField] Material _targetDebugMaterial;
-    FlowFieldAgent _agentToDebug;
 
     Toggle _debugModeToggle;
     Toggle _costFieldToggle;
@@ -50,16 +50,13 @@ public class BuildPathDebuggingController : MonoBehaviour
     }
     private void Update()
     {
+        FlowFieldAgent agentToDebug = _agentSelectionController.DebuggableAgent;
         FlowFieldUtilities.DebugMode = _debugModeToggle.value;
         if (!FlowFieldUtilities.DebugMode) { return; }
-        _targetDebugger.Debug(_agentToDebug, _targetOffset);
-        if (_costFieldToggle.value && !_integrationFieldToggle.value) { _costDebugger.Debug(_agentToDebug, _costOffset); }
-        if (_integrationFieldToggle.value) { _integrationFieldDebugger.Debug(_agentToDebug, _intOffset); }
-        if (_portalSequenceToggle.value) { _portalSequenceDebugger.Debug(_agentToDebug, _portaltOffset); }
-        if(_losPassToggle.value) { _losDebugger.Debug(_agentToDebug, _losOffset); }
-    }
-    public void SetAgentToDebug(FlowFieldAgent agent)
-    {
-        _agentToDebug = agent;
+        _targetDebugger.Debug(agentToDebug, _targetOffset);
+        if (_costFieldToggle.value && !_integrationFieldToggle.value) { _costDebugger.Debug(agentToDebug, _costOffset); }
+        if (_integrationFieldToggle.value) { _integrationFieldDebugger.Debug(agentToDebug, _intOffset); }
+        if (_portalSequenceToggle.value) { _portalSequenceDebugger.Debug(agentToDebug, _portaltOffset); }
+        if(_losPassToggle.value) { _losDebugger.Debug(agentToDebug, _losOffset); }
     }
 }
