@@ -1,11 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
-using Unity.Collections;
-using UnityEditor.Profiling.Memory.Experimental;
-using UnityEngine.Rendering;
-using UnityEngine.Rendering.Universal;
-
-internal class PathPreallocator
+﻿internal class PathPreallocator
 {
     PortalTraversalDataArrayFactory _porTravDataArrayFactory;
     PortalSequenceFactory _portalSequenceFactory;
