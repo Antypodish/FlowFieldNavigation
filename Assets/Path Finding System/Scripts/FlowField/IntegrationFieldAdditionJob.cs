@@ -3,6 +3,7 @@ using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Burst;
+using System.Security.Cryptography;
 
 [BurstCompile]
 public struct IntegrationFieldAdditionJob : IJob
@@ -48,10 +49,11 @@ public struct IntegrationFieldAdditionJob : IJob
         int neSector1d;
         int seSector1d;
         int swSector1d;
-        int nwSector1d; byte nCost;
-        byte eCost;
-        byte sCost;
-        byte wCost;
+        int nwSector1d;
+        bool nBlocked;
+        bool eBlocked;
+        bool sBlocked;
+        bool wBlocked;
         int curSectorMark;
         int nSectorMark;
         int eSectorMark;
@@ -142,10 +144,10 @@ public struct IntegrationFieldAdditionJob : IJob
             nwLocal1d = math.select(nwLocal1d, nwLocal1d + sectorColAmount, wLocalOverflow);
 
             //COSTS
-            nCost = costs[nSector1d][nLocal1d];
-            eCost = costs[eSector1d][eLocal1d];
-            sCost = costs[sSector1d][sLocal1d];
-            wCost = costs[wSector1d][wLocal1d];
+            nBlocked = costs[nSector1d][nLocal1d] == byte.MaxValue;
+            eBlocked = costs[eSector1d][eLocal1d] == byte.MaxValue;
+            sBlocked = costs[sSector1d][sLocal1d] == byte.MaxValue;
+            wBlocked = costs[wSector1d][wLocal1d] == byte.MaxValue;
 
             //SECTOR MARKS
             curSectorMark = sectorMarks[curSector1d];
@@ -185,10 +187,10 @@ public struct IntegrationFieldAdditionJob : IJob
             if (nwSectorMark != 0) { nwIntCost = integrationField[nwSectorMark + nwLocal1d].Cost; }
 
             //AVAILABILITY
-            nAvailable = nCost != byte.MaxValue && (nMark == IntegrationMark.Integrated || nMark == IntegrationMark.None) && nSectorMark != 0;
-            eAvailable = eCost != byte.MaxValue && (eMark == IntegrationMark.Integrated || eMark == IntegrationMark.None) && eSectorMark != 0;
-            sAvailable = sCost != byte.MaxValue && (sMark == IntegrationMark.Integrated || sMark == IntegrationMark.None) && sSectorMark != 0;
-            wAvailable = wCost != byte.MaxValue && (wMark == IntegrationMark.Integrated || wMark == IntegrationMark.None) && wSectorMark != 0;
+            nAvailable = !nBlocked && (nMark == IntegrationMark.Integrated || nMark == IntegrationMark.None) && nSectorMark != 0;
+            eAvailable = !eBlocked && (eMark == IntegrationMark.Integrated || eMark == IntegrationMark.None) && eSectorMark != 0;
+            sAvailable = !sBlocked && (sMark == IntegrationMark.Integrated || sMark == IntegrationMark.None) && sSectorMark != 0;
+            wAvailable = !wBlocked && (wMark == IntegrationMark.Integrated || wMark == IntegrationMark.None) && wSectorMark != 0;
         }
         void Enqueue()
         {
@@ -232,10 +234,10 @@ public struct IntegrationFieldAdditionJob : IJob
             float eCost = eIntCost + 1f;
             float sCost = sIntCost + 1f;
             float wCost = wIntCost + 1f;
-            float neCost = neIntCost + 1.4f;
-            float seCost = seIntCost + 1.4f;
-            float swCost = swIntCost + 1.4f;
-            float nwCost = nwIntCost + 1.4f;
+            float neCost = math.select(neIntCost + 1.4f, float.MaxValue, nBlocked && eBlocked);
+            float seCost = math.select(seIntCost + 1.4f, float.MaxValue, sBlocked && eBlocked);
+            float swCost = math.select(swIntCost + 1.4f, float.MaxValue, sBlocked && wBlocked);
+            float nwCost = math.select(nwIntCost + 1.4f, float.MaxValue, nBlocked && wBlocked);
 
             costToReturn = math.select(costToReturn, nCost, nCost < costToReturn);
             costToReturn = math.select(costToReturn, eCost, eCost < costToReturn);
