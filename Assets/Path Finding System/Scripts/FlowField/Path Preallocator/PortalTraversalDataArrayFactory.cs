@@ -3,11 +3,11 @@ using System.Linq;
 using Unity.Collections;
 using Unity.Jobs;
 
-public class PortalTraversalDataArrayAllocator
+public class PortalTraversalDataArrayFactory
 {
     List<NativeArray<PortalTraversalData>>[] _preallocationMatrix;
     int[] _portalNodeAmounts;
-    public PortalTraversalDataArrayAllocator(CostFieldProducer costFieldProducer)
+    public PortalTraversalDataArrayFactory(CostFieldProducer costFieldProducer)
     {
         CostField[] costFields = costFieldProducer.GetAllCostFields();
         _preallocationMatrix = new List<NativeArray<PortalTraversalData>>[costFields.Length];
@@ -33,7 +33,7 @@ public class PortalTraversalDataArrayAllocator
         _preallocations.RemoveAtSwapBack(_preallocations.Count - 1);
         return array;
     }
-    public void SendPortalTraversalDataArray(NativeArray<PortalTraversalData> array, int offset)
+    public void SendPortalTraversalDataArray(ref NativeArray<PortalTraversalData> array, int offset)
     {
         PortalTraversalDataArrayCleaningJob cleaninJob = new PortalTraversalDataArrayCleaningJob()
         {

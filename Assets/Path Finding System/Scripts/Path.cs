@@ -29,14 +29,7 @@ public class Path
     {
         NewFlowFieldLength.Dispose();
         IntegrationStartIndicies.Dispose();
-        BlockedWaveFronts.Dispose();
-        FlowFieldLength.Dispose();
-        PickedToSector.Dispose();
-        PortalSequenceBorders.Dispose();
         Sources.Dispose();
-        TargetSectorCosts.Dispose();
-        PortalSequence.Dispose();
-        SectorToPicked.Dispose();
         IntegrationField.Dispose();
         FlowField.Dispose();
     }

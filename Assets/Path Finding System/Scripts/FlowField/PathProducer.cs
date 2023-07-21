@@ -36,16 +36,28 @@ public class PathProducer
         _sectorMatrixColAmount = _columnAmount / _sectorTileAmount;
         _sectorMatrixRowAmount = _rowAmount / _sectorTileAmount;
         ProducedPaths = new List<Path>(1);
-        _preallocator = new PathPreallocator(_costFieldProducer);
+        _preallocator = new PathPreallocator(_costFieldProducer, _sectorTileAmount * _sectorTileAmount, _sectorMatrixColAmount * _sectorMatrixRowAmount);
     }
     public void Update()
     {
         for (int i = ProducedPaths.Count - 1; i >= 0; i--)
         {
-            if (ProducedPaths[i].State == PathState.ToBeDisposed && ProducedPaths[i].IsCalculated)
+            Path path = ProducedPaths[i];
+            if (path.State == PathState.ToBeDisposed && path.IsCalculated)
             {
-                ProducedPaths[i].Dispose();
-                _preallocator.Send(ProducedPaths[i].PortalTraversalDataArray, ProducedPaths[i].Offset);
+                path.Dispose();
+                PreallocationPack preallocations = new PreallocationPack()
+                {
+                    SectorToPicked = path.SectorToPicked,
+                    PickedToSector = path.PickedToSector,
+                    PortalSequence = path.PortalSequence,
+                    PortalSequenceBorders = path.PortalSequenceBorders,
+                    PortalTraversalDataArray = path.PortalTraversalDataArray,
+                    BlockedWaveFronts = path.BlockedWaveFronts,
+                    TargetSectorCosts = path.TargetSectorCosts,
+                    FlowFieldLength = path.FlowFieldLength,
+                };
+                _preallocator.SendPreallocationsBack(ref preallocations, path.Offset);
                 ProducedPaths[ProducedPaths.Count - 1].Id = i;
                 ProducedPaths.RemoveAtSwapBack(i);
             }
@@ -53,7 +65,6 @@ public class PathProducer
     }
     public PortalTraversalJobPack GetPortalTraversalJobPack(NativeArray<float2> sources, Vector2 destination, int offset)
     {
-        
         int2 destinationIndex = new int2(Mathf.FloorToInt(destination.x / _tileSize), Mathf.FloorToInt(destination.y / _tileSize));
         int destionationIndexFlat = destinationIndex.y * _columnAmount + destinationIndex.x;
         CostField pickedCostField = _costFieldProducer.GetCostFieldWithOffset(offset);
@@ -61,15 +72,16 @@ public class PathProducer
         //returns portal pack with path=null if target is unwalkable
         if (pickedCostField.CostsG[destionationIndexFlat] == byte.MaxValue) { return new PortalTraversalJobPack(); }
 
-        NativeList<int> portalSequence = new NativeList<int>(Allocator.Persistent);
-        NativeList<int> portalSequenceBorders = new NativeList<int>(Allocator.Persistent);
-        NativeArray<PortalTraversalData> portalTraversalDataArray = _preallocator.GetPortalTraversalDataArray(offset);
-        NativeArray<DijkstraTile> targetSectorCosts = new NativeArray<DijkstraTile>(_sectorTileAmount * _sectorTileAmount, Allocator.Persistent);
-        NativeQueue<LocalIndex1d> blockedWaveFronts = new NativeQueue<LocalIndex1d>(Allocator.Persistent);
-        UnsafeList<int> sectorToPicked = new UnsafeList<int>(pickedCostField.FieldGraph.SectorNodes.Length, Allocator.Persistent, NativeArrayOptions.ClearMemory);
-        sectorToPicked.Length = pickedCostField.FieldGraph.SectorNodes.Length;
-        NativeList<int> pickedToSector = new NativeList<int>(Allocator.Persistent);
-        NativeArray<int> flowFieldLength = new NativeArray<int>(1, Allocator.Persistent);
+        PreallocationPack preallocations = _preallocator.GetPreallocations(offset);
+        NativeList<int> portalSequence = preallocations.PortalSequence;
+        NativeList<int> portalSequenceBorders = preallocations.PortalSequenceBorders;
+        NativeArray<PortalTraversalData> portalTraversalDataArray = preallocations.PortalTraversalDataArray;
+        NativeArray<DijkstraTile> targetSectorCosts = preallocations.TargetSectorCosts;
+        NativeQueue<LocalIndex1d> blockedWaveFronts = preallocations.BlockedWaveFronts;
+        UnsafeList<int> sectorToPicked = preallocations.SectorToPicked;
+        NativeList<int> pickedToSector = preallocations.PickedToSector;
+        NativeArray<int> flowFieldLength = preallocations.FlowFieldLength;
+
         //TRAVERSAL
         PortalNodeTraversalJob traversalJob = new PortalNodeTraversalJob()
         {
@@ -116,7 +128,6 @@ public class PathProducer
             IntegrationStartIndicies = new NativeList<LocalIndex1d>(Allocator.Persistent),
             NewFlowFieldLength = new NativeArray<int>(1, Allocator.Persistent),
         };
-
         ProducedPaths.Add(producedPath);
         return new PortalTraversalJobPack
         {
