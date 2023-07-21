@@ -20,6 +20,7 @@ public class AgentSelectionController : MonoBehaviour
 
     AgentBoundSelector _agentSelector;
     AgentFactory _agentFactory;
+    CostEditController _costEditController;
     ControllerState _state;
 
     int _agentsToCreate = 0;
@@ -28,6 +29,7 @@ public class AgentSelectionController : MonoBehaviour
         _agentsToCreate = _startingAgentCount;
         _agentSelector = new AgentBoundSelector(_selectionBox);
         _agentFactory = new AgentFactory(_agentPrefab, _pathfindingManager);
+        _costEditController = new CostEditController(_pathfindingManager);
         _state = ControllerState.SingleSelection;
     }
     private void Update()
@@ -53,7 +55,16 @@ public class AgentSelectionController : MonoBehaviour
             _state = ControllerState.AgentAddition;
             _agentSelector.ForceStopSelection();
         }
-
+        else if (Input.GetKeyDown(KeyCode.E))
+        {
+            _state = ControllerState.CostEditUnwalkable;
+            _agentSelector.ForceStopSelection();
+        }
+        else if (Input.GetKeyDown(KeyCode.R))
+        {
+            _state = ControllerState.CostEditWalkable;
+            _agentSelector.ForceStopSelection();
+        }
         if (_state == ControllerState.SingleSelection)
         {
             if (Input.GetMouseButtonDown(0))
@@ -106,6 +117,22 @@ public class AgentSelectionController : MonoBehaviour
                 }
             }
         }
+        else if(_state == ControllerState.CostEditUnwalkable)
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                _costEditController.SetUnwalkable();
+            }
+        }
+        else if (_state == ControllerState.CostEditWalkable)
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                _costEditController.SetWalkable();
+            }
+        }
+
+
         if (Input.GetMouseButtonDown(1) && SelectedAgents.Count != 0)
         {
             SetDestination();
@@ -158,5 +185,7 @@ public class AgentSelectionController : MonoBehaviour
         SingleSelection,
         MultiSelection,
         AgentAddition,
+        CostEditUnwalkable,
+        CostEditWalkable,
     };
 }

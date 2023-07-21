@@ -567,17 +567,17 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: RowAmount
-      value: 320
+      value: 1000
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: _resolution
-      value: 10
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: ColumnAmount
-      value: 310
+      value: 1000
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207641, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
@@ -1023,21 +1023,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Flow Field
       objectReference: {fileID: 0}
-    - target: {fileID: 8734084087089525708, guid: 5e3867b8afbc0bb49a0027ab49965980,
-        type: 3}
-      propertyPath: _pathfindingManager
-      value: 
-      objectReference: {fileID: 2828686871073884696, guid: 5e3867b8afbc0bb49a0027ab49965980,
-        type: 3}
     - target: {fileID: 8734084087838304231, guid: 5e3867b8afbc0bb49a0027ab49965980,
         type: 3}
       propertyPath: _terrainGenerator
       value: 
       objectReference: {fileID: 1550691738}
-    - target: {fileID: 8734084087838304231, guid: 5e3867b8afbc0bb49a0027ab49965980,
-        type: 3}
-      propertyPath: _agentUpdateFrequency
-      value: 0.016
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5e3867b8afbc0bb49a0027ab49965980, type: 3}

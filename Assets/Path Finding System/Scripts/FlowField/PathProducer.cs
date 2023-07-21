@@ -53,7 +53,6 @@ public class PathProducer
                     PortalSequence = path.PortalSequence,
                     PortalSequenceBorders = path.PortalSequenceBorders,
                     PortalTraversalDataArray = path.PortalTraversalDataArray,
-                    BlockedWaveFronts = path.BlockedWaveFronts,
                     TargetSectorCosts = path.TargetSectorCosts,
                     FlowFieldLength = path.FlowFieldLength,
                 };
@@ -79,7 +78,6 @@ public class PathProducer
         NativeList<int> portalSequenceBorders = preallocations.PortalSequenceBorders;
         NativeArray<PortalTraversalData> portalTraversalDataArray = preallocations.PortalTraversalDataArray;
         NativeArray<DijkstraTile> targetSectorCosts = preallocations.TargetSectorCosts;
-        NativeQueue<LocalIndex1d> blockedWaveFronts = preallocations.BlockedWaveFronts;
         UnsafeList<int> sectorToPicked = preallocations.SectorToPicked;
         NativeList<int> pickedToSector = preallocations.PickedToSector;
         NativeArray<int> flowFieldLength = preallocations.FlowFieldLength;
@@ -114,7 +112,6 @@ public class PathProducer
         Path producedPath = new Path()
         {
             Id = ProducedPaths.Count,
-            BlockedWaveFronts = blockedWaveFronts,
             PickedToSector = pickedToSector,
             PortalSequenceBorders = portalSequenceBorders,
             TargetIndex = destinationIndex,
@@ -168,17 +165,16 @@ public class PathProducer
             SectorToPicked = path.SectorToPicked,
             Directions = pickedCostField.LocalDirections,
             IntegrationField = path.IntegrationField,
-            BlockedWaveFronts = path.BlockedWaveFronts,
+            BlockedWaveFronts = path.IntegrationStartIndicies,
         };
         
         //INTEGRATION
         IntegrationFieldJob intjob = new IntegrationFieldJob()
         {
-            Target = destinationIndex,
-            WaveFrontQueue = path.BlockedWaveFronts,
+            StartIndicies = path.IntegrationStartIndicies,
             Costs = pickedCostField.CostsL,
             IntegrationField = path.IntegrationField,
-            SectorMarks = path.SectorToPicked,
+            SectorToPicked = path.SectorToPicked,
             SectorColAmount = _sectorTileAmount,
             SectorMatrixColAmount = _sectorMatrixColAmount,
             FieldColAmount = _columnAmount,
@@ -266,7 +262,7 @@ public class PathProducer
         };
 
         //INT
-        IntegrationFieldAdditionJob intAddJob = new IntegrationFieldAdditionJob()
+        IntegrationFieldJob intAddJob = new IntegrationFieldJob()
         {
             StartIndicies = path.IntegrationStartIndicies,
             Costs = pickedCostField.CostsL,

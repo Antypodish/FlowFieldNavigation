@@ -1,23 +1,20 @@
-﻿using System.Runtime.ConstrainedExecution;
-using Unity.Burst;
+﻿using Unity.Collections.LowLevel.Unsafe;
 using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
-using Unity.VisualScripting;
-using UnityEngine;
+using Unity.Burst;
+using System.Security.Cryptography;
 
 [BurstCompile]
 public struct IntegrationFieldJob : IJob
 {
-    public int2 Target;
+    public NativeList<LocalIndex1d> StartIndicies;
     public int FieldColAmount;
     public int FieldRowAmount;
     public int SectorColAmount;
     public int SectorMatrixColAmount;
     public NativeArray<IntegrationTile> IntegrationField;
-    public NativeQueue<LocalIndex1d> WaveFrontQueue;
-    [ReadOnly] public UnsafeList<int> SectorMarks;
+    [ReadOnly] public UnsafeList<int> SectorToPicked;
     [ReadOnly] public NativeArray<UnsafeList<byte>> Costs;
     public void Execute()
     {
@@ -26,14 +23,14 @@ public struct IntegrationFieldJob : IJob
     void Integrate()
     {
         //DATA
-        int sectorColAmount = SectorColAmount;
-        int sectorMatrixColAmount = SectorMatrixColAmount;
-        int fieldColAmount = FieldColAmount;
-        int sectorTileAmount = SectorColAmount * sectorColAmount;
         NativeArray<IntegrationTile> integrationField = IntegrationField;
-        UnsafeList<int> sectorMarks = SectorMarks;
+        UnsafeList<int> sectorMarks = SectorToPicked;
         NativeArray<UnsafeList<byte>> costs = Costs;
-        NativeQueue<LocalIndex1d> integrationQueue = WaveFrontQueue;
+        NativeQueue<LocalIndex1d> integrationQueue = new NativeQueue<LocalIndex1d>(Allocator.Temp);
+        int fieldColAmount = FieldColAmount;
+        int sectorColAmount = SectorColAmount;
+        int sectorTileAmount = sectorColAmount * sectorColAmount;
+        int sectorMatrixColAmount = SectorMatrixColAmount;
 
         ///////////LOOKUP TABLE////////////////
         ///////////////////////////////////////
@@ -53,6 +50,10 @@ public struct IntegrationFieldJob : IJob
         int seSector1d;
         int swSector1d;
         int nwSector1d;
+        bool nBlocked;
+        bool eBlocked;
+        bool sBlocked;
+        bool wBlocked;
         int curSectorMark;
         int nSectorMark;
         int eSectorMark;
@@ -71,16 +72,18 @@ public struct IntegrationFieldJob : IJob
         float seIntCost;
         float swIntCost;
         float nwIntCost;
-        bool nBlocked;
-        bool eBlocked;
-        bool sBlocked;
-        bool wBlocked;
         bool nAvailable;
         bool eAvailable;
         bool sAvailable;
         bool wAvailable;
         ///////////////////////////////////////////////
         //CODE
+
+        for(int i = 0; i < StartIndicies.Length; i++)
+        {
+            integrationQueue.Enqueue(StartIndicies[i]);
+        }
+        StartIndicies.Clear();
         while (!integrationQueue.IsEmpty())
         {
             LocalIndex1d cur = integrationQueue.Dequeue();
@@ -140,7 +143,7 @@ public struct IntegrationFieldJob : IJob
             nwLocal1d = math.select(nwLocal1d, nwLocal1d - (sectorColAmount * sectorColAmount), nLocalOverflow);
             nwLocal1d = math.select(nwLocal1d, nwLocal1d + sectorColAmount, wLocalOverflow);
 
-            //BLOCKEDS
+            //COSTS
             nBlocked = costs[nSector1d][nLocal1d] == byte.MaxValue;
             eBlocked = costs[eSector1d][eLocal1d] == byte.MaxValue;
             sBlocked = costs[sSector1d][sLocal1d] == byte.MaxValue;
@@ -245,6 +248,33 @@ public struct IntegrationFieldJob : IJob
             costToReturn = math.select(costToReturn, swCost, swCost < costToReturn);
             costToReturn = math.select(costToReturn, nwCost, nwCost < costToReturn);
             return costToReturn;
+        }
+        int To1D(int2 index2, int colAmount)
+        {
+            return index2.y * colAmount + index2.x;
+        }
+        int2 To2D(int index, int colAmount)
+        {
+            return new int2(index % colAmount, index / colAmount);
+        }
+        int2 GetSectorIndex(int2 index)
+        {
+            return new int2(index.x / sectorColAmount, index.y / sectorColAmount);
+        }
+        int2 GetLocalIndex(int2 index, int2 sectorStartIndex)
+        {
+            return index - sectorStartIndex;
+        }
+        int2 GetSectorStartIndex(int2 sectorIndex)
+        {
+            return new int2(sectorIndex.x * sectorColAmount, sectorIndex.y * sectorColAmount);
+        }
+        int GetGeneralIndex1d(int local1d, int sector1d)
+        {
+            int2 sector2d = To2D(sector1d, sectorMatrixColAmount);
+            int2 sectorStartIndex = GetSectorStartIndex(sector2d);
+            int2 local2d = To2D(local1d, sectorColAmount);
+            return To1D(sectorStartIndex + local2d, fieldColAmount);
         }
     }
 }

@@ -25,7 +25,7 @@ public struct LOSJob : IJob
     [ReadOnly] public NativeArray<UnsafeList<LocalDirectionData1d>> Directions;
     public UnsafeList<int> SectorToPicked;
     public NativeArray<IntegrationTile> IntegrationField;
-    public NativeQueue<LocalIndex1d> BlockedWaveFronts;
+    public NativeList<LocalIndex1d> BlockedWaveFronts;
     public void Execute()
     {
         //DATA
@@ -41,7 +41,7 @@ public struct LOSJob : IJob
         NativeArray<IntegrationTile> integrationField = IntegrationField;
         NativeQueue<LocalIndex1d> waveFrontQueue = new NativeQueue<LocalIndex1d>(Allocator.Temp);
         NativeArray<byte> costs = Costs;
-        NativeQueue<LocalIndex1d> blockedWaveFronts = BlockedWaveFronts;
+        NativeList<LocalIndex1d> blockedWaveFronts = BlockedWaveFronts;
 
         ///////CURRENT INDEX LOOKUP TABLE////////
         /////////////////////////////////////////
@@ -568,7 +568,7 @@ public struct LOSJob : IJob
                             else if (costs[resultingIndex1d] == byte.MaxValue) { stopCalculating = true; break; }
                             tile.Mark = IntegrationMark.LOSBlock;
                             integrationField[resultingSectorMark + resultingLocalIndex1d] = tile;
-                            blockedWaveFronts.Enqueue(new LocalIndex1d(resultingLocalIndex1d, resultingSectorIndex1d));
+                            blockedWaveFronts.Add(new LocalIndex1d(resultingLocalIndex1d, resultingSectorIndex1d));
                         }
                         step += stepAmount;
                     }
