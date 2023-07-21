@@ -198,10 +198,10 @@ public class PathProducer
         JobHandle resetHandle = resetJob.Schedule();
         JobHandle losHandle = losjob.Schedule(resetHandle);
         JobHandle integrationHandle = intjob.Schedule(losHandle);
-
+        JobHandle ffHandle = ffJob.Schedule(ffJob.FlowField.Length, 256, integrationHandle);
         return new PathHandle()
         {
-            Handle = ffJob.Schedule(ffJob.FlowField.Length, 256, integrationHandle),
+            Handle = ffHandle,
             Path = path,
         };
     }

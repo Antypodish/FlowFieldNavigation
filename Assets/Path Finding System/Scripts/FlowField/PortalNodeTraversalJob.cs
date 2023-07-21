@@ -75,11 +75,13 @@ public struct PortalNodeTraversalJob : IJob
         for (int i = 0; i < SourcePositions.Length; i++)
         {
             float2 sourcePos = SourcePositions[i];
-
             int2 sourceIndex = new int2((int)math.floor(sourcePos.x / FieldTileSize), (int)math.floor(sourcePos.y / FieldTileSize));
             int2 sourceSectorIndex = sourceIndex / SectorColAmount;
-
             int sourceSectorIndexFlat = sourceSectorIndex.y * SectorMatrixColAmount + sourceSectorIndex.x;
+
+            //ADD SOURCE SECTOR TO THE PICKED SECTORS
+
+
             UnsafeList<int> sourcePortalIndicies = GetPortalIndicies(sourceSectorIndexFlat);
             for(int j = 0; j < sourcePortalIndicies.Length; j++)
             {
@@ -311,7 +313,7 @@ public struct PortalNodeTraversalJob : IJob
         }
         return portalIndicies;
     }
-    void PickSectorsFromPortalSequence()
+    void OldPickSectorsFromPortalSequence()
     {
         int sectorTileAmount = SectorColAmount * SectorColAmount;
         int pickedSectorAmount = 0;
@@ -333,7 +335,52 @@ public struct PortalNodeTraversalJob : IJob
         }
         FlowFieldLength[0] = pickedSectorAmount * sectorTileAmount + 1;
     }
-
+    void PickSectorsFromPortalSequence()
+    {
+        int sectorTileAmount = SectorColAmount * SectorColAmount;
+        int pickedSectorAmount = 0;
+        for(int i = 0; i < PortalSequenceBorders.Length - 1; i++)
+        {
+            int start = PortalSequenceBorders[i];
+            int end = PortalSequenceBorders[i + 1];
+            for(int j = start; j < end - 1; j++)
+            {
+                int portalIndex1 = PortalSequence[j];
+                int portalIndex2 = PortalSequence[j + 1];
+                int windowIndex1 = PortalNodes[portalIndex1].WinPtr;
+                int windowIndex2 = PortalNodes[portalIndex2].WinPtr;
+                WindowNode winNode1 = WindowNodes[windowIndex1];
+                WindowNode winNode2 = WindowNodes[windowIndex2];
+                int win1Sec1Index = WinToSecPtrs[winNode1.WinToSecPtr];
+                int win1Sec2Index = WinToSecPtrs[winNode1.WinToSecPtr + 1];
+                int win2Sec1Index = WinToSecPtrs[winNode2.WinToSecPtr];
+                int win2Sec2Index = WinToSecPtrs[winNode2.WinToSecPtr + 1];
+                int commonSectorIndex = math.select(win1Sec1Index, win1Sec2Index, win1Sec2Index == win2Sec1Index || win1Sec2Index == win2Sec2Index);
+                if (SectorToPicked[commonSectorIndex] != 0) { continue; }
+                SectorToPicked[commonSectorIndex] = pickedSectorAmount * sectorTileAmount + 1;
+                PickedToSector.Add(commonSectorIndex);
+                pickedSectorAmount++;
+            }
+            int lastIndex = end - 1;
+            int portalIndex = PortalSequence[lastIndex];
+            int windowIndex = PortalNodes[portalIndex].WinPtr;
+            WindowNode winNode = WindowNodes[windowIndex];
+            int sec1Index = WinToSecPtrs[winNode.WinToSecPtr];
+            int sec2Index = WinToSecPtrs[winNode.WinToSecPtr + 1];
+            if (SectorToPicked[sec1Index] != 0) { continue; }
+            SectorToPicked[sec1Index] = pickedSectorAmount * sectorTileAmount + 1;
+            PickedToSector.Add(sec1Index);
+            pickedSectorAmount++;
+            if (SectorToPicked[sec2Index] != 0) { continue; }
+            SectorToPicked[sec2Index] = pickedSectorAmount * sectorTileAmount + 1;
+            PickedToSector.Add(sec2Index);
+            pickedSectorAmount++;
+        }
+        SectorToPicked[_targetSectorIndex1d] = pickedSectorAmount * sectorTileAmount + 1;
+        PickedToSector.Add(_targetSectorIndex1d);
+        pickedSectorAmount++;
+        FlowFieldLength[0] = pickedSectorAmount * sectorTileAmount + 1;
+    }
     //HELPERS
     int GetPortalLocalIndexAtSector(PortalNode portalNode, int sectorIndex, int sectorStartIndex)
     {

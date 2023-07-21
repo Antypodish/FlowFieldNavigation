@@ -285,7 +285,7 @@ public struct PortalNodeAdditionTraversalJob : IJob
         }
         return portalIndicies;
     }
-    void PickSectorsFromPortalSequence()
+    void OldPickSectorsFromPortalSequence()
     {
         int sectorTileAmount = SectorColAmount * SectorColAmount;
         int existingPickedFieldLength = ExistingFlowFieldLength;
@@ -308,6 +308,51 @@ public struct PortalNodeAdditionTraversalJob : IJob
             }
         }
         NewFlowFieldLength[0] = newSectorCount * sectorTileAmount + ExistingFlowFieldLength;
+    }
+    void PickSectorsFromPortalSequence()
+    {
+        int sectorTileAmount = SectorColAmount * SectorColAmount;
+        int existingPickedFieldLength = ExistingFlowFieldLength;
+        int newSectorCount = 0;
+
+        for (int i = 0; i < PortalSequenceBorders.Length - 1; i++)
+        {
+            int start = PortalSequenceBorders[i];
+            int end = PortalSequenceBorders[i + 1];
+            for (int j = start; j < end - 1; j++)
+            {
+                int portalIndex1 = PortalSequence[j];
+                int portalIndex2 = PortalSequence[j + 1];
+                int windowIndex1 = PortalNodes[portalIndex1].WinPtr;
+                int windowIndex2 = PortalNodes[portalIndex2].WinPtr;
+                WindowNode winNode1 = WindowNodes[windowIndex1];
+                WindowNode winNode2 = WindowNodes[windowIndex2];
+                int win1Sec1Index = WinToSecPtrs[winNode1.WinToSecPtr];
+                int win1Sec2Index = WinToSecPtrs[winNode1.WinToSecPtr + 1];
+                int win2Sec1Index = WinToSecPtrs[winNode2.WinToSecPtr];
+                int win2Sec2Index = WinToSecPtrs[winNode2.WinToSecPtr + 1];
+                int commonSectorIndex = math.select(win1Sec1Index, win1Sec2Index, win1Sec2Index == win2Sec1Index || win1Sec2Index == win2Sec2Index);
+                if (SectorToPicked[commonSectorIndex] != 0) { continue; }
+                SectorToPicked[commonSectorIndex] = newSectorCount * sectorTileAmount + existingPickedFieldLength;
+                PickedToSector.Add(commonSectorIndex);
+                newSectorCount++;
+            }
+            int lastIndex = end - 1;
+            int portalIndex = PortalSequence[lastIndex];
+            int windowIndex = PortalNodes[portalIndex].WinPtr;
+            WindowNode winNode = WindowNodes[windowIndex];
+            int sec1Index = WinToSecPtrs[winNode.WinToSecPtr];
+            int sec2Index = WinToSecPtrs[winNode.WinToSecPtr + 1];
+            if (SectorToPicked[sec1Index] != 0) { continue; }
+            SectorToPicked[sec1Index] = newSectorCount * sectorTileAmount + existingPickedFieldLength;
+            PickedToSector.Add(sec1Index);
+            newSectorCount++;
+            if (SectorToPicked[sec2Index] != 0) { continue; }
+            SectorToPicked[sec2Index] = newSectorCount * sectorTileAmount + existingPickedFieldLength;
+            PickedToSector.Add(sec2Index);
+            newSectorCount++;
+        }
+        NewFlowFieldLength[0] = newSectorCount * sectorTileAmount + existingPickedFieldLength;
     }
     LocalIndex1d GetNotCalculatedIndexOfPortalNode(PortalNode portalNode)
     {
