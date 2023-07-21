@@ -57,11 +57,13 @@ public class PathProducer
                     TargetSectorCosts = path.TargetSectorCosts,
                     FlowFieldLength = path.FlowFieldLength,
                 };
+
                 _preallocator.SendPreallocationsBack(ref preallocations, path.Offset);
                 ProducedPaths[ProducedPaths.Count - 1].Id = i;
                 ProducedPaths.RemoveAtSwapBack(i);
             }
         }
+        _preallocator.CheckForDeallocations();
     }
     public PortalTraversalJobPack GetPortalTraversalJobPack(NativeArray<float2> sources, Vector2 destination, int offset)
     {

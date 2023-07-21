@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using Unity.Collections;
 using UnityEditor.Profiling.Memory.Experimental;
 using UnityEngine.Rendering;
@@ -21,14 +22,10 @@ internal class PathPreallocator
         _sectorTransformationFactory = new SectorTransformationFactory(sectorMatrixSectorAmount);
         _flowFieldLengthArrayFactory = new FlowFieldLengthArrayFactory();
     }
-
-    public NativeArray<PortalTraversalData> GetPortalTraversalDataArray(int offset)
+    public void CheckForDeallocations()
     {
-        return _porTravDataArrayFactory.GetPortalTraversalDataArray(offset);
-    }
-    public void Send(ref NativeArray<PortalTraversalData> array, int offset)
-    {
-        _porTravDataArrayFactory.SendPortalTraversalDataArray(ref array, offset);
+        _porTravDataArrayFactory.CheckForCleaningHandles();
+        _sectorTransformationFactory.CheckForCleaningHandles();
     }
     public PreallocationPack GetPreallocations(int offset)
     {
@@ -46,12 +43,12 @@ internal class PathPreallocator
     }
     public void SendPreallocationsBack(ref PreallocationPack preallocations, int offset)
     {
-        _porTravDataArrayFactory.SendPortalTraversalDataArray(ref preallocations.PortalTraversalDataArray, offset);
-        _portalSequenceFactory.SendPortalSequences(ref preallocations.PortalSequence, ref preallocations.PortalSequenceBorders);
-        _targetSectorCostsArrayFactory.SendTargetSectorCosts(ref preallocations.TargetSectorCosts);
-        _blockedWaveFrontQueueFactory.SendBlockedWaveFrontQueueBack(ref preallocations.BlockedWaveFronts);
-        _sectorTransformationFactory.SendSectorTransformationsBack(ref preallocations.SectorToPicked, ref preallocations.PickedToSector);
-        _flowFieldLengthArrayFactory.SendFlowFieldLengthArray(ref preallocations.FlowFieldLength);
+        _porTravDataArrayFactory.SendPortalTraversalDataArray(preallocations.PortalTraversalDataArray, offset);
+        _portalSequenceFactory.SendPortalSequences(preallocations.PortalSequence, preallocations.PortalSequenceBorders); 
+        _targetSectorCostsArrayFactory.SendTargetSectorCosts(preallocations.TargetSectorCosts); 
+        _blockedWaveFrontQueueFactory.SendBlockedWaveFrontQueueBack(preallocations.BlockedWaveFronts);
+        _sectorTransformationFactory.SendSectorTransformationsBack(preallocations.SectorToPicked, preallocations.PickedToSector);
+        _flowFieldLengthArrayFactory.SendFlowFieldLengthArray(preallocations.FlowFieldLength);
     }
     public void DisposeAllPreallocations()
     {

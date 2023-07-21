@@ -26,7 +26,7 @@ internal class PortalSequenceFactory
         _portalSequenceBorders.RemoveAtSwapBack(index);
         return portalSequenceBorders;
     }
-    public void SendPortalSequences(ref NativeList<int> portalSequence, ref NativeList<int> portalSequenceBorders)
+    public void SendPortalSequences(NativeList<int> portalSequence, NativeList<int> portalSequenceBorders)
     {
         portalSequence.Clear();
         portalSequenceBorders.Clear();

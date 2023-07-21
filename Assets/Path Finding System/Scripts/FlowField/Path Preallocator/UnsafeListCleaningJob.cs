@@ -1,7 +1,9 @@
 ﻿using System;
+using Unity.Burst;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 
+[BurstCompile]
 public struct UnsafeListCleaningJob<T> : IJob where T : unmanaged
 {
     public UnsafeList<T> List;

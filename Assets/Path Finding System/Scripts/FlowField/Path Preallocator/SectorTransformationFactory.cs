@@ -7,6 +7,7 @@ public class SectorTransformationFactory
 {
     List<UnsafeList<int>> _sectorToPickedArrays;
     List<NativeList<int>> _pickedToSectorLists;
+    List<CleaningHandle> _cleaningHandles;
     int _sectorMatrixSectorAmount;
 
     public SectorTransformationFactory(int sectorMatrixSectorAmount)
@@ -14,6 +15,20 @@ public class SectorTransformationFactory
         _sectorMatrixSectorAmount = sectorMatrixSectorAmount;
         _sectorToPickedArrays = new List<UnsafeList<int>>();
         _pickedToSectorLists = new List<NativeList<int>>();
+        _cleaningHandles = new List<CleaningHandle>();
+    }
+    public void CheckForCleaningHandles()
+    {
+        for (int i = _cleaningHandles.Count - 1; i >= 0; i--)
+        {
+            CleaningHandle cleaningHandle = _cleaningHandles[i];
+            if (cleaningHandle.Handle.IsCompleted)
+            {
+                cleaningHandle.Handle.Complete();
+                _sectorToPickedArrays.Add(cleaningHandle.List);
+                _cleaningHandles.RemoveAtSwapBack(i);
+            }
+        }
     }
     public UnsafeList<int> GetSectorToPickedArray()
     {
@@ -37,15 +52,25 @@ public class SectorTransformationFactory
         _pickedToSectorLists.RemoveAtSwapBack(index);
         return list;
     }
-    public void SendSectorTransformationsBack(ref UnsafeList<int> sectorToPicked, ref NativeList<int> pickedToSector)
+    public void SendSectorTransformationsBack(UnsafeList<int> sectorToPicked, NativeList<int> pickedToSector)
     {
         UnsafeListCleaningJob<int> cleaning = new UnsafeListCleaningJob<int>()
         {
             List = sectorToPicked,
         };
-        cleaning.Schedule().Complete();
-        _sectorToPickedArrays.Add(sectorToPicked);
+        CleaningHandle cleaningHandle = new CleaningHandle()
+        {
+            Handle = cleaning.Schedule(),
+            List = sectorToPicked,
+        };
+        _cleaningHandles.Add(cleaningHandle);
         pickedToSector.Clear();
         _pickedToSectorLists.Add(pickedToSector);
+    }
+
+    struct CleaningHandle
+    {
+        public UnsafeList<int> List;
+        public JobHandle Handle;
     }
 }

@@ -19,9 +19,9 @@ public class TargetSectorCostArrayFactory
         _targetSectorCostAllocations.RemoveAtSwapBack(index);
         return portalSequence;
     }
-    public void SendTargetSectorCosts(ref NativeArray<DijkstraTile> targetSectorCosts)
+    public void SendTargetSectorCosts(NativeArray<DijkstraTile> targetSectorCosts)
     {
-        DijkstraTileArrayCleaningJob cleaning = new DijkstraTileArrayCleaningJob()
+        NativeArrayCleaningJob<DijkstraTile> cleaning = new NativeArrayCleaningJob<DijkstraTile>()
         {
             Array = targetSectorCosts,
         };

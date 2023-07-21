@@ -17,7 +17,7 @@ public class BlockedWaveFrontQueueFactory
         _blockedWaveFrontQueues.RemoveAtSwapBack(index);
         return queue;
     }
-    public void SendBlockedWaveFrontQueueBack(ref NativeQueue<LocalIndex1d> blockedWaveFrontQueue)
+    public void SendBlockedWaveFrontQueueBack(NativeQueue<LocalIndex1d> blockedWaveFrontQueue)
     {
         blockedWaveFrontQueue.Clear();
         _blockedWaveFrontQueues.Add(blockedWaveFrontQueue);

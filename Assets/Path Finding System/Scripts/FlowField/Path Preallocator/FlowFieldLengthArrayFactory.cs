@@ -19,7 +19,7 @@ public class FlowFieldLengthArrayFactory
         _flowFieldLengths.RemoveAtSwapBack(index);
         return array;
     }
-    public void SendFlowFieldLengthArray(ref NativeArray<int> flowFieldLengthArray)
+    public void SendFlowFieldLengthArray(NativeArray<int> flowFieldLengthArray)
     {
         flowFieldLengthArray[0] = 0;
         _flowFieldLengths.Add(flowFieldLengthArray);
