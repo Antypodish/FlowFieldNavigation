@@ -449,24 +449,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &983938240 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7273620610478753682, guid: a222553a8d76c3b4f84192d5037f50bc,
-    type: 3}
-  m_PrefabInstance: {fileID: 7273620610725417557}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &983938241
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 983938240}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 29c1bad45720ec6408e866276ca4e2af, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &1550691738 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
@@ -836,7 +818,7 @@ PrefabInstance:
     - target: {fileID: 5571130920343903277, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}
       propertyPath: _startingAgentCount
-      value: 7500
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7314432835859767064, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}
