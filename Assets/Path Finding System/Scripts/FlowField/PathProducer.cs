@@ -163,7 +163,6 @@ public class PathProducer
             Costs = pickedCostField.CostsG,
             Target = destinationIndex,
             SectorToPicked = path.SectorToPicked,
-            Directions = pickedCostField.LocalDirections,
             IntegrationField = path.IntegrationField,
             BlockedWaveFronts = path.IntegrationStartIndicies,
         };

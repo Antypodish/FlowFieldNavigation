@@ -22,7 +22,6 @@ public struct LOSJob : IJob
     public int SectorMatrixColAmount;
     public int SectorMatrixRowAmount;
     [ReadOnly] public NativeArray<byte> Costs;
-    [ReadOnly] public NativeArray<UnsafeList<LocalDirectionData1d>> Directions;
     public UnsafeList<int> SectorToPicked;
     public NativeArray<IntegrationTile> IntegrationField;
     public NativeList<LocalIndex1d> BlockedWaveFronts;
