@@ -12,8 +12,8 @@ public class BuildFlowFieldDebugger
         if (agent == null) { return; }
         float tileSize = _pathfindingManager.TileSize;
         float yOffset = 0.001f;
-        int sectorTileAmount = _pathfindingManager.SectorTileAmount * _pathfindingManager.SectorTileAmount;
-        int sectorColAmount = _pathfindingManager.SectorTileAmount;
+        int sectorTileAmount = _pathfindingManager.SectorColAmount * _pathfindingManager.SectorColAmount;
+        int sectorColAmount = _pathfindingManager.SectorColAmount;
         int sectorMatrixColAmount = _pathfindingManager.SectorMatrixColAmount;
 
         Path path = agent.GetPath();

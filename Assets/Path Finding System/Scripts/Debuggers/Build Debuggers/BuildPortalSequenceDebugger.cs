@@ -22,7 +22,7 @@ public class BuildPortalSequenceDebugger
 
         Path path = agent.GetPath();
         if (path == null) { return; }
-        NativeArray<PortalNode> portalNodes = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(path.Offset).FieldGraph.PortalNodes;
+        NativeArray<PortalNode> portalNodes = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(path.Offset).PortalNodes;
         NativeList<int> portalSequence = path.PortalSequence;
         NativeList<int> portalSequenceBorders = path.PortalSequenceBorders;
         for (int i = 0; i < portalSequenceBorders.Length - 1; i++)

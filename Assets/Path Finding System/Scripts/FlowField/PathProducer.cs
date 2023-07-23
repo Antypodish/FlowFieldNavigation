@@ -16,7 +16,7 @@ public class PathProducer
     public List<Path> ProducedPaths;
 
     PathfindingManager _pathfindingManager;
-    CostFieldProducer _costFieldProducer;
+    FieldProducer _fieldProducer;
     PathPreallocator _preallocator;
     int _columnAmount;
     int _rowAmount;
@@ -28,15 +28,15 @@ public class PathProducer
     public PathProducer(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
-        _costFieldProducer = pathfindingManager.CostFieldProducer;
+        _fieldProducer = pathfindingManager.FieldProducer;
         _columnAmount = pathfindingManager.ColumnAmount;
         _rowAmount = pathfindingManager.RowAmount;
         _tileSize = pathfindingManager.TileSize;
-        _sectorTileAmount = pathfindingManager.SectorTileAmount;
+        _sectorTileAmount = pathfindingManager.SectorColAmount;
         _sectorMatrixColAmount = _columnAmount / _sectorTileAmount;
         _sectorMatrixRowAmount = _rowAmount / _sectorTileAmount;
         ProducedPaths = new List<Path>(1);
-        _preallocator = new PathPreallocator(_costFieldProducer, _sectorTileAmount * _sectorTileAmount, _sectorMatrixColAmount * _sectorMatrixRowAmount);
+        _preallocator = new PathPreallocator(_fieldProducer, _sectorTileAmount * _sectorTileAmount, _sectorMatrixColAmount * _sectorMatrixRowAmount);
     }
     public void Update()
     {
@@ -68,7 +68,8 @@ public class PathProducer
     {
         int2 destinationIndex = new int2(Mathf.FloorToInt(destination.x / _tileSize), Mathf.FloorToInt(destination.y / _tileSize));
         int destionationIndexFlat = destinationIndex.y * _columnAmount + destinationIndex.x;
-        CostField pickedCostField = _costFieldProducer.GetCostFieldWithOffset(offset);
+        CostField pickedCostField = _fieldProducer.GetCostFieldWithOffset(offset);
+        FieldGraph pickedFieldGraph = _fieldProducer.GetFieldGraphWithOffset(offset);
 
         //returns portal pack with path=null if target is unwalkable
         if (pickedCostField.CostsG[destionationIndexFlat] == byte.MaxValue) { return new PortalTraversalJobPack(); }
@@ -90,19 +91,19 @@ public class PathProducer
             TargetSectorCosts = targetSectorCosts,
             TargetIndex = destinationIndex,
             FieldColAmount = _columnAmount,
-            PortalNodes = pickedCostField.FieldGraph.PortalNodes,
-            SecToWinPtrs = pickedCostField.FieldGraph.SecToWinPtrs,
-            WindowNodes = pickedCostField.FieldGraph.WindowNodes,
-            WinToSecPtrs = pickedCostField.FieldGraph.WinToSecPtrs,
+            PortalNodes = pickedFieldGraph.PortalNodes,
+            SecToWinPtrs = pickedFieldGraph.SecToWinPtrs,
+            WindowNodes = pickedFieldGraph.WindowNodes,
+            WinToSecPtrs = pickedFieldGraph.WinToSecPtrs,
             FieldRowAmount = _rowAmount,
             FieldTileSize = _tileSize,
             SourcePositions = sources,
-            PorPtrs = pickedCostField.FieldGraph.PorToPorPtrs,
-            SectorNodes = pickedCostField.FieldGraph.SectorNodes,
+            PorPtrs = pickedFieldGraph.PorToPorPtrs,
+            SectorNodes = pickedFieldGraph.SectorNodes,
             Costs = pickedCostField.CostsG,
             SectorColAmount = _sectorTileAmount,
             SectorMatrixColAmount = _columnAmount / _sectorTileAmount,
-            LocalDirections = _costFieldProducer.SectorDirections,
+            LocalDirections = _fieldProducer.GetSectorDirections(),
             PortalSequence = portalSequence,
             SectorToPicked = sectorToPicked,
             FlowFieldLength = flowFieldLength,
@@ -137,7 +138,7 @@ public class PathProducer
     public PathHandle SchedulePathProductionJob(Path path)
     {
 
-        CostField pickedCostField = _costFieldProducer.GetCostFieldWithOffset(path.Offset);
+        CostField pickedCostField = _fieldProducer.GetCostFieldWithOffset(path.Offset);
         NativeArray<int> flowFieldLength = path.FlowFieldLength;
         path.FlowField = new UnsafeList<FlowData>(flowFieldLength[0], Allocator.Persistent);
         path.FlowField.Length = flowFieldLength[0];
@@ -211,7 +212,9 @@ public class PathProducer
             Path path = ProducedPaths[i];
             if(path.IsCalculated && path.State != PathState.ToBeDisposed)
             {
-                CostField pickedCostField = _costFieldProducer.GetCostFieldWithOffset(path.Offset);
+                CostField pickedCostField = _fieldProducer.GetCostFieldWithOffset(path.Offset);
+                FieldGraph pickedFieldGraph = _fieldProducer.GetFieldGraphWithOffset(path.Offset);
+
                 PortalNodeAdditionTraversalJob travJob = new PortalNodeAdditionTraversalJob()
                 {
                     PortalSequenceBorders = path.PortalSequenceBorders,
@@ -221,12 +224,12 @@ public class PathProducer
                     TargetSectorCosts = path.TargetSectorCosts,
                     SectorColAmount = _sectorTileAmount,
                     SectorMatrixColAmount = _sectorMatrixColAmount,
-                    PortalNodes = pickedCostField.FieldGraph.PortalNodes,
-                    SecToWinPtrs = pickedCostField.FieldGraph.SecToWinPtrs,
-                    WindowNodes = pickedCostField.FieldGraph.WindowNodes,
-                    WinToSecPtrs = pickedCostField.FieldGraph.WinToSecPtrs,
-                    PorPtrs = pickedCostField.FieldGraph.PorToPorPtrs,
-                    SectorNodes = pickedCostField.FieldGraph.SectorNodes,
+                    PortalNodes = pickedFieldGraph.PortalNodes,
+                    SecToWinPtrs = pickedFieldGraph.SecToWinPtrs,
+                    WindowNodes = pickedFieldGraph.WindowNodes,
+                    WinToSecPtrs = pickedFieldGraph.WinToSecPtrs,
+                    PorPtrs = pickedFieldGraph.PorToPorPtrs,
+                    SectorNodes = pickedFieldGraph.SectorNodes,
                     PortalSequence = path.PortalSequence,
                     SectorToPicked = path.SectorToPicked,
                     PickedToSector = path.PickedToSector,
@@ -247,7 +250,7 @@ public class PathProducer
     }
     public JobHandle SchedulePathAdditionJob(Path path)
     {
-        CostField pickedCostField = _costFieldProducer.GetCostFieldWithOffset(path.Offset);
+        CostField pickedCostField = _fieldProducer.GetCostFieldWithOffset(path.Offset);
 
         //RESIZING FLOW FIELD
         int oldFieldLength = path.FlowField.Length;

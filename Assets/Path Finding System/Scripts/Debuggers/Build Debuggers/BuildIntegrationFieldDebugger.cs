@@ -32,8 +32,8 @@ public class BuildIntegrationFieldDebugger
         if (_mesh == null) { ConfigMesh(); }
         if (agent == null) { return; }
         float tileSize = _pathfindingManager.TileSize;
-        int sectorTileAmount = _pathfindingManager.SectorTileAmount * _pathfindingManager.SectorTileAmount;
-        int sectorColAmount = _pathfindingManager.SectorTileAmount;
+        int sectorTileAmount = _pathfindingManager.SectorColAmount * _pathfindingManager.SectorColAmount;
+        int sectorColAmount = _pathfindingManager.SectorColAmount;
         int sectorMatrixColAmount = _pathfindingManager.SectorMatrixColAmount;
 
         Path path = agent.GetPath();

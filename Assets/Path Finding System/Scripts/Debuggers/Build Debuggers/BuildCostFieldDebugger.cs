@@ -22,12 +22,12 @@ public class BuildCostFieldDebugger
         if(_mesh == null) { ConfigMesh(); }
         if(agent == null) { return; }
         float tileSize = _pathfindingManager.TileSize;
-        int sectorColAmount = _pathfindingManager.SectorTileAmount;
+        int sectorColAmount = _pathfindingManager.SectorColAmount;
         int sectorMatrixColAmount = _pathfindingManager.SectorMatrixColAmount;
 
         Path path = agent.GetPath();
         if(path == null) { return; }
-        CostField costField = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(path.Offset);
+        CostField costField = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(path.Offset);
         UnsafeList<int> sectorToPicked = path.SectorToPicked;
         NativeArray<UnsafeList<byte>> costs = costField.CostsL;
         for(int i = 0; i < sectorToPicked.Length; i++)

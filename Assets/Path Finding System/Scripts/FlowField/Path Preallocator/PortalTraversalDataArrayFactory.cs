@@ -9,14 +9,13 @@ public class PortalTraversalDataArrayFactory
     List<NativeArray<PortalTraversalData>>[] _preallocationMatrix;
     List<CleaningHandle> _cleaningHandles;
     int[] _portalNodeAmounts;
-    public PortalTraversalDataArrayFactory(CostFieldProducer costFieldProducer)
+    public PortalTraversalDataArrayFactory(FieldGraph[] producedFieldGraphs)
     {
-        CostField[] costFields = costFieldProducer.GetAllCostFields();
-        _preallocationMatrix = new List<NativeArray<PortalTraversalData>>[costFields.Length];
-        _portalNodeAmounts = new int[costFields.Length];
+        _preallocationMatrix = new List<NativeArray<PortalTraversalData>>[producedFieldGraphs.Length];
+        _portalNodeAmounts = new int[producedFieldGraphs.Length];
         for(int i = 0; i < _portalNodeAmounts.Length; i++)
         {
-            _portalNodeAmounts[i] = costFields[i].FieldGraph.PortalNodes.Length;
+            _portalNodeAmounts[i] = producedFieldGraphs[i].PortalNodes.Length;
         }
         for(int i = 0; i < _preallocationMatrix.Length; i++)
         {

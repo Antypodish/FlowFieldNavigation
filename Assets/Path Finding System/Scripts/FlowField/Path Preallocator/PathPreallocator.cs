@@ -5,9 +5,9 @@
     TargetSectorCostArrayFactory _targetSectorCostsArrayFactory;
     SectorTransformationFactory _sectorTransformationFactory;
     FlowFieldLengthArrayFactory _flowFieldLengthArrayFactory;
-    public PathPreallocator(CostFieldProducer costFieldProducer, int sectorTileAmount, int sectorMatrixSectorAmount)
+    public PathPreallocator(FieldProducer fieldProducer, int sectorTileAmount, int sectorMatrixSectorAmount)
     {
-        _porTravDataArrayFactory = new PortalTraversalDataArrayFactory(costFieldProducer);
+        _porTravDataArrayFactory = new PortalTraversalDataArrayFactory(fieldProducer.GetAllFieldGraphs());
         _portalSequenceFactory = new PortalSequenceFactory();
         _targetSectorCostsArrayFactory = new TargetSectorCostArrayFactory(sectorTileAmount);
         _sectorTransformationFactory = new SectorTransformationFactory(sectorMatrixSectorAmount);

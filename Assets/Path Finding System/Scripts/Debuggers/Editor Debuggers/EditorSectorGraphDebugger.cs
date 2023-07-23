@@ -17,7 +17,7 @@ public class EditorSectorGraphDebugger
         Gizmos.color = Color.black;
         float yOffset = 0.02f;
         float tileSize = _pathfindingManager.TileSize;
-        FieldGraph fieldGraph = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).FieldGraph;
+        FieldGraph fieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(offset);
         NativeArray<SectorNode> sectorNodes = fieldGraph.SectorNodes;
         for (int i = 0; i < sectorNodes.Length; i++)
         {
@@ -55,7 +55,7 @@ public class EditorSectorGraphDebugger
         Gizmos.color = Color.black;
         float yOffset = 0.02f;
         float tileSize = _pathfindingManager.TileSize;
-        FieldGraph fieldGraph = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).FieldGraph;
+        FieldGraph fieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(offset);
         NativeArray<WindowNode> windowNodes = fieldGraph.WindowNodes;
         for(int i = 0; i < windowNodes.Length; i++)
         {

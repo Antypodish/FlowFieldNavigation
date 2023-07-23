@@ -20,14 +20,14 @@ public struct FieldGraph
     //helper data
     NativeArray<UnsafeList<byte>> _costsL;
     NativeArray<byte> _costsG;
+    float _tileSize;
     int _fieldRowAmount;
     int _fieldColAmount;
-    float _fieldTileSize;
     int _sectorTileAmount;
     int _sectorMatrixRowAmount;
     int _sectorMatrixColAmount;
     int _portalPerWindow;
-    public FieldGraph(NativeArray<byte> costsG, NativeArray<UnsafeList<byte>> costsL, int sectorSize, int fieldRowAmount, int fieldColAmount, int costFieldOffset, float fieldTileSize)
+    public FieldGraph(NativeArray<byte> costsG, NativeArray<UnsafeList<byte>> costsL, int sectorSize, int fieldRowAmount, int fieldColAmount, int costFieldOffset, float tileSize)
     {
         //size calculations
         int sectorMatrixRowAmount = fieldRowAmount / sectorSize;
@@ -47,11 +47,11 @@ public struct FieldGraph
         int porToPorPtrAmount = portalAmount * (portalPerWindow * 8 - 2);
 
         //innitialize fields
+        _tileSize = tileSize;
         _sectorMatrixColAmount = sectorMatrixColAmount;
         _sectorMatrixRowAmount = sectorMatrixRowAmount;
         _fieldColAmount = fieldColAmount;
         _fieldRowAmount = fieldRowAmount;
-        _fieldTileSize = fieldTileSize;
         _sectorTileAmount = sectorSize;
         _portalPerWindow = portalPerWindow;
         _costsG = costsG;
@@ -77,7 +77,6 @@ public struct FieldGraph
             Costs = _costsG,
             FieldColAmount = _fieldColAmount,
             FieldRowAmount = _fieldRowAmount,
-            FieldTileSize = _fieldTileSize,
             SectorTileAmount = _sectorTileAmount,
             SectorMatrixColAmount = _sectorMatrixColAmount,
             SectorMatrixRowAmount = _sectorMatrixRowAmount,
@@ -102,7 +101,6 @@ public struct FieldGraph
             CostsG = _costsG,
             FieldColAmount = _fieldColAmount,
             FieldRowAmount = _fieldRowAmount,
-            FieldTileSize = _fieldTileSize,
             SectorColAmount = _sectorTileAmount,
             SectorMatrixColAmount = _sectorMatrixColAmount,
             SectorMatrixRowAmount = _sectorMatrixRowAmount,
@@ -172,7 +170,7 @@ public struct FieldGraph
     }
     public SectorNode GetSectorNodeAt(Vector3 pos)
     {
-        float sectorSize = _sectorTileAmount * _fieldTileSize;
+        float sectorSize = _sectorTileAmount * _tileSize;
         Index2 index2 = new Index2(Mathf.FloorToInt(pos.z / sectorSize), Mathf.FloorToInt(pos.x / sectorSize));
         int index = Index2.ToIndex(index2, _sectorMatrixColAmount);
         return SectorNodes[index];

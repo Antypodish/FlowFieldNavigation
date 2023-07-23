@@ -23,8 +23,8 @@ public class EditorAStarDebugger
     public void DebugAstarForPortal(int offset)
     {
         float yOffset = .2f;
-        FieldGraph fieldGraph = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).FieldGraph;
-        NativeArray<byte> costs = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset).CostsG;
+        FieldGraph fieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(offset);
+        NativeArray<byte> costs = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(offset).CostsG;
         SetClickedPortalNode(fieldGraph);
         Portal clickedPortal1 = _clickedPortalNode.Portal1;
         Portal clickedPortal2 = _clickedPortalNode.Portal2;

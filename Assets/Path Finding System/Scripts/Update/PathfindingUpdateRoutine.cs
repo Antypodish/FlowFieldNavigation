@@ -44,7 +44,7 @@ public class PathfindingUpdateRoutine
     {
         Index2 b1 = new Index2(startingPoint.y, startingPoint.x);
         Index2 b2 = new Index2(endPoint.y, endPoint.x);
-        CostFieldEditJob[] costEditJobs = _pathfindingManager.CostFieldProducer.GetEditJobs(new BoundaryData(b1, b2), newCost);
+        CostFieldEditJob[] costEditJobs = _pathfindingManager.FieldProducer.GetCostFieldEditJobs(new BoundaryData(b1, b2), newCost);
         _costEditRequests.Add(costEditJobs);
     }
     public Path RequestPath(NativeArray<float2> sources, Vector2 destination, int offset)

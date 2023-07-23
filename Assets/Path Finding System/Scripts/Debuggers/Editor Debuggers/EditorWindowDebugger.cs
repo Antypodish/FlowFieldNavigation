@@ -1,5 +1,6 @@
 ﻿#if (UNITY_EDITOR) 
 
+using Unity.Collections;
 using UnityEngine;
 public class EditorWindowDebugger
 {
@@ -58,11 +59,11 @@ public class EditorWindowDebugger
         float yOffset = .02f;
         float tileSize = _pathfindingManager.TileSize;
 
-        CostField costField = _pathfindingManager.CostFieldProducer.GetCostFieldWithOffset(offset);
-        for (int i = 0; i < costField.FieldGraph.WindowNodes.Length; i++)
+        NativeArray<WindowNode> windowNodes = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(offset).WindowNodes;
+        for (int i = 0; i < windowNodes.Length; i++)
         {
-            Index2 botLeftBound = costField.FieldGraph.WindowNodes[i].Window.BottomLeftBoundary;
-            Index2 upRightBound = costField.FieldGraph.WindowNodes[i].Window.TopRightBoundary;
+            Index2 botLeftBound = windowNodes[i].Window.BottomLeftBoundary;
+            Index2 upRightBound = windowNodes[i].Window.TopRightBoundary;
             for(int r = botLeftBound.R; r <= upRightBound.R; r++)
             {
                 for(int c = botLeftBound.C; c <= upRightBound.C; c++)

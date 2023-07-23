@@ -12,11 +12,11 @@ public class PathfindingManager : MonoBehaviour
     [HideInInspector] public float TileSize;
     [HideInInspector] public int RowAmount;
     [HideInInspector] public int ColumnAmount;
-    [HideInInspector] public byte SectorTileAmount = 10;
+    [HideInInspector] public byte SectorColAmount = 10;
     [HideInInspector] public int SectorMatrixColAmount;
     [HideInInspector] public int SectorMatrixRowAmount;
 
-    public CostFieldProducer CostFieldProducer;
+    public FieldProducer FieldProducer;
     public PathProducer PathProducer;
     public AgentDataContainer AgentDataContainer;
 
@@ -34,14 +34,15 @@ public class PathfindingManager : MonoBehaviour
         TileSize = _terrainGenerator.TileSize;
         RowAmount = _terrainGenerator.RowAmount;
         ColumnAmount = _terrainGenerator.ColumnAmount;
-        SectorMatrixColAmount = ColumnAmount / SectorTileAmount;
-        SectorMatrixRowAmount = RowAmount / SectorTileAmount;
-        CostFieldProducer = new CostFieldProducer(_terrainGenerator.WalkabilityData, SectorTileAmount, ColumnAmount, RowAmount, SectorMatrixColAmount, SectorMatrixRowAmount);
-        CostFieldProducer.StartCostFieldProduction(0, _maxCostfieldOffset, SectorTileAmount, SectorMatrixColAmount, SectorMatrixRowAmount);
+        SectorMatrixColAmount = ColumnAmount / SectorColAmount;
+        SectorMatrixRowAmount = RowAmount / SectorColAmount;
+
+        FieldProducer = new FieldProducer(_terrainGenerator.WalkabilityData, SectorColAmount);
+        FieldProducer.CreateField(_maxCostfieldOffset, SectorColAmount, SectorMatrixColAmount, SectorMatrixRowAmount, RowAmount, ColumnAmount, TileSize);
+
         PathProducer = new PathProducer(this);
         _pathfindingUpdateRoutine = new PathfindingUpdateRoutine(this, PathProducer);
         _agentUpdater = new AgentUpdater(AgentDataContainer, this);
-        CostFieldProducer.ForceCompleteCostFieldProduction();
 
         SetFlowFieldUtilities();
     }
@@ -66,9 +67,9 @@ public class PathfindingManager : MonoBehaviour
         FlowFieldUtilities.SectorMatrixTileAmount = SectorMatrixColAmount * SectorMatrixRowAmount;
         FlowFieldUtilities.SectorMatrixRowAmount = SectorMatrixRowAmount;
         FlowFieldUtilities.SectorMatrixColAmount = SectorMatrixColAmount;
-        FlowFieldUtilities.SectorColAmount = SectorTileAmount;
-        FlowFieldUtilities.SectorRowAmount = SectorTileAmount;
-        FlowFieldUtilities.SectorTileAmount = SectorTileAmount * SectorTileAmount;
+        FlowFieldUtilities.SectorColAmount = SectorColAmount;
+        FlowFieldUtilities.SectorRowAmount = SectorColAmount;
+        FlowFieldUtilities.SectorTileAmount = SectorColAmount * SectorColAmount;
         FlowFieldUtilities.TileSize = TileSize;
         FlowFieldUtilities.FieldColAmount = ColumnAmount;
         FlowFieldUtilities.FieldRowAmount = RowAmount;

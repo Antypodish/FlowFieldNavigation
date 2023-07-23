@@ -355,11 +355,19 @@ public struct PortalNodeTraversalJob : IJob
                 int win1Sec2Index = WinToSecPtrs[winNode1.WinToSecPtr + 1];
                 int win2Sec1Index = WinToSecPtrs[winNode2.WinToSecPtr];
                 int win2Sec2Index = WinToSecPtrs[winNode2.WinToSecPtr + 1];
-                int commonSectorIndex = math.select(win1Sec1Index, win1Sec2Index, win1Sec2Index == win2Sec1Index || win1Sec2Index == win2Sec2Index);
-                if (SectorToPicked[commonSectorIndex] != 0) { continue; }
-                SectorToPicked[commonSectorIndex] = pickedSectorAmount * sectorTileAmount + 1;
-                PickedToSector.Add(commonSectorIndex);
-                pickedSectorAmount++;
+                if ((win1Sec1Index == win2Sec1Index || win1Sec1Index == win2Sec2Index)&& SectorToPicked[win1Sec1Index] == 0)
+                {
+                    SectorToPicked[win1Sec1Index] = pickedSectorAmount * sectorTileAmount + 1;
+                    PickedToSector.Add(win1Sec1Index);
+                    pickedSectorAmount++;
+                }
+                if ((win1Sec2Index == win2Sec1Index || win1Sec2Index == win2Sec2Index) && SectorToPicked[win1Sec2Index] == 0)
+                {
+                    SectorToPicked[win1Sec2Index] = pickedSectorAmount * sectorTileAmount + 1;
+                    PickedToSector.Add(win1Sec2Index);
+                    pickedSectorAmount++;
+                }
+                
             }
             int lastIndex = end - 1;
             int portalIndex = PortalSequence[lastIndex];

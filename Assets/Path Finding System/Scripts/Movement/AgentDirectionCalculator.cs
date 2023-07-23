@@ -75,7 +75,7 @@ public class AgentDirectionCalculator
         return new AgentMovementDataCalculationJob()
         {
             TileSize = _pathfindingManager.TileSize,
-            SectorColAmount = _pathfindingManager.SectorTileAmount,
+            SectorColAmount = _pathfindingManager.SectorColAmount,
             SectorMatrixColAmount = _pathfindingManager.SectorMatrixColAmount,
             AgentMovementData = _agentMovementDataList,
         };

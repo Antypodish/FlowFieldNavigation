@@ -1,220 +1,305 @@
-﻿using Unity.Burst;
+﻿using System.Linq;
+using Unity.Burst;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
+using Unity.VisualScripting;
+using UnityEngine;
 
 [BurstCompile]
-public struct FieldGraphConfigurationJob : IJob
+public struct CostFieldEditJob : IJob
 {
+    public byte NewCost;
+    public BoundaryData Bounds;
     public NativeArray<SectorNode> SectorNodes;
     public NativeArray<int> SecToWinPtrs;
     public NativeArray<WindowNode> WindowNodes;
     public NativeArray<int> WinToSecPtrs;
     public NativeArray<PortalNode> PortalNodes;
-    public NativeArray<PortalToPortal> PorToPorPtrs;
-    public NativeArray<byte> Costs;
-    public int FieldRowAmount;
+    public NativeArray<PortalToPortal> PorPtrs;
+    public NativeArray<UnsafeList<byte>> CostsL;
+    public NativeArray<byte> CostsG;
     public int FieldColAmount;
-    public float FieldTileSize;
-    public int SectorTileAmount;
+    public int FieldRowAmount;
+    public int SectorColAmount;
     public int SectorMatrixColAmount;
     public int SectorMatrixRowAmount;
     public int PortalPerWindow;
     public NativeArray<AStarTile> IntegratedCosts;
     public NativeQueue<int> AStarQueue;
+    public NativeList<int> EditedSectorIndicies;
 
 
+    int _sectorTileAmount;
     public void Execute()
     {
-        ConfigureSectorNodes(SectorTileAmount);
-        ConfigureWindowNodes(PortalPerWindow);
-        ConfigureSectorToWindowPoiners();
-        ConfigureWindowToSectorPointers();
-        ConfigurePortalNodes(PortalPerWindow * 8 - 2);
-        ConfigurePortalToPortalPtrs();
+        _sectorTileAmount = SectorColAmount * SectorColAmount;
+        ApplyCostUpdate();
+        SetSectorsBetweenBounds();
+        NativeArray<int> windowIndiciesBetweenBounds = GetWindowsBetweenBounds(EditedSectorIndicies);
+        ResetConnectionsIn(EditedSectorIndicies);
+        RecalcualatePortalsAt(windowIndiciesBetweenBounds);
+        RecalculatePortalConnectionsAt(EditedSectorIndicies);
     }
-    void ConfigureSectorNodes(int sectorSize)
+    void ApplyCostUpdate()
     {
-        //int sectorMatrixSize = _sectorMatrixSize;
+        int sectorColAmount = SectorColAmount;
+        int sectorMatrixColAmount = SectorMatrixColAmount;
+        //APPLY FOR GENERAL COST FIELD
+        Index2 botLeft = Bounds.BottomLeft;
+        Index2 topRight = Bounds.UpperRight;
+        if (botLeft.R == 0) { botLeft.R += 1; }
+        if (botLeft.C == 0) { botLeft.C += 1; }
+        if (topRight.R == FieldRowAmount - 1) { topRight.R -= 1; }
+        if(topRight.C == FieldColAmount - 1) { topRight.C -= 1; }
 
-        int iterableSecToWinPtr = 0;
-        for (int r = 0; r < SectorMatrixRowAmount; r++)
+        int bound1Flat = botLeft.R * FieldColAmount + botLeft.C;
+        int bound2Flat = topRight.R * FieldColAmount + topRight.C;
+        int colDif = topRight.C - botLeft.C;
+
+        for(int r = bound1Flat; r <= bound2Flat - colDif; r += FieldColAmount)
         {
-            for (int c = 0; c < SectorMatrixColAmount; c++)
+            for(int i = r; i <= r + colDif; i++)
             {
-                int index = r * SectorMatrixColAmount + c;
-                Sector sect = new Sector(new Index2(r * sectorSize, c * sectorSize), sectorSize);
-                int secToWinCnt = 4;
-                if (sect.IsOnCorner(FieldColAmount, FieldRowAmount))
+                CostsG[i] = NewCost;
+            }
+        }
+
+        //APPLY FOR LOCAL COST FIELD
+        int eastCount = topRight.C - botLeft.C;
+        int northCount = topRight.R - botLeft.R;
+        int sectorTileAmount = SectorColAmount * SectorColAmount;
+        LocalIndex1d localBotLeft = GetLocalIndex(botLeft);
+        LocalIndex1d startLocal1d = localBotLeft;
+        LocalIndex1d curLocalIndex = localBotLeft;
+        UnsafeList<byte> costSector;
+        for(int i = 0; i <= northCount; i++)
+        {
+            for(int j = 0; j <= eastCount; j++)
+            {
+                costSector = CostsL[curLocalIndex.sector];
+                costSector[curLocalIndex.index] = NewCost;
+                curLocalIndex = GetEast(curLocalIndex);
+            }
+            startLocal1d = GetNorth(startLocal1d);
+            curLocalIndex = startLocal1d;
+        }
+
+        LocalIndex1d GetLocalIndex(Index2 index)
+        {
+            int2 general2d = new int2(index.C, index.R);
+            int2 sector2d = general2d / sectorColAmount;
+            int sector1d = sector2d.y * sectorMatrixColAmount + sector2d.x;
+            int2 sectorStart2d = sector2d * sectorColAmount;
+            int2 local2d = general2d - sectorStart2d;
+            int local1d = local2d.y * sectorColAmount + local2d.x;
+            return new LocalIndex1d(local1d, sector1d);
+        }
+        LocalIndex1d GetEast(LocalIndex1d local)
+        {
+            int eLocal1d = local.index + 1;
+            bool eLocalOverflow = (eLocal1d % sectorColAmount) == 0;
+            int eSector1d = math.select(local.sector, local.sector + 1, eLocalOverflow);
+            eLocal1d = math.select(eLocal1d, local.index - sectorColAmount + 1, eLocalOverflow);
+            return new LocalIndex1d(eLocal1d, eSector1d);
+        }
+        LocalIndex1d GetNorth(LocalIndex1d local)
+        {
+            int nLocal1d = local.index + sectorColAmount;
+            bool nLocalOverflow = nLocal1d >= sectorTileAmount;
+            int nSector1d = math.select(local.sector, local.sector + sectorMatrixColAmount, nLocalOverflow);
+            nLocal1d = math.select(nLocal1d, local.index - (sectorColAmount * sectorColAmount - sectorColAmount), nLocalOverflow);
+            return new LocalIndex1d(nLocal1d, nSector1d);
+        }
+    }
+    void SetSectorsBetweenBounds()
+    {
+        Index2 botLeft = Bounds.BottomLeft;
+        Index2 topRight = Bounds.UpperRight;
+        int bottomLeftRow = botLeft.R / SectorColAmount;
+        int bottomLeftCol = botLeft.C / SectorColAmount;
+        int upperRightRow = topRight.R / SectorColAmount;
+        int upperRightCol = topRight.C / SectorColAmount;
+
+        int bottomLeft = bottomLeftRow * SectorMatrixColAmount + bottomLeftCol;
+        int upperRight = upperRightRow * SectorMatrixColAmount + upperRightCol;
+
+        bool isSectorOnTop = upperRight / SectorMatrixColAmount == SectorMatrixRowAmount - 1;
+        bool isSectorOnBot = bottomLeft - SectorMatrixColAmount < 0;
+        bool isSectorOnRight = (upperRight + 1) % SectorMatrixColAmount == 0;
+        bool isSectorOnLeft = bottomLeft % SectorMatrixColAmount == 0;
+
+        bool doesIntersectLowerSectors = botLeft.R % SectorColAmount == 0;
+        bool doesIntersectUpperSectors = (topRight.R + 1) % SectorColAmount == 0;
+        bool doesIntersectLeftSectors = botLeft.C % SectorColAmount == 0;
+        bool doesIntersectRightSectors = (topRight.C + 1) % SectorColAmount == 0;
+
+        int sectorRowCount = upperRightRow - bottomLeftRow + 1;
+        int sectorColCount = upperRightCol - bottomLeftCol + 1;
+
+        for (int r = bottomLeft; r < bottomLeft + sectorRowCount * SectorMatrixColAmount; r += SectorMatrixColAmount)
+        {
+            for (int i = r; i < r + sectorColCount; i++)
+            {
+                EditedSectorIndicies.Add(i);
+            }
+        }
+        if (!isSectorOnTop && doesIntersectUpperSectors)
+        {
+            for (int i = upperRight + SectorMatrixColAmount; i > upperRight + SectorMatrixColAmount - sectorColCount; i--)
+            {
+                EditedSectorIndicies.Add(i);
+            }
+        }
+        if (!isSectorOnBot && doesIntersectLowerSectors)
+        {
+            for (int i = bottomLeft - SectorMatrixColAmount; i < bottomLeft - SectorMatrixColAmount + sectorColCount; i++)
+            {
+                EditedSectorIndicies.Add(i);
+            }
+        }
+        if (!isSectorOnRight && doesIntersectRightSectors)
+        {
+            for (int i = upperRight + 1; i > upperRight + 1 - sectorRowCount * SectorMatrixColAmount; i -= SectorMatrixColAmount)
+            {
+                EditedSectorIndicies.Add(i);
+            }
+        }
+        if (!isSectorOnLeft && doesIntersectLeftSectors)
+        {
+            for (int i = bottomLeft - 1; i < bottomLeft - 1 + sectorRowCount * SectorMatrixColAmount; i += SectorMatrixColAmount)
+            {
+                EditedSectorIndicies.Add(i);
+            }
+        }
+        int GetSectorAmount()
+        {
+            int amount = sectorRowCount * sectorColCount;
+            if (!isSectorOnTop && doesIntersectUpperSectors)
+            {
+                amount += sectorColCount;
+            }
+            if (!isSectorOnBot && doesIntersectLowerSectors)
+            {
+                amount += sectorColCount;
+            }
+            if (!isSectorOnRight && doesIntersectRightSectors)
+            {
+                amount += sectorRowCount;
+            }
+            if (!isSectorOnLeft && doesIntersectLeftSectors)
+            {
+                amount += sectorRowCount;
+            }
+            return amount;
+        }
+    }
+    NativeArray<int> GetWindowsBetweenBounds(NativeArray<int> helperSectorIndicies)
+    {
+        Index2 botLeft = Bounds.BottomLeft;
+        Index2 topRight = Bounds.UpperRight;
+        int boundLeftC = botLeft.C;
+        int boundRightC = topRight.C;
+        int boundBotR = botLeft.R;
+        int boundTopR = topRight.R;
+
+        NativeArray<int> windows = new NativeArray<int>(2 + helperSectorIndicies.Length * 2, Allocator.Temp);
+        int windowIterable = 0;
+        for (int i = 0; i < helperSectorIndicies.Length; i++)
+        {
+            int secToWinPtr = SectorNodes[helperSectorIndicies[i]].SecToWinPtr;
+            int secToWinCnt = SectorNodes[helperSectorIndicies[i]].SecToWinCnt;
+            for (int j = secToWinPtr; j < secToWinPtr + secToWinCnt; j++)
+            {
+                int windowIndex = SecToWinPtrs[j];
+                Window window = WindowNodes[windowIndex].Window;
+                if (BoundsCollideWith(window))
                 {
-                    secToWinCnt = 2;
+                    if (ArrayContains(windows, windowIterable, windowIndex)) { continue; }
+                    windows[windowIterable++] = windowIndex;
                 }
-                else if (sect.IsOnEdge(FieldColAmount, FieldRowAmount))
+            }
+        }
+        return windows.GetSubArray(0, windowIterable);
+
+        bool BoundsCollideWith(Window window)
+        {
+            int rightDistance = boundLeftC - window.TopRightBoundary.C;
+            int leftDistance = window.BottomLeftBoundary.C - boundRightC;
+            int topDitance = boundBotR - window.TopRightBoundary.R;
+            int botDistance = window.BottomLeftBoundary.R - boundTopR;
+            if (rightDistance > 0) { return false; }
+            if (leftDistance > 0) { return false; }
+            if (topDitance > 0) { return false; }
+            if (botDistance > 0) { return false; }
+            return true;
+        }
+        bool ArrayContains(NativeArray<int> windowPairs, int windowCount,int windowIndex)
+        {
+            for (int i = 0; i < windowCount; i++)
+            {
+                if (windowPairs[i] == windowIndex)
                 {
-                    secToWinCnt = 3;
+                    return true;
                 }
-                SectorNodes[index] = new SectorNode(sect, secToWinCnt, iterableSecToWinPtr);
-                iterableSecToWinPtr += secToWinCnt;
+            }
+            return false;
+        }
+    }
+    void ResetConnectionsIn(NativeArray<int> sectorIndicies)
+    {
+        for (int i = 0; i < sectorIndicies.Length; i++)
+        {
+            int pickedSectorIndex = sectorIndicies[i];
+            SectorNode pickedSectorNode = SectorNodes[pickedSectorIndex];
+            int pickedSecToWinPtr = pickedSectorNode.SecToWinPtr;
+            for (int j = 0; j < pickedSectorNode.SecToWinCnt; j++)
+            {
+                WindowNode pickedWindowNode = WindowNodes[SecToWinPtrs[pickedSecToWinPtr + j]];
+                int pickedWinToPorPtr = pickedWindowNode.PorPtr;
+                for (int k = 0; k < pickedWindowNode.PorCnt; k++)
+                {
+                    PortalNode pickedPortalNode = PortalNodes[pickedWinToPorPtr + k];
+                    int portal1SectorspaceFlatIndex = (pickedPortalNode.Portal1.Index.R / SectorColAmount) * SectorMatrixColAmount + (pickedPortalNode.Portal1.Index.C / SectorColAmount);
+                    if (portal1SectorspaceFlatIndex == pickedSectorIndex)
+                    {
+                        pickedPortalNode.Portal1.PorToPorCnt = 0;
+                    }
+                    else
+                    {
+                        pickedPortalNode.Portal2.PorToPorCnt = 0;
+                    }
+                    PortalNodes[pickedWinToPorPtr + k] = pickedPortalNode;
+                }
             }
         }
     }
-    void ConfigureSectorToWindowPoiners()
+    void RecalcualatePortalsAt(NativeArray<int> windowIndicies)
     {
-        int sectorSize = SectorNodes[0].Sector.Size;
-        int secToWinPtrIterable = 0;
-        for (int i = 0; i < SectorNodes.Length; i++)
-        {
-            Index2 sectorStartIndex = SectorNodes[i].Sector.StartIndex;
-            Index2 topWinIndex = new Index2(sectorStartIndex.R + sectorSize - 1, sectorStartIndex.C);
-            Index2 rightWinIndex = new Index2(sectorStartIndex.R, sectorStartIndex.C + sectorSize - 1);
-            Index2 botWinIndex = new Index2(sectorStartIndex.R - 1, sectorStartIndex.C);
-            Index2 leftWinIndex = new Index2(sectorStartIndex.R, sectorStartIndex.C - 1);
-            for (int j = 0; j < WindowNodes.Length; j++)
-            {
-                Window window = WindowNodes[j].Window;
-                if (window.BottomLeftBoundary == topWinIndex) { SecToWinPtrs[secToWinPtrIterable++] = j; }
-                else if (window.BottomLeftBoundary == rightWinIndex) { SecToWinPtrs[secToWinPtrIterable++] = j; }
-                else if (window.BottomLeftBoundary == botWinIndex) { SecToWinPtrs[secToWinPtrIterable++] = j; }
-                else if (window.BottomLeftBoundary == leftWinIndex) { SecToWinPtrs[secToWinPtrIterable++] = j; }
-            }
-        }
-    }
-    void ConfigureWindowNodes(int portalPerWindow)
-    {
-        //DATA
-
-        int porPtrJumpFactor = portalPerWindow;
-        NativeArray<byte> costs = Costs;
+        int porToPorCnt = PortalPerWindow * 8 - 2;
         int fieldColAmount = FieldColAmount;
-
-        //CODE
-
-        int windowNodesIndex = 0;
-        int iterableWinToSecPtr = 0;
-        for (int r = 0; r < SectorMatrixRowAmount; r++)
-        {
-            for (int c = 0; c < SectorMatrixColAmount; c++)
-            {
-                int index = r * SectorMatrixColAmount + c;
-                Sector sector = SectorNodes[index].Sector;
-
-                //create upper window relative to the sector
-                if (!sector.IsOnTop(FieldRowAmount))
-                {
-                    Window window = GetUpperWindowFor(sector);
-                    WindowNodes[windowNodesIndex] = new WindowNode(window, 2, iterableWinToSecPtr, windowNodesIndex * porPtrJumpFactor, GetPortalCountFor(window));
-                    windowNodesIndex++;
-                    iterableWinToSecPtr += 2;
-                }
-
-                //create right window relative to the sector
-                if (!sector.IsOnRight(fieldColAmount))
-                {
-                    Window window = GetRightWindowFor(sector);
-                    WindowNodes[windowNodesIndex] = new WindowNode(window, 2, iterableWinToSecPtr, windowNodesIndex * porPtrJumpFactor, GetPortalCountFor(window));
-                    windowNodesIndex++;
-                    iterableWinToSecPtr += 2;
-                }
-            }
-        }
-        
-        //HELPERS
-
-        Window GetUpperWindowFor(Sector sector)
-        {
-            Index2 bottomLeftBoundary = new Index2(sector.StartIndex.R + sector.Size - 1, sector.StartIndex.C);
-            Index2 topRightBoundary = new Index2(sector.StartIndex.R + sector.Size, sector.StartIndex.C + sector.Size - 1);
-            return new Window(bottomLeftBoundary, topRightBoundary);
-        }
-        Window GetRightWindowFor(Sector sector)
-        {
-            Index2 bottomLeftBoundary = new Index2(sector.StartIndex.R, sector.StartIndex.C + sector.Size - 1);
-            Index2 topRightBoundary = new Index2(bottomLeftBoundary.R + sector.Size - 1, bottomLeftBoundary.C + 1);
-            return new Window(bottomLeftBoundary, topRightBoundary);
-        }
-        int GetPortalCountFor(Window window)
-        {
-            if (window.IsHorizontal())  //if horizontal
-            {
-                int portalAmount = 0;
-                bool wasUnwalkableFlag = true;
-                int startCol = window.BottomLeftBoundary.C;
-                int lastCol = window.TopRightBoundary.C;
-                int row1 = window.BottomLeftBoundary.R;
-                int row2 = window.TopRightBoundary.R;
-                for (int i = startCol; i <= lastCol; i++)
-                {
-                    int costIndex1 = row1 * fieldColAmount + i;
-                    int costIndex2 = row2 * fieldColAmount + i;
-                    if (costs[costIndex1] == byte.MaxValue) { wasUnwalkableFlag = true; }
-                    else if (costs[costIndex2] == byte.MaxValue) { wasUnwalkableFlag = true; }
-                    else if (wasUnwalkableFlag) { portalAmount++; wasUnwalkableFlag = false; }
-                }
-                return portalAmount;
-            }
-            else //if vertical
-            {
-                int portalAmount = 0;
-                bool wasUnwalkableFlag = true;
-                int startRow = window.BottomLeftBoundary.R;
-                int lastRow = window.TopRightBoundary.R;
-                int col1 = window.BottomLeftBoundary.C;
-                int col2 = window.TopRightBoundary.C;
-                for (int i = startRow; i <= lastRow; i++)
-                {
-                    int costIndex1 = i * fieldColAmount + col1;
-                    int costIndex2 = i * fieldColAmount + col2;
-                    if (costs[costIndex1] == byte.MaxValue) { wasUnwalkableFlag = true; }
-                    else if (costs[costIndex2] == byte.MaxValue) { wasUnwalkableFlag = true; }
-                    else if (wasUnwalkableFlag) { portalAmount++; wasUnwalkableFlag = false; }
-                }
-                return portalAmount;
-            }
-        }
-    }
-    void ConfigureWindowToSectorPointers()
-    {
-        int winToSecPtrIterable = 0;
-        for (int i = 0; i < WindowNodes.Length; i++)
-        {
-            Index2 botLeft = WindowNodes[i].Window.BottomLeftBoundary;
-            Index2 topRight = WindowNodes[i].Window.TopRightBoundary;
-            for (int j = 0; j < SectorNodes.Length; j++)
-            {
-                if (SectorNodes[j].Sector.ContainsIndex(botLeft))
-                {
-                    WinToSecPtrs[winToSecPtrIterable] = j;
-                }
-                else if (SectorNodes[j].Sector.ContainsIndex(topRight))
-                {
-                    WinToSecPtrs[winToSecPtrIterable + 1] = j;
-                }
-            }
-            winToSecPtrIterable += 2;
-        }
-    }
-    void ConfigurePortalNodes(int porToPorCnt)
-    {
-        int fieldColAmount = FieldColAmount;
-        int fieldRowAmount = FieldRowAmount;
-        NativeArray<WindowNode> windowNodes = WindowNodes;
-        NativeArray<byte> costs = Costs;
+        NativeArray<byte> costs = CostsG;
         NativeArray<PortalNode> portalNodes = PortalNodes;
 
-        for (int i = 0; i < windowNodes.Length; i++)
+        for (int i = 0; i < windowIndicies.Length; i++)
         {
-            Window window = windowNodes[i].Window;
+            int windowIndex = windowIndicies[i];
+            WindowNode windowNode = WindowNodes[windowIndex];
+            Window window = windowNode.Window;
             if (window.IsHorizontal())
             {
                 ConfigureForHorizontal();
+                WindowNodes[windowIndex] = windowNode;
             }
             else
             {
                 ConfigureForVertical();
+                WindowNodes[windowIndex] = windowNode;
             }
             void ConfigureForHorizontal()
             {
-                int porPtr = windowNodes[i].PorPtr;
+                int porPtr = windowNode.PorPtr;
                 int portalCount = 0;
                 bool wasUnwalkable = true;
                 Index2 bound1 = new Index2();
@@ -242,19 +327,21 @@ public struct FieldGraphConfigurationJob : IJob
                     }
                     if ((costs[index1] == byte.MaxValue || costs[index2] == byte.MaxValue) && !wasUnwalkable)
                     {
-                        portalNodes[porPtr + portalCount] = GetPortalNodeBetween(bound1, bound2, porPtr, portalCount, i, true);
+                        portalNodes[porPtr + portalCount] = GetPortalNodeBetween(bound1, bound2, porPtr, portalCount, windowIndicies[i], true);
                         portalCount++;
                         wasUnwalkable = true;
                     }
                 }
                 if (!wasUnwalkable)
                 {
-                    portalNodes[porPtr + portalCount] = GetPortalNodeBetween(bound1, bound2, porPtr, portalCount, i, true);
+                    portalNodes[porPtr + portalCount] = GetPortalNodeBetween(bound1, bound2, porPtr, portalCount, windowIndicies[i], true);
+                    portalCount++;
                 }
+                windowNode.PorCnt = portalCount;
             }
             void ConfigureForVertical()
             {
-                int porPtr = windowNodes[i].PorPtr;
+                int porPtr = windowNode.PorPtr;
                 int portalCount = 0;
                 bool wasUnwalkable = true;
                 Index2 bound1 = new Index2();
@@ -282,15 +369,17 @@ public struct FieldGraphConfigurationJob : IJob
                     }
                     if ((costs[index1] == byte.MaxValue || costs[index2] == byte.MaxValue) && !wasUnwalkable)
                     {
-                        portalNodes[porPtr + portalCount] = GetPortalNodeBetween(bound1, bound2, porPtr, portalCount, i, false);
+                        portalNodes[porPtr + portalCount] = GetPortalNodeBetween(bound1, bound2, porPtr, portalCount, windowIndicies[i], false);
                         portalCount++;
                         wasUnwalkable = true;
                     }
                 }
                 if (!wasUnwalkable)
                 {
-                    portalNodes[porPtr + portalCount] = GetPortalNodeBetween(bound1, bound2, porPtr, portalCount, i, false); ;
+                    portalNodes[porPtr + portalCount] = GetPortalNodeBetween(bound1, bound2, porPtr, portalCount, windowIndicies[i], false);
+                    portalCount++;
                 }
+                windowNode.PorCnt = portalCount;
             }
         }
         PortalNode GetPortalNodeBetween(Index2 boundary1, Index2 boundary2, int porPtr, int portalCount, int winPtr, bool isHorizontal)
@@ -314,81 +403,72 @@ public struct FieldGraphConfigurationJob : IJob
             return new PortalNode(portal1, portal2, winPtr);
         }
     }
-    void ConfigurePortalToPortalPtrs()
+    void RecalculatePortalConnectionsAt(NativeArray<int> sectorIndicies)
     {
-        //DATA
-
-        int sectorColAmount = SectorMatrixColAmount;
-        int sectorTileAmount = SectorTileAmount;
-        NativeArray<PortalNode> portalNodes = PortalNodes;
-        NativeArray<SectorNode> sectorNodes = SectorNodes;
-        NativeArray<PortalToPortal> porPtrs = PorToPorPtrs;
+        //data
+        int sectorMatrixColAmount = SectorMatrixColAmount;
+        int sectorTileAmount = SectorColAmount;
         NativeArray<WindowNode> windowNodes = WindowNodes;
         NativeArray<int> secToWinPtrs = SecToWinPtrs;
+        NativeArray<PortalNode> portalNodes = PortalNodes;
+        NativeArray<PortalToPortal> porPtrs = PorPtrs;
         int fieldColAmount = FieldColAmount;
 
-        //CODE
-
-        for (int i = 0; i < sectorNodes.Length; i++)
+        //function
+        for(int i =0; i < sectorIndicies.Length; i++)
         {
-            Sector pickedSector = sectorNodes[i].Sector;
-            NativeArray<int> portalIndicies = GetPortalIndicies(sectorNodes[i]);
-            NativeArray<byte> portalDeterminationArray = GetPortalDeterminationArrayFor(portalIndicies, i);
-
-            for (int j = 0; j < portalIndicies.Length; j++)
+            int sectorIndex = sectorIndicies[i];
+            SectorNode pickedSectorNode = SectorNodes[sectorIndex];
+            Sector pickedSector = pickedSectorNode.Sector;
+            NativeArray<int> portalNodeIndicies = GetPortalNodeIndicies(pickedSectorNode);
+            NativeArray<byte> portalDeterminationArray = GetPortalDeterminationArrayFor(portalNodeIndicies, sectorIndex);
+            for (int j = 0; j < portalNodeIndicies.Length; j++)
             {
                 //for each portal, set it "target" and calculate distances of others
-                PortalNode sourcePortalNode = PortalNodes[portalIndicies[j]];
-                Index2 sourceIndex = portalDeterminationArray[j] == 1 ? sourcePortalNode.Portal1.Index : sourcePortalNode.Portal2.Index;
+                PortalNode sourcePortalNode = PortalNodes[portalNodeIndicies[j]];
+                byte sourcePortalDetermination = portalDeterminationArray[j];
+                Index2 sourceIndex = sourcePortalDetermination == 1 ? sourcePortalNode.Portal1.Index : sourcePortalNode.Portal2.Index;
                 NativeArray<AStarTile> integratedCosts = GetIntegratedCostsFor(pickedSector, sourceIndex);
-
-                CalculatePortalBounds(0, j);
-                CalculatePortalBounds(j + 1, portalIndicies.Length);
-
-                void CalculatePortalBounds(int fromInclusive, int toExclusive)
+                CalculatePortalConnections(0, j);
+                CalculatePortalConnections(j+1, portalNodeIndicies.Length);
+                PortalNodes[portalNodeIndicies[j]] = sourcePortalNode;
+                void CalculatePortalConnections(int fromInclusive, int toExclusive)
                 {
                     for (int k = fromInclusive; k < toExclusive; k++)
                     {
-                        PortalNode targetPortalNode = portalNodes[portalIndicies[k]];
+                        PortalNode targetPortalNode = portalNodes[portalNodeIndicies[k]];
                         byte pickedTargetPortalNumber = portalDeterminationArray[k];
                         Index2 targetIndex = pickedTargetPortalNumber == 1 ? targetPortalNode.Portal1.Index : targetPortalNode.Portal2.Index;
                         int targetIndexFlat = targetIndex.R * fieldColAmount + targetIndex.C;
-
                         float cost = integratedCosts[targetIndexFlat].IntegratedCost;
 
                         if (cost == float.MaxValue) { continue; }
-
-                        if (pickedTargetPortalNumber == 1)
+                        if (sourcePortalDetermination == 1)
                         {
-                            targetPortalNode.Portal1.PorToPorCnt++;
-                            portalNodes[portalIndicies[k]] = targetPortalNode;
-                            porPtrs[targetPortalNode.Portal1.PorToPorPtr + targetPortalNode.Portal1.PorToPorCnt - 1] = new PortalToPortal(cost, portalIndicies[j]);
+                            sourcePortalNode.Portal1.PorToPorCnt++;
+                            porPtrs[sourcePortalNode.Portal1.PorToPorPtr + sourcePortalNode.Portal1.PorToPorCnt - 1] = new PortalToPortal(cost, portalNodeIndicies[k]);
                         }
                         else
                         {
-                            targetPortalNode.Portal2.PorToPorCnt++;
-                            portalNodes[portalIndicies[k]] = targetPortalNode;
-                            porPtrs[targetPortalNode.Portal2.PorToPorPtr + targetPortalNode.Portal2.PorToPorCnt - 1] = new PortalToPortal(cost, portalIndicies[j]);
+                            sourcePortalNode.Portal2.PorToPorCnt++;
+                            porPtrs[sourcePortalNode.Portal2.PorToPorPtr + sourcePortalNode.Portal2.PorToPorCnt - 1] = new PortalToPortal(cost, portalNodeIndicies[k]);
                         }
                     }
                 }
             }
         }
-
-        //HELPERS
-
-        NativeArray<byte> GetPortalDeterminationArrayFor(NativeArray<int> portalIndicies, int sectorIndex)
+        NativeArray<byte> GetPortalDeterminationArrayFor(NativeArray<int> portalNodeIndicies, int sectorIndex)
         {
-            NativeArray<byte> determinationArray = new NativeArray<byte>(portalIndicies.Length, Allocator.Temp);
-            for(int i = 0; i < determinationArray.Length; i++)
+            NativeArray<byte> determinationArray = new NativeArray<byte>(portalNodeIndicies.Length, Allocator.Temp);
+            for (int i = 0; i < determinationArray.Length; i++)
             {
-                Portal portal1 = portalNodes[portalIndicies[i]].Portal1;
+                Portal portal1 = portalNodes[portalNodeIndicies[i]].Portal1;
                 Index2 sectorSpaceIndex = new Index2(portal1.Index.R / sectorTileAmount, portal1.Index.C / sectorTileAmount);
-                determinationArray[i] = sectorIndex == sectorSpaceIndex.R * sectorColAmount + sectorSpaceIndex.C ? (byte) 1 : (byte) 2;
+                determinationArray[i] = sectorIndex == sectorSpaceIndex.R * sectorMatrixColAmount + sectorSpaceIndex.C ? (byte)1 : (byte)2;
             }
             return determinationArray;
         }
-        NativeArray<int> GetPortalIndicies(SectorNode sectorNode)
+        NativeArray<int> GetPortalNodeIndicies(SectorNode sectorNode)
         {
             NativeArray<int> portalIndicies;
             int secToWinCnt = sectorNode.SecToWinCnt;
@@ -416,12 +496,15 @@ public struct FieldGraphConfigurationJob : IJob
             return portalIndicies;
         }
     }
+    
+
+    //A* Algorithm
     NativeArray<AStarTile> GetIntegratedCostsFor(Sector sector, Index2 target)
     {
         //DATA
         int fieldColAmount = FieldColAmount;
         int fieldRowAmount = FieldRowAmount;
-        NativeArray<byte> costs = Costs;
+        NativeArray<byte> costs = CostsG;
         NativeArray<AStarTile> integratedCosts = IntegratedCosts;
         NativeQueue<int> aStarQueue = AStarQueue;
 
@@ -596,4 +679,5 @@ public struct FieldGraphConfigurationJob : IJob
             return costToReturn;
         }
     }
+    
 }

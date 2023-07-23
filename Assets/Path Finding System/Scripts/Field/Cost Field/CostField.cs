@@ -9,13 +9,9 @@ public class CostField
     public int Offset;
     public NativeArray<byte> CostsG;
     public NativeArray<UnsafeList<byte>> CostsL;
-    public FieldGraph FieldGraph;
 
-    float _fieldTileSize;
-    JobHandle _fieldGraphConfigJobHandle;
     public CostField(WalkabilityData walkabilityData, int offset, int sectorColAmount, int sectorMatrixColAmount, int sectorMatrixRowAmount)
     {
-        _fieldTileSize = walkabilityData.TileSize;
         int fieldRowAmount = walkabilityData.RowAmount;
         int fieldColAmount = walkabilityData.ColAmount;
         WalkabilityCell[][] walkabilityMatrix = walkabilityData.WalkabilityMatrix;
@@ -26,9 +22,6 @@ public class CostField
         CostsL = new NativeArray<UnsafeList<byte>>(sectorMatrixColAmount * sectorMatrixRowAmount, Allocator.Persistent);
         CalculateCosts();
         ConvertToNewCosts();
-
-        //allocate field graph
-        FieldGraph = new FieldGraph(CostsG, CostsL, sectorColAmount, fieldRowAmount, fieldColAmount, offset, _fieldTileSize);
 
         //HELPERS
         void CalculateCosts()
@@ -108,24 +101,5 @@ public class CostField
             }
         }
     }
-    public void ScheduleConfigurationJob()
-    {
-        FieldGraphConfigurationJob _fieldGraphConfigJob = FieldGraph.GetConfigJob();
-        _fieldGraphConfigJobHandle = _fieldGraphConfigJob.Schedule();
-    }
-    public void EndConfigurationJobIfCompleted()
-    {
-        if (_fieldGraphConfigJobHandle.IsCompleted)
-        {
-            _fieldGraphConfigJobHandle.Complete();
-        }
-    }
-    public void ForceCompleteConigurationJob()
-    {
-        _fieldGraphConfigJobHandle.Complete();
-    }
-    public CostFieldEditJob GetEditJob(BoundaryData bounds, byte newCost)
-    {
-        return FieldGraph.GetEditJob(bounds, newCost);
-    }
+    
 }
