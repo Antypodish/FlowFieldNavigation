@@ -128,4 +128,19 @@ public class PathfindingManager : MonoBehaviour
     {
         return AgentDataContainer.Agents.Count;
     }
+
+    private void OnDrawGizmos()
+    {
+        if(FieldProducer == null) { return; }
+        Gizmos.color = Color.black;
+        NativeArray<Edge> edges = FieldProducer._edges;
+        for(int i = 0; i < edges.Length; i++)
+        {
+            Edge edge = edges[i];
+            if(edge.dir == WallDirection.None) { continue; }
+            Vector3 p1 = new Vector3(edge.p1.x, 0.5f, edge.p1.y);
+            Vector3 p2 = new Vector3(edge.p2.x, 0.5f, edge.p2.y);
+            Gizmos.DrawLine(p1, p2);
+        }
+    }
 }
