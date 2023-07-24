@@ -1,12 +1,17 @@
-﻿using System.Runtime.InteropServices.WindowsRuntime;
+﻿using System.Diagnostics;
+using System.Runtime.InteropServices.WindowsRuntime;
+using TMPro;
 using Unity.Collections;
 using Unity.Jobs;
+using Unity.Mathematics;
 
 public class FieldProducer
 {
     CostFieldProducer _costFieldProducer;
     FieldGraphProducer _fieldGraphProducer;
-    public NativeArray<Edge> _edges;
+    public NativeArray<int> TileToWallObject;
+    public NativeList<float2> VertexSequence;
+    public NativeList<WallObject> WallObjectList;
     public FieldProducer(WalkabilityData walkabilityData, byte sectorTileAmount)
     {
         _costFieldProducer = new CostFieldProducer(walkabilityData, sectorTileAmount);
@@ -17,14 +22,18 @@ public class FieldProducer
         _costFieldProducer.ProduceCostFields(maxOffset, sectorColAmount, sectorMatrixColAmount, sectorMatrixRowAmount);
         _fieldGraphProducer.ProduceFieldGraphs(_costFieldProducer.GetAllCostFields(), sectorColAmount, fieldRowAmount, fieldColAmount, tileSize);
 
-        _edges = new NativeArray<Edge>(_costFieldProducer.GetCostFieldWithOffset(0).CostsG.Length * 4, Allocator.Persistent, NativeArrayOptions.ClearMemory);
+        TileToWallObject = new NativeArray<int>(_costFieldProducer.GetCostFieldWithOffset(0).CostsG.Length, Allocator.Persistent, NativeArrayOptions.ClearMemory);
+        VertexSequence = new NativeList<float2>(Allocator.Persistent);
+        WallObjectList = new NativeList<WallObject>(Allocator.Persistent);
         WallColliderCalculationJob walCalJob = new WallColliderCalculationJob()
         {
+            WallObjectList = WallObjectList,
+            TileToWallObject = TileToWallObject,
+            VertexSequence = VertexSequence,
             TileSize = tileSize,
             Costs = _costFieldProducer.GetCostFieldWithOffset(0).CostsG,
             FieldColAmount = fieldColAmount,
             FieldRowAmount = fieldRowAmount,
-            TileEdges = _edges,
         };
         walCalJob.Schedule().Complete();
     }

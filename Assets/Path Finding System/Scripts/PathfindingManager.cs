@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using Unity.Collections;
 using Unity.Mathematics;
+using Unity.VisualScripting;
+using UnityEditor;
 using UnityEngine;
 public class PathfindingManager : MonoBehaviour
 {
@@ -131,16 +133,41 @@ public class PathfindingManager : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        if(FieldProducer == null) { return; }
-        Gizmos.color = Color.black;
-        NativeArray<Edge> edges = FieldProducer._edges;
-        for(int i = 0; i < edges.Length; i++)
+        DebugWallObjects();
+        void DebugMarks()
         {
-            Edge edge = edges[i];
-            if(edge.dir == WallDirection.None) { continue; }
-            Vector3 p1 = new Vector3(edge.p1.x, 0.5f, edge.p1.y);
-            Vector3 p2 = new Vector3(edge.p2.x, 0.5f, edge.p2.y);
-            Gizmos.DrawLine(p1, p2);
+            if (FieldProducer == null) { return; }
+            Handles.color = Color.white;
+            NativeArray<int> marks = FieldProducer.TileToWallObject;
+            for (int i = 0; i < marks.Length; i++)
+            {
+                if (marks[i] == 0) { continue; }
+                int2 i2d = new int2(i % ColumnAmount, i / ColumnAmount);
+                Vector3 pos = new Vector3(TileSize / 2 + i2d.x * TileSize, 0.1f, TileSize / 2 + i2d.y * TileSize);
+                Handles.Label(pos, marks[i].ToString());
+            }
+        }
+        void DebugWallObjects()
+        {
+            if (FieldProducer == null) { return; }
+            Color[] clrs = new Color[] { Color.cyan, Color.black, Color.blue, Color.magenta, Color.green, Color.red, Color.yellow };
+            NativeList<WallObject> walls = FieldProducer.WallObjectList;
+            NativeList<float2> verticies = FieldProducer.VertexSequence;
+            for (int i = 1; i < walls.Length; i++)
+            {
+                Gizmos.color = clrs[i % clrs.Length];
+                int start = walls[i].vertexStart;
+                int len = walls[i].vertexLength;
+                for(int j = 0; j < len; j++)
+                {
+                    int index1 = j + start;
+                    int index2 = ((j + 1) % len) + start;
+                    Vector3 pos1 = new Vector3(verticies[index1].x, 0.1f, verticies[index1].y);
+                    Vector3 pos2 = new Vector3(verticies[index2].x, 0.1f, verticies[index2].y);
+                    Gizmos.DrawLine(pos1, pos2);
+                }
+                
+            }
         }
     }
 }
