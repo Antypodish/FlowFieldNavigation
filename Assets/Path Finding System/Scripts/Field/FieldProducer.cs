@@ -54,4 +54,8 @@ public class FieldProducer
     {
         return _wallProducer.WallObjectList;
     }
+    public NativeList<Direction> GetEdgeDirections()
+    {
+        return _wallProducer.EdgeDirections;
+    }
 }

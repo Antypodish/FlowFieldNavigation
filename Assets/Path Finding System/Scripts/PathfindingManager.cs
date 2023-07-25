@@ -134,6 +134,7 @@ public class PathfindingManager : MonoBehaviour
     private void OnDrawGizmos()
     {
         DebugWallObjects();
+        DebugEdgeDirections();
         void DebugMarks()
         {
             if (FieldProducer == null) { return; }
@@ -166,7 +167,46 @@ public class PathfindingManager : MonoBehaviour
                     Vector3 pos2 = new Vector3(verticies[index2].x, 0.1f, verticies[index2].y);
                     Gizmos.DrawLine(pos1, pos2);
                 }
-                
+            }
+        }
+        void DebugEdgeDirections()
+        {
+            if(FieldProducer == null) { return; }
+            Gizmos.color = Color.black;
+            NativeList<Direction> dirs = FieldProducer.GetEdgeDirections();
+            NativeList<WallObject> walls = FieldProducer.GetWallObjectList();
+            NativeList<float2> verticies = FieldProducer.GetVertexSequence();
+            for(int i = 1; i < walls.Length; i++)
+            {
+                WallObject wall = walls[i];
+                for(int j = wall.vertexStart; j < wall.vertexLength + wall.vertexStart - 1; j++)
+                {
+                    float2 v1 = verticies[j];
+                    float2 v2 = verticies[j + 1];
+                    Direction dir = dirs[j];
+                    float2 avPos = (v1 + v2) / 2f;
+                    DrawDir(dir, avPos);
+                }
+            }
+
+            void DrawDir(Direction dir, float2 avgPos)
+            {
+                Vector3 start = new Vector3(avgPos.x, 0.1f, avgPos.y);
+                switch (dir)
+                {
+                    case Direction.N:
+                        Gizmos.DrawLine(start, start + new Vector3(0, 0, 0.35f));
+                        break;
+                    case Direction.E:
+                        Gizmos.DrawLine(start, start + new Vector3(0.35f, 0, 0));
+                        break;
+                    case Direction.S:
+                        Gizmos.DrawLine(start, start + new Vector3(0, 0, -0.35f));
+                        break;
+                    case Direction.W:
+                        Gizmos.DrawLine(start, start + new Vector3(-0.35f, 0, 0));
+                        break;
+                }
             }
         }
     }

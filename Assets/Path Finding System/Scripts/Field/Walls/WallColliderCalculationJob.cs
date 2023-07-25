@@ -19,6 +19,7 @@ public struct WallColliderCalculationJob : IJob
     public NativeArray<int> TileToWallObject;
     public NativeList<WallObject> WallObjectList;
     public NativeList<float2> VertexSequence;
+    public NativeList<Direction> EdgeDirections;
 
     int _fieldTileAmount;
     public void Execute()
@@ -27,7 +28,6 @@ public struct WallColliderCalculationJob : IJob
         _fieldTileAmount = FieldColAmount * FieldRowAmount;
 
         NativeArray<Edge> tileEdges = new NativeArray<Edge>(Costs.Length * 4, Allocator.Temp, NativeArrayOptions.ClearMemory);
-        VertexSequence.Add(new float2(-1, -1));
         WallObjectList.Add(new WallObject());
         SetEdgesForEachTile(tileEdges);
 
@@ -56,6 +56,7 @@ public struct WallColliderCalculationJob : IJob
             newWallObject.vertexLength++;
             VertexSequence.Add(lastVertex);
             newWallObject.vertexLength++;
+            EdgeDirections.Add(edgeList[0].dir);
             for (int j = 1; j < edgeList.Length; j++)
             {
                 Edge newEdge = edgeList[j];
@@ -64,12 +65,14 @@ public struct WallColliderCalculationJob : IJob
                     lastVertex = newEdge.p2;
                     VertexSequence.Add(lastVertex);
                     newWallObject.vertexLength++;
+                    EdgeDirections.Add(newEdge.dir);
                 }
                 else if (Equals(newEdge.p2, lastVertex))
                 {
                     lastVertex = newEdge.p1;
                     VertexSequence.Add(lastVertex);
                     newWallObject.vertexLength++;
+                    EdgeDirections.Add(newEdge.dir);
                 }
             }
 
@@ -88,21 +91,23 @@ public struct WallColliderCalculationJob : IJob
                     lastEdgeListLength = edgeList.Length;
                     for (int j = lastEdgeListLength - 1; j >= 0; j--)
                     {
-                        Edge edge = edgeList[j];
-                        if (Equals(edge.p1, lastVertex))
+                        Edge newEdge = edgeList[j];
+                        if (Equals(newEdge.p1, lastVertex))
                         {
-                            lastVertex = edge.p2;
+                            lastVertex = newEdge.p2;
                             VertexSequence.Add(lastVertex);
                             newWallObject.vertexLength++;
                             edgeList.RemoveAtSwapBack(j);
-                            
+                            EdgeDirections.Add(newEdge.dir);
+
                         }
-                        else if (Equals(edge.p2, lastVertex))
+                        else if (Equals(newEdge.p2, lastVertex))
                         {
-                            lastVertex = edge.p1;
+                            lastVertex = newEdge.p1;
                             VertexSequence.Add(lastVertex);
                             newWallObject.vertexLength++;
                             edgeList.RemoveAtSwapBack(j);
+                            EdgeDirections.Add(newEdge.dir);
                         }
                         if (Equals(lastVertex, startVertex)) { break; }
                     }
@@ -111,8 +116,8 @@ public struct WallColliderCalculationJob : IJob
                 //SET IT CURRENT TILE
                 curIndex = commonVertexNeighbourIndex;
             }
-            VertexSequence.RemoveAtSwapBack(VertexSequence.Length - 1);
-            newWallObject.vertexLength--;
+            //Adding empty direction to preserve patterns
+            EdgeDirections.Add(new Direction());
 
             MarkArea(i, WallObjectList.Length);
             WallObjectList.Add(newWallObject);
