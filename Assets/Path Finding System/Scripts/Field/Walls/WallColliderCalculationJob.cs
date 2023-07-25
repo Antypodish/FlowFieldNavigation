@@ -123,7 +123,7 @@ public struct WallColliderCalculationJob : IJob
             edgeList.Clear();
             for (int i = tileIndex * 4; i < tileIndex * 4 + 4; i++)
             {
-                if (tileEdges[i].dir != WallDirection.None) { edgeList.Add(tileEdges[i]); }
+                if (tileEdges[i].dir != Direction.None) { edgeList.Add(tileEdges[i]); }
             }
         }
     }
@@ -219,7 +219,7 @@ public struct WallColliderCalculationJob : IJob
             for (int i = n * 4; i < n * 4 + 4; i++)
             {
                 Edge edge = tileEdges[i];
-                if (edge.dir == WallDirection.None) { break; }
+                if (edge.dir == Direction.None) { break; }
                 if (Equals(edge.p1, lastVertex) || Equals(edge.p2, lastVertex)) { return n; }
             }
         }
@@ -228,7 +228,7 @@ public struct WallColliderCalculationJob : IJob
             for (int i = e * 4; i < e * 4 + 4; i++)
             {
                 Edge edge = tileEdges[i];
-                if (edge.dir == WallDirection.None) { break; }
+                if (edge.dir == Direction.None) { break; }
                 if (Equals(edge.p1, lastVertex) || Equals(edge.p2, lastVertex)) { return e; }
             }
         }
@@ -237,7 +237,7 @@ public struct WallColliderCalculationJob : IJob
             for (int i = s * 4; i < s * 4 + 4; i++)
             {
                 Edge edge = tileEdges[i];
-                if (edge.dir == WallDirection.None) { break; }
+                if (edge.dir == Direction.None) { break; }
                 if (Equals(edge.p1, lastVertex) || Equals(edge.p2, lastVertex)) { return s; }
             }
         }
@@ -246,7 +246,7 @@ public struct WallColliderCalculationJob : IJob
             for (int i = w * 4; i < w * 4 + 4; i++)
             {
                 Edge edge = tileEdges[i];
-                if (edge.dir == WallDirection.None) { break; }
+                if (edge.dir == Direction.None) { break; }
                 if (Equals(edge.p1, lastVertex) || Equals(edge.p2, lastVertex)) { return w; }
             }
         }
@@ -255,7 +255,7 @@ public struct WallColliderCalculationJob : IJob
             for (int i = ne * 4; i < ne * 4 + 4; i++)
             {
                 Edge edge = tileEdges[i];
-                if (edge.dir == WallDirection.None)
+                if (edge.dir == Direction.None)
                 {
                     break;
                 }
@@ -267,7 +267,7 @@ public struct WallColliderCalculationJob : IJob
             for (int i = se * 4; i < se * 4 + 4; i++)
             {
                 Edge edge = tileEdges[i];
-                if (edge.dir == WallDirection.None) { break; }
+                if (edge.dir == Direction.None) { break; }
                 if (Equals(edge.p1, lastVertex) || Equals(edge.p2, lastVertex)) { return se; }
             }
         }
@@ -276,7 +276,7 @@ public struct WallColliderCalculationJob : IJob
             for (int i = sw * 4; i < sw * 4 + 4; i++)
             {
                 Edge edge = tileEdges[i];
-                if (edge.dir == WallDirection.None) { break; }
+                if (edge.dir == Direction.None) { break; }
                 if (Equals(edge.p1, lastVertex) || Equals(edge.p2, lastVertex)) { return sw; }
             }
         }
@@ -285,7 +285,7 @@ public struct WallColliderCalculationJob : IJob
             for (int i = nw * 4; i < nw * 4 + 4; i++)
             {
                 Edge edge = tileEdges[i];
-                if (edge.dir == WallDirection.None) { break; }
+                if (edge.dir == Direction.None) { break; }
                 if (Equals(edge.p1, lastVertex) || Equals(edge.p2, lastVertex)) { return nw; }
             }
         }
@@ -325,7 +325,7 @@ public struct WallColliderCalculationJob : IJob
                     {
                         p1 = p1,
                         p2 = p2,
-                        dir = WallDirection.S
+                        dir = Direction.S
                     };
                     tileEdgeIndex++;
                 }
@@ -341,7 +341,7 @@ public struct WallColliderCalculationJob : IJob
                     {
                         p1 = p1,
                         p2 = p2,
-                        dir = WallDirection.W
+                        dir = Direction.W
                     };
                     tileEdgeIndex++;
                 }
@@ -357,7 +357,7 @@ public struct WallColliderCalculationJob : IJob
                     {
                         p1 = p1,
                         p2 = p2,
-                        dir = WallDirection.N
+                        dir = Direction.N
                     };
                     tileEdgeIndex++;
                 }
@@ -373,7 +373,7 @@ public struct WallColliderCalculationJob : IJob
                     {
                         p1 = p1,
                         p2 = p2,
-                        dir = WallDirection.E
+                        dir = Direction.E
                     };
                     tileEdgeIndex++;
                 }
@@ -389,23 +389,5 @@ public struct Edge
 {
     public float2 p1;
     public float2 p2;
-    public WallDirection dir;
-}
-public struct WallObject
-{
-    public int vertexStart;
-    public int vertexLength;
-}
-public struct SequenceIndexer
-{
-    public int start;
-    public int length;
-}
-public enum WallDirection : byte
-{
-    None,
-    N,
-    E,
-    S,
-    W,
+    public Direction dir;
 }

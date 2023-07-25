@@ -138,7 +138,7 @@ public class PathfindingManager : MonoBehaviour
         {
             if (FieldProducer == null) { return; }
             Handles.color = Color.white;
-            NativeArray<int> marks = FieldProducer.TileToWallObject;
+            NativeArray<int> marks = FieldProducer.GetTileToWallObject();
             for (int i = 0; i < marks.Length; i++)
             {
                 if (marks[i] == 0) { continue; }
@@ -151,8 +151,8 @@ public class PathfindingManager : MonoBehaviour
         {
             if (FieldProducer == null) { return; }
             Color[] clrs = new Color[] { Color.cyan, Color.black, Color.blue, Color.magenta, Color.green, Color.red, Color.yellow };
-            NativeList<WallObject> walls = FieldProducer.WallObjectList;
-            NativeList<float2> verticies = FieldProducer.VertexSequence;
+            NativeList<WallObject> walls = FieldProducer.GetWallObjectList();
+            NativeList<float2> verticies = FieldProducer.GetVertexSequence();
             for (int i = 1; i < walls.Length; i++)
             {
                 Gizmos.color = clrs[i % clrs.Length];
