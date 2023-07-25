@@ -16,7 +16,7 @@ public struct AgentMovementDataCalculationJob : IJobParallelForTransform
     {
         AgentMovementData data = AgentMovementData[index];
         data.Position = transform.position;
-        if(data.SectorToPicked.Length == 0) { return; }
+        if(data.SectorToPicked.Length == 0) { AgentMovementData[index] = data; return; }
         int2 sector2d = new int2((int)math.floor(data.Position.x / (SectorColAmount * TileSize)), (int)math.floor(data.Position.z / (SectorColAmount * TileSize)));
         int2 general2d = new int2((int)math.floor(data.Position.x / TileSize), (int)math.floor(data.Position.z / TileSize));
         int2 sectorStart2d = sector2d * SectorColAmount;

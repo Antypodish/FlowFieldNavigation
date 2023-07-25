@@ -45,6 +45,7 @@ public class AgentDirectionCalculator
                 AgentMovementData data = new AgentMovementData()
                 {
                     Position = 0,
+                    Radius = agentDataList[i].Radius,
                     Direction = 0,
                     Local1d = 0,
                     Sector1d = 0,
@@ -58,6 +59,7 @@ public class AgentDirectionCalculator
                 AgentMovementData data = new AgentMovementData()
                 {
                     Position = 0,
+                    Radius = agentDataList[i].Radius,
                     Direction = 0,
                     Local1d = 0,
                     Sector1d = 0,
@@ -88,6 +90,7 @@ public class AgentDirectionCalculator
 public struct AgentMovementData
 {
     public float3 Position;
+    public float Radius;
     public float2 Direction;
     public ushort Local1d;
     public ushort Sector1d;

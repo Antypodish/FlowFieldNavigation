@@ -785,7 +785,12 @@ PrefabInstance:
     - target: {fileID: 2010554042057534776, guid: 5b8107cfe6c808547b1890d4dca1b9f7,
         type: 3}
       propertyPath: Speed
-      value: 0
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 2010554042057534776, guid: 5b8107cfe6c808547b1890d4dca1b9f7,
+        type: 3}
+      propertyPath: Radius
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 2010554042057534779, guid: 5b8107cfe6c808547b1890d4dca1b9f7,
         type: 3}
@@ -803,7 +808,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
       propertyPath: _debugFlowField
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
       propertyPath: _pathfindingManager
@@ -828,7 +833,7 @@ PrefabInstance:
     - target: {fileID: 5571130920343903277, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}
       propertyPath: _startingAgentCount
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7314432835859767064, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}

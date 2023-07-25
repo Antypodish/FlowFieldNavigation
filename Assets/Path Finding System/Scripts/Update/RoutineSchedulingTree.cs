@@ -64,6 +64,22 @@ public class RoutineSchedulingTree
 
         if (FlowFieldUtilities.DebugMode) { _movDataCalcHandle[_movDataCalcHandle.Count - 1].Complete(); }
     }
+    public void AddCollisionCalculationJob()
+    {
+        CollisionCalculationJob collisionJob = new CollisionCalculationJob()
+        {
+            TileSize = _pathfindingManager.TileSize,
+            FieldColAmount = _pathfindingManager.ColumnAmount,
+            FieldRowAmount = _pathfindingManager.RowAmount,
+            VertexSequence = _pathfindingManager.FieldProducer.GetVertexSequence(),
+            EdgeDirections = _pathfindingManager.FieldProducer.GetEdgeDirections(),
+            TileToWallObject = _pathfindingManager.FieldProducer.GetTileToWallObject(),
+            WallObjectList = _pathfindingManager.FieldProducer.GetWallObjectList(),
+            AgentMovementData = _dirCalculator._agentMovementDataList,
+        };
+        JobHandle collisionHandle = collisionJob.Schedule(_movDataCalcHandle[0]);
+        collisionHandle.Complete();
+    }
     public void AddPortalTraversalHandles(List<PortalTraversalJobPack> portalTravJobs, JobHandle dependency)
     {
         for (int i = 0; i < portalTravJobs.Count; i++)
