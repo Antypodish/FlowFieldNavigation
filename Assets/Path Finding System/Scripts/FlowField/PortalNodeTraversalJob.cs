@@ -80,8 +80,6 @@ public struct PortalNodeTraversalJob : IJob
             int sourceSectorIndexFlat = sourceSectorIndex.y * SectorMatrixColAmount + sourceSectorIndex.x;
 
             //ADD SOURCE SECTOR TO THE PICKED SECTORS
-
-
             UnsafeList<int> sourcePortalIndicies = GetPortalIndicies(sourceSectorIndexFlat);
             for(int j = 0; j < sourcePortalIndicies.Length; j++)
             {
@@ -140,7 +138,7 @@ public struct PortalNodeTraversalJob : IJob
             fCost = 0f,
             gCost = 0f,
             hCost = 0f,
-            mark = PortalTraversalMark.Picked | PortalTraversalMark.Included,
+            mark = curData.mark | PortalTraversalMark.Picked | PortalTraversalMark.Included,
             originIndex = sourcePortalIndex,
         };
         PortalTraversalDataArray[sourcePortalIndex] = curData;

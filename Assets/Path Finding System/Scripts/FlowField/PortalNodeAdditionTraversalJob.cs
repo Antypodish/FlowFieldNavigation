@@ -137,7 +137,7 @@ public struct PortalNodeAdditionTraversalJob : IJob
             fCost = 0f,
             gCost = 0f,
             hCost = 0f,
-            mark = PortalTraversalMark.Picked | PortalTraversalMark.Included,
+            mark = curData.mark | PortalTraversalMark.Picked | PortalTraversalMark.Included,
             originIndex = sourcePortalIndex,
         };
         PortalTraversalDataArray[sourcePortalIndex] = curData;
