@@ -11,12 +11,18 @@ public struct AgentMovementDataCalculationJob : IJobParallelForTransform
     public int SectorColAmount;
     public int SectorMatrixColAmount;
     public NativeArray<AgentMovementData> AgentMovementData;
+    public NativeArray<float2> Directions;
 
     public void Execute(int index, TransformAccess transform)
     {
         AgentMovementData data = AgentMovementData[index];
         data.Position = transform.position;
-        if(data.SectorToPicked.Length == 0) { AgentMovementData[index] = data; return; }
+        if(data.SectorToPicked.Length == 0)
+        {
+            AgentMovementData[index] = data;
+            Directions[index] = 0;
+            return;
+        }
         int2 sector2d = new int2((int)math.floor(data.Position.x / (SectorColAmount * TileSize)), (int)math.floor(data.Position.z / (SectorColAmount * TileSize)));
         int2 general2d = new int2((int)math.floor(data.Position.x / TileSize), (int)math.floor(data.Position.z / TileSize));
         int2 sectorStart2d = sector2d * SectorColAmount;
@@ -32,6 +38,7 @@ public struct AgentMovementDataCalculationJob : IJobParallelForTransform
         {
             data.OutOfFieldFlag = true;
             AgentMovementData[index] = data;
+            Directions[index] = 0;
             return;
         }
 
@@ -41,38 +48,39 @@ public struct AgentMovementDataCalculationJob : IJobParallelForTransform
             case FlowData.None:
                 data.OutOfFieldFlag = true;
                 AgentMovementData[index] = data;
+                Directions[index] = 0;
                 return;
             case FlowData.LOS:
-                data.Direction = -1f;
+                Directions[index] = -1f;
                 break;
             case FlowData.N:
-                data.Direction = new float2(0f, 1f);
+                Directions[index] = new float2(0f, 1f);
                 break;
             case FlowData.E:
-                data.Direction = new float2(1f, 0f);
+                Directions[index] = new float2(1f, 0f);
                 break;
             case FlowData.S:
-                data.Direction = new float2(0f, -1f);
+                Directions[index] = new float2(0f, -1f);
                 break;
             case FlowData.W:
-                data.Direction = new float2(-1f, 0f);
+                Directions[index] = new float2(-1f, 0f);
                 break;
             case FlowData.NE:
-                data.Direction = new float2(1f, 1f);
+                Directions[index] = new float2(1f, 1f);
                 break;
             case FlowData.SE:
-                data.Direction = new float2(1f, -1f);
+                Directions[index] = new float2(1f, -1f);
                 break;
             case FlowData.SW:
-                data.Direction = new float2(-1f, -1f);
+                Directions[index] = new float2(-1f, -1f);
                 break;
             case FlowData.NW:
-                data.Direction = new float2(-1f, 1f);
+                Directions[index] = new float2(-1f, 1f);
                 break;
         }
         if(flow != FlowData.LOS)
         {
-            data.Direction = math.normalize(data.Direction);
+            Directions[index] = math.normalize(Directions[index]);
         }
         AgentMovementData[index] = data;
     }

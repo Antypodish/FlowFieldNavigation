@@ -17,13 +17,15 @@ public class AgentDirectionCalculator
     AgentDataContainer _agentDataContainer;
     PathfindingManager _pathfindingManager;
 
-    public NativeList<AgentMovementData> _agentMovementDataList;
+    public NativeList<AgentMovementData> AgentMovementDataList;
+    public NativeList<float2> Directions;
 
     public AgentDirectionCalculator(AgentDataContainer agentDataContainer, PathfindingManager pathfindingManager)
     {
         _agentDataContainer = agentDataContainer;
         _pathfindingManager = pathfindingManager;
-        _agentMovementDataList = new NativeList<AgentMovementData>(_agentDataContainer.Agents.Count, Allocator.Persistent);
+        AgentMovementDataList = new NativeList<AgentMovementData>(_agentDataContainer.Agents.Count, Allocator.Persistent);
+        Directions = new NativeList<float2>(Allocator.Persistent);
     }
     public AgentMovementDataCalculationJob CalculateDirections(out TransformAccessArray transformsToSchedule)
     {
@@ -32,9 +34,10 @@ public class AgentDirectionCalculator
         TransformAccessArray agentTransforms = _agentDataContainer.AgentTransforms;
 
         //CLEAR
-        _agentMovementDataList.Clear();
-        _agentMovementDataList.Length = agentDataList.Length;
-
+        AgentMovementDataList.Clear();
+        Directions.Clear();
+        AgentMovementDataList.Length = agentDataList.Length;
+        Directions.Length = agentDataList.Length;
         //FILL
         for (int i = 0; i < agentDataList.Length; i++)
         {
@@ -46,13 +49,12 @@ public class AgentDirectionCalculator
                 {
                     Position = 0,
                     Radius = agentDataList[i].Radius,
-                    Direction = 0,
                     Local1d = 0,
                     Sector1d = 0,
                     OutOfFieldFlag = false,
                     PathId = -1,
                 };
-                _agentMovementDataList[i] = data;
+                AgentMovementDataList[i] = data;
             }
             else
             {
@@ -60,7 +62,6 @@ public class AgentDirectionCalculator
                 {
                     Position = 0,
                     Radius = agentDataList[i].Radius,
-                    Direction = 0,
                     Local1d = 0,
                     Sector1d = 0,
                     OutOfFieldFlag = false,
@@ -68,7 +69,7 @@ public class AgentDirectionCalculator
                     SectorToPicked = curPath.SectorToPicked,
                     PathId = curPath.Id,
                 };
-                _agentMovementDataList[i] = data;
+                AgentMovementDataList[i] = data;
             }
         }
         
@@ -79,19 +80,19 @@ public class AgentDirectionCalculator
             TileSize = _pathfindingManager.TileSize,
             SectorColAmount = _pathfindingManager.SectorColAmount,
             SectorMatrixColAmount = _pathfindingManager.SectorMatrixColAmount,
-            AgentMovementData = _agentMovementDataList,
+            AgentMovementData = AgentMovementDataList,
+            Directions = Directions,
         };
     }
     public void SendDirections()
     {
-        _agentDataContainer.SetDirection(_agentMovementDataList);
+        _agentDataContainer.SetDirection(Directions);
     }
 }
 public struct AgentMovementData
 {
     public float3 Position;
     public float Radius;
-    public float2 Direction;
     public ushort Local1d;
     public ushort Sector1d;
     public bool OutOfFieldFlag;

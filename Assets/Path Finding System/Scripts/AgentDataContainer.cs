@@ -80,12 +80,12 @@ public class AgentDataContainer
         data.Direction = direction;
         AgentDataList[agentIndex] = data;
     }
-    public void SetDirection(NativeArray<AgentMovementData> agentMovementData)
+    public void SetDirection(NativeArray<float2> agentDirections)
     {
         AgentDirectionSetJob directionSetJob = new AgentDirectionSetJob()
         {
             AgentDataDataArray = AgentDataList,
-            MovementDataArray = agentMovementData,
+            AgentDirections = agentDirections,
         };
         directionSetJob.Schedule().Complete();
     }

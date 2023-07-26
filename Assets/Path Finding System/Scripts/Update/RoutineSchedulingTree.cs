@@ -16,7 +16,7 @@ public class RoutineSchedulingTree
     List<PathHandle> _porTravHandles;
     List<PathHandle> _porAddTravHandles;
     List<JobHandle> _movDataCalcHandle;
-
+    List<JobHandle> _dirCalcHandle;
     public RoutineSchedulingTree(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
@@ -27,6 +27,7 @@ public class RoutineSchedulingTree
         _movDataCalcHandle = new List<JobHandle>();
         _pathProdCalcHandles = new List<PathHandle>();
         _pathAdditionHandles = new NativeList<JobHandle>(Allocator.Persistent);
+        _dirCalcHandle = new List<JobHandle>();
     }
 
     public JobHandle ScheduleCostEditRequests(List<CostFieldEditJob[]> costFieldEditRequests)
@@ -64,7 +65,7 @@ public class RoutineSchedulingTree
 
         if (FlowFieldUtilities.DebugMode) { _movDataCalcHandle[_movDataCalcHandle.Count - 1].Complete(); }
     }
-    public void AddCollisionCalculationJob()
+    public void AddDirectionCalculationJob()
     {
         CollisionCalculationJob collisionJob = new CollisionCalculationJob()
         {
@@ -75,10 +76,11 @@ public class RoutineSchedulingTree
             EdgeDirections = _pathfindingManager.FieldProducer.GetEdgeDirections(),
             TileToWallObject = _pathfindingManager.FieldProducer.GetTileToWallObject(),
             WallObjectList = _pathfindingManager.FieldProducer.GetWallObjectList(),
-            AgentMovementData = _dirCalculator._agentMovementDataList,
+            AgentMovementData = _dirCalculator.AgentMovementDataList,
+            AgentDirections = _dirCalculator.Directions,
         };
         JobHandle collisionHandle = collisionJob.Schedule(collisionJob.AgentMovementData.Length,512 ,_movDataCalcHandle[0]);
-        collisionHandle.Complete();
+        _dirCalcHandle.Add(collisionHandle);
     }
     public void AddPortalTraversalHandles(List<PortalTraversalJobPack> portalTravJobs, JobHandle dependency)
     {
@@ -99,7 +101,7 @@ public class RoutineSchedulingTree
     }
     public void SetPortalAdditionTraversalHandles()
     {
-        _pathfindingManager.PathProducer.SetPortalAdditionTraversalHandles(_dirCalculator._agentMovementDataList, _porAddTravHandles, _movDataCalcHandle[0]);
+        _pathfindingManager.PathProducer.SetPortalAdditionTraversalHandles(_dirCalculator.AgentMovementDataList, _porAddTravHandles, _movDataCalcHandle[0]);
 
         if (FlowFieldUtilities.DebugMode)
         {
@@ -128,6 +130,12 @@ public class RoutineSchedulingTree
         {
             _movDataCalcHandle[0].Complete();
             _movDataCalcHandle.Clear();
+        }
+        
+        if(_dirCalcHandle.Count != 0 && _dirCalcHandle[0].IsCompleted)
+        {
+            _dirCalcHandle[0].Complete();
+            _dirCalcHandle.Clear();
         }
 
         //HANDLE PORTAL ADD TRAVERSALS
@@ -166,6 +174,12 @@ public class RoutineSchedulingTree
             _movDataCalcHandle.Clear();
         }
 
+        //FORCE COMPLETE DIRECTION CALCULATION
+        if (_dirCalcHandle.Count != 0)
+        {
+            _dirCalcHandle[0].Complete();
+            _dirCalcHandle.Clear();
+        }
         //FOCE COMTPLETE PATH PRODUCTION TRAVERSALS
         for (int i = 0; i < _porTravHandles.Count; i++)
         {

@@ -8,7 +8,6 @@ using UnityEngine.Rendering;
 
 
 //ONLY WORKS FOR AGENTS WITH OFFSET 0!
-[BurstCompile]
 public struct CollisionCalculationJob : IJobParallelFor
 {
     public int FieldColAmount;
@@ -19,6 +18,7 @@ public struct CollisionCalculationJob : IJobParallelFor
     [ReadOnly] public NativeList<float2> VertexSequence;
     [ReadOnly] public NativeList<WallObject> WallObjectList;
     [ReadOnly] public NativeList<Direction> EdgeDirections;
+    public NativeArray<float2> AgentDirections;
     public void Execute(int index)
     {
         float3 agentPos = AgentMovementData[index].Position;
