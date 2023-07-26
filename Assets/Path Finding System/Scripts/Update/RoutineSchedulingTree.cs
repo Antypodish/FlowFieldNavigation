@@ -77,7 +77,7 @@ public class RoutineSchedulingTree
             WallObjectList = _pathfindingManager.FieldProducer.GetWallObjectList(),
             AgentMovementData = _dirCalculator._agentMovementDataList,
         };
-        JobHandle collisionHandle = collisionJob.Schedule(_movDataCalcHandle[0]);
+        JobHandle collisionHandle = collisionJob.Schedule(collisionJob.AgentMovementData.Length,512 ,_movDataCalcHandle[0]);
         collisionHandle.Complete();
     }
     public void AddPortalTraversalHandles(List<PortalTraversalJobPack> portalTravJobs, JobHandle dependency)

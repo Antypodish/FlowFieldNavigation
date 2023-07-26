@@ -1,4 +1,5 @@
-﻿using Unity.Collections;
+﻿using Unity.Burst;
+using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.VisualScripting;
@@ -7,7 +8,8 @@ using UnityEngine.Rendering;
 
 
 //ONLY WORKS FOR AGENTS WITH OFFSET 0!
-public struct CollisionCalculationJob : IJob
+[BurstCompile]
+public struct CollisionCalculationJob : IJobParallelFor
 {
     public int FieldColAmount;
     public int FieldRowAmount;
@@ -17,21 +19,18 @@ public struct CollisionCalculationJob : IJob
     [ReadOnly] public NativeList<float2> VertexSequence;
     [ReadOnly] public NativeList<WallObject> WallObjectList;
     [ReadOnly] public NativeList<Direction> EdgeDirections;
-    public void Execute()
+    public void Execute(int index)
     {
-        for(int i = 0; i < AgentMovementData.Length; i++)
+        float3 agentPos = AgentMovementData[index].Position;
+        float2 agentPos2d = new float2(agentPos.x, agentPos.z);
+        int2 agentIndex = new int2((int)math.floor(agentPos2d.x / TileSize), (int)math.floor(agentPos2d.y / TileSize));
+        int agentIndex1d = agentIndex.y * FieldColAmount + agentIndex.x;
+        NativeList<int> wallIndiciesAround = GetWallObjectsAround(agentIndex1d);
+        for (int j = 0; j < wallIndiciesAround.Length; j++)
         {
-            float3 agentPos = AgentMovementData[i].Position;
-            float2 agentPos2d = new float2(agentPos.x, agentPos.z);
-            int2 agentIndex = new int2((int)math.floor(agentPos2d.x / TileSize), (int) math.floor(agentPos2d.y / TileSize));
-            int agentIndex1d = agentIndex.y * FieldColAmount + agentIndex.x;
-            NativeList<int> wallIndiciesAround = GetWallObjectsAround(agentIndex1d);
-            for(int j = 0; j < wallIndiciesAround.Length; j++)
-            {
-                NativeSlice<float2> vertexSequence = GetVerteciesOf(WallObjectList[wallIndiciesAround[j]]);
-                NativeSlice<Direction> edgeDirections = GetEdgeDirectionsOf(WallObjectList[wallIndiciesAround[j]]);
-                NativeList<Edge> collidingEdges = GetCollidingEdges(vertexSequence, edgeDirections, agentPos2d, AgentMovementData[i].Radius);
-            }
+            NativeSlice<float2> vertexSequence = GetVerteciesOf(WallObjectList[wallIndiciesAround[j]]);
+            NativeSlice<Direction> edgeDirections = GetEdgeDirectionsOf(WallObjectList[wallIndiciesAround[j]]);
+            NativeList<Edge> collidingEdges = GetCollidingEdges(vertexSequence, edgeDirections, agentPos2d, AgentMovementData[index].Radius);
         }
     }
 
