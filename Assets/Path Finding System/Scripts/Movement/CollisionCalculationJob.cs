@@ -24,6 +24,7 @@ public struct CollisionCalculationJob : IJobParallelForTransform
     public NativeArray<float2> AgentDirections;
     public void Execute(int index, TransformAccess transform)
     {
+        //FOR POSITION
         float3 agentPos = AgentMovementData[index].Position;
         float2 agentPos2d = new float2(agentPos.x, agentPos.z);
         int2 agentIndex = new int2((int)math.floor(agentPos2d.x / TileSize), (int)math.floor(agentPos2d.y / TileSize));
@@ -37,14 +38,37 @@ public struct CollisionCalculationJob : IJobParallelForTransform
             collidingEdges.Clear();
             CheckCollisionsForce(wall, agentPos2d, AgentMovementData[index].Radius, collidingEdges, seperationForces);
         }
-        if(seperationForces.Length == 0) { return; }
-        float2 sum = 0;/*
-        for(int i = 0; i < seperationForces.Length; i++)
+        float2 sum = 0;
+        if (seperationForces.Length != 0)
         {
-            sum += seperationForces[i];
-        }*/
-        sum = seperationForces[0];
-        transform.position = transform.position + new Vector3(sum.x, 0f, sum.y);
+            sum = seperationForces[0];
+            transform.position = transform.position + new Vector3(sum.x, 0f, sum.y);
+        }
+        
+
+        //FOR DIRECTION
+        float2 dir2d = AgentDirections[index];
+        float3 dest3d = transform.position + (new Vector3(dir2d.x, 0f, dir2d.y) * DeltaTime * AgentMovementData[index].Speed);
+        float2 dest2d = new float2(dest3d.x, dest3d.z);
+        int2 destIndex = new int2((int)math.floor(dest2d.x / TileSize), (int)math.floor(dest2d.y / TileSize));
+        int destIndex1d = destIndex.y * FieldColAmount + destIndex.x;
+        NativeList<int> wallIndiciesAroundDest = GetWallObjectsAround(destIndex1d);
+        NativeList<Edge> collidingEdgesDest = new NativeList<Edge>(Allocator.Temp);
+        NativeList<float2> seperationForcesDest = new NativeList<float2>(Allocator.Temp);
+        for (int j = 0; j < wallIndiciesAroundDest.Length; j++)
+        {
+            WallObject wall = WallObjectList[wallIndiciesAroundDest[j]];
+            collidingEdgesDest.Clear();
+            CheckCollisionsForce(wall, dest2d, AgentMovementData[index].Radius, collidingEdgesDest, seperationForcesDest);
+        }
+        if (seperationForcesDest.Length != 0)
+        {
+            sum = seperationForcesDest[0];
+            dest2d += sum;
+            agentPos2d = new float2(transform.position.x, transform.position.z);
+            float2 newDir2d = math.normalize(dest2d - agentPos2d);
+            AgentDirections[index] = newDir2d;
+        }
     }
 
     NativeList<int> GetWallObjectsAround(int index)

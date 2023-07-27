@@ -137,7 +137,7 @@ public class AgentSelectionController : MonoBehaviour
         {
             SetDestination();
         }
-        if (Input.GetMouseButton(2) && SelectedAgents.Count != 0)
+        if (Input.GetMouseButtonDown(2) && SelectedAgents.Count != 0)
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;

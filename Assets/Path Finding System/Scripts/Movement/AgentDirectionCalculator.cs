@@ -8,6 +8,7 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
+using Unity.VisualScripting;
 using UnityEditor.Rendering.Universal;
 using UnityEngine;
 using UnityEngine.Jobs;
@@ -51,6 +52,7 @@ public class AgentDirectionCalculator
                     Radius = agentDataList[i].Radius,
                     Local1d = 0,
                     Sector1d = 0,
+                    Speed = agentDataList[i].Speed,
                     OutOfFieldFlag = false,
                     PathId = -1,
                 };
@@ -64,6 +66,7 @@ public class AgentDirectionCalculator
                     Radius = agentDataList[i].Radius,
                     Local1d = 0,
                     Sector1d = 0,
+                    Speed = agentDataList[i].Speed,
                     Destination = agentDataList[i].Destination,
                     OutOfFieldFlag = false,
                     FlowField = curPath.FlowField,
@@ -94,6 +97,7 @@ public struct AgentMovementData
 {
     public float3 Position;
     public float2 Destination;
+    public float Speed;
     public float Radius;
     public ushort Local1d;
     public ushort Sector1d;
