@@ -19,7 +19,7 @@ public class WallProducer
         {
             EdgeDirections = EdgeDirections,
             WallObjectList = WallObjectList,
-            TileToWallObject = TileToWallObject,
+            TileWallObjects = TileToWallObject,
             VertexSequence = VertexSequence,
             TileSize = tileSize,
             Costs = costfieldWithOffset0.CostsG,

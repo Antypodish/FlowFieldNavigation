@@ -15,8 +15,8 @@ public struct WallColliderCalculationJob : IJob
     public int FieldColAmount;
     public int FieldRowAmount;
 
-    public NativeArray<byte> Costs;
-    public NativeArray<int> TileToWallObject;
+    [ReadOnly] public NativeArray<byte> Costs;
+    public NativeArray<int> TileWallObjects;
     public NativeList<WallObject> WallObjectList;
     public NativeList<float2> VertexSequence;
     public NativeList<Direction> EdgeDirections;
@@ -38,9 +38,10 @@ public struct WallColliderCalculationJob : IJob
         {
             //GUARDS
             if (Costs[i] != byte.MaxValue) { continue; }
-            if (TileToWallObject[i] != 0) { continue; }
+            if (TileWallObjects[i] != 0) { continue; }
             SetEdgeList(i);
             if(edgeList.IsEmpty) { continue; }
+
 
             //CREATE NEW WALL OBJECT
             WallObject newWallObject = new WallObject()
@@ -138,7 +139,7 @@ public struct WallColliderCalculationJob : IJob
         int fieldColAmount = FieldColAmount;
         int fieldTileAmount = FieldColAmount * FieldRowAmount;
 
-         TileToWallObject[startIndex] = wallObjectIndex;
+         TileWallObjects[startIndex] = wallObjectIndex;
 
         markQueue.Enqueue(startIndex);
         while (!markQueue.IsEmpty())
@@ -160,29 +161,29 @@ public struct WallColliderCalculationJob : IJob
             s = math.select(s, cur, sOverflow);
             w = math.select(w, cur, wOverflow);
 
-            bool nAvailable = !nOverflow && Costs[n] == byte.MaxValue && TileToWallObject[n] != wallObjectIndex;
-            bool eAvailable = !eOverflow && Costs[e] == byte.MaxValue && TileToWallObject[e] != wallObjectIndex;
-            bool sAvailable = !sOverflow && Costs[s] == byte.MaxValue && TileToWallObject[s] != wallObjectIndex;
-            bool wAvailable = !wOverflow && Costs[w] == byte.MaxValue && TileToWallObject[w] != wallObjectIndex;
+            bool nAvailable = !nOverflow && Costs[n] == byte.MaxValue && TileWallObjects[n] != wallObjectIndex;
+            bool eAvailable = !eOverflow && Costs[e] == byte.MaxValue && TileWallObjects[e] != wallObjectIndex;
+            bool sAvailable = !sOverflow && Costs[s] == byte.MaxValue && TileWallObjects[s] != wallObjectIndex;
+            bool wAvailable = !wOverflow && Costs[w] == byte.MaxValue && TileWallObjects[w] != wallObjectIndex;
 
             if (nAvailable)
             {
-                TileToWallObject[n] = wallObjectIndex;
+                TileWallObjects[n] = wallObjectIndex;
                 markQueue.Enqueue(n);
             }
             if (eAvailable)
             {
-                TileToWallObject[e] = wallObjectIndex;
+                TileWallObjects[e] = wallObjectIndex;
                 markQueue.Enqueue(e);
             }
             if (sAvailable)
             {
-                TileToWallObject[s] = wallObjectIndex;
+                TileWallObjects[s] = wallObjectIndex;
                 markQueue.Enqueue(s);
             }
             if (wAvailable)
             {
-                TileToWallObject[w] = wallObjectIndex;
+                TileWallObjects[w] = wallObjectIndex;
                 markQueue.Enqueue(w);
             }
         }

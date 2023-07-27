@@ -790,7 +790,7 @@ PrefabInstance:
     - target: {fileID: 2010554042057534776, guid: 5b8107cfe6c808547b1890d4dca1b9f7,
         type: 3}
       propertyPath: Radius
-      value: 0.5
+      value: 0.48
       objectReference: {fileID: 0}
     - target: {fileID: 2010554042057534779, guid: 5b8107cfe6c808547b1890d4dca1b9f7,
         type: 3}
@@ -1043,5 +1043,10 @@ PrefabInstance:
       propertyPath: _terrainGenerator
       value: 
       objectReference: {fileID: 1550691738}
+    - target: {fileID: 8734084087838304231, guid: 5e3867b8afbc0bb49a0027ab49965980,
+        type: 3}
+      propertyPath: _agentUpdateFrequency
+      value: 0.016
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5e3867b8afbc0bb49a0027ab49965980, type: 3}

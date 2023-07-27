@@ -64,6 +64,7 @@ public class AgentDirectionCalculator
                     Radius = agentDataList[i].Radius,
                     Local1d = 0,
                     Sector1d = 0,
+                    Destination = agentDataList[i].Destination,
                     OutOfFieldFlag = false,
                     FlowField = curPath.FlowField,
                     SectorToPicked = curPath.SectorToPicked,
@@ -92,6 +93,7 @@ public class AgentDirectionCalculator
 public struct AgentMovementData
 {
     public float3 Position;
+    public float2 Destination;
     public float Radius;
     public ushort Local1d;
     public ushort Sector1d;

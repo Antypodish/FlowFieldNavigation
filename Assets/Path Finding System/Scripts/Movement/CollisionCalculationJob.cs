@@ -1,15 +1,18 @@
-﻿using Unity.Burst;
+﻿using System.Drawing;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Jobs;
 using UnityEngine.Rendering;
 
 
 //ONLY WORKS FOR AGENTS WITH OFFSET 0!
-public struct CollisionCalculationJob : IJobParallelFor
+public struct CollisionCalculationJob : IJobParallelForTransform
 {
+    public float DeltaTime;
     public int FieldColAmount;
     public int FieldRowAmount;
     public float TileSize;
@@ -19,19 +22,29 @@ public struct CollisionCalculationJob : IJobParallelFor
     [ReadOnly] public NativeList<WallObject> WallObjectList;
     [ReadOnly] public NativeList<Direction> EdgeDirections;
     public NativeArray<float2> AgentDirections;
-    public void Execute(int index)
+    public void Execute(int index, TransformAccess transform)
     {
         float3 agentPos = AgentMovementData[index].Position;
         float2 agentPos2d = new float2(agentPos.x, agentPos.z);
         int2 agentIndex = new int2((int)math.floor(agentPos2d.x / TileSize), (int)math.floor(agentPos2d.y / TileSize));
         int agentIndex1d = agentIndex.y * FieldColAmount + agentIndex.x;
         NativeList<int> wallIndiciesAround = GetWallObjectsAround(agentIndex1d);
+        NativeList<Edge> collidingEdges = new NativeList<Edge>(Allocator.Temp);
+        NativeList<float2> seperationForces = new NativeList<float2>(Allocator.Temp);
         for (int j = 0; j < wallIndiciesAround.Length; j++)
         {
-            NativeSlice<float2> vertexSequence = GetVerteciesOf(WallObjectList[wallIndiciesAround[j]]);
-            NativeSlice<Direction> edgeDirections = GetEdgeDirectionsOf(WallObjectList[wallIndiciesAround[j]]);
-            NativeList<Edge> collidingEdges = GetCollidingEdges(vertexSequence, edgeDirections, agentPos2d, AgentMovementData[index].Radius);
+            WallObject wall = WallObjectList[wallIndiciesAround[j]];
+            collidingEdges.Clear();
+            CheckCollisionsForce(wall, agentPos2d, AgentMovementData[index].Radius, collidingEdges, seperationForces);
         }
+        if(seperationForces.Length == 0) { return; }
+        float2 sum = 0;/*
+        for(int i = 0; i < seperationForces.Length; i++)
+        {
+            sum += seperationForces[i];
+        }*/
+        sum = seperationForces[0];
+        transform.position = transform.position + new Vector3(sum.x, 0f, sum.y);
     }
 
     NativeList<int> GetWallObjectsAround(int index)
@@ -97,9 +110,12 @@ public struct CollisionCalculationJob : IJobParallelFor
     }
     NativeSlice<float2> GetVerteciesOf(WallObject wall) => new NativeSlice<float2>(VertexSequence, wall.vertexStart, wall.vertexLength);
     NativeSlice<Direction> GetEdgeDirectionsOf(WallObject wall) => new NativeSlice<Direction>(EdgeDirections, wall.vertexStart, wall.vertexLength - 1);
-    NativeList<Edge> GetCollidingEdges(NativeSlice<float2> vertexSequence, NativeSlice<Direction> edgeDirections, float2 agentPos, float agentRadius)
+    bool CheckCollisions(WallObject wallObj, float2 point, float agentRadius, NativeList<Edge> collidingEdgesOut, NativeList<float2> seperationDirections)
     {
-        NativeList<Edge> edges = new NativeList<Edge>(Allocator.Temp);
+        bool isColliding = false;
+
+        NativeSlice<float2> vertexSequence = GetVerteciesOf(wallObj);
+        NativeSlice<Direction> edgeDirections = GetEdgeDirectionsOf(wallObj);
         for(int i = 0; i < vertexSequence.Length - 1; i++)
         {
             Edge curEdge = new Edge()
@@ -108,40 +124,182 @@ public struct CollisionCalculationJob : IJobParallelFor
                 p2 = vertexSequence[i + 1],
                 dir = edgeDirections[i],
             };
-            if (IsColliding(curEdge)) { edges.Add(curEdge); }
-        }
-        return edges;
-
-        bool IsColliding(Edge edge)
-        {
-            //M = INFINITY
-            if (edge.p1.x == edge.p2.x)
+            float2 seperationForce;
+            if (IsColliding(curEdge, out seperationForce))
             {
-                float2 up = math.select(edge.p2, edge.p1, edge.p1.y > edge.p2.y);
-                float2 down = math.select(edge.p2, edge.p1, edge.p1.y < edge.p2.y);
-                float xDistance = math.abs(agentPos.x - up.x);
-                return math.distance(agentPos, up) <= agentRadius || math.distance(agentPos, down) <= agentRadius || (agentPos.y <= up.y && agentPos.y >= down.y && xDistance <= agentRadius);
+                collidingEdgesOut.Add(curEdge); 
+                seperationDirections.Add(seperationForce); 
+                isColliding = true;
             }
-            //M = 0
-            else if(edge.p1.y == edge.p2.y)
+        }
+        return isColliding;
+
+        bool IsColliding(Edge edge, out float2 seperationDirection)
+        {
+            if (edge.p1.y == edge.p2.y) //M = 0
             {
                 float2 rh = math.select(edge.p2, edge.p1, edge.p1.x > edge.p2.x);
                 float2 lh = math.select(edge.p2, edge.p1, edge.p1.x < edge.p2.x);
-                float yDistance = math.abs(agentPos.y - lh.y);
-                return math.distance(agentPos, lh) <= agentRadius || math.distance(agentPos, rh) <= agentRadius || (agentPos.x <= rh.x && agentPos.x >= lh.x && yDistance <= agentRadius);
+                bool isOutside = (edge.dir == Direction.N && point.y < lh.y) || (edge.dir == Direction.S && point.y > lh.y);
+                bool isColliding;
+                if (point.x < rh.x && point.x > lh.x)
+                {
+                    float yDistance = lh.y - point.y;
+                    float2 intersection = point + new float2(0, yDistance);
+                    seperationDirection = math.normalize(point - intersection);
+                    isColliding = math.abs(yDistance) <= agentRadius;
+                    return isColliding && isOutside;
+                }
+                float lhDistance = math.distance(lh, point);
+                float rhDistance = math.distance(rh, point);
+                if (rhDistance < lhDistance)
+                {
+                    isColliding = rhDistance <= agentRadius;
+                    seperationDirection = math.normalize(point -rh);
+                    return isColliding && isOutside;
+                }
+                else
+                {
+                    isColliding = lhDistance <= agentRadius;
+                    seperationDirection = math.normalize(point - lh);
+                    return isColliding && isOutside;
+                }
             }
+            else if (edge.p1.x == edge.p2.x) //M = INFINITY
+            {
+                float2 up = math.select(edge.p2, edge.p1, edge.p1.y > edge.p2.y);
+                float2 down = math.select(edge.p2, edge.p1, edge.p1.y < edge.p2.y);
+                bool isOutside = (edge.dir == Direction.E && point.x < down.x) || (edge.dir == Direction.W && point.x > down.x);
+                bool isColliding;
+                if (point.y < up.y && point.y > down.y)
+                {
+                    float xDistance = down.x - point.x;
+                    float2 intersection = point + new float2(xDistance, 0);
+                    seperationDirection = math.normalize(point - intersection);
+                    isColliding = math.abs(xDistance) <= agentRadius;
+                    return isColliding && isOutside;
+                }
+                float upDistance = math.distance(down, point);
+                float downDistance = math.distance(up, point);
+                if (downDistance < upDistance)
+                {
+                    isColliding = downDistance <= agentRadius;
+                    seperationDirection = math.normalize(point - up);
+                    return isColliding && isOutside;
+                }
+                else
+                {
+                    isColliding = upDistance <= agentRadius;
+                    seperationDirection = math.normalize(point - down);
+                    return isColliding && isOutside;
+                }
+            }
+            seperationDirection = 0;
+            return false;
+        }
+    }
+    bool CheckCollisionsForce(WallObject wallObj, float2 point, float agentRadius, NativeList<Edge> collidingEdgesOut, NativeList<float2> seperationForces)
+    {
+        bool isColliding = false;
 
-            //NORMAL
-            float2 edgelh = math.select(edge.p2, edge.p1, edge.p1.x < edge.p2.x);
-            float2 edgerh = math.select(edge.p2, edge.p1, edge.p1.x > edge.p2.x);
-            float edgeM = (edgerh.y - edgelh.y) / (edgerh.x - edgelh.x);
-            float edgeC = edgelh.y / (edgeM * edgelh.x);
-            float perpM = -edgeM;
-            float perpC = agentPos.y / (perpM * agentPos.x);
-            float intersectX = (perpC - perpM) / 2 * edgeM;
-            float intersectY = intersectX * edgeM + edgeC;
-            float2 intersection = new float2(intersectX, intersectY);
-            return math.distance(agentPos, edgelh) <= agentRadius || math.distance(agentPos, edgerh) <= agentRadius || math.distance(intersection, agentPos) <= agentRadius;
+        NativeSlice<float2> vertexSequence = GetVerteciesOf(wallObj);
+        NativeSlice<Direction> edgeDirections = GetEdgeDirectionsOf(wallObj);
+        for (int i = 0; i < vertexSequence.Length - 1; i++)
+        {
+            Edge curEdge = new Edge()
+            {
+                p1 = vertexSequence[i],
+                p2 = vertexSequence[i + 1],
+                dir = edgeDirections[i],
+            };
+            float2 seperationForce;
+            if (IsColliding(curEdge, out seperationForce))
+            {
+                collidingEdgesOut.Add(curEdge);
+                seperationForces.Add(seperationForce);
+                isColliding = true;
+            }
+        }
+        return isColliding;
+
+        bool IsColliding(Edge edge, out float2 seperationForce)
+        {
+            if (edge.p1.y == edge.p2.y) //M = 0
+            {
+                float2 rh = math.select(edge.p2, edge.p1, edge.p1.x > edge.p2.x);
+                float2 lh = math.select(edge.p2, edge.p1, edge.p1.x < edge.p2.x);
+                bool isOutside = (edge.dir == Direction.N && point.y < lh.y) || (edge.dir == Direction.S && point.y > lh.y);
+                bool isColliding;
+                if (point.x < rh.x && point.x > lh.x)
+                {
+                    float yDistance = lh.y - point.y;
+                    float2 intersection = point + new float2(0, yDistance);
+                    seperationForce = math.normalize(point - intersection) * (agentRadius - math.abs(yDistance));
+                    isColliding = math.abs(yDistance) <= agentRadius;
+                    return isColliding && isOutside;
+                }
+                float lhDistance = math.distance(lh, point);
+                float rhDistance = math.distance(rh, point);
+                if (rhDistance < lhDistance)
+                {
+                    isColliding = rhDistance <= agentRadius;
+                    seperationForce = math.normalize(point - rh) * (agentRadius - math.abs(rhDistance));
+                    return isColliding && isOutside;
+                }
+                else
+                {
+                    isColliding = lhDistance <= agentRadius;
+                    seperationForce = math.normalize(point - lh) * (agentRadius - math.abs(lhDistance));
+                    return isColliding && isOutside;
+                }
+            }
+            else if (edge.p1.x == edge.p2.x) //M = INFINITY
+            {
+                float2 up = math.select(edge.p2, edge.p1, edge.p1.y > edge.p2.y);
+                float2 down = math.select(edge.p2, edge.p1, edge.p1.y < edge.p2.y);
+                bool isOutside = (edge.dir == Direction.E && point.x < down.x) || (edge.dir == Direction.W && point.x > down.x);
+                bool isColliding;
+                if (point.y < up.y && point.y > down.y)
+                {
+                    float xDistance = down.x - point.x;
+                    float2 intersection = point + new float2(xDistance, 0);
+                    seperationForce = math.normalize(point - intersection) * (agentRadius - math.abs(xDistance));
+                    isColliding = math.abs(xDistance) <= agentRadius;
+                    return isColliding && isOutside;
+                }
+                float upDistance = math.distance(down, point);
+                float downDistance = math.distance(up, point);
+                if (downDistance < upDistance)
+                {
+                    isColliding = downDistance <= agentRadius;
+                    seperationForce = math.normalize(point - up) * (agentRadius - math.abs(downDistance));
+                    return isColliding && isOutside;
+                }
+                else
+                {
+                    isColliding = upDistance <= agentRadius;
+                    seperationForce = math.normalize(point - down) * (agentRadius - math.abs(upDistance));
+                    return isColliding && isOutside;
+                }
+            }
+            seperationForce = 0;
+            return false;
         }
     }
 }
+
+////NORMAL
+//    float2 edgelh = math.select(edge.p2, edge.p1, edge.p1.x < edge.p2.x);
+//    float2 edgerh = math.select(edge.p2, edge.p1, edge.p1.x > edge.p2.x);
+//    float edgeM = (edgerh.y - edgelh.y) / (edgerh.x - edgelh.x);
+//    float edgeC = edgelh.y / (edgeM * edgelh.x);
+//    float perpM = -edgeM;
+//    float perpC = point.y / (perpM * point.x);
+//    float intersectX = (perpC - perpM) / 2 * edgeM;
+//    float intersectY = intersectX * edgeM + edgeC;
+//    float2 intersection = new float2(intersectX, intersectY);
+//    //THATS JUST A PLACE HOLDER! YOU NEED TO THINK A SOLUTION
+//    seperationDirection = new float2();
+//    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//    bool isColliding = math.distance(point, edgelh) <= agentRadius || math.distance(point, edgerh) <= agentRadius || math.distance(intersection, point) <= agentRadius;
+//    return isColliding;

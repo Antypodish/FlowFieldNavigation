@@ -69,6 +69,7 @@ public class RoutineSchedulingTree
     {
         CollisionCalculationJob collisionJob = new CollisionCalculationJob()
         {
+            DeltaTime = _pathfindingManager._agentUpdateFrequency,
             TileSize = _pathfindingManager.TileSize,
             FieldColAmount = _pathfindingManager.ColumnAmount,
             FieldRowAmount = _pathfindingManager.RowAmount,
@@ -79,7 +80,8 @@ public class RoutineSchedulingTree
             AgentMovementData = _dirCalculator.AgentMovementDataList,
             AgentDirections = _dirCalculator.Directions,
         };
-        JobHandle collisionHandle = collisionJob.Schedule(collisionJob.AgentMovementData.Length,512 ,_movDataCalcHandle[0]);
+        //JobHandle collisionHandle = collisionJob.Schedule(collisionJob.AgentMovementData.Length,512 ,_movDataCalcHandle[0]);
+        JobHandle collisionHandle = collisionJob.Schedule(_pathfindingManager.AgentDataContainer.AgentTransforms ,_movDataCalcHandle[0]);
         _dirCalcHandle.Add(collisionHandle);
     }
     public void AddPortalTraversalHandles(List<PortalTraversalJobPack> portalTravJobs, JobHandle dependency)

@@ -9,7 +9,7 @@ public class PathfindingManager : MonoBehaviour
 {
     [SerializeField] TerrainGenerator _terrainGenerator;
     [SerializeField] int _maxCostfieldOffset;
-    [SerializeField] float _agentUpdateFrequency;
+    [SerializeField] public float _agentUpdateFrequency;
 
     [HideInInspector] public float TileSize;
     [HideInInspector] public int RowAmount;

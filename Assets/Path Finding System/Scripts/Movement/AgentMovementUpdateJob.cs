@@ -15,14 +15,6 @@ public struct AgentMovementUpdateJob : IJobParallelForTransform
     {
         AgentData data = AgentDataArray[index];
         if(data.Direction.x == 0 && data.Direction.y == 0){ return; }
-
-        if (data.Direction.x == -1f && data.Direction.y == -1f)
-        {
-            float3 destination = new float3(data.Destination.x, transform.position.y, data.Destination.y);
-            Vector3 newPos = Vector3.MoveTowards(transform.position, destination, data.Speed * DeltaTime);
-            transform.position = newPos;
-            AgentPositions[index] = newPos;
-        }
         else
         {
             float3 direction = new float3(data.Direction.x, 0f, data.Direction.y);

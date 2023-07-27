@@ -51,7 +51,7 @@ public struct AgentMovementDataCalculationJob : IJobParallelForTransform
                 Directions[index] = 0;
                 return;
             case FlowData.LOS:
-                Directions[index] = -1f;
+                Directions[index] = data.Destination - new float2(data.Position.x, data.Position.z);
                 break;
             case FlowData.N:
                 Directions[index] = new float2(0f, 1f);
@@ -78,10 +78,7 @@ public struct AgentMovementDataCalculationJob : IJobParallelForTransform
                 Directions[index] = new float2(-1f, 1f);
                 break;
         }
-        if(flow != FlowData.LOS)
-        {
-            Directions[index] = math.normalize(Directions[index]);
-        }
+        Directions[index] = math.normalize(Directions[index]);
         AgentMovementData[index] = data;
     }
 }
