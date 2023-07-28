@@ -51,6 +51,7 @@ public class AgentDirectionCalculator
                     Position = 0,
                     Radius = agentDataList[i].Radius,
                     Local1d = 0,
+                    Flow = 0,
                     Sector1d = 0,
                     Speed = agentDataList[i].Speed,
                     OutOfFieldFlag = false,
@@ -65,6 +66,7 @@ public class AgentDirectionCalculator
                     Position = 0,
                     Radius = agentDataList[i].Radius,
                     Local1d = 0,
+                    Flow = 0,
                     Sector1d = 0,
                     Speed = agentDataList[i].Speed,
                     Destination = agentDataList[i].Destination,
@@ -85,7 +87,6 @@ public class AgentDirectionCalculator
             SectorColAmount = _pathfindingManager.SectorColAmount,
             SectorMatrixColAmount = _pathfindingManager.SectorMatrixColAmount,
             AgentMovementData = AgentMovementDataList,
-            Directions = Directions,
         };
     }
     public void SendDirections()
@@ -97,6 +98,7 @@ public struct AgentMovementData
 {
     public float3 Position;
     public float2 Destination;
+    public float2 Flow;
     public float Speed;
     public float Radius;
     public ushort Local1d;

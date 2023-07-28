@@ -47,7 +47,7 @@ public struct CollisionCalculationJob : IJobParallelForTransform
         
 
         //FOR DIRECTION
-        float2 dir2d = AgentDirections[index];
+        float2 dir2d = AgentMovementData[index].Flow;
         float3 dest3d = transform.position + (new Vector3(dir2d.x, 0f, dir2d.y) * DeltaTime * AgentMovementData[index].Speed);
         float2 dest2d = new float2(dest3d.x, dest3d.z);
         int2 destIndex = new int2((int)math.floor(dest2d.x / TileSize), (int)math.floor(dest2d.y / TileSize));
@@ -68,6 +68,10 @@ public struct CollisionCalculationJob : IJobParallelForTransform
             agentPos2d = new float2(transform.position.x, transform.position.z);
             float2 newDir2d = math.normalize(dest2d - agentPos2d);
             AgentDirections[index] = newDir2d;
+        }
+        else
+        {
+            AgentDirections[index] = dir2d;
         }
     }
 

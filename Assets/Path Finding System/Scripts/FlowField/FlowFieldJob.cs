@@ -140,7 +140,7 @@ public struct FlowFieldJob : IJobParallelFor
         if (neSectorMark != 0 ) { neIntCost = IntegrationField[neSectorMark + neLocal1d].Cost; }
         if (seSectorMark != 0 ) { seIntCost = IntegrationField[seSectorMark + seLocal1d].Cost; }
         if (swSectorMark != 0 ) { swIntCost = IntegrationField[swSectorMark + swLocal1d].Cost; }
-        if (nwSectorMark != 0 ) { nwIntCost = IntegrationField[nwSectorMark + nwLocal1d].Cost; }/*
+        if (nwSectorMark != 0 ) { nwIntCost = IntegrationField[nwSectorMark + nwLocal1d].Cost; }
         if(nIntCost == float.MaxValue)
         {
             neIntCost = float.MaxValue;
@@ -160,7 +160,7 @@ public struct FlowFieldJob : IJobParallelFor
         {
             nwIntCost = float.MaxValue;
             swIntCost = float.MaxValue;
-        }*/
+        }
         float minCost = float.MaxValue;
         FlowData minFlow = FlowData.None;
         if(nIntCost < minCost) { minCost = nIntCost; minFlow = FlowData.N; }
