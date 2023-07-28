@@ -84,7 +84,7 @@ public class AgentDataContainer
     {
         AgentDirectionSetJob directionSetJob = new AgentDirectionSetJob()
         {
-            AgentDataDataArray = AgentDataList,
+            AgentDataArray = AgentDataList,
             AgentDirections = agentDirections,
         };
         directionSetJob.Schedule().Complete();

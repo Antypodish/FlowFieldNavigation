@@ -1,4 +1,5 @@
 ﻿using JetBrains.Annotations;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Tracing;
@@ -28,7 +29,7 @@ public class AgentDirectionCalculator
         AgentMovementDataList = new NativeList<AgentMovementData>(_agentDataContainer.Agents.Count, Allocator.Persistent);
         Directions = new NativeList<float2>(Allocator.Persistent);
     }
-    public AgentMovementDataCalculationJob CalculateDirections(out TransformAccessArray transformsToSchedule)
+    public AgentRoutineDataCalculationJob CalculateDirections(out TransformAccessArray transformsToSchedule)
     {
         NativeList<AgentData> agentDataList = _agentDataContainer.AgentDataList;
         List<AgentPath> pathList = _agentDataContainer.Paths;
@@ -81,7 +82,7 @@ public class AgentDirectionCalculator
         
         //RETRUN JOB
         transformsToSchedule = agentTransforms;
-        return new AgentMovementDataCalculationJob()
+        return new AgentRoutineDataCalculationJob()
         {
             TileSize = _pathfindingManager.TileSize,
             SectorColAmount = _pathfindingManager.SectorColAmount,

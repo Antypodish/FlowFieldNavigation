@@ -2,6 +2,8 @@
 using System.Threading;
 using Unity.Collections;
 using Unity.Jobs;
+using Unity.VisualScripting;
+using UnityEditor;
 using UnityEngine.Jobs;
 
 public class RoutineSchedulingTree
@@ -16,7 +18,8 @@ public class RoutineSchedulingTree
     List<PathHandle> _porTravHandles;
     List<PathHandle> _porAddTravHandles;
     List<JobHandle> _movDataCalcHandle;
-    List<JobHandle> _dirCalcHandle;
+    List<JobHandle> _colCalculationHandle;
+    List<JobHandle> _avoidanceHandle;
     public RoutineSchedulingTree(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
@@ -27,7 +30,8 @@ public class RoutineSchedulingTree
         _movDataCalcHandle = new List<JobHandle>();
         _pathProdCalcHandles = new List<PathHandle>();
         _pathAdditionHandles = new NativeList<JobHandle>(Allocator.Persistent);
-        _dirCalcHandle = new List<JobHandle>();
+        _colCalculationHandle = new List<JobHandle>();
+        _avoidanceHandle = new List<JobHandle>();
     }
 
     public JobHandle ScheduleCostEditRequests(List<CostFieldEditJob[]> costFieldEditRequests)
@@ -60,12 +64,22 @@ public class RoutineSchedulingTree
     }
     public void AddMovementDataCalculationHandle(JobHandle dependency)
     {
-        AgentMovementDataCalculationJob movDataJob = _dirCalculator.CalculateDirections(out TransformAccessArray transformsToSchedule);
+        AgentRoutineDataCalculationJob movDataJob = _dirCalculator.CalculateDirections(out TransformAccessArray transformsToSchedule);
         _movDataCalcHandle.Add(movDataJob.Schedule(transformsToSchedule,dependency));
 
         if (FlowFieldUtilities.DebugMode) { _movDataCalcHandle[_movDataCalcHandle.Count - 1].Complete(); }
     }
-    public void AddDirectionCalculationJob()
+    public void AddLocalAvoidanceJob()
+    {
+        LocalAvoidanceJob avoidanceJob = new LocalAvoidanceJob()
+        {
+            AgentDirections = _dirCalculator.Directions,
+            AgentMovementData = _dirCalculator.AgentMovementDataList,
+        };
+        JobHandle handle = avoidanceJob.Schedule(_dirCalculator.Directions.Length, 128, _movDataCalcHandle[0]);
+        _avoidanceHandle.Add(handle);
+    }
+    public void AddCollisionCalculationJob()
     {
         CollisionCalculationJob collisionJob = new CollisionCalculationJob()
         {
@@ -80,9 +94,8 @@ public class RoutineSchedulingTree
             AgentMovementData = _dirCalculator.AgentMovementDataList,
             AgentDirections = _dirCalculator.Directions,
         };
-        //JobHandle collisionHandle = collisionJob.Schedule(collisionJob.AgentMovementData.Length,512 ,_movDataCalcHandle[0]);
-        JobHandle collisionHandle = collisionJob.Schedule(_pathfindingManager.AgentDataContainer.AgentTransforms ,_movDataCalcHandle[0]);
-        _dirCalcHandle.Add(collisionHandle);
+        JobHandle collisionHandle = collisionJob.Schedule(_pathfindingManager.AgentDataContainer.AgentTransforms ,_avoidanceHandle[0]);
+        _colCalculationHandle.Add(collisionHandle);
     }
     public void AddPortalTraversalHandles(List<PortalTraversalJobPack> portalTravJobs, JobHandle dependency)
     {
@@ -133,11 +146,17 @@ public class RoutineSchedulingTree
             _movDataCalcHandle[0].Complete();
             _movDataCalcHandle.Clear();
         }
-        
-        if(_dirCalcHandle.Count != 0 && _dirCalcHandle[0].IsCompleted)
+
+        if(_avoidanceHandle.Count != 0 && _avoidanceHandle[0].IsCompleted)
         {
-            _dirCalcHandle[0].Complete();
-            _dirCalcHandle.Clear();
+            _avoidanceHandle[0].Complete();
+            _avoidanceHandle.Clear();
+        }
+        
+        if(_colCalculationHandle.Count != 0 && _colCalculationHandle[0].IsCompleted)
+        {
+            _colCalculationHandle[0].Complete();
+            _colCalculationHandle.Clear();
         }
 
         //HANDLE PORTAL ADD TRAVERSALS
@@ -176,11 +195,18 @@ public class RoutineSchedulingTree
             _movDataCalcHandle.Clear();
         }
 
-        //FORCE COMPLETE DIRECTION CALCULATION
-        if (_dirCalcHandle.Count != 0)
+        //FORCE COMPLETE LOCAL AVOIDANCE
+        if (_avoidanceHandle.Count != 0)
         {
-            _dirCalcHandle[0].Complete();
-            _dirCalcHandle.Clear();
+            _avoidanceHandle[0].Complete();
+            _avoidanceHandle.Clear();
+        }
+
+        //FORCE COMPLETE COLLISION CALCULATION
+        if (_colCalculationHandle.Count != 0)
+        {
+            _colCalculationHandle[0].Complete();
+            _colCalculationHandle.Clear();
         }
         //FOCE COMTPLETE PATH PRODUCTION TRAVERSALS
         for (int i = 0; i < _porTravHandles.Count; i++)

@@ -7,14 +7,14 @@ using Unity.Mathematics;
 struct AgentDirectionSetJob : IJob
 {
     [ReadOnly] public NativeArray<float2> AgentDirections;
-    public NativeArray<AgentData> AgentDataDataArray;
+    public NativeArray<AgentData> AgentDataArray;
     public void Execute()
     {
         for (int i = 0; i < AgentDirections.Length; i++)
         {
-            AgentData agentData = AgentDataDataArray[i];
+            AgentData agentData = AgentDataArray[i];
             agentData.Direction = AgentDirections[i];
-            AgentDataDataArray[i] = agentData;
+            AgentDataArray[i] = agentData;
         }
     }
 }

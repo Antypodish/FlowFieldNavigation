@@ -5,7 +5,7 @@ using Unity.Mathematics;
 using UnityEngine.Jobs;
 
 [BurstCompile]
-public struct AgentMovementDataCalculationJob : IJobParallelForTransform
+public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
 {
     public float TileSize;
     public int SectorColAmount;
