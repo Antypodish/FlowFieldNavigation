@@ -42,14 +42,17 @@ public struct CollisionCalculationJob : IJobParallelForTransform
         float2 sum = 0;
         if (seperationForces.Length != 0)
         {
-            sum = seperationForces[0];
+            for(int i = 0; i < seperationForces.Length; i++)
+            {
+                sum += seperationForces[i];
+            }
             transform.position = transform.position + new Vector3(sum.x, 0f, sum.y);
         }
         
-
+        /*
         //FOR DIRECTION
         float2 dir2d = AgentDirections[index];
-        float3 dest3d = transform.position + (new Vector3(dir2d.x, 0f, dir2d.y) * DeltaTime * AgentMovementData[index].Speed);
+        float3 dest3d = agentPos + (new float3(dir2d.x, 0f, dir2d.y) * DeltaTime * AgentMovementData[index].Speed);
         float2 dest2d = new float2(dest3d.x, dest3d.z);
         int2 destIndex = new int2((int)math.floor(dest2d.x / TileSize), (int)math.floor(dest2d.y / TileSize));
         int destIndex1d = destIndex.y * FieldColAmount + destIndex.x;
@@ -69,7 +72,7 @@ public struct CollisionCalculationJob : IJobParallelForTransform
             agentPos2d = new float2(transform.position.x, transform.position.z);
             float2 newDir2d = math.normalize(dest2d - agentPos2d);
             AgentDirections[index] = newDir2d;
-        }
+        }*/
     }
 
     NativeList<int> GetWallObjectsAround(int index)

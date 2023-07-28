@@ -56,6 +56,7 @@ public class AgentDirectionCalculator
                     Sector1d = 0,
                     Speed = agentDataList[i].Speed,
                     OutOfFieldFlag = false,
+                    Status = agentDataList[i].Status,
                     PathId = -1,
                 };
                 AgentMovementDataList[i] = data;
@@ -72,6 +73,7 @@ public class AgentDirectionCalculator
                     Speed = agentDataList[i].Speed,
                     Destination = agentDataList[i].Destination,
                     OutOfFieldFlag = false,
+                    Status = agentDataList[i].Status,
                     FlowField = curPath.FlowField,
                     SectorToPicked = curPath.SectorToPicked,
                     PathId = curPath.Id,
@@ -105,6 +107,7 @@ public struct AgentMovementData
     public ushort Local1d;
     public ushort Sector1d;
     public bool OutOfFieldFlag;
+    public AgentStatus Status;
     public UnsafeList<FlowData> FlowField;
     public UnsafeList<int> SectorToPicked;
     public int PathId;

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Assets.Path_Finding_System.Scripts;
+using System.Collections.Generic;
 using System.Threading;
 using Unity.Collections;
 using Unity.Jobs;
@@ -73,6 +74,8 @@ public class RoutineSchedulingTree
     {
         LocalAvoidanceJob avoidanceJob = new LocalAvoidanceJob()
         {
+            SeperationMultiplier = BoidController.Instance.SeperationMultiplier,
+            SeperationRadius = BoidController.Instance.SeperationRange,
             AgentDirections = _dirCalculator.Directions,
             AgentMovementData = _dirCalculator.AgentMovementDataList,
         };

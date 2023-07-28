@@ -1,4 +1,5 @@
-﻿using Unity.Burst;
+﻿using System.Diagnostics;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Mathematics;
 
@@ -16,7 +17,7 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
     {
         AgentMovementData data = AgentMovementData[index];
         data.Position = transform.position;
-        if(data.SectorToPicked.Length == 0)
+        if((data.Status & AgentStatus.Moving) != AgentStatus.Moving)
         {
             data.Flow = 0;
             AgentMovementData[index] = data;
@@ -46,8 +47,8 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
         {
             case FlowData.None:
                 data.OutOfFieldFlag = true;
-                AgentMovementData[index] = data;
                 data.Flow = 0;
+                AgentMovementData[index] = data;
                 return;
             case FlowData.LOS:
                 data.Flow = data.Destination - new float2(data.Position.x, data.Position.z);

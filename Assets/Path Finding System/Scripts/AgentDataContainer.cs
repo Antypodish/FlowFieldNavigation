@@ -1,4 +1,5 @@
 ﻿using JetBrains.Annotations;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -35,6 +36,7 @@ public class AgentDataContainer
         AgentData data = new AgentData()
         {
             Speed = agent.GetSpeed(),
+            Status = 0,
             Destination = Vector2.zero,
             Direction = Vector2.zero,
             Radius = agent.GetRadius(),
@@ -103,6 +105,7 @@ public class AgentDataContainer
 public struct AgentData
 {
     public float Speed;
+    public AgentStatus Status;
     public float2 Destination;
     public float2 Direction;
     public float Radius;
@@ -111,4 +114,10 @@ public struct AgentPath
 {
     public Path CurPath;
     public Path NewPath;
+}
+[Flags]
+public enum AgentStatus : byte
+{
+    Moving = 1,
+    OutOfField = 2,
 }

@@ -30,5 +30,6 @@ public class FlowFieldAgent : MonoBehaviour
     public float GetSpeed() => Speed;
     public float GetRadius() => Radius;
     public float GetLandOffset() => LandOffset;
+    public AgentStatus GetAgentStatus() => _pathfindingManager.AgentDataContainer.AgentDataList[AgentDataIndex].Status;
     public void SetSpeed(float newSpeed) { Speed = newSpeed; _pathfindingManager.AgentDataContainer.SetSpeed(AgentDataIndex, newSpeed); }
 }

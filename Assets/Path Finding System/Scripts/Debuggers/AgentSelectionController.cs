@@ -111,7 +111,7 @@ public class AgentSelectionController : MonoBehaviour
             {
                 Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
                 RaycastHit hit;
-                if (Physics.Raycast(ray, out hit, float.PositiveInfinity, 8))
+                if (Physics.Raycast(ray, out hit, 1000, 8))
                 {
                     _agentFactory.AddAgent(hit.point);
                 }
