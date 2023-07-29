@@ -177,23 +177,23 @@ public struct CollisionCalculationJob : IJobParallelForTransform
                 if (point.x < rh.x && point.x > lh.x)
                 {
                     float yDistance = lh.y - point.y;
-                    seperationForce = seperationDirection * (agentRadius - math.abs(yDistance));
+                    seperationForce = isOutside ? seperationDirection * (agentRadius - math.abs(yDistance)) : seperationDirection * (agentRadius + math.abs(yDistance));
                     isColliding = math.abs(yDistance) <= agentRadius;
-                    return isColliding && isOutside;
+                    return isColliding;
                 }
                 float lhDistance = math.distance(lh, point);
                 float rhDistance = math.distance(rh, point);
                 if (rhDistance < lhDistance)
                 {
                     isColliding = rhDistance <= agentRadius;
-                    seperationForce = seperationDirection * (agentRadius - math.abs(rhDistance));
-                    return isColliding && isOutside;
+                    seperationForce = isOutside ? seperationDirection * (agentRadius - math.abs(rhDistance)) : seperationDirection * (agentRadius + math.abs(rhDistance));
+                    return isColliding;
                 }
                 else
                 {
                     isColliding = lhDistance <= agentRadius;
-                    seperationForce = seperationDirection * (agentRadius - math.abs(lhDistance));
-                    return isColliding && isOutside;
+                    seperationForce = isOutside ? seperationDirection * (agentRadius - math.abs(lhDistance)) : seperationDirection * (agentRadius + math.abs(lhDistance));
+                    return isColliding;
                 }
             }
             else if (edge.p1.x == edge.p2.x) //M = INFINITY
@@ -207,23 +207,23 @@ public struct CollisionCalculationJob : IJobParallelForTransform
                 {
                     float xDistance = down.x - point.x;
                     float2 intersection = point + new float2(xDistance, 0);
-                    seperationForce = seperationDirection * (agentRadius - math.abs(xDistance));
+                    seperationForce = isOutside ? seperationDirection * (agentRadius - math.abs(xDistance)) : seperationDirection * (agentRadius + math.abs(xDistance));
                     isColliding = math.abs(xDistance) <= agentRadius;
-                    return isColliding && isOutside;
+                    return isColliding;
                 }
                 float upDistance = math.distance(down, point);
                 float downDistance = math.distance(up, point);
                 if (downDistance < upDistance)
                 {
                     isColliding = downDistance <= agentRadius;
-                    seperationForce = seperationDirection * (agentRadius - math.abs(downDistance));
-                    return isColliding && isOutside;
+                    seperationForce = isOutside ? seperationDirection * (agentRadius - math.abs(downDistance)) : seperationDirection * (agentRadius + math.abs(downDistance));
+                    return isColliding;
                 }
                 else
                 {
                     isColliding = upDistance <= agentRadius;
-                    seperationForce = seperationDirection * (agentRadius - math.abs(upDistance));
-                    return isColliding && isOutside;
+                    seperationForce = isOutside ? seperationDirection * (agentRadius - math.abs(upDistance)) : seperationDirection * (agentRadius + math.abs(upDistance));
+                    return isColliding;
                 }
             }
             seperationForce = 0;
