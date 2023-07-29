@@ -68,19 +68,21 @@ public struct LocalAvoidanceJob : IJobParallelFor
             AgentMovementData mateData = AgentMovementDataArray[i];
             if (i == agentIndex) { continue; }
 
-            float2 foreignAgentPosition = new float2(mateData.Position.x, mateData.Position.z);
-            float distance = math.distance(foreignAgentPosition, agentPos);
+            float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
+            float distance = math.distance(matePos, agentPos);
 
             if (distance > SeperationRadius * 2) { continue; }
 
             float overlapping = SeperationRadius * 2 - distance;
-            totalSeperation += math.select(math.normalize(agentPos - foreignAgentPosition) * overlapping, 0, agentPos.Equals(foreignAgentPosition) || overlapping == 0);
+
+            float2 push = math.select(math.normalize(agentPos - matePos) * overlapping, 0, overlapping == 0); 
+            push = math.select(push, math.normalize(new float2(i, 1)), agentPos.Equals(matePos));
+            totalSeperation += push;
         }
         if (totalSeperation.Equals(0)) { return desiredDirection; }
         float2 seperationDirection = math.normalize(totalSeperation);
         float2 steering = (seperationDirection - desiredDirection) * SeperationMultiplier;
         float2 newDirection = math.select(math.normalize(desiredDirection + steering), 0, (desiredDirection + steering).Equals(0));
-        //float2 directionToReturn = math.select(math.normalize(newDirection - desiredDirection), 0f, newDirection.Equals(desiredDirection));
         return newDirection;
     }
     float2 GetAlignedDirection(float2 agentPos, int agentIndex, float2 desiredDirection)
@@ -97,7 +99,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
             float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
 
             float dot = math.dot(desiredDirection, matePos - agentPos);
-            //if (dot <= 0) { continue; }
+            if (dot <= 0) { continue; }
 
             float distance = math.distance(matePos, agentPos);
 

@@ -49,7 +49,7 @@ public struct CollisionCalculationJob : IJobParallelForTransform
             transform.position = transform.position + new Vector3(sum.x, 0f, sum.y);
         }
         
-        /*
+        
         //FOR DIRECTION
         float2 dir2d = AgentDirections[index];
         float3 dest3d = agentPos + (new float3(dir2d.x, 0f, dir2d.y) * DeltaTime * AgentMovementData[index].Speed);
@@ -67,12 +67,15 @@ public struct CollisionCalculationJob : IJobParallelForTransform
         }
         if (seperationForcesDest.Length != 0)
         {
-            sum = seperationForcesDest[0];
+            for(int i = 0; i < seperationForcesDest.Length; i++)
+            {
+                sum += seperationForces[i];
+            }
             dest2d += sum;
             agentPos2d = new float2(transform.position.x, transform.position.z);
-            float2 newDir2d = math.normalize(dest2d - agentPos2d);
+            float2 newDir2d = math.select(math.normalize(dest2d - agentPos2d), 0, dest2d.Equals(agentPos2d));
             AgentDirections[index] = newDir2d;
-        }*/
+        }
     }
 
     NativeList<int> GetWallObjectsAround(int index)
@@ -170,11 +173,11 @@ public struct CollisionCalculationJob : IJobParallelForTransform
                 float2 lh = math.select(edge.p2, edge.p1, edge.p1.x < edge.p2.x);
                 bool isOutside = (edge.dir == Direction.N && point.y < lh.y) || (edge.dir == Direction.S && point.y > lh.y);
                 bool isColliding;
+                float2 seperationDirection = math.select(new float2(0, 1), new float2(0, -1), edge.dir == Direction.N);
                 if (point.x < rh.x && point.x > lh.x)
                 {
                     float yDistance = lh.y - point.y;
-                    float2 intersection = point + new float2(0, yDistance);
-                    seperationForce = math.normalize(point - intersection) * (agentRadius - math.abs(yDistance));
+                    seperationForce = seperationDirection * (agentRadius - math.abs(yDistance));
                     isColliding = math.abs(yDistance) <= agentRadius;
                     return isColliding && isOutside;
                 }
@@ -183,13 +186,13 @@ public struct CollisionCalculationJob : IJobParallelForTransform
                 if (rhDistance < lhDistance)
                 {
                     isColliding = rhDistance <= agentRadius;
-                    seperationForce = math.normalize(point - rh) * (agentRadius - math.abs(rhDistance));
+                    seperationForce = seperationDirection * (agentRadius - math.abs(rhDistance));
                     return isColliding && isOutside;
                 }
                 else
                 {
                     isColliding = lhDistance <= agentRadius;
-                    seperationForce = math.normalize(point - lh) * (agentRadius - math.abs(lhDistance));
+                    seperationForce = seperationDirection * (agentRadius - math.abs(lhDistance));
                     return isColliding && isOutside;
                 }
             }
@@ -199,11 +202,12 @@ public struct CollisionCalculationJob : IJobParallelForTransform
                 float2 down = math.select(edge.p2, edge.p1, edge.p1.y < edge.p2.y);
                 bool isOutside = (edge.dir == Direction.E && point.x < down.x) || (edge.dir == Direction.W && point.x > down.x);
                 bool isColliding;
+                float2 seperationDirection = math.select(new float2(1, 0), new float2(-1, 0), edge.dir == Direction.E);
                 if (point.y < up.y && point.y > down.y)
                 {
                     float xDistance = down.x - point.x;
                     float2 intersection = point + new float2(xDistance, 0);
-                    seperationForce = math.normalize(point - intersection) * (agentRadius - math.abs(xDistance));
+                    seperationForce = seperationDirection * (agentRadius - math.abs(xDistance));
                     isColliding = math.abs(xDistance) <= agentRadius;
                     return isColliding && isOutside;
                 }
@@ -212,13 +216,13 @@ public struct CollisionCalculationJob : IJobParallelForTransform
                 if (downDistance < upDistance)
                 {
                     isColliding = downDistance <= agentRadius;
-                    seperationForce = math.normalize(point - up) * (agentRadius - math.abs(downDistance));
+                    seperationForce = seperationDirection * (agentRadius - math.abs(downDistance));
                     return isColliding && isOutside;
                 }
                 else
                 {
                     isColliding = upDistance <= agentRadius;
-                    seperationForce = math.normalize(point - down) * (agentRadius - math.abs(upDistance));
+                    seperationForce = seperationDirection * (agentRadius - math.abs(upDistance));
                     return isColliding && isOutside;
                 }
             }
