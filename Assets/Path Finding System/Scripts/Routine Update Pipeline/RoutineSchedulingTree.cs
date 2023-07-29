@@ -76,8 +76,10 @@ public class RoutineSchedulingTree
         {
             SeperationMultiplier = BoidController.Instance.SeperationMultiplier,
             SeperationRadius = BoidController.Instance.SeperationRange,
+            AlignmentMultiplier = BoidController.Instance.AlignmentMultiplier,
+            AlignmentRadius = BoidController.Instance.AlignmentRange,
             AgentDirections = _dirCalculator.Directions,
-            AgentMovementData = _dirCalculator.AgentMovementDataList,
+            AgentMovementDataArray = _dirCalculator.AgentMovementDataList,
         };
         JobHandle handle = avoidanceJob.Schedule(_dirCalculator.Directions.Length, 128, _movDataCalcHandle[0]);
         _avoidanceHandle.Add(handle);

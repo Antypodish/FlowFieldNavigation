@@ -11,9 +11,12 @@ namespace Assets.Path_Finding_System.Scripts
     {
         public static BoidController Instance;
 
-        [SerializeField] public float SeperationRange;
-        [SerializeField] [Range(0,1)] public float SeperationMultiplier;
-
+        [Header("Seperation")]
+        public float SeperationRange;
+        [Range(0,1)] public float SeperationMultiplier;
+        [Header("Alignment")]
+        public float AlignmentRange;
+        [Range(0,1)] public float AlignmentMultiplier;
         private void Start()
         {
             Instance = this;

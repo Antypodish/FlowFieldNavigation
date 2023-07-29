@@ -24,6 +24,8 @@ public class EditorDebuggingController : MonoBehaviour
     [SerializeField] bool _debugLOSPass;
     [SerializeField] bool _debugLOSBlocks;
     [SerializeField] bool _debugFlowField;
+    [Header("Agent Debugger")]
+    [SerializeField] bool _debugAgentDirections;
 
 
     //debuggers
@@ -33,6 +35,7 @@ public class EditorDebuggingController : MonoBehaviour
     EditorPortalDebugger _portalDebugger;
     EditorAStarDebugger _aStarDebugger;
     EditorPathDebugger _pathDebugger;
+    EditorAgentDirectionDebugger _agentDirectionDebugger;
     private void Start()
     {
         _sectorDebugger = new EditorSectorDebugger(_pathfindingManager);
@@ -40,7 +43,7 @@ public class EditorDebuggingController : MonoBehaviour
         _sectorGraphDebugger = new EditorSectorGraphDebugger(_pathfindingManager);
         _portalDebugger = new EditorPortalDebugger(_pathfindingManager);
         _aStarDebugger = new EditorAStarDebugger(_pathfindingManager);
-        
+        _agentDirectionDebugger = new EditorAgentDirectionDebugger(_pathfindingManager);
     }
     private void Update()
     {
@@ -60,14 +63,18 @@ public class EditorDebuggingController : MonoBehaviour
 
         if(_agentSelectionController == null) { return; }
         FlowFieldAgent _agentToDebug = _agentSelectionController.DebuggableAgent;
-        if(_agentToDebug == null) { return; }
-        if (_debugPortalTraversalMarks && _pathDebugger != null) { _pathDebugger.DebugPortalTraversalMarks(_agentToDebug); }
-        if (_debugPortalSequence && _pathDebugger != null) { _pathDebugger.DebugPortalSequence(_agentToDebug); }
-        if (_debugPickedSectors && _pathDebugger != null) { _pathDebugger.DebugPickedSectors(_agentToDebug); }
-        if (_debugIntegrationField && _pathDebugger != null) { _pathDebugger.DebugIntegrationField(_agentToDebug); }
-        if (_debugFlowField && _pathDebugger != null) { _pathDebugger.DebugFlowField(_agentToDebug); }
-        if (_debugLOSPass && _pathDebugger != null) { _pathDebugger.LOSPassDebug(_agentToDebug); }
-        if (_debugLOSBlocks && _pathDebugger != null) { _pathDebugger.LOSBlockDebug(_agentToDebug); }
+        if(_agentToDebug != null)
+        {
+            if (_debugPortalTraversalMarks && _pathDebugger != null) { _pathDebugger.DebugPortalTraversalMarks(_agentToDebug); }
+            if (_debugPortalSequence && _pathDebugger != null) { _pathDebugger.DebugPortalSequence(_agentToDebug); }
+            if (_debugPickedSectors && _pathDebugger != null) { _pathDebugger.DebugPickedSectors(_agentToDebug); }
+            if (_debugIntegrationField && _pathDebugger != null) { _pathDebugger.DebugIntegrationField(_agentToDebug); }
+            if (_debugFlowField && _pathDebugger != null) { _pathDebugger.DebugFlowField(_agentToDebug); }
+            if (_debugLOSPass && _pathDebugger != null) { _pathDebugger.LOSPassDebug(_agentToDebug); }
+            if (_debugLOSBlocks && _pathDebugger != null) { _pathDebugger.LOSBlockDebug(_agentToDebug); }
+        }
+
+        if(_debugAgentDirections && _agentDirectionDebugger != null) { _agentDirectionDebugger.Debug(); }
     }
 
     enum CostFieldOffset : byte

@@ -815,6 +815,10 @@ PrefabInstance:
       propertyPath: _pathfindingManager
       value: 
       objectReference: {fileID: 2058839523}
+    - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
+      propertyPath: _debugAgentDirections
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1633507769824742795, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}
       propertyPath: m_Name
@@ -1047,7 +1051,7 @@ PrefabInstance:
     - target: {fileID: 8734084087838304231, guid: 5e3867b8afbc0bb49a0027ab49965980,
         type: 3}
       propertyPath: _agentUpdateFrequency
-      value: 0.016
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5e3867b8afbc0bb49a0027ab49965980, type: 3}
@@ -1071,3 +1075,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   SeperationRange: 0.5
   SeperationMultiplier: 1
+  AlignmentRange: 3
+  AlignmentMultiplier: 1
