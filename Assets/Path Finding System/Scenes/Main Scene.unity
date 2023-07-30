@@ -711,6 +711,11 @@ PrefabInstance:
       objectReference: {fileID: 330585546}
     - target: {fileID: 1825739965324605910, guid: e0d1fa0b1efdac642802b5705081a344,
         type: 3}
+      propertyPath: _movementSensitivity
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1825739965324605910, guid: e0d1fa0b1efdac642802b5705081a344,
+        type: 3}
       propertyPath: _cameraPivotTransform
       value: 
       objectReference: {fileID: 871812275}
