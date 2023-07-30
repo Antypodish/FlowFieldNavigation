@@ -177,6 +177,12 @@ public struct IntegrationFieldJob : IJob
             swIntCost = curIntCost;
             nwIntCost = curIntCost;
 
+            bool nUnreachable = nSectorMark != 0 || nBlocked;
+            bool eUnreachable = eSectorMark != 0 || eBlocked;
+            bool sUnreachable = sSectorMark != 0 || sBlocked;
+            bool wUnreachable = wSectorMark != 0 || wBlocked;
+            bool neUnreachable = neSectorMark != 0;
+
             if (nSectorMark != 0) { nIntCost = integrationField[nSectorMark + nLocal1d].Cost; nMark = integrationField[nSectorMark + nLocal1d].Mark; }
             if (eSectorMark != 0) { eIntCost = integrationField[eSectorMark + eLocal1d].Cost; eMark = integrationField[eSectorMark + eLocal1d].Mark; }
             if (sSectorMark != 0) { sIntCost = integrationField[sSectorMark + sLocal1d].Cost; sMark = integrationField[sSectorMark + sLocal1d].Mark; }
@@ -234,10 +240,10 @@ public struct IntegrationFieldJob : IJob
             float eCost = eIntCost + 1f;
             float sCost = sIntCost + 1f;
             float wCost = wIntCost + 1f;
-            float neCost = math.select(neIntCost + 1.4f, float.MaxValue, nBlocked && eBlocked);
-            float seCost = math.select(seIntCost + 1.4f, float.MaxValue, sBlocked && eBlocked);
-            float swCost = math.select(swIntCost + 1.4f, float.MaxValue, sBlocked && wBlocked);
-            float nwCost = math.select(nwIntCost + 1.4f, float.MaxValue, nBlocked && wBlocked);
+            float neCost = math.select(neIntCost + 1.4f, float.MaxValue, (nBlocked || nSectorMark == 0) && (eBlocked || eSectorMark == 0));
+            float seCost = math.select(seIntCost + 1.4f, float.MaxValue, (sBlocked || sSectorMark == 0) && (eBlocked || eSectorMark == 0));
+            float swCost = math.select(swIntCost + 1.4f, float.MaxValue, (sBlocked || wSectorMark == 0) && (wBlocked || wSectorMark == 0));
+            float nwCost = math.select(nwIntCost + 1.4f, float.MaxValue, (nBlocked || nSectorMark == 0) && (wBlocked || wSectorMark == 0));
 
             costToReturn = math.select(costToReturn, nCost, nCost < costToReturn);
             costToReturn = math.select(costToReturn, eCost, eCost < costToReturn);

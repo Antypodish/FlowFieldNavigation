@@ -1,7 +1,13 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using Unity.Collections;
+using Unity.Mathematics;
 using Unity.VisualScripting;
+using UnityEditor.PackageManager;
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 using UnityEngine.Timeline;
+using UnityEngine.UIElements;
 
 public class FlowFieldAgent : MonoBehaviour
 {
@@ -32,4 +38,263 @@ public class FlowFieldAgent : MonoBehaviour
     public float GetLandOffset() => LandOffset;
     public AgentStatus GetAgentStatus() => _pathfindingManager.AgentDataContainer.AgentDataList[AgentDataIndex].Status;
     public void SetSpeed(float newSpeed) { Speed = newSpeed; _pathfindingManager.AgentDataContainer.SetSpeed(AgentDataIndex, newSpeed); }
+
+
+    //WAYPOINT TRIALS
+    public void OnDrawGizmos()
+    {
+        if (_pathfindingManager == null) { return; }
+        Path path = GetPath();
+        if (path == null) { return; }
+
+        float tileSize = _pathfindingManager.TileSize;
+        int fieldColAmount = _pathfindingManager.ColumnAmount;
+        int sectorColAmount = _pathfindingManager.SectorColAmount;
+        int sectorMatrixColAmount = _pathfindingManager.SectorMatrixColAmount;
+        int targetGeneral1d = To1D(path.TargetIndex, fieldColAmount);
+        Vector3 agentPos = Transform.position;
+        int2 general2d = PosTo2D(agentPos, tileSize);
+        int general1d = To1D(general2d, fieldColAmount);
+
+
+        //ALGORITHM
+        NativeList<int> waypointIndicies = new NativeList<int>(Allocator.Temp);
+        waypointIndicies.Add(general1d);
+
+        int wayp = general1d;
+        while(wayp != targetGeneral1d)
+        {
+            wayp = GetNextWaypoint(wayp);
+            waypointIndicies.Add(wayp);
+        }
+
+
+        //DEBUG WAYPOINTS
+        if (waypointIndicies.Length == 0) { return; }
+        Vector3 prevPoint = IndexToPos(waypointIndicies[0], tileSize, fieldColAmount);
+        Gizmos.color = Color.red;
+        Gizmos.DrawSphere(prevPoint, 0.3f);
+        for (int i = 1; i < waypointIndicies.Length; i++)
+        {
+            Vector3 p1 = IndexToPos(waypointIndicies[i], tileSize, fieldColAmount);
+            Gizmos.color = Color.red;
+            Gizmos.DrawSphere(p1, 0.3f);
+            Gizmos.color = Color.black;
+            Gizmos.DrawLine(prevPoint, p1);
+            prevPoint = p1;
+        }
+        FlowData GetFlowAt(int general1d, Path path)
+        {
+            int2 general2d = To2D(general1d, fieldColAmount);
+            int2 sector2d = GetSectorIndex(general2d, sectorColAmount);
+            int2 sectorStart2d = GetSectorStartIndex(sector2d, sectorColAmount);
+            int2 local2d = GetLocalIndex(general2d, sectorStart2d);
+            int local1d = To1D(local2d, sectorColAmount);
+            int sector1d = To1D(sector2d, sectorMatrixColAmount);
+
+            int flowStartIndex = path.SectorToPicked[sector1d];
+            int flowIndex = flowStartIndex + local1d;
+            return path.FlowField[flowIndex];
+        }
+        int GetNextWaypoint(int source1d)
+        {
+            int wayPointIndex = source1d;
+            int cur1d = source1d;
+            bool waypointFound = false;
+            NativeList<int> deb = new NativeList<int>(Allocator.Temp);
+            while (!waypointFound)
+            {
+                deb.Add(5);
+                FlowData flow = GetFlowAt(cur1d, path);
+                cur1d = GetNextIndex(flow, cur1d, fieldColAmount, path);
+                Waypoint wayp;
+                if (IsWaypoint(cur1d, source1d, out wayp))
+                {
+                    waypointFound = true;
+                    wayPointIndex = cur1d;
+                }
+            }
+            return wayPointIndex;
+        }
+        bool IsWaypoint(int potentialWaypoint1d, int source1d, out Waypoint wayp)
+        {
+            bool isWaypoint = false;
+            wayp = new Waypoint();
+            Vector3 waypPos = IndexToPos(potentialWaypoint1d, tileSize, fieldColAmount);
+            Vector3 sourcePos = IndexToPos(source1d, tileSize, fieldColAmount);
+            NativeArray<byte> costs = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(path.Offset).CostsG;
+
+            int n = potentialWaypoint1d + fieldColAmount;
+            int e = potentialWaypoint1d + 1;
+            int s = potentialWaypoint1d - fieldColAmount;
+            int w = potentialWaypoint1d - 1;
+            int ne = potentialWaypoint1d + fieldColAmount + 1;
+            int se = potentialWaypoint1d - fieldColAmount + 1;
+            int sw = potentialWaypoint1d - fieldColAmount - 1;
+            int nw = potentialWaypoint1d + fieldColAmount - 1;
+
+            byte curCost = costs[potentialWaypoint1d];
+            byte nCost = costs[n];
+            byte eCost = costs[e];
+            byte sCost = costs[s];
+            byte wCost = costs[w];
+            byte neCost = costs[ne];
+            byte seCost = costs[se];
+            byte swCost = costs[sw];
+            byte nwCost = costs[nw];
+
+            int2 cur2d = To2D(potentialWaypoint1d, fieldColAmount);
+            int2 source2d = To2D(source1d, fieldColAmount);
+            int2 n2d = To2D(n, fieldColAmount);
+            int2 e2d = To2D(e, fieldColAmount);
+            int2 s2d = To2D(s, fieldColAmount);
+            int2 w2d = To2D(w, fieldColAmount);
+            int2 ne2d = To2D(ne, fieldColAmount);
+            int2 se2d = To2D(se, fieldColAmount);
+            int2 sw2d = To2D(sw, fieldColAmount);
+            int2 nw2d = To2D(nw, fieldColAmount);
+
+            int2 curDif = math.abs(cur2d - source2d);
+            int2 neDif = math.abs(ne2d - source2d);
+            int2 seDif = math.abs(se2d - source2d);
+            int2 swDif = math.abs(sw2d - source2d);
+            int2 nwDif = math.abs(nw2d - source2d);
+
+            bool mInfinite = waypPos.y == sourcePos.y;
+
+            if(curCost == byte.MaxValue) { return false; }
+            if(potentialWaypoint1d == targetGeneral1d) { return true; }
+            if(neCost == byte.MaxValue && nCost != byte.MaxValue && eCost != byte.MaxValue)
+            {
+                int2 change = curDif - neDif;
+                int componentChange = change.x * change.y;
+                if(componentChange < 0)
+                {
+                    isWaypoint = true;
+                    wayp.position = waypPos;
+                    wayp.blockedDirection = mInfinite ? wayp.blockedDirection | Direction.E : wayp.blockedDirection | Direction.N;
+                }
+            }
+            if (seCost == byte.MaxValue && sCost != byte.MaxValue && eCost != byte.MaxValue)
+            {
+                int2 change = curDif - seDif;
+                int componentChange = change.x * change.y;
+                if (componentChange < 0)
+                {
+                    isWaypoint = true;
+                    wayp.position = waypPos;
+                    wayp.blockedDirection = mInfinite ? wayp.blockedDirection | Direction.E : wayp.blockedDirection | Direction.S;
+                }
+            }
+            if (swCost == byte.MaxValue && sCost != byte.MaxValue && wCost != byte.MaxValue)
+            {
+                int2 change = curDif - swDif;
+                int componentChange = change.x * change.y;
+                if (componentChange < 0)
+                {
+                    isWaypoint = true;
+                    wayp.position = waypPos;
+                    wayp.blockedDirection = mInfinite ? wayp.blockedDirection | Direction.W : wayp.blockedDirection | Direction.S;
+                }
+            }
+            if (nwCost == byte.MaxValue && nCost != byte.MaxValue && wCost != byte.MaxValue)
+            {
+                int2 change = curDif - nwDif;
+                int componentChange = change.x * change.y;
+                if (componentChange < 0)
+                {
+                    isWaypoint = true;
+                    wayp.position = waypPos;
+                    wayp.blockedDirection = mInfinite ? wayp.blockedDirection | Direction.W : wayp.blockedDirection | Direction.N;
+                }
+            }
+
+            return isWaypoint;
+        }
+        int To1D(int2 index2, int colAmount)
+        {
+            return index2.y * colAmount + index2.x;
+        }
+        int2 To2D(int index, int colAmount)
+        {
+            return new int2(index % colAmount, index / colAmount);
+        }
+        int2 PosTo2D(Vector3 pos, float tileSize)
+        {
+            return new int2(Mathf.FloorToInt(pos.x / tileSize), Mathf.FloorToInt(pos.z / tileSize));
+        }
+        Vector3 IndexToPos(int general1d, float tileSize, int fieldColAmount)
+        {
+            int2 general2d = To2D(general1d, fieldColAmount);
+            return new Vector3(general2d.x * tileSize + tileSize / 2, 0.5f, general2d.y * tileSize + tileSize / 2);
+        }
+        int2 GetSectorIndex(int2 index, int sectorColAmount)
+        {
+            return new int2(index.x / sectorColAmount, index.y / sectorColAmount);
+        }
+        int2 GetLocalIndex(int2 index, int2 sectorStartIndex)
+        {
+            return index - sectorStartIndex;
+        }
+        int2 GetSectorStartIndex(int2 sectorIndex, int sectorColAmount)
+        {
+            return new int2(sectorIndex.x * sectorColAmount, sectorIndex.y * sectorColAmount);
+        }
+        int GetGeneral1d(int2 local2d, int2 sector2d, int sectorColAmount, int fieldColAmount)
+        {
+            int2 sectorStart = GetSectorStartIndex(sector2d, sectorColAmount);
+            int2 general2d = local2d + sectorStart;
+            int general1d = To1D(general2d, fieldColAmount);
+            return general1d;
+        }
+        int GetNextIndex(FlowData flow, int general1d, int fieldColAmount, Path path)
+        {
+            int nextIndex = -1;
+            switch (flow)
+            {
+                case FlowData.N:
+                    nextIndex = general1d + fieldColAmount;
+                    break;
+                case FlowData.E:
+                    nextIndex = general1d + 1;
+                    break;
+                case FlowData.S:
+                    nextIndex = general1d - fieldColAmount;
+                    break;
+                case FlowData.W:
+                    nextIndex = general1d - 1;
+                    break;
+                case FlowData.NE:
+                    nextIndex = general1d + fieldColAmount + 1;
+                    break;
+                case FlowData.SE:
+                    nextIndex = general1d - fieldColAmount + 1;
+                    break;
+                case FlowData.SW:
+                    nextIndex = general1d - fieldColAmount - 1;
+                    break;
+                case FlowData.NW:
+                    nextIndex = general1d + fieldColAmount - 1;
+                    break;
+                case FlowData.LOS:
+                    nextIndex = To1D(path.TargetIndex, fieldColAmount);
+                    break;
+            }
+            return nextIndex;
+        }
+    }
+}
+public struct Waypoint
+{
+    public Vector2 position;
+    public Direction blockedDirection;
+}
+[Flags]
+public enum WaypointDirection : byte
+{
+    None = 0,
+    N = 1,
+    E = 2,
+    S = 4,
+    W = 8
 }

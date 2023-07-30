@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 
 [BurstCompile]
-public struct LocalAvoidanceJob : IJobParallelFor
+public struct LocalAvoidanceJob : IJob
 {
     public float SeperationRadius;
     public float SeperationMultiplier;
@@ -16,22 +16,30 @@ public struct LocalAvoidanceJob : IJobParallelFor
     [ReadOnly] public NativeArray<AgentMovementData> AgentMovementDataArray;
     public NativeArray<float2> AgentDirections;
 
-    public void Execute(int index)
+    public void Execute()
     {
-        AgentMovementData agentData = AgentMovementDataArray[index];
-        float2 agentPos = new float2(agentData.Position.x, agentData.Position.z);
-        float2 totalSeperationDirection = 0;
-        bool isAgentMoving = (agentData.Status & AgentStatus.Moving) == AgentStatus.Moving;
-        float2 finalDirection = agentData.Flow;
-        if (isAgentMoving)
+        for (int i = 0; i < AgentMovementDataArray.Length; i++)
         {
-            finalDirection = GetAlignedDirection(agentPos, index, finalDirection);
-            finalDirection = GetSeperatedDirection(agentPos, index, finalDirection);
-            AgentDirections[index] = finalDirection;
+            AgentDirections[i] = AgentMovementDataArray[i].Flow;
         }
-        else
+
+        for (int index = 0; index < AgentMovementDataArray.Length; index++)
         {
-            AgentDirections[index] = GetPushingForce(agentPos, index, agentData.Flow);
+            AgentMovementData agentData = AgentMovementDataArray[index];
+            float2 agentPos = new float2(agentData.Position.x, agentData.Position.z);
+            float2 totalSeperationDirection = 0;
+            bool isAgentMoving = (agentData.Status & AgentStatus.Moving) == AgentStatus.Moving;
+            float2 finalDirection = AgentDirections[index];
+            if (isAgentMoving)
+            {
+                finalDirection = GetAlignedDirection(agentPos, index, finalDirection);
+                finalDirection = GetSeperatedDirection(agentPos, index, finalDirection);
+                AgentDirections[index] = finalDirection;
+            }
+            else
+            {
+                AgentDirections[index] = GetPushingForce(agentPos, index, agentData.Flow);
+            }
         }
     }
     float2 GetSeperatedDirection(float2 agentPos, int agentIndex, float2 desiredDirection)
@@ -41,7 +49,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
         {
             AgentMovementData mateData = AgentMovementDataArray[i];
             if (i == agentIndex) { continue; }
-            if((mateData.Status & AgentStatus.Moving) != AgentStatus.Moving) { continue; }
+            if ((mateData.Status & AgentStatus.Moving) != AgentStatus.Moving) { continue; }
 
             float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
             float distance = math.distance(matePos, agentPos);
@@ -54,7 +62,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
             float overlapping = SeperationRadius * 2 - distance;
             totalSeperation += math.select(math.normalize(agentPos - matePos) * overlapping, 0, agentPos.Equals(matePos) || overlapping == 0);
         }
-        if(totalSeperation.Equals(0)) { return desiredDirection; }
+        if (totalSeperation.Equals(0)) { return desiredDirection; }
         float2 seperationDirection = math.normalize(totalSeperation);
         float2 steering = (seperationDirection - desiredDirection) * SeperationMultiplier;
         float2 newDirection = math.select(math.normalize(desiredDirection + steering), 0, (desiredDirection + steering).Equals(0));
@@ -66,6 +74,8 @@ public struct LocalAvoidanceJob : IJobParallelFor
         for (int i = 0; i < AgentMovementDataArray.Length; i++)
         {
             AgentMovementData mateData = AgentMovementDataArray[i];
+            float2 mateDirection = AgentDirections[i];
+
             if (i == agentIndex) { continue; }
 
             float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
@@ -75,7 +85,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
 
             float overlapping = SeperationRadius * 2 - distance;
 
-            float2 push = math.select(math.normalize(agentPos - matePos) * overlapping, 0, overlapping == 0); 
+            float2 push = math.select(math.normalize(agentPos - matePos) * overlapping, 0, overlapping == 0);
             push = math.select(push, math.normalize(new float2(i, 1)), agentPos.Equals(matePos));
             totalSeperation += push;
         }
@@ -92,21 +102,24 @@ public struct LocalAvoidanceJob : IJobParallelFor
         for (int i = 0; i < AgentMovementDataArray.Length; i++)
         {
             AgentMovementData mateData = AgentMovementDataArray[i];
+            float2 mateDirection = AgentDirections[i];
 
             if (i == agentIndex) { continue; }
-            if (mateData.Flow.Equals(0)) { continue; }
-            
+            if (mateDirection.Equals(0)) { continue; }
+
             float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
 
-            float dot = math.dot(desiredDirection, matePos - agentPos);
-            if (dot <= 0) { continue; }
+            float mateRelativeLocation = math.dot(desiredDirection, matePos - agentPos);
+            float mateRelativeDirection = math.dot(desiredDirection, mateDirection);
+            if (mateRelativeLocation <= 0) { continue; }
+            if (mateRelativeDirection <= 0) { continue; }
 
             float distance = math.distance(matePos, agentPos);
 
             if (distance > AlignmentRadius * 2) { continue; }
 
             float overlapping = AlignmentRadius * 2 - distance;
-            totalHeading += mateData.Flow * overlapping;
+            totalHeading += mateDirection * overlapping;
             count++;
         }
 

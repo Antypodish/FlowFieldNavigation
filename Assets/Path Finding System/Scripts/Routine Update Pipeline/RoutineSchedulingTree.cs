@@ -81,7 +81,7 @@ public class RoutineSchedulingTree
             AgentDirections = _dirCalculator.Directions,
             AgentMovementDataArray = _dirCalculator.AgentMovementDataList,
         };
-        JobHandle handle = avoidanceJob.Schedule(_dirCalculator.Directions.Length, 128, _movDataCalcHandle[0]);
+        JobHandle handle = avoidanceJob.Schedule(_movDataCalcHandle[0]);
         _avoidanceHandle.Add(handle);
     }
     public void AddCollisionCalculationJob()

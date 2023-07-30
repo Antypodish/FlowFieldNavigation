@@ -134,7 +134,6 @@ public class PathfindingManager : MonoBehaviour
     private void OnDrawGizmos()
     {
         DebugWallObjects();
-        DebugEdgeDirections();
         void DebugMarks()
         {
             if (FieldProducer == null) { return; }
