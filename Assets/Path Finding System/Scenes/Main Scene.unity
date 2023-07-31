@@ -809,15 +809,23 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
       propertyPath: _debugFlowField
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
       propertyPath: _pathfindingManager
       value: 
       objectReference: {fileID: 2058839523}
     - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
+      propertyPath: _debugPortalSequence
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
       propertyPath: _debugAgentDirections
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
+      propertyPath: _debugPortalTraversalMarks
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1633507769824742795, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}

@@ -21,7 +21,7 @@ public struct FlowFieldJob : IJobParallelFor
     public void Execute(int index)
     {
         if(index == 0) { return; }
-        if (IntegrationField[index].Mark == IntegrationMark.LOSPass) { FlowField[index] = FlowData.LOS; return; }
+        if (IntegrationField[index].Mark == IntegrationMark.LOSPass && IntegrationField[index].Cost == 0) { FlowField[index] = FlowData.LOS; return; }
 
         //DATA
         int localIndex = (index - 1) % SectorTileAmount;
