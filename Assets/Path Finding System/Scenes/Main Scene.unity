@@ -821,7 +821,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
       propertyPath: _debugAgentDirections
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
       propertyPath: _debugPortalTraversalMarks
