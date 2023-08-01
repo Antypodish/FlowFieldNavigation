@@ -1,14 +1,9 @@
-﻿using Assets.Path_Finding_System.Scripts;
-using System;
-using System.Diagnostics;
-using System.IO;
+﻿using System;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
-using Unity.VisualScripting;
 using UnityEngine.Jobs;
-using UnityEngine.SocialPlatforms;
 
 [BurstCompile]
 public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
@@ -138,7 +133,6 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
 
         if (costField[curGeneral1d] == byte.MaxValue)
         {
-            UnityEngine.Debug.Log("heh");
             float2 direction = GetDirection(data.FlowField[sectorMark + local1d], out data.OutOfFieldFlag, data.Destination, new float2(data.Position.x, data.Position.z));
             data.Flow = direction;
             data.waypoint = new Waypoint()
