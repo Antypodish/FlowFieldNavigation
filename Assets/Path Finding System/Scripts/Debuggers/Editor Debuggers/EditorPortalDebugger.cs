@@ -12,11 +12,9 @@ public class EditorPortalDebugger
 
     SectorNode _clickedSectorNodes;
     PortalNode _clickedPortalNode;
-    float _tileSize;
     public EditorPortalDebugger(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
-        _tileSize = _pathfindingManager.TileSize;
     }
     
     public void DebugPortals(int offset)
@@ -137,6 +135,7 @@ public class EditorPortalDebugger
     }
     void SetClickedPortalNode(FieldGraph fieldGraph)
     {
+        float tileSize = _pathfindingManager.TileSize;
         if (Input.GetMouseButton(0))
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -146,7 +145,7 @@ public class EditorPortalDebugger
                 Vector3 hitPos = hit.point;
                 NativeArray<int> portalIndicies = fieldGraph.GetPortalIndicies(fieldGraph.GetSectorNodeAt(hitPos), fieldGraph.WindowNodes);
                 NativeArray<PortalNode> portalNodes = fieldGraph.PortalNodes;
-                Index2 clickedIndex = new Index2(Mathf.FloorToInt(hitPos.z / _tileSize), Mathf.FloorToInt(hitPos.x / _tileSize));
+                Index2 clickedIndex = new Index2(Mathf.FloorToInt(hitPos.z / tileSize), Mathf.FloorToInt(hitPos.x / tileSize));
                 for (int i = 0; i < portalIndicies.Length; i++)
                 {
                     PortalNode pickedPortalNode = portalNodes[portalIndicies[i]];
@@ -160,11 +159,13 @@ public class EditorPortalDebugger
     }
     Vector3 GetPositionOf(PortalNode portalNode)
     {
+        float tileSize = _pathfindingManager.TileSize;
+
         Index2 index1 = portalNode.Portal1.Index;
         Index2 index2 = portalNode.Portal2.Index;
 
-        Vector3 pos1 = new Vector3(_tileSize / 2 + _tileSize * index1.C, 0, _tileSize / 2 + _tileSize * index1.R);
-        Vector3 pos2 = new Vector3(_tileSize / 2 + _tileSize * index2.C, 0, _tileSize / 2 + _tileSize * index2.R);
+        Vector3 pos1 = new Vector3(tileSize / 2 + tileSize * index1.C, 0, tileSize / 2 + tileSize * index1.R);
+        Vector3 pos2 = new Vector3(tileSize / 2 + tileSize * index2.C, 0, tileSize / 2 + tileSize * index2.R);
 
         return (pos1 + pos2) / 2;
     }
