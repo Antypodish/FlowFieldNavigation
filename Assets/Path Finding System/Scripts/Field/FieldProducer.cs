@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices.WindowsRuntime;
 using TMPro;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
 
@@ -57,5 +58,9 @@ public class FieldProducer
     public NativeList<Direction> GetEdgeDirections()
     {
         return _wallProducer.EdgeDirections;
+    }
+    public CostField[] GetAllCostFields()
+    {
+        return _costFieldProducer.GetAllCostFields();
     }
 }

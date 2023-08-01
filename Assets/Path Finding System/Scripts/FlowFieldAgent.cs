@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEditor.PackageManager;
@@ -41,15 +42,16 @@ public class FlowFieldAgent : MonoBehaviour
     public AgentStatus GetAgentStatus() => _pathfindingManager.AgentDataContainer.AgentDataList[AgentDataIndex].Status;
     public void SetSpeed(float newSpeed) { Speed = newSpeed; _pathfindingManager.AgentDataContainer.SetSpeed(AgentDataIndex, newSpeed); }
 
-
+    float lastTime = 0f;
     //WAYPOINT TRIALS
     public void OnDrawGizmos()
     {
+        return;
         if (_pathfindingManager == null) { return; }
         Path path = GetPath();
         if (path == null) { return; }
 
-        if(path!= oldPath)
+        if (path != oldPath)
         {
             oldPath = path;
             currentWaypoint = new Waypoint();
@@ -65,29 +67,36 @@ public class FlowFieldAgent : MonoBehaviour
         int general1d = To1D(general2d, fieldColAmount);
 
 
-        //ALGORITHM
-        NativeList<int> waypointIndicies = new NativeList<int>(Allocator.Temp);
-        waypointIndicies.Add(general1d);
-
-        int waypIndex = general1d;  
-        if (path.SectorToPicked[To1D(GetSectorIndex(general2d, sectorColAmount), sectorMatrixColAmount)] == 0) { return; }
-        Vector3 wayPos = IndexToPos(waypIndex, tileSize, fieldColAmount);
-
-
-        if(waypIndex != targetGeneral1d)
+        float time = Time.realtimeSinceStartup;
+        if (time - lastTime >= 0.016f)
         {
-            Waypoint newWayp;
-            GetNextWaypoint(waypIndex, wayPos, out newWayp);
-            if(!currentWaypoint.Equals(new Waypoint()))
+            lastTime = time;
+            //ALGORITHM
+            NativeList<int> waypointIndicies = new NativeList<int>(Allocator.Temp);
+            waypointIndicies.Add(general1d);
+
+            int waypIndex = general1d;
+            if (path.SectorToPicked[To1D(GetSectorIndex(general2d, sectorColAmount), sectorMatrixColAmount)] == 0) { return; }
+            Vector3 wayPos = IndexToPos(waypIndex, tileSize, fieldColAmount);
+
+
+            if (waypIndex != targetGeneral1d)
             {
-                currentWaypoint = GetBestWaypoint(currentWaypoint, newWayp, general1d);
-            }
-            else
-            {
-                currentWaypoint = newWayp;
+                Waypoint newWayp;
+                GetNextWaypoint(waypIndex, wayPos, out newWayp);
+                if (!currentWaypoint.Equals(new Waypoint()))
+                {
+                    currentWaypoint = GetBestWaypoint(currentWaypoint, newWayp, general1d);
+                }
+                else
+                {
+                    currentWaypoint = newWayp;
+                }
             }
         }
-        if(currentWaypoint.position == Vector3.zero) { return; }
+
+        
+        if (currentWaypoint.position == Vector3.zero) { return; }
         Gizmos.color = Color.black;
         Gizmos.DrawLine(agentPos, currentWaypoint.position);
         Gizmos.color = Color.red;
@@ -127,16 +136,16 @@ public class FlowFieldAgent : MonoBehaviour
         */
         Waypoint GetBestWaypoint(Waypoint oldWaypoint, Waypoint newWaypoint, int sourceIndex)
         {
-            if(!IsWaypoint(oldWaypoint.index, sourceIndex, out oldWaypoint))
+            if (!IsWaypoint(oldWaypoint.index, sourceIndex, out oldWaypoint))
             {
                 return newWaypoint;
             }
             Vector3 sourcePos = IndexToPos(sourceIndex, tileSize, fieldColAmount);
             float oldDist = Vector3.Distance(oldWaypoint.position, sourcePos);
             float newDist = Vector3.Distance(newWaypoint.position, sourcePos);
-            if(oldDist < newDist)
+            if (oldDist < newDist)
             {
-                if(IsInLOS(newWaypoint.position, oldWaypoint, sourcePos))
+                if (IsInLOS(newWaypoint.position, oldWaypoint, sourcePos))
                 {
                     return newWaypoint;
                 }
@@ -168,7 +177,7 @@ public class FlowFieldAgent : MonoBehaviour
         {
             int lastWaypointIndex;
             Waypoint lastWaypoint = GetNextWaypointCandidate(source1d, source1d, out lastWaypointIndex);
-            if(lastWaypointIndex == targetGeneral1d)
+            if (lastWaypointIndex == targetGeneral1d)
             {
                 wayp = new Waypoint()
                 {
@@ -181,8 +190,8 @@ public class FlowFieldAgent : MonoBehaviour
 
             int newWaypointIndex;
             Waypoint newWaypoint = GetNextWaypointCandidate(source1d, lastWaypointIndex, out newWaypointIndex);
-            
-            while(IsInLOS(newWaypoint.position, lastWaypoint, sourcePos))
+
+            while (IsInLOS(newWaypoint.position, lastWaypoint, sourcePos))
             {
                 if (newWaypointIndex == targetGeneral1d)
                 {
@@ -193,7 +202,6 @@ public class FlowFieldAgent : MonoBehaviour
                 lastWaypointIndex = newWaypointIndex;
                 lastWaypoint = newWaypoint;
                 newWaypoint = GetNextWaypointCandidate(source1d, lastWaypointIndex, out newWaypointIndex);
-
             }
             wayp = lastWaypoint;
             return lastWaypointIndex;
@@ -204,13 +212,13 @@ public class FlowFieldAgent : MonoBehaviour
             Vector3 wayPos = wayp.position;
             WaypointDirection wayDir = wayp.blockedDirection;
             //M = INFINITY
-            if(sourcePos.x == wayPos.x)
+            if (sourcePos.x == wayPos.x)
             {
-                if((wayDir & WaypointDirection.E) == WaypointDirection.E && point.x > wayPos.x)
+                if ((wayDir & WaypointDirection.E) == WaypointDirection.E && point.x > wayPos.x)
                 {
                     return false;
                 }
-                if((wayDir & WaypointDirection.W) == WaypointDirection.W && point.x < wayPos.x)
+                if ((wayDir & WaypointDirection.W) == WaypointDirection.W && point.x < wayPos.x)
                 {
                     return false;
                 }
@@ -222,8 +230,8 @@ public class FlowFieldAgent : MonoBehaviour
             Vector3 rh = wayPos.x >= sourcePos.x ? wayPos : sourcePos;
 
             float m = (rh.z - lh.z) / (rh.x - lh.x);
-            
-            if(m == 0f)
+
+            if (m == 0f)
             {
                 if ((wayDir & WaypointDirection.S) == WaypointDirection.S && point.z < wayPos.z)
                 {
@@ -275,7 +283,7 @@ public class FlowFieldAgent : MonoBehaviour
             wayp.position = waypPos;
             wayp.index = potentialWaypoint1d;
             Vector3 sourcePos = IndexToPos(source1d, tileSize, fieldColAmount);
-            NativeArray<byte> costs = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(path.Offset).CostsG;
+            UnsafeList<byte> costs = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(path.Offset).CostsG;
 
             int n = potentialWaypoint1d + fieldColAmount;
             int e = potentialWaypoint1d + 1;
@@ -315,13 +323,13 @@ public class FlowFieldAgent : MonoBehaviour
 
             bool mInfinite = waypPos.x == sourcePos.x;
 
-            if(curCost == byte.MaxValue) { return false; }
-            if(potentialWaypoint1d == targetGeneral1d) { return true; }
-            if(neCost == byte.MaxValue && nCost != byte.MaxValue && eCost != byte.MaxValue)
+            if (curCost == byte.MaxValue) { return false; }
+            if (potentialWaypoint1d == targetGeneral1d) { return true; }
+            if (neCost == byte.MaxValue && nCost != byte.MaxValue && eCost != byte.MaxValue)
             {
                 int2 change = curDif - neDif;
                 int componentChange = change.x * change.y;
-                if(componentChange < 0)
+                if (componentChange < 0)
                 {
                     isWaypoint = true;
                     wayp.blockedDirection = mInfinite ? wayp.blockedDirection | WaypointDirection.E : wayp.blockedDirection | WaypointDirection.N;
@@ -432,24 +440,25 @@ public class FlowFieldAgent : MonoBehaviour
             return nextIndex;
         }
     }
-}
-public struct Waypoint
-{
-    public int index;
-    public Vector3 position;
-    public WaypointDirection blockedDirection;
 
-    public bool Equals(Waypoint wayp)
+    struct Waypoint
     {
-        return position == wayp.position && blockedDirection == wayp.blockedDirection;
+        public int index;
+        public Vector3 position;
+        public WaypointDirection blockedDirection;
+
+        public bool Equals(Waypoint wayp)
+        {
+            return position == wayp.position && blockedDirection == wayp.blockedDirection;
+        }
     }
-}
-[Flags]
-public enum WaypointDirection : byte
-{
-    None = 0,
-    N = 1,
-    E = 2,
-    S = 4,
-    W = 8
+    [Flags]
+    enum WaypointDirection : byte
+    {
+        None = 0,
+        N = 1,
+        E = 2,
+        S = 4,
+        W = 8
+    }
 }

@@ -7,7 +7,7 @@ using Unity.Mathematics;
 public class CostField
 {
     public int Offset;
-    public NativeArray<byte> CostsG;
+    public UnsafeList<byte> CostsG;
     public NativeArray<UnsafeList<byte>> CostsL;
 
     public CostField(WalkabilityData walkabilityData, int offset, int sectorColAmount, int sectorMatrixColAmount, int sectorMatrixRowAmount)
@@ -18,7 +18,8 @@ public class CostField
         Offset = offset;
 
         //configure costs
-        CostsG = new NativeArray<byte>(fieldRowAmount * fieldColAmount, Allocator.Persistent);
+        CostsG = new UnsafeList<byte>(fieldRowAmount * fieldColAmount, Allocator.Persistent);
+        CostsG.Length = fieldColAmount * fieldRowAmount;
         CostsL = new NativeArray<UnsafeList<byte>>(sectorMatrixColAmount * sectorMatrixRowAmount, Allocator.Persistent);
         CalculateCosts();
         ConvertToNewCosts();

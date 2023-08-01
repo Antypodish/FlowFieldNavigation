@@ -38,7 +38,7 @@ public struct PortalNodeTraversalJob : IJob
     [ReadOnly] public NativeArray<int> WinToSecPtrs;
     [ReadOnly] public NativeArray<PortalNode> PortalNodes;
     [ReadOnly] public NativeArray<PortalToPortal> PorPtrs;
-    [ReadOnly] public NativeArray<byte> Costs;
+    [ReadOnly] public UnsafeList<byte> Costs;
     [ReadOnly] public NativeArray<SectorDirectionData> LocalDirections;
 
     int _targetSectorStartIndex1d;
@@ -414,7 +414,7 @@ public struct PortalNodeTraversalJob : IJob
         int sectorTileAmount = SectorColAmount;
         int fieldColAmount = FieldColAmount;
         int sectorStartIndexFlat = sector.StartIndex.R * fieldColAmount + sector.StartIndex.C;
-        NativeArray<byte> costs = Costs;
+        UnsafeList<byte> costs = Costs;
 
         //CODE
 

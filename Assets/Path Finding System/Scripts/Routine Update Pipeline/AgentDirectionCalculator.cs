@@ -21,13 +21,21 @@ public class AgentDirectionCalculator
 
     public NativeList<AgentMovementData> AgentMovementDataList;
     public NativeList<float2> Directions;
-
+    public UnsafeList<UnsafeList<byte>> CostFieldList;
     public AgentDirectionCalculator(AgentDataContainer agentDataContainer, PathfindingManager pathfindingManager)
     {
         _agentDataContainer = agentDataContainer;
         _pathfindingManager = pathfindingManager;
         AgentMovementDataList = new NativeList<AgentMovementData>(_agentDataContainer.Agents.Count, Allocator.Persistent);
         Directions = new NativeList<float2>(Allocator.Persistent);
+        CostField[] costFields = _pathfindingManager.FieldProducer.GetAllCostFields();
+        CostFieldList = new UnsafeList<UnsafeList<byte>>(costFields.Length, Allocator.Persistent);
+        CostFieldList.Length = costFields.Length;
+        for(int i = 0; i < CostFieldList.Length; i++)
+        {
+            CostFieldList[i] = costFields[i].CostsG;
+        }
+
     }
     public AgentRoutineDataCalculationJob CalculateDirections(out TransformAccessArray transformsToSchedule)
     {
@@ -76,6 +84,7 @@ public class AgentDirectionCalculator
                     Status = agentDataList[i].Status,
                     FlowField = curPath.FlowField,
                     SectorToPicked = curPath.SectorToPicked,
+                    Offset = curPath.Offset,
                     PathId = curPath.Id,
                 };
                 AgentMovementDataList[i] = data;
@@ -86,15 +95,17 @@ public class AgentDirectionCalculator
         transformsToSchedule = agentTransforms;
         return new AgentRoutineDataCalculationJob()
         {
+            FieldColAmount = _pathfindingManager.ColumnAmount,
+            CostFields = CostFieldList,
             TileSize = _pathfindingManager.TileSize,
             SectorColAmount = _pathfindingManager.SectorColAmount,
             SectorMatrixColAmount = _pathfindingManager.SectorMatrixColAmount,
             AgentMovementData = AgentMovementDataList,
         };
     }
-    public void SendDirections()
+    public void SendRoutineResultsToAgents()
     {
-        _agentDataContainer.SetDirection(Directions);
+        _agentDataContainer.SendRoutineResults(Directions, AgentMovementDataList);
     }
 }
 public struct AgentMovementData
@@ -102,7 +113,9 @@ public struct AgentMovementData
     public float3 Position;
     public float2 Destination;
     public float2 Flow;
+    public Waypoint waypoint;
     public float Speed;
+    public int Offset;
     public float Radius;
     public ushort Local1d;
     public ushort Sector1d;

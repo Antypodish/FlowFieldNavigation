@@ -1,6 +1,7 @@
 ﻿#if (UNITY_EDITOR) 
 
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEditor;
 using UnityEngine;
 
@@ -24,7 +25,7 @@ public class EditorAStarDebugger
     {
         float yOffset = .2f;
         FieldGraph fieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(offset);
-        NativeArray<byte> costs = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(offset).CostsG;
+        UnsafeList<byte> costs = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(offset).CostsG;
         SetClickedPortalNode(fieldGraph);
         Portal clickedPortal1 = _clickedPortalNode.Portal1;
         Portal clickedPortal2 = _clickedPortalNode.Portal2;

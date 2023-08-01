@@ -21,7 +21,7 @@ public struct LOSJob : IJob
     public int SectorColAmount;
     public int SectorMatrixColAmount;
     public int SectorMatrixRowAmount;
-    [ReadOnly] public NativeArray<byte> Costs;
+    [ReadOnly] public UnsafeList<byte> Costs;
     public UnsafeList<int> SectorToPicked;
     public NativeArray<IntegrationTile> IntegrationField;
     public NativeList<LocalIndex1d> BlockedWaveFronts;
@@ -39,7 +39,7 @@ public struct LOSJob : IJob
         UnsafeList<int> sectorToPicked = SectorToPicked;
         NativeArray<IntegrationTile> integrationField = IntegrationField;
         NativeQueue<LocalIndex1d> waveFrontQueue = new NativeQueue<LocalIndex1d>(Allocator.Temp);
-        NativeArray<byte> costs = Costs;
+        UnsafeList<byte> costs = Costs;
         NativeList<LocalIndex1d> blockedWaveFronts = BlockedWaveFronts;
 
         ///////CURRENT INDEX LOOKUP TABLE////////

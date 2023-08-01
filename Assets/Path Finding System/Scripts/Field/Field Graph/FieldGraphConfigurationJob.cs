@@ -1,5 +1,6 @@
 ﻿using Unity.Burst;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
 
@@ -12,7 +13,7 @@ public struct FieldGraphConfigurationJob : IJob
     public NativeArray<int> WinToSecPtrs;
     public NativeArray<PortalNode> PortalNodes;
     public NativeArray<PortalToPortal> PorToPorPtrs;
-    public NativeArray<byte> Costs;
+    public UnsafeList<byte> Costs;
     public int FieldRowAmount;
     public int FieldColAmount;
     public int SectorTileAmount;
@@ -83,7 +84,7 @@ public struct FieldGraphConfigurationJob : IJob
         //DATA
 
         int porPtrJumpFactor = portalPerWindow;
-        NativeArray<byte> costs = Costs;
+        UnsafeList<byte> costs = Costs;
         int fieldColAmount = FieldColAmount;
 
         //CODE
@@ -197,7 +198,7 @@ public struct FieldGraphConfigurationJob : IJob
         int fieldColAmount = FieldColAmount;
         int fieldRowAmount = FieldRowAmount;
         NativeArray<WindowNode> windowNodes = WindowNodes;
-        NativeArray<byte> costs = Costs;
+        UnsafeList<byte> costs = Costs;
         NativeArray<PortalNode> portalNodes = PortalNodes;
 
         for (int i = 0; i < windowNodes.Length; i++)
@@ -420,7 +421,7 @@ public struct FieldGraphConfigurationJob : IJob
         //DATA
         int fieldColAmount = FieldColAmount;
         int fieldRowAmount = FieldRowAmount;
-        NativeArray<byte> costs = Costs;
+        UnsafeList<byte> costs = Costs;
         NativeArray<AStarTile> integratedCosts = IntegratedCosts;
         NativeQueue<int> aStarQueue = AStarQueue;
 

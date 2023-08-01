@@ -19,7 +19,7 @@ public struct CostFieldEditJob : IJob
     public NativeArray<PortalNode> PortalNodes;
     public NativeArray<PortalToPortal> PorPtrs;
     public NativeArray<UnsafeList<byte>> CostsL;
-    public NativeArray<byte> CostsG;
+    public UnsafeList<byte> CostsG;
     public int FieldColAmount;
     public int FieldRowAmount;
     public int SectorColAmount;
@@ -279,7 +279,7 @@ public struct CostFieldEditJob : IJob
     {
         int porToPorCnt = PortalPerWindow * 8 - 2;
         int fieldColAmount = FieldColAmount;
-        NativeArray<byte> costs = CostsG;
+        UnsafeList<byte> costs = CostsG;
         NativeArray<PortalNode> portalNodes = PortalNodes;
 
         for (int i = 0; i < windowIndicies.Length; i++)
@@ -504,7 +504,7 @@ public struct CostFieldEditJob : IJob
         //DATA
         int fieldColAmount = FieldColAmount;
         int fieldRowAmount = FieldRowAmount;
-        NativeArray<byte> costs = CostsG;
+        UnsafeList<byte> costs = CostsG;
         NativeArray<AStarTile> integratedCosts = IntegratedCosts;
         NativeQueue<int> aStarQueue = AStarQueue;
 

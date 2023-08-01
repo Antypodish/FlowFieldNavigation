@@ -19,7 +19,7 @@ public struct FieldGraph
 
     //helper data
     NativeArray<UnsafeList<byte>> _costsL;
-    NativeArray<byte> _costsG;
+    UnsafeList<byte> _costsG;
     float _tileSize;
     int _fieldRowAmount;
     int _fieldColAmount;
@@ -27,7 +27,7 @@ public struct FieldGraph
     int _sectorMatrixRowAmount;
     int _sectorMatrixColAmount;
     int _portalPerWindow;
-    public FieldGraph(NativeArray<byte> costsG, NativeArray<UnsafeList<byte>> costsL, int sectorSize, int fieldRowAmount, int fieldColAmount, int costFieldOffset, float tileSize)
+    public FieldGraph(UnsafeList<byte> costsG, NativeArray<UnsafeList<byte>> costsL, int sectorSize, int fieldRowAmount, int fieldColAmount, int costFieldOffset, float tileSize)
     {
         //size calculations
         int sectorMatrixRowAmount = fieldRowAmount / sectorSize;

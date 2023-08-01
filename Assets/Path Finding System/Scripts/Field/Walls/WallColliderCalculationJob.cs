@@ -2,6 +2,7 @@
 using System.Runtime.ConstrainedExecution;
 using Unity.Burst;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEditor.ShaderGraph.Internal;
@@ -15,7 +16,7 @@ public struct WallColliderCalculationJob : IJob
     public int FieldColAmount;
     public int FieldRowAmount;
 
-    [ReadOnly] public NativeArray<byte> Costs;
+    [ReadOnly] public UnsafeList<byte> Costs;
     public NativeArray<int> TileWallObjects;
     public NativeList<WallObject> WallObjectList;
     public NativeList<float2> VertexSequence;

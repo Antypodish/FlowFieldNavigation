@@ -82,10 +82,11 @@ public class AgentDataContainer
         data.Direction = direction;
         AgentDataList[agentIndex] = data;
     }
-    public void SetDirection(NativeArray<float2> agentDirections)
+    public void SendRoutineResults(NativeArray<float2> agentDirections, NativeArray<AgentMovementData> movementDataArray)
     {
         AgentDirectionSetJob directionSetJob = new AgentDirectionSetJob()
         {
+            MovementDataArray = movementDataArray,
             AgentDataArray = AgentDataList,
             AgentDirections = agentDirections,
         };
@@ -109,6 +110,7 @@ public struct AgentData
     public float2 Destination;
     public float2 Direction;
     public float Radius;
+    public Waypoint waypoint;
 }
 public struct AgentPath
 {

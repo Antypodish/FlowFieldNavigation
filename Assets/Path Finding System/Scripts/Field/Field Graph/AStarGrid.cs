@@ -1,4 +1,5 @@
 ﻿using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 
 public struct AStarGrid
@@ -20,7 +21,7 @@ public struct AStarGrid
         _integratedCosts.Dispose();
         _searchQueue.Dispose();
     }
-    public NativeArray<AStarTile> GetIntegratedCostsFor(Sector sector, Index2 target, NativeArray<byte> costs)
+    public NativeArray<AStarTile> GetIntegratedCostsFor(Sector sector, Index2 target, UnsafeList<byte> costs)
     {
         int targetIndex = Index2.ToIndex(target, _colAmount);
         NativeArray<AStarTile> integratedCosts = _integratedCosts;
@@ -71,7 +72,7 @@ public struct AStarGrid
             sw = s - 1;
             nw = n - 1;
         }
-        void Reset(Sector sector, NativeArray<byte> costs)
+        void Reset(Sector sector, UnsafeList<byte> costs)
         {
             Index2 lowerBound = sector.StartIndex;
             Index2 upperBound = new Index2(sector.StartIndex.R + sector.Size - 1, sector.StartIndex.C + sector.Size - 1);

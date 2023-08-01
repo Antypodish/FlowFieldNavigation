@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 
 [BurstCompile]
-public struct LocalAvoidanceJob : IJob
+public struct LocalAvoidanceJob : IJobParallelFor
 {
     public float SeperationRadius;
     public float SeperationMultiplier;
@@ -16,30 +16,22 @@ public struct LocalAvoidanceJob : IJob
     [ReadOnly] public NativeArray<AgentMovementData> AgentMovementDataArray;
     public NativeArray<float2> AgentDirections;
 
-    public void Execute()
+    public void Execute(int index)
     {
-        for (int i = 0; i < AgentMovementDataArray.Length; i++)
+        AgentMovementData agentData = AgentMovementDataArray[index];
+        float2 agentPos = new float2(agentData.Position.x, agentData.Position.z);
+        float2 totalSeperationDirection = 0;
+        bool isAgentMoving = (agentData.Status & AgentStatus.Moving) == AgentStatus.Moving;
+        float2 finalDirection = agentData.Flow;
+        if (isAgentMoving)
         {
-            AgentDirections[i] = AgentMovementDataArray[i].Flow;
+            finalDirection = GetAlignedDirection(agentPos, index, finalDirection, agentData.waypoint);
+            finalDirection = GetSeperatedDirection(agentPos, index, finalDirection);
+            AgentDirections[index] = finalDirection;
         }
-
-        for (int index = 0; index < AgentMovementDataArray.Length; index++)
+        else
         {
-            AgentMovementData agentData = AgentMovementDataArray[index];
-            float2 agentPos = new float2(agentData.Position.x, agentData.Position.z);
-            float2 totalSeperationDirection = 0;
-            bool isAgentMoving = (agentData.Status & AgentStatus.Moving) == AgentStatus.Moving;
-            float2 finalDirection = AgentDirections[index];
-            if (isAgentMoving)
-            {
-                finalDirection = GetAlignedDirection(agentPos, index, finalDirection);
-                finalDirection = GetSeperatedDirection(agentPos, index, finalDirection);
-                AgentDirections[index] = finalDirection;
-            }
-            else
-            {
-                AgentDirections[index] = GetPushingForce(agentPos, index, agentData.Flow);
-            }
+            AgentDirections[index] = GetPushingForce(agentPos, index, agentData.Flow);
         }
     }
     float2 GetSeperatedDirection(float2 agentPos, int agentIndex, float2 desiredDirection)
@@ -74,7 +66,6 @@ public struct LocalAvoidanceJob : IJob
         for (int i = 0; i < AgentMovementDataArray.Length; i++)
         {
             AgentMovementData mateData = AgentMovementDataArray[i];
-            float2 mateDirection = AgentDirections[i];
 
             if (i == agentIndex) { continue; }
 
@@ -95,17 +86,18 @@ public struct LocalAvoidanceJob : IJob
         float2 newDirection = math.select(math.normalize(desiredDirection + steering), 0, (desiredDirection + steering).Equals(0));
         return newDirection;
     }
-    float2 GetAlignedDirection(float2 agentPos, int agentIndex, float2 desiredDirection)
+    float2 GetAlignedDirection(float2 agentPos, int agentIndex, float2 desiredDirection, Waypoint agentWaypoint)
     {
         float2 totalHeading = 0;
         int count = 0;
         for (int i = 0; i < AgentMovementDataArray.Length; i++)
         {
             AgentMovementData mateData = AgentMovementDataArray[i];
-            float2 mateDirection = AgentDirections[i];
+            float2 mateDirection = mateData.Flow;
 
             if (i == agentIndex) { continue; }
             if (mateDirection.Equals(0)) { continue; }
+            if (!mateData.waypoint.position.Equals(agentWaypoint.position)) { continue; } 
 
             float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
 
