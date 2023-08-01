@@ -1,13 +1,9 @@
-﻿using System.Drawing;
-using Unity.Burst;
+﻿using Unity.Burst;
 using Unity.Collections;
-using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.VisualScripting;
-using UnityEditor.AssetImporters;
 using UnityEngine;
 using UnityEngine.Jobs;
-using UnityEngine.Rendering;
 
 
 //ONLY WORKS FOR AGENTS WITH OFFSET 0!

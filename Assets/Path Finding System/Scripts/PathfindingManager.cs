@@ -134,19 +134,6 @@ public class PathfindingManager : MonoBehaviour
     private void OnDrawGizmos()
     {
         DebugWallObjects();
-        void DebugMarks()
-        {
-            if (FieldProducer == null) { return; }
-            Handles.color = Color.white;
-            NativeArray<int> marks = FieldProducer.GetTileToWallObject();
-            for (int i = 0; i < marks.Length; i++)
-            {
-                if (marks[i] == 0) { continue; }
-                int2 i2d = new int2(i % ColumnAmount, i / ColumnAmount);
-                Vector3 pos = new Vector3(TileSize / 2 + i2d.x * TileSize, 0.1f, TileSize / 2 + i2d.y * TileSize);
-                Handles.Label(pos, marks[i].ToString());
-            }
-        }
         void DebugWallObjects()
         {
             if (FieldProducer == null) { return; }

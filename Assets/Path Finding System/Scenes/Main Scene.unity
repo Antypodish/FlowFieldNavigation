@@ -573,7 +573,7 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: _resolution
-      value: 20
+      value: 15
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
@@ -812,6 +812,10 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
+      propertyPath: _debugAgentWaypoint
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
       propertyPath: _pathfindingManager
       value: 
       objectReference: {fileID: 2058839523}
@@ -821,7 +825,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
       propertyPath: _debugAgentDirections
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
       propertyPath: _debugPortalTraversalMarks
@@ -1083,5 +1087,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   SeperationRange: 0.5
   SeperationMultiplier: 0.5
-  AlignmentRange: 3
+  AlignmentRange: 14
   AlignmentMultiplier: 1

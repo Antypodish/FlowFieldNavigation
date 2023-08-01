@@ -1,14 +1,8 @@
-﻿using JetBrains.Annotations;
-using System.Runtime.ConstrainedExecution;
-using Unity.Burst;
+﻿using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
-using UnityEditor.ShaderGraph.Internal;
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.UIElements;
 [BurstCompile]
 public struct WallColliderCalculationJob : IJob
 {

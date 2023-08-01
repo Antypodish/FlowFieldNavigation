@@ -8,6 +8,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEngine.Jobs;
+using UnityEngine.SocialPlatforms;
 
 [BurstCompile]
 public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
@@ -134,6 +135,21 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
         int curGeneral1d = To1D(general2d, fieldColAmount);
         float2 curTilePos = IndexToPos(curGeneral1d, tileSize, fieldColAmount);
         float2 agentPos = new float2(data.Position.x, data.Position.z);
+
+        if (costField[curGeneral1d] == byte.MaxValue)
+        {
+            UnityEngine.Debug.Log("heh");
+            float2 direction = GetDirection(data.FlowField[sectorMark + local1d], out data.OutOfFieldFlag, data.Destination, new float2(data.Position.x, data.Position.z));
+            data.Flow = direction;
+            data.waypoint = new Waypoint()
+            {
+                position = agentPos,
+                index = curGeneral1d,
+            };
+            AgentMovementData[index] = data;
+            return;
+        }
+
         //GET WAYPOINT
         if (curGeneral1d != targetGeneral1d)
         {
@@ -460,6 +476,45 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
             }
             return nextIndex;
         }
+    }
+    float2 GetDirection(FlowData flowdata, out bool outOfFieldFlag, float2 destination, float2 position)
+    {
+        outOfFieldFlag = false;
+        float2 flow = 0;
+        switch (flowdata)
+        {
+            case FlowData.None:
+                outOfFieldFlag = true;
+                return 0;
+            case FlowData.LOS:
+                flow = destination - position;
+                break;
+            case FlowData.N:
+                flow = new float2(0f, 1f);
+                break;
+            case FlowData.E:
+                flow = new float2(1f, 0f);
+                break;
+            case FlowData.S:
+                flow = new float2(0f, -1f);
+                break;
+            case FlowData.W:
+                flow = new float2(-1f, 0f);
+                break;
+            case FlowData.NE:
+                flow = new float2(1f, 1f);
+                break;
+            case FlowData.SE:
+                flow = new float2(1f, -1f);
+                break;
+            case FlowData.SW:
+                flow = new float2(-1f, -1f);
+                break;
+            case FlowData.NW:
+                flow = new float2(-1f, 1f);
+                break;
+        }
+        return math.normalize(flow);
     }
 }
 public struct Waypoint

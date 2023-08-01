@@ -1,5 +1,6 @@
 ﻿#if (UNITY_EDITOR) 
 
+using Assets.Path_Finding_System.Scripts.Debuggers.Editor_Debuggers;
 using UnityEngine;
 
 public class EditorDebuggingController : MonoBehaviour
@@ -26,6 +27,7 @@ public class EditorDebuggingController : MonoBehaviour
     [SerializeField] bool _debugFlowField;
     [Header("Agent Debugger")]
     [SerializeField] bool _debugAgentDirections;
+    [SerializeField] bool _debugAgentWaypoint;
 
 
     //debuggers
@@ -36,6 +38,7 @@ public class EditorDebuggingController : MonoBehaviour
     EditorAStarDebugger _aStarDebugger;
     EditorPathDebugger _pathDebugger;
     EditorAgentDirectionDebugger _agentDirectionDebugger;
+    EditorAgentWaypointDebugger _agentWaypointDebugger;
     private void Start()
     {
         _sectorDebugger = new EditorSectorDebugger(_pathfindingManager);
@@ -44,6 +47,7 @@ public class EditorDebuggingController : MonoBehaviour
         _portalDebugger = new EditorPortalDebugger(_pathfindingManager);
         _aStarDebugger = new EditorAStarDebugger(_pathfindingManager);
         _agentDirectionDebugger = new EditorAgentDirectionDebugger(_pathfindingManager);
+        _agentWaypointDebugger = new EditorAgentWaypointDebugger(_pathfindingManager);
     }
     private void Update()
     {
@@ -72,6 +76,7 @@ public class EditorDebuggingController : MonoBehaviour
             if (_debugFlowField && _pathDebugger != null) { _pathDebugger.DebugFlowField(_agentToDebug); }
             if (_debugLOSPass && _pathDebugger != null) { _pathDebugger.LOSPassDebug(_agentToDebug); }
             if (_debugLOSBlocks && _pathDebugger != null) { _pathDebugger.LOSBlockDebug(_agentToDebug); }
+            if(_debugAgentWaypoint && _agentWaypointDebugger!= null) { _agentWaypointDebugger.Debug(_agentToDebug); }
         }
 
         if(_debugAgentDirections && _agentDirectionDebugger != null) { _agentDirectionDebugger.Debug(); }

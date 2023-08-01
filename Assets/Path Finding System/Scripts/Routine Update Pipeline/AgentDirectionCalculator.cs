@@ -80,6 +80,7 @@ public class AgentDirectionCalculator
                     Sector1d = 0,
                     Speed = agentDataList[i].Speed,
                     Destination = agentDataList[i].Destination,
+                    waypoint = agentDataList[i].waypoint,
                     OutOfFieldFlag = false,
                     Status = agentDataList[i].Status,
                     FlowField = curPath.FlowField,
