@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8734084087089525697}
   - component: {fileID: 8734084087838304231}
+  - component: {fileID: 8734084086652011014}
   m_Layer: 0
   m_Name: Flow Field
   m_TagString: Untagged
@@ -45,11 +46,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _terrainGenerator: {fileID: 0}
-  _maxCostfieldOffset: 5
+  _maxCostfieldOffset: 3
   _agentUpdateFrequency: 0.016
   TileSize: 0
   RowAmount: 0
   ColumnAmount: 0
-  SectorTileAmount: 10
+  SectorColAmount: 10
   SectorMatrixColAmount: 0
   SectorMatrixRowAmount: 0
+--- !u!114 &8734084086652011014
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8734084087089525702}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a52bbbebd324b0e47a82462e07f07058, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SeperationRange: 0.5
+  SeperationMultiplier: 0.5
+  AlignmentRange: 14
+  AlignmentMultiplier: 1

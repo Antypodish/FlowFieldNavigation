@@ -95,7 +95,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _pathfindingManager: {fileID: 0}
   _agentSelectionController: {fileID: 5571130920343903277}
-  _costFieldOffset: 0
+  _costFieldOffset: 3
+  _costField: 0
   _sectors: 0
   _windows: 0
   _sectorWindows: 0
@@ -110,7 +111,9 @@ MonoBehaviour:
   _debugIntegrationField: 0
   _debugLOSPass: 0
   _debugLOSBlocks: 0
-  _debugFlowField: 0
+  _debugFlowField: 1
+  _debugAgentDirections: 1
+  _debugAgentWaypoint: 1
 --- !u!1 &1633507769824742795
 GameObject:
   m_ObjectHideFlags: 0
@@ -370,6 +373,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   SelectedAgents: []
   DebuggableAgent: {fileID: 0}
+  _startingAgentCount: 0
+  _agentPrefab: {fileID: 2010554042057534779, guid: 5b8107cfe6c808547b1890d4dca1b9f7,
+    type: 3}
   _pathfindingManager: {fileID: 0}
   _normalAgentMaterial: {fileID: 2100000, guid: 3aa0b16bbf3d8244a9db1a9369ce06d2,
     type: 2}
