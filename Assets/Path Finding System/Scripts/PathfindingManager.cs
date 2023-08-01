@@ -134,6 +134,17 @@ public class PathfindingManager : MonoBehaviour
     private void OnDrawGizmos()
     {
         DebugWallObjects();
+        Handles.color = Color.white;
+        if(FieldProducer== null) { return; }
+        NativeArray<SectorNode> sectorNodes = FieldProducer.GetFieldGraphWithOffset(0).SectorNodes;
+        for(int index = 0; index < sectorNodes.Length; index++)
+        {
+            SectorNode sectorNode = sectorNodes[index];
+            Index2 startIndex = sectorNode.Sector.StartIndex;
+            Vector3 pos = new Vector3(startIndex.C * TileSize + TileSize / 2, 0.5f, startIndex.R * TileSize + TileSize / 2);
+            Handles.Label(pos, startIndex.ToString());
+        }
+
         void DebugWallObjects()
         {
             if (FieldProducer == null) { return; }

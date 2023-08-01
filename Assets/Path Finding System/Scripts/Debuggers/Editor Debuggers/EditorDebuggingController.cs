@@ -9,6 +9,7 @@ public class EditorDebuggingController : MonoBehaviour
     [SerializeField] AgentSelectionController _agentSelectionController;
     [Header("Field Debugger")]
     [SerializeField] CostFieldOffset _costFieldOffset;
+    [SerializeField] bool _costField;
     [SerializeField] bool _sectors;
     [SerializeField] bool _windows;
     [SerializeField] bool _sectorWindows;
@@ -39,6 +40,7 @@ public class EditorDebuggingController : MonoBehaviour
     EditorPathDebugger _pathDebugger;
     EditorAgentDirectionDebugger _agentDirectionDebugger;
     EditorAgentWaypointDebugger _agentWaypointDebugger;
+    EditorCostFieldDebugger _costFieldDebugger;
     private void Start()
     {
         _sectorDebugger = new EditorSectorDebugger(_pathfindingManager);
@@ -48,6 +50,7 @@ public class EditorDebuggingController : MonoBehaviour
         _aStarDebugger = new EditorAStarDebugger(_pathfindingManager);
         _agentDirectionDebugger = new EditorAgentDirectionDebugger(_pathfindingManager);
         _agentWaypointDebugger = new EditorAgentWaypointDebugger(_pathfindingManager);
+        _costFieldDebugger = new EditorCostFieldDebugger(_pathfindingManager);
     }
     private void Update()
     {
@@ -64,6 +67,7 @@ public class EditorDebuggingController : MonoBehaviour
         if(_portalsOnSector && _portalDebugger != null) { _portalDebugger.DebugPortalsOnClickedSector((int) _costFieldOffset); }
         if(_costsToPortal && _portalDebugger != null) { _portalDebugger.DebugCostsToClickedPortal((int) _costFieldOffset); }
         if(_AStar && _aStarDebugger != null) { _aStarDebugger.DebugAstarForPortal((int) _costFieldOffset); }
+        if(_costField && _costFieldDebugger != null) { _costFieldDebugger.DebugCostFieldWithMesh((int) _costFieldOffset); }
 
         if(_agentSelectionController == null) { return; }
         FlowFieldAgent _agentToDebug = _agentSelectionController.DebuggableAgent;

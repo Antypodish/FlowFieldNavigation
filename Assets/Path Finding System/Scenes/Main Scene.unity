@@ -727,8 +727,24 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
+      propertyPath: _portals
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
+      propertyPath: _sectors
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
+      propertyPath: _costField
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
       propertyPath: _debugFlowField
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
+      propertyPath: _costFieldOffset
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
       propertyPath: _debugAgentWaypoint
@@ -979,6 +995,11 @@ PrefabInstance:
       propertyPath: _terrainGenerator
       value: 
       objectReference: {fileID: 1550691738}
+    - target: {fileID: 8734084087838304231, guid: 5e3867b8afbc0bb49a0027ab49965980,
+        type: 3}
+      propertyPath: _maxCostfieldOffset
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 8734084087838304231, guid: 5e3867b8afbc0bb49a0027ab49965980,
         type: 3}
       propertyPath: _agentUpdateFrequency

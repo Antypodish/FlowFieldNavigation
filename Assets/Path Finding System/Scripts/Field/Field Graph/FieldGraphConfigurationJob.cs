@@ -195,6 +195,7 @@ public struct FieldGraphConfigurationJob : IJob
     }
     void ConfigurePortalNodes(int porToPorCnt)
     {
+        NativeArray<int> winToSecPtrs = WinToSecPtrs;
         int fieldColAmount = FieldColAmount;
         int fieldRowAmount = FieldRowAmount;
         NativeArray<WindowNode> windowNodes = WindowNodes;
@@ -289,8 +290,9 @@ public struct FieldGraphConfigurationJob : IJob
                 }
                 if (!wasUnwalkable)
                 {
-                    portalNodes[porPtr + portalCount] = GetPortalNodeBetween(bound1, bound2, porPtr, portalCount, i, false); ;
+                    portalNodes[porPtr + portalCount] = GetPortalNodeBetween(bound1, bound2, porPtr, portalCount, i, false);
                 }
+                
             }
         }
         PortalNode GetPortalNodeBetween(Index2 boundary1, Index2 boundary2, int porPtr, int portalCount, int winPtr, bool isHorizontal)
@@ -341,7 +343,6 @@ public struct FieldGraphConfigurationJob : IJob
                 PortalNode sourcePortalNode = PortalNodes[portalIndicies[j]];
                 Index2 sourceIndex = portalDeterminationArray[j] == 1 ? sourcePortalNode.Portal1.Index : sourcePortalNode.Portal2.Index;
                 NativeArray<AStarTile> integratedCosts = GetIntegratedCostsFor(pickedSector, sourceIndex);
-
                 CalculatePortalBounds(0, j);
                 CalculatePortalBounds(j + 1, portalIndicies.Length);
 

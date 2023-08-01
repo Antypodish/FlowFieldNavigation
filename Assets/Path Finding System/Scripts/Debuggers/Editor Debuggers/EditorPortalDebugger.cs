@@ -37,7 +37,7 @@ public class EditorPortalDebugger
     }
     public void DebugPortalsOnClickedSector(int offset)
     {
-        Gizmos.color = Color.black;
+        Gizmos.color = Color.white;
         float tileSize = _pathfindingManager.TileSize;
         FieldGraph fieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(offset);
         SetClickedSectorNode(fieldGraph);
@@ -47,7 +47,7 @@ public class EditorPortalDebugger
         for(int i = 0; i < portalIndicies.Length; i++)
         {
             PortalNode pickedPortalNode = portalNodes[portalIndicies[i]];
-            Gizmos.DrawSphere(GetPositionOf(pickedPortalNode), 0.35f);
+            Gizmos.DrawSphere(GetPositionOf(pickedPortalNode)+new Vector3(0,0.5f,0f), 0.5f);
         }
     }
     public void DebugCostsToClickedPortal(int offset)

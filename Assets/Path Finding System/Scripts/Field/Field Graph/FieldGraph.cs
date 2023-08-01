@@ -37,12 +37,7 @@ public struct FieldGraph
         int windowAmount = 2 * sectorMatrixColAmount * sectorMatrixRowAmount - sectorMatrixRowAmount - sectorMatrixColAmount;
         int winToSecPtrAmount = windowAmount * 2;
         int secToWinPtrAmount = windowAmount * 2;
-        int divider = 2;
-        for (int i = 0; i < costFieldOffset; i++)
-        {
-            divider *= 2;
-        }
-        int portalPerWindow = (sectorSize + divider - 1) / divider;
+        int portalPerWindow = GetPortalPerWindow(costFieldOffset);
         int portalAmount = windowAmount * portalPerWindow;
         int porToPorPtrAmount = portalAmount * (portalPerWindow * 8 - 2);
 
@@ -63,7 +58,28 @@ public struct FieldGraph
         WinToSecPtrs = new NativeArray<int>(winToSecPtrAmount, Allocator.Persistent);
         PortalNodes = new NativeArray<PortalNode>(portalAmount + 1, Allocator.Persistent);
         PorToPorPtrs = new NativeArray<PortalToPortal>(porToPorPtrAmount, Allocator.Persistent);
+
+        int GetPortalPerWindow(int offset)
+        {
+            switch (offset)
+            {
+                case 0:
+                    return 5;
+                case 1:
+                    return 3;
+                case 2:
+                    return 2;
+                case 3:
+                    return 2;
+                case 4:
+                    return 1;
+                case 5:
+                    return 1;
+            }
+            return -1;
+        }
     }
+
     public FieldGraphConfigurationJob GetConfigJob()
     {
         return new FieldGraphConfigurationJob()
@@ -188,7 +204,6 @@ public struct FieldGraph
             portalIndexCount += windowNodes[SecToWinPtrs[secToWinPtr + i]].PorCnt;
         }
         portalIndicies = new NativeArray<int>(portalIndexCount, Allocator.Temp);
-
         //get portals
         int portalIndiciesIterable = 0;
         for (int i = 0; i < secToWinCnt; i++)
