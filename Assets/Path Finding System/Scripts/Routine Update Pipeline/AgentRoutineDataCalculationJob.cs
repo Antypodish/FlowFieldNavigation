@@ -204,11 +204,10 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
             int flowIndex = flowStartIndex + local1d;
             return flowField[flowIndex];
         }
-        int GetNextWaypoint(int source1d, float2 sourcePos, out Waypoint wayp, int targetGeneral1d, float2 targetPos, UnsafeList<FlowData> flowField, UnsafeList<int> sectorToPicked)
+        void GetNextWaypoint(int source1d, float2 sourcePos, out Waypoint wayp, int targetGeneral1d, float2 targetPos, UnsafeList<FlowData> flowField, UnsafeList<int> sectorToPicked)
         {
-            int lastWaypointIndex;
-            Waypoint lastWaypoint = GetNextWaypointCandidate(source1d, source1d, out lastWaypointIndex, targetGeneral1d, flowField, sectorToPicked);
-            if (lastWaypointIndex == targetGeneral1d)
+            Waypoint lastWaypoint = GetNextWaypointCandidate(source1d, source1d, targetGeneral1d, flowField, sectorToPicked);
+            if (lastWaypoint.index == targetGeneral1d)
             {
                 wayp = new Waypoint()
                 {
@@ -216,26 +215,24 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
                     position = targetPos,
                     blockedDirection = 0,
                 };
-                return lastWaypointIndex;
+                return;
             }
 
-            int newWaypointIndex;
-            Waypoint newWaypoint = GetNextWaypointCandidate(source1d, lastWaypointIndex, out newWaypointIndex, targetGeneral1d, flowField, sectorToPicked);
+            Waypoint newWaypoint = GetNextWaypointCandidate(source1d, lastWaypoint.index, targetGeneral1d, flowField, sectorToPicked);
 
             while (IsInLOS(newWaypoint.position, lastWaypoint, sourcePos))
             {
-                if (newWaypointIndex == targetGeneral1d)
+                if (newWaypoint.index == targetGeneral1d)
                 {
                     wayp = newWaypoint;
-                    return newWaypointIndex;
+                    return;
                 }
 
-                lastWaypointIndex = newWaypointIndex;
                 lastWaypoint = newWaypoint;
-                newWaypoint = GetNextWaypointCandidate(source1d, lastWaypointIndex, out newWaypointIndex, targetGeneral1d, flowField, sectorToPicked);
+                newWaypoint = GetNextWaypointCandidate(source1d, lastWaypoint.index, targetGeneral1d, flowField, sectorToPicked);
             }
             wayp = lastWaypoint;
-            return lastWaypointIndex;
+            return;
 
         }
         bool IsInLOS(float2 point, Waypoint wayp, float2 sourcePos)
@@ -288,9 +285,8 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
             }
             return true;
         }
-        Waypoint GetNextWaypointCandidate(int source1d, int start1d, out int waypointIndex, int targetIndex1d, UnsafeList<FlowData> flowField, UnsafeList<int> sectorToPicked)
+        Waypoint GetNextWaypointCandidate(int source1d, int start1d, int targetIndex1d, UnsafeList<FlowData> flowField, UnsafeList<int> sectorToPicked)
         {
-            waypointIndex = -1;
             int cur1d = start1d;
             bool waypointFound = false;
             Waypoint wayp = new Waypoint();
@@ -300,7 +296,6 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
                 cur1d = GetNextIndex(flow, cur1d, fieldColAmount, targetIndex1d);
                 if (IsWaypoint(cur1d, source1d, targetIndex1d, out wayp))   
                 {
-                    waypointIndex = cur1d;
                     return wayp;
                 }
             }
