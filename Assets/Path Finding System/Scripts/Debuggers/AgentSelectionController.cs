@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using TMPro;
 using Unity.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngineInternal;
@@ -64,6 +65,13 @@ public class AgentSelectionController : MonoBehaviour
         {
             _state = ControllerState.CostEditWalkable;
             _agentSelector.ForceStopSelection();
+        }
+        else if (Input.GetKeyDown(KeyCode.S))
+        {
+            for (int i = 0; i < SelectedAgents.Count; i++)
+            {
+                SelectedAgents[i].Stop();
+            }
         }
         if (_state == ControllerState.SingleSelection)
         {

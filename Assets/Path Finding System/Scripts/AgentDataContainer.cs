@@ -76,6 +76,18 @@ public class AgentDataContainer
         data.Speed = newSpeed;
         AgentDataList[agentIndex] = data;
     }
+    public void Stop(int agentIndex)
+    {
+        AgentData data = AgentDataList[agentIndex]; 
+        data.Status = ~(~data.Status | AgentStatus.Moving);
+        AgentDataList[agentIndex] = data;
+    }
+    public void Mobilize(int agentIndex)
+    {
+        AgentData data = AgentDataList[agentIndex];
+        data.Status |= AgentStatus.Moving;
+        AgentDataList[agentIndex] = data;
+    }
     public void SetDirection(int agentIndex, Vector2 direction)
     {
         AgentData data = AgentDataList[agentIndex];
