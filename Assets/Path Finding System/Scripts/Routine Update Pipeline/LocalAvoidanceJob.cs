@@ -25,7 +25,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
         float2 finalDirection = agentData.Flow;
         if (isAgentMoving)
         {
-            finalDirection = GetAlignedDirection(agentPos, index, finalDirection, agentData.waypoint);
+            finalDirection = GetAlignedDirection(agentPos, index, finalDirection, agentData.waypoint, agentData.PathId);
             finalDirection = GetSeperatedDirection(agentPos, index, finalDirection);
             AgentDirections[index] = finalDirection;
         }
@@ -86,7 +86,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
         float2 newDirection = math.select(math.normalize(desiredDirection + steering), 0, (desiredDirection + steering).Equals(0));
         return newDirection;
     }
-    float2 GetAlignedDirection(float2 agentPos, int agentIndex, float2 desiredDirection, Waypoint agentWaypoint)
+    float2 GetAlignedDirection(float2 agentPos, int agentIndex, float2 desiredDirection, Waypoint agentWaypoint, int pathId)
     {
         float2 totalHeading = 0;
         int count = 0;
@@ -97,7 +97,8 @@ public struct LocalAvoidanceJob : IJobParallelFor
 
             if (i == agentIndex) { continue; }
             if (mateDirection.Equals(0)) { continue; }
-            if (!mateData.waypoint.position.Equals(agentWaypoint.position)) { continue; } 
+            if (!mateData.waypoint.position.Equals(agentWaypoint.position)) { continue; }
+            if(pathId != mateData.PathId) { continue; }
 
             float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
 

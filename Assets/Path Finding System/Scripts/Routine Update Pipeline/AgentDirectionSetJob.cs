@@ -14,8 +14,9 @@ struct AgentDirectionSetJob : IJob
         for (int i = 0; i < AgentDirections.Length; i++)
         {
             AgentData agentData = AgentDataArray[i];
+            AgentMovementData movementData = MovementDataArray[i];
+            agentData.waypoint = agentData.Destination.Equals(movementData.Destination) ? movementData.waypoint : new Waypoint();
             agentData.Direction = AgentDirections[i];
-            agentData.waypoint = MovementDataArray[i].waypoint;
             AgentDataArray[i] = agentData;
         }
     }
