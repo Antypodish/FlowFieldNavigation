@@ -968,6 +968,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 8734084086652011014, guid: 5e3867b8afbc0bb49a0027ab49965980,
+        type: 3}
+      propertyPath: SeperationMultiplier
+      value: 10
+      objectReference: {fileID: 0}
     - target: {fileID: 8734084087089525697, guid: 5e3867b8afbc0bb49a0027ab49965980,
         type: 3}
       propertyPath: m_RootOrder

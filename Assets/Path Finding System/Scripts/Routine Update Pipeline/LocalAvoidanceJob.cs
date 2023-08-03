@@ -26,7 +26,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
         if (isAgentMoving)
         {
             finalDirection = GetAlignedDirection(agentPos, index, finalDirection, agentData.waypoint, agentData.PathId);
-            finalDirection = GetSeperatedDirection(agentPos, index, finalDirection);
+            finalDirection = GetSeperationNew(agentPos, index, finalDirection);
             AgentDirections[index] = finalDirection;
         }
         else
@@ -59,6 +59,32 @@ public struct LocalAvoidanceJob : IJobParallelFor
         float2 steering = (seperationDirection - desiredDirection) * SeperationMultiplier;
         float2 newDirection = math.select(math.normalize(desiredDirection + steering), 0, (desiredDirection + steering).Equals(0));
         return newDirection;
+    }
+    float2 GetSeperationNew(float2 agentPos, int agentIndex, float2 desiredDirection)
+    {
+        float2 totalSeperation = 0;
+        for (int i = 0; i < AgentMovementDataArray.Length; i++)
+        {
+            AgentMovementData mateData = AgentMovementDataArray[i];
+            if (i == agentIndex) { continue; }
+            if ((mateData.Status & AgentStatus.Moving) != AgentStatus.Moving) { continue; }
+
+            float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
+            float distance = math.distance(matePos, agentPos);
+
+            if (distance > SeperationRadius * 2 * 1f) { continue; }
+
+            float dot = math.dot(desiredDirection, matePos - agentPos);
+            if (dot <= 0) { continue; }
+
+            float overlapping = SeperationRadius * 2 - distance;
+            float multiplier = overlapping * SeperationMultiplier;
+            totalSeperation += math.select(math.normalize(agentPos - matePos) * multiplier, 0, agentPos.Equals(matePos) || overlapping == 0);
+        }
+        if (totalSeperation.Equals(0)) { return desiredDirection; }
+        float2 newVelocity = desiredDirection + totalSeperation;
+        newVelocity = math.select(newVelocity, math.normalize(newVelocity), math.length(newVelocity) > 1);
+        return newVelocity;
     }
     float2 GetPushingForce(float2 agentPos, int agentIndex, float2 desiredDirection)
     {
@@ -112,7 +138,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
             if (distance > AlignmentRadius * 2) { continue; }
 
             float overlapping = AlignmentRadius * 2 - distance;
-            totalHeading += mateDirection * overlapping;
+            totalHeading += mateDirection;
             count++;
         }
 

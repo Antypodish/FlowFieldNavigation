@@ -13,7 +13,7 @@ namespace Assets.Path_Finding_System.Scripts
 
         [Header("Seperation")]
         public float SeperationRange;
-        [Range(0,1)] public float SeperationMultiplier;
+        [Range(0,100)] public float SeperationMultiplier;
         [Header("Alignment")]
         public float AlignmentRange;
         [Range(0,1)] public float AlignmentMultiplier;

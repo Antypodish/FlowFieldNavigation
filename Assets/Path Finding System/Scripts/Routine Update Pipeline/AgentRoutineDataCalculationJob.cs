@@ -168,7 +168,7 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
 
         Waypoint GetBestWaypoint(Waypoint oldWaypoint, Waypoint newWaypoint, int sourceIndex, int targetGeneral1d)
         {
-            if (!IsWaypoint(oldWaypoint.index, sourceIndex, targetGeneral1d, out oldWaypoint, out bool placeholderBool))
+            if (!IsWaypoint(oldWaypoint.index, sourceIndex, targetGeneral1d, out oldWaypoint, out CornerDirections placeholder))
             {
                 return newWaypoint;
             }
@@ -290,21 +290,20 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
         {
             int cur1d = start1d;
             bool waypointFound = false;
-            bool isCorner = false;
+            CornerDirections corners = 0;
             Waypoint wayp = new Waypoint();
             while (!waypointFound)
             {
                 FlowData incomingFlow = GetFlowAt(cur1d, flowField, sectorToPicked);
                 cur1d = GetNextIndex(incomingFlow, cur1d, fieldColAmount, targetIndex1d);
-                if (IsWaypoint(cur1d, source1d, targetIndex1d, out wayp, out isCorner))   
+                if (IsWaypoint(cur1d, source1d, targetIndex1d, out wayp, out corners))   
                 {
                     return wayp;
                 }
-                else if (isCorner)
+                else if (corners != 0)
                 {
                     FlowData outgoindFlow = GetFlowAt(cur1d, flowField, sectorToPicked);
-                    bool notLosCorner = ((incomingFlow == FlowData.E || incomingFlow == FlowData.W) && (outgoindFlow == FlowData.S || outgoindFlow == FlowData.N) || (incomingFlow == FlowData.S || incomingFlow == FlowData.N) && (outgoindFlow == FlowData.E || outgoindFlow == FlowData.W));
-                    if (notLosCorner)
+                    if (IsTurningCorner(incomingFlow, outgoindFlow, corners))
                     {
                         return new Waypoint()
                         {
@@ -316,9 +315,17 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
             }
             return wayp;
         }
-        bool IsWaypoint(int potentialWaypoint1d, int source1d, int targetGeneral1d, out Waypoint wayp, out bool isCorner)
+        bool IsTurningCorner(FlowData incomingFlow, FlowData outgoingFlow, CornerDirections cornerDirections)
         {
-            isCorner = false;
+            bool isTurningNe = (cornerDirections & CornerDirections.NE) == CornerDirections.NE && ((incomingFlow == FlowData.S && outgoingFlow == FlowData.E) || (incomingFlow == FlowData.W && outgoingFlow == FlowData.N));
+            bool isTurningSe = (cornerDirections & CornerDirections.SE) == CornerDirections.SE && ((incomingFlow == FlowData.N && outgoingFlow == FlowData.E) || (incomingFlow == FlowData.W && outgoingFlow == FlowData.S));
+            bool isTurningSw = (cornerDirections & CornerDirections.SW) == CornerDirections.SW && ((incomingFlow == FlowData.N && outgoingFlow == FlowData.W) || (incomingFlow == FlowData.E && outgoingFlow == FlowData.S));
+            bool isTurningNw = (cornerDirections & CornerDirections.NW) == CornerDirections.NW && ((incomingFlow == FlowData.S && outgoingFlow == FlowData.W) || (incomingFlow == FlowData.E && outgoingFlow == FlowData.N));
+            return isTurningNe || isTurningSe || isTurningSw || isTurningNw;
+        }
+        bool IsWaypoint(int potentialWaypoint1d, int source1d, int targetGeneral1d, out Waypoint wayp, out CornerDirections cornerDirections)
+        {
+            cornerDirections = 0;
             bool isWaypoint = false;
             wayp = new Waypoint();
             float2 waypPos = IndexToPos(potentialWaypoint1d, tileSize, fieldColAmount);
@@ -369,7 +376,7 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
             if (potentialWaypoint1d == targetGeneral1d) { return true; }
             if (neCost == byte.MaxValue && nCost != byte.MaxValue && eCost != byte.MaxValue)
             {
-                isCorner = true;
+                cornerDirections |= CornerDirections.NE;
                 int2 change = curDif - neDif;
                 int componentChange = change.x * change.y;
                 if (componentChange < 0)
@@ -380,7 +387,7 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
             }
             if (seCost == byte.MaxValue && sCost != byte.MaxValue && eCost != byte.MaxValue)
             {
-                isCorner = true;
+                cornerDirections |= CornerDirections.SE;
                 int2 change = curDif - seDif;
                 int componentChange = change.x * change.y;
                 if (componentChange < 0)
@@ -391,7 +398,7 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
             }
             if (swCost == byte.MaxValue && sCost != byte.MaxValue && wCost != byte.MaxValue)
             {
-                isCorner = true;
+                cornerDirections |= CornerDirections.SW;
                 int2 change = curDif - swDif;
                 int componentChange = change.x * change.y;
                 if (componentChange < 0)
@@ -402,7 +409,7 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
             }
             if (nwCost == byte.MaxValue && nCost != byte.MaxValue && wCost != byte.MaxValue)
             {
-                isCorner = true;
+                cornerDirections |= CornerDirections.NW;
                 int2 change = curDif - nwDif;
                 int componentChange = change.x * change.y;
                 if (componentChange < 0)
@@ -545,4 +552,13 @@ public enum WaypointDirection : byte
     E = 2,
     S = 4,
     W = 8
+}
+[Flags]
+public enum CornerDirections : byte
+{
+    None = 0,
+    NE = 1,
+    SE = 2,
+    SW = 4,
+    NW = 8
 }
