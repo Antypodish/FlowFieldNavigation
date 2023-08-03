@@ -83,7 +83,16 @@ public struct LocalAvoidanceJob : IJobParallelFor
         }
         if (totalSeperation.Equals(0)) { return desiredDirection; }
         float2 newVelocity = desiredDirection + totalSeperation;
-        newVelocity = math.select(newVelocity, math.normalize(newVelocity), math.length(newVelocity) > 1);
+        if (math.dot(newVelocity, desiredDirection) < 0)
+        {
+            newVelocity = math.select(math.normalize(newVelocity), 0f, newVelocity.Equals(0f));
+            float2 steering = (newVelocity - desiredDirection) * 0.5f;
+            newVelocity = math.select(math.normalize(desiredDirection + steering), 0f, desiredDirection.Equals(-steering));
+        }
+        else
+        {
+            newVelocity = math.select(newVelocity, math.normalize(newVelocity), math.length(newVelocity) > 1);
+        }
         return newVelocity;
     }
     float2 GetPushingForce(float2 agentPos, int agentIndex, float2 desiredDirection)
