@@ -9,10 +9,10 @@ using UnityEngine.UIElements;
 [BurstCompile]
 public struct LocalAvoidanceJob : IJobParallelFor
 {
-    public float SeperationRadius;
+    public float SeperationRangeAddition;
     public float SeperationMultiplier;
-    public float AlignmentRadius;
-    public float AlignmentMultiplier;
+    public float AlignmentRadiusMultiplier;
+    public float AlignmentDecreaseStartDistance;
     [ReadOnly] public NativeArray<AgentMovementData> AgentMovementDataArray;
     public NativeArray<float2> AgentDirections;
 
@@ -26,21 +26,21 @@ public struct LocalAvoidanceJob : IJobParallelFor
         {
             if (agentData.waypoint.position.Equals(agentData.Destination))
             {
-                finalDirection = GetAlignmentDirectionToDestination(agentPos, index, finalDirection, agentData.PathId, agentData.Destination);
+                finalDirection = GetAlignmentDirectionToDestination(agentPos, agentData.Radius, index, finalDirection, agentData.PathId, agentData.Destination);
             }
             else
             {
-                finalDirection = GetAlignedDirectionDecreasing(agentPos, index, finalDirection, agentData.waypoint, agentData.PathId);
+                finalDirection = GetAlignedDirectionDecreasing(agentPos, agentData.Radius, index, finalDirection, agentData.waypoint, agentData.PathId);
             }
-            finalDirection = GetSeperationNew(agentPos, index, finalDirection);
+            finalDirection = GetSeperationNew(agentPos, agentData.Radius, index, finalDirection);
             AgentDirections[index] = finalDirection;
         }
         else
         {
-            AgentDirections[index] = GetPushinfForceNew(agentPos, index, agentData.Flow);
+            AgentDirections[index] = GetPushinfForceNew(agentPos, agentData.Radius, index, agentData.Flow);
         }
     }
-    float2 GetSeperationNew(float2 agentPos, int agentIndex, float2 desiredDirection)
+    float2 GetSeperationNew(float2 agentPos, float agentRadius, int agentIndex, float2 desiredDirection)
     {
         float2 totalSeperation = 0;
         for (int i = 0; i < AgentMovementDataArray.Length; i++)
@@ -51,13 +51,13 @@ public struct LocalAvoidanceJob : IJobParallelFor
 
             float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
             float distance = math.distance(matePos, agentPos);
-
-            if (distance > SeperationRadius * 2 * 1f) { continue; }
+            float seperationRadius = (agentRadius + mateData.Radius) + SeperationRangeAddition;
+            if (distance > seperationRadius) { continue; }
 
             float dot = math.dot(desiredDirection, matePos - agentPos);
             if (dot <= 0) { continue; }
 
-            float overlapping = SeperationRadius * 2 - distance;
+            float overlapping = seperationRadius - distance;
             float multiplier = overlapping * SeperationMultiplier;
             totalSeperation += math.select(math.normalize(agentPos - matePos) * multiplier, 0, agentPos.Equals(matePos) || overlapping == 0);
         }
@@ -75,7 +75,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
         }
         return newVelocity;
     }
-    float2 GetPushinfForceNew(float2 agentPos, int agentIndex, float2 desiredDirection)
+    float2 GetPushinfForceNew(float2 agentPos, float agentRadius, int agentIndex, float2 desiredDirection)
     {
         float2 totalSeperation = 0;
         for (int i = 0; i < AgentMovementDataArray.Length; i++)
@@ -85,8 +85,9 @@ public struct LocalAvoidanceJob : IJobParallelFor
 
             float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
             float distance = math.distance(matePos, agentPos);
-            if (distance > SeperationRadius * 2) { continue; }
-            float overlapping = SeperationRadius * 2 - distance;
+            float seperationRadius = (agentRadius + mateData.Radius) + SeperationRangeAddition;
+            if (distance > seperationRadius) { continue; }
+            float overlapping = seperationRadius - distance;
             float multiplier = overlapping * SeperationMultiplier;
             totalSeperation += math.select(math.normalize(agentPos - matePos) * multiplier, 0, agentPos.Equals(matePos) || overlapping == 0);
         }
@@ -96,7 +97,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
         return newVelocity;
     }
 
-    float2 GetAlignedDirectionDecreasing(float2 agentPos, int agentIndex, float2 desiredDirection, Waypoint agentWaypoint, int pathId)
+    float2 GetAlignedDirectionDecreasing(float2 agentPos, float agentRadius, int agentIndex, float2 desiredDirection, Waypoint agentWaypoint, int pathId)
     {
         float2 totalHeading = 0;
         for (int i = 0; i < AgentMovementDataArray.Length; i++)
@@ -117,8 +118,8 @@ public struct LocalAvoidanceJob : IJobParallelFor
             if (mateRelativeDirection <= 0) { continue; }
 
             float distance = math.distance(matePos, agentPos);
-
-            if (distance > AlignmentRadius * 2) { continue; }
+            float alignmentRadius = (agentRadius + mateData.Radius) * AlignmentRadiusMultiplier;
+            if (distance > alignmentRadius) { continue; }
 
             totalHeading += mateDirection;
         }
@@ -126,12 +127,12 @@ public struct LocalAvoidanceJob : IJobParallelFor
         if (totalHeading.Equals(0)) { return desiredDirection; }
         float2 averageHeading = math.normalize(totalHeading);
         float waypointDistance = math.distance(agentPos, agentWaypoint.position);
-        float multiplier = math.select(waypointDistance / 15, 1, waypointDistance > 15);
+        float multiplier = math.select(waypointDistance / AlignmentDecreaseStartDistance, 1, waypointDistance > AlignmentDecreaseStartDistance);
         float2 steering = (averageHeading - desiredDirection) * multiplier;
         float2 newDirection = math.select(math.normalize(desiredDirection + steering), 0, (desiredDirection + steering).Equals(0));
         return newDirection;
     }
-    float2 GetAlignmentDirectionToDestination(float2 agentPos, int agentIndex, float2 desiredDirection, int pathId, float2 destination)
+    float2 GetAlignmentDirectionToDestination(float2 agentPos, float agentRadius, int agentIndex, float2 desiredDirection, int pathId, float2 destination)
     {
         float2 totalHeading = 0;
         for (int i = 0; i < AgentMovementDataArray.Length; i++)
@@ -149,7 +150,8 @@ public struct LocalAvoidanceJob : IJobParallelFor
 
             float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
             float distance = math.distance(matePos, agentPos);
-            if (distance > AlignmentRadius * 2) { continue; }
+            float alignmentRadius = (agentRadius + mateData.Radius) * AlignmentRadiusMultiplier;
+            if (distance > alignmentRadius) { continue; }
             totalHeading += mateDirection;
         }
 
@@ -158,7 +160,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
         float2 newDirection = averageHeading;
         return newDirection;
     }
-
+    /*
     //LEGACY ALGORITHMS
     float2 GetSeperatedDirection(float2 agentPos, int agentIndex, float2 desiredDirection)
     {
@@ -247,5 +249,5 @@ public struct LocalAvoidanceJob : IJobParallelFor
         float2 steering = (averageHeading - desiredDirection) * AlignmentMultiplier;
         float2 newDirection = math.select(math.normalize(desiredDirection + steering), 0, (desiredDirection + steering).Equals(0));
         return newDirection;
-    }
+    }*/
 }

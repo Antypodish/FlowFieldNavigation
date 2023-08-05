@@ -903,6 +903,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5571130920343903277, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}
+      propertyPath: _agentPrefab
+      value: 
+      objectReference: {fileID: 2010554042057534779, guid: 5b8107cfe6c808547b1890d4dca1b9f7,
+        type: 3}
+    - target: {fileID: 5571130920343903277, guid: 6171110bace36bb42a195b4ce00d2d41,
+        type: 3}
       propertyPath: _pathfindingManager
       value: 
       objectReference: {fileID: 2058839523}
@@ -1064,6 +1070,21 @@ PrefabInstance:
       propertyPath: SeperationMultiplier
       value: 12
       objectReference: {fileID: 0}
+    - target: {fileID: 8734084086652011014, guid: 5e3867b8afbc0bb49a0027ab49965980,
+        type: 3}
+      propertyPath: SeperationRangeAddition
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8734084086652011014, guid: 5e3867b8afbc0bb49a0027ab49965980,
+        type: 3}
+      propertyPath: AlignmentRangeMultiplier
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 8734084086652011014, guid: 5e3867b8afbc0bb49a0027ab49965980,
+        type: 3}
+      propertyPath: AlignmentDecreaseStartDistance
+      value: 15
+      objectReference: {fileID: 0}
     - target: {fileID: 8734084087089525697, guid: 5e3867b8afbc0bb49a0027ab49965980,
         type: 3}
       propertyPath: m_RootOrder
@@ -1132,7 +1153,7 @@ PrefabInstance:
     - target: {fileID: 8734084087838304231, guid: 5e3867b8afbc0bb49a0027ab49965980,
         type: 3}
       propertyPath: _maxCostfieldOffset
-      value: 0
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 8734084087838304231, guid: 5e3867b8afbc0bb49a0027ab49965980,
         type: 3}

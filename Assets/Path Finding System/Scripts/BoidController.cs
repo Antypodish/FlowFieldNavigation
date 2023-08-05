@@ -12,11 +12,12 @@ namespace Assets.Path_Finding_System.Scripts
         public static BoidController Instance;
 
         [Header("Seperation")]
-        public float SeperationRange;
+        public float SeperationRangeAddition;
         [Range(0,100)] public float SeperationMultiplier;
         [Header("Alignment")]
-        public float AlignmentRange;
-        [Range(0,1)] public float AlignmentMultiplier;
+        public float AlignmentRangeMultiplier;
+        public float AlignmentDecreaseStartDistance;
+
         private void Start()
         {
             Instance = this;

@@ -71,9 +71,7 @@ public struct FieldGraph
                     return 2;
                 case 3:
                     return 2;
-                case 4:
-                    return 1;
-                case 5:
+                case > 3:
                     return 1;
             }
             return -1;
