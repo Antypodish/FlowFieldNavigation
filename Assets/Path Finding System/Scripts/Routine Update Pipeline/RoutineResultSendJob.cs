@@ -4,7 +4,7 @@ using Unity.Jobs;
 using Unity.Mathematics;
 
 [BurstCompile]
-struct AgentDirectionSetJob : IJob
+struct RoutineResultSendJob : IJob
 {
     [ReadOnly] public NativeArray<AgentMovementData> MovementDataArray;
     [ReadOnly] public NativeArray<float2> AgentDirections;

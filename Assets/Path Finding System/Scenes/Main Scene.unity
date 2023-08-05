@@ -260,7 +260,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &530849417
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -268,12 +268,12 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 530849416}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d5bb1c3feb353e240854b3a3026f80e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxFps: 60
+  maxFps: 50
 --- !u!4 &530849418
 Transform:
   m_ObjectHideFlags: 0
@@ -728,7 +728,7 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: _resolution
-      value: 15
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
@@ -1051,6 +1051,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 8734084086652011014, guid: 5e3867b8afbc0bb49a0027ab49965980,
         type: 3}
+      propertyPath: AlignmentRange
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8734084086652011014, guid: 5e3867b8afbc0bb49a0027ab49965980,
+        type: 3}
       propertyPath: SeperationRange
       value: 0.6
       objectReference: {fileID: 0}
@@ -1128,6 +1133,11 @@ PrefabInstance:
         type: 3}
       propertyPath: _maxCostfieldOffset
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8734084087838304231, guid: 5e3867b8afbc0bb49a0027ab49965980,
+        type: 3}
+      propertyPath: _agentUpdateFrequency
+      value: 0.016
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5e3867b8afbc0bb49a0027ab49965980, type: 3}

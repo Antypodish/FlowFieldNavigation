@@ -131,7 +131,8 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
         int curGeneral1d = To1D(general2d, fieldColAmount);
         float2 curTilePos = IndexToPos(curGeneral1d, tileSize, fieldColAmount);
         float2 agentPos = new float2(data.Position.x, data.Position.z);
-
+        float2 destination = data.Destination;
+        //IF UNWALKABLE
         if (costField[curGeneral1d] == byte.MaxValue)
         {
             float2 direction = GetDirection(data.FlowField[sectorMark + local1d], out data.OutOfFieldFlag, data.Destination, new float2(data.Position.x, data.Position.z));
@@ -373,7 +374,7 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
             bool mInfinite = waypPos.x == sourcePos.x;
 
             if (curCost == byte.MaxValue) { return false; }
-            if (potentialWaypoint1d == targetGeneral1d) { return true; }
+            if (potentialWaypoint1d == targetGeneral1d) { wayp.position = destination; return true; }
             if (neCost == byte.MaxValue && nCost != byte.MaxValue && eCost != byte.MaxValue)
             {
                 cornerDirections |= CornerDirections.NE;

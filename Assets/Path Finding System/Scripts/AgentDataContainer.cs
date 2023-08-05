@@ -96,7 +96,7 @@ public class AgentDataContainer
     }
     public void SendRoutineResults(NativeArray<float2> agentDirections, NativeArray<AgentMovementData> movementDataArray)
     {
-        AgentDirectionSetJob directionSetJob = new AgentDirectionSetJob()
+        RoutineResultSendJob directionSetJob = new RoutineResultSendJob()
         {
             MovementDataArray = movementDataArray,
             AgentDataArray = AgentDataList,
@@ -123,6 +123,8 @@ public struct AgentData
     public float2 Direction;
     public float Radius;
     public Waypoint waypoint;
+
+    public int StopDistanceIndex;
 }
 public struct AgentPath
 {

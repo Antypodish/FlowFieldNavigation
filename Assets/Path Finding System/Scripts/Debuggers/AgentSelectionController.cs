@@ -141,7 +141,7 @@ public class AgentSelectionController : MonoBehaviour
         }
 
 
-        if (Input.GetMouseButton(1) && SelectedAgents.Count != 0)
+        if (Input.GetMouseButtonDown(1) && SelectedAgents.Count != 0)
         {
             SetDestination();
         }

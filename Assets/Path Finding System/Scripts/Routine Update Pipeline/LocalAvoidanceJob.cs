@@ -20,12 +20,18 @@ public struct LocalAvoidanceJob : IJobParallelFor
     {
         AgentMovementData agentData = AgentMovementDataArray[index];
         float2 agentPos = new float2(agentData.Position.x, agentData.Position.z);
-        float2 totalSeperationDirection = 0;
         bool isAgentMoving = (agentData.Status & AgentStatus.Moving) == AgentStatus.Moving;
         float2 finalDirection = agentData.Flow;
         if (isAgentMoving)
         {
-            finalDirection = GetAlignedDirection(agentPos, index, finalDirection, agentData.waypoint, agentData.PathId);
+            if (agentData.waypoint.position.Equals(agentData.Destination))
+            {
+                finalDirection = GetAlignmentDirectionToDestination(agentPos, index, finalDirection, agentData.PathId, agentData.Destination);
+            }
+            else
+            {
+                finalDirection = GetAlignedDirectionDecreasing(agentPos, index, finalDirection, agentData.waypoint, agentData.PathId);
+            }
             finalDirection = GetSeperationNew(agentPos, index, finalDirection);
             AgentDirections[index] = finalDirection;
         }
@@ -155,6 +161,68 @@ public struct LocalAvoidanceJob : IJobParallelFor
         float2 averageHeading = math.normalize(totalHeading);
         float2 steering = (averageHeading - desiredDirection) * AlignmentMultiplier;
         float2 newDirection = math.select(math.normalize(desiredDirection + steering), 0, (desiredDirection + steering).Equals(0));
+        return newDirection;
+    }
+    float2 GetAlignedDirectionDecreasing(float2 agentPos, int agentIndex, float2 desiredDirection, Waypoint agentWaypoint, int pathId)
+    {
+        float2 totalHeading = 0;
+        for (int i = 0; i < AgentMovementDataArray.Length; i++)
+        {
+            AgentMovementData mateData = AgentMovementDataArray[i];
+            float2 mateDirection = mateData.Flow;
+
+            if (i == agentIndex) { continue; }
+            if (mateDirection.Equals(0)) { continue; }
+            if (!mateData.waypoint.position.Equals(agentWaypoint.position)) { continue; }
+            if (pathId != mateData.PathId) { continue; }
+
+            float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
+
+            float mateRelativeLocation = math.dot(desiredDirection, matePos - agentPos);
+            float mateRelativeDirection = math.dot(desiredDirection, mateDirection);
+            if (mateRelativeLocation <= 0) { continue; }
+            if (mateRelativeDirection <= 0) { continue; }
+
+            float distance = math.distance(matePos, agentPos);
+
+            if (distance > AlignmentRadius * 2) { continue; }
+
+            totalHeading += mateDirection;
+        }
+
+        if (totalHeading.Equals(0)) { return desiredDirection; }
+        float2 averageHeading = math.normalize(totalHeading);
+        float waypointDistance = math.distance(agentPos, agentWaypoint.position);
+        float multiplier = math.select(waypointDistance / 15, 1, waypointDistance > 15);
+        float2 steering = (averageHeading - desiredDirection) * multiplier;
+        float2 newDirection = math.select(math.normalize(desiredDirection + steering), 0, (desiredDirection + steering).Equals(0));
+        return newDirection;
+    }
+    float2 GetAlignmentDirectionToDestination(float2 agentPos, int agentIndex, float2 desiredDirection, int pathId, float2 destination)
+    {
+        float2 totalHeading = 0;
+        for (int i = 0; i < AgentMovementDataArray.Length; i++)
+        {
+            AgentMovementData mateData = AgentMovementDataArray[i];
+            float2 mateDirection = mateData.Flow;
+
+            if (i == agentIndex) { continue; }
+            if (mateDirection.Equals(0)) { continue; }
+            if (!mateData.waypoint.position.Equals(destination)) { continue; }
+            if (pathId != mateData.PathId) { continue; }
+
+            float mateRelativeDirection = math.dot(desiredDirection, mateDirection);
+            if (mateRelativeDirection <= 0) { continue; }
+
+            float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
+            float distance = math.distance(matePos, agentPos);
+            if (distance > AlignmentRadius * 2) { continue; }
+            totalHeading += mateDirection;
+        }
+
+        if (totalHeading.Equals(0)) { return desiredDirection; }
+        float2 averageHeading = math.normalize(totalHeading);
+        float2 newDirection = averageHeading;
         return newDirection;
     }
 }

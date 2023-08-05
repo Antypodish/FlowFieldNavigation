@@ -129,6 +129,7 @@ public class PathProducer
             NewFlowFieldLength = new NativeArray<int>(1, Allocator.Persistent),
         };
         ProducedPaths.Add(producedPath);
+
         return new PortalTraversalJobPack
         {
             PortalTravJob = traversalJob,
