@@ -7,7 +7,7 @@ public class TerrainGenerator : MonoBehaviour
     [SerializeField] MeshCollider _fieldMeshCollider;
     [SerializeField] MeshFilter _fieldMeshFilter;
     [Header("Random Generator")]
-    [SerializeField][Range(1,20)] float _resolution;    //5 good
+    [SerializeField][Range(1,100)] float _resolution;    //5 good
     [SerializeField] SimulationState _simulationState;
     [SerializeField] Material _obstacleMat;
     [HideInInspector] public WalkabilityData WalkabilityData;

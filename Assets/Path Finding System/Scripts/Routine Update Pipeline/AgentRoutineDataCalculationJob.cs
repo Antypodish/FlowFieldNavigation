@@ -3,6 +3,7 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
+using UnityEngine;
 using UnityEngine.Jobs;
 using UnityEngine.UIElements;
 
@@ -135,15 +136,22 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
         //IF UNWALKABLE
         if (costField[curGeneral1d] == byte.MaxValue)
         {
-            float2 direction = GetDirection(data.FlowField[sectorMark + local1d], out data.OutOfFieldFlag, data.Destination, new float2(data.Position.x, data.Position.z));
-            data.Flow = direction;
-            data.waypoint = new Waypoint()
+            FlowData startingFlow = GetFlowAt(curGeneral1d, data.FlowField, data.SectorToPicked);
+            if(startingFlow == FlowData.None)
             {
-                position = agentPos,
-                index = curGeneral1d,
-            };
-            AgentMovementData[index] = data;
-            return;
+                data.Flow = 0;
+                data.waypoint = new Waypoint()
+                {
+                    position = agentPos,
+                    index = curGeneral1d,
+                };
+                AgentMovementData[index] = data;
+                return;
+            }
+            else
+            {
+                curGeneral1d = GetNextIndex(startingFlow, curGeneral1d, fieldColAmount, targetGeneral1d);
+            }
         }
 
         //GET WAYPOINT
@@ -169,7 +177,7 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
 
         Waypoint GetBestWaypoint(Waypoint oldWaypoint, Waypoint newWaypoint, int sourceIndex, int targetGeneral1d)
         {
-            if (!IsWaypoint(oldWaypoint.index, sourceIndex, targetGeneral1d, out oldWaypoint, out CornerDirections placeholder))
+            if (oldWaypoint.blockedDirection == 0 || !IsWaypoint(oldWaypoint.index, sourceIndex, targetGeneral1d, out oldWaypoint, out CornerDirections placeholder))
             {
                 return newWaypoint;
             }

@@ -125,6 +125,7 @@ public struct FlowFieldJob : IJobParallelFor
         int nwSectorMark = SectorToPicked[nwSector1d];
 
         //INTEGRATED COSTS
+        float curIntCost = IntegrationField[index].Cost;
         float nIntCost = float.MaxValue;
         float eIntCost = float.MaxValue;
         float sIntCost = float.MaxValue;
@@ -141,25 +142,28 @@ public struct FlowFieldJob : IJobParallelFor
         if (seSectorMark != 0 ) { seIntCost = IntegrationField[seSectorMark + seLocal1d].Cost; }
         if (swSectorMark != 0 ) { swIntCost = IntegrationField[swSectorMark + swLocal1d].Cost; }
         if (nwSectorMark != 0 ) { nwIntCost = IntegrationField[nwSectorMark + nwLocal1d].Cost; }
-        if(nIntCost == float.MaxValue)
+        if(curIntCost != float.MaxValue)
         {
-            neIntCost = float.MaxValue;
-            nwIntCost = float.MaxValue;
-        }
-        if (eIntCost == float.MaxValue)
-        {
-            neIntCost = float.MaxValue;
-            seIntCost = float.MaxValue;
-        }
-        if (sIntCost == float.MaxValue)
-        {
-            seIntCost = float.MaxValue;
-            swIntCost = float.MaxValue;
-        }
-        if (wIntCost == float.MaxValue)
-        {
-            nwIntCost = float.MaxValue;
-            swIntCost = float.MaxValue;
+            if (nIntCost == float.MaxValue)
+            {
+                neIntCost = float.MaxValue;
+                nwIntCost = float.MaxValue;
+            }
+            if (eIntCost == float.MaxValue)
+            {
+                neIntCost = float.MaxValue;
+                seIntCost = float.MaxValue;
+            }
+            if (sIntCost == float.MaxValue)
+            {
+                seIntCost = float.MaxValue;
+                swIntCost = float.MaxValue;
+            }
+            if (wIntCost == float.MaxValue)
+            {
+                nwIntCost = float.MaxValue;
+                swIntCost = float.MaxValue;
+            }
         }
         float minCost = float.MaxValue;
         FlowData minFlow = FlowData.None;

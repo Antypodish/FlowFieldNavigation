@@ -111,8 +111,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49ebfc9203a85bc4a91e89a1b4fa274f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Radius: 1.125
-  Speed: 7
+  Radius: 0.75
+  Speed: 5
   LandOffset: 1
   AgentDataIndex: 0
   Transform: {fileID: 0}

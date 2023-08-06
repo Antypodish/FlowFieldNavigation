@@ -90,7 +90,7 @@ public class PathfindingManager : MonoBehaviour
             float radius = agents[i].GetRadius();
             maxRadius = radius > maxRadius ? radius : maxRadius;
         }
-        int offset = Mathf.FloorToInt(maxRadius);
+        int offset = Mathf.FloorToInt(maxRadius + 0.5f);
         
         if (agents.Count == 0) { UnityEngine.Debug.Log("Agent list passed is empty"); return; }
         //CREATE PATH
