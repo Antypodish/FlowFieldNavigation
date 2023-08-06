@@ -14,6 +14,7 @@ namespace Assets.Path_Finding_System.Scripts
         [Header("Seperation")]
         public float SeperationRangeAddition;
         [Range(0,100)] public float SeperationMultiplier;
+        [Range(0, 10)] public float MovingForeignFlockSeperationRangeMultiplier;
         [Header("Alignment")]
         public float AlignmentRangeMultiplier;
         public float AlignmentDecreaseStartDistance;

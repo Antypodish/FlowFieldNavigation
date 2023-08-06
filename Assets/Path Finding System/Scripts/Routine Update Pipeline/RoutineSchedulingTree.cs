@@ -74,6 +74,7 @@ public class RoutineSchedulingTree
     {
         LocalAvoidanceJob avoidanceJob = new LocalAvoidanceJob()
         {
+            MovingForeignFlockSeperationRangeMultiplier = BoidController.Instance.MovingForeignFlockSeperationRangeMultiplier,
             SeperationRangeAddition = BoidController.Instance.SeperationRangeAddition,
             SeperationMultiplier = BoidController.Instance.SeperationMultiplier,
             AlignmentDecreaseStartDistance = BoidController.Instance.AlignmentDecreaseStartDistance,

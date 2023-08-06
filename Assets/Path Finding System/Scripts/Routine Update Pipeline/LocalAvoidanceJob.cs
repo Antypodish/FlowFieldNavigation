@@ -9,6 +9,7 @@ using UnityEngine.UIElements;
 [BurstCompile]
 public struct LocalAvoidanceJob : IJobParallelFor
 {
+    public float MovingForeignFlockSeperationRangeMultiplier;
     public float SeperationRangeAddition;
     public float SeperationMultiplier;
     public float AlignmentRadiusMultiplier;
@@ -32,7 +33,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
             {
                 finalDirection = GetAlignedDirectionDecreasing(agentPos, agentData.Radius, index, finalDirection, agentData.waypoint, agentData.PathId);
             }
-            finalDirection = GetSeperationNew(agentPos, agentData.Radius, index, finalDirection);
+            finalDirection = GetSeperationNew(agentPos, agentData.Radius, agentData.PathId, index, finalDirection);
             AgentDirections[index] = finalDirection;
         }
         else
@@ -40,18 +41,24 @@ public struct LocalAvoidanceJob : IJobParallelFor
             AgentDirections[index] = GetPushinfForceNew(agentPos, agentData.Radius, index, agentData.Flow);
         }
     }
-    float2 GetSeperationNew(float2 agentPos, float agentRadius, int agentIndex, float2 desiredDirection)
+    float2 GetSeperationNew(float2 agentPos, float agentRadius, int pathId, int agentIndex, float2 desiredDirection)
     {
         float2 totalSeperation = 0;
+        bool nonFlowMate = false;
         for (int i = 0; i < AgentMovementDataArray.Length; i++)
         {
             AgentMovementData mateData = AgentMovementDataArray[i];
             if (i == agentIndex) { continue; }
             if ((mateData.Status & AgentStatus.Moving) != AgentStatus.Moving) { continue; }
-
             float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
             float distance = math.distance(matePos, agentPos);
+            
             float seperationRadius = (agentRadius + mateData.Radius) + SeperationRangeAddition;
+            if (mateData.PathId != pathId)
+            {
+                nonFlowMate = true;
+                seperationRadius *= MovingForeignFlockSeperationRangeMultiplier;
+            }
             if (distance > seperationRadius) { continue; }
 
             float dot = math.dot(desiredDirection, matePos - agentPos);
@@ -63,7 +70,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
         }
         if (totalSeperation.Equals(0)) { return desiredDirection; }
         float2 newVelocity = desiredDirection + totalSeperation;
-        if (math.dot(newVelocity, desiredDirection) < 0)
+        if (!nonFlowMate && math.dot(newVelocity, desiredDirection) < 0)
         {
             float2 newDir = math.normalize(newVelocity);
             float2 perp1 = new float2(1, (-desiredDirection.x) / desiredDirection.y);
