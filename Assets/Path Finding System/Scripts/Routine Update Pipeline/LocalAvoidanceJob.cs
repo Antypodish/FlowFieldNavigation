@@ -65,9 +65,14 @@ public struct LocalAvoidanceJob : IJobParallelFor
         float2 newVelocity = desiredDirection + totalSeperation;
         if (math.dot(newVelocity, desiredDirection) < 0)
         {
-            newVelocity = math.select(math.normalize(newVelocity), 0f, newVelocity.Equals(0f));
-            float2 steering = (newVelocity - desiredDirection) * 0.5f;
-            newVelocity = math.select(math.normalize(desiredDirection + steering), 0f, desiredDirection.Equals(-steering));
+            float2 newDir = math.normalize(newVelocity);
+            float2 perp1 = new float2(1, (-desiredDirection.x) / desiredDirection.y);
+            float2 perp2 = new float2(-1, desiredDirection.x / desiredDirection.y);
+            perp1 = math.normalize(perp1);
+            perp2 = math.normalize(perp2);
+            float perp1Distance = math.distance(perp1, newDir);
+            float perp2Distance = math.distance(perp2, newDir);
+            newVelocity = math.select(perp2, perp1, perp1Distance < perp2Distance);
         }
         else
         {
