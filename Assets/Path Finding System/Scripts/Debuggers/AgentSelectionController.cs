@@ -177,7 +177,7 @@ public class AgentSelectionController : MonoBehaviour
     {
         for(int i = 0; i < SelectedAgents.Count; i++)
         {
-            SelectedAgents[i].GetComponent<MeshRenderer>().material = _normalAgentMaterial;
+            SelectedAgents[i].GetComponentInChildren<MeshRenderer>().material = _normalAgentMaterial;
         }
         SelectedAgents.Clear();
     }
@@ -185,7 +185,7 @@ public class AgentSelectionController : MonoBehaviour
     {
         for (int i = 0; i < agents.Count; i++)
         {
-            agents[i].GetComponent<MeshRenderer>().material = mat;
+            agents[i].GetComponentInChildren<MeshRenderer>().material = mat;
         }
     }
     enum ControllerState : byte

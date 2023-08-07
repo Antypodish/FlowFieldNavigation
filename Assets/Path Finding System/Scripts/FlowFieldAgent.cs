@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
@@ -21,6 +22,18 @@ public class FlowFieldAgent : MonoBehaviour
         _pathfindingManager.Subscribe(this);
         Transform = transform;
     }
+    private void Update()
+    {
+        Vector2 direction = GetDirection();
+        Vector3 position = transform.position;
+        Vector3 curDirection = transform.forward;
+        Vector3 direction3d = new Vector3(direction.x, curDirection.y, direction.y);
+        Vector3 newLookDirection = Vector3.MoveTowards(curDirection, direction3d, 0.1f);
+        newLookDirection.y = 0f;
+        transform.LookAt(position + newLookDirection);
+
+
+    }
     public void SetPath(Path path)
     {
         _pathfindingManager.SetPath(AgentDataIndex, path);
@@ -32,6 +45,7 @@ public class FlowFieldAgent : MonoBehaviour
     public float GetSpeed() => Speed;
     public float GetRadius() => Radius;
     public float GetLandOffset() => LandOffset;
+    public Vector2 GetDirection() => _pathfindingManager.AgentDataContainer.AgentDataList[AgentDataIndex].Direction;
     public AgentStatus GetAgentStatus() => _pathfindingManager.AgentDataContainer.AgentDataList[AgentDataIndex].Status;
     public void Stop()
     {
