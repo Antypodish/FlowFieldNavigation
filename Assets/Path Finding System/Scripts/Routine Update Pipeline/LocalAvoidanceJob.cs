@@ -52,6 +52,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
             AgentMovementData mateData = AgentMovementDataArray[i];
             if (i == agentIndex) { continue; }
             if ((mateData.Status & AgentStatus.Moving) != AgentStatus.Moving) { continue; }
+
             float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
             float distance = math.distance(matePos, agentPos);
             

@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.Jobs;
 using UnityEngine.UIElements;
 
-[BurstCompile]
+//[BurstCompile]
 public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
 {
     public float TileSize;
@@ -132,6 +132,7 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
         int curGeneral1d = To1D(general2d, fieldColAmount);
         float2 curTilePos = IndexToPos(curGeneral1d, tileSize, fieldColAmount);
         float2 agentPos = new float2(data.Position.x, data.Position.z);
+
         float2 destination = data.Destination;
         //IF UNWALKABLE
         if (costField[curGeneral1d] == byte.MaxValue)
@@ -227,7 +228,10 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
                 };
                 return;
             }
-
+            if(lastWaypoint.index == -1)
+            {
+                UnityEngine.Debug.Log(source1d);
+            }
             Waypoint newWaypoint = GetNextWaypointCandidate(source1d, lastWaypoint.index, targetGeneral1d, flowField, sectorToPicked);
 
             while (newWaypoint.index != -1 && IsInLOS(newWaypoint.position, lastWaypoint, sourcePos))
@@ -385,9 +389,9 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
             if (potentialWaypoint1d == targetGeneral1d) { wayp.position = destination; return true; }
             if (neCost == byte.MaxValue && nCost != byte.MaxValue && eCost != byte.MaxValue)
             {
-                cornerDirections |= CornerDirections.NE;
                 int2 change = curDif - neDif;
                 int componentChange = change.x * change.y;
+                cornerDirections = change.x > 0 && change.y > 0 ? cornerDirections | CornerDirections.NE : cornerDirections;
                 if (componentChange < 0)
                 {
                     isWaypoint = true;
@@ -396,9 +400,9 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
             }
             if (seCost == byte.MaxValue && sCost != byte.MaxValue && eCost != byte.MaxValue)
             {
-                cornerDirections |= CornerDirections.SE;
                 int2 change = curDif - seDif;
                 int componentChange = change.x * change.y;
+                cornerDirections = change.x > 0 && change.y > 0 ? cornerDirections | CornerDirections.SE : cornerDirections;
                 if (componentChange < 0)
                 {
                     isWaypoint = true;
@@ -407,9 +411,9 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
             }
             if (swCost == byte.MaxValue && sCost != byte.MaxValue && wCost != byte.MaxValue)
             {
-                cornerDirections |= CornerDirections.SW;
                 int2 change = curDif - swDif;
                 int componentChange = change.x * change.y;
+                cornerDirections = change.x > 0 && change.y > 0 ? cornerDirections | CornerDirections.SW : cornerDirections;
                 if (componentChange < 0)
                 {
                     isWaypoint = true;
@@ -418,9 +422,9 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
             }
             if (nwCost == byte.MaxValue && nCost != byte.MaxValue && wCost != byte.MaxValue)
             {
-                cornerDirections |= CornerDirections.NW;
                 int2 change = curDif - nwDif;
                 int componentChange = change.x * change.y;
+                cornerDirections = change.x > 0 && change.y > 0 ? cornerDirections | CornerDirections.NW : cornerDirections;
                 if (componentChange < 0)
                 {
                     isWaypoint = true;
