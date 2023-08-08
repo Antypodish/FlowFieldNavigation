@@ -16,6 +16,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
     public float AlignmentDecreaseStartDistance;
     [ReadOnly] public NativeArray<AgentMovementData> AgentMovementDataArray;
     public NativeArray<float2> AgentDirections;
+    
 
     public void Execute(int index)
     {
@@ -41,6 +42,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
             AgentDirections[index] = GetPushinfForceNew(agentPos, agentData.Radius, index, agentData.Flow);
         }
     }
+    
     float2 GetSeperationNew(float2 agentPos, float agentRadius, int pathId, int agentIndex, float2 desiredDirection)
     {
         float2 totalSeperation = 0;
@@ -72,9 +74,10 @@ public struct LocalAvoidanceJob : IJobParallelFor
         float2 newVelocity = desiredDirection + totalSeperation;
         if (!nonFlowMate && math.dot(newVelocity, desiredDirection) < 0)
         {
-            float2 newDir = math.normalize(newVelocity);
-            float2 perp1 = new float2(1, (-desiredDirection.x) / desiredDirection.y);
-            float2 perp2 = new float2(-1, desiredDirection.x / desiredDirection.y);
+
+            float2 newDir = math.select(math.normalize(newVelocity), 0f, newVelocity.Equals(0));
+            float2 perp1 = new float2(1, (-desiredDirection.x) / math.select(desiredDirection.y, 0.000001f , desiredDirection.y == 0));;
+            float2 perp2 = new float2(-1, desiredDirection.x / math.select(desiredDirection.y, 0.000001f, desiredDirection.y == 0));
             perp1 = math.normalize(perp1);
             perp2 = math.normalize(perp2);
             float perp1Distance = math.distance(perp1, newDir);
@@ -101,7 +104,9 @@ public struct LocalAvoidanceJob : IJobParallelFor
             if (distance > seperationRadius) { continue; }
             float overlapping = seperationRadius - distance;
             float multiplier = overlapping * SeperationMultiplier;
-            totalSeperation += math.select(math.normalize(agentPos - matePos) * multiplier, 0, agentPos.Equals(matePos) || overlapping == 0);
+            float2 push = math.select(math.normalize(agentPos - matePos) * multiplier, 0, overlapping == 0);
+            push = math.select(push, math.normalize(new float2(i, 1)), agentPos.Equals(matePos));
+            totalSeperation += push;
         }
         if (totalSeperation.Equals(0)) { return desiredDirection; }
         float2 newVelocity = desiredDirection + totalSeperation;
@@ -170,6 +175,58 @@ public struct LocalAvoidanceJob : IJobParallelFor
         if (totalHeading.Equals(0)) { return desiredDirection; }
         float2 averageHeading = math.normalize(totalHeading);
         float2 newDirection = averageHeading;
+        return newDirection;
+    }
+    float2 GetSeperationOld(float2 agentPos, float agentRadius, int pathId, int agentIndex, float2 desiredDirection)
+    {
+        float _flockmateSeperationRange = 1.2f;
+        float _foreignSeperationRange = 1.6f;
+        float _foreignSeperationMultiplier = 0.48f;
+        float _flockmateSeperationMultiplier = 0.7f;
+
+        float2 totalSeperation = 0;
+        bool foreign = false;
+        bool push = false;
+        for (int i = 0; i < AgentMovementDataArray.Length; i++)
+        {
+            AgentMovementData mateData = AgentMovementDataArray[i];
+
+            if (agentIndex == i) { continue; }
+
+            if (pathId == mateData.PathId)
+            {
+                float2 foreignAgentPosition = new float2(mateData.Position.x, mateData.Position.z);
+                float distance = math.distance(foreignAgentPosition, agentPos);
+
+                if (distance > _flockmateSeperationRange) { continue; }
+
+                float dot = math.dot(desiredDirection, foreignAgentPosition - agentPos);
+                if (dot <= 0) { continue; }
+
+                float overlapping = _flockmateSeperationRange - distance;
+                totalSeperation += math.select(math.normalize(agentPos - foreignAgentPosition) * overlapping, 0f, agentPos.Equals(foreignAgentPosition));
+            }
+            else
+            {
+                float2 foreignAgentPosition = new float2(mateData.Position.x, mateData.Position.z);
+                float distance = math.distance(foreignAgentPosition, agentPos);
+
+                if (distance > _foreignSeperationRange) { continue; }
+
+                float dot = math.dot(desiredDirection, foreignAgentPosition - agentPos);
+                if (dot <= 0) { continue; }
+
+                float overlapping = _foreignSeperationRange - distance;
+                if (overlapping > 0.6) { push = true; }
+                totalSeperation += math.select(math.normalize(agentPos - foreignAgentPosition) * overlapping, 0f, agentPos.Equals(foreignAgentPosition));
+                foreign = true;
+            }
+        }
+        if (totalSeperation.Equals(0f)) { return desiredDirection; }
+        float2 seperationDirection = math.normalize(totalSeperation);
+        _foreignSeperationMultiplier = math.select(_foreignSeperationMultiplier, 0.9f, push);
+        float2 steering = (seperationDirection - desiredDirection) * math.select(_flockmateSeperationMultiplier, _foreignSeperationMultiplier, foreign);
+        float2 newDirection = math.select(math.normalize(desiredDirection + steering), 0f, desiredDirection.Equals(-steering));
         return newDirection;
     }
     /*

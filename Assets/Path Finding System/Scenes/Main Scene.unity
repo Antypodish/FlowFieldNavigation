@@ -716,7 +716,7 @@ PrefabInstance:
         type: 3}
       propertyPath: _agentPrefab
       value: 
-      objectReference: {fileID: 3857663434598705277, guid: f625416f2d4a8874b98491e28dbe6597,
+      objectReference: {fileID: 2010554042057534779, guid: 5b8107cfe6c808547b1890d4dca1b9f7,
         type: 3}
     - target: {fileID: 5571130920343903277, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}
