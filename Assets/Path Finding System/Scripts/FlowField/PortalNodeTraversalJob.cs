@@ -373,14 +373,20 @@ public struct PortalNodeTraversalJob : IJob
             WindowNode winNode = WindowNodes[windowIndex];
             int sec1Index = WinToSecPtrs[winNode.WinToSecPtr];
             int sec2Index = WinToSecPtrs[winNode.WinToSecPtr + 1];
-            if (SectorToPicked[sec1Index] != 0) { continue; }
-            SectorToPicked[sec1Index] = pickedSectorAmount * sectorTileAmount + 1;
-            PickedToSector.Add(sec1Index);
-            pickedSectorAmount++;
-            if (SectorToPicked[sec2Index] != 0) { continue; }
-            SectorToPicked[sec2Index] = pickedSectorAmount * sectorTileAmount + 1;
-            PickedToSector.Add(sec2Index);
-            pickedSectorAmount++;
+            if (SectorToPicked[sec1Index] == 0)
+            {
+                SectorToPicked[sec1Index] = pickedSectorAmount * sectorTileAmount + 1;
+                PickedToSector.Add(sec1Index);
+                pickedSectorAmount++;
+            }
+            
+            if (SectorToPicked[sec2Index] == 0)
+            {
+                SectorToPicked[sec2Index] = pickedSectorAmount * sectorTileAmount + 1;
+                PickedToSector.Add(sec2Index);
+                pickedSectorAmount++;
+            }
+            
         }
         SectorToPicked[_targetSectorIndex1d] = pickedSectorAmount * sectorTileAmount + 1;
         PickedToSector.Add(_targetSectorIndex1d);

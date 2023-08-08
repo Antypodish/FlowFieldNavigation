@@ -228,10 +228,6 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
                 };
                 return;
             }
-            if(lastWaypoint.index == -1)
-            {
-                UnityEngine.Debug.Log(source1d);
-            }
             Waypoint newWaypoint = GetNextWaypointCandidate(source1d, lastWaypoint.index, targetGeneral1d, flowField, sectorToPicked);
 
             while (newWaypoint.index != -1 && IsInLOS(newWaypoint.position, lastWaypoint, sourcePos))

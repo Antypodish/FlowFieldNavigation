@@ -351,14 +351,20 @@ public struct PortalNodeAdditionTraversalJob : IJob
             WindowNode winNode = WindowNodes[windowIndex];
             int sec1Index = WinToSecPtrs[winNode.WinToSecPtr];
             int sec2Index = WinToSecPtrs[winNode.WinToSecPtr + 1];
-            if (SectorToPicked[sec1Index] != 0) { continue; }
-            SectorToPicked[sec1Index] = newSectorCount * sectorTileAmount + existingPickedFieldLength;
-            PickedToSector.Add(sec1Index);
-            newSectorCount++;
-            if (SectorToPicked[sec2Index] != 0) { continue; }
-            SectorToPicked[sec2Index] = newSectorCount * sectorTileAmount + existingPickedFieldLength;
-            PickedToSector.Add(sec2Index);
-            newSectorCount++;
+            if (SectorToPicked[sec1Index] == 0)
+            {
+                SectorToPicked[sec1Index] = newSectorCount * sectorTileAmount + existingPickedFieldLength;
+                PickedToSector.Add(sec1Index);
+                newSectorCount++;
+            }
+            
+            if (SectorToPicked[sec2Index] == 0)
+            {
+                SectorToPicked[sec2Index] = newSectorCount * sectorTileAmount + existingPickedFieldLength;
+                PickedToSector.Add(sec2Index);
+                newSectorCount++;
+            }
+            
         }
         NewFlowFieldLength[0] = newSectorCount * sectorTileAmount + existingPickedFieldLength;
     }
