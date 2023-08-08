@@ -101,11 +101,12 @@ public struct LocalAvoidanceJob : IJobParallelFor
             float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
             float distance = math.distance(matePos, agentPos);
             float seperationRadius = (agentRadius + mateData.Radius) + SeperationRangeAddition;
-            if (distance > seperationRadius) { continue; }
+            if (distance >= seperationRadius) { continue; }
             float overlapping = seperationRadius - distance;
             float multiplier = overlapping * SeperationMultiplier;
-            float2 push = math.select(math.normalize(agentPos - matePos) * multiplier, 0, overlapping == 0);
-            push = math.select(push, math.normalize(new float2(i, 1)), agentPos.Equals(matePos));
+            float2 push = (agentPos - matePos) * multiplier;
+            push = math.select(push, new float2(i, 1), agentPos.Equals(matePos) && agentIndex < i);
+            push = math.normalizesafe(push);
             totalSeperation += push;
         }
         if (totalSeperation.Equals(0)) { return desiredDirection; }
