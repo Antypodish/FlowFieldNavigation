@@ -4,6 +4,7 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UIElements;
 
 [BurstCompile]
@@ -39,10 +40,10 @@ public struct LocalAvoidanceJob : IJobParallelFor
         }
         else
         {
-            AgentDirections[index] = GetPushinfForceNew(agentPos, agentData.Radius, index, agentData.Flow);
+            AgentDirections[index] = GetStoppedSeperationNew(agentPos, agentData.Radius, index, agentData.Flow);
         }
     }
-    
+
     float2 GetSeperationNew(float2 agentPos, float agentRadius, int pathId, int agentIndex, float2 desiredDirection)
     {
         float2 totalSeperation = 0;
@@ -91,7 +92,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
         }
         return newVelocity;
     }
-    float2 GetPushinfForceNew(float2 agentPos, float agentRadius, int agentIndex, float2 desiredDirection)
+    float2 GetStoppedSeperationNew(float2 agentPos, float agentRadius, int agentIndex, float2 desiredDirection)
     {
         float2 totalSeperation = 0;
         for (int i = 0; i < AgentMovementDataArray.Length; i++)
@@ -230,6 +231,38 @@ public struct LocalAvoidanceJob : IJobParallelFor
         float2 steering = (seperationDirection - desiredDirection) * math.select(_flockmateSeperationMultiplier, _foreignSeperationMultiplier, foreign);
         float2 newDirection = math.select(math.normalize(desiredDirection + steering), 0f, desiredDirection.Equals(-steering));
         return newDirection;
+    }
+    float2 GetPush(float2 agentPos, float agentRadius, int pathId, int agentIndex, float2 desiredDirection)
+    {
+        float2 totalSeperation = 0;
+        for (int i = 0; i < AgentMovementDataArray.Length; i++)
+        {
+            AgentMovementData mateData = AgentMovementDataArray[i];
+            if (i == agentIndex) { continue; }
+            if ((mateData.Status & AgentStatus.Moving) != AgentStatus.Moving) { continue; }
+
+            float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
+            float distance = math.distance(matePos, agentPos);
+
+            float seperationRadius = (agentRadius + mateData.Radius) + SeperationRangeAddition;
+            if (mateData.PathId != pathId) { continue; }
+            if (distance > seperationRadius) { continue; }
+
+            float dot = math.dot(desiredDirection, matePos - agentPos);
+            if (dot >= 0) { continue; }
+            float mateRelativeDirection = math.dot(desiredDirection, mateData.Flow);
+            if (mateRelativeDirection <= 0.3f) { continue; }
+
+            float overlapping = seperationRadius - distance;
+            if (overlapping < 0.5f) { continue; }
+            float multiplier = overlapping * SeperationMultiplier;
+            totalSeperation += math.select(math.normalize(agentPos - matePos) * multiplier, 0, agentPos.Equals(matePos) || overlapping == 0);
+        }
+        if (totalSeperation.Equals(0)) { return desiredDirection; }
+        totalSeperation = math.normalize(totalSeperation);
+        float2 newVelocity = desiredDirection + totalSeperation;
+        newVelocity = math.select(newVelocity, math.normalize(newVelocity), math.length(newVelocity) > 1);
+        return newVelocity;
     }
     /*
     //LEGACY ALGORITHMS
