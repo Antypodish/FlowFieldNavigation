@@ -88,6 +88,18 @@ public class AgentDataContainer
         data.Status |= AgentStatus.Moving;
         AgentDataList[agentIndex] = data;
     }
+    public void SetHoldGround(int agentIndex)
+    {
+        AgentData data = AgentDataList[agentIndex];
+        data.Status |= AgentStatus.HoldGround;
+        AgentDataList[agentIndex] = data;
+    }
+    public void ClearHoldGround(int agentIndex)
+    {
+        AgentData data = AgentDataList[agentIndex];
+        data.Status = ~(~data.Status | AgentStatus.HoldGround);
+        AgentDataList[agentIndex] = data;
+    }
     public void SetDirection(int agentIndex, Vector2 direction)
     {
         AgentData data = AgentDataList[agentIndex];
@@ -125,6 +137,15 @@ public struct AgentData
     public Waypoint waypoint;
 
     public int StopDistanceIndex;
+
+    public void SetStatusBit(AgentStatus status)
+    {
+        Status |= status;
+    }
+    public void ClearStatusBit(AgentStatus status)
+    {
+        Status = ~(~Status | status);
+    }
 }
 public struct AgentPath
 {
@@ -135,5 +156,5 @@ public struct AgentPath
 public enum AgentStatus : byte
 {
     Moving = 1,
-    OutOfField = 2,
+    HoldGround = 2,
 }

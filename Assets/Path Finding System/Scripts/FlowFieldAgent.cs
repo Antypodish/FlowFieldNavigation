@@ -31,8 +31,6 @@ public class FlowFieldAgent : MonoBehaviour
         Vector3 newLookDirection = Vector3.MoveTowards(curDirection, direction3d, 0.1f);
         newLookDirection.y = 0f;
         transform.LookAt(position + newLookDirection);
-
-
     }
     public void SetPath(Path path)
     {
@@ -53,7 +51,17 @@ public class FlowFieldAgent : MonoBehaviour
     }
     public void Mobilize()
     {
+        ClearHoldGround();
         _pathfindingManager.AgentDataContainer.Mobilize(AgentDataIndex);
+    }
+    public void SetHoldGround()
+    {
+        Stop();
+        _pathfindingManager.AgentDataContainer.SetHoldGround(AgentDataIndex);
+    }
+    public void ClearHoldGround()
+    {
+        _pathfindingManager.AgentDataContainer.ClearHoldGround(AgentDataIndex);
     }
     public void SetSpeed(float newSpeed) { Speed = newSpeed; _pathfindingManager.AgentDataContainer.SetSpeed(AgentDataIndex, newSpeed); }
 }

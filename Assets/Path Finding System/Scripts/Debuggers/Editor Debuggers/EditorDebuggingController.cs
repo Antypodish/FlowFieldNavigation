@@ -29,7 +29,8 @@ public class EditorDebuggingController : MonoBehaviour
     [Header("Agent Debugger")]
     [SerializeField] bool _debugAgentDirections;
     [SerializeField] bool _debugAgentWaypoint;
-
+    [SerializeField] bool _debugAgentsHoldingGround;
+    [SerializeField] bool _debugAgentSeperationRadius;
 
     //debuggers
     EditorSectorDebugger _sectorDebugger;
@@ -41,6 +42,8 @@ public class EditorDebuggingController : MonoBehaviour
     EditorAgentDirectionDebugger _agentDirectionDebugger;
     EditorAgentWaypointDebugger _agentWaypointDebugger;
     EditorCostFieldDebugger _costFieldDebugger;
+    EditorHoldGroundDebugger _holdGroundDebugger;
+    EditorAgentRadiusDebugger _agentRadiusDebugger;
     private void Start()
     {
         _sectorDebugger = new EditorSectorDebugger(_pathfindingManager);
@@ -51,6 +54,8 @@ public class EditorDebuggingController : MonoBehaviour
         _agentDirectionDebugger = new EditorAgentDirectionDebugger(_pathfindingManager);
         _agentWaypointDebugger = new EditorAgentWaypointDebugger(_pathfindingManager);
         _costFieldDebugger = new EditorCostFieldDebugger(_pathfindingManager);
+        _holdGroundDebugger = new EditorHoldGroundDebugger(_pathfindingManager);
+        _agentRadiusDebugger = new EditorAgentRadiusDebugger(_pathfindingManager);
     }
     private void Update()
     {
@@ -84,6 +89,8 @@ public class EditorDebuggingController : MonoBehaviour
         }
 
         if(_debugAgentDirections && _agentDirectionDebugger != null) { _agentDirectionDebugger.Debug(); }
+        if(_debugAgentsHoldingGround && _holdGroundDebugger != null) { _holdGroundDebugger.Debug(); }
+        if(_debugAgentSeperationRadius && _agentRadiusDebugger != null) { _agentRadiusDebugger.DebugSeperationRadius(); }
     }
 
     enum CostFieldOffset : byte

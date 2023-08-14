@@ -14,7 +14,7 @@ using UnityEditor.Rendering.Universal;
 using UnityEngine;
 using UnityEngine.Jobs;
 
-public class AgentDirectionCalculator
+public class AgentRoutineDataProducer
 {
     AgentDataContainer _agentDataContainer;
     PathfindingManager _pathfindingManager;
@@ -22,7 +22,7 @@ public class AgentDirectionCalculator
     public NativeList<AgentMovementData> AgentMovementDataList;
     public NativeList<float2> Directions;
     public UnsafeList<UnsafeList<byte>> CostFieldList;
-    public AgentDirectionCalculator(AgentDataContainer agentDataContainer, PathfindingManager pathfindingManager)
+    public AgentRoutineDataProducer(AgentDataContainer agentDataContainer, PathfindingManager pathfindingManager)
     {
         _agentDataContainer = agentDataContainer;
         _pathfindingManager = pathfindingManager;
@@ -80,7 +80,7 @@ public class AgentDirectionCalculator
                     Sector1d = 0,
                     Speed = agentDataList[i].Speed,
                     Destination = agentDataList[i].Destination,
-                    waypoint = agentDataList[i].waypoint,
+                    Waypoint = agentDataList[i].waypoint,
                     OutOfFieldFlag = false,
                     Status = agentDataList[i].Status,
                     FlowField = curPath.FlowField,
@@ -104,25 +104,4 @@ public class AgentDirectionCalculator
             AgentMovementData = AgentMovementDataList,
         };
     }
-    public void SendRoutineResultsToAgents()
-    {
-        _agentDataContainer.SendRoutineResults(Directions, AgentMovementDataList);
-    }
-}
-public struct AgentMovementData
-{
-    public float3 Position;
-    public float2 Destination;
-    public float2 Flow;
-    public Waypoint waypoint;
-    public float Speed;
-    public int Offset;
-    public float Radius;
-    public ushort Local1d;
-    public ushort Sector1d;
-    public bool OutOfFieldFlag;
-    public AgentStatus Status;
-    public UnsafeList<FlowData> FlowField;
-    public UnsafeList<int> SectorToPicked;
-    public int PathId;
 }

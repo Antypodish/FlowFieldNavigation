@@ -1,10 +1,13 @@
-﻿using Unity.Burst;
+﻿using System.IO;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Profiling.Memory.Experimental;
+using UnityEngine.Rendering;
 using UnityEngine.UIElements;
 
 [BurstCompile]
@@ -23,17 +26,17 @@ public struct LocalAvoidanceJob : IJobParallelFor
     {
         AgentMovementData agentData = AgentMovementDataArray[index];
         float2 agentPos = new float2(agentData.Position.x, agentData.Position.z);
-        bool isAgentMoving = (agentData.Status & AgentStatus.Moving) == AgentStatus.Moving;
         float2 finalDirection = agentData.Flow;
-        if (isAgentMoving)
+        if ((agentData.Status & AgentStatus.Moving) == AgentStatus.Moving)
         {
-            if (agentData.waypoint.position.Equals(agentData.Destination))
+            GetAvoidance(agentPos, agentData.Radius, agentData.PathId, index, finalDirection);
+            if (agentData.Waypoint.position.Equals(agentData.Destination))
             {
                 finalDirection = GetAlignmentDirectionToDestination(agentPos, agentData.Radius, index, finalDirection, agentData.PathId, agentData.Destination);
             }
             else
             {
-                finalDirection = GetAlignedDirectionDecreasing(agentPos, agentData.Radius, index, finalDirection, agentData.waypoint, agentData.PathId);
+                finalDirection = GetAlignedDirectionDecreasing(agentPos, agentData.Radius, index, finalDirection, agentData.Waypoint, agentData.PathId);
             }
             finalDirection = GetSeperationNew(agentPos, agentData.Radius, agentData.PathId, index, finalDirection);
             AgentDirections[index] = finalDirection;
@@ -43,7 +46,66 @@ public struct LocalAvoidanceJob : IJobParallelFor
             AgentDirections[index] = GetStoppedSeperationNew(agentPos, agentData.Radius, index, agentData.Flow);
         }
     }
+    void GetAvoidance(float2 agentPos, float agentRadius, int pathId, int agentIndex, float2 desiredDirection)
+    {
+        for(int i = 0; i < AgentMovementDataArray.Length; i++)
+        {
+            AgentMovementData mateData = AgentMovementDataArray[i];
+            if(i== agentIndex) { continue; }
+            if((mateData.Status & AgentStatus.HoldGround) != AgentStatus.HoldGround) { continue; }
 
+            float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
+            float distance = math.distance(matePos, agentPos);
+
+            float obstacleDetectionRange = (agentRadius + mateData.Radius) + 1f;
+
+            if (distance > obstacleDetectionRange) { continue; }
+
+            float dot = math.dot(desiredDirection, matePos - agentPos);
+            if (dot <= 0) { continue; }
+
+            DetectObstacle(i, 2.5f);
+            return;
+        }
+    }
+    void DetectObstacle(int startAgentIndex, float maxDistance)
+    {
+        NativeList<int> detectedAgents = new NativeList<int>(Allocator.Temp);
+        NativeQueue<int> neighbours = new NativeQueue<int>(Allocator.Temp);
+
+        detectedAgents.Add(startAgentIndex);
+        neighbours.Enqueue(startAgentIndex);
+        AgentMovementData agentData = AgentMovementDataArray[startAgentIndex];
+        GetNeighbourAgents(startAgentIndex, new float2(agentData.Position.x, agentData.Position.z), maxDistance, detectedAgents, neighbours);
+
+        while (!neighbours.IsEmpty())
+        {
+            int agentIndex = neighbours.Dequeue();
+            agentData = AgentMovementDataArray[agentIndex];
+            GetNeighbourAgents(agentIndex, new float2(agentData.Position.x, agentData.Position.z), maxDistance, detectedAgents, neighbours);
+        }
+
+        UnityEngine.Debug.Log(detectedAgents.Length);
+    }
+    void GetNeighbourAgents(int agentIndex, float2 agentPos, float maxDistance, NativeList<int> detectedList, NativeQueue<int> neighbours)
+    {
+        for(int i = 0; i < AgentMovementDataArray.Length; i++)
+        {
+            AgentMovementData mateData = AgentMovementDataArray[i];
+            if (i == agentIndex) { continue; }
+            if ((mateData.Status & AgentStatus.HoldGround) != AgentStatus.HoldGround) { continue; }
+
+            float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
+            float distance = math.distance(matePos, agentPos);
+
+            if (distance > maxDistance) { continue; }
+            if (!detectedList.Contains(i))
+            {
+                detectedList.Add(i);
+                neighbours.Enqueue(i);
+            }
+        }
+    }
     float2 GetSeperationNew(float2 agentPos, float agentRadius, int pathId, int agentIndex, float2 desiredDirection)
     {
         float2 totalSeperation = 0;
@@ -127,7 +189,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
 
             if (i == agentIndex) { continue; }
             if (mateDirection.Equals(0)) { continue; }
-            if (!mateData.waypoint.position.Equals(agentWaypoint.position)) { continue; }
+            if (!mateData.Waypoint.position.Equals(agentWaypoint.position)) { continue; }
             if (pathId != mateData.PathId) { continue; }
 
             float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
@@ -162,7 +224,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
 
             if (i == agentIndex) { continue; }
             if (mateDirection.Equals(0)) { continue; }
-            if (!mateData.waypoint.position.Equals(destination)) { continue; }
+            if (!mateData.Waypoint.position.Equals(destination)) { continue; }
             if (pathId != mateData.PathId) { continue; }
 
             float mateRelativeDirection = math.dot(desiredDirection, mateDirection);

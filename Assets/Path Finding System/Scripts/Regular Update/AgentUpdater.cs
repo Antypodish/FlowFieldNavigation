@@ -42,7 +42,8 @@ public class AgentUpdater
                     if (agentPath.CurPath != null) { agentPath.CurPath.Unsubscribe(); }
                     agentPath.CurPath = agentPath.NewPath;
                     data.Destination = agentPath.NewPath.Destination;
-                    data.Status |= AgentStatus.Moving;
+                    data.SetStatusBit(AgentStatus.Moving);
+                    data.ClearStatusBit(AgentStatus.HoldGround);
                     agentPath.NewPath = null;
                     pathList[i] = agentPath;
                     agentDataList[i] = data;

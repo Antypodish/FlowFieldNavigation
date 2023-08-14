@@ -128,7 +128,7 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
         //DATA TABLE
         UnsafeList<byte> costField = CostFields[data.Offset];
         int targetGeneral1d = To1D(PosTo2D(data.Destination, tileSize), fieldColAmount);
-        Waypoint currentWaypoint = data.waypoint;
+        Waypoint currentWaypoint = data.Waypoint;
         int curGeneral1d = To1D(general2d, fieldColAmount);
         float2 curTilePos = IndexToPos(curGeneral1d, tileSize, fieldColAmount);
         float2 agentPos = new float2(data.Position.x, data.Position.z);
@@ -141,7 +141,7 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
             if(startingFlow == FlowData.None)
             {
                 data.Flow = 0;
-                data.waypoint = new Waypoint()
+                data.Waypoint = new Waypoint()
                 {
                     position = agentPos,
                     index = curGeneral1d,
@@ -173,7 +173,7 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
         //CALCULATE FLOW
         float2 flow = math.select(math.normalize(currentWaypoint.position - agentPos), 0, currentWaypoint.position == agentPos);
         data.Flow = flow;
-        data.waypoint = currentWaypoint;
+        data.Waypoint = currentWaypoint;
         AgentMovementData[index] = data;
 
         Waypoint GetBestWaypoint(Waypoint oldWaypoint, Waypoint newWaypoint, int sourceIndex, int targetGeneral1d)

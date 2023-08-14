@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Unity.Collections;
 using Unity.Jobs;
+using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine.Jobs;
@@ -10,7 +11,7 @@ using UnityEngine.Jobs;
 public class RoutineSchedulingTree
 {
     PathfindingManager _pathfindingManager;
-    AgentDirectionCalculator _dirCalculator;
+    AgentRoutineDataProducer _dirCalculator;
 
     List<PathHandle> _pathProdCalcHandles;
     NativeList<JobHandle> _pathAdditionHandles;
@@ -24,7 +25,7 @@ public class RoutineSchedulingTree
     public RoutineSchedulingTree(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
-        _dirCalculator = new AgentDirectionCalculator(pathfindingManager.AgentDataContainer, pathfindingManager);
+        _dirCalculator = new AgentRoutineDataProducer(pathfindingManager.AgentDataContainer, pathfindingManager);
 
         _porTravHandles = new List<PathHandle>();
         _porAddTravHandles = new List<PathHandle>();
@@ -153,18 +154,6 @@ public class RoutineSchedulingTree
             _movDataCalcHandle.Clear();
         }
 
-        if(_avoidanceHandle.Count != 0 && _avoidanceHandle[0].IsCompleted)
-        {
-            _avoidanceHandle[0].Complete();
-            _avoidanceHandle.Clear();
-        }
-        
-        if(_colCalculationHandle.Count != 0 && _colCalculationHandle[0].IsCompleted)
-        {
-            _colCalculationHandle[0].Complete();
-            _colCalculationHandle.Clear();
-        }
-
         //HANDLE PORTAL ADD TRAVERSALS
         for (int i = _porAddTravHandles.Count - 1; i >= 0; i--)
         {
@@ -247,6 +236,13 @@ public class RoutineSchedulingTree
         _pathAdditionHandles.Clear();
 
         //SEND DIRECTIONS
-        _dirCalculator.SendRoutineResultsToAgents();
+        SendRoutineResultsToAgents();
+    }
+    public void SendRoutineResultsToAgents()
+    {
+        NativeArray<float2> directions = _dirCalculator.Directions;
+        NativeArray<AgentMovementData> agentMovementDataList = _dirCalculator.AgentMovementDataList;
+
+        _pathfindingManager.AgentDataContainer.SendRoutineResults(directions, agentMovementDataList);
     }
 }

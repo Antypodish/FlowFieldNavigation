@@ -73,6 +73,13 @@ public class AgentSelectionController : MonoBehaviour
                 SelectedAgents[i].Stop();
             }
         }
+        if (Input.GetKeyDown(KeyCode.H))
+        {
+            for (int i = 0; i < SelectedAgents.Count; i++)
+            {
+                SelectedAgents[i].SetHoldGround();
+            }
+        }
         if (_state == ControllerState.SingleSelection)
         {
             if (Input.GetMouseButtonDown(0))
