@@ -11,10 +11,15 @@ public struct AgentMovementData
     public int Offset;
     public float Radius;
     public ushort Local1d;
-    public ushort Sector1d;
-    public bool OutOfFieldFlag;
     public AgentStatus Status;
+    public AvoidanceStatus Avoidance;
+    public AgentRoutineStatus RoutineStatus;
     public UnsafeList<FlowData> FlowField;
     public UnsafeList<int> SectorToPicked;
     public int PathId;
+}
+public enum AgentRoutineStatus : byte
+{
+    None = 0,
+    Traversed = 1,
 }

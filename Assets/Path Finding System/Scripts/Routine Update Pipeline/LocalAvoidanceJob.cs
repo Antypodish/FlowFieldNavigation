@@ -11,101 +11,184 @@ using UnityEngine.Rendering;
 using UnityEngine.UIElements;
 
 [BurstCompile]
-public struct LocalAvoidanceJob : IJobParallelFor
+public struct LocalAvoidanceJob : IJob
 {
     public float MovingForeignFlockSeperationRangeMultiplier;
     public float SeperationRangeAddition;
     public float SeperationMultiplier;
     public float AlignmentRadiusMultiplier;
     public float AlignmentDecreaseStartDistance;
-    [ReadOnly] public NativeArray<AgentMovementData> AgentMovementDataArray;
+    public NativeArray<AgentMovementData> AgentMovementDataArray;
     public NativeArray<float2> AgentDirections;
     
 
-    public void Execute(int index)
+    public void Execute()
     {
-        AgentMovementData agentData = AgentMovementDataArray[index];
+        for(int index = 0; index < AgentMovementDataArray.Length; index++)
+        {
+            AgentMovementData agentData = AgentMovementDataArray[index];
+            float2 agentPos = new float2(agentData.Position.x, agentData.Position.z);
+            float2 finalDirection = agentData.Flow;
+            if ((agentData.Status & AgentStatus.Moving) == AgentStatus.Moving)
+            {
+                if(!GetAvoidance(agentData, index, finalDirection, out finalDirection))
+                {
+                    agentData.Avoidance = 0;
+                    AgentMovementDataArray[index] = agentData;
+                }
+                if (agentData.Waypoint.position.Equals(agentData.Destination))
+                {
+                    finalDirection = GetAlignmentDirectionToDestination(agentPos, agentData.Radius, index, finalDirection, agentData.PathId, agentData.Destination);
+                }
+                else
+                {
+                    finalDirection = GetAlignedDirectionDecreasing(agentPos, agentData.Radius, index, finalDirection, agentData.Waypoint, agentData.PathId);
+                }
+                finalDirection = GetSeperationNew(agentPos, agentData.Radius, agentData.PathId, index, finalDirection);
+                AgentDirections[index] = finalDirection;
+            }
+            else if ((agentData.Status & AgentStatus.HoldGround) != AgentStatus.HoldGround)
+            {
+                AgentDirections[index] = GetStoppedSeperationNew(agentPos, agentData.Radius, index, agentData.Flow);
+            }
+        }
+
+    }
+    bool GetAvoidance(AgentMovementData agentData, int agentIndex, float2 desiredDirection, out float2 finalDirection)
+    {
+        finalDirection = desiredDirection;
         float2 agentPos = new float2(agentData.Position.x, agentData.Position.z);
-        float2 finalDirection = agentData.Flow;
-        if ((agentData.Status & AgentStatus.Moving) == AgentStatus.Moving)
+        float agentRadius = agentData.Radius;
+        NativeArray<AgentMovementData> agentMovementDataArray = AgentMovementDataArray;
+        if (agentData.Avoidance == AvoidanceStatus.None)
         {
-            GetAvoidance(agentPos, agentData.Radius, agentData.PathId, index, finalDirection);
-            if (agentData.Waypoint.position.Equals(agentData.Destination))
+            for (int i = 0; i < agentMovementDataArray.Length; i++)
             {
-                finalDirection = GetAlignmentDirectionToDestination(agentPos, agentData.Radius, index, finalDirection, agentData.PathId, agentData.Destination);
+                AgentMovementData mateData = agentMovementDataArray[i];
+                if (i == agentIndex) { continue; }
+                if ((mateData.Status & AgentStatus.HoldGround) != AgentStatus.HoldGround) { continue; }
+
+                float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
+                float distance = math.distance(matePos, agentPos);
+
+                float obstacleDetectionRange = (agentRadius + mateData.Radius) + SeperationRangeAddition + 1f;
+
+                if (distance > obstacleDetectionRange) { continue; }
+
+                float dot = math.dot(desiredDirection, matePos - agentPos);
+                if (dot <= 0) { continue; }
+
+                float2 obstacleCenter = DetectObstacle(i, 2.5f);
+                agentData.Avoidance = GetAvoidanceStatus(agentPos, agentData.Waypoint.position, obstacleCenter, matePos);
+                AgentMovementDataArray[agentIndex] = agentData;
+                return true;
             }
-            else
+            return false; ;
+        }
+        else if(agentData.Avoidance == AvoidanceStatus.CW)
+        {
+            float2 totalAvoidance = 0;
+            bool holdGroundDetected = false;
+            for (int i = 0; i < agentMovementDataArray.Length; i++)
             {
-                finalDirection = GetAlignedDirectionDecreasing(agentPos, agentData.Radius, index, finalDirection, agentData.Waypoint, agentData.PathId);
+                AgentMovementData mateData = agentMovementDataArray[i];
+                if (i == agentIndex) { continue; }
+                if ((mateData.Status & AgentStatus.HoldGround) != AgentStatus.HoldGround) { continue; }
+                float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
+                float distance = math.distance(matePos, agentPos);
+                float obstacleDetectionRange = (agentRadius + mateData.Radius) + SeperationRangeAddition + 3f;
+                if (distance > obstacleDetectionRange) { continue; }
+                float2 mateDir = matePos - agentPos;
+                float dot = math.dot(desiredDirection, mateDir);
+                if (dot <= 0) { continue; }
+                float overlapping = obstacleDetectionRange - distance;
+                float2 avoidance = math.normalizesafe(new float2(mateDir.y, -mateDir.x));
+                totalAvoidance += avoidance;
+                holdGroundDetected = true;
             }
-            finalDirection = GetSeperationNew(agentPos, agentData.Radius, agentData.PathId, index, finalDirection);
-            AgentDirections[index] = finalDirection;
+            totalAvoidance = math.normalizesafe(totalAvoidance);
+            finalDirection = totalAvoidance;
+            return holdGroundDetected;
         }
-        else
+        else if(agentData.Avoidance == AvoidanceStatus.CCW)
         {
-            AgentDirections[index] = GetStoppedSeperationNew(agentPos, agentData.Radius, index, agentData.Flow);
-        }
-    }
-    void GetAvoidance(float2 agentPos, float agentRadius, int pathId, int agentIndex, float2 desiredDirection)
-    {
-        for(int i = 0; i < AgentMovementDataArray.Length; i++)
-        {
-            AgentMovementData mateData = AgentMovementDataArray[i];
-            if(i== agentIndex) { continue; }
-            if((mateData.Status & AgentStatus.HoldGround) != AgentStatus.HoldGround) { continue; }
-
-            float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
-            float distance = math.distance(matePos, agentPos);
-
-            float obstacleDetectionRange = (agentRadius + mateData.Radius) + 1f;
-
-            if (distance > obstacleDetectionRange) { continue; }
-
-            float dot = math.dot(desiredDirection, matePos - agentPos);
-            if (dot <= 0) { continue; }
-
-            DetectObstacle(i, 2.5f);
-            return;
-        }
-    }
-    void DetectObstacle(int startAgentIndex, float maxDistance)
-    {
-        NativeList<int> detectedAgents = new NativeList<int>(Allocator.Temp);
-        NativeQueue<int> neighbours = new NativeQueue<int>(Allocator.Temp);
-
-        detectedAgents.Add(startAgentIndex);
-        neighbours.Enqueue(startAgentIndex);
-        AgentMovementData agentData = AgentMovementDataArray[startAgentIndex];
-        GetNeighbourAgents(startAgentIndex, new float2(agentData.Position.x, agentData.Position.z), maxDistance, detectedAgents, neighbours);
-
-        while (!neighbours.IsEmpty())
-        {
-            int agentIndex = neighbours.Dequeue();
-            agentData = AgentMovementDataArray[agentIndex];
-            GetNeighbourAgents(agentIndex, new float2(agentData.Position.x, agentData.Position.z), maxDistance, detectedAgents, neighbours);
-        }
-
-        UnityEngine.Debug.Log(detectedAgents.Length);
-    }
-    void GetNeighbourAgents(int agentIndex, float2 agentPos, float maxDistance, NativeList<int> detectedList, NativeQueue<int> neighbours)
-    {
-        for(int i = 0; i < AgentMovementDataArray.Length; i++)
-        {
-            AgentMovementData mateData = AgentMovementDataArray[i];
-            if (i == agentIndex) { continue; }
-            if ((mateData.Status & AgentStatus.HoldGround) != AgentStatus.HoldGround) { continue; }
-
-            float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
-            float distance = math.distance(matePos, agentPos);
-
-            if (distance > maxDistance) { continue; }
-            if (!detectedList.Contains(i))
+            float2 totalAvoidance = 0;
+            bool holdGroundDetected = false;
+            for (int i = 0; i < agentMovementDataArray.Length; i++)
             {
-                detectedList.Add(i);
-                neighbours.Enqueue(i);
+                AgentMovementData mateData = agentMovementDataArray[i];
+                if (i == agentIndex) { continue; }
+                if ((mateData.Status & AgentStatus.HoldGround) != AgentStatus.HoldGround) { continue; }
+                float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
+                float distance = math.distance(matePos, agentPos);
+                float obstacleDetectionRange = (agentRadius + mateData.Radius) + SeperationRangeAddition + 3f;
+                if (distance > obstacleDetectionRange) { continue; }
+                float2 mateDir = matePos - agentPos;
+                float dot = math.dot(desiredDirection, mateDir);
+                if (dot <= 0) { continue; }
+                float overlapping = obstacleDetectionRange - distance;
+                float2 avoidance = math.normalizesafe(new float2(-mateDir.y, mateDir.x));
+                totalAvoidance += avoidance;
+                holdGroundDetected = true;
+            }
+            totalAvoidance = math.normalizesafe(totalAvoidance);
+            finalDirection = totalAvoidance;
+            return holdGroundDetected;
+        }
+        return false;
+
+
+        AvoidanceStatus GetAvoidanceStatus(float2 agentPos, float2 waypointPos, float2 obstacleCenter, float2 obstacleAgentPos)
+        {
+            float2 obstacleDirection = obstacleCenter - agentPos;
+            float2 waypointDirection = waypointPos - agentPos;
+            float dotRotated = obstacleDirection.x * -waypointDirection.y + obstacleDirection.y * waypointDirection.x;
+            return dotRotated > 0 ? AvoidanceStatus.CW : AvoidanceStatus.CCW;
+        }
+        float2 DetectObstacle(int startAgentIndex, float maxDistance)
+        {
+            float2 obstaclePos = 0;
+            int detectedAgentCount = 0;
+            NativeQueue<int> neighbours = new NativeQueue<int>(Allocator.Temp);
+
+            neighbours.Enqueue(startAgentIndex);
+
+            AgentMovementData agentData = agentMovementDataArray[startAgentIndex];
+            agentData.RoutineStatus |= AgentRoutineStatus.Traversed;
+            agentMovementDataArray[startAgentIndex] = agentData;
+
+            while (!neighbours.IsEmpty())
+            {
+                detectedAgentCount++;
+                int agentIndex = neighbours.Dequeue();
+                agentData = agentMovementDataArray[agentIndex];
+                obstaclePos += new float2(agentData.Position.x, agentData.Position.z);
+                GetNeighbourAgents(agentIndex, new float2(agentData.Position.x, agentData.Position.z), maxDistance, neighbours);
+            }
+            return obstaclePos / detectedAgentCount;
+        }
+        void GetNeighbourAgents(int agentIndex, float2 agentPos, float maxDistance, NativeQueue<int> neighbours)
+        {
+            for (int i = 0; i < agentMovementDataArray.Length; i++)
+            {
+                AgentMovementData mateData = agentMovementDataArray[i];
+                if (i == agentIndex) { continue; }
+                if ((mateData.Status & AgentStatus.HoldGround) != AgentStatus.HoldGround) { continue; }
+
+                float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
+                float distance = math.distance(matePos, agentPos);
+
+                if (distance > maxDistance) { continue; }
+                if ((mateData.RoutineStatus & AgentRoutineStatus.Traversed) != AgentRoutineStatus.Traversed)
+                {
+                    mateData.RoutineStatus |= AgentRoutineStatus.Traversed;
+                    agentMovementDataArray[i] = mateData;
+                    neighbours.Enqueue(i);
+                }
             }
         }
     }
+
     float2 GetSeperationNew(float2 agentPos, float agentRadius, int pathId, int agentIndex, float2 desiredDirection)
     {
         float2 totalSeperation = 0;

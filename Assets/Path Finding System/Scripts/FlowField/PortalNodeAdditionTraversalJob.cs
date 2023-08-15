@@ -23,7 +23,7 @@ public struct PortalNodeAdditionTraversalJob : IJob
     public NativeList<int> PickedToSector;
     public NativeArray<int> NewFlowFieldLength;
 
-    [ReadOnly] public NativeArray<AgentMovementData> AgentMovementDataArray;
+    [ReadOnly] public NativeArray<OutOfFieldStatus> AgentOutOfFieldStatusList;
     [ReadOnly] public NativeArray<SectorNode> SectorNodes;
     [ReadOnly] public NativeArray<int> SecToWinPtrs;
     [ReadOnly] public NativeArray<WindowNode> WindowNodes;
@@ -41,12 +41,12 @@ public struct PortalNodeAdditionTraversalJob : IJob
 
         //SET NEW SECTORS
         NativeList<int> newSectorIndicies = new NativeList<int>(Allocator.Temp);
-        for(int i = 0; i < AgentMovementDataArray.Length; i++)
+        for(int i = 0; i < AgentOutOfFieldStatusList.Length; i++)
         {
-            AgentMovementData movData = AgentMovementDataArray[i];
-            if(movData.OutOfFieldFlag && movData.PathId == PathId)
+            OutOfFieldStatus status = AgentOutOfFieldStatusList[i];
+            if(status.IsOutOfField && status.PathId == PathId)
             {
-                newSectorIndicies.Add(movData.Sector1d);
+                newSectorIndicies.Add(status.Sector1d);
             }
         }
 

@@ -17,6 +17,7 @@ struct RoutineResultSendJob : IJob
             AgentMovementData movementData = MovementDataArray[i];
             agentData.waypoint = agentData.Destination.Equals(movementData.Destination) ? movementData.Waypoint : new Waypoint();
             agentData.Direction = AgentDirections[i];
+            agentData.Avoidance = movementData.Avoidance;
             AgentDataArray[i] = agentData;
         }
     }

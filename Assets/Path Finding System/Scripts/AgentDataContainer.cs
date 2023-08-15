@@ -131,6 +131,7 @@ public struct AgentData
 {
     public float Speed;
     public AgentStatus Status;
+    public AvoidanceStatus Avoidance;
     public float2 Destination;
     public float2 Direction;
     public float Radius;
@@ -157,4 +158,11 @@ public enum AgentStatus : byte
 {
     Moving = 1,
     HoldGround = 2,
+}
+[Flags]
+public enum AvoidanceStatus : byte
+{
+    None = 0,
+    CW = 1,
+    CCW = 2,
 }

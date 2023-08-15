@@ -206,7 +206,7 @@ public class PathProducer
             Path = path,
         };
     }
-    public void SetPortalAdditionTraversalHandles(NativeList<AgentMovementData> movDataArray, List<PathHandle> portalAdditionTraversalHandles, JobHandle dependency)
+    public void SetPortalAdditionTraversalHandles(NativeList<OutOfFieldStatus> outOfFieldStatus, List<PathHandle> portalAdditionTraversalHandles, JobHandle dependency)
     {
         for(int i = 0; i < ProducedPaths.Count; i++)
         {
@@ -236,7 +236,7 @@ public class PathProducer
                     PickedToSector = path.PickedToSector,
                     IntegrationStartIndicies = path.IntegrationStartIndicies,
                     ExistingFlowFieldLength = path.FlowField.Length,
-                    AgentMovementDataArray = movDataArray,
+                    AgentOutOfFieldStatusList = outOfFieldStatus,
                     PathId = path.Id,
                     NewFlowFieldLength = path.NewFlowFieldLength,
                 };

@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.Jobs;
 using UnityEngine.UIElements;
 
-//[BurstCompile]
+[BurstCompile]
 public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
 {
     public float TileSize;
@@ -15,6 +15,7 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
     public int SectorColAmount;
     public int SectorMatrixColAmount;
     public NativeArray<AgentMovementData> AgentMovementData;
+    public NativeArray<OutOfFieldStatus> AgentOutOfFieldStatusList;
     [ReadOnly] public UnsafeList<UnsafeList<byte>> CostFields;
 
     public void Execute(int index, TransformAccess transform)
@@ -22,7 +23,7 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
         Waypoint(index, transform);
     }
     void Normal(int index, TransformAccess transform)
-    {
+    {/*
         AgentMovementData data = AgentMovementData[index];
         data.Position = transform.position;
         if ((data.Status & AgentStatus.Moving) != AgentStatus.Moving)
@@ -87,7 +88,7 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
                 break;
         }
         data.Flow = math.normalize(data.Flow);
-        AgentMovementData[index] = data;
+        AgentMovementData[index] = data;*/
     }
     void Waypoint(int index, TransformAccess transform)
     {
@@ -100,12 +101,7 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
         AgentMovementData data = AgentMovementData[index];
         data.Position = transform.position;
 
-        if ((data.Status & AgentStatus.Moving) != AgentStatus.Moving)
-        {
-            data.Flow = 0;
-            AgentMovementData[index] = data;
-            return;
-        }
+
         int2 sector2d = new int2((int)math.floor(data.Position.x / (SectorColAmount * TileSize)), (int)math.floor(data.Position.z / (SectorColAmount * TileSize)));
         int2 general2d = new int2((int)math.floor(data.Position.x / TileSize), (int)math.floor(data.Position.z / TileSize));
         int2 sectorStart2d = sector2d * SectorColAmount;
@@ -114,16 +110,39 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
         int sector1d = sector2d.y * SectorMatrixColAmount + sector2d.x;
 
         data.Local1d = (ushort)local1d;
-        data.Sector1d = (ushort)sector1d;
 
-        int sectorMark = data.SectorToPicked[sector1d];
-        if (sectorMark == 0)
+
+        if ((data.Status & AgentStatus.Moving) != AgentStatus.Moving)
         {
-            data.OutOfFieldFlag = true;
+            AgentOutOfFieldStatusList[index] = new OutOfFieldStatus()
+            {
+                PathId = data.PathId,
+                IsOutOfField = false,
+                Sector1d = (ushort) sector1d,
+            };
             data.Flow = 0;
             AgentMovementData[index] = data;
             return;
         }
+        int sectorMark = data.SectorToPicked[sector1d];
+        if (sectorMark == 0)
+        {
+            AgentOutOfFieldStatusList[index] = new OutOfFieldStatus()
+            {
+                PathId = data.PathId,
+                IsOutOfField = true,
+                Sector1d = (ushort) sector1d,
+            };
+            data.Flow = 0;
+            AgentMovementData[index] = data;
+            return;
+        }
+        AgentOutOfFieldStatusList[index] = new OutOfFieldStatus()
+        {
+            PathId = data.PathId,
+            IsOutOfField = false,
+            Sector1d = (ushort) sector1d,
+        };
 
         //DATA TABLE
         UnsafeList<byte> costField = CostFields[data.Offset];
@@ -147,6 +166,12 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
                     index = curGeneral1d,
                 };
                 AgentMovementData[index] = data;
+                AgentOutOfFieldStatusList[index] = new OutOfFieldStatus()
+                {
+                    PathId = data.PathId,
+                    IsOutOfField = false,
+                    Sector1d = (ushort) sector1d,
+                };
                 return;
             }
             else
@@ -175,6 +200,12 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
         data.Flow = flow;
         data.Waypoint = currentWaypoint;
         AgentMovementData[index] = data;
+        AgentOutOfFieldStatusList[index] = new OutOfFieldStatus()
+        {
+            PathId = data.PathId,
+            IsOutOfField = false,
+            Sector1d = (ushort) sector1d,
+        };
 
         Waypoint GetBestWaypoint(Waypoint oldWaypoint, Waypoint newWaypoint, int sourceIndex, int targetGeneral1d)
         {
@@ -501,45 +532,6 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
             }
             return nextIndex;
         }
-    }
-    float2 GetDirection(FlowData flowdata, out bool outOfFieldFlag, float2 destination, float2 position)
-    {
-        outOfFieldFlag = false;
-        float2 flow = 0;
-        switch (flowdata)
-        {
-            case FlowData.None:
-                outOfFieldFlag = true;
-                return 0;
-            case FlowData.LOS:
-                flow = destination - position;
-                break;
-            case FlowData.N:
-                flow = new float2(0f, 1f);
-                break;
-            case FlowData.E:
-                flow = new float2(1f, 0f);
-                break;
-            case FlowData.S:
-                flow = new float2(0f, -1f);
-                break;
-            case FlowData.W:
-                flow = new float2(-1f, 0f);
-                break;
-            case FlowData.NE:
-                flow = new float2(1f, 1f);
-                break;
-            case FlowData.SE:
-                flow = new float2(1f, -1f);
-                break;
-            case FlowData.SW:
-                flow = new float2(-1f, -1f);
-                break;
-            case FlowData.NW:
-                flow = new float2(-1f, 1f);
-                break;
-        }
-        return math.normalize(flow);
     }
 }
 public struct Waypoint

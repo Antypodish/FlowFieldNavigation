@@ -83,7 +83,7 @@ public class RoutineSchedulingTree
             AgentDirections = _dirCalculator.Directions,
             AgentMovementDataArray = _dirCalculator.AgentMovementDataList,
         };
-        JobHandle handle = avoidanceJob.Schedule(avoidanceJob.AgentDirections.Length, 256, _movDataCalcHandle[0]);
+        JobHandle handle = avoidanceJob.Schedule(_movDataCalcHandle[0]);
         _avoidanceHandle.Add(handle);
     }
     public void AddCollisionCalculationJob()
@@ -123,7 +123,7 @@ public class RoutineSchedulingTree
     }
     public void SetPortalAdditionTraversalHandles()
     {
-        _pathfindingManager.PathProducer.SetPortalAdditionTraversalHandles(_dirCalculator.AgentMovementDataList, _porAddTravHandles, _movDataCalcHandle[0]);
+        _pathfindingManager.PathProducer.SetPortalAdditionTraversalHandles(_dirCalculator.AgentOutOfFieldStatusList, _porAddTravHandles, _movDataCalcHandle[0]);
 
         if (FlowFieldUtilities.DebugMode)
         {
