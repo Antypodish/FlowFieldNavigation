@@ -1,14 +1,8 @@
-﻿using System.IO;
-using Unity.Burst;
+﻿using Unity.Burst;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
-using Unity.VisualScripting;
-using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.Profiling.Memory.Experimental;
-using UnityEngine.Rendering;
-using UnityEngine.UIElements;
 
 [BurstCompile]
 public struct LocalAvoidanceJob : IJob
@@ -31,20 +25,23 @@ public struct LocalAvoidanceJob : IJob
             float2 finalDirection = agentData.Flow;
             if ((agentData.Status & AgentStatus.Moving) == AgentStatus.Moving)
             {
-                if(!GetAvoidance(agentData, index, finalDirection, out finalDirection))
+                bool avoided = GetAvoidance(agentData, index, finalDirection, out finalDirection);
+                if (agentData.Waypoint.position.Equals(agentData.Destination) && !avoided)
                 {
                     agentData.Avoidance = 0;
                     AgentMovementDataArray[index] = agentData;
-                }
-                if (agentData.Waypoint.position.Equals(agentData.Destination))
-                {
                     finalDirection = GetAlignmentDirectionToDestination(agentPos, agentData.Radius, index, finalDirection, agentData.PathId, agentData.Destination);
                 }
-                else
+                else if(!avoided)
                 {
+                    agentData.Avoidance = 0;
+                    AgentMovementDataArray[index] = agentData;
                     finalDirection = GetAlignedDirectionDecreasing(agentPos, agentData.Radius, index, finalDirection, agentData.Waypoint, agentData.PathId);
                 }
-                finalDirection = GetSeperationNew(agentPos, agentData.Radius, agentData.PathId, index, finalDirection);
+                if((agentData.Status & AgentStatus.HoldGround)!= AgentStatus.HoldGround)
+                {
+                    finalDirection = GetSeperationNew(agentPos, agentData.Radius, agentData.PathId, index, finalDirection);
+                }
                 AgentDirections[index] = finalDirection;
             }
             else if ((agentData.Status & AgentStatus.HoldGround) != AgentStatus.HoldGround)
@@ -56,6 +53,7 @@ public struct LocalAvoidanceJob : IJob
     }
     bool GetAvoidance(AgentMovementData agentData, int agentIndex, float2 desiredDirection, out float2 finalDirection)
     {
+        UnsafeList<float2> pickedAgents = new UnsafeList<float2>(1, Allocator.Temp);
         finalDirection = desiredDirection;
         float2 agentPos = new float2(agentData.Position.x, agentData.Position.z);
         float agentRadius = agentData.Radius;
@@ -81,6 +79,7 @@ public struct LocalAvoidanceJob : IJob
                 float2 obstacleCenter = DetectObstacle(i, 2.5f);
                 agentData.Avoidance = GetAvoidanceStatus(agentPos, agentData.Waypoint.position, obstacleCenter, matePos);
                 AgentMovementDataArray[agentIndex] = agentData;
+                UnityEngine.Debug.Log(agentData.Avoidance);
                 return true;
             }
             return false; ;
@@ -99,12 +98,23 @@ public struct LocalAvoidanceJob : IJob
                 float obstacleDetectionRange = (agentRadius + mateData.Radius) + SeperationRangeAddition + 3f;
                 if (distance > obstacleDetectionRange) { continue; }
                 float2 mateDir = matePos - agentPos;
-                float dot = math.dot(desiredDirection, mateDir);
+                float dot = math.dot(desiredDirection, math.normalizesafe(mateDir));
                 if (dot <= 0) { continue; }
-                float overlapping = obstacleDetectionRange - distance;
-                float2 avoidance = math.normalizesafe(new float2(mateDir.y, -mateDir.x));
-                totalAvoidance += avoidance;
+                pickedAgents.Add(matePos);
                 holdGroundDetected = true;
+            }
+
+            if (HasGap(desiredDirection, agentPos, pickedAgents, agentRadius * 2 + SeperationRangeAddition))
+            {
+                finalDirection = desiredDirection;
+                return holdGroundDetected;
+            }
+            for(int i = 0; i < pickedAgents.Length; i++)
+            {
+                float2 matePos = pickedAgents[i];
+                float2 mateDir = matePos - agentPos;
+                float2 avoidance = math.normalizesafe(new float2(-mateDir.y, mateDir.x));
+                totalAvoidance += avoidance;
             }
             totalAvoidance = math.normalizesafe(totalAvoidance);
             finalDirection = totalAvoidance;
@@ -124,12 +134,23 @@ public struct LocalAvoidanceJob : IJob
                 float obstacleDetectionRange = (agentRadius + mateData.Radius) + SeperationRangeAddition + 3f;
                 if (distance > obstacleDetectionRange) { continue; }
                 float2 mateDir = matePos - agentPos;
-                float dot = math.dot(desiredDirection, mateDir);
+                float dot = math.dot(desiredDirection, math.normalizesafe(mateDir));
                 if (dot <= 0) { continue; }
-                float overlapping = obstacleDetectionRange - distance;
-                float2 avoidance = math.normalizesafe(new float2(-mateDir.y, mateDir.x));
-                totalAvoidance += avoidance;
+                pickedAgents.Add(matePos);
                 holdGroundDetected = true;
+            }
+
+            if (HasGap(desiredDirection, agentPos, pickedAgents, agentRadius * 2 + SeperationRangeAddition))
+            {
+                finalDirection = desiredDirection;
+                return holdGroundDetected;
+            }
+            for (int i = 0; i < pickedAgents.Length; i++)
+            {
+                float2 matePos = pickedAgents[i];
+                float2 mateDir = matePos - agentPos;
+                float2 avoidance = math.normalizesafe(new float2(mateDir.y, -mateDir.x));
+                totalAvoidance += avoidance;
             }
             totalAvoidance = math.normalizesafe(totalAvoidance);
             finalDirection = totalAvoidance;
@@ -137,13 +158,43 @@ public struct LocalAvoidanceJob : IJob
         }
         return false;
 
-
+        bool HasGap(float2 desiredDirection, float2 agentPos, UnsafeList<float2> matePositions, float desiredGap)
+        {
+            UnsafeList<float2> left = new UnsafeList<float2>(0, Allocator.Temp);
+            UnsafeList<float2> right = new UnsafeList<float2>(0, Allocator.Temp);
+            for(int i = 0; i < matePositions.Length; i++)
+            {
+                float2 matepos2d = matePositions[i];
+                float2 matetDir2d = matepos2d - agentPos;
+                float dotRotated = desiredDirection.x * -matetDir2d.y + desiredDirection.y * matetDir2d.x;
+                if(dotRotated > 0)
+                {
+                    left.Add(matepos2d);
+                }
+                else
+                {
+                    right.Add(matepos2d);
+                }
+            }
+            if(left.Length == 0 || right.Length == 0) { return true; }
+            for(int i = 0; i < left.Length; i++)
+            {
+                for(int j = 0; j < right.Length; j++)
+                {
+                    if(math.distance(left[i], right[j]) < desiredGap + 1.2f)
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
         AvoidanceStatus GetAvoidanceStatus(float2 agentPos, float2 waypointPos, float2 obstacleCenter, float2 obstacleAgentPos)
         {
             float2 obstacleDirection = obstacleCenter - agentPos;
             float2 waypointDirection = waypointPos - agentPos;
             float dotRotated = obstacleDirection.x * -waypointDirection.y + obstacleDirection.y * waypointDirection.x;
-            return dotRotated > 0 ? AvoidanceStatus.CW : AvoidanceStatus.CCW;
+            return dotRotated > 0 ? AvoidanceStatus.CCW : AvoidanceStatus.CW;
         }
         float2 DetectObstacle(int startAgentIndex, float maxDistance)
         {
@@ -197,7 +248,7 @@ public struct LocalAvoidanceJob : IJob
         {
             AgentMovementData mateData = AgentMovementDataArray[i];
             if (i == agentIndex) { continue; }
-            if ((mateData.Status & AgentStatus.Moving) != AgentStatus.Moving) { continue; }
+            if ((mateData.Status)==0) { continue; }
 
             float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
             float distance = math.distance(matePos, agentPos);
@@ -409,94 +460,4 @@ public struct LocalAvoidanceJob : IJob
         newVelocity = math.select(newVelocity, math.normalize(newVelocity), math.length(newVelocity) > 1);
         return newVelocity;
     }
-    /*
-    //LEGACY ALGORITHMS
-    float2 GetSeperatedDirection(float2 agentPos, int agentIndex, float2 desiredDirection)
-    {
-        float2 totalSeperation = 0;
-        for (int i = 0; i < AgentMovementDataArray.Length; i++)
-        {
-            AgentMovementData mateData = AgentMovementDataArray[i];
-            if (i == agentIndex) { continue; }
-            if ((mateData.Status & AgentStatus.Moving) != AgentStatus.Moving) { continue; }
-
-            float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
-            float distance = math.distance(matePos, agentPos);
-
-            if (distance > SeperationRadius * 2 * 1f) { continue; }
-
-            float dot = math.dot(desiredDirection, matePos - agentPos);
-            if (dot <= 0) { continue; }
-
-            float overlapping = SeperationRadius * 2 - distance;
-            totalSeperation += math.select(math.normalize(agentPos - matePos) * overlapping, 0, agentPos.Equals(matePos) || overlapping == 0);
-        }
-        if (totalSeperation.Equals(0)) { return desiredDirection; }
-        float2 seperationDirection = math.normalize(totalSeperation);
-        float2 steering = (seperationDirection - desiredDirection) * SeperationMultiplier;
-        float2 newDirection = math.select(math.normalize(desiredDirection + steering), 0, (desiredDirection + steering).Equals(0));
-        return newDirection;
-    }
-    float2 GetPushingForce(float2 agentPos, int agentIndex, float2 desiredDirection)
-    {
-        float2 totalSeperation = 0;
-        for (int i = 0; i < AgentMovementDataArray.Length; i++)
-        {
-            AgentMovementData mateData = AgentMovementDataArray[i];
-
-            if (i == agentIndex) { continue; }
-
-            float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
-            float distance = math.distance(matePos, agentPos);
-
-            if (distance > SeperationRadius * 2) { continue; }
-
-            float overlapping = SeperationRadius * 2 - distance;
-
-            float2 push = math.select(math.normalize(agentPos - matePos) * overlapping, 0, overlapping == 0);
-            push = math.select(push, math.normalize(new float2(i, 1)), agentPos.Equals(matePos));
-            totalSeperation += push;
-        }
-        if (totalSeperation.Equals(0)) { return desiredDirection; }
-        float2 seperationDirection = math.normalize(totalSeperation);
-        float2 steering = (seperationDirection - desiredDirection) * 0.5f;
-        float2 newDirection = math.select(math.normalize(desiredDirection + steering), 0, (desiredDirection + steering).Equals(0));
-        return newDirection;
-    }
-    float2 GetAlignedDirection(float2 agentPos, int agentIndex, float2 desiredDirection, Waypoint agentWaypoint, int pathId)
-    {
-        float2 totalHeading = 0;
-        int count = 0;
-        for (int i = 0; i < AgentMovementDataArray.Length; i++)
-        {
-            AgentMovementData mateData = AgentMovementDataArray[i];
-            float2 mateDirection = mateData.Flow;
-
-            if (i == agentIndex) { continue; }
-            if (mateDirection.Equals(0)) { continue; }
-            if (!mateData.waypoint.position.Equals(agentWaypoint.position)) { continue; }
-            if (pathId != mateData.PathId) { continue; }
-
-            float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
-
-            float mateRelativeLocation = math.dot(desiredDirection, matePos - agentPos);
-            float mateRelativeDirection = math.dot(desiredDirection, mateDirection);
-            if (mateRelativeLocation <= 0) { continue; }
-            if (mateRelativeDirection <= 0) { continue; }
-
-            float distance = math.distance(matePos, agentPos);
-
-            if (distance > AlignmentRadius * 2) { continue; }
-
-            float overlapping = AlignmentRadius * 2 - distance;
-            totalHeading += mateDirection;
-            count++;
-        }
-
-        if (totalHeading.Equals(0)) { return desiredDirection; }
-        float2 averageHeading = math.normalize(totalHeading);
-        float2 steering = (averageHeading - desiredDirection) * AlignmentMultiplier;
-        float2 newDirection = math.select(math.normalize(desiredDirection + steering), 0, (desiredDirection + steering).Equals(0));
-        return newDirection;
-    }*/
 }
