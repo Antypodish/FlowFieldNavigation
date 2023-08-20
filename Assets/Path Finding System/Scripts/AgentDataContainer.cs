@@ -165,4 +165,5 @@ public enum AvoidanceStatus : byte
     None = 0,
     CW = 1,
     CCW = 2,
+    GapFound = 4,
 }

@@ -44,6 +44,7 @@ public class AgentUpdater
                     data.Destination = agentPath.NewPath.Destination;
                     data.SetStatusBit(AgentStatus.Moving);
                     data.ClearStatusBit(AgentStatus.HoldGround);
+                    data.Avoidance = 0;
                     agentPath.NewPath = null;
                     pathList[i] = agentPath;
                     agentDataList[i] = data;
