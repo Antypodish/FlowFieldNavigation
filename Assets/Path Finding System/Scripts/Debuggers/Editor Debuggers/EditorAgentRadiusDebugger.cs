@@ -16,7 +16,7 @@ public class EditorAgentRadiusDebugger
         NativeArray<Vector3> agentPositions = _pathfindingManager.AgentDataContainer.AgentPositions;
         for(int i = 0; i < agents.Length; i++)
         {
-            Gizmos.DrawWireSphere(agentPositions[i], agents[i].Radius + BoidController.Instance.SeperationRangeAddition);
+            Gizmos.DrawWireSphere(agentPositions[i], agents[i].Radius + BoidController.Instance.SeperationRangeAddition / 2);
         }
     }
 }

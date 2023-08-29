@@ -515,7 +515,7 @@ PrefabInstance:
     - target: {fileID: 730032217079484805, guid: 020509caef94de64c94b7fd5a119b25d,
         type: 3}
       propertyPath: _debugTiles
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 730032217079484805, guid: 020509caef94de64c94b7fd5a119b25d,
         type: 3}
@@ -785,8 +785,12 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
-      propertyPath: _debugAgentSeperationRadius
+      propertyPath: _debugAvoidanceDirections
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
+      propertyPath: _debugAgentSeperationRadius
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1633507769824742795, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}
@@ -960,7 +964,7 @@ PrefabInstance:
     - target: {fileID: 8734084086652011014, guid: 5e3867b8afbc0bb49a0027ab49965980,
         type: 3}
       propertyPath: SeperationMultiplier
-      value: 7
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 8734084086652011014, guid: 5e3867b8afbc0bb49a0027ab49965980,
         type: 3}
@@ -970,7 +974,7 @@ PrefabInstance:
     - target: {fileID: 8734084086652011014, guid: 5e3867b8afbc0bb49a0027ab49965980,
         type: 3}
       propertyPath: AlignmentRangeMultiplier
-      value: 10
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 8734084086652011014, guid: 5e3867b8afbc0bb49a0027ab49965980,
         type: 3}

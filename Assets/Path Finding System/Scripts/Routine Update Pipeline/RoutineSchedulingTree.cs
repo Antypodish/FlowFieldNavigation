@@ -1,5 +1,6 @@
 ﻿using Assets.Path_Finding_System.Scripts;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using Unity.Collections;
 using Unity.Jobs;
@@ -22,6 +23,7 @@ public class RoutineSchedulingTree
     List<JobHandle> _movDataCalcHandle;
     List<JobHandle> _colCalculationHandle;
     List<JobHandle> _avoidanceHandle;
+    List<JobHandle> _collisionResolutionHandle;
     public RoutineSchedulingTree(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
@@ -34,6 +36,7 @@ public class RoutineSchedulingTree
         _pathAdditionHandles = new NativeList<JobHandle>(Allocator.Persistent);
         _colCalculationHandle = new List<JobHandle>();
         _avoidanceHandle = new List<JobHandle>();
+        _collisionResolutionHandle = new List<JobHandle>();
     }
 
     public JobHandle ScheduleCostEditRequests(List<CostFieldEditJob[]> costFieldEditRequests)
@@ -71,6 +74,16 @@ public class RoutineSchedulingTree
 
         if (FlowFieldUtilities.DebugMode) { _movDataCalcHandle[_movDataCalcHandle.Count - 1].Complete(); }
     }
+    public void AddCollisionResolutionJob()
+    {
+        CollisionResolutionJob colResJob = new CollisionResolutionJob()
+        {
+            SeperationRangeAddition = BoidController.Instance.SeperationRangeAddition,
+            AgentMovementDataArray = _dirCalculator.AgentMovementDataList,
+        };
+        JobHandle colResHandle = colResJob.Schedule(_pathfindingManager.AgentDataContainer.AgentTransforms, _movDataCalcHandle[0]);
+        _collisionResolutionHandle.Add(colResHandle);
+    }
     public void AddLocalAvoidanceJob()
     {
         LocalAvoidanceJob avoidanceJob = new LocalAvoidanceJob()
@@ -83,7 +96,7 @@ public class RoutineSchedulingTree
             AgentDirections = _dirCalculator.Directions,
             AgentMovementDataArray = _dirCalculator.AgentMovementDataList,
         };
-        JobHandle handle = avoidanceJob.Schedule(_movDataCalcHandle[0]);
+        JobHandle handle = avoidanceJob.Schedule(_collisionResolutionHandle[0]);
         _avoidanceHandle.Add(handle);
     }
     public void AddCollisionCalculationJob()
@@ -188,6 +201,13 @@ public class RoutineSchedulingTree
         {
             _movDataCalcHandle[0].Complete();
             _movDataCalcHandle.Clear();
+        }
+
+        //FORCE COMPLETE COLLISION RESOLUTION
+        if(_collisionResolutionHandle.Count != 0)
+        {
+            _collisionResolutionHandle[0].Complete();
+            _collisionResolutionHandle.Clear();
         }
 
         //FORCE COMPLETE LOCAL AVOIDANCE

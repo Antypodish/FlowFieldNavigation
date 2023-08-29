@@ -17,6 +17,7 @@ public struct AgentMovementData
     public UnsafeList<FlowData> FlowField;
     public UnsafeList<int> SectorToPicked;
     public int PathId;
+    public int ObstacleIndex;
 }
 public enum AgentRoutineStatus : byte
 {

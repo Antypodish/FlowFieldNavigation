@@ -32,6 +32,7 @@ public class PathfindingUpdateRoutine
         JobHandle costEditHandle = _schedulingTree.ScheduleCostEditRequests(_costEditRequests);
         _costEditRequests.Clear();
         _schedulingTree.AddMovementDataCalculationHandle(costEditHandle);
+        _schedulingTree.AddCollisionResolutionJob();
         _schedulingTree.AddLocalAvoidanceJob();
         _schedulingTree.AddCollisionCalculationJob();
         _schedulingTree.SetPortalAdditionTraversalHandles();

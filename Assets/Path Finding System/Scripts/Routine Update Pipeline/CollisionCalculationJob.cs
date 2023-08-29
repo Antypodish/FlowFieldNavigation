@@ -23,7 +23,7 @@ public struct CollisionCalculationJob : IJobParallelForTransform
     public void Execute(int index, TransformAccess transform)
     {
         //FOR POSITION
-        float3 agentPos = AgentMovementData[index].Position;
+        float3 agentPos = transform.position;
         float2 agentPos2d = new float2(agentPos.x, agentPos.z);
         int2 agentIndex = new int2((int)math.floor(agentPos2d.x / TileSize), (int)math.floor(agentPos2d.y / TileSize));
         int agentIndex1d = agentIndex.y * FieldColAmount + agentIndex.x;

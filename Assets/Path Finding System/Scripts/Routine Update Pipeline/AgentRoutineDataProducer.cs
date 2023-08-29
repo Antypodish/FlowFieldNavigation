@@ -69,6 +69,8 @@ public class AgentRoutineDataProducer
                     Avoidance = agentDataList[i].Avoidance,
                     RoutineStatus = 0,
                     PathId = -1,
+                    ObstacleIndex = -1,
+                    
                 };
                 AgentMovementDataList[i] = data;
             }
@@ -90,6 +92,7 @@ public class AgentRoutineDataProducer
                     SectorToPicked = curPath.SectorToPicked,
                     Offset = curPath.Offset,
                     PathId = curPath.Id,
+                    ObstacleIndex = -1,
                 };
                 AgentMovementDataList[i] = data;
             }
