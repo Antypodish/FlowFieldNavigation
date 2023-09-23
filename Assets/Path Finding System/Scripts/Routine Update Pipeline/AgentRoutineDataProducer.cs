@@ -21,7 +21,7 @@ public class AgentRoutineDataProducer
 
     public NativeList<AgentMovementData> AgentMovementDataList;
     public NativeList<OutOfFieldStatus> AgentOutOfFieldStatusList;
-    public NativeList<float2> Directions;
+    public NativeList<float2> ResultVelocities;
     public UnsafeList<UnsafeList<byte>> CostFieldList;
     public AgentRoutineDataProducer(AgentDataContainer agentDataContainer, PathfindingManager pathfindingManager)
     {
@@ -29,7 +29,7 @@ public class AgentRoutineDataProducer
         _pathfindingManager = pathfindingManager;
         AgentMovementDataList = new NativeList<AgentMovementData>(_agentDataContainer.Agents.Count, Allocator.Persistent);
         AgentOutOfFieldStatusList = new NativeList<OutOfFieldStatus>(Allocator.Persistent);
-        Directions = new NativeList<float2>(Allocator.Persistent);
+        ResultVelocities = new NativeList<float2>(Allocator.Persistent);
         CostField[] costFields = _pathfindingManager.FieldProducer.GetAllCostFields();
         CostFieldList = new UnsafeList<UnsafeList<byte>>(costFields.Length, Allocator.Persistent);
         CostFieldList.Length = costFields.Length;
@@ -47,10 +47,10 @@ public class AgentRoutineDataProducer
 
         //CLEAR
         AgentMovementDataList.Clear();
-        Directions.Clear();
+        ResultVelocities.Clear();
         AgentMovementDataList.Length = agentDataList.Length;
         AgentOutOfFieldStatusList.Length = agentDataList.Length;
-        Directions.Length = agentDataList.Length;
+        ResultVelocities.Length = agentDataList.Length;
         //FILL
         for (int i = 0; i < agentDataList.Length; i++)
         {
@@ -64,9 +64,9 @@ public class AgentRoutineDataProducer
                     Radius = agentDataList[i].Radius,
                     Local1d = 0,
                     Flow = 0,
+                    Velocity = agentDataList[i].Velocity,
                     Speed = agentDataList[i].Speed,
                     Status = agentDataList[i].Status,
-                    Avoidance = agentDataList[i].Avoidance,
                     RoutineStatus = 0,
                     PathId = -1,
                     ObstacleIndex = -1,
@@ -82,11 +82,11 @@ public class AgentRoutineDataProducer
                     Radius = agentDataList[i].Radius,
                     Local1d = 0,
                     Flow = 0,
+                    Velocity = agentDataList[i].Velocity,
                     Speed = agentDataList[i].Speed,
                     Destination = agentDataList[i].Destination,
                     Waypoint = agentDataList[i].waypoint,
                     Status = agentDataList[i].Status,
-                    Avoidance = agentDataList[i].Avoidance,
                     RoutineStatus = 0,
                     FlowField = curPath.FlowField,
                     SectorToPicked = curPath.SectorToPicked,

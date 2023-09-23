@@ -18,7 +18,7 @@ public class EditorAgentDirectionDebugger
         {
             Vector3 pos = agentPositions[i];
             pos.y = 2f;
-            Vector2 agentDirection = agentData[i].Direction;
+            Vector2 agentDirection = agentData[i].Velocity;
             Gizmos.DrawLine(pos, pos + new Vector3(agentDirection.x, 0f, agentDirection.y));
         }
     }

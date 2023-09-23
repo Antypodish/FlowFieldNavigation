@@ -18,26 +18,63 @@ internal class jobtest : MonoBehaviour
     public GameObject position;
     public GameObject desired;
 
-    
-    private void OnDrawGizmos()
+
+    private void Update()
     {/*
-        float3 pos = position.transform.position;
-        float3 des = desired.transform.position;
+        Stopwatch normal = new Stopwatch();
+        Stopwatch statik = new Stopwatch();
+        JobNormal norm = new JobNormal()
+        {
+            fun = new FuncNormal(),
+        };
+        JobStatic stat = new JobStatic();
+        normal.Start();
+        norm.Schedule().Complete();
+        normal.Stop();
+        statik.Start();
+        stat.Schedule().Complete();
+        statik.Stop();
+        UnityEngine.Debug.Log("normal:" + normal.Elapsed.TotalMilliseconds);
+        UnityEngine.Debug.Log("static:" + statik.Elapsed.TotalMilliseconds);*/
+    }
+}
+[BurstCompile]
+struct JobNormal : IJob
+{
+    public FuncNormal fun;
 
-        float3 desiredDir = des - pos;
-        desiredDir = math.normalize(desiredDir);
-
-        float3 perp1 = new float3(1, desiredDir.y, (-desiredDir.x) / desiredDir.z);
-        float3 perp2 = new float3(-1, desiredDir.y, desiredDir.x / desiredDir.z);
-        perp1 += pos;
-        perp2 += pos;
-        desired.transform.position = desiredDir + pos;
-
-        Gizmos.color = Color.red;
-        Gizmos.DrawLine(position.transform.position, desired.transform.position);
-
-        Gizmos.color = Color.blue;
-        Gizmos.DrawLine(position.transform.position, perp1);
-        Gizmos.DrawLine(position.transform.position, perp2);*/
+    public void Execute()
+    {
+        fun.Run();
+    }
+}
+struct FuncNormal
+{
+    public void Run()
+    {
+        int j = 0;
+        for(int i = 0; i < 1000000; i++)
+        {
+            j += i;
+        }
+    }
+}
+[BurstCompile]
+struct JobStatic : IJob
+{
+    public void Execute()
+    {
+        FuncStatic.Run();
+    }
+}
+struct FuncStatic
+{
+    public static void Run()
+    {
+        int j = 0;
+        for (int i = 0; i < 1000000; i++)
+        {
+            j += i;
+        }
     }
 }

@@ -11,13 +11,7 @@ namespace Assets.Path_Finding_System.Scripts
     {
         public static BoidController Instance;
 
-        [Header("Seperation")]
-        public float SeperationRangeAddition;
-        [Range(0,100)] public float SeperationMultiplier;
-        [Range(0, 10)] public float MovingForeignFlockSeperationRangeMultiplier;
-        [Header("Alignment")]
-        public float AlignmentRangeMultiplier;
-        public float AlignmentDecreaseStartDistance;
+        public float SeekMultiplier;
 
         private void Start()
         {

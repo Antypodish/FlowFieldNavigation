@@ -9,7 +9,6 @@ using UnityEngine.Jobs;
 public struct CollisionResolutionJob : IJobParallelForTransform
 {
     [ReadOnly] public NativeArray<AgentMovementData> AgentMovementDataArray;
-    public float SeperationRangeAddition;
     public void Execute(int index, TransformAccess transform)
     {
         AgentMovementData agentData = AgentMovementDataArray[index];
@@ -22,7 +21,7 @@ public struct CollisionResolutionJob : IJobParallelForTransform
             AgentMovementData mateData = AgentMovementDataArray[i];
             float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
             float mateRadius = mateData.Radius;
-            float desiredDistance = agentRadius + mateRadius + SeperationRangeAddition;
+            float desiredDistance = agentRadius + mateRadius;
             float distance = math.distance(matePos, agentPos);
             float overlapping = desiredDistance - distance;
             overlapping = math.select(overlapping, 0, overlapping < 0 || (mateData.Status & AgentStatus.HoldGround) != AgentStatus.HoldGround || index == i);

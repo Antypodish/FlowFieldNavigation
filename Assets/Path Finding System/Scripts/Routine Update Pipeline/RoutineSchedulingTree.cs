@@ -78,7 +78,6 @@ public class RoutineSchedulingTree
     {
         CollisionResolutionJob colResJob = new CollisionResolutionJob()
         {
-            SeperationRangeAddition = BoidController.Instance.SeperationRangeAddition,
             AgentMovementDataArray = _dirCalculator.AgentMovementDataList,
         };
         JobHandle colResHandle = colResJob.Schedule(_pathfindingManager.AgentDataContainer.AgentTransforms, _movDataCalcHandle[0]);
@@ -88,12 +87,8 @@ public class RoutineSchedulingTree
     {
         LocalAvoidanceJob avoidanceJob = new LocalAvoidanceJob()
         {
-            MovingForeignFlockSeperationRangeMultiplier = BoidController.Instance.MovingForeignFlockSeperationRangeMultiplier,
-            SeperationRangeAddition = BoidController.Instance.SeperationRangeAddition,
-            SeperationMultiplier = BoidController.Instance.SeperationMultiplier,
-            AlignmentDecreaseStartDistance = BoidController.Instance.AlignmentDecreaseStartDistance,
-            AlignmentRadiusMultiplier = BoidController.Instance.AlignmentRangeMultiplier,
-            AgentDirections = _dirCalculator.Directions,
+            SeekMultiplier = BoidController.Instance.SeekMultiplier,
+            AgentDirections = _dirCalculator.ResultVelocities,
             AgentMovementDataArray = _dirCalculator.AgentMovementDataList,
         };
         JobHandle handle = avoidanceJob.Schedule(_collisionResolutionHandle[0]);
@@ -112,7 +107,7 @@ public class RoutineSchedulingTree
             TileToWallObject = _pathfindingManager.FieldProducer.GetTileToWallObject(),
             WallObjectList = _pathfindingManager.FieldProducer.GetWallObjectList(),
             AgentMovementData = _dirCalculator.AgentMovementDataList,
-            AgentDirections = _dirCalculator.Directions,
+            AgentVelocities = _dirCalculator.ResultVelocities,
         };
         JobHandle collisionHandle = collisionJob.Schedule(_pathfindingManager.AgentDataContainer.AgentTransforms ,_avoidanceHandle[0]);
         _colCalculationHandle.Add(collisionHandle);
@@ -260,7 +255,7 @@ public class RoutineSchedulingTree
     }
     public void SendRoutineResultsToAgents()
     {
-        NativeArray<float2> directions = _dirCalculator.Directions;
+        NativeArray<float2> directions = _dirCalculator.ResultVelocities;
         NativeArray<AgentMovementData> agentMovementDataList = _dirCalculator.AgentMovementDataList;
 
         _pathfindingManager.AgentDataContainer.SendRoutineResults(directions, agentMovementDataList);

@@ -10,7 +10,7 @@ internal class EditorAvoidanceDirectionDebugger
     }
 
     public void Debug()
-    {
+    {/*
         NativeArray<AgentData> agents = _pathfindingManager.AgentDataContainer.AgentDataList;
         NativeArray<Vector3> positions = _pathfindingManager.AgentDataContainer.AgentPositions;
 
@@ -26,6 +26,6 @@ internal class EditorAvoidanceDirectionDebugger
                 Gizmos.color = Color.cyan;
                 Gizmos.DrawCube(positions[i], new Vector3(0.2f, 0.2f, 0.2f));
             }
-        }
+        }*/
     }
 }
