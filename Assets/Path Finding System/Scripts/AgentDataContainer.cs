@@ -92,6 +92,7 @@ public class AgentDataContainer
     {
         AgentData data = AgentDataList[agentIndex];
         data.Status |= AgentStatus.HoldGround;
+        data.Avoidance = 0;
         AgentDataList[agentIndex] = data;
     }
     public void ClearHoldGround(int agentIndex)
@@ -131,6 +132,7 @@ public struct AgentData
 {
     public float Speed;
     public AgentStatus Status;
+    public AvoidanceStatus Avoidance;
     public float2 Destination;
     public float2 Velocity;
     public float Radius;

@@ -67,9 +67,10 @@ public class AgentRoutineDataProducer
                     Velocity = agentDataList[i].Velocity,
                     Speed = agentDataList[i].Speed,
                     Status = agentDataList[i].Status,
+                    Avoidance = agentDataList[i].Avoidance,
                     RoutineStatus = 0,
                     PathId = -1,
-                    ObstacleIndex = -1,
+                    TensionPowerIndex = -1,
                     
                 };
                 AgentMovementDataList[i] = data;
@@ -87,12 +88,13 @@ public class AgentRoutineDataProducer
                     Destination = agentDataList[i].Destination,
                     Waypoint = agentDataList[i].waypoint,
                     Status = agentDataList[i].Status,
+                    Avoidance = agentDataList[i].Avoidance,
                     RoutineStatus = 0,
                     FlowField = curPath.FlowField,
                     SectorToPicked = curPath.SectorToPicked,
                     Offset = curPath.Offset,
                     PathId = curPath.Id,
-                    ObstacleIndex = -1,
+                    TensionPowerIndex = -1,
                 };
                 AgentMovementDataList[i] = data;
             }

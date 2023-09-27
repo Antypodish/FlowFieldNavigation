@@ -11,8 +11,10 @@ namespace Assets.Path_Finding_System.Scripts
     {
         public static BoidController Instance;
 
+        public float SeperationMultiplier;
+        public float SeperationRangeAddition;
         public float SeekMultiplier;
-
+        public float AlignmentMultiplier;
         private void Start()
         {
             Instance = this;

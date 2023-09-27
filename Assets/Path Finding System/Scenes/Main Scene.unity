@@ -474,6 +474,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2010554042057534776, guid: 5b8107cfe6c808547b1890d4dca1b9f7,
+        type: 3}
+      propertyPath: Speed
+      value: 5
+      objectReference: {fileID: 0}
     - target: {fileID: 2010554042057534779, guid: 5b8107cfe6c808547b1890d4dca1b9f7,
         type: 3}
       propertyPath: m_Name
@@ -774,7 +779,7 @@ PrefabInstance:
       objectReference: {fileID: 2058839523}
     - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
       propertyPath: _debugAgentDirections
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
       propertyPath: _debugObstacleAllocation
@@ -790,7 +795,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
       propertyPath: _debugAgentSeperationRadius
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1633507769824742795, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}
@@ -965,6 +970,11 @@ PrefabInstance:
         type: 3}
       propertyPath: SeperationRange
       value: 0.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 8734084086652011014, guid: 5e3867b8afbc0bb49a0027ab49965980,
+        type: 3}
+      propertyPath: AlignmentMultiplier
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8734084086652011014, guid: 5e3867b8afbc0bb49a0027ab49965980,
         type: 3}

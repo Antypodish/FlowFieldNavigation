@@ -87,8 +87,11 @@ public class RoutineSchedulingTree
     {
         LocalAvoidanceJob avoidanceJob = new LocalAvoidanceJob()
         {
+            SeperationMultiplier = BoidController.Instance.SeperationMultiplier,
+            SeperationRangeAddition = BoidController.Instance.SeperationRangeAddition,
             SeekMultiplier = BoidController.Instance.SeekMultiplier,
-            AgentDirections = _dirCalculator.ResultVelocities,
+            AlignmentMultiplier = BoidController.Instance.AlignmentMultiplier,
+            AgentVelocities = _dirCalculator.ResultVelocities,
             AgentMovementDataArray = _dirCalculator.AgentMovementDataList,
         };
         JobHandle handle = avoidanceJob.Schedule(_collisionResolutionHandle[0]);
