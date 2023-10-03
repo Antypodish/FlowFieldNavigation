@@ -31,7 +31,7 @@ public struct LocalAvoidanceJob : IJob
             float agentRadius = agentData.Radius;
             float2 agentFlow = agentData.Flow;
             float2 agentPos2 = new float2(agentData.Position.x, agentData.Position.z);
-            float2 agentCurVelocity = agentData.Velocity;
+            float2 agentCurVelocity = agentData.CurrentVelocity;
             float2 agentCurDirection = math.normalizesafe(agentCurVelocity);
             float2 seperationForce = 0;
             float2 destination = agentData.Destination;
@@ -45,7 +45,7 @@ public struct LocalAvoidanceJob : IJob
                 agentData.Avoidance = GetAvoidanceStatus(agentPos2, agentRadius, index, finalDirection);
                 if(agentData.Avoidance != 0)
                 {
-                    agentData.SplitInterval = 20;
+                    agentData.SplitInterval = 50;
                 }
             }
             if(agentData.Avoidance != 0)
@@ -90,7 +90,7 @@ public struct LocalAvoidanceJob : IJob
             }
             float2 resultingForce = finalDirection + seperationForce;
             float resultingForceMag = math.length(resultingForce);
-            agentData.Flow = math.select(resultingForce, resultingForce / resultingForceMag, resultingForceMag > 1);
+            agentData.NextDirection = math.select(resultingForce, resultingForce / resultingForceMag, resultingForceMag > 1);
             AgentMovementDataArray[index] = agentData;
         }
 
@@ -108,10 +108,10 @@ public struct LocalAvoidanceJob : IJob
                 float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
                 if(mateData.Avoidance == 0) { continue; }
 
-                float dot = math.dot(agentData.Flow, matePos - agentPos);
+                float dot = math.dot(agentData.NextDirection, matePos - agentPos);
                 if(dot < 0) { continue; }
 
-                dot = math.dot(agentData.Flow, mateData.Flow);
+                dot = math.dot(agentData.NextDirection, mateData.NextDirection);
                 //if(dot > 0) { continue; }
 
                 if(mateData.Avoidance == agentData.Avoidance) { continue; }
@@ -162,13 +162,13 @@ public struct LocalAvoidanceJob : IJob
             if(agent1Power > agent2Power)
             {
                 agent2.Avoidance = agent1.Avoidance;
-                agent2.Flow = agent1.Flow;
+                agent2.NextDirection = agent1.NextDirection;
                 AgentMovementDataArray[tension.agent2] = agent2;
             }
             else
             {
                 agent1.Avoidance = agent2.Avoidance;
-                agent1.Flow = agent2.Flow;
+                agent1.NextDirection = agent2.NextDirection;
                 AgentMovementDataArray[tension.agent1] = agent1;
             }
         }
@@ -185,7 +185,7 @@ public struct LocalAvoidanceJob : IJob
         //SEND DIRECTIONS
         for (int index = 0; index < AgentVelocities.Length; index++)
         {
-            AgentVelocities[index] = AgentMovementDataArray[index].Flow * AgentMovementDataArray[index].Speed;
+            AgentVelocities[index] = AgentMovementDataArray[index].NextDirection * AgentMovementDataArray[index].Speed;
         }
     }
     bool ExamineSplitting(ref AgentMovementData agent1, ref AgentMovementData agent2)
@@ -194,7 +194,7 @@ public struct LocalAvoidanceJob : IJob
         if(agent1.PathId != agent2.PathId) { return succesfull; }
         else if(agent1.SplitInfo > 0 && agent2.SplitInfo == 0)
         {
-            agent2.Flow = agent1.Flow;
+            agent2.NextDirection = agent1.NextDirection;
             agent2.Avoidance = agent1.Avoidance;
             agent2.SplitInterval = 0;
             agent2.SplitInfo = 50;
@@ -202,7 +202,7 @@ public struct LocalAvoidanceJob : IJob
         }
         else if (agent1.SplitInfo == 0 && agent2.SplitInfo > 0)
         {
-            agent1.Flow = agent2.Flow;
+            agent1.NextDirection = agent2.NextDirection;
             agent1.Avoidance = agent2.Avoidance;
             agent1.SplitInterval = 0;
             agent1.SplitInfo = 50;
@@ -216,22 +216,57 @@ public struct LocalAvoidanceJob : IJob
         }
         else if(agent1.SplitInterval > 0 && agent2.SplitInterval > 0)
         {
-            float2 flow1 = agent1.Flow;
-            float2 flow2 = agent2.Flow;
+            float2 nextDir1 = agent1.NextDirection;
+            float2 nextDir2 = agent2.NextDirection;
             AvoidanceStatus avoidance1 = agent1.Avoidance;
             AvoidanceStatus avoidance2 = agent2.Avoidance;
 
-            agent1.Flow = flow2;
+            agent1.NextDirection = nextDir2;
             agent1.Avoidance = avoidance2;
             agent1.SplitInterval = 0;
             agent1.SplitInfo = 50;
-            
-            agent2.Flow = flow1;
+
+            agent2.NextDirection = nextDir1;
             agent2.Avoidance = avoidance1;
             agent2.SplitInterval = 0;
             agent2.SplitInfo = 50;
 
             succesfull = true;
+            /*
+            float2 agent1Dir = agent1.NextDirection;
+            float2 agent2Dir = agent2.NextDirection;
+            float2 agent1Pos = new float2(agent1.Position.x, agent1.Position.z);
+            float2 agent2Pos = new float2(agent2.Position.x, agent2.Position.z);
+            float2 center = (agent1Pos + agent2Pos) / 2;
+            float agent1Power = 0;
+            float agent2Power = 0;
+
+            for(int i = 0; i < AgentMovementDataArray.Length; i++)
+            {
+                AgentMovementData agent = AgentMovementDataArray[i];
+                float2 agentPos = new float2(agent.Position.x, agent.Position.z);
+                if(agent.PathId != agent1.PathId) { continue; }
+                if(math.distance(center, agentPos) > 20f) { continue; }
+
+                if(math.dot(agent1Dir, agentPos - center) <= 0f && math.dot(agent.Flow, agent1Dir) >= 0f)
+                {
+                    agent1Power++;
+                }
+                if (math.dot(agent2Dir, agentPos - center) <= 0f && math.dot(agent.Flow, agent2Dir) >= 0f)
+                {
+                    agent2Power++;
+                }
+            }
+            if(agent1Power / agent2Power < 1.4f && agent1Power / agent2Power > 0.6f)
+            {
+                
+            }
+            else
+            {
+                agent1.SplitInterval = 0;
+                agent2.SplitInterval = 0;
+                succesfull = false;
+            }*/
         }
         else
         {
@@ -247,7 +282,7 @@ public struct LocalAvoidanceJob : IJob
         for (int i = 0; i < AgentMovementDataArray.Length; i++)
         {
             AgentMovementData mateData = AgentMovementDataArray[i];
-            float2 mateDirection = math.normalizesafe(mateData.Velocity);
+            float2 mateDirection = math.normalizesafe(mateData.CurrentVelocity);
 
             if (i == agentIndex) { continue; }
             if (mateDirection.Equals(0)) { continue; }
@@ -449,7 +484,7 @@ public struct LocalAvoidanceJob : IJob
             float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
             float distance = math.distance(matePos, agentPos);
 
-            float obstacleDetectionRange = (agentRadius + mateData.Radius) + SeperationRangeAddition + 0.25f;
+            float obstacleDetectionRange = (agentRadius + mateData.Radius) + SeperationRangeAddition + 0.1f;
 
             if (distance > obstacleDetectionRange) { continue; }
 

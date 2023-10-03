@@ -6,7 +6,8 @@ public struct AgentMovementData
     public float3 Position;
     public float2 Destination;
     public float2 Flow;
-    public float2 Velocity;
+    public float2 CurrentVelocity;
+    public float2 NextDirection;
     public Waypoint Waypoint;
     public float Speed;
     public int Offset;
