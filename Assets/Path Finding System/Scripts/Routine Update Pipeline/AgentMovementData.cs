@@ -19,6 +19,9 @@ public struct AgentMovementData
     public UnsafeList<int> SectorToPicked;
     public int PathId;
     public int TensionPowerIndex;
+
+    public byte SplitInterval;
+    public byte SplitInfo;
 }
 public enum AgentRoutineStatus : byte
 {

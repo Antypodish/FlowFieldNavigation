@@ -71,6 +71,8 @@ public class AgentRoutineDataProducer
                     RoutineStatus = 0,
                     PathId = -1,
                     TensionPowerIndex = -1,
+                    SplitInfo = agentDataList[i].SplitInfo,
+                    SplitInterval = agentDataList[i].SplitInterval
                     
                 };
                 AgentMovementDataList[i] = data;
@@ -95,6 +97,8 @@ public class AgentRoutineDataProducer
                     Offset = curPath.Offset,
                     PathId = curPath.Id,
                     TensionPowerIndex = -1,
+                    SplitInfo = agentDataList[i].SplitInfo,
+                    SplitInterval = agentDataList[i].SplitInterval
                 };
                 AgentMovementDataList[i] = data;
             }

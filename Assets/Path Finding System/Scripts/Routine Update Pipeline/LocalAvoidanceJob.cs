@@ -8,6 +8,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine.Analytics;
+using UnityEngine.SceneManagement;
 
 [BurstCompile]
 public struct LocalAvoidanceJob : IJob
@@ -42,6 +43,10 @@ public struct LocalAvoidanceJob : IJob
             if ((agentData.Status & AgentStatus.Moving) == AgentStatus.Moving && agentData.Avoidance == 0)
             {
                 agentData.Avoidance = GetAvoidanceStatus(agentPos2, agentRadius, index, finalDirection);
+                if(agentData.Avoidance != 0)
+                {
+                    agentData.SplitInterval = 20;
+                }
             }
             if(agentData.Avoidance != 0)
             {
@@ -67,8 +72,11 @@ public struct LocalAvoidanceJob : IJob
             //ALIGN
             if ((agentData.Status & AgentStatus.Moving) == AgentStatus.Moving && agentData.Avoidance == 0)
             {
-                
-                finalDirection = GetAlignedDirectionToDestination(agentPos2, agentRadius, index, finalDirection, destination, pathId);
+                bool b = GetAvoidanceAlignment(agentPos2, agentRadius, index, finalDirection, pathId, out finalDirection);
+                if (!b)
+                {
+                    finalDirection = GetAlignedDirectionToDestination(agentPos2, agentRadius, index, finalDirection, destination, pathId);
+                }
             }
 
             //SEPERATE
@@ -125,6 +133,14 @@ public struct LocalAvoidanceJob : IJob
             AgentMovementData agent1 = AgentMovementDataArray[tension.agent1];
             AgentMovementData agent2 = AgentMovementDataArray[tension.agent2];
 
+            bool succesfull = ExamineSplitting(ref agent1, ref agent2);
+            if (succesfull)
+            {
+                AgentMovementDataArray[tension.agent2] = agent2;
+                AgentMovementDataArray[tension.agent1] = agent1;
+                continue;
+            }
+
             int agent1Power;
             int agent2Power;
             if(agent1.TensionPowerIndex == -1)
@@ -157,11 +173,105 @@ public struct LocalAvoidanceJob : IJob
             }
         }
 
+        //DECREASE SPLIT INTERVALS AND INFO
+        for (int index = 0; index < AgentMovementDataArray.Length; index++)
+        {
+            AgentMovementData data = AgentMovementDataArray[index];
+            data.SplitInterval = (byte) math.select(data.SplitInterval - 1,0,data.SplitInterval == 0);
+            data.SplitInfo = (byte) math.select(data.SplitInfo - 1,0,data.SplitInfo == 0);
+            AgentMovementDataArray[index] = data;
+        }
+
         //SEND DIRECTIONS
-        for(int index = 0; index < AgentVelocities.Length; index++)
+        for (int index = 0; index < AgentVelocities.Length; index++)
         {
             AgentVelocities[index] = AgentMovementDataArray[index].Flow * AgentMovementDataArray[index].Speed;
         }
+    }
+    bool ExamineSplitting(ref AgentMovementData agent1, ref AgentMovementData agent2)
+    {
+        bool succesfull = false;
+        if(agent1.PathId != agent2.PathId) { return succesfull; }
+        else if(agent1.SplitInfo > 0 && agent2.SplitInfo == 0)
+        {
+            agent2.Flow = agent1.Flow;
+            agent2.Avoidance = agent1.Avoidance;
+            agent2.SplitInterval = 0;
+            agent2.SplitInfo = 50;
+            succesfull = true;
+        }
+        else if (agent1.SplitInfo == 0 && agent2.SplitInfo > 0)
+        {
+            agent1.Flow = agent2.Flow;
+            agent1.Avoidance = agent2.Avoidance;
+            agent1.SplitInterval = 0;
+            agent1.SplitInfo = 50;
+            succesfull = true;
+        }
+        else if(agent1.SplitInfo > 0 && agent2.SplitInfo > 0)
+        {
+            agent1.SplitInfo = 0;
+            agent2.SplitInfo = 0;
+            succesfull = false;
+        }
+        else if(agent1.SplitInterval > 0 && agent2.SplitInterval > 0)
+        {
+            float2 flow1 = agent1.Flow;
+            float2 flow2 = agent2.Flow;
+            AvoidanceStatus avoidance1 = agent1.Avoidance;
+            AvoidanceStatus avoidance2 = agent2.Avoidance;
+
+            agent1.Flow = flow2;
+            agent1.Avoidance = avoidance2;
+            agent1.SplitInterval = 0;
+            agent1.SplitInfo = 50;
+            
+            agent2.Flow = flow1;
+            agent2.Avoidance = avoidance1;
+            agent2.SplitInterval = 0;
+            agent2.SplitInfo = 50;
+
+            succesfull = true;
+        }
+        else
+        {
+            agent1.SplitInterval = 0;
+            agent2.SplitInterval = 0;
+            succesfull = false;
+        }
+        return succesfull;
+    }
+    bool GetAvoidanceAlignment(float2 agentPos, float agentRadius, int agentIndex, float2 desiredDirection, int pathId, out float2 finalDirection)
+    {
+        float2 totalHeading = 0;
+        for (int i = 0; i < AgentMovementDataArray.Length; i++)
+        {
+            AgentMovementData mateData = AgentMovementDataArray[i];
+            float2 mateDirection = math.normalizesafe(mateData.Velocity);
+
+            if (i == agentIndex) { continue; }
+            if (mateDirection.Equals(0)) { continue; }
+            if (pathId != mateData.PathId) { continue; }
+            if (mateData.Avoidance == 0) { continue; }
+
+            float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
+
+            float mateRelativeLocation = math.dot(desiredDirection, matePos - agentPos);
+            if (mateRelativeLocation <= 0) { continue; }
+
+            float distance = math.distance(matePos, agentPos);
+            float alignmentRadius = (agentRadius + mateData.Radius + SeperationRangeAddition) * 3f;
+            if (distance > alignmentRadius) { continue; }
+
+            totalHeading += mateDirection;
+        }
+
+        if (totalHeading.Equals(0)) { finalDirection = desiredDirection; return false; }
+        float2 averageHeading = math.normalize(totalHeading);
+        float2 steering = averageHeading - desiredDirection;
+        float2 newDirection = math.select(math.normalize(desiredDirection + steering), 0, (desiredDirection + steering).Equals(0));
+        finalDirection = newDirection;
+        return true;
     }
     int GetTensionPower(int agentIndex, AvoidanceStatus avoidance, ref UnsafeList<int> tensionPowerList)
     {

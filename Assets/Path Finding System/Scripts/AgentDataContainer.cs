@@ -138,6 +138,9 @@ public struct AgentData
     public float Radius;
     public Waypoint waypoint;
 
+    public byte SplitInterval;
+    public byte SplitInfo;
+
     public int StopDistanceIndex;
 
     public void SetStatusBit(AgentStatus status)
