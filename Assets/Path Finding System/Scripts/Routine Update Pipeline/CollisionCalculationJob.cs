@@ -19,7 +19,7 @@ public struct CollisionCalculationJob : IJobParallelForTransform
     [ReadOnly] public NativeList<float2> VertexSequence;
     [ReadOnly] public NativeList<WallObject> WallObjectList;
     [ReadOnly] public NativeList<Direction> EdgeDirections;
-    public NativeArray<float2> AgentVelocities;
+    public NativeArray<float2> AgentDirections;
     public void Execute(int index, TransformAccess transform)
     {
         //FOR POSITION
@@ -43,8 +43,7 @@ public struct CollisionCalculationJob : IJobParallelForTransform
 
 
         //FOR DIRECTION
-        float speed2d = math.length(AgentVelocities[index]);
-        float2 dir2d = math.select(0f, AgentVelocities[index] / speed2d, speed2d > 0f);
+        float2 dir2d = AgentDirections[index];
         float3 dest3d = agentPos + (new float3(dir2d.x, 0f, dir2d.y) * DeltaTime * AgentMovementData[index].Speed);
         float2 dest2d = new float2(dest3d.x, dest3d.z);
         int2 destIndex = new int2((int)math.floor(dest2d.x / TileSize), (int)math.floor(dest2d.y / TileSize));
@@ -58,7 +57,7 @@ public struct CollisionCalculationJob : IJobParallelForTransform
                 float2 seperationForce = SolveCollision(collisionOutput, dest2d, AgentMovementData[index].Radius);
                 float2 newDest2d = dest2d + seperationForce;
                 float2 newDirection = math.select(math.normalize(newDest2d - agentPos2d), 0f, agentPos2d.Equals(newDest2d));
-                AgentVelocities[index] = newDirection * speed2d;
+                AgentDirections[index] = newDirection;
             }
         }
     }

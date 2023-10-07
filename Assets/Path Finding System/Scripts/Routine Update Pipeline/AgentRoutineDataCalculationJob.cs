@@ -120,7 +120,7 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
                 IsOutOfField = false,
                 Sector1d = (ushort) sector1d,
             };
-            data.Flow = 0;
+            data.DesiredDirection = 0;
             AgentMovementData[index] = data;
             return;
         }
@@ -133,7 +133,7 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
                 IsOutOfField = true,
                 Sector1d = (ushort) sector1d,
             };
-            data.Flow = 0;
+            data.DesiredDirection = 0;
             AgentMovementData[index] = data;
             return;
         }
@@ -159,7 +159,7 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
             FlowData startingFlow = GetFlowAt(curGeneral1d, data.FlowField, data.SectorToPicked);
             if(startingFlow == FlowData.None)
             {
-                data.Flow = 0;
+                data.DesiredDirection = 0;
                 data.Waypoint = new Waypoint()
                 {
                     position = agentPos,
@@ -197,7 +197,7 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
 
         //CALCULATE FLOW
         float2 flow = math.select(math.normalize(currentWaypoint.position - agentPos), 0, currentWaypoint.position == agentPos);
-        data.Flow = flow;
+        data.DesiredDirection = flow;
         data.Waypoint = currentWaypoint;
         AgentMovementData[index] = data;
         AgentOutOfFieldStatusList[index] = new OutOfFieldStatus()

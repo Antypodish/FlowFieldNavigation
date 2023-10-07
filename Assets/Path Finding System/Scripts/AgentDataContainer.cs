@@ -38,7 +38,7 @@ public class AgentDataContainer
             Speed = agent.GetSpeed(),
             Status = 0,
             Destination = Vector2.zero,
-            Velocity = Vector2.zero,
+            Direction = Vector2.zero,
             Radius = agent.GetRadius(),
         };
         Agents.Add(agent);
@@ -104,7 +104,7 @@ public class AgentDataContainer
     public void SetDirection(int agentIndex, Vector2 direction)
     {
         AgentData data = AgentDataList[agentIndex];
-        data.Velocity = direction * math.length(data.Velocity);
+        data.Direction = direction * math.length(data.Direction);
         AgentDataList[agentIndex] = data;
     }
     public void SendRoutineResults(NativeArray<float2> agentDirections, NativeArray<AgentMovementData> movementDataArray)
@@ -113,7 +113,7 @@ public class AgentDataContainer
         {
             MovementDataArray = movementDataArray,
             AgentDataArray = AgentDataList,
-            AgentVelocities = agentDirections,
+            AgentDirections = agentDirections,
         };
         directionSetJob.Schedule().Complete();
     }
@@ -134,7 +134,8 @@ public struct AgentData
     public AgentStatus Status;
     public AvoidanceStatus Avoidance;
     public float2 Destination;
-    public float2 Velocity;
+    public float2 Direction;
+    public float2 Seperation;
     public float Radius;
     public Waypoint waypoint;
 

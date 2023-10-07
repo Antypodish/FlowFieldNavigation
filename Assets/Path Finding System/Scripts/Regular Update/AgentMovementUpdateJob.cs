@@ -17,19 +17,20 @@ public struct AgentMovementUpdateJob : IJobParallelForTransform
     public void Execute(int index, TransformAccess transform)
     {
         AgentData data = AgentDataArray[index];
-        if(data.Velocity.x == 0 && data.Velocity.y == 0){ return; }
+        if(data.Direction.x == 0 && data.Direction.y == 0){ return; }
 
         //STOP IF CLOSE ENOUGH
         float stopDistance = PathStopDistances[data.StopDistanceIndex];
         float3 pos = transform.position;
         if ((data.Status & AgentStatus.Moving) == AgentStatus.Moving && math.distance(pos, new float3(data.Destination.x, pos.y, data.Destination.y)) <= stopDistance)
         {
-            data.Velocity = 0;
+            data.Direction = 0;
             data.Status = ~(~data.Status | AgentStatus.Moving);
             AgentDataArray[index] = data;
         }
-        float3 direction = new float3(data.Velocity.x, 0f, data.Velocity.y);
-        float3 newPos = pos + (direction * DeltaTime);
+        float3 direction = new float3(data.Direction.x, 0f, data.Direction.y);
+        float3 seperation = new float3(data.Seperation.x, 0f, data.Seperation.y);
+        float3 newPos = pos + (direction + seperation) * data.Speed * DeltaTime;
         transform.position = newPos;
         AgentPositions[index] = newPos;
     }

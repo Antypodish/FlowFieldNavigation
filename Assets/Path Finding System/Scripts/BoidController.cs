@@ -15,6 +15,7 @@ namespace Assets.Path_Finding_System.Scripts
         public float SeperationRangeAddition;
         public float SeekMultiplier;
         public float AlignmentMultiplier;
+        public float AlignmentRangeAddition;
         private void Start()
         {
             Instance = this;

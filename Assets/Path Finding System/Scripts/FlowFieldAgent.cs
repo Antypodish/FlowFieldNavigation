@@ -26,11 +26,8 @@ public class FlowFieldAgent : MonoBehaviour
     {
         Vector2 direction = GetDirection();
         Vector3 position = transform.position;
-        Vector3 curDirection = transform.forward;
-        Vector3 direction3d = new Vector3(direction.x, curDirection.y, direction.y);
-        Vector3 newLookDirection = Vector3.MoveTowards(curDirection, direction3d, 0.1f);
-        newLookDirection.y = 0f;
-        transform.LookAt(position + newLookDirection);
+        Vector3 direction3d = new Vector3(direction.x, 0f, direction.y);
+        transform.LookAt(position + direction3d);
     }
     public void SetPath(Path path)
     {
@@ -43,7 +40,7 @@ public class FlowFieldAgent : MonoBehaviour
     public float GetSpeed() => Speed;
     public float GetRadius() => Radius;
     public float GetLandOffset() => LandOffset;
-    public Vector2 GetDirection() => _pathfindingManager.AgentDataContainer.AgentDataList[AgentDataIndex].Velocity;
+    public Vector2 GetDirection() => _pathfindingManager.AgentDataContainer.AgentDataList[AgentDataIndex].Direction;
     public AgentStatus GetAgentStatus() => _pathfindingManager.AgentDataContainer.AgentDataList[AgentDataIndex].Status;
     public void Stop()
     {
