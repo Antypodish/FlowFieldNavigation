@@ -1,16 +1,10 @@
-﻿using System;
-using System.Numerics;
-using System.Runtime.ConstrainedExecution;
-using System.Security.Authentication;
+﻿
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
-using UnityEditor.Rendering.Universal;
-using UnityEngine.Analytics;
-using UnityEngine.SceneManagement;
-using UnityEngine.UIElements;
+using UnityEngine;
 
 [BurstCompile]
 public struct LocalAvoidanceJob : IJob
@@ -47,13 +41,13 @@ public struct LocalAvoidanceJob : IJob
             //CHECK IF DESIRED DIRECTION IS FREE
             if(agent.Avoidance != 0 && math.dot(agent.DesiredDirection, agent.CurrentDirection) > 0)
             {
-                agent.Avoidance = IsDirectionFree(agentPos, agent.DesiredDirection, i, agent.Radius * 2 + SeperationRangeAddition, agent.Radius) ? 0 : agent.Avoidance;
+                agent.Avoidance = IsDirectionFree(agentPos, agent.DesiredDirection, i, agent.Radius, agent.Radius + 1f) ? 0 : agent.Avoidance;
             }
 
             //GET AVIODANCE DIRECTION
             if(agent.Avoidance != 0)
             {
-                float2 avoidanceDirection = GetAvoidanceDirection(agentPos, agent.CurrentDirection, agent.Radius, i, agent.Avoidance);
+                float2 avoidanceDirection = GetAvoidanceDirection(agentPos, agent.CurrentDirection, agent.Radius, i, agent.Radius + 1f, agent.Avoidance);
                 newDirectionToSteer = avoidanceDirection;
                 if (avoidanceDirection.Equals(0))
                 {
@@ -340,7 +334,7 @@ public struct LocalAvoidanceJob : IJob
             return leftDot > rightDot ? AvoidanceStatus.L : AvoidanceStatus.R;
         }
     }
-    float2 GetAvoidanceDirection(float2 agentPos, float2 currentDirection, float agentRadius, int agentIndex, AvoidanceStatus agentAvoidance)
+    float2 GetAvoidanceDirection(float2 agentPos, float2 currentDirection, float agentRadius, int agentIndex, float maxCheckRange, AvoidanceStatus agentAvoidance)
     {
         float2 closestObstaclePos = 0;
         float closestObstacleRadius = 0;
@@ -370,9 +364,9 @@ public struct LocalAvoidanceJob : IJob
         float2 destinationPoint = agentAvoidance == AvoidanceStatus.L ? GetLeftDirection(agentPos, closestObstaclePos, currentDirection, totalRadius) : GetRightDirection(agentPos, closestObstaclePos, currentDirection, totalRadius);
         return math.normalizesafe(destinationPoint - agentPos);
 
-        float2 GetLeftDirection(float2 point, float2 circleCenter, float2 agentDirection, float circleRadius)
+        float2 GetLeftDirection(float2 agentPos, float2 circleCenter, float2 agentDirection, float circleRadius)
         {
-            float2 obstacleRelativePos = circleCenter - point;
+            float2 obstacleRelativePos = circleCenter - agentPos;
             float obstacleDistance = math.length(obstacleRelativePos);
             float2 agentDirectionResized = agentDirection * obstacleDistance;
             float2 newDirection = agentDirectionResized;
@@ -385,14 +379,14 @@ public struct LocalAvoidanceJob : IJob
                 float sin = math.sqrt(1 - cos * cos);
                 newDirection = new float2(cos * obstacleRelativePos.x - sin * obstacleRelativePos.y, sin * obstacleRelativePos.x + cos * obstacleRelativePos.y) * obstacleDistance;
             }
-            float2 newWorldDirection = point + newDirection;
+            float2 newWorldDirection = agentPos + math.select(newDirection, math.normalizesafe(newDirection) * maxCheckRange, obstacleDistance > maxCheckRange);
             float2 snap = newWorldDirection - circleCenter;
             snap = math.normalizesafe(snap) * circleRadius;
             return circleCenter + snap;
         }
-        float2 GetRightDirection(float2 point, float2 circleCenter, float2 agentDirection, float circleRadius)
+        float2 GetRightDirection(float2 agentPos, float2 circleCenter, float2 agentDirection, float circleRadius)
         {
-            float2 obstacleRelativePos = circleCenter - point;
+            float2 obstacleRelativePos = circleCenter - agentPos;
             float obstacleDistance = math.length(obstacleRelativePos);
             float2 agentDirectionResized = agentDirection * obstacleDistance;
             float2 newDirection = agentDirectionResized;
@@ -406,7 +400,7 @@ public struct LocalAvoidanceJob : IJob
                 obstacleRelativePos *= -1;
                 newDirection = new float2(cos * obstacleRelativePos.x - sin * obstacleRelativePos.y, sin * obstacleRelativePos.x + cos * obstacleRelativePos.y) * obstacleDistance;
             }
-            float2 newWorldDirection = point + newDirection;
+            float2 newWorldDirection = agentPos + math.select(newDirection, math.normalizesafe(newDirection) * maxCheckRange, obstacleDistance > maxCheckRange);
             float2 snap = newWorldDirection - circleCenter;
             snap = math.normalizesafe(snap) * circleRadius;
             return circleCenter + snap;
@@ -544,41 +538,93 @@ public struct LocalAvoidanceJob : IJob
             }
         }
     }
-    bool IsDirectionFree(float2 agentPos, float2 direction, int agentIndex, float desiredGap, float agentRadius)
+    bool IsDirectionFree(float2 agentPos, float2 direction, int agentIndex, float agentRadius, float checkRange)
     {
-        UnsafeList<float2> left = new UnsafeList<float2>(0, Allocator.Temp);
-        UnsafeList<float2> right = new UnsafeList<float2>(0, Allocator.Temp);
-        for (int i = 0; i < AgentMovementDataArray.Length; i++)
+        float2 directionClampedToRange = math.normalizesafe(direction) * checkRange;
+        float2 directionPerpLeft = new float2(-directionClampedToRange.y, directionClampedToRange.x) * agentRadius;
+        float2 directionPerpRight = new float2(directionClampedToRange.y, -directionClampedToRange.x) * agentRadius;
+
+        float2 leftLinep1 = agentPos + directionPerpLeft;
+        float2 leftLinep2 = agentPos + directionClampedToRange + directionPerpLeft;
+        
+        float2 rightLinep1 = agentPos + directionPerpRight;
+        float2 rightLinep2 = agentPos + directionClampedToRange + directionPerpRight;
+
+        for(int i = 0; i < AgentMovementDataArray.Length; i++)
         {
-            float3 matePos3d = AgentMovementDataArray[i].Position;
-            float2 matepos2d = new float2(matePos3d.x, matePos3d.z);
-            if (i == agentIndex) { continue; }
-            //if(!HasStatusFlag(AgentStatus.HoldGround, AgentMovementDataArray[i].Status)) { continue; }
-            if (math.distance(matepos2d, agentPos) > agentRadius + AgentMovementDataArray[i].Radius + 2f) { continue; }
-            if (math.dot(direction, matepos2d - agentPos) < 0) { continue; }
-            float2 matetDir2d = matepos2d - agentPos;
-            float dotRotated = direction.x * -matetDir2d.y + direction.y * matetDir2d.x;
-            if (dotRotated > 0)
+            AgentMovementData mate = AgentMovementDataArray[i];
+            if (agentIndex == i) { continue; }
+            if(!HasStatusFlag(AgentStatus.HoldGround, mate.Status)) { continue; }
+            float3 matePos3 = mate.Position;
+            float2 matePos2 = new float2(matePos3.x, matePos3.z);
+            if(math.distance(agentPos, matePos2) > checkRange + mate.Radius) { continue; }
+            float2 dirFromLeft = matePos2 - leftLinep1;
+            float2 dirFromRight = matePos2 - rightLinep1;
+            bool isRightOfLeft = math.dot(leftLinep2 - leftLinep1, new float2(dirFromLeft.y, -dirFromLeft.x)) < 0;
+            bool isLeftOfRight = math.dot(rightLinep2 - rightLinep1, new float2(-dirFromRight.y, dirFromRight.x)) < 0;
+            if (Intersects(leftLinep1, leftLinep2, matePos2, mate.Radius) || Intersects(rightLinep1, rightLinep2, matePos2, mate.Radius) || (isLeftOfRight && isRightOfLeft && math.dot(direction, matePos2 - agentPos) >= 0))
             {
-                left.Add(matepos2d);
-            }
-            else
-            {
-                right.Add(matepos2d);
-            }
-        }
-        if (left.Length == 0 || right.Length == 0) { return true; }
-        for (int i = 0; i < left.Length; i++)
-        {
-            for (int j = 0; j < right.Length; j++)
-            {
-                if (math.distance(left[i], right[j]) < desiredGap + 1.2f)
-                {
-                    return false;
-                }
+                return false;
             }
         }
         return true;
+
+        
+        bool Intersects(float2 linep1, float2 linep2, float2 matePos, float mateRadius)
+        {
+            if (linep1.y == linep2.y) //M = 0
+            {
+                float2 rh = math.select(linep2, linep1, linep1.x > linep2.x);
+                float2 lh = math.select(linep2, linep1, linep1.x < linep2.x);
+                if (matePos.x < rh.x && matePos.x > lh.x)
+                {
+                    float yDistance = math.abs(lh.y - matePos.y);
+                    return yDistance <= mateRadius;
+                }
+                float lhDistance = math.distance(lh, matePos);
+                float rhDistance = math.distance(rh, matePos);
+                return rhDistance <= mateRadius || lhDistance <= mateRadius;
+            }
+            else if (linep1.x == linep2.x) //M = INFINITY
+            {
+                float2 up = math.select(linep2, linep1, linep1.y > linep2.y);
+                float2 down = math.select(linep2, linep1, linep1.y < linep2.y);
+                if (matePos.y < up.y && matePos.y > down.y)
+                {
+                    float xDistance = math.abs(down.x - matePos.x);
+                    return xDistance <= mateRadius;
+                }
+                float upDistance = math.distance(down, matePos);
+                float downDistance = math.distance(up, matePos);
+                return downDistance <= mateRadius || upDistance <= mateRadius;
+            }
+            else
+            {
+                float2 rh = math.select(linep2, linep1, linep1.x > linep2.x);
+                float2 lh = math.select(linep2, linep1, linep1.x < linep2.x);
+
+                float m1 = (rh.y - lh.y) / (rh.x - lh.x);
+                float m2 = -m1;
+
+                float c1 = rh.y - m1 * rh.x;
+                float c2 = matePos.y - m2 * matePos.x;
+
+                float x = (c2 - c1) / (2 * m1);
+                float y = (c2 - c1) / 2 + c1;
+
+                float2 intersectionPoint = new float2(x, y);
+
+                if(intersectionPoint.x <= rh.x && intersectionPoint.x >= lh.x)
+                {
+                    return math.distance(intersectionPoint, matePos) < mateRadius;
+                }
+                else
+                {
+
+                }
+                return math.distance(matePos, lh) < mateRadius || math.distance(matePos, rh) < mateRadius;
+            }
+        }
     }
     bool HasStatusFlag(AgentStatus flag, AgentStatus agentStatus)
     {

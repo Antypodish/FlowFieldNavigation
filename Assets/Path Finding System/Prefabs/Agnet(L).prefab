@@ -27,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 3857663434598705277}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 45.954, y: -54.615005, z: 96.67564}
-  m_LocalScale: {x: 2.5, y: 1, z: 2.5}
+  m_LocalScale: {x: 12.5, y: 1, z: 12.5}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4011365940578340909}
@@ -60,7 +60,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49ebfc9203a85bc4a91e89a1b4fa274f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Radius: 1.25
+  Radius: 6
   Speed: 5
   LandOffset: 1
   AgentDataIndex: 0
