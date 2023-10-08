@@ -107,13 +107,13 @@ public class AgentDataContainer
         data.Direction = direction * math.length(data.Direction);
         AgentDataList[agentIndex] = data;
     }
-    public void SendRoutineResults(NativeArray<float2> agentDirections, NativeArray<AgentMovementData> movementDataArray)
+    public void SendRoutineResults(NativeArray<RoutineResult> routineResults, NativeArray<AgentMovementData> movementDataArray)
     {
         RoutineResultSendJob directionSetJob = new RoutineResultSendJob()
         {
             MovementDataArray = movementDataArray,
             AgentDataArray = AgentDataList,
-            AgentDirections = agentDirections,
+            RoutineResultArray = routineResults,
         };
         directionSetJob.Schedule().Complete();
     }

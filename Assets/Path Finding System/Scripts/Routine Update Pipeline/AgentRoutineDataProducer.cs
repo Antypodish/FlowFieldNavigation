@@ -21,7 +21,7 @@ public class AgentRoutineDataProducer
 
     public NativeList<AgentMovementData> AgentMovementDataList;
     public NativeList<OutOfFieldStatus> AgentOutOfFieldStatusList;
-    public NativeList<float2> ResultDirections;
+    public NativeList<RoutineResult> RoutineResults;
     public UnsafeList<UnsafeList<byte>> CostFieldList;
     public AgentRoutineDataProducer(AgentDataContainer agentDataContainer, PathfindingManager pathfindingManager)
     {
@@ -29,7 +29,7 @@ public class AgentRoutineDataProducer
         _pathfindingManager = pathfindingManager;
         AgentMovementDataList = new NativeList<AgentMovementData>(_agentDataContainer.Agents.Count, Allocator.Persistent);
         AgentOutOfFieldStatusList = new NativeList<OutOfFieldStatus>(Allocator.Persistent);
-        ResultDirections = new NativeList<float2>(Allocator.Persistent);
+        RoutineResults = new NativeList<RoutineResult>(Allocator.Persistent);
         CostField[] costFields = _pathfindingManager.FieldProducer.GetAllCostFields();
         CostFieldList = new UnsafeList<UnsafeList<byte>>(costFields.Length, Allocator.Persistent);
         CostFieldList.Length = costFields.Length;
@@ -47,10 +47,10 @@ public class AgentRoutineDataProducer
 
         //CLEAR
         AgentMovementDataList.Clear();
-        ResultDirections.Clear();
+        RoutineResults.Clear();
         AgentMovementDataList.Length = agentDataList.Length;
         AgentOutOfFieldStatusList.Length = agentDataList.Length;
-        ResultDirections.Length = agentDataList.Length;
+        RoutineResults.Length = agentDataList.Length;
         //FILL
         for (int i = 0; i < agentDataList.Length; i++)
         {
@@ -65,7 +65,6 @@ public class AgentRoutineDataProducer
                     Local1d = 0,
                     DesiredDirection = 0,
                     SeperationForce = 0,
-                    NextDirection = 0,
                     CurrentDirection = agentDataList[i].Direction,
                     Speed = agentDataList[i].Speed,
                     Status = agentDataList[i].Status,
@@ -88,7 +87,6 @@ public class AgentRoutineDataProducer
                     Local1d = 0,
                     DesiredDirection = 0,
                     SeperationForce = 0,
-                    NextDirection = 0,
                     CurrentDirection = agentDataList[i].Direction,
                     Speed = agentDataList[i].Speed,
                     Destination = agentDataList[i].Destination,

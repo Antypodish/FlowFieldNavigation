@@ -7,20 +7,21 @@ using Unity.Mathematics;
 struct RoutineResultSendJob : IJob
 {
     [ReadOnly] public NativeArray<AgentMovementData> MovementDataArray;
-    [ReadOnly] public NativeArray<float2> AgentDirections;
+    [ReadOnly] public NativeArray<RoutineResult> RoutineResultArray;
     public NativeArray<AgentData> AgentDataArray;
     public void Execute()
     {
-        for (int i = 0; i < AgentDirections.Length; i++)
+        for (int i = 0; i < RoutineResultArray.Length; i++)
         {
             AgentData agentData = AgentDataArray[i];
             AgentMovementData movementData = MovementDataArray[i];
+            RoutineResult result = RoutineResultArray[i];
             agentData.waypoint = agentData.Destination.Equals(movementData.Destination) ? movementData.Waypoint : new Waypoint();
-            agentData.Direction = AgentDirections[i];
-            agentData.Seperation = movementData.SeperationForce;
-            agentData.Avoidance = agentData.Destination.Equals(movementData.Destination) ? movementData.Avoidance : AvoidanceStatus.None;
-            agentData.SplitInfo = movementData.SplitInfo;
-            agentData.SplitInterval = movementData.SplitInterval;
+            agentData.Direction = result.NewDirection;
+            agentData.Seperation = result.NewSeperation;
+            agentData.Avoidance = agentData.Destination.Equals(movementData.Destination) ? result.NewAvoidance : AvoidanceStatus.None;
+            agentData.SplitInfo = result.NewSplitInfo;
+            agentData.SplitInterval = result.NewSplitInterval;
             AgentDataArray[i] = agentData;
         }
     }

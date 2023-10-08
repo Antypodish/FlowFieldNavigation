@@ -1,12 +1,8 @@
 ﻿using Assets.Path_Finding_System.Scripts;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Threading;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
-using Unity.VisualScripting;
-using UnityEditor;
 using UnityEngine.Jobs;
 
 public class RoutineSchedulingTree
@@ -70,7 +66,7 @@ public class RoutineSchedulingTree
     public void AddMovementDataCalculationHandle(JobHandle dependency)
     {
         AgentRoutineDataCalculationJob movDataJob = _dirCalculator.CalculateDirections(out TransformAccessArray transformsToSchedule);
-        _movDataCalcHandle.Add(movDataJob.Schedule(transformsToSchedule,dependency));
+        _movDataCalcHandle.Add(movDataJob.Schedule(transformsToSchedule, dependency));
 
         if (FlowFieldUtilities.DebugMode) { _movDataCalcHandle[_movDataCalcHandle.Count - 1].Complete(); }
     }
@@ -93,11 +89,20 @@ public class RoutineSchedulingTree
             AlignmentMultiplier = BoidController.Instance.AlignmentMultiplier,
             AlignmentRangeAddition = BoidController.Instance.AlignmentRangeAddition,
             MaxSeperationMagnitude = BoidController.Instance.MaxSeperationMagnitude,
-            AgentDirections = _dirCalculator.ResultDirections,
             AgentMovementDataArray = _dirCalculator.AgentMovementDataList,
+            RoutineResultArray = _dirCalculator.RoutineResults,
         };
-        JobHandle handle = avoidanceJob.Schedule(_collisionResolutionHandle[0]);
-        _avoidanceHandle.Add(handle);
+        JobHandle avoidanceHandle = avoidanceJob.Schedule(avoidanceJob.AgentMovementDataArray.Length, 64, _collisionResolutionHandle[0]);
+
+        TensionResolver tensionResJob = new TensionResolver()
+        {
+            RoutineResultArray = _dirCalculator.RoutineResults,
+            AgentMovementDataArray = _dirCalculator.AgentMovementDataList,
+            SeperationRangeAddition = BoidController.Instance.SeperationRangeAddition,
+        };
+        JobHandle tensionHandle = tensionResJob.Schedule(avoidanceHandle);
+
+        _avoidanceHandle.Add(tensionHandle);
     }
     public void AddCollisionCalculationJob()
     {
@@ -112,9 +117,9 @@ public class RoutineSchedulingTree
             TileToWallObject = _pathfindingManager.FieldProducer.GetTileToWallObject(),
             WallObjectList = _pathfindingManager.FieldProducer.GetWallObjectList(),
             AgentMovementData = _dirCalculator.AgentMovementDataList,
-            AgentDirections = _dirCalculator.ResultDirections,
+            RoutineResultArray = _dirCalculator.RoutineResults,
         };
-        JobHandle collisionHandle = collisionJob.Schedule(_pathfindingManager.AgentDataContainer.AgentTransforms ,_avoidanceHandle[0]);
+        JobHandle collisionHandle = collisionJob.Schedule(_pathfindingManager.AgentDataContainer.AgentTransforms, _avoidanceHandle[0]);
         _colCalculationHandle.Add(collisionHandle);
     }
     public void AddPortalTraversalHandles(List<PortalTraversalJobPack> portalTravJobs, JobHandle dependency)
@@ -128,7 +133,7 @@ public class RoutineSchedulingTree
 
         if (FlowFieldUtilities.DebugMode)
         {
-            for(int i = 0; i < _porTravHandles.Count; i++)
+            for (int i = 0; i < _porTravHandles.Count; i++)
             {
                 _porTravHandles[i].Handle.Complete();
             }
@@ -140,7 +145,7 @@ public class RoutineSchedulingTree
 
         if (FlowFieldUtilities.DebugMode)
         {
-            for(int i = 0; i <_porAddTravHandles.Count; i++)
+            for (int i = 0; i < _porAddTravHandles.Count; i++)
             {
                 _porAddTravHandles[i].Handle.Complete();
             }
@@ -177,7 +182,7 @@ public class RoutineSchedulingTree
                 handle.Handle.Complete();
                 _porAddTravHandles.RemoveAtSwapBack(i);
 
-                if(handle.Path.IntegrationStartIndicies.Length != 0)
+                if (handle.Path.IntegrationStartIndicies.Length != 0)
                 {
                     JobHandle additionHandle = _pathfindingManager.PathProducer.SchedulePathAdditionJob(handle.Path);
                     _pathAdditionHandles.Add(additionHandle);
@@ -187,7 +192,7 @@ public class RoutineSchedulingTree
 
         if (FlowFieldUtilities.DebugMode)
         {
-            for(int i = 0; i < _pathProdCalcHandles.Count; i++)
+            for (int i = 0; i < _pathProdCalcHandles.Count; i++)
             {
                 _pathProdCalcHandles[i].Handle.Complete();
             }
@@ -197,14 +202,14 @@ public class RoutineSchedulingTree
     public void ForceCompleteAll()
     {
         //FORCE COMPLETE MOVEMENT DATA CALCULATION
-        if(_movDataCalcHandle.Count == 1)
+        if (_movDataCalcHandle.Count == 1)
         {
             _movDataCalcHandle[0].Complete();
             _movDataCalcHandle.Clear();
         }
 
         //FORCE COMPLETE COLLISION RESOLUTION
-        if(_collisionResolutionHandle.Count != 0)
+        if (_collisionResolutionHandle.Count != 0)
         {
             _collisionResolutionHandle[0].Complete();
             _collisionResolutionHandle.Clear();
@@ -260,9 +265,9 @@ public class RoutineSchedulingTree
     }
     public void SendRoutineResultsToAgents()
     {
-        NativeArray<float2> directions = _dirCalculator.ResultDirections;
+        NativeArray<RoutineResult> routineResults = _dirCalculator.RoutineResults;
         NativeArray<AgentMovementData> agentMovementDataList = _dirCalculator.AgentMovementDataList;
 
-        _pathfindingManager.AgentDataContainer.SendRoutineResults(directions, agentMovementDataList);
+        _pathfindingManager.AgentDataContainer.SendRoutineResults(routineResults, agentMovementDataList);
     }
 }

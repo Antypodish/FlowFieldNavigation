@@ -4,10 +4,11 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
+using Unity.VisualScripting;
 using UnityEngine;
 
 [BurstCompile]
-public struct LocalAvoidanceJob : IJob
+public struct LocalAvoidanceJob : IJobParallelFor
 {
     public float SeekMultiplier;
     public float AlignmentMultiplier;
@@ -15,168 +16,74 @@ public struct LocalAvoidanceJob : IJob
     public float SeperationRangeAddition;
     public float AlignmentRangeAddition;
     public float MaxSeperationMagnitude;
-    public NativeArray<AgentMovementData> AgentMovementDataArray;
-    public NativeArray<float2> AgentDirections;
+    [ReadOnly] public NativeArray<AgentMovementData> AgentMovementDataArray;
+    [WriteOnly] public NativeArray<RoutineResult> RoutineResultArray;
 
-
-    public void Execute()
+    public void Execute(int index)
     {
+        AgentMovementData agent = AgentMovementDataArray[index];
+        RoutineResult newRoutineResult = new RoutineResult()
+        {
+            NewAvoidance = agent.Avoidance,
+            NewSplitInfo = agent.SplitInfo,
+            NewSplitInterval = agent.SplitInterval,
+        };
+
+        float2 agentPos = new float2(agent.Position.x, agent.Position.z);
+        float2 newDirectionToSteer = agent.DesiredDirection;
+
+        if (HasStatusFlag(AgentStatus.HoldGround, agent.Status)) { return; }
+        //GET AVOIDANCE STATUS
+        if (newRoutineResult.NewAvoidance == 0)
+        {
+            newRoutineResult.NewAvoidance = GetAvoidanceStatus(agentPos, agent.DesiredDirection, agent.Radius, index);
+            if (newRoutineResult.NewAvoidance != 0)
+            {
+                newRoutineResult.NewSplitInterval = 50;
+            }
+        }
+
+        //CHECK IF DESIRED DIRECTION IS FREE
+        if (newRoutineResult.NewAvoidance != 0 && math.dot(agent.DesiredDirection, agent.CurrentDirection) > 0)
+        {
+            newRoutineResult.NewAvoidance = IsDirectionFree(agentPos, agent.DesiredDirection, index, agent.Radius, agent.Radius + 1f) ? 0 : newRoutineResult.NewAvoidance;
+        }
+
+        //GET AVIODANCE DIRECTION
+        if (newRoutineResult.NewAvoidance != 0)
+        {
+            float2 avoidanceDirection = GetAvoidanceDirection(agentPos, agent.CurrentDirection, agent.Radius, index, agent.Radius + 1f, newRoutineResult.NewAvoidance);
+            newDirectionToSteer = avoidanceDirection;
+            if (avoidanceDirection.Equals(0))
+            {
+                newRoutineResult.NewAvoidance = 0;
+            }
+        }
+
+        //GET SEPERATİON
+        float2 seperation = GetSeperation(agentPos, agent.CurrentDirection, agent.Radius, index, newRoutineResult.NewAvoidance);
+
+        //GET ALIGNMENT
+        if (newRoutineResult.NewAvoidance == 0)
+        {
+            float2 alignment = GetAlignment(agentPos, agent.DesiredDirection, index, agent.PathId, agent.Radius);
+            newDirectionToSteer += alignment;
+        }
+
         //GET SEEK
-        for(int i = 0; i < AgentMovementDataArray.Length; i++)
+        float2 seek = GetSeek(agent.CurrentDirection, newDirectionToSteer);
+
+        //COMBINE FORCES
+        if (HasStatusFlag(AgentStatus.Moving, agent.Status))
         {
-            AgentMovementData agent = AgentMovementDataArray[i];
-            float2 agentPos = new float2(agent.Position.x, agent.Position.z);
-            float2 newDirectionToSteer = agent.DesiredDirection;
-
-            if(HasStatusFlag(AgentStatus.HoldGround, agent.Status)) { continue; }
-            //GET AVOIDANCE STATUS
-            if(agent.Avoidance == 0)
-            {
-                agent.Avoidance = GetAvoidanceStatus(agentPos, agent.DesiredDirection, agent.Radius, i);
-                if(agent.Avoidance != 0)
-                {
-                    agent.SplitInterval = 50;
-                }
-            }
-
-            //CHECK IF DESIRED DIRECTION IS FREE
-            if(agent.Avoidance != 0 && math.dot(agent.DesiredDirection, agent.CurrentDirection) > 0)
-            {
-                agent.Avoidance = IsDirectionFree(agentPos, agent.DesiredDirection, i, agent.Radius, agent.Radius + 1f) ? 0 : agent.Avoidance;
-            }
-
-            //GET AVIODANCE DIRECTION
-            if(agent.Avoidance != 0)
-            {
-                float2 avoidanceDirection = GetAvoidanceDirection(agentPos, agent.CurrentDirection, agent.Radius, i, agent.Radius + 1f, agent.Avoidance);
-                newDirectionToSteer = avoidanceDirection;
-                if (avoidanceDirection.Equals(0))
-                {
-                    agent.Avoidance = 0;
-                }
-            }
-
-            //GET SEPERATİON
-            float2 seperation = GetSeperation(agentPos, agent.CurrentDirection, agent.Radius, i, agent.Avoidance);
-
-            //GET ALIGNMENT
-            if(agent.Avoidance == 0)
-            {
-                float2 alignment = GetAlignment(agentPos, agent.DesiredDirection, i, agent.PathId, agent.Radius);
-                newDirectionToSteer += alignment;
-            }
-
-            //GET SEEK
-            float2 seek = GetSeek(agent.CurrentDirection, newDirectionToSteer);
-
-            //COMBINE FORCES
-            if (HasStatusFlag(AgentStatus.Moving, agent.Status))
-            {
-                agent.NextDirection = agent.CurrentDirection + seek;
-                agent.SeperationForce = seperation;
-            }
-            else
-            {
-                agent.NextDirection = (agent.Status & AgentStatus.HoldGround) == AgentStatus.HoldGround ? 0f : GetStoppedSeperationForce(agentPos, agent.Radius, i);
-            }
-            AgentMovementDataArray[i] = agent;
+            newRoutineResult.NewDirection = agent.CurrentDirection + seek;
+            newRoutineResult.NewSeperation = seperation;
         }
-
-        //DETECT TENSIONS
-        UnsafeList<Tension> tensionlist = new UnsafeList<Tension>(0, Allocator.Temp);
-        UnsafeList<int> tensionPowerList = new UnsafeList<int>(0, Allocator.Temp);
-        for (int i = 0; i < AgentMovementDataArray.Length; i++)
+        else
         {
-            AgentMovementData agentData = AgentMovementDataArray[i];
-            float2 agentPos = new float2(agentData.Position.x, agentData.Position.z);
-            if (agentData.Avoidance == 0) { continue; }
-            for (int j = i + 1; j < AgentMovementDataArray.Length; j++)
-            {
-                AgentMovementData mateData = AgentMovementDataArray[j];
-                float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
-                if (mateData.Avoidance == 0) { continue; }
-
-                float dot = math.dot(agentData.NextDirection, matePos - agentPos);
-                if (dot < 0) { continue; }
-
-                //dot = math.dot(agentData.NextDirection, mateData.NextDirection);
-                //if(dot > 0) { continue; }
-
-                if (mateData.Avoidance == agentData.Avoidance) { continue; }
-
-                if (math.distance(agentPos, matePos) > agentData.Radius + mateData.Radius + SeperationRangeAddition) { continue; }
-                Tension tension = new Tension()
-                {
-                    agent1 = i,
-                    agent2 = j,
-                };
-                tensionlist.Add(tension);
-            }
+            newRoutineResult.NewDirection = (agent.Status & AgentStatus.HoldGround) == AgentStatus.HoldGround ? 0f : GetStoppedSeperationForce(agentPos, agent.Radius, index);
         }
-
-        //RESOLVE TENSIONS
-        for (int i = 0; i < tensionlist.Length; i++)
-        {
-            Tension tension = tensionlist[i];
-            AgentMovementData agent1 = AgentMovementDataArray[tension.agent1];
-            AgentMovementData agent2 = AgentMovementDataArray[tension.agent2];
-
-            bool succesfull = ExamineSplitting(ref agent1, ref agent2);
-            if (succesfull)
-            {
-                AgentMovementDataArray[tension.agent2] = agent2;
-                AgentMovementDataArray[tension.agent1] = agent1;
-                continue;
-            }
-
-            int agent1Power;
-            int agent2Power;
-            if (agent1.TensionPowerIndex == -1)
-            {
-                agent1Power = GetTensionPower(tension.agent1, agent1.Avoidance, ref tensionPowerList);
-            }
-            else
-            {
-                agent1Power = tensionPowerList[agent1.TensionPowerIndex];
-            }
-            if (agent2.TensionPowerIndex == -1)
-            {
-                agent2Power = GetTensionPower(tension.agent2, agent2.Avoidance, ref tensionPowerList);
-            }
-            else
-            {
-                agent2Power = tensionPowerList[agent2.TensionPowerIndex];
-            }
-            if (agent1Power > agent2Power)
-            {
-                agent2.Avoidance = agent1.Avoidance;
-                //agent2.NextDirection = agent1.NextDirection;
-                AgentMovementDataArray[tension.agent2] = agent2;
-            }
-            else
-            {
-                agent1.Avoidance = agent2.Avoidance;
-                //agent1.NextDirection = agent2.NextDirection;
-                AgentMovementDataArray[tension.agent1] = agent1;
-            }
-        }
-
-        //DECREASE SPLIT INTERVALS AND INFO
-        for (int index = 0; index < AgentMovementDataArray.Length; index++)
-        {
-            AgentMovementData data = AgentMovementDataArray[index];
-            data.SplitInterval = (byte)math.select(data.SplitInterval - 1, 0, data.SplitInterval == 0);
-            data.SplitInfo = (byte)math.select(data.SplitInfo - 1, 0, data.SplitInfo == 0);
-            AgentMovementDataArray[index] = data;
-        }
-
-
-
-        //COPY NEW DIRECTIONS TO AgentDirections
-        for (int i = 0; i < AgentMovementDataArray.Length; i++)
-        {
-            AgentDirections[i] = AgentMovementDataArray[i].NextDirection;
-        }
+        RoutineResultArray[index] = newRoutineResult;
     }
 
     float2 GetSeek(float2 currentDirection, float2 desiredDirection)
@@ -298,7 +205,7 @@ public struct LocalAvoidanceJob : IJob
         NativeArray<AgentMovementData> agentMovementDataArray = AgentMovementDataArray;
         for (int i = 0; i < agentMovementDataArray.Length; i++)
         {
-            AgentMovementData mateData = agentMovementDataArray[i];
+            AgentMovementData mateData = AgentMovementDataArray[i];
             if (i == agentIndex) { continue; }
             if ((mateData.Status & AgentStatus.HoldGround) != AgentStatus.HoldGround) { continue; }
 
@@ -416,138 +323,6 @@ public struct LocalAvoidanceJob : IJob
             return circleCenter + snap;
         }
     }
-    bool ExamineSplitting(ref AgentMovementData agent1, ref AgentMovementData agent2)
-    {
-        bool succesfull = false;
-        if (agent1.PathId != agent2.PathId) { return succesfull; }
-        else if (agent1.SplitInfo > 0 && agent2.SplitInfo == 0)
-        {
-            //agent2.NextDirection = agent1.NextDirection;
-            agent2.Avoidance = agent1.Avoidance;
-            agent2.SplitInterval = 0;
-            agent2.SplitInfo = 50;
-            succesfull = true;
-        }
-        else if (agent1.SplitInfo == 0 && agent2.SplitInfo > 0)
-        {
-            //agent1.NextDirection = agent2.NextDirection;
-            agent1.Avoidance = agent2.Avoidance;
-            agent1.SplitInterval = 0;
-            agent1.SplitInfo = 50;
-            succesfull = true;
-        }
-        else if (agent1.SplitInfo > 0 && agent2.SplitInfo > 0)
-        {
-            agent1.SplitInfo = 0;
-            agent2.SplitInfo = 0;
-            succesfull = false;
-        }
-        else if (agent1.SplitInterval > 0 && agent2.SplitInterval > 0)
-        {
-            float2 nextDir1 = agent1.NextDirection;
-            float2 nextDir2 = agent2.NextDirection;
-            AvoidanceStatus avoidance1 = agent1.Avoidance;
-            AvoidanceStatus avoidance2 = agent2.Avoidance;
-
-            //agent1.NextDirection = nextDir2;
-            agent1.Avoidance = avoidance2;
-            agent1.SplitInterval = 0;
-            agent1.SplitInfo = 50;
-
-            //agent2.NextDirection = nextDir1;
-            agent2.Avoidance = avoidance1;
-            agent2.SplitInterval = 0;
-            agent2.SplitInfo = 50;
-
-            succesfull = true;
-            /*
-            float2 agent1Dir = agent1.NextDirection;
-            float2 agent2Dir = agent2.NextDirection;
-            float2 agent1Pos = new float2(agent1.Position.x, agent1.Position.z);
-            float2 agent2Pos = new float2(agent2.Position.x, agent2.Position.z);
-            float2 center = (agent1Pos + agent2Pos) / 2;
-            float agent1Power = 0;
-            float agent2Power = 0;
-
-            for(int i = 0; i < AgentMovementDataArray.Length; i++)
-            {
-                AgentMovementData agent = AgentMovementDataArray[i];
-                float2 agentPos = new float2(agent.Position.x, agent.Position.z);
-                if(agent.PathId != agent1.PathId) { continue; }
-                if(math.distance(center, agentPos) > 20f) { continue; }
-
-                if(math.dot(agent1Dir, agentPos - center) <= 0f && math.dot(agent.Flow, agent1Dir) >= 0f)
-                {
-                    agent1Power++;
-                }
-                if (math.dot(agent2Dir, agentPos - center) <= 0f && math.dot(agent.Flow, agent2Dir) >= 0f)
-                {
-                    agent2Power++;
-                }
-            }
-            if(agent1Power / agent2Power < 1.4f && agent1Power / agent2Power > 0.6f)
-            {
-                
-            }
-            else
-            {
-                agent1.SplitInterval = 0;
-                agent2.SplitInterval = 0;
-                succesfull = false;
-            }*/
-        }
-        else
-        {
-            agent1.SplitInterval = 0;
-            agent2.SplitInterval = 0;
-            succesfull = false;
-        }
-        return succesfull;
-    }
-    int GetTensionPower(int agentIndex, AvoidanceStatus avoidance, ref UnsafeList<int> tensionPowerList)
-    {
-        int index = tensionPowerList.Length;
-        int power = 0;
-        NativeQueue<int> neighbours = new NativeQueue<int>(Allocator.Temp);
-
-        neighbours.Enqueue(agentIndex);
-
-        AgentMovementData agentData = AgentMovementDataArray[agentIndex];
-        agentData.RoutineStatus |= AgentRoutineStatus.Traversed;
-        agentData.TensionPowerIndex = index;
-        AgentMovementDataArray[agentIndex] = agentData;
-
-        while (!neighbours.IsEmpty())
-        {
-            power++;
-            int pickedIndex = neighbours.Dequeue();
-            agentData = AgentMovementDataArray[pickedIndex];
-            GetNeighbourAgents(pickedIndex, agentData.Radius, new float2(agentData.Position.x, agentData.Position.z), 0.3f, neighbours, index, avoidance);
-        }
-        tensionPowerList.Add(power);
-        return power;
-    }
-    void GetNeighbourAgents(int agentIndex, float agentRadius, float2 agentPos, float maxDistance, NativeQueue<int> neighbours, int tensionPowerIndex, AvoidanceStatus avoidance)
-    {
-        for (int i = 0; i < AgentMovementDataArray.Length; i++)
-        {
-            AgentMovementData mateData = AgentMovementDataArray[i];
-            if (i == agentIndex) { continue; }
-            if (mateData.Avoidance != avoidance) { continue; }
-
-            float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
-            float distance = math.distance(matePos, agentPos);
-
-            if (distance > agentRadius + mateData.Radius + SeperationRangeAddition + maxDistance) { continue; }
-            if ((mateData.RoutineStatus & AgentRoutineStatus.Traversed) != AgentRoutineStatus.Traversed)
-            {
-                mateData.RoutineStatus |= AgentRoutineStatus.Traversed;
-                mateData.TensionPowerIndex = tensionPowerIndex;
-                AgentMovementDataArray[i] = mateData;
-                neighbours.Enqueue(i);
-            }
-        }
-    }
     bool IsDirectionFree(float2 agentPos, float2 direction, int agentIndex, float agentRadius, float checkRange)
     {
         float2 directionClampedToRange = math.normalizesafe(direction) * checkRange;
@@ -640,9 +415,4 @@ public struct LocalAvoidanceJob : IJob
     {
         return (agentStatus & flag) == flag;
     }
-}
-public struct Tension
-{
-    public int agent1;
-    public int agent2;
 }
