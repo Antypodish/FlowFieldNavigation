@@ -14,6 +14,7 @@ public struct LocalAvoidanceJob : IJob
     public float SeperationMultiplier;
     public float SeperationRangeAddition;
     public float AlignmentRangeAddition;
+    public float MaxSeperationMagnitude;
     public NativeArray<AgentMovementData> AgentMovementDataArray;
     public NativeArray<float2> AgentDirections;
 
@@ -31,7 +32,7 @@ public struct LocalAvoidanceJob : IJob
             //GET AVOIDANCE STATUS
             if(agent.Avoidance == 0)
             {
-                agent.Avoidance = GetAvoidanceStatus(agentPos, agent.CurrentDirection, agent.Radius, i);
+                agent.Avoidance = GetAvoidanceStatus(agentPos, agent.DesiredDirection, agent.Radius, i);
                 if(agent.Avoidance != 0)
                 {
                     agent.SplitInterval = 50;
@@ -188,6 +189,9 @@ public struct LocalAvoidanceJob : IJob
     {
         float2 totalHeading = 0;
         int alignedAgentCount = 0;
+
+        float2 toalCurrentHeading = 0;
+        bool avoiding = false;
         for(int i = 0; i < AgentMovementDataArray.Length; i++)
         {
             AgentMovementData mate = AgentMovementDataArray[i];
@@ -203,7 +207,13 @@ public struct LocalAvoidanceJob : IJob
             if (overlapping <= 0) { continue; }
 
             totalHeading += mate.DesiredDirection;
+            toalCurrentHeading += math.normalizesafe(mate.CurrentDirection);
             alignedAgentCount++;
+            if(mate.Avoidance != 0) { avoiding = true; }
+        }
+        if (avoiding)
+        {
+            return math.select((toalCurrentHeading / alignedAgentCount - desiredDirection) * AlignmentMultiplier, 0, alignedAgentCount == 0);
         }
         return math.select(totalHeading / alignedAgentCount - desiredDirection, 0, alignedAgentCount == 0);
     }

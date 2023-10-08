@@ -92,6 +92,7 @@ public class RoutineSchedulingTree
             SeekMultiplier = BoidController.Instance.SeekMultiplier,
             AlignmentMultiplier = BoidController.Instance.AlignmentMultiplier,
             AlignmentRangeAddition = BoidController.Instance.AlignmentRangeAddition,
+            MaxSeperationMagnitude = BoidController.Instance.MaxSeperationMagnitude,
             AgentDirections = _dirCalculator.ResultDirections,
             AgentMovementDataArray = _dirCalculator.AgentMovementDataList,
         };
