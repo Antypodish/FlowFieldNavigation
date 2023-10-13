@@ -10,8 +10,7 @@ public struct AgentRotationUpdateJob : IJobParallelForTransform
     public void Execute(int index, TransformAccess transform)
     {
         float2 direction = agentData[index].Direction;
-        float3 position = transform.position;
         float3 desiredForward = new float3(direction.x, 0f, direction.y);
-        float3 currentForward = transform.rotation * new float3(0, 0, 1);
+        transform.rotation = quaternion.LookRotation(desiredForward, new float3(0, 1, 0));
     }
 }

@@ -92,5 +92,12 @@ public class AgentUpdater
             PathStopDistances = PathStopDistances,
         };
         movJob.Schedule(agentTransforms).Complete();
+
+        //ROTATE
+        AgentRotationUpdateJob rotateJob = new AgentRotationUpdateJob()
+        {
+            agentData = agentDataList,
+        };
+        rotateJob.Schedule(agentTransforms).Complete();
     }
 }

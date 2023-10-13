@@ -23,14 +23,6 @@ public class FlowFieldAgent : MonoBehaviour
         Transform = transform;
         AgentDataIndex = -1;
     }
-    private void Update()
-    {
-        if(AgentDataIndex == -1) { return; }
-        Vector2 direction = GetDirection();
-        Vector3 position = transform.position;
-        Vector3 direction3d = new Vector3(direction.x, 0f, direction.y);
-        transform.LookAt(position + direction3d);
-    }
     public void SetPath(Path path)
     {
         _pathfindingManager.SetPath(AgentDataIndex, path);
