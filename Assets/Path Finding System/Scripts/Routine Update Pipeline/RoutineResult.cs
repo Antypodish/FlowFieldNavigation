@@ -7,4 +7,5 @@ public struct RoutineResult
     public byte NewSplitInterval;
     public byte NewSplitInfo;
     public AvoidanceStatus NewAvoidance;
+    public MovingAvoidanceStatus NewMovingAvoidance;
 }

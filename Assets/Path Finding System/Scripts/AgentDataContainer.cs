@@ -133,6 +133,7 @@ public struct AgentData
     public float Speed;
     public AgentStatus Status;
     public AvoidanceStatus Avoidance;
+    public MovingAvoidanceStatus MovingAvoidance;
     public float2 Destination;
     public float2 Direction;
     public float2 Seperation;

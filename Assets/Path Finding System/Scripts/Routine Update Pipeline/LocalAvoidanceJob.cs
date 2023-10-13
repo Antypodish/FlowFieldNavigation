@@ -5,7 +5,10 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.VisualScripting;
+using UnityEditor;
+using UnityEditor.Experimental.Rendering;
 using UnityEngine;
+using UnityEngine.Analytics;
 
 [BurstCompile]
 public struct LocalAvoidanceJob : IJobParallelFor
@@ -15,7 +18,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
     public float SeperationMultiplier;
     public float SeperationRangeAddition;
     public float AlignmentRangeAddition;
-    public float MaxSeperationMagnitude;
+    public float MovingAvoidanceRangeAddition;
     [ReadOnly] public NativeArray<AgentMovementData> AgentMovementDataArray;
     [WriteOnly] public NativeArray<RoutineResult> RoutineResultArray;
 
@@ -27,6 +30,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
             NewAvoidance = agent.Avoidance,
             NewSplitInfo = agent.SplitInfo,
             NewSplitInterval = agent.SplitInterval,
+            NewMovingAvoidance = agent.MovingAvoidance,
         };
 
         float2 agentPos = new float2(agent.Position.x, agent.Position.z);
@@ -60,15 +64,24 @@ public struct LocalAvoidanceJob : IJobParallelFor
             }
         }
 
-        //GET SEPERATİON
-        float2 seperation = GetSeperation(agentPos, agent.CurrentDirection, agent.Radius, index, newRoutineResult.NewAvoidance);
+        //GET MOVING AVOIDANCE
+        float2 movingAvoidance = GetMovingAvoidance(agentPos, agent.CurrentDirection, index, agent.Radius, ref newRoutineResult.NewMovingAvoidance);
+        if (!movingAvoidance.Equals(0))
+        {
+            newDirectionToSteer = movingAvoidance;
+        }
+        //GET SEPERATION
+        float2 seperation = GetSeperation(agentPos, agent.CurrentDirection, agent.Radius, index, newRoutineResult.NewAvoidance, movingAvoidance);
+
+        
 
         //GET ALIGNMENT
-        if (newRoutineResult.NewAvoidance == 0)
+        if (newRoutineResult.NewAvoidance == 0 && movingAvoidance.Equals(0))
         {
-            float2 alignment = GetAlignment(agentPos, agent.DesiredDirection, index, agent.PathId, agent.Radius);
+            float2 alignment = GetAlignment(agentPos, agent.DesiredDirection, index, agent.PathId, agent.Radius, agent.CurrentDirection);
             newDirectionToSteer += alignment;
         }
+
 
         //GET SEEK
         float2 seek = GetSeek(agent.CurrentDirection, newDirectionToSteer);
@@ -92,12 +105,13 @@ public struct LocalAvoidanceJob : IJobParallelFor
         float steeringToSeekLen = math.length(steeringToSeek);
         return math.select(steeringToSeek / steeringToSeekLen, 0f, steeringToSeekLen == 0) * math.select(SeekMultiplier, steeringToSeekLen, steeringToSeekLen < SeekMultiplier);
     }
-    float2 GetAlignment(float2 agentPos, float2 desiredDirection, int agentIndex, int pahtId, float radius)
+    float2 GetAlignment(float2 agentPos, float2 desiredDirection, int agentIndex, int pahtId, float radius, float2 cur)
     {
         float2 totalHeading = 0;
         int alignedAgentCount = 0;
 
         float2 toalCurrentHeading = 0;
+        int curAlignedAgentCount = 0;
         bool avoiding = false;
         for(int i = 0; i < AgentMovementDataArray.Length; i++)
         {
@@ -109,27 +123,49 @@ public struct LocalAvoidanceJob : IJobParallelFor
             
             if (i == agentIndex) { continue; }
             if (math.dot(matePos - agentPos, desiredDirection) < 0) { continue; }
+            if(math.dot(mate.CurrentDirection, cur) < 0) { continue; }
             if(!HasStatusFlag(AgentStatus.Moving, mate.Status)) { continue; }
-            if (mate.PathId != pahtId) { continue; }
             if (overlapping <= 0) { continue; }
 
-            totalHeading += mate.DesiredDirection;
+            if(mate.PathId == pahtId)
+            {
+                totalHeading += mate.DesiredDirection;
+                alignedAgentCount++;
+            }
             toalCurrentHeading += math.normalizesafe(mate.CurrentDirection);
-            alignedAgentCount++;
+            curAlignedAgentCount++;
             if(mate.Avoidance != 0) { avoiding = true; }
         }
         if (avoiding)
         {
-            return math.select((toalCurrentHeading / alignedAgentCount - desiredDirection) * AlignmentMultiplier, 0, alignedAgentCount == 0);
+            return math.select((toalCurrentHeading / curAlignedAgentCount - desiredDirection) * AlignmentMultiplier, 0, curAlignedAgentCount == 0);
         }
         return math.select(totalHeading / alignedAgentCount - desiredDirection, 0, alignedAgentCount == 0);
     }
-    float2 GetSeperation(float2 agentPos, float2 desiredDirection, float agentRadius, int agentIndex, AvoidanceStatus agentAvoidance)
+    float2 GetSeperation(float2 agentPos, float2 currentDirection, float agentRadius, int agentIndex, AvoidanceStatus agentAvoidance, float2 movingAvoidance)
     {
         float2 totalSeperation = 0;
         int seperationCount = 0;
 
-        if(agentAvoidance == 0)
+        bool b = true;
+
+        for (int i = 0; i < AgentMovementDataArray.Length; i++)
+        {
+            AgentMovementData mate = AgentMovementDataArray[i];
+            float2 matePos = new float2(mate.Position.x, mate.Position.z);
+            float distance = math.distance(matePos, agentPos);
+            float desiredRange = mate.Radius + agentRadius + SeperationRangeAddition + 0.1f;
+            if(mate.PathId == AgentMovementDataArray[agentIndex].PathId) { continue; }
+            float overlapping = desiredRange - distance;
+            if (overlapping <= 0) { continue; }
+            if (!HasStatusFlag(AgentStatus.Moving, mate.Status)) { continue; }
+            if(math.dot(currentDirection, mate.CurrentDirection) > 0) { continue; }
+            //if(math.dot(desiredDirection, matePos - agentPos) < 0) { continue; }
+            b = false;
+            break;
+        }
+
+        if (agentAvoidance == 0)
         {
             for (int i = 0; i < AgentMovementDataArray.Length; i++)
             {
@@ -138,10 +174,9 @@ public struct LocalAvoidanceJob : IJobParallelFor
                 float distance = math.distance(matePos, agentPos);
                 float desiredRange = mate.Radius + agentRadius + SeperationRangeAddition;
                 float overlapping = desiredRange - distance;
-
                 if (overlapping <= 0) { continue; }
                 if (!HasStatusFlag(AgentStatus.Moving, mate.Status)) { continue; }
-                if (math.dot(desiredDirection, matePos - agentPos) < 0) { continue; }
+                if (math.dot(currentDirection, matePos - agentPos) < 0 && b) { continue; }
 
                 float2 seperationForce = math.normalizesafe(agentPos - matePos) * overlapping;
                 seperationForce = math.select(seperationForce, new float2(i, 1), agentPos.Equals(matePos) && agentIndex < i);
@@ -163,7 +198,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
                 if (overlapping <= 0) { continue; }
                 if (!HasStatusFlag(AgentStatus.Moving, mate.Status)) { continue; }
                 if(mate.Avoidance == 0) { continue; }
-                if (math.dot(desiredDirection, matePos - agentPos) < 0) { continue; }
+                if (math.dot(currentDirection, matePos - agentPos) < 0 && b) { continue; }
 
                 float2 seperationForce = math.normalizesafe(agentPos - matePos) * overlapping;
                 seperationForce = math.select(seperationForce, new float2(i, 1), agentPos.Equals(matePos) && agentIndex < i);
@@ -177,6 +212,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
         totalSeperation /= seperationCount;
         return totalSeperation * SeperationMultiplier;
     }
+
     float2 GetStoppedSeperationForce(float2 agentPos, float agentRadius, int agentIndex)
     {
         float2 totalSeperation = 0;
@@ -353,66 +389,132 @@ public struct LocalAvoidanceJob : IJobParallelFor
             }
         }
         return true;
-
-        
-        bool Intersects(float2 linep1, float2 linep2, float2 matePos, float mateRadius)
-        {
-            if (linep1.y == linep2.y) //M = 0
-            {
-                float2 rh = math.select(linep2, linep1, linep1.x > linep2.x);
-                float2 lh = math.select(linep2, linep1, linep1.x < linep2.x);
-                if (matePos.x < rh.x && matePos.x > lh.x)
-                {
-                    float yDistance = math.abs(lh.y - matePos.y);
-                    return yDistance <= mateRadius;
-                }
-                float lhDistance = math.distance(lh, matePos);
-                float rhDistance = math.distance(rh, matePos);
-                return rhDistance <= mateRadius || lhDistance <= mateRadius;
-            }
-            else if (linep1.x == linep2.x) //M = INFINITY
-            {
-                float2 up = math.select(linep2, linep1, linep1.y > linep2.y);
-                float2 down = math.select(linep2, linep1, linep1.y < linep2.y);
-                if (matePos.y < up.y && matePos.y > down.y)
-                {
-                    float xDistance = math.abs(down.x - matePos.x);
-                    return xDistance <= mateRadius;
-                }
-                float upDistance = math.distance(down, matePos);
-                float downDistance = math.distance(up, matePos);
-                return downDistance <= mateRadius || upDistance <= mateRadius;
-            }
-            else
-            {
-                float2 rh = math.select(linep2, linep1, linep1.x > linep2.x);
-                float2 lh = math.select(linep2, linep1, linep1.x < linep2.x);
-
-                float m1 = (rh.y - lh.y) / (rh.x - lh.x);
-                float m2 = -m1;
-
-                float c1 = rh.y - m1 * rh.x;
-                float c2 = matePos.y - m2 * matePos.x;
-
-                float x = (c2 - c1) / (2 * m1);
-                float y = (c2 - c1) / 2 + c1;
-
-                float2 intersectionPoint = new float2(x, y);
-
-                if(intersectionPoint.x <= rh.x && intersectionPoint.x >= lh.x)
-                {
-                    return math.distance(intersectionPoint, matePos) < mateRadius;
-                }
-                else
-                {
-
-                }
-                return math.distance(matePos, lh) < mateRadius || math.distance(matePos, rh) < mateRadius;
-            }
-        }
     }
     bool HasStatusFlag(AgentStatus flag, AgentStatus agentStatus)
     {
         return (agentStatus & flag) == flag;
+    }
+    bool Intersects(float2 linep1, float2 linep2, float2 matePos, float mateRadius)
+    {
+        if (linep1.y == linep2.y) //M = 0
+        {
+            float2 rh = math.select(linep2, linep1, linep1.x > linep2.x);
+            float2 lh = math.select(linep2, linep1, linep1.x < linep2.x);
+            if (matePos.x < rh.x && matePos.x > lh.x)
+            {
+                float yDistance = math.abs(lh.y - matePos.y);
+                return yDistance <= mateRadius;
+            }
+            float lhDistance = math.distance(lh, matePos);
+            float rhDistance = math.distance(rh, matePos);
+            return rhDistance <= mateRadius || lhDistance <= mateRadius;
+        }
+        else if (linep1.x == linep2.x) //M = INFINITY
+        {
+            float2 up = math.select(linep2, linep1, linep1.y > linep2.y);
+            float2 down = math.select(linep2, linep1, linep1.y < linep2.y);
+            if (matePos.y < up.y && matePos.y > down.y)
+            {
+                float xDistance = math.abs(down.x - matePos.x);
+                return xDistance <= mateRadius;
+            }
+            float upDistance = math.distance(down, matePos);
+            float downDistance = math.distance(up, matePos);
+            return downDistance <= mateRadius || upDistance <= mateRadius;
+        }
+        else
+        {
+            float2 rh = math.select(linep2, linep1, linep1.x > linep2.x);
+            float2 lh = math.select(linep2, linep1, linep1.x < linep2.x);
+
+            float m1 = (rh.y - lh.y) / (rh.x - lh.x);
+            float m2 = -m1;
+
+            float c1 = rh.y - m1 * rh.x;
+            float c2 = matePos.y - m2 * matePos.x;
+
+            float x = (c2 - c1) / (2 * m1);
+            float y = (c2 - c1) / 2 + c1;
+
+            float2 intersectionPoint = new float2(x, y);
+
+            if (intersectionPoint.x <= rh.x && intersectionPoint.x >= lh.x)
+            {
+                return math.distance(intersectionPoint, matePos) < mateRadius;
+            }
+            return math.distance(matePos, lh) < mateRadius || math.distance(matePos, rh) < mateRadius;
+        }
+    }
+    float2 GetMovingAvoidance(float2 agentPos, float2 agentCurrentDir, int agentIndex, float agentRadius, ref MovingAvoidanceStatus avoidance)
+    {
+        float2 center1 = agentPos;
+        float2 center2 = agentPos + math.normalizesafe(agentCurrentDir) * (agentRadius + 0.2f);
+
+        float2 rightEdgeOffset = math.normalizesafe(new float2(-agentCurrentDir.y, agentCurrentDir.x)) * agentRadius + SeperationRangeAddition / 2;
+        float2 leftEdgeOffset = math.normalizesafe(new float2(agentCurrentDir.y, -agentCurrentDir.x)) * agentRadius + SeperationRangeAddition / 2;
+
+        float2 left1 = agentPos + leftEdgeOffset;
+        float2 left2 = center2 + leftEdgeOffset;
+
+        float2 right1 = agentPos + rightEdgeOffset;
+        float2 right2 = center2 + rightEdgeOffset;
+
+
+        float closestAgentDist = float.MaxValue;
+        int closestAgentIndex = 0;
+        for(int i = 0; i < AgentMovementDataArray.Length; i++)
+        {
+            AgentMovementData mate = AgentMovementDataArray[i];
+            float2 matePos = new float2(mate.Position.x, mate.Position.z);
+            if(i == agentIndex) { continue; }
+            if(mate.PathId == AgentMovementDataArray[agentIndex].PathId) { continue; }
+            if(!HasStatusFlag(AgentStatus.Moving, mate.Status)) { continue; }
+            if(math.dot(agentCurrentDir, matePos - agentPos) < 0) { continue; }
+            if(math.dot(agentCurrentDir, mate.CurrentDirection) > 0) { continue; }
+            float desiredDistance = agentRadius + mate.Radius + 0.2f;
+            float mateDistance = math.distance(agentPos, matePos);
+            float overlapping = desiredDistance - mateDistance;
+            if(overlapping <= 0) { continue; }
+
+            bool right = Intersects(right1, right2, matePos, mate.Radius + SeperationRangeAddition / 2);
+            bool left = Intersects(left1, left2, matePos, mate.Radius + SeperationRangeAddition / 2);
+            bool center = Intersects(center1, center2, matePos, mate.Radius + SeperationRangeAddition / 2);
+
+            if(right || left || center)
+            {
+                if(mateDistance < closestAgentDist)
+                {
+                    closestAgentDist = mateDistance;
+                    closestAgentIndex = i;
+                }
+            }
+        }
+        if(closestAgentDist == float.MaxValue) { avoidance = 0; return 0; }
+        AgentMovementData picked = AgentMovementDataArray[closestAgentIndex];
+        float2 pickedPos = new float2(picked.Position.x, picked.Position.z);
+        float2 pickeDir = pickedPos - agentPos;
+        float2 pickedToAgent = agentPos - pickedPos;
+
+        //is picked avoiding left
+        if(math.dot(pickedToAgent, new float2(-picked.CurrentDirection.y, picked.CurrentDirection.x)) < 0)
+        {
+            float2 avoidanceDirection = math.normalizesafe(new float2(-pickeDir.y, pickeDir.x));
+            float2 steering = avoidanceDirection - agentCurrentDir;
+            float steeringMaxLen = math.length(steering);
+            steering = math.select(steering / steeringMaxLen * MovingAvoidanceRangeAddition, steering, MovingAvoidanceRangeAddition > steeringMaxLen);
+            agentCurrentDir += steering;
+            avoidance = math.dot(AgentMovementDataArray[agentIndex].DesiredDirection, new float2(-agentCurrentDir.y, agentCurrentDir.x)) < 0 ? MovingAvoidanceStatus.L : MovingAvoidanceStatus.R;
+            return agentCurrentDir;
+        }
+        else
+        {
+            float2 avoidanceDirection = math.normalizesafe(new float2(pickeDir.y, -pickeDir.x));
+            float2 steering = avoidanceDirection - agentCurrentDir;
+            float steeringMaxLen = math.length(steering);
+            steering = math.select(steering / steeringMaxLen * MovingAvoidanceRangeAddition, steering, MovingAvoidanceRangeAddition > steeringMaxLen);
+            agentCurrentDir += steering;
+            avoidance = math.dot(AgentMovementDataArray[agentIndex].DesiredDirection, new float2(-agentCurrentDir.y, agentCurrentDir.x)) < 0 ? MovingAvoidanceStatus.L : MovingAvoidanceStatus.R;
+            return agentCurrentDir;
+        }
     }
 }

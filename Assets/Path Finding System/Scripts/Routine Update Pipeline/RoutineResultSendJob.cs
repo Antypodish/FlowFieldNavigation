@@ -20,6 +20,7 @@ struct RoutineResultSendJob : IJob
             agentData.Direction = result.NewDirection;
             agentData.Seperation = result.NewSeperation;
             agentData.Avoidance = agentData.Destination.Equals(movementData.Destination) ? result.NewAvoidance : AvoidanceStatus.None;
+            agentData.MovingAvoidance = result.NewMovingAvoidance;
             agentData.SplitInfo = result.NewSplitInfo;
             agentData.SplitInterval = result.NewSplitInterval;
             AgentDataArray[i] = agentData;

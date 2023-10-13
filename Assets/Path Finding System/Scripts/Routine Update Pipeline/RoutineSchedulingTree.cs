@@ -1,8 +1,10 @@
 ﻿using Assets.Path_Finding_System.Scripts;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
+using UnityEngine.Experimental.Rendering;
 using UnityEngine.Jobs;
 
 public class RoutineSchedulingTree
@@ -88,12 +90,11 @@ public class RoutineSchedulingTree
             SeekMultiplier = BoidController.Instance.SeekMultiplier,
             AlignmentMultiplier = BoidController.Instance.AlignmentMultiplier,
             AlignmentRangeAddition = BoidController.Instance.AlignmentRangeAddition,
-            MaxSeperationMagnitude = BoidController.Instance.MaxSeperationMagnitude,
+            MovingAvoidanceRangeAddition = BoidController.Instance.MovingAvoidanceRangeAddition,
             AgentMovementDataArray = _dirCalculator.AgentMovementDataList,
             RoutineResultArray = _dirCalculator.RoutineResults,
         };
         JobHandle avoidanceHandle = avoidanceJob.Schedule(avoidanceJob.AgentMovementDataArray.Length, 64, _collisionResolutionHandle[0]);
-
         TensionResolver tensionResJob = new TensionResolver()
         {
             RoutineResultArray = _dirCalculator.RoutineResults,

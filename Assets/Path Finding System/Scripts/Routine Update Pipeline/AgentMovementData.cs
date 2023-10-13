@@ -15,6 +15,7 @@ public struct AgentMovementData
     public ushort Local1d;
     public AgentStatus Status;
     public AvoidanceStatus Avoidance;
+    public MovingAvoidanceStatus MovingAvoidance;
     public AgentRoutineStatus RoutineStatus;
     public UnsafeList<FlowData> FlowField;
     public UnsafeList<int> SectorToPicked;
@@ -30,6 +31,12 @@ public enum AgentRoutineStatus : byte
     Traversed = 1,
 }
 public enum AvoidanceStatus : byte
+{
+    None = 0,
+    R = 1,
+    L = 2,
+}
+public enum MovingAvoidanceStatus: byte
 {
     None = 0,
     R = 1,

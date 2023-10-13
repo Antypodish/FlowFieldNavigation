@@ -3,6 +3,7 @@ using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Burst;
+using Unity.VisualScripting;
 
 [BurstCompile]
 public struct TensionResolver : IJob
@@ -19,6 +20,7 @@ public struct TensionResolver : IJob
         {
             AgentMovementData agentData = AgentMovementDataArray[i];
             float2 agentPos = new float2(agentData.Position.x, agentData.Position.z);
+            float2 agentDir = RoutineResultArray[i].NewDirection;
             AvoidanceStatus agentAvoidance = RoutineResultArray[i].NewAvoidance;
             if (agentAvoidance == 0) { continue; }
             for (int j = i + 1; j < AgentMovementDataArray.Length; j++)
@@ -28,14 +30,13 @@ public struct TensionResolver : IJob
                 float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
                 if (mateRoutineResult.NewAvoidance == 0) { continue; }
 
-                float dot = math.dot(mateRoutineResult.NewDirection, matePos - agentPos);
+                float dot = math.dot(agentDir, matePos - agentPos);
                 if (dot < 0) { continue; }
 
                 //dot = math.dot(agentData.NextDirection, mateData.NextDirection);
                 //if(dot > 0) { continue; }
 
                 if (mateRoutineResult.NewAvoidance == agentAvoidance) { continue; }
-
                 if (math.distance(agentPos, matePos) > agentData.Radius + mateData.Radius + SeperationRangeAddition) { continue; }
                 Tension tension = new Tension()
                 {
@@ -55,14 +56,14 @@ public struct TensionResolver : IJob
 
             RoutineResult result1 = RoutineResultArray[tension.agent1];
             RoutineResult result2 = RoutineResultArray[tension.agent2];
-
+            /*
             bool succesfull = agent1.PathId == agent2.PathId && ExamineSplitting(ref result1, ref result2);
             if (succesfull)
             {
                 RoutineResultArray[tension.agent2] = result2;
                 RoutineResultArray[tension.agent1] = result1;
                 continue;
-            }
+            }*/
 
             int agent1Power;
             int agent2Power;
@@ -85,13 +86,13 @@ public struct TensionResolver : IJob
             if (agent1Power > agent2Power)
             {
                 result2.NewAvoidance = result1.NewAvoidance;
-                //agent2.NextDirection = agent1.NextDirection;
+                result2.NewDirection = result1.NewDirection;
                 RoutineResultArray[tension.agent2] = result2;
             }
             else
             {
                 result1.NewAvoidance = result2.NewAvoidance;
-                //agent1.NextDirection = agent2.NextDirection;
+                result1.NewDirection = result2.NewDirection;
                 RoutineResultArray[tension.agent1] = result1;
             }
         }
@@ -110,7 +111,7 @@ public struct TensionResolver : IJob
         bool succesfull = false;
         if (result1.NewSplitInfo > 0 && result2.NewSplitInfo == 0)
         {
-            //agent2.NextDirection = agent1.NextDirection;
+            result2.NewAvoidance = result1.NewAvoidance;
             result2.NewAvoidance = result1.NewAvoidance;
             result2.NewSplitInterval = 0;
             result2.NewSplitInfo = 50;
@@ -118,7 +119,7 @@ public struct TensionResolver : IJob
         }
         else if (result1.NewSplitInfo == 0 && result2.NewSplitInfo > 0)
         {
-            //agent1.NextDirection = agent2.NextDirection;
+            result1.NewAvoidance = result2.NewAvoidance;
             result1.NewAvoidance = result2.NewAvoidance;
             result1.NewSplitInterval = 0;
             result1.NewSplitInfo = 50;
@@ -137,12 +138,12 @@ public struct TensionResolver : IJob
             AvoidanceStatus avoidance1 = result1.NewAvoidance;
             AvoidanceStatus avoidance2 = result2.NewAvoidance;
 
-            //agent1.NextDirection = nextDir2;
+            result1.NewDirection = nextDir2;
             result1.NewAvoidance = avoidance2;
             result1.NewSplitInterval = 0;
             result1.NewSplitInfo = 50;
 
-            //agent2.NextDirection = nextDir1;
+            result2.NewDirection = nextDir1;
             result2.NewAvoidance = avoidance1;
             result2.NewSplitInterval = 0;
             result2.NewSplitInfo = 50;
