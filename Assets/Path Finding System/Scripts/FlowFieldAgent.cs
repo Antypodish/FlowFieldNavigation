@@ -13,17 +13,19 @@ public class FlowFieldAgent : MonoBehaviour
     [SerializeField] float Speed;
     [SerializeField] float LandOffset;
 
-    [HideInInspector] public int AgentDataIndex;
+    [HideInInspector] public int AgentDataIndex;   //-1 means not subscribed yet
     [HideInInspector] public Transform Transform;
 
     private void Start()
     {
         _pathfindingManager = FindObjectOfType<PathfindingManager>();
-        _pathfindingManager.Subscribe(this);
+        _pathfindingManager.RequestSubscription(this);
         Transform = transform;
+        AgentDataIndex = -1;
     }
     private void Update()
     {
+        if(AgentDataIndex == -1) { return; }
         Vector2 direction = GetDirection();
         Vector3 position = transform.position;
         Vector3 direction3d = new Vector3(direction.x, 0f, direction.y);

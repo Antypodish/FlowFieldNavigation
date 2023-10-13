@@ -7,10 +7,11 @@ using Unity.VisualScripting;
 using UnityEngine.Jobs;
 
 [BurstCompile]
-public struct CollisionResolutionJob : IJobParallelForTransform
+public struct CollisionResolutionJob : IJobParallelFor
 {
     [ReadOnly] public NativeArray<AgentMovementData> AgentMovementDataArray;
-    public void Execute(int index, TransformAccess transform)
+    public NativeArray<float2> AgentPositionChangeBuffer;
+    public void Execute(int index)
     {
         AgentMovementData agentData = AgentMovementDataArray[index];
         if((agentData.Status & AgentStatus.Moving) != AgentStatus.Moving) { return; }
@@ -34,8 +35,7 @@ public struct CollisionResolutionJob : IJobParallelForTransform
             maxOverlapping = math.select(overlapping, maxOverlapping, maxOverlapping > overlapping);
         }
         totalResolution = math.select(totalResolution, math.normalize(totalResolution) * maxOverlapping, math.length(totalResolution) > maxOverlapping);
-        float3 curPos = transform.position;
-        curPos += new float3(totalResolution.x, 0f, totalResolution.y);
-        transform.position = curPos;
+        float3 curPos = AgentMovementDataArray[index].Position;
+        AgentPositionChangeBuffer[index] = new float2(totalResolution.x, totalResolution.y); ;
     }
 }

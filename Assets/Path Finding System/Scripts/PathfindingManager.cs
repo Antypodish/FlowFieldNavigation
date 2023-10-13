@@ -106,9 +106,9 @@ public class PathfindingManager : MonoBehaviour
     {
         _pathfindingUpdateRoutine.RequestCostEdit(startingPoint, endPoint, newCost);
     }
-    public void Subscribe(FlowFieldAgent agent)
+    public void RequestSubscription(FlowFieldAgent agent)
     {
-        AgentDataContainer.Subscribe(agent);
+        _pathfindingUpdateRoutine.RequestAgentAddition(agent);
     }
     public void UnSubscribe(FlowFieldAgent agent)
     {

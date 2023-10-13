@@ -21,6 +21,7 @@ public class AgentRoutineDataProducer
 
     public NativeList<AgentMovementData> AgentMovementDataList;
     public NativeList<OutOfFieldStatus> AgentOutOfFieldStatusList;
+    public NativeList<float2> AgentPositionChangeBuffer;
     public NativeList<RoutineResult> RoutineResults;
     public UnsafeList<UnsafeList<byte>> CostFieldList;
     public AgentRoutineDataProducer(AgentDataContainer agentDataContainer, PathfindingManager pathfindingManager)
@@ -30,6 +31,7 @@ public class AgentRoutineDataProducer
         AgentMovementDataList = new NativeList<AgentMovementData>(_agentDataContainer.Agents.Count, Allocator.Persistent);
         AgentOutOfFieldStatusList = new NativeList<OutOfFieldStatus>(Allocator.Persistent);
         RoutineResults = new NativeList<RoutineResult>(Allocator.Persistent);
+        AgentPositionChangeBuffer = new NativeList<float2>(Allocator.Persistent);
         CostField[] costFields = _pathfindingManager.FieldProducer.GetAllCostFields();
         CostFieldList = new UnsafeList<UnsafeList<byte>>(costFields.Length, Allocator.Persistent);
         CostFieldList.Length = costFields.Length;
@@ -39,77 +41,45 @@ public class AgentRoutineDataProducer
         }
 
     }
-    public AgentRoutineDataCalculationJob CalculateDirections(out TransformAccessArray transformsToSchedule)
+    public AgentRoutineDataCalculationJob CalculateDirections()
     {
         NativeList<AgentData> agentDataList = _agentDataContainer.AgentDataList;
         List<AgentPath> pathList = _agentDataContainer.Paths;
         TransformAccessArray agentTransforms = _agentDataContainer.AgentTransforms;
 
+        
         //CLEAR
         AgentMovementDataList.Clear();
+        AgentPositionChangeBuffer.Clear();
         RoutineResults.Clear();
         AgentMovementDataList.Length = agentDataList.Length;
         AgentOutOfFieldStatusList.Length = agentDataList.Length;
         RoutineResults.Length = agentDataList.Length;
-        //FILL
+        AgentPositionChangeBuffer.Length = agentDataList.Length;
+
+        //FILL AGENT MOVEMENT DATA ARRAY
         for (int i = 0; i < agentDataList.Length; i++)
         {
             Path curPath = pathList[i].CurPath;
 
-            if (curPath == null)
+            if (curPath == null) { continue; }
+            AgentMovementData data = new AgentMovementData()
             {
-                AgentMovementData data = new AgentMovementData()
-                {
-                    Position = 0,
-                    Radius = agentDataList[i].Radius,
-                    Local1d = 0,
-                    DesiredDirection = 0,
-                    SeperationForce = 0,
-                    CurrentDirection = agentDataList[i].Direction,
-                    Speed = agentDataList[i].Speed,
-                    Status = agentDataList[i].Status,
-                    Avoidance = agentDataList[i].Avoidance,
-                    MovingAvoidance = agentDataList[i].MovingAvoidance,
-                    RoutineStatus = 0,
-                    PathId = -1,
-                    TensionPowerIndex = -1,
-                    SplitInfo = agentDataList[i].SplitInfo,
-                    SplitInterval = agentDataList[i].SplitInterval
-                    
-                };
-                AgentMovementDataList[i] = data;
-            }
-            else
-            {
-                AgentMovementData data = new AgentMovementData()
-                {
-                    Position = 0,
-                    Radius = agentDataList[i].Radius,
-                    Local1d = 0,
-                    DesiredDirection = 0,
-                    SeperationForce = 0,
-                    CurrentDirection = agentDataList[i].Direction,
-                    Speed = agentDataList[i].Speed,
-                    Destination = agentDataList[i].Destination,
-                    Waypoint = agentDataList[i].waypoint,
-                    Status = agentDataList[i].Status,
-                    Avoidance = agentDataList[i].Avoidance,
-                    MovingAvoidance = agentDataList[i].MovingAvoidance,
-                    RoutineStatus = 0,
-                    FlowField = curPath.FlowField,
-                    SectorToPicked = curPath.SectorToPicked,
-                    Offset = curPath.Offset,
-                    PathId = curPath.Id,
-                    TensionPowerIndex = -1,
-                    SplitInfo = agentDataList[i].SplitInfo,
-                    SplitInterval = agentDataList[i].SplitInterval
-                };
-                AgentMovementDataList[i] = data;
-            }
+                FlowField = curPath.FlowField,
+                SectorToPicked = curPath.SectorToPicked,
+                Offset = curPath.Offset,
+                PathId = curPath.Id,
+            };
+            AgentMovementDataList[i] = data;
         }
+        AgentMovementDataArrayPreperationJob movDataPrepJob = new AgentMovementDataArrayPreperationJob()
+        {
+            AgentDataArray = agentDataList,
+            AgentMovementDataArray = AgentMovementDataList,
+        };
+        movDataPrepJob.Schedule(agentTransforms).Complete();
         
         //RETRUN JOB
-        transformsToSchedule = agentTransforms;
         return new AgentRoutineDataCalculationJob()
         {
             AgentOutOfFieldStatusList = AgentOutOfFieldStatusList,

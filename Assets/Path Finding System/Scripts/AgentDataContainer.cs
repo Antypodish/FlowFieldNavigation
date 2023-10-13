@@ -107,8 +107,14 @@ public class AgentDataContainer
         data.Direction = direction * math.length(data.Direction);
         AgentDataList[agentIndex] = data;
     }
-    public void SendRoutineResults(NativeArray<RoutineResult> routineResults, NativeArray<AgentMovementData> movementDataArray)
+    public void SendRoutineResults(NativeArray<RoutineResult> routineResults, NativeArray<AgentMovementData> movementDataArray, NativeArray<float2> agentPositionChangeBuffer)
     {
+        AgentPositionChangeSendJob posSendJob = new AgentPositionChangeSendJob()
+        {
+            AgentPositionChangeBuffer = agentPositionChangeBuffer,
+        };
+        posSendJob.Schedule(AgentTransforms).Complete();
+
         RoutineResultSendJob directionSetJob = new RoutineResultSendJob()
         {
             MovementDataArray = movementDataArray,

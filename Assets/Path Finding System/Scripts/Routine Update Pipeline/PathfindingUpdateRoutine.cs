@@ -12,6 +12,7 @@ public class PathfindingUpdateRoutine
 
     List<CostFieldEditJob[]> _costEditRequests;
     List<PortalTraversalJobPack> _portalTravJobs;
+    List<FlowFieldAgent> _agentAddRequest;
 
     public PathfindingUpdateRoutine(PathfindingManager pathfindingManager, PathProducer pathProducer)
     {
@@ -20,6 +21,7 @@ public class PathfindingUpdateRoutine
 
         _costEditRequests = new List<CostFieldEditJob[]>();
         _portalTravJobs = new List<PortalTraversalJobPack>();
+        _agentAddRequest = new List<FlowFieldAgent>();
     }
     public void RoutineUpdate(float deltaTime)
     {
@@ -27,6 +29,13 @@ public class PathfindingUpdateRoutine
         _schedulingTree.ForceCompleteAll();
 
         _pathfindingManager.PathProducer.Update();
+
+        //ADD NEW AGENTS
+        for(int i = 0; i < _agentAddRequest.Count; i++)
+        {
+            _pathfindingManager.AgentDataContainer.Subscribe(_agentAddRequest[i]);
+        }
+        _agentAddRequest.Clear();
 
         //SCHEDULE NEW JOBS
         JobHandle costEditHandle = _schedulingTree.ScheduleCostEditRequests(_costEditRequests);
@@ -49,6 +58,10 @@ public class PathfindingUpdateRoutine
         Index2 b2 = new Index2(endPoint.y, endPoint.x);
         CostFieldEditJob[] costEditJobs = _pathfindingManager.FieldProducer.GetCostFieldEditJobs(new BoundaryData(b1, b2), newCost);
         _costEditRequests.Add(costEditJobs);
+    }
+    public void RequestAgentAddition(FlowFieldAgent agent)
+    {
+        _agentAddRequest.Add(agent);
     }
     public Path RequestPath(NativeArray<float2> sources, Vector2 destination, int offset)
     {

@@ -35,9 +35,11 @@ public class AgentSelectionController : MonoBehaviour
     }
     private void Update()
     {
+        float lowerLimit = 150;
+        float upperLimit = 350;
         for (int i = 0; i < _agentsToCreate; i++)
         {
-            _agentFactory.AddAgent(new Vector3(10, 10, 10));
+            _agentFactory.AddAgent(new Vector3(Random.Range(lowerLimit, upperLimit), 10, Random.Range(lowerLimit, upperLimit)));
         }
         _agentsToCreate= 0;
 

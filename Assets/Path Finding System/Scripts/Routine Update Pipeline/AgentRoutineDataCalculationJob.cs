@@ -2,13 +2,14 @@
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
+using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Jobs;
 using UnityEngine.UIElements;
 
 [BurstCompile]
-public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
+public struct AgentRoutineDataCalculationJob : IJobParallelFor
 {
     public float TileSize;
     public int FieldColAmount;
@@ -18,9 +19,9 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
     public NativeArray<OutOfFieldStatus> AgentOutOfFieldStatusList;
     [ReadOnly] public UnsafeList<UnsafeList<byte>> CostFields;
 
-    public void Execute(int index, TransformAccess transform)
+    public void Execute(int index)
     {
-        Waypoint(index, transform);
+        Waypoint(index);
     }
     void Normal(int index, TransformAccess transform)
     {/*
@@ -90,7 +91,7 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
         data.Flow = math.normalize(data.Flow);
         AgentMovementData[index] = data;*/
     }
-    void Waypoint(int index, TransformAccess transform)
+    void Waypoint(int index)
     {
         float tileSize = TileSize;
         int fieldColAmount = FieldColAmount;
@@ -99,7 +100,6 @@ public struct AgentRoutineDataCalculationJob : IJobParallelForTransform
 
 
         AgentMovementData data = AgentMovementData[index];
-        data.Position = transform.position;
 
 
         int2 sector2d = new int2((int)math.floor(data.Position.x / (SectorColAmount * TileSize)), (int)math.floor(data.Position.z / (SectorColAmount * TileSize)));

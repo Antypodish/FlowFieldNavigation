@@ -1,5 +1,6 @@
 ﻿using Unity.Burst;
 using Unity.Collections;
+using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -8,7 +9,7 @@ using UnityEngine.Jobs;
 
 //ONLY WORKS FOR AGENTS WITH OFFSET 0!
 [BurstCompile]
-public struct CollisionCalculationJob : IJobParallelForTransform
+public struct CollisionCalculationJob : IJobParallelFor
 {
     public float DeltaTime;
     public int FieldColAmount;
@@ -19,11 +20,12 @@ public struct CollisionCalculationJob : IJobParallelForTransform
     [ReadOnly] public NativeList<float2> VertexSequence;
     [ReadOnly] public NativeList<WallObject> WallObjectList;
     [ReadOnly] public NativeList<Direction> EdgeDirections;
+    [WriteOnly] public NativeArray<float2> AgentPositionChangeBuffer;
     public NativeArray<RoutineResult> RoutineResultArray;
-    public void Execute(int index, TransformAccess transform)
+    public void Execute(int index)
     {
         //FOR POSITION
-        float3 agentPos = transform.position;
+        float3 agentPos = AgentMovementData[index].Position;
         float2 agentPos2d = new float2(agentPos.x, agentPos.z);
         int2 agentIndex = new int2((int)math.floor(agentPos2d.x / TileSize), (int)math.floor(agentPos2d.y / TileSize));
         int agentIndex1d = agentIndex.y * FieldColAmount + agentIndex.x;
@@ -34,8 +36,8 @@ public struct CollisionCalculationJob : IJobParallelForTransform
             if (GetCollision(WallObjectList[wallIndiciesAround[0]], agentPos2d, AgentMovementData[index].Radius, out collisionOutpu))
             {
                 float2 seperationForce = SolveCollision(collisionOutpu, agentPos2d, AgentMovementData[index].Radius);
-                transform.position = transform.position + new Vector3(seperationForce.x, 0f, seperationForce.y);
-                agentPos = transform.position;
+                AgentPositionChangeBuffer[index] = new float2(seperationForce.x, seperationForce.y);
+                agentPos = AgentMovementData[index].Position + new float3(seperationForce.x, 0, seperationForce.y);
                 agentPos2d.x = agentPos.x;
                 agentPos2d.y = agentPos.z;
             }

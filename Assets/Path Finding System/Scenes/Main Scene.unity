@@ -742,7 +742,7 @@ PrefabInstance:
     - target: {fileID: 5571130920343903277, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}
       propertyPath: _startingAgentCount
-      value: 0
+      value: 5000
       objectReference: {fileID: 0}
     - target: {fileID: 7314432835859767064, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}
