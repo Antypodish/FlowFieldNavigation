@@ -86,6 +86,8 @@ public class RoutineSchedulingTree
     }
     public void AddLocalAvoidanceJob()
     {
+        Stopwatch sw = new Stopwatch();
+        sw.Start();
         LocalAvoidanceJob avoidanceJob = new LocalAvoidanceJob()
         {
             SeperationMultiplier = BoidController.Instance.SeperationMultiplier,
@@ -94,8 +96,12 @@ public class RoutineSchedulingTree
             AlignmentMultiplier = BoidController.Instance.AlignmentMultiplier,
             AlignmentRangeAddition = BoidController.Instance.AlignmentRangeAddition,
             MovingAvoidanceRangeAddition = BoidController.Instance.MovingAvoidanceRangeAddition,
+            BaseSpatialGridSize = FlowFieldUtilities.BaseSpatialGridSize,
+            FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
+            FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
             AgentMovementDataArray = _dirCalculator.AgentMovementDataList,
             RoutineResultArray = _dirCalculator.RoutineResults,
+            HashGridArray = _dirCalculator.HashGridArray,
         };
         JobHandle avoidanceHandle = avoidanceJob.Schedule(avoidanceJob.AgentMovementDataArray.Length, 64, _collisionResolutionHandle[0]);
         TensionResolver tensionResJob = new TensionResolver()
@@ -109,6 +115,8 @@ public class RoutineSchedulingTree
         _avoidanceHandle.Add(tensionHandle);
 
         if (FlowFieldUtilities.DebugMode) { _avoidanceHandle[0].Complete(); }
+        sw.Stop();
+        UnityEngine.Debug.Log(sw.Elapsed.TotalMilliseconds);
     }
     public void AddCollisionCalculationJob()
     {

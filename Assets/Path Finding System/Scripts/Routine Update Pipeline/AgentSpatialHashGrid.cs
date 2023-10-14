@@ -6,15 +6,20 @@ using Unity.Mathematics;
 [BurstCompile]
 public struct AgentSpatialHashGrid
 {
-    public NativeArray<AgentMovementData> AgentMovementDataArray;
-    public NativeArray<UnsafeList<HashTile>> HashGrids;
+    public float BaseSpatialGridSize;
+    public float FieldHorizontalSize;
+    [ReadOnly] public NativeArray<AgentMovementData> AgentMovementDataArray;
+    [ReadOnly] public NativeArray<UnsafeList<HashTile>> HashGrids;
 
     public NativeSlice<AgentMovementData> Get(float2 position, float size)
     {
-        int startIndex = 0;
-        int length = 0;
-
-
-        return new NativeSlice<AgentMovementData>(AgentMovementDataArray, startIndex, length);
+        int hashGridIndex = (int)math.floor(size / BaseSpatialGridSize);
+        float tileSize = hashGridIndex * BaseSpatialGridSize + BaseSpatialGridSize;
+        int gridColAmount = (int)math.ceil(FieldHorizontalSize / tileSize);
+        int hashTileRow = (int)math.floor(position.y / tileSize);
+        int hashTileCol = (int)math.floor(position.x / tileSize);
+        int hashTileIndex = hashTileRow * gridColAmount + hashTileCol;
+        HashTile tile = HashGrids[hashGridIndex][hashTileIndex];
+        return new NativeSlice<AgentMovementData>(AgentMovementDataArray, tile.Start, tile.Length);
     }
 }
