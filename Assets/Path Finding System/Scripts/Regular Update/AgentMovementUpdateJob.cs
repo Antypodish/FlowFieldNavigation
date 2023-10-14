@@ -11,7 +11,6 @@ public struct AgentMovementUpdateJob : IJobParallelForTransform
 {
     public float DeltaTime;
     public NativeArray<AgentData> AgentDataArray;
-    [WriteOnly] public NativeArray<Vector3> AgentPositions;
     [ReadOnly] public UnsafeList<float> PathStopDistances;
     
     public void Execute(int index, TransformAccess transform)
@@ -34,6 +33,7 @@ public struct AgentMovementUpdateJob : IJobParallelForTransform
         if(math.length(direction + seperation) > 1) { resultingDirection = math.normalize(resultingDirection); }
         float3 newPos = pos + (resultingDirection) * data.Speed * DeltaTime;
         transform.position = newPos;
-        AgentPositions[index] = newPos;
+        data.Position = newPos;
+        AgentDataArray[index] = data;
     }
 }

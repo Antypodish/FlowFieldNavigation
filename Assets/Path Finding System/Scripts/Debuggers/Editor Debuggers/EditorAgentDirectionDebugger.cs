@@ -13,10 +13,9 @@ public class EditorAgentDirectionDebugger
     {
         Gizmos.color = Color.white;
         NativeArray<AgentData> agentData = _pathfindingManager.AgentDataContainer.AgentDataList;
-        NativeArray<Vector3> agentPositions = _pathfindingManager.AgentDataContainer.AgentPositions;
         for(int i = 0; i < agentData.Length; i++)
         {
-            Vector3 pos = agentPositions[i];
+            Vector3 pos = agentData[i].Position;
             pos.y = 2f;
             Vector2 agentDirection = agentData[i].Direction;
             Gizmos.DrawLine(pos, pos + new Vector3(agentDirection.x, 0f, agentDirection.y));

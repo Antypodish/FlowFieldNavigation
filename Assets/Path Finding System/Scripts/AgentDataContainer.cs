@@ -16,7 +16,6 @@ public class AgentDataContainer
     public List<FlowFieldAgent> Agents;
     public TransformAccessArray AgentTransforms;
     public NativeList<AgentData> AgentDataList;
-    public NativeList<Vector3> AgentPositions;
     public List<AgentPath> Paths;
 
     PathfindingManager _pathfindingManager;
@@ -28,7 +27,6 @@ public class AgentDataContainer
         Paths = new List<AgentPath>();
         AgentTransforms = new TransformAccessArray(0);
         AgentDataList = new NativeList<AgentData>(Allocator.Persistent);
-        AgentPositions = new NativeList<Vector3>(Allocator.Persistent);
     }
     public void Subscribe(FlowFieldAgent agent)
     {
@@ -40,12 +38,12 @@ public class AgentDataContainer
             Destination = Vector2.zero,
             Direction = Vector2.zero,
             Radius = agent.GetRadius(),
+            Position = agent.transform.position,
         };
         Agents.Add(agent);
         Paths.Add(new AgentPath());
         AgentTransforms.Add(agent.transform);
         AgentDataList.Add(data);
-        AgentPositions.Add(agent.transform.position);
     }
     public void UnSubscribe(FlowFieldAgent agent)
     {
@@ -55,7 +53,6 @@ public class AgentDataContainer
         Paths.RemoveAtSwapBack(agentIndex);
         AgentTransforms.RemoveAtSwapBack(agentIndex);
         AgentDataList.RemoveAtSwapBack(agentIndex);
-        AgentPositions.RemoveAtSwapBack(agentIndex);
         Agents[agentIndex].AgentDataIndex = agentIndex;
     }
     public void SetPath(int agentIndex, Path newPath)
@@ -128,7 +125,7 @@ public class AgentDataContainer
         NativeArray<float2> positions = new NativeArray<float2>(agents.Count, Allocator.Persistent);
         for(int i = 0; i < agents.Count; i++)
         {
-            Vector3 pos3d = AgentPositions[agents[i].AgentDataIndex];
+            Vector3 pos3d = AgentDataList[agents[i].AgentDataIndex].Position;
             positions[i] = new float2(pos3d.x, pos3d.z);
         }
         return positions;
@@ -143,6 +140,7 @@ public struct AgentData
     public float2 Destination;
     public float2 Direction;
     public float2 Seperation;
+    public float3 Position;
     public float Radius;
     public Waypoint waypoint;
 

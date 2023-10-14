@@ -25,28 +25,38 @@ public class PathfindingUpdateRoutine
     }
     public void RoutineUpdate(float deltaTime)
     {
+        Stopwatch sw = new Stopwatch();
         //FORCE COMPLETE JOBS FROM PREVIOUS UPDATE
         _schedulingTree.ForceCompleteAll();
 
         _pathfindingManager.PathProducer.Update();
 
         //ADD NEW AGENTS
-        for(int i = 0; i < _agentAddRequest.Count; i++)
+        for (int i = 0; i < _agentAddRequest.Count; i++)
         {
             _pathfindingManager.AgentDataContainer.Subscribe(_agentAddRequest[i]);
         }
         _agentAddRequest.Clear();
 
         //SCHEDULE NEW JOBS
+
         JobHandle costEditHandle = _schedulingTree.ScheduleCostEditRequests(_costEditRequests);
+
         _costEditRequests.Clear();
-        _schedulingTree.AddMovementDataCalculationHandle(costEditHandle);
+
+        _schedulingTree.AddMovementDataCalculationHandle(costEditHandle); 
+
         _schedulingTree.AddCollisionResolutionJob();
-        _schedulingTree.AddLocalAvoidanceJob();
-        _schedulingTree.AddCollisionCalculationJob();
+        sw.Start();
+
+        _schedulingTree.AddLocalAvoidanceJob(); sw.Stop();
+
+        _schedulingTree.AddCollisionCalculationJob(); 
         _schedulingTree.SetPortalAdditionTraversalHandles();
         _schedulingTree.AddPortalTraversalHandles(_portalTravJobs, costEditHandle);
         _portalTravJobs.Clear();
+
+        UnityEngine.Debug.Log(sw.Elapsed.TotalMilliseconds);
     }
     public void IntermediateLateUpdate()
     {

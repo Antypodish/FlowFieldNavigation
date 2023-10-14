@@ -6,17 +6,17 @@ using UnityEngine.SocialPlatforms;
 using UnityEngine.UIElements;
 
 [BurstCompile]
-public struct AgentMovementDataArrayPreperationJob : IJobParallelForTransform
+public struct AgentMovementDataArrayPreperationJob : IJobParallelFor
 {
     [ReadOnly] public NativeArray<AgentData> AgentDataArray;
     public NativeArray<AgentMovementData> AgentMovementDataArray;
-    public void Execute(int index, TransformAccess transform)
+    public void Execute(int index)
     {
         AgentData agentData = AgentDataArray[index];
         AgentMovementData agentMovementData = AgentMovementDataArray[index];
         if (agentMovementData.FlowField.Length == 0)
         {
-            agentMovementData.Position = transform.position;
+            agentMovementData.Position = agentData.Position;
             agentMovementData.Radius = agentData.Radius;
             agentMovementData.Local1d = 0;
             agentMovementData.DesiredDirection = 0;
@@ -35,7 +35,7 @@ public struct AgentMovementDataArrayPreperationJob : IJobParallelForTransform
         }
         else
         {
-            agentMovementData.Position = transform.position;
+            agentMovementData.Position = agentData.Position;
             agentMovementData.Radius = agentData.Radius;
             agentMovementData.Local1d = 0;
             agentMovementData.DesiredDirection = 0;

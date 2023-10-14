@@ -1,14 +1,8 @@
 ﻿
 using Unity.Burst;
 using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
-using Unity.VisualScripting;
-using UnityEditor;
-using UnityEditor.Experimental.Rendering;
-using UnityEngine;
-using UnityEngine.Analytics;
 
 [BurstCompile]
 public struct LocalAvoidanceJob : IJobParallelFor
@@ -123,7 +117,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
             
             if (i == agentIndex) { continue; }
             if (math.dot(matePos - agentPos, desiredDirection) < 0) { continue; }
-            if(math.dot(mate.CurrentDirection, cur) < 0) { continue; }
+            if(math.dot(mate.CurrentDirection, cur) <= 0) { continue; }
             if(!HasStatusFlag(AgentStatus.Moving, mate.Status)) { continue; }
             if (overlapping <= 0) { continue; }
 
@@ -132,7 +126,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
                 totalHeading += mate.DesiredDirection;
                 alignedAgentCount++;
             }
-            toalCurrentHeading += math.normalizesafe(mate.CurrentDirection);
+            toalCurrentHeading += math.normalize(mate.CurrentDirection);
             curAlignedAgentCount++;
             if(mate.Avoidance != 0) { avoiding = true; }
         }

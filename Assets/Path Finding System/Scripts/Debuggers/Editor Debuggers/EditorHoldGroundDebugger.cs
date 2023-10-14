@@ -15,12 +15,11 @@ public class EditorHoldGroundDebugger
         Gizmos.color = Color.yellow;
 
         NativeArray<AgentData> agents = _pathfindingManager.AgentDataContainer.AgentDataList;
-        NativeArray<Vector3> positions = _pathfindingManager.AgentDataContainer.AgentPositions;
 
         for(int i = 0; i< agents.Length; i++)
         {            
             if ((agents[i].Status & AgentStatus.HoldGround) != AgentStatus.HoldGround) { continue; }
-            Gizmos.DrawCube(positions[i], new Vector3(0.2f, 0.2f, 0.2f));
+            Gizmos.DrawCube(agents[i].Position, new Vector3(0.2f, 0.2f, 0.2f));
         }
     }
 }

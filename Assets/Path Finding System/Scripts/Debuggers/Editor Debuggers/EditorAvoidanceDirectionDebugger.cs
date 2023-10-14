@@ -12,19 +12,18 @@ internal class EditorAvoidanceDirectionDebugger
     public void Debug()
     {
         NativeArray<AgentData> agents = _pathfindingManager.AgentDataContainer.AgentDataList;
-        NativeArray<Vector3> positions = _pathfindingManager.AgentDataContainer.AgentPositions;
 
         for (int i = 0; i < agents.Length; i++)
         {
             if (agents[i].Avoidance == AvoidanceStatus.L)
             {
                 Gizmos.color = Color.red;
-                Gizmos.DrawCube(positions[i], new Vector3(0.2f, 0.2f, 0.2f));
+                Gizmos.DrawCube(agents[i].Position, new Vector3(0.2f, 0.2f, 0.2f));
             }
             else if (agents[i].Avoidance == AvoidanceStatus.R)
             {
                 Gizmos.color = Color.black;
-                Gizmos.DrawCube(positions[i], new Vector3(0.2f, 0.2f, 0.2f));
+                Gizmos.DrawCube(agents[i].Position, new Vector3(0.2f, 0.2f, 0.2f));
             }
         }
     }

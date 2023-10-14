@@ -13,10 +13,9 @@ public class EditorAgentRadiusDebugger
     {
         Gizmos.color = Color.white;
         NativeArray<AgentData> agents = _pathfindingManager.AgentDataContainer.AgentDataList;
-        NativeArray<Vector3> agentPositions = _pathfindingManager.AgentDataContainer.AgentPositions;
         for(int i = 0; i < agents.Length; i++)
         {
-            Gizmos.DrawWireSphere(agentPositions[i], agents[i].Radius);
+            Gizmos.DrawWireSphere(agents[i].Position, agents[i].Radius);
         }
     }
 }

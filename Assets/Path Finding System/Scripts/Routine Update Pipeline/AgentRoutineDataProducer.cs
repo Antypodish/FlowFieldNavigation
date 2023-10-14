@@ -57,6 +57,13 @@ public class AgentRoutineDataProducer
         RoutineResults.Length = agentDataList.Length;
         AgentPositionChangeBuffer.Length = agentDataList.Length;
 
+        //SET POSITIONS OF AGENT DATA
+        AgentDataSetPositionJob posSetJob = new AgentDataSetPositionJob()
+        {
+            AgentDataArray = agentDataList,
+        };
+        posSetJob.Schedule(agentTransforms).Complete();
+
         //FILL AGENT MOVEMENT DATA ARRAY
         for (int i = 0; i < agentDataList.Length; i++)
         {
@@ -77,7 +84,7 @@ public class AgentRoutineDataProducer
             AgentDataArray = agentDataList,
             AgentMovementDataArray = AgentMovementDataList,
         };
-        movDataPrepJob.Schedule(agentTransforms).Complete();
+        movDataPrepJob.Schedule(movDataPrepJob.AgentMovementDataArray.Length, 64).Complete();
         
         //RETRUN JOB
         return new AgentRoutineDataCalculationJob()
