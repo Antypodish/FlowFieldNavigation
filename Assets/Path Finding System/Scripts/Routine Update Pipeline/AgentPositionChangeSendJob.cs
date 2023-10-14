@@ -9,9 +9,11 @@ using UnityEngine.Jobs;
 public struct AgentPositionChangeSendJob : IJobParallelForTransform
 {
     [ReadOnly] public NativeArray<float2> AgentPositionChangeBuffer;
+    [ReadOnly] public NativeArray<int> NormalToHashed;
     public void Execute(int index, TransformAccess transform)
     {
-        float2 change = AgentPositionChangeBuffer[index];
+        int hashedIndex = NormalToHashed[index];
+        float2 change = AgentPositionChangeBuffer[hashedIndex];
         transform.position = transform.position + new Vector3(change.x, 0f, change.y);
     }
 }

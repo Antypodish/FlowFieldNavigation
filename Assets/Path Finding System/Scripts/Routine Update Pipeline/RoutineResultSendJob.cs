@@ -8,14 +8,15 @@ struct RoutineResultSendJob : IJob
 {
     [ReadOnly] public NativeArray<AgentMovementData> MovementDataArray;
     [ReadOnly] public NativeArray<RoutineResult> RoutineResultArray;
+    [ReadOnly] public NativeArray<int> NormalToHashed;
     public NativeArray<AgentData> AgentDataArray;
     public void Execute()
     {
         for (int i = 0; i < RoutineResultArray.Length; i++)
         {
             AgentData agentData = AgentDataArray[i];
-            AgentMovementData movementData = MovementDataArray[i];
-            RoutineResult result = RoutineResultArray[i];
+            AgentMovementData movementData = MovementDataArray[NormalToHashed[i]];
+            RoutineResult result = RoutineResultArray[NormalToHashed[i]];
             agentData.waypoint = agentData.Destination.Equals(movementData.Destination) ? movementData.Waypoint : new Waypoint();
             agentData.Direction = result.NewDirection;
             agentData.Seperation = result.NewSeperation;

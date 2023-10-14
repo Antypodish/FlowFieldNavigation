@@ -1,15 +1,13 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using Unity.Collections;
 using Unity.Mathematics;
-using Unity.VisualScripting;
-using UnityEditor;
 using UnityEngine;
 public class PathfindingManager : MonoBehaviour
 {
     [SerializeField] TerrainGenerator _terrainGenerator;
     [SerializeField] int _maxCostfieldOffset;
-    [SerializeField] public float _agentUpdateFrequency;
+    [SerializeField] public float AgentUpdateFrequency;
+    [SerializeField] public float BaseSpatialGridSize;
 
     [HideInInspector] public float TileSize;
     [HideInInspector] public int RowAmount;
@@ -38,6 +36,8 @@ public class PathfindingManager : MonoBehaviour
         ColumnAmount = _terrainGenerator.ColumnAmount;
         SectorMatrixColAmount = ColumnAmount / SectorColAmount;
         SectorMatrixRowAmount = RowAmount / SectorColAmount;
+        SetFlowFieldUtilities();
+
 
         FieldProducer = new FieldProducer(_terrainGenerator.WalkabilityData, SectorColAmount);
         FieldProducer.CreateField(_maxCostfieldOffset, SectorColAmount, SectorMatrixColAmount, SectorMatrixRowAmount, RowAmount, ColumnAmount, TileSize);
@@ -46,7 +46,7 @@ public class PathfindingManager : MonoBehaviour
         _pathfindingUpdateRoutine = new PathfindingUpdateRoutine(this, PathProducer);
         _agentUpdater = new AgentUpdater(AgentDataContainer, this);
 
-        SetFlowFieldUtilities();
+        
     }
     private void Update()
     {
@@ -54,7 +54,7 @@ public class PathfindingManager : MonoBehaviour
 
         float curTime = Time.realtimeSinceStartup;
         float deltaTime = curTime - _lastAgentUpdateTime;
-        if (deltaTime >= _agentUpdateFrequency)
+        if (deltaTime >= AgentUpdateFrequency)
         {
             _lastAgentUpdateTime = curTime;
             _pathfindingUpdateRoutine.RoutineUpdate(deltaTime);
@@ -77,6 +77,9 @@ public class PathfindingManager : MonoBehaviour
         FlowFieldUtilities.FieldColAmount = ColumnAmount;
         FlowFieldUtilities.FieldRowAmount = RowAmount;
         FlowFieldUtilities.FieldTileAmount = ColumnAmount * RowAmount;
+        FlowFieldUtilities.BaseSpatialGridSize = BaseSpatialGridSize;
+        FlowFieldUtilities.MinAgentSize = 0;
+        FlowFieldUtilities.MaxAgentSize = (_maxCostfieldOffset * TileSize * 2) + TileSize;
     }
     public void SetDestination(List<FlowFieldAgent> agents, Vector3 target)
     {

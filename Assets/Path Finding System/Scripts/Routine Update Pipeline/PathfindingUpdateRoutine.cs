@@ -55,8 +55,6 @@ public class PathfindingUpdateRoutine
         _schedulingTree.SetPortalAdditionTraversalHandles();
         _schedulingTree.AddPortalTraversalHandles(_portalTravJobs, costEditHandle);
         _portalTravJobs.Clear();
-
-        UnityEngine.Debug.Log(sw.Elapsed.TotalMilliseconds);
     }
     public void IntermediateLateUpdate()
     {

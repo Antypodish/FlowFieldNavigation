@@ -104,11 +104,12 @@ public class AgentDataContainer
         data.Direction = direction * math.length(data.Direction);
         AgentDataList[agentIndex] = data;
     }
-    public void SendRoutineResults(NativeArray<RoutineResult> routineResults, NativeArray<AgentMovementData> movementDataArray, NativeArray<float2> agentPositionChangeBuffer)
+    public void SendRoutineResults(NativeArray<RoutineResult> routineResults, NativeArray<AgentMovementData> movementDataArray, NativeArray<float2> agentPositionChangeBuffer, NativeArray<int> normalToHashed)
     {
         AgentPositionChangeSendJob posSendJob = new AgentPositionChangeSendJob()
         {
             AgentPositionChangeBuffer = agentPositionChangeBuffer,
+            NormalToHashed = normalToHashed,
         };
         posSendJob.Schedule(AgentTransforms).Complete();
 
@@ -117,6 +118,7 @@ public class AgentDataContainer
             MovementDataArray = movementDataArray,
             AgentDataArray = AgentDataList,
             RoutineResultArray = routineResults,
+            NormalToHashed = normalToHashed
         };
         directionSetJob.Schedule().Complete();
     }

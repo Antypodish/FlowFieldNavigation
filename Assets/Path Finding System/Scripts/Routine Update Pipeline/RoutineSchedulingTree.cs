@@ -114,7 +114,7 @@ public class RoutineSchedulingTree
     {
         CollisionCalculationJob collisionJob = new CollisionCalculationJob()
         {
-            DeltaTime = _pathfindingManager._agentUpdateFrequency,
+            DeltaTime = _pathfindingManager.AgentUpdateFrequency,
             TileSize = _pathfindingManager.TileSize,
             FieldColAmount = _pathfindingManager.ColumnAmount,
             FieldRowAmount = _pathfindingManager.RowAmount,
@@ -277,7 +277,8 @@ public class RoutineSchedulingTree
         NativeArray<RoutineResult> routineResults = _dirCalculator.RoutineResults;
         NativeArray<AgentMovementData> agentMovementDataList = _dirCalculator.AgentMovementDataList;
         NativeArray<float2> agentPositionChangeBuffer = _dirCalculator.AgentPositionChangeBuffer;
+        NativeArray<int> normalToHashed = _dirCalculator.NormalToHashed;
 
-        _pathfindingManager.AgentDataContainer.SendRoutineResults(routineResults, agentMovementDataList, agentPositionChangeBuffer);
+        _pathfindingManager.AgentDataContainer.SendRoutineResults(routineResults, agentMovementDataList, agentPositionChangeBuffer, normalToHashed);
     }
 }

@@ -13,6 +13,9 @@ public static class FlowFieldUtilities
     public static int SectorMatrixColAmount;
     public static int SectorMatrixRowAmount;
     public static int SectorMatrixTileAmount;
+    public static float BaseSpatialGridSize;
+    public static float MinAgentSize;
+    public static float MaxAgentSize;
 
     public static int To1D(int2 index2, int colAmount)
     {
