@@ -708,6 +708,10 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
+      propertyPath: _debugSpatialHashGrid
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
       propertyPath: _debugObstacleAllocation
       value: 1
       objectReference: {fileID: 0}
@@ -742,7 +746,7 @@ PrefabInstance:
     - target: {fileID: 5571130920343903277, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}
       propertyPath: _startingAgentCount
-      value: 5000
+      value: 1000
       objectReference: {fileID: 0}
     - target: {fileID: 7314432835859767064, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}
@@ -1015,7 +1019,7 @@ PrefabInstance:
     - target: {fileID: 8734084087838304231, guid: 5e3867b8afbc0bb49a0027ab49965980,
         type: 3}
       propertyPath: BaseSpatialGridSize
-      value: 3
+      value: 11.546
       objectReference: {fileID: 0}
     - target: {fileID: 8734084087838304231, guid: 5e3867b8afbc0bb49a0027ab49965980,
         type: 3}

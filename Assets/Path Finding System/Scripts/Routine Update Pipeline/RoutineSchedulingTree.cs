@@ -36,7 +36,10 @@ public class RoutineSchedulingTree
         _avoidanceHandle = new List<JobHandle>();
         _collisionResolutionHandle = new List<JobHandle>();
     }
-
+    public AgentRoutineDataProducer GetRoutineDataProducer()
+    {
+        return _dirCalculator;
+    }
     public JobHandle ScheduleCostEditRequests(List<CostFieldEditJob[]> costFieldEditRequests)
     {
         NativeList<JobHandle> editHandles = new NativeList<JobHandle>(Allocator.Temp);
@@ -74,10 +77,13 @@ public class RoutineSchedulingTree
     }
     public void AddCollisionResolutionJob()
     {
+        _movDataCalcHandle[0].Complete();
         CollisionResolutionJob colResJob = new CollisionResolutionJob()
         {
             AgentMovementDataArray = _dirCalculator.AgentMovementDataList,
             AgentPositionChangeBuffer = _dirCalculator.AgentPositionChangeBuffer,
+            HashGridArray = _dirCalculator.HashGridArray,
+            SpatialGridUtils = new AgentSpatialGridUtils(0),
         };
         JobHandle colResHandle = colResJob.Schedule(colResJob.AgentMovementDataArray.Length, 64, _movDataCalcHandle[0]);
         _collisionResolutionHandle.Add(colResHandle);
@@ -100,12 +106,7 @@ public class RoutineSchedulingTree
             AgentMovementDataArray = _dirCalculator.AgentMovementDataList,
             RoutineResultArray = _dirCalculator.RoutineResults,
             HashGridArray = _dirCalculator.HashGridArray,
-            SpatialGridUtils = new AgentSpatialGridUtils()
-            {
-                BaseSpatialGridSize = FlowFieldUtilities.BaseSpatialGridSize,
-                FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
-                FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
-            }
+            SpatialGridUtils = new AgentSpatialGridUtils(0),
         };
         JobHandle avoidanceHandle = avoidanceJob.Schedule(avoidanceJob.AgentMovementDataArray.Length, 64, _collisionResolutionHandle[0]);
         TensionResolver tensionResJob = new TensionResolver()

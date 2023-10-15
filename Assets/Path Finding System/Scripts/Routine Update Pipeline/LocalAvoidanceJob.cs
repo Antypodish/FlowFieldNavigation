@@ -73,8 +73,6 @@ public struct LocalAvoidanceJob : IJobParallelFor
         //GET SEPERATION
         float2 seperation = GetSeperation(agentPos, agent.CurrentDirection, agent.Radius, index, newRoutineResult.NewAvoidance);
 
-        
-
         //GET ALIGNMENT
         if (newRoutineResult.NewAvoidance == 0 && movingAvoidance.Equals(0))
         {

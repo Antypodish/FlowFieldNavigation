@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 using UnityEngine;
 public class PathfindingManager : MonoBehaviour
@@ -105,6 +106,18 @@ public class PathfindingManager : MonoBehaviour
             agents[i].SetPath(newPath);
         }
         
+    }
+    public NativeArray<UnsafeList<HashTile>> GetSpatialHashGridArray()
+    {
+        return _pathfindingUpdateRoutine.GetSchedulingTree().GetRoutineDataProducer().HashGridArray;
+    }
+    public NativeArray<int> GetNormalToHashed()
+    {
+        return _pathfindingUpdateRoutine.GetSchedulingTree().GetRoutineDataProducer().NormalToHashed;
+    }
+    public NativeArray<AgentMovementData> GetAgentMovementData()
+    {
+        return _pathfindingUpdateRoutine.GetSchedulingTree().GetRoutineDataProducer().AgentMovementDataList;
     }
     public void EditCost(int2 startingPoint, int2 endPoint, byte newCost)
     {

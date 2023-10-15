@@ -56,6 +56,10 @@ public class PathfindingUpdateRoutine
         _schedulingTree.AddPortalTraversalHandles(_portalTravJobs, costEditHandle);
         _portalTravJobs.Clear();
     }
+    public RoutineSchedulingTree GetSchedulingTree()
+    {
+        return _schedulingTree;
+    }
     public void IntermediateLateUpdate()
     {
         _schedulingTree.TryCompletePredecessorJobs();

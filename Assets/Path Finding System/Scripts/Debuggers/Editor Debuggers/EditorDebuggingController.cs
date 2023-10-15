@@ -32,6 +32,9 @@ public class EditorDebuggingController : MonoBehaviour
     [SerializeField] bool _debugAgentsHoldingGround;
     [SerializeField] bool _debugAgentSeperationRadius;
     [SerializeField] bool _debugAvoidanceDirections;
+    [Header("Spatial Hash Grid Debugger")]
+    [SerializeField] int _gridIndex;
+    [SerializeField] bool _debugSpatialHashGrid;
 
     //debuggers
     EditorSectorDebugger _sectorDebugger;
@@ -46,6 +49,7 @@ public class EditorDebuggingController : MonoBehaviour
     EditorHoldGroundDebugger _holdGroundDebugger;
     EditorAgentRadiusDebugger _agentRadiusDebugger;
     EditorAvoidanceDirectionDebugger _avoidanceDirectionDebugger;
+    EditorSpatialHashGridDebugger _spatialHashGridDebugger;
     private void Start()
     {
         _sectorDebugger = new EditorSectorDebugger(_pathfindingManager);
@@ -59,6 +63,7 @@ public class EditorDebuggingController : MonoBehaviour
         _holdGroundDebugger = new EditorHoldGroundDebugger(_pathfindingManager);
         _agentRadiusDebugger = new EditorAgentRadiusDebugger(_pathfindingManager);
         _avoidanceDirectionDebugger = new EditorAvoidanceDirectionDebugger(_pathfindingManager);
+        _spatialHashGridDebugger = new EditorSpatialHashGridDebugger(_pathfindingManager);
     }
     private void Update()
     {
@@ -95,6 +100,7 @@ public class EditorDebuggingController : MonoBehaviour
         if(_debugAgentsHoldingGround && _holdGroundDebugger != null) { _holdGroundDebugger.Debug(); }
         if(_debugAgentSeperationRadius && _agentRadiusDebugger != null) { _agentRadiusDebugger.DebugSeperationRadius(); }
         if (_debugAvoidanceDirections && _avoidanceDirectionDebugger != null) { _avoidanceDirectionDebugger.Debug(); }
+        if(_debugSpatialHashGrid && _spatialHashGridDebugger != null) { _spatialHashGridDebugger.Debug(_gridIndex); }
     }
 
     enum CostFieldOffset : byte
@@ -106,5 +112,6 @@ public class EditorDebuggingController : MonoBehaviour
         Four = 4,
         Five = 5
     }
+
 }
 #endif
