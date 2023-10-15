@@ -17,6 +17,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
     public float BaseSpatialGridSize;
     public float FieldHorizontalSize;
     public float FieldVerticalSize;
+    public AgentSpatialGridUtils SpatialGridUtils;
     [ReadOnly] public NativeArray<AgentMovementData> AgentMovementDataArray;
     [ReadOnly] public NativeArray<UnsafeList<HashTile>> HashGridArray;
     [WriteOnly] public NativeArray<RoutineResult> RoutineResultArray;
@@ -70,14 +71,14 @@ public struct LocalAvoidanceJob : IJobParallelFor
             newDirectionToSteer = movingAvoidance;
         }
         //GET SEPERATION
-        float2 seperation = GetSeperation(agentPos, agent.CurrentDirection, agent.Radius, index, newRoutineResult.NewAvoidance, movingAvoidance);
+        float2 seperation = GetSeperation(agentPos, agent.CurrentDirection, agent.Radius, index, newRoutineResult.NewAvoidance);
 
         
 
         //GET ALIGNMENT
         if (newRoutineResult.NewAvoidance == 0 && movingAvoidance.Equals(0))
         {
-            float2 alignment = GetAlignment(agentPos, agent.DesiredDirection, index, agent.PathId, agent.Radius, agent.CurrentDirection);
+            float2 alignment = GetAlignment(agentPos, agent.DesiredDirection, agent.CurrentDirection, index, agent.PathId, agent.Radius);
             newDirectionToSteer += alignment;
         }
 
@@ -104,7 +105,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
         float steeringToSeekLen = math.length(steeringToSeek);
         return math.select(steeringToSeek / steeringToSeekLen, 0f, steeringToSeekLen == 0) * math.select(SeekMultiplier, steeringToSeekLen, steeringToSeekLen < SeekMultiplier);
     }
-    float2 GetAlignment(float2 agentPos, float2 desiredDirection, int agentIndex, int pahtId, float radius, float2 cur)
+    float2 GetAlignment(float2 agentPos, float2 desiredDirection, float2 currentDirection, int agentIndex, int pahtId, float radius)
     {
         float2 totalHeading = 0;
         int alignedAgentCount = 0;
@@ -118,7 +119,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
         for(int i = 0; i < HashGridArray.Length; i++)
         {
             UnsafeList<HashTile> hashGrid = HashGridArray[i];
-            GridTravesalData travData = GetGridTraversalData(agentPos, checkRange, i);
+            GridTravesalData travData = SpatialGridUtils.GetGridTraversalData(agentPos, checkRange, i);
             for(int j = travData.botLeft; j <= travData.topLeft; j += travData.gridColAmount)
             {
                 for(int k = j; k < j + travData.horizontalSize; k++)
@@ -136,7 +137,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
 
                         if (m == agentIndex) { continue; }
                         if (math.dot(matePos - agentPos, desiredDirection) < 0) { continue; }
-                        if (math.dot(mate.CurrentDirection, cur) <= 0) { continue; }
+                        if (math.dot(mate.CurrentDirection, currentDirection) <= 0) { continue; }
                         if (!HasStatusFlag(AgentStatus.Moving, mate.Status)) { continue; }
                         if (overlapping <= 0) { continue; }
 
@@ -159,7 +160,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
         }
         return math.select(totalHeading / alignedAgentCount - desiredDirection, 0, alignedAgentCount == 0);
     }
-    float2 GetSeperation(float2 agentPos, float2 currentDirection, float agentRadius, int agentIndex, AvoidanceStatus agentAvoidance, float2 movingAvoidance)
+    float2 GetSeperation(float2 agentPos, float2 currentDirection, float agentRadius, int agentIndex, AvoidanceStatus agentAvoidance)
     {
         float2 totalSeperation = 0;
         int seperationCount = 0;
@@ -169,7 +170,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
         for(int i = 0; i < HashGridArray.Length; i++)
         {
             UnsafeList<HashTile> hashGrid = HashGridArray[i];
-            GridTravesalData travData = GetGridTraversalData(agentPos, agentRadius + SeperationRangeAddition + 0.1f, i);
+            GridTravesalData travData = SpatialGridUtils.GetGridTraversalData(agentPos, agentRadius + SeperationRangeAddition + 0.1f, i);
             for(int j = travData.botLeft; j <= travData.topLeft; j += travData.gridColAmount)
             {
                 for(int k = j; k < j + travData.horizontalSize; k++)
@@ -202,7 +203,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
             for (int i = 0; i < HashGridArray.Length; i++)
             {
                 UnsafeList<HashTile> hashGrid = HashGridArray[i];
-                GridTravesalData travData = GetGridTraversalData(agentPos, agentRadius + SeperationRangeAddition, i);
+                GridTravesalData travData = SpatialGridUtils.GetGridTraversalData(agentPos, agentRadius + SeperationRangeAddition, i);
                 for (int j = travData.botLeft; j <= travData.topLeft; j += travData.gridColAmount)
                 {
                     for (int k = j; k < j + travData.horizontalSize; k++)
@@ -234,7 +235,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
             for (int i = 0; i < HashGridArray.Length; i++)
             {
                 UnsafeList<HashTile> hashGrid = HashGridArray[i];
-                GridTravesalData travData = GetGridTraversalData(agentPos, agentRadius + SeperationRangeAddition, i);
+                GridTravesalData travData = SpatialGridUtils.GetGridTraversalData(agentPos, agentRadius + SeperationRangeAddition, i);
                 for (int j = travData.botLeft; j <= travData.topLeft; j += travData.gridColAmount)
                 {
                     for (int k = j; k < j + travData.horizontalSize; k++)
@@ -275,7 +276,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
         for (int i = 0; i < HashGridArray.Length; i++)
         {
             UnsafeList<HashTile> hashGrid = HashGridArray[i];
-            GridTravesalData travData = GetGridTraversalData(agentPos, agentRadius + SeperationRangeAddition, i);
+            GridTravesalData travData = SpatialGridUtils.GetGridTraversalData(agentPos, agentRadius + SeperationRangeAddition, i);
             for (int j = travData.botLeft; j <= travData.topLeft; j += travData.gridColAmount)
             {
                 for (int k = j; k < j + travData.horizontalSize; k++)
@@ -311,7 +312,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
         for (int i = 0; i < HashGridArray.Length; i++)
         {
             UnsafeList<HashTile> hashGrid = HashGridArray[i];
-            GridTravesalData travData = GetGridTraversalData(agentPos, agentRadius + SeperationRangeAddition + 0.1f, i);
+            GridTravesalData travData = SpatialGridUtils.GetGridTraversalData(agentPos, agentRadius + SeperationRangeAddition + 0.1f, i);
             for (int j = travData.botLeft; j <= travData.topLeft; j += travData.gridColAmount)
             {
                 for (int k = j; k < j + travData.horizontalSize; k++)
@@ -349,7 +350,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
         for (int i = 0; i < HashGridArray.Length; i++)
         {
             UnsafeList<HashTile> hashGrid = HashGridArray[i];
-            GridTravesalData travData = GetGridTraversalData(agentPos, agentRadius + 0.2f + 0.3f, i);
+            GridTravesalData travData = SpatialGridUtils.GetGridTraversalData(agentPos, agentRadius + 0.2f + 0.3f, i);
             for (int j = travData.botLeft; j <= travData.topLeft; j += travData.gridColAmount)
             {
                 for (int k = j; k < j + travData.horizontalSize; k++)
@@ -389,7 +390,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
         for (int i = 0; i < HashGridArray.Length; i++)
         {
             UnsafeList<HashTile> hashGrid = HashGridArray[i];
-            GridTravesalData travData = GetGridTraversalData(agentPos, agentRadius + SeperationRangeAddition + 1f, i);
+            GridTravesalData travData = SpatialGridUtils.GetGridTraversalData(agentPos, agentRadius + SeperationRangeAddition + 1f, i);
             for (int j = travData.botLeft; j <= travData.topLeft; j += travData.gridColAmount)
             {
                 for (int k = j; k < j + travData.horizontalSize; k++)
@@ -480,7 +481,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
         for (int i = 0; i < HashGridArray.Length; i++)
         {
             UnsafeList<HashTile> hashGrid = HashGridArray[i];
-            GridTravesalData travData = GetGridTraversalData(agentPos, checkRange, i);
+            GridTravesalData travData = SpatialGridUtils.GetGridTraversalData(agentPos, checkRange, i);
             for (int j = travData.botLeft; j <= travData.topLeft; j += travData.gridColAmount)
             {
                 for (int k = j; k < j + travData.horizontalSize; k++)
@@ -584,7 +585,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
         for (int i = 0; i < HashGridArray.Length; i++)
         {
             UnsafeList<HashTile> hashGrid = HashGridArray[i];
-            GridTravesalData travData = GetGridTraversalData(agentPos, agentRadius + 0.2f, i);
+            GridTravesalData travData = SpatialGridUtils.GetGridTraversalData(agentPos, agentRadius + 0.2f, i);
             for (int j = travData.botLeft; j <= travData.topLeft; j += travData.gridColAmount)
             {
                 for (int k = j; k < j + travData.horizontalSize; k++)
@@ -648,38 +649,5 @@ public struct LocalAvoidanceJob : IJobParallelFor
             return agentCurrentDir;
         }
     }
-
-    int2 GetStartingTileIndex(float2 position, float tileSize) => new int2((int)math.floor(position.x / tileSize), (int)math.floor(position.y / tileSize));
-    int GetOffset(float size, float tileSize) => (int)math.ceil(size / tileSize);
-    GridTravesalData GetGridTraversalData(float2 agentPos, float checkRange, int hashGridIndex)
-    {
-        float tileSize = hashGridIndex * BaseSpatialGridSize + BaseSpatialGridSize;
-        int2 startingTileIndex = GetStartingTileIndex(agentPos, tileSize);
-        int offset = GetOffset(checkRange * 2, tileSize);
-        int2 botleft = startingTileIndex - new int2(offset, offset);
-        int2 topright = startingTileIndex + new int2(offset, offset);
-        botleft.x = math.select(botleft.x, 0, botleft.x < 0);
-        botleft.y = math.select(botleft.y, 0, botleft.y < 0);
-        int gridRowAmount = (int)math.ceil(FieldVerticalSize / tileSize);
-        int gridColAmount = (int)math.ceil(FieldHorizontalSize / tileSize);
-        topright.x = math.select(topright.x, gridColAmount - 1, topright.x >= gridColAmount);
-        topright.y = math.select(topright.y, gridRowAmount - 1, topright.y >= gridRowAmount);
-        int botleft1d = botleft.y * gridColAmount + botleft.x;
-        int verticalSize = topright.y - botleft.y + 1;
-
-        return new GridTravesalData()
-        {
-            horizontalSize = topright.x - botleft.x + 1,
-            botLeft = botleft1d,
-            gridColAmount = gridColAmount,
-            topLeft = botleft1d + (verticalSize * gridColAmount) - 1,
-        };
-    }
-    struct GridTravesalData
-    {
-        public int botLeft;
-        public int topLeft;
-        public int horizontalSize;
-        public int gridColAmount;
-    }
+    
 }
