@@ -28,34 +28,41 @@ public struct CollisionResolutionJob : IJobParallelFor
             GridTravesalData travData = SpatialGridUtils.GetGridTraversalData(agentPos, agentRadius, i);
             UnsafeList<HashTile> hashGrid = HashGridArray[i];
 
-            for (int j = travData.botLeft; j <= travData.topLeft; j++)
+            for (int j = travData.botLeft; j <= travData.topLeft; j+=travData.gridColAmount)
             {
                 for(int k = j; k < j + travData.horizontalSize; k++)
                 {
                     HashTile tile = hashGrid[k];
-                    for(int m = tile.Start; m < tile.Start + tile.Length; m++)
+                    int end = tile.Start + tile.Length;
+                    for(int m = tile.Start; m < end; m++)
                     {
-                        if(index == m) { continue; }
-                        AgentMovementData mateData = AgentMovementDataArray[m];
-                        if(mateData.Status == 0) { continue; }
-                        float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
-                        float mateRadius = mateData.Radius;
+                        if(m == index) { continue; }
+
+                        AgentStatus mateStatus = AgentMovementDataArray[m].Status;
+                        float mateRadius = AgentMovementDataArray[m].Radius;
+                        float3 matePosition = AgentMovementDataArray[m].Position;
+
+                        if (mateStatus == 0) { continue; }
+
+                        float2 matePos = new float2(matePosition.x, matePosition.z);
                         float desiredDistance = agentRadius + mateRadius;
-                        desiredDistance *= math.select(1f, 0.85f, (mateData.Status & AgentStatus.Moving) == AgentStatus.Moving);
+                        desiredDistance *= math.select(1f, 0.85f, (mateStatus & AgentStatus.Moving) == AgentStatus.Moving);
                         float distance = math.distance(matePos, agentPos);
                         float overlapping = desiredDistance - distance;
-                        if(overlapping < 0) { continue; }
 
-                        overlapping = math.select(overlapping / 2, overlapping, (mateData.Status & AgentStatus.HoldGround) == AgentStatus.HoldGround);
-                        float2 resolutionDirection = math.normalizesafe(agentPos - matePos);
-                        totalResolution += resolutionDirection * overlapping;
-                        maxOverlapping = math.select(overlapping, maxOverlapping, maxOverlapping > overlapping);
+                        if(overlapping <= 0) { continue; }
+
+
+                        overlapping = math.select(overlapping / 2, overlapping, (mateStatus & AgentStatus.HoldGround) == AgentStatus.HoldGround);
+                        float2 resolutionDirection = (agentPos - matePos) / distance;
+                        totalResolution += math.select(resolutionDirection * overlapping, 0f, distance == 0);
+                        maxOverlapping = math.select(overlapping, maxOverlapping, maxOverlapping >= overlapping);
                     }
                 }
             }
         }
-        totalResolution = math.select(totalResolution, math.normalize(totalResolution) * maxOverlapping, math.length(totalResolution) > maxOverlapping);
-        float3 curPos = AgentMovementDataArray[index].Position;
-        AgentPositionChangeBuffer[index] = new float2(totalResolution.x, totalResolution.y); ;
+        float totalResolutionLen = math.length(totalResolution);
+        totalResolution = math.select(totalResolution, totalResolution / totalResolutionLen * maxOverlapping, totalResolutionLen > maxOverlapping);
+        AgentPositionChangeBuffer[index] = totalResolution;
     }
 }

@@ -77,7 +77,6 @@ public class RoutineSchedulingTree
     }
     public void AddCollisionResolutionJob()
     {
-        _movDataCalcHandle[0].Complete();
         CollisionResolutionJob colResJob = new CollisionResolutionJob()
         {
             AgentMovementDataArray = _dirCalculator.AgentMovementDataList,
@@ -85,7 +84,7 @@ public class RoutineSchedulingTree
             HashGridArray = _dirCalculator.HashGridArray,
             SpatialGridUtils = new AgentSpatialGridUtils(0),
         };
-        JobHandle colResHandle = colResJob.Schedule(colResJob.AgentMovementDataArray.Length, 64, _movDataCalcHandle[0]);
+        JobHandle colResHandle = colResJob.Schedule(colResJob.AgentMovementDataArray.Length, 4, _movDataCalcHandle[0]);
         _collisionResolutionHandle.Add(colResHandle);
 
         if (FlowFieldUtilities.DebugMode) { _collisionResolutionHandle[0].Complete(); }

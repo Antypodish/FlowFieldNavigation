@@ -746,7 +746,7 @@ PrefabInstance:
     - target: {fileID: 5571130920343903277, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}
       propertyPath: _startingAgentCount
-      value: 1000
+      value: 5000
       objectReference: {fileID: 0}
     - target: {fileID: 7314432835859767064, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}
@@ -1019,7 +1019,7 @@ PrefabInstance:
     - target: {fileID: 8734084087838304231, guid: 5e3867b8afbc0bb49a0027ab49965980,
         type: 3}
       propertyPath: BaseSpatialGridSize
-      value: 11.546
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 8734084087838304231, guid: 5e3867b8afbc0bb49a0027ab49965980,
         type: 3}
