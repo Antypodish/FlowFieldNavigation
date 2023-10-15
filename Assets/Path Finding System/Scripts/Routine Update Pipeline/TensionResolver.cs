@@ -9,7 +9,9 @@ using Unity.VisualScripting;
 public struct TensionResolver : IJob
 {
     public float SeperationRangeAddition;
+    public AgentSpatialGridUtils HashGridUtils;
     public NativeArray<AgentMovementData> AgentMovementDataArray;
+    [ReadOnly] public NativeArray<UnsafeList<HashTile>> HashGridArray;
     public NativeArray<RoutineResult> RoutineResultArray;
 
     public void Execute()
@@ -23,27 +25,37 @@ public struct TensionResolver : IJob
             float2 agentDir = RoutineResultArray[i].NewDirection;
             AvoidanceStatus agentAvoidance = RoutineResultArray[i].NewAvoidance;
             if (agentAvoidance == 0) { continue; }
-            for (int j = i + 1; j < AgentMovementDataArray.Length; j++)
+
+            for(int j = 0; j < HashGridArray.Length; j++)
             {
-                AgentMovementData mateData = AgentMovementDataArray[j];
-                RoutineResult mateRoutineResult = RoutineResultArray[j];
-                float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
-                if (mateRoutineResult.NewAvoidance == 0) { continue; }
-
-                float dot = math.dot(agentDir, matePos - agentPos);
-                if (dot < 0) { continue; }
-
-                //dot = math.dot(agentData.NextDirection, mateData.NextDirection);
-                //if(dot > 0) { continue; }
-
-                if (mateRoutineResult.NewAvoidance == agentAvoidance) { continue; }
-                if (math.distance(agentPos, matePos) > agentData.Radius + mateData.Radius + SeperationRangeAddition) { continue; }
-                Tension tension = new Tension()
+                UnsafeList<HashTile> pickedGrid = HashGridArray[j];
+                GridTravesalData travData = HashGridUtils.GetGridTraversalData(agentPos, agentData.Radius + SeperationRangeAddition, j);
+                for(int k = travData.botLeft; k <= travData.topLeft; k += travData.gridColAmount)
                 {
-                    agent1 = i,
-                    agent2 = j,
-                };
-                tensionlist.Add(tension);
+                    for(int l = k; l < k + travData.horizontalSize; l++)
+                    {
+                        HashTile tile = pickedGrid[l];
+                        for(int m = tile.Start; m < tile.Start + tile.Length; m++)
+                        {
+                            AgentMovementData mateData = AgentMovementDataArray[m];
+                            RoutineResult mateRoutineResult = RoutineResultArray[m];
+                            float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
+                            if (mateRoutineResult.NewAvoidance == 0) { continue; }
+
+                            float dot = math.dot(agentDir, matePos - agentPos);
+                            if (dot < 0) { continue; }
+
+                            if (mateRoutineResult.NewAvoidance == agentAvoidance) { continue; }
+                            if (math.distance(agentPos, matePos) > agentData.Radius + mateData.Radius + SeperationRangeAddition) { continue; }
+                            Tension tension = new Tension()
+                            {
+                                agent1 = i,
+                                agent2 = m,
+                            };
+                            tensionlist.Add(tension);
+                        }
+                    }
+                }
             }
         }
 
@@ -218,22 +230,34 @@ public struct TensionResolver : IJob
     }
     void GetNeighbourAgents(int agentIndex, float agentRadius, float2 agentPos, float maxDistance, NativeQueue<int> neighbours, int tensionPowerIndex, AvoidanceStatus avoidance)
     {
-        for (int i = 0; i < AgentMovementDataArray.Length; i++)
+        for (int i = 0; i < HashGridArray.Length; i++)
         {
-            AgentMovementData mateData = AgentMovementDataArray[i];
-            if (i == agentIndex) { continue; }
-            if (mateData.Avoidance != avoidance) { continue; }
-
-            float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
-            float distance = math.distance(matePos, agentPos);
-
-            if (distance > agentRadius + mateData.Radius + SeperationRangeAddition + maxDistance) { continue; }
-            if ((mateData.RoutineStatus & AgentRoutineStatus.Traversed) != AgentRoutineStatus.Traversed)
+            UnsafeList<HashTile> pickedGrid = HashGridArray[i];
+            GridTravesalData travData = HashGridUtils.GetGridTraversalData(agentPos, agentRadius + SeperationRangeAddition, i);
+            for (int j = travData.botLeft; j <= travData.topLeft; j += travData.gridColAmount)
             {
-                mateData.RoutineStatus |= AgentRoutineStatus.Traversed;
-                mateData.TensionPowerIndex = tensionPowerIndex;
-                AgentMovementDataArray[i] = mateData;
-                neighbours.Enqueue(i);
+                for (int k = j; k < j + travData.horizontalSize; k++)
+                {
+                    HashTile tile = pickedGrid[k];
+                    for (int l = tile.Start; l < tile.Start + tile.Length; l++)
+                    {
+                        AgentMovementData mateData = AgentMovementDataArray[l];
+                        if (l == agentIndex) { continue; }
+                        if (mateData.Avoidance != avoidance) { continue; }
+
+                        float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
+                        float distance = math.distance(matePos, agentPos);
+
+                        if (distance > agentRadius + mateData.Radius + SeperationRangeAddition + maxDistance) { continue; }
+                        if ((mateData.RoutineStatus & AgentRoutineStatus.Traversed) != AgentRoutineStatus.Traversed)
+                        {
+                            mateData.RoutineStatus |= AgentRoutineStatus.Traversed;
+                            mateData.TensionPowerIndex = tensionPowerIndex;
+                            AgentMovementDataArray[l] = mateData;
+                            neighbours.Enqueue(l);
+                        }
+                    }
+                }
             }
         }
     }

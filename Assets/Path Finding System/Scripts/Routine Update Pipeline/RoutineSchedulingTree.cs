@@ -110,6 +110,8 @@ public class RoutineSchedulingTree
         JobHandle avoidanceHandle = avoidanceJob.Schedule(avoidanceJob.AgentMovementDataArray.Length, 64, _collisionResolutionHandle[0]);
         TensionResolver tensionResJob = new TensionResolver()
         {
+            HashGridArray = _dirCalculator.HashGridArray,
+            HashGridUtils = new AgentSpatialGridUtils(0),
             RoutineResultArray = _dirCalculator.RoutineResults,
             AgentMovementDataArray = _dirCalculator.AgentMovementDataList,
             SeperationRangeAddition = BoidController.Instance.SeperationRangeAddition,
