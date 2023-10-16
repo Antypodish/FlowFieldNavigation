@@ -58,12 +58,17 @@ public class PathfindingManager : MonoBehaviour
         if (deltaTime >= AgentUpdateFrequency)
         {
             _lastAgentUpdateTime = curTime;
-            _pathfindingUpdateRoutine.RoutineUpdate(deltaTime);
+            //_pathfindingUpdateRoutine.RoutineUpdate(deltaTime);
         }
+        _pathfindingUpdateRoutine.IntermediateLateUpdate();
+    }
+    private void FixedUpdate()
+    {
+        _pathfindingUpdateRoutine.RoutineUpdate(Time.fixedDeltaTime);
     }
     private void LateUpdate()
     {
-        _pathfindingUpdateRoutine.IntermediateLateUpdate();
+        //_pathfindingUpdateRoutine.IntermediateLateUpdate();
     }
     void SetFlowFieldUtilities()
     {
