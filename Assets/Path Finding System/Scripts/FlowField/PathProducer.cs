@@ -6,6 +6,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Jobs.LowLevel.Unsafe;
 using Unity.Mathematics;
+using Unity.VisualScripting;
 using Unity.VisualScripting.FullSerializer;
 using UnityEditor;
 using UnityEngine;
@@ -75,7 +76,7 @@ public class PathProducer
         if (pickedCostField.CostsG[destionationIndexFlat] == byte.MaxValue) { return new PortalTraversalJobPack(); }
 
         PreallocationPack preallocations = _preallocator.GetPreallocations(offset);
-        NativeList<int> portalSequence = preallocations.PortalSequence;
+        NativeList<ActivePortal> portalSequence = preallocations.PortalSequence;
         NativeList<int> portalSequenceBorders = preallocations.PortalSequenceBorders;
         NativeArray<PortalTraversalData> portalTraversalDataArray = preallocations.PortalTraversalDataArray;
         NativeArray<DijkstraTile> targetSectorCosts = preallocations.TargetSectorCosts;
@@ -84,7 +85,7 @@ public class PathProducer
         NativeArray<int> flowFieldLength = preallocations.FlowFieldLength;
 
         //TRAVERSAL
-        PortalNodeTraversalJob traversalJob = new PortalNodeTraversalJob()
+        NewPortalNodeTraversalJob traversalJob = new NewPortalNodeTraversalJob()
         {
             PickedToSector = pickedToSector,
             PortalSequenceBorders = portalSequenceBorders,
@@ -231,7 +232,7 @@ public class PathProducer
                     WinToSecPtrs = pickedFieldGraph.WinToSecPtrs,
                     PorPtrs = pickedFieldGraph.PorToPorPtrs,
                     SectorNodes = pickedFieldGraph.SectorNodes,
-                    PortalSequence = path.PortalSequence,
+                    //PortalSequence = path.PortalSequence,
                     SectorToPicked = path.SectorToPicked,
                     PickedToSector = path.PickedToSector,
                     IntegrationStartIndicies = path.IntegrationStartIndicies,
@@ -242,7 +243,7 @@ public class PathProducer
                 };
                 PathHandle handle = new PathHandle()
                 {
-                    Handle = travJob.Schedule(dependency),
+                    //Handle = travJob.Schedule(dependency),
                     Path = path,
                 };
                 portalAdditionTraversalHandles.Add(handle);

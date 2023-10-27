@@ -1,11 +1,14 @@
 ﻿using Assets.Path_Finding_System.Scripts;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
+using Unity.VisualScripting;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Jobs;
+using static UnityEngine.Rendering.VirtualTexturing.Debugging;
 
 public class RoutineSchedulingTree
 {
@@ -157,6 +160,7 @@ public class RoutineSchedulingTree
             for (int i = 0; i < _porTravHandles.Count; i++)
             {
                 _porTravHandles[i].Handle.Complete();
+
             }
         }
     }
@@ -181,9 +185,10 @@ public class RoutineSchedulingTree
             PathHandle handle = _porTravHandles[i];
             if (handle.Handle.IsCompleted)
             {
-                handle.Handle.Complete();
+                handle.Handle.Complete();   
                 _pathProdCalcHandles.Add(_pathfindingManager.PathProducer.SchedulePathProductionJob(handle.Path));
                 _porTravHandles.RemoveAtSwapBack(i);
+                
             }
         }
 

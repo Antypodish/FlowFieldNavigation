@@ -76,12 +76,12 @@ public struct PortalNodeAdditionTraversalJob : IJob
     }
     void ResetTraversedIndicies(ref UnsafeList<int> traversedIndicies)
     {
-        PortalTraversalMark bitsToSet = ~(PortalTraversalMark.Included | PortalTraversalMark.Considered);
+        PortalTraversalMark bitsToSet = ~(PortalTraversalMark.Added | PortalTraversalMark.Extracted);
         for (int i = 0; i < traversedIndicies.Length; i++)
         {
             int index = traversedIndicies[i];
             PortalTraversalData travData = PortalTraversalDataArray[index];
-            travData.mark &= bitsToSet;
+            travData.Mark &= bitsToSet;
             PortalTraversalDataArray[index] = travData;
         }
         traversedIndicies.Clear();
@@ -93,9 +93,9 @@ public struct PortalNodeAdditionTraversalJob : IJob
         if (originIndex == PortalTraversalDataArray.Length - 1)
         {
             PortalTraversalData nextPortalData = PortalTraversalDataArray[originIndex];
-            nextPortalData.mark |= PortalTraversalMark.Picked;
+            nextPortalData.Mark |= PortalTraversalMark.AStarPicked;
             PortalTraversalDataArray[originIndex] = nextPortalData;
-            originIndex = nextPortalData.originIndex;
+            originIndex = nextPortalData.OriginIndex;
         }
         while (originIndex != sourceNodeIndex)
         {
@@ -109,9 +109,9 @@ public struct PortalNodeAdditionTraversalJob : IJob
             }
             PortalSequence.Add(originIndex);
             PortalTraversalData nextPortalData = PortalTraversalDataArray[originIndex];
-            nextPortalData.mark |= PortalTraversalMark.Picked;
+            nextPortalData.Mark |= PortalTraversalMark.AStarPicked;
             PortalTraversalDataArray[originIndex] = nextPortalData;
-            originIndex = nextPortalData.originIndex;
+            originIndex = nextPortalData.OriginIndex;
         }
         PortalSequence.Add(originIndex);
         if (!isIntegrationStartFound)
@@ -129,16 +129,16 @@ public struct PortalNodeAdditionTraversalJob : IJob
         NativeArray<PortalTraversalData> portalTraversalDataArray = PortalTraversalDataArray;
 
         PortalTraversalData curData = PortalTraversalDataArray[sourcePortalIndex];
-        if ((curData.mark & PortalTraversalMark.Picked) == PortalTraversalMark.Picked) { return -1; }
+        if ((curData.Mark & PortalTraversalMark.AStarPicked) == PortalTraversalMark.AStarPicked) { return -1; }
 
         //SET INNITIAL MARK
         curData = new PortalTraversalData()
         {
-            fCost = 0f,
-            gCost = 0f,
-            hCost = 0f,
-            mark = curData.mark | PortalTraversalMark.Picked | PortalTraversalMark.Included,
-            originIndex = sourcePortalIndex,
+            FCost = 0f,
+            GCost = 0f,
+            HCost = 0f,
+            Mark = curData.Mark | PortalTraversalMark.AStarPicked | PortalTraversalMark.Added,
+            OriginIndex = sourcePortalIndex,
         };
         PortalTraversalDataArray[sourcePortalIndex] = curData;
 
@@ -156,7 +156,7 @@ public struct PortalNodeAdditionTraversalJob : IJob
         TraverseNeighbours(curData, ref traversalHeap, ref traversedIndicies, targetSectorCosts, curNodeIndex, por2P2pIdx, por2P2pIdx + por2P2pCnt);
         SetNextNode();
 
-        while ((curData.mark & PortalTraversalMark.Picked) != PortalTraversalMark.Picked)
+        while ((curData.Mark & PortalTraversalMark.AStarPicked) != PortalTraversalMark.AStarPicked)
         {
             TraverseNeighbours(curData, ref traversalHeap, ref traversedIndicies, targetSectorCosts, curNodeIndex, por1P2pIdx, por1P2pIdx + por1P2pCnt);
             TraverseNeighbours(curData, ref traversalHeap, ref traversedIndicies, targetSectorCosts, curNodeIndex, por2P2pIdx, por2P2pIdx + por2P2pCnt);
@@ -168,12 +168,12 @@ public struct PortalNodeAdditionTraversalJob : IJob
             if (traversalHeap.IsEmpty) { return; }
             int nextMinIndex = traversalHeap.ExtractMin();
             PortalTraversalData nextMinTraversalData = portalTraversalDataArray[nextMinIndex];
-            while ((nextMinTraversalData.mark & PortalTraversalMark.Considered) == PortalTraversalMark.Considered)
+            while ((nextMinTraversalData.Mark & PortalTraversalMark.Extracted) == PortalTraversalMark.Extracted)
             {
                 nextMinIndex = traversalHeap.ExtractMin();
                 nextMinTraversalData = portalTraversalDataArray[nextMinIndex];
             }
-            nextMinTraversalData.mark |= PortalTraversalMark.Considered;
+            nextMinTraversalData.Mark |= PortalTraversalMark.Extracted;
             curData = nextMinTraversalData;
             portalTraversalDataArray[nextMinIndex] = curData;
             curNodeIndex = nextMinIndex;
@@ -191,63 +191,63 @@ public struct PortalNodeAdditionTraversalJob : IJob
             PortalToPortal neighbourConnection = PorPtrs[i];
             PortalNode portalNode = PortalNodes[neighbourConnection.Index];
             PortalTraversalData traversalData = PortalTraversalDataArray[neighbourConnection.Index];
-            if ((traversalData.mark & PortalTraversalMark.Included) == PortalTraversalMark.Included)
+            if ((traversalData.Mark & PortalTraversalMark.Added) == PortalTraversalMark.Added)
             {
-                float newGCost = curData.gCost + neighbourConnection.Distance;
-                if (newGCost < traversalData.gCost)
+                float newGCost = curData.GCost + neighbourConnection.Distance;
+                if (newGCost < traversalData.GCost)
                 {
-                    float newFCost = traversalData.hCost + newGCost;
-                    traversalData.gCost = newGCost;
-                    traversalData.fCost = newFCost;
-                    traversalData.originIndex = curNodeIndex;
+                    float newFCost = traversalData.HCost + newGCost;
+                    traversalData.GCost = newGCost;
+                    traversalData.FCost = newFCost;
+                    traversalData.OriginIndex = curNodeIndex;
                     PortalTraversalDataArray[neighbourConnection.Index] = traversalData;
-                    traversalHeap.Add(neighbourConnection.Index, traversalData.fCost, traversalData.hCost);
+                    traversalHeap.Add(neighbourConnection.Index, traversalData.FCost, traversalData.HCost);
                 }
             }
             else
             {
                 float hCost = GetHCost(portalNode.Portal1.Index);
-                float gCost = curData.gCost + neighbourConnection.Distance;
+                float gCost = curData.GCost + neighbourConnection.Distance;
                 float fCost = hCost + gCost;
-                traversalData.hCost = hCost;
-                traversalData.gCost = gCost;
-                traversalData.fCost = fCost;
-                traversalData.mark |= PortalTraversalMark.Included;
-                traversalData.originIndex = curNodeIndex;
+                traversalData.HCost = hCost;
+                traversalData.GCost = gCost;
+                traversalData.FCost = fCost;
+                traversalData.Mark |= PortalTraversalMark.Added;
+                traversalData.OriginIndex = curNodeIndex;
                 PortalTraversalDataArray[neighbourConnection.Index] = traversalData;
-                traversalHeap.Add(neighbourConnection.Index, traversalData.fCost, traversalData.hCost);
+                traversalHeap.Add(neighbourConnection.Index, traversalData.FCost, traversalData.HCost);
                 traversedIndicies.Add(neighbourConnection.Index);
             }
         }
-        if ((curData.mark & PortalTraversalMark.TargetNeighbour) == PortalTraversalMark.TargetNeighbour)
+        if ((curData.Mark & PortalTraversalMark.TargetNeighbour) == PortalTraversalMark.TargetNeighbour)
         {
             int targetNodeIndex = PortalNodes.Length - 1;
             PortalTraversalData traversalData = PortalTraversalDataArray[targetNodeIndex];
-            if ((traversalData.mark & PortalTraversalMark.Included) == PortalTraversalMark.Included)
+            if ((traversalData.Mark & PortalTraversalMark.Added) == PortalTraversalMark.Added)
             {
-                float newGCost = curData.gCost + GetGCostBetweenTargetAndTargetNeighbour(curNodeIndex, targetSectorCosts);
-                if (newGCost < traversalData.gCost)
+                float newGCost = curData.GCost + GetGCostBetweenTargetAndTargetNeighbour(curNodeIndex, targetSectorCosts);
+                if (newGCost < traversalData.GCost)
                 {
-                    float newFCost = traversalData.hCost + newGCost;
-                    traversalData.gCost = newGCost;
-                    traversalData.fCost = newFCost;
-                    traversalData.originIndex = curNodeIndex;
+                    float newFCost = traversalData.HCost + newGCost;
+                    traversalData.GCost = newGCost;
+                    traversalData.FCost = newFCost;
+                    traversalData.OriginIndex = curNodeIndex;
                     PortalTraversalDataArray[targetNodeIndex] = traversalData;
-                    traversalHeap.Add(targetNodeIndex, traversalData.fCost, traversalData.hCost);
+                    traversalHeap.Add(targetNodeIndex, traversalData.FCost, traversalData.HCost);
                 }
             }
             else
             {
                 float hCost = 0f;
-                float gCost = curData.gCost + GetGCostBetweenTargetAndTargetNeighbour(curNodeIndex, targetSectorCosts);
+                float gCost = curData.GCost + GetGCostBetweenTargetAndTargetNeighbour(curNodeIndex, targetSectorCosts);
                 float fCost = hCost + gCost;
-                traversalData.hCost = hCost;
-                traversalData.gCost = gCost;
-                traversalData.fCost = fCost;
-                traversalData.mark |= PortalTraversalMark.Included;
-                traversalData.originIndex = curNodeIndex;
+                traversalData.HCost = hCost;
+                traversalData.GCost = gCost;
+                traversalData.FCost = fCost;
+                traversalData.Mark |= PortalTraversalMark.Added;
+                traversalData.OriginIndex = curNodeIndex;
                 PortalTraversalDataArray[targetNodeIndex] = traversalData;
-                traversalHeap.Add(targetNodeIndex, traversalData.fCost, traversalData.hCost);
+                traversalHeap.Add(targetNodeIndex, traversalData.FCost, traversalData.HCost);
                 traversedIndicies.Add(targetNodeIndex);
             }
         }

@@ -25,7 +25,6 @@ public class PathfindingUpdateRoutine
     }
     public void RoutineUpdate(float deltaTime)
     {
-        Stopwatch sw = new Stopwatch();
         //FORCE COMPLETE JOBS FROM PREVIOUS UPDATE
         _schedulingTree.ForceCompleteAll();
 
@@ -41,18 +40,12 @@ public class PathfindingUpdateRoutine
         //SCHEDULE NEW JOBS
 
         JobHandle costEditHandle = _schedulingTree.ScheduleCostEditRequests(_costEditRequests);
-
         _costEditRequests.Clear();
-
-        _schedulingTree.AddMovementDataCalculationHandle(costEditHandle); 
-
+        _schedulingTree.AddMovementDataCalculationHandle(costEditHandle);
         _schedulingTree.AddCollisionResolutionJob();
-        sw.Start();
-
-        _schedulingTree.AddLocalAvoidanceJob(); sw.Stop();
-
+        _schedulingTree.AddLocalAvoidanceJob(); 
         _schedulingTree.AddCollisionCalculationJob(); 
-        _schedulingTree.SetPortalAdditionTraversalHandles();
+        //_schedulingTree.SetPortalAdditionTraversalHandles();
         _schedulingTree.AddPortalTraversalHandles(_portalTravJobs, costEditHandle);
         _portalTravJobs.Clear();
     }

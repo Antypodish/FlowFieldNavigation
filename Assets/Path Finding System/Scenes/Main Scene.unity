@@ -740,16 +740,44 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
+      propertyPath: _portals
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
+      propertyPath: _sectors
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
+      propertyPath: _costField
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
+      propertyPath: _debugFlowField
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
       propertyPath: _costFieldOffset
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
+      propertyPath: _debugAgentWaypoint
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
+      propertyPath: _debugPickedSectors
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
       propertyPath: _pathfindingManager
       value: 
       objectReference: {fileID: 2058839523}
     - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
-      propertyPath: _debugAgentDirections
+      propertyPath: _debugPortalSequence
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
+      propertyPath: _debugAgentDirections
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
       propertyPath: _debugSpatialHashGrid
@@ -761,10 +789,14 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
       propertyPath: _debugAgentsHoldingGround
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
       propertyPath: _debugAvoidanceDirections
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
+      propertyPath: _debugPortalTraversalMarks
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}

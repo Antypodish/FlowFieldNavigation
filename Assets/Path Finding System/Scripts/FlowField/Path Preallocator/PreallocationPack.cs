@@ -3,7 +3,7 @@ using Unity.Collections.LowLevel.Unsafe;
 
 public struct PreallocationPack
 {
-    public NativeList<int> PortalSequence;
+    public NativeList<ActivePortal> PortalSequence;
     public NativeList<int> PortalSequenceBorders;
     public NativeArray<PortalTraversalData> PortalTraversalDataArray;
     public NativeArray<DijkstraTile> TargetSectorCosts;

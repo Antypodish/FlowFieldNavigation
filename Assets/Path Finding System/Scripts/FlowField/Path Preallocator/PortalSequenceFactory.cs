@@ -3,18 +3,18 @@ using Unity.Collections;
 
 internal class PortalSequenceFactory
 {
-    List<NativeList<int>> _portalSequences;
+    List<NativeList<ActivePortal>> _portalSequences;
     List<NativeList<int>> _portalSequenceBorders;
     public PortalSequenceFactory()
     {
-        _portalSequences = new List<NativeList<int>>();
+        _portalSequences = new List<NativeList<ActivePortal>>();
         _portalSequenceBorders = new List<NativeList<int>>();
     }
-    public NativeList<int> GetPortalSequenceList()
+    public NativeList<ActivePortal> GetPortalSequenceList()
     {
-        if(_portalSequences.Count == 0) { return new NativeList<int>(Allocator.Persistent); }
+        if(_portalSequences.Count == 0) { return new NativeList<ActivePortal>(Allocator.Persistent); }
         int index = _portalSequences.Count - 1;
-        NativeList<int> portalSequence = _portalSequences[index];
+        NativeList<ActivePortal> portalSequence = _portalSequences[index];
         _portalSequences.RemoveAtSwapBack(index);
         return portalSequence;
     }
@@ -26,7 +26,7 @@ internal class PortalSequenceFactory
         _portalSequenceBorders.RemoveAtSwapBack(index);
         return portalSequenceBorders;
     }
-    public void SendPortalSequences(NativeList<int> portalSequence, NativeList<int> portalSequenceBorders)
+    public void SendPortalSequences(NativeList<ActivePortal> portalSequence, NativeList<int> portalSequenceBorders)
     {
         portalSequence.Clear();
         portalSequenceBorders.Clear();

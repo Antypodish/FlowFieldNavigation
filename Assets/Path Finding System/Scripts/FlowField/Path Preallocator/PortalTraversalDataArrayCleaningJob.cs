@@ -10,7 +10,11 @@ public struct PortalTraversalDataArrayCleaningJob : IJob
     {
         for(int i = 0; i < Array.Length; i++)
         {
-            Array[i] = new PortalTraversalData();
+            Array[i] = new PortalTraversalData()
+            {
+                NextIndex = -1,
+                DistanceFromTarget = float.MaxValue,
+            };
         }
     }
 }

@@ -14,7 +14,7 @@ public class Path
     public Vector2 Destination;
     public NativeArray<float2> Sources;
     public NativeArray<PortalTraversalData> PortalTraversalDataArray;
-    public NativeList<int> PortalSequence;
+    public NativeList<ActivePortal> PortalSequence;
     public UnsafeList<int> SectorToPicked;
     public NativeList<int> PickedToSector;
     public NativeList<IntegrationTile> IntegrationField;

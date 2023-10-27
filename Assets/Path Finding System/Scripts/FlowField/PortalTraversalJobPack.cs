@@ -3,7 +3,7 @@ using Unity.Jobs;
 
 public struct PortalTraversalJobPack
 {
-    public PortalNodeTraversalJob PortalTravJob;
+    public NewPortalNodeTraversalJob PortalTravJob;
     public Path Path;
 
     public PathHandle Schedule(JobHandle dependancy)

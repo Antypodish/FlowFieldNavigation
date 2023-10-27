@@ -35,37 +35,24 @@ public class EditorPathDebugger
         FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset);
         NativeArray<PortalNode> portalNodes = fg.PortalNodes;
         NativeArray<PortalTraversalData> portalTraversalDataArray = producedPath.PortalTraversalDataArray;
-        for(int i = 0; i < portalNodes.Length; i++)
+
+        for (int i = 0; i < portalNodes.Length; i++)
         {
             PortalTraversalData travData = portalTraversalDataArray[i];
             PortalNode node = portalNodes[i];
-            if ((travData.mark & PortalTraversalMark.Picked) == PortalTraversalMark.Picked)
+            if (travData.HasMark(PortalTraversalMark.FastMarchPicked))
             {
-                Gizmos.color = Color.blue;
+                Gizmos.color = Color.white;
                 Vector3 portalPos = node.GetPosition(tileSize);
+                Handles.Label(portalPos + new Vector3(0, 0, 0.75f), "d: " + travData.DistanceFromTarget.ToString());
                 Gizmos.DrawSphere(portalPos, 0.25f);
-                Handles.Label(portalPos + new Vector3(0,0 , 0.75f), i.ToString());
             }
-            else if ((travData.mark & PortalTraversalMark.TargetNeighbour) == PortalTraversalMark.TargetNeighbour)
+            else if (travData.HasMark(PortalTraversalMark.Reduced))
             {
-                Gizmos.color = Color.magenta;
+                Gizmos.color = Color.black;
                 Vector3 portalPos = node.GetPosition(tileSize);
+                Handles.Label(portalPos + new Vector3(0, 0, 0.75f), "d: " + travData.DistanceFromTarget.ToString());
                 Gizmos.DrawSphere(portalPos, 0.25f);
-                Handles.Label(portalPos + new Vector3(0, 0, 0.75f), i.ToString());
-            }
-            else if ((travData.mark & PortalTraversalMark.Considered) == PortalTraversalMark.Considered)
-            {
-                Gizmos.color = Color.red;
-                Vector3 portalPos = node.GetPosition(tileSize);
-                Gizmos.DrawSphere(portalPos, 0.25f);
-                Handles.Label(portalPos + new Vector3(0, 0, 0.75f), i.ToString());
-            }
-            else if ((travData.mark & PortalTraversalMark.Included) == PortalTraversalMark.Included)
-            {
-                Gizmos.color = Color.yellow;
-                Vector3 portalPos = node.GetPosition(tileSize);
-                Gizmos.DrawSphere(portalPos, 0.25f);
-                Handles.Label(portalPos + new Vector3(0, 0, 0.75f), i.ToString());
             }
         }
     }
@@ -75,11 +62,11 @@ public class EditorPathDebugger
         if (_pathProducer.ProducedPaths.Count == 0) { return; }
         Path producedPath = agent.GetPath();
         if (!producedPath.IsCalculated) { return; }
-
+        
         float tileSize = _pathfindingManager.TileSize;
         FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset);
         NativeArray<PortalNode> portalNodes = fg.PortalNodes;
-        NativeList<int> porSeq = producedPath.PortalSequence;
+        NativeList<ActivePortal> porSeq = producedPath.PortalSequence;
         NativeList<int> portSeqBorders = producedPath.PortalSequenceBorders;
         for(int i = 0; i < portSeqBorders.Length - 1; i++)
         {
@@ -87,13 +74,27 @@ public class EditorPathDebugger
             int end = portSeqBorders[i + 1];
             for(int j = start; j < end - 1; j++)
             {
-                Gizmos.color = Color.black;
-                PortalNode firstportalNode = portalNodes[porSeq[j]];
-                PortalNode secondportalNode = portalNodes[porSeq[j + 1]];
+                Gizmos.color = Color.white;
+                PortalNode firstportalNode = portalNodes[porSeq[j].Index];
+                PortalNode secondportalNode = portalNodes[porSeq[j + 1].Index];
                 if(firstportalNode.Portal1.Index.R == 0) { continue; }
-                Vector3 firstPorPos = firstportalNode.GetPosition(_tileSize);
                 Vector3 secondPorPos = secondportalNode.GetPosition(_tileSize);
+                Vector3 firstPorPos = firstportalNode.GetPosition(_tileSize);
+
+                Vector3 relativeSecond = secondPorPos - firstPorPos;
+                Vector2 relativeSecond2d = new Vector2(relativeSecond.x, relativeSecond.z);
+                relativeSecond2d = relativeSecond2d.normalized;
+                Vector2 perpLeft = new Vector2(-relativeSecond2d.y, relativeSecond2d.x);
+                Vector2 perpRight = new Vector2(relativeSecond2d.y, -relativeSecond2d.x);
+                
+                Vector2 rightArrow = (perpRight - relativeSecond2d).normalized;
+                Vector2 leftArrow = (perpLeft - relativeSecond2d).normalized;
+
+                Vector3 rightArrow3 = new Vector3(rightArrow.x, secondPorPos.y, rightArrow.y);
+                Vector3 leftArrow3 = new Vector3(leftArrow.x, secondPorPos.y, leftArrow.y);
                 Gizmos.DrawLine(firstPorPos, secondPorPos);
+                Gizmos.DrawLine(secondPorPos, secondPorPos + rightArrow3);
+                Gizmos.DrawLine(secondPorPos, secondPorPos + leftArrow3);
             }
         }
     }

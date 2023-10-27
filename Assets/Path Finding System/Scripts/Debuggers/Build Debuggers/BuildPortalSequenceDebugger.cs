@@ -23,7 +23,7 @@ public class BuildPortalSequenceDebugger
         Path path = agent.GetPath();
         if (path == null) { return; }
         NativeArray<PortalNode> portalNodes = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(path.Offset).PortalNodes;
-        NativeList<int> portalSequence = path.PortalSequence;
+        NativeList<ActivePortal> portalSequence = path.PortalSequence;
         NativeList<int> portalSequenceBorders = path.PortalSequenceBorders;
         for (int i = 0; i < portalSequenceBorders.Length - 1; i++)
         {
@@ -32,14 +32,14 @@ public class BuildPortalSequenceDebugger
             for (int j = start; j < end - 1; j++)
             {
                 Gizmos.color = Color.black;
-                PortalNode firstportalNode = portalNodes[portalSequence[j]];
-                PortalNode secondportalNode = portalNodes[portalSequence[j + 1]];
+                PortalNode firstportalNode = portalNodes[portalSequence[j].Index];
+                PortalNode secondportalNode = portalNodes[portalSequence[j + 1].Index];
                 if (firstportalNode.Portal1.Index.R == 0) { continue; }
                 Vector3 firstPorPos = firstportalNode.GetPosition(tileSize);
                 Vector3 secondPorPos = secondportalNode.GetPosition(tileSize);
                 Graphics.DrawMesh(_mesh, firstPorPos, Quaternion.identity, _meshMat, 1);
             }
-            Vector3 pos = portalNodes[portalSequence[end - 2]].GetPosition(tileSize);
+            Vector3 pos = portalNodes[portalSequence[end - 2].Index].GetPosition(tileSize);
             Graphics.DrawMesh(_mesh, pos, Quaternion.identity, _meshMat, 1);
         }
 

@@ -112,13 +112,9 @@ public class AgentSelectionController : MonoBehaviour
                 DeselectAllAgents();
                 _agentSelector.GetAgentsInBox(Input.mousePosition, Camera.main, _pathfindingManager.GetAllAgents(), SelectedAgents);
                 SetMaterialOfAgents(SelectedAgents, _selectedAgentMaterial);
-                if(SelectedAgents.Count == 1)
+                if(SelectedAgents.Count > 0)
                 {
                     DebuggableAgent = SelectedAgents[0];
-                }
-                else
-                {
-                    DebuggableAgent = null;
                 }
             }
         }
