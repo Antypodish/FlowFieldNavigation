@@ -21,7 +21,7 @@ public struct AgentRoutineDataCalculationJob : IJobParallelFor
 
     public void Execute(int index)
     {
-        Waypoint(index);
+        //Waypoint(index);
     }
     void Normal(int index, TransformAccess transform)
     {/*

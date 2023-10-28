@@ -114,15 +114,15 @@ public class PathfindingManager : MonoBehaviour
     }
     public NativeArray<UnsafeList<HashTile>> GetSpatialHashGridArray()
     {
-        return _pathfindingUpdateRoutine.GetSchedulingTree().GetRoutineDataProducer().HashGridArray;
+        return _pathfindingUpdateRoutine.GetRoutineScheduler().GetRoutineDataProducer().HashGridArray;
     }
     public NativeArray<int> GetNormalToHashed()
     {
-        return _pathfindingUpdateRoutine.GetSchedulingTree().GetRoutineDataProducer().NormalToHashed;
+        return _pathfindingUpdateRoutine.GetRoutineScheduler().GetRoutineDataProducer().NormalToHashed;
     }
     public NativeArray<AgentMovementData> GetAgentMovementData()
     {
-        return _pathfindingUpdateRoutine.GetSchedulingTree().GetRoutineDataProducer().AgentMovementDataList;
+        return _pathfindingUpdateRoutine.GetRoutineScheduler().GetRoutineDataProducer().AgentMovementDataList;
     }
     public void EditCost(int2 startingPoint, int2 endPoint, byte newCost)
     {

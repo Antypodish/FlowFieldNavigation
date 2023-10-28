@@ -1,27 +1,13 @@
-﻿using JetBrains.Annotations;
-using Mono.CompilerServices.SymbolWriter;
-using Newtonsoft.Json.Linq;
-using System;
-using System.Linq;
-using System.Runtime.InteropServices;
-using Unity.Burst;
+﻿using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
-using Unity.VisualScripting;
-using UnityEditor;
-using UnityEditor.XR;
-using UnityEngine;
-using UnityEngine.Analytics;
-using UnityEngine.Pool;
+
 
 [BurstCompile]
 public struct NewPortalNodeTraversalJob : IJob
 {
-
-    public float HMultiplier;
-    public float GMultiplier;
     public int2 TargetIndex;
     public int FieldColAmount;
     public int FieldRowAmount;
@@ -48,12 +34,15 @@ public struct NewPortalNodeTraversalJob : IJob
     [ReadOnly] public UnsafeList<byte> Costs;
     [ReadOnly] public NativeArray<SectorDirectionData> LocalDirections;
 
+    public NativeList<int> TargetSectorPortalIndexList;
+    public NativeList<int> AStarTraverseIndexList;
+    public NativeList<int> SourcePortalIndexList;
+    public NativeQueue<int> FastMarchingQueue;
+
     int _targetSectorStartIndex1d;
     int _targetSectorIndex1d;
     public void Execute()
     {
-        HMultiplier = 1f;GMultiplier = 1f;
-
         //TARGET DATA
         int2 targetSectorIndex2d = new int2(TargetIndex.x / SectorColAmount, TargetIndex.y / SectorColAmount);
         _targetSectorIndex1d = targetSectorIndex2d.y * SectorMatrixColAmount + targetSectorIndex2d.x;
@@ -62,7 +51,7 @@ public struct NewPortalNodeTraversalJob : IJob
         int targetGeneralIndex1d = TargetIndex.y * FieldColAmount + TargetIndex.x;
 
         TargetSectorCosts = GetIntegratedCosts(targetGeneralIndex1d);
-        UnsafeList<int> targetSectorPortalIndicies = GetPortalIndicies(_targetSectorIndex1d);
+        SetSectorPortalIndicies(_targetSectorIndex1d, TargetSectorPortalIndexList);
 
         //SET TARGET PORTAL DATA
         PortalTraversalDataArray[PortalTraversalDataArray.Length - 1] = new PortalTraversalData()
@@ -76,25 +65,24 @@ public struct NewPortalNodeTraversalJob : IJob
         };
 
         //SET TARGET NEIGHBOUR DATA
-        SetTargetNeighbourPortalData(targetSectorPortalIndicies, TargetSectorCosts);
+        SetTargetNeighbourPortalData();
 
         //START GRAPH WALKER
         PortalSequenceBorders.Add(0);
-        UnsafeList<int> traversedIndicies = new UnsafeList<int>(10, Allocator.Temp);
         UnsafeHeap<int> walkerHeap = new UnsafeHeap<int>(10, Allocator.Temp);
         
         UnsafeList<int> allSorucePortalIndicies = GetSourcePortalIndicies();
 
         for (int i = 0; i < allSorucePortalIndicies.Length; i++)
         {
-            int stoppedIndex = RunReductionAStar(allSorucePortalIndicies[i], walkerHeap, TargetSectorCosts, ref traversedIndicies);
+            int stoppedIndex = RunReductionAStar(allSorucePortalIndicies[i], walkerHeap);
             if (stoppedIndex == -1) { continue; }
             PickAStarNodes(allSorucePortalIndicies[i], stoppedIndex);
-            ResetTraversedIndicies(ref traversedIndicies);
+            ResetTraversedIndicies();
             walkerHeap.Clear();
         }
         
-        RunFastMarching(allSorucePortalIndicies.Length, ref targetSectorPortalIndicies);
+        RunFastMarching(allSorucePortalIndicies.Length);
         for(int  i = 0; i < allSorucePortalIndicies.Length; i++)
         {
             PickPortalSequenceFromFastMarching(allSorucePortalIndicies[i]);
@@ -155,17 +143,17 @@ public struct NewPortalNodeTraversalJob : IJob
 
         return (pos1 + pos2) / 2;
     }
-    void ResetTraversedIndicies(ref UnsafeList<int> traversedIndicies)
+    void ResetTraversedIndicies()
     {
         PortalTraversalMark bitsToSet = ~(PortalTraversalMark.Added | PortalTraversalMark.Extracted);
-        for (int i = 0; i < traversedIndicies.Length; i++)
+        for (int i = 0; i < AStarTraverseIndexList.Length; i++)
         {
-            int index = traversedIndicies[i];
+            int index = AStarTraverseIndexList[i];
             PortalTraversalData travData = PortalTraversalDataArray[index];
             travData.Mark &= bitsToSet;
             PortalTraversalDataArray[index] = travData;
         }
-        traversedIndicies.Clear();
+        AStarTraverseIndexList.Clear();
     }
     void PickAStarNodes(int sourceNodeIndex, int stoppedIndex)
     {
@@ -203,11 +191,11 @@ public struct NewPortalNodeTraversalJob : IJob
             int sourceSectorIndexFlat = sourceSectorIndex.y * SectorMatrixColAmount + sourceSectorIndex.x;
 
             //ADD SOURCE SECTOR TO THE PICKED SECTORS
-            UnsafeList<int> sourcePortalIndicies = GetPortalIndicies(sourceSectorIndexFlat);
+            SetSectorPortalIndicies(sourceSectorIndexFlat, SourcePortalIndexList);
 
-            for (int j = 0; j < sourcePortalIndicies.Length; j++)
+            for (int j = 0; j < SourcePortalIndexList.Length; j++)
             {
-                int index = sourcePortalIndicies[j];
+                int index = SourcePortalIndexList[j];
                 PortalTraversalData travData = PortalTraversalDataArray[index];
                 if (travData.HasMark(PortalTraversalMark.Source)) { continue; }
                 travData.Mark |= PortalTraversalMark.Source;
@@ -218,32 +206,32 @@ public struct NewPortalNodeTraversalJob : IJob
         return indicies;
 
     }
-    void RunFastMarching(int sourcePortalCount, ref UnsafeList<int> targetSectorPortalIndicies)
+    void RunFastMarching(int sourcePortalCount)
     {
+        NativeQueue<int> fastMarchingQueue = FastMarchingQueue;
         NativeArray<PortalTraversalData> portalTraversalDataArray = PortalTraversalDataArray;
         NativeArray<PortalNode> portalNodes = PortalNodes;
         NativeArray<PortalToPortal> porPtrs = PorPtrs;
-        NativeQueue<int> marchQueue = new NativeQueue<int>(Allocator.Temp);
 
         //MARK TARGET NEIGHBOURS
-        for(int i = 0; i< targetSectorPortalIndicies.Length; i++)
+        for(int i = 0; i< TargetSectorPortalIndexList.Length; i++)
         {
-            int index = targetSectorPortalIndicies[i];
+            int index = TargetSectorPortalIndexList[i];
             PortalTraversalData targetNeighbour = PortalTraversalDataArray[index];
             targetNeighbour.Mark |= PortalTraversalMark.FastMarchTraversed;
             PortalTraversalDataArray[index] = targetNeighbour;
             sourcePortalCount = math.select(sourcePortalCount, sourcePortalCount - 1, targetNeighbour.HasMark(PortalTraversalMark.Source));
         }
         
-        for(int i = 0; i< targetSectorPortalIndicies.Length; i++)
+        for(int i = 0; i< TargetSectorPortalIndexList.Length; i++)
         {
-            int index = targetSectorPortalIndicies[i];
+            int index = TargetSectorPortalIndexList[i];
             EnqueueNeighbours(index);
         }
 
-        while (!marchQueue.IsEmpty())
+        while (!fastMarchingQueue.IsEmpty())
         {
-            int curIndex = marchQueue.Dequeue();
+            int curIndex = fastMarchingQueue.Dequeue();
 
             //GET BEST NEIGHBOUR
             PortalNode portal = portalNodes[curIndex];
@@ -300,7 +288,7 @@ public struct NewPortalNodeTraversalJob : IJob
                 if (porData.HasMark(PortalTraversalMark.FastMarchTraversed) || !porData.HasMark(PortalTraversalMark.Reduced)) { continue; }
                 porData.Mark |= PortalTraversalMark.FastMarchTraversed;
                 portalTraversalDataArray[portalIndex] = porData;
-                marchQueue.Enqueue(portalIndex);
+                fastMarchingQueue.Enqueue(portalIndex);
             }
             for (int i = por2Ptr; i < por2Ptr + por2Cnt; i++)
             {
@@ -309,11 +297,11 @@ public struct NewPortalNodeTraversalJob : IJob
                 if (porData.HasMark(PortalTraversalMark.FastMarchTraversed) || !porData.HasMark(PortalTraversalMark.Reduced)) { continue; }
                 porData.Mark |= PortalTraversalMark.FastMarchTraversed;
                 portalTraversalDataArray[portalIndex] = porData;
-                marchQueue.Enqueue(portalIndex);
+                fastMarchingQueue.Enqueue(portalIndex);
             }
         }
     }
-    int RunReductionAStar(int sourcePortalIndex, UnsafeHeap<int> traversalHeap, NativeArray<DijkstraTile> targetSectorCosts, ref UnsafeList<int> traversedIndicies)
+    int RunReductionAStar(int sourcePortalIndex, UnsafeHeap<int> traversalHeap)
     {
         NativeArray<PortalNode> portalNodes = PortalNodes;
         NativeArray<PortalTraversalData> portalTraversalDataArray = PortalTraversalDataArray;
@@ -345,15 +333,15 @@ public struct NewPortalNodeTraversalJob : IJob
         int por2P2pCnt = curNode.Portal2.PorToPorCnt;
 
         //HANDLE NEIGHBOURS
-        traversedIndicies.Add(curNodeIndex);
-        TraverseNeighbours(curData, ref traversalHeap, ref traversedIndicies, targetSectorCosts, curNodeIndex, por1P2pIdx, por1P2pIdx + por1P2pCnt);
-        TraverseNeighbours(curData, ref traversalHeap, ref traversedIndicies, targetSectorCosts, curNodeIndex, por2P2pIdx, por2P2pIdx + por2P2pCnt);
+        AStarTraverseIndexList.Add(curNodeIndex);
+        TraverseNeighbours(curData, ref traversalHeap, curNodeIndex, por1P2pIdx, por1P2pIdx + por1P2pCnt);
+        TraverseNeighbours(curData, ref traversalHeap, curNodeIndex, por2P2pIdx, por2P2pIdx + por2P2pCnt);
         SetNextNode();
 
         while (!curData.HasMark(PortalTraversalMark.AStarPicked))
         {
-            TraverseNeighbours(curData, ref traversalHeap, ref traversedIndicies, targetSectorCosts, curNodeIndex, por1P2pIdx, por1P2pIdx + por1P2pCnt);
-            TraverseNeighbours(curData, ref traversalHeap, ref traversedIndicies, targetSectorCosts, curNodeIndex, por2P2pIdx, por2P2pIdx + por2P2pCnt);
+            TraverseNeighbours(curData, ref traversalHeap, curNodeIndex, por1P2pIdx, por1P2pIdx + por1P2pCnt);
+            TraverseNeighbours(curData, ref traversalHeap, curNodeIndex, por2P2pIdx, por2P2pIdx + por2P2pCnt);
             SetNextNode();
         }
         return curNodeIndex;
@@ -378,7 +366,7 @@ public struct NewPortalNodeTraversalJob : IJob
             por2P2pCnt = curNode.Portal2.PorToPorCnt;
         }
     }
-    void TraverseNeighbours(PortalTraversalData curData, ref UnsafeHeap<int> traversalHeap, ref UnsafeList<int> traversedIndicies, NativeArray<DijkstraTile> targetSectorCosts, int curNodeIndex, int from, int to)
+    void TraverseNeighbours(PortalTraversalData curData, ref UnsafeHeap<int> traversalHeap, int curNodeIndex, int from, int to)
     {
         for (int i = from; i < to; i++)
         {
@@ -390,7 +378,7 @@ public struct NewPortalNodeTraversalJob : IJob
                 float newGCost = curData.GCost + neighbourConnection.Distance;
                 if (newGCost < traversalData.GCost)
                 {
-                    float newFCost = traversalData.HCost * HMultiplier + newGCost * GMultiplier;
+                    float newFCost = traversalData.HCost + newGCost;
                     traversalData.GCost = newGCost;
                     traversalData.FCost = newFCost;
                     traversalData.OriginIndex = curNodeIndex;
@@ -402,7 +390,7 @@ public struct NewPortalNodeTraversalJob : IJob
             {
                 float hCost = GetHCost(portalNode.Portal1.Index);
                 float gCost = curData.GCost + neighbourConnection.Distance;
-                float fCost = hCost * HMultiplier + gCost * GMultiplier;
+                float fCost = hCost * gCost;
                 traversalData.HCost = hCost;
                 traversalData.GCost = gCost;
                 traversalData.FCost = fCost;
@@ -410,7 +398,7 @@ public struct NewPortalNodeTraversalJob : IJob
                 traversalData.OriginIndex = curNodeIndex;
                 PortalTraversalDataArray[neighbourConnection.Index] = traversalData;
                 traversalHeap.Add(neighbourConnection.Index, traversalData.FCost, traversalData.HCost);
-                traversedIndicies.Add(neighbourConnection.Index);
+                AStarTraverseIndexList.Add(neighbourConnection.Index);
             }
         }
         if (curData.HasMark(PortalTraversalMark.TargetNeighbour))
@@ -419,10 +407,10 @@ public struct NewPortalNodeTraversalJob : IJob
             PortalTraversalData traversalData = PortalTraversalDataArray[targetNodeIndex];
             if (traversalData.HasMark(PortalTraversalMark.Added))
             {
-                float newGCost = curData.GCost + GetGCostBetweenTargetAndTargetNeighbour(curNodeIndex, targetSectorCosts);
+                float newGCost = curData.GCost + GetGCostBetweenTargetAndTargetNeighbour(curNodeIndex);
                 if (newGCost < traversalData.GCost)
                 {
-                    float newFCost = traversalData.HCost * HMultiplier + newGCost * GMultiplier;
+                    float newFCost = traversalData.HCost + newGCost;
                     traversalData.GCost = newGCost;
                     traversalData.FCost = newFCost;
                     traversalData.OriginIndex = curNodeIndex;
@@ -433,8 +421,8 @@ public struct NewPortalNodeTraversalJob : IJob
             else
             {
                 float hCost = 0f;
-                float gCost = curData.GCost + GetGCostBetweenTargetAndTargetNeighbour(curNodeIndex, targetSectorCosts);
-                float fCost = hCost * HMultiplier + gCost * GMultiplier;
+                float gCost = curData.GCost + GetGCostBetweenTargetAndTargetNeighbour(curNodeIndex);
+                float fCost = hCost + gCost;
                 traversalData.HCost = hCost;
                 traversalData.GCost = gCost;
                 traversalData.FCost = fCost;
@@ -442,7 +430,7 @@ public struct NewPortalNodeTraversalJob : IJob
                 traversalData.OriginIndex = curNodeIndex;
                 PortalTraversalDataArray[targetNodeIndex] = traversalData;
                 traversalHeap.Add(targetNodeIndex, traversalData.FCost, traversalData.HCost);
-                traversedIndicies.Add(targetNodeIndex);
+                AStarTraverseIndexList.Add(targetNodeIndex);
             }
         }
     }
@@ -457,13 +445,13 @@ public struct NewPortalNodeTraversalJob : IJob
         int bigOne = math.max(xDif, yDif);
         return (bigOne - smallOne) * 1f + smallOne * 1.4f;
     }
-    void SetTargetNeighbourPortalData(UnsafeList<int> targetSectorPortalIndicies, NativeArray<DijkstraTile> integratedCostsAtTargetSector)
+    void SetTargetNeighbourPortalData()
     {
-        for (int i = 0; i < targetSectorPortalIndicies.Length; i++)
+        for (int i = 0; i < TargetSectorPortalIndexList.Length; i++)
         {
-            int portalNodeIndex = targetSectorPortalIndicies[i];
+            int portalNodeIndex = TargetSectorPortalIndexList[i];
             int portalLocalIndexAtSector = GetPortalLocalIndexAtSector(PortalNodes[portalNodeIndex], _targetSectorIndex1d, _targetSectorStartIndex1d);
-            float integratedCost = integratedCostsAtTargetSector[portalLocalIndexAtSector].IntegratedCost;
+            float integratedCost = TargetSectorCosts[portalLocalIndexAtSector].IntegratedCost;
             if (integratedCost == float.MaxValue) { continue; }
             PortalTraversalDataArray[portalNodeIndex] = new PortalTraversalData()
             {
@@ -477,10 +465,10 @@ public struct NewPortalNodeTraversalJob : IJob
             };
         }
     }
-    float GetGCostBetweenTargetAndTargetNeighbour(int targetNeighbourIndex, NativeArray<DijkstraTile> targetSectorCosts)
+    float GetGCostBetweenTargetAndTargetNeighbour(int targetNeighbourIndex)
     {
         int portalLocalIndexAtSector = GetPortalLocalIndexAtSector(PortalNodes[targetNeighbourIndex], _targetSectorIndex1d, _targetSectorStartIndex1d);
-        return targetSectorCosts[portalLocalIndexAtSector].IntegratedCost;
+        return TargetSectorCosts[portalLocalIndexAtSector].IntegratedCost;
     }
     NativeArray<DijkstraTile> GetIntegratedCosts(int targetIndex)
     {
@@ -489,9 +477,8 @@ public struct NewPortalNodeTraversalJob : IJob
         CalculateIntegratedCosts(integratedCosts, aStarQueue, SectorNodes[_targetSectorIndex1d].Sector, targetIndex);
         return integratedCosts;
     }
-    UnsafeList<int> GetPortalIndicies(int targetSectorIndexF)
+    void SetSectorPortalIndicies(int targetSectorIndexF, NativeList<int> destinationList)
     {
-        UnsafeList<int> portalIndicies = new UnsafeList<int>(0, Allocator.Temp);
         SectorNode sectorNode = SectorNodes[targetSectorIndexF];
         int winPtr = sectorNode.SecToWinPtr;
         int winCnt = sectorNode.SecToWinCnt;
@@ -502,15 +489,13 @@ public struct NewPortalNodeTraversalJob : IJob
             int porCnt = windowNode.PorCnt;
             for (int j = 0; j < porCnt; j++)
             {
-                portalIndicies.Add(j + porPtr);
+                destinationList.Add(j + porPtr);
             }
         }
-        return portalIndicies;
     }
     void PickSectorsFromPortalSequence()
     {
         int sectorTileAmount = SectorColAmount * SectorColAmount;
-        int pickedSectorAmount = 0;
         for (int i = 0; i < PortalSequenceBorders.Length - 1; i++)
         {
             int start = PortalSequenceBorders[i];
@@ -529,17 +514,15 @@ public struct NewPortalNodeTraversalJob : IJob
                 int win2Sec2Index = WinToSecPtrs[winNode2.WinToSecPtr + 1];
                 if ((win1Sec1Index == win2Sec1Index || win1Sec1Index == win2Sec2Index) && SectorToPicked[win1Sec1Index] == 0)
                 {
-                    SectorToPicked[win1Sec1Index] = pickedSectorAmount * sectorTileAmount + 1;
+                    SectorToPicked[win1Sec1Index] = PickedToSector.Length * sectorTileAmount + 1;
                     PickedToSector.Add(win1Sec1Index);
-                    pickedSectorAmount++;
+
                 }
                 if ((win1Sec2Index == win2Sec1Index || win1Sec2Index == win2Sec2Index) && SectorToPicked[win1Sec2Index] == 0)
                 {
-                    SectorToPicked[win1Sec2Index] = pickedSectorAmount * sectorTileAmount + 1;
+                    SectorToPicked[win1Sec2Index] = PickedToSector.Length * sectorTileAmount + 1;
                     PickedToSector.Add(win1Sec2Index);
-                    pickedSectorAmount++;
                 }
-
             }
 
         }
@@ -554,10 +537,16 @@ public struct NewPortalNodeTraversalJob : IJob
             int2 sourceIndex = new int2((int)math.floor(sourcePos.x / FieldTileSize), (int)math.floor(sourcePos.y / FieldTileSize));
             int2 sourceSectorIndex = sourceIndex / SectorColAmount;
             int sourceSectorIndexFlat = sourceSectorIndex.y * SectorMatrixColAmount + sourceSectorIndex.x;
-            SectorToPicked[sourceSectorIndexFlat] = PickedToSector.Length * sectorTileAmount + 1;
-            PickedToSector.Add(sourceSectorIndexFlat);
-            SectorToPicked[_targetSectorIndex1d] = PickedToSector.Length * sectorTileAmount + 1;
-            PickedToSector.Add(_targetSectorIndex1d);
+            if (SectorToPicked[sourceSectorIndexFlat] == 0)
+            {
+                SectorToPicked[sourceSectorIndexFlat] = PickedToSector.Length * sectorTileAmount + 1;
+                PickedToSector.Add(sourceSectorIndexFlat);
+            }
+            if(SectorToPicked[_targetSectorIndex1d] == 0)
+            {
+                SectorToPicked[_targetSectorIndex1d] = PickedToSector.Length * sectorTileAmount + 1;
+                PickedToSector.Add(_targetSectorIndex1d);
+            }
             FlowFieldLength[0] = PickedToSector.Length * sectorTileAmount + 1;
         }
     }
@@ -842,10 +831,22 @@ public struct NewPortalNodeTraversalJob : IJob
         }
     }
 }
+[BurstCompile]
 public struct ActivePortal
 {
     public int Index;
-    public int OriginIndex;
     public int NextIndex;
     public float Distance;
+
+    public bool IsTargetNode() => Index == -1 && Distance == 0 && NextIndex == -1;
+    public bool IsTargetNeighbour() => NextIndex == -1;
+    public static ActivePortal GetTargetNode()
+    {
+        return new ActivePortal()
+        {
+            Index = -1,
+            Distance = 0,
+            NextIndex = -1
+        };
+    }
 }

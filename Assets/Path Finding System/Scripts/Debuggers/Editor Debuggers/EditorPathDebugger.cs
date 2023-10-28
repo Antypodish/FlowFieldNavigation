@@ -23,7 +23,36 @@ public class EditorPathDebugger
         _fieldProducer = pathfindingManager.FieldProducer;
         _tileSize = pathfindingManager.TileSize;
     }
+    public void DebugActiveWaveFronts(FlowFieldAgent agent)
+    {
+        if (_pathProducer == null) { return; }
+        if (_pathProducer.ProducedPaths.Count == 0) { return; }
+        Path producedPath = agent.GetPath();
+        if (!producedPath.IsCalculated) { return; }
 
+        float tileSize = _pathfindingManager.TileSize;
+        int sectorColAmount = FlowFieldUtilities.SectorColAmount;
+
+        FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset);
+        NativeArray<UnsafeList<ActiveWaveFront>> waveFronts = producedPath.ActiveWaveFrontList;
+        NativeArray<int> pickedToSector = producedPath.PickedToSector;
+        Gizmos.color = Color.red;
+        for (int i = 0; i < pickedToSector.Length; i++)
+        {
+            int sectorIndex = pickedToSector[i];
+            int2 sector2d = FlowFieldUtilities.To2D(sectorIndex, FlowFieldUtilities.SectorMatrixColAmount);
+            UnsafeList<ActiveWaveFront> fronts = waveFronts[i];
+            for(int j = 0; j < fronts.Length; j++)
+            {
+                ActiveWaveFront front = fronts[j];
+                int2 local2d = FlowFieldUtilities.To2D(front.LocalIndex, sectorColAmount);
+                int2 general2d = FlowFieldUtilities.GetGeneral2d(local2d, sector2d, sectorColAmount, FlowFieldUtilities.FieldColAmount);
+                float2 pos = FlowFieldUtilities.IndexToPos(general2d, tileSize);
+                Vector3 pos3 = new Vector3(pos.x, 0f, pos.y);
+                Gizmos.DrawCube(pos3, new Vector3(0.6f, 0.6f, 0.6f));
+            }            
+        }
+    }
     public void DebugPortalTraversalMarks(FlowFieldAgent agent)
     {
         if (_pathProducer == null) { return; }

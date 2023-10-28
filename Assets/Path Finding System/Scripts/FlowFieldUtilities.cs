@@ -34,6 +34,10 @@ public static class FlowFieldUtilities
         int2 general2d = To2D(general1d, fieldColAmount);
         return new float2(general2d.x * tileSize + tileSize / 2, general2d.y * tileSize + tileSize / 2);
     }
+    public static float2 IndexToPos(int2 general2d, float tileSize)
+    {
+        return new float2(general2d.x * tileSize + tileSize / 2, general2d.y * tileSize + tileSize / 2);
+    }
     public static int2 GetSectorIndex(int2 index, int sectorColAmount)
     {
         return new int2(index.x / sectorColAmount, index.y / sectorColAmount);
@@ -52,5 +56,11 @@ public static class FlowFieldUtilities
         int2 general2d = local2d + sectorStart;
         int general1d = To1D(general2d, fieldColAmount);
         return general1d;
+    }
+    public static int2 GetGeneral2d(int2 local2d, int2 sector2d, int sectorColAmount, int fieldColAmount)
+    {
+        int2 sectorStart = GetSectorStartIndex(sector2d, sectorColAmount);
+        int2 general2d = local2d + sectorStart;
+        return general2d;
     }
 }

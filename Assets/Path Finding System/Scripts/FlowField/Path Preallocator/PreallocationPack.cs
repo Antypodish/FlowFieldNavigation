@@ -10,4 +10,8 @@ public struct PreallocationPack
     public UnsafeList<int> SectorToPicked;
     public NativeList<int> PickedToSector;
     public NativeArray<int> FlowFieldLength;
+    public NativeQueue<int> PortalTraversalFastMarchingQueue;
+    public NativeList<int> AStartTraverseIndexList;
+    public NativeList<int> TargetSectorPortalIndexList;
+    public NativeList<int> SourcePortalIndexList;
 }

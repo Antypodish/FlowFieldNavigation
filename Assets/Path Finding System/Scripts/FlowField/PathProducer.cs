@@ -56,9 +56,13 @@ public class PathProducer
                     PortalTraversalDataArray = path.PortalTraversalDataArray,
                     TargetSectorCosts = path.TargetSectorCosts,
                     FlowFieldLength = path.FlowFieldLength,
+                    SourcePortalIndexList = path.SourcePortalIndexList,
+                    AStartTraverseIndexList = path.AStartTraverseIndexList,
+                    TargetSectorPortalIndexList = path.TargetSectorPortalIndexList,
+                    PortalTraversalFastMarchingQueue = path.PortalTraversalFastMarchingQueue,
                 };
 
-                _preallocator.SendPreallocationsBack(ref preallocations, path.Offset);
+                _preallocator.SendPreallocationsBack(ref preallocations, path.ActiveWaveFrontList, path.Offset);
                 ProducedPaths[ProducedPaths.Count - 1].Id = i;
                 ProducedPaths.RemoveAtSwapBack(i);
             }
@@ -76,56 +80,59 @@ public class PathProducer
         if (pickedCostField.CostsG[destionationIndexFlat] == byte.MaxValue) { return new PortalTraversalJobPack(); }
 
         PreallocationPack preallocations = _preallocator.GetPreallocations(offset);
-        NativeList<ActivePortal> portalSequence = preallocations.PortalSequence;
-        NativeList<int> portalSequenceBorders = preallocations.PortalSequenceBorders;
-        NativeArray<PortalTraversalData> portalTraversalDataArray = preallocations.PortalTraversalDataArray;
-        NativeArray<DijkstraTile> targetSectorCosts = preallocations.TargetSectorCosts;
-        UnsafeList<int> sectorToPicked = preallocations.SectorToPicked;
-        NativeList<int> pickedToSector = preallocations.PickedToSector;
-        NativeArray<int> flowFieldLength = preallocations.FlowFieldLength;
-
+        
         //TRAVERSAL
         NewPortalNodeTraversalJob traversalJob = new NewPortalNodeTraversalJob()
         {
-            PickedToSector = pickedToSector,
-            PortalSequenceBorders = portalSequenceBorders,
-            TargetSectorCosts = targetSectorCosts,
             TargetIndex = destinationIndex,
             FieldColAmount = _columnAmount,
+            FieldRowAmount = _rowAmount,
+            FieldTileSize = _tileSize,
+            SectorColAmount = _sectorTileAmount,
+            SectorMatrixColAmount = _columnAmount / _sectorTileAmount,
+
+            PickedToSector = preallocations.PickedToSector,
+            PortalSequenceBorders = preallocations.PortalSequenceBorders,
+            TargetSectorCosts = preallocations.TargetSectorCosts,
             PortalNodes = pickedFieldGraph.PortalNodes,
             SecToWinPtrs = pickedFieldGraph.SecToWinPtrs,
             WindowNodes = pickedFieldGraph.WindowNodes,
             WinToSecPtrs = pickedFieldGraph.WinToSecPtrs,
-            FieldRowAmount = _rowAmount,
-            FieldTileSize = _tileSize,
             SourcePositions = sources,
             PorPtrs = pickedFieldGraph.PorToPorPtrs,
             SectorNodes = pickedFieldGraph.SectorNodes,
             Costs = pickedCostField.CostsG,
-            SectorColAmount = _sectorTileAmount,
-            SectorMatrixColAmount = _columnAmount / _sectorTileAmount,
             LocalDirections = _fieldProducer.GetSectorDirections(),
-            PortalSequence = portalSequence,
-            SectorToPicked = sectorToPicked,
-            FlowFieldLength = flowFieldLength,
-            PortalTraversalDataArray = portalTraversalDataArray,
+            PortalSequence = preallocations.PortalSequence,
+            SectorToPicked = preallocations.SectorToPicked,
+            FlowFieldLength = preallocations.FlowFieldLength,
+            PortalTraversalDataArray = preallocations.PortalTraversalDataArray,
+            SourcePortalIndexList = preallocations.SourcePortalIndexList,
+            TargetSectorPortalIndexList = preallocations.TargetSectorPortalIndexList,
+            AStarTraverseIndexList = preallocations.AStartTraverseIndexList,
+            FastMarchingQueue = preallocations.PortalTraversalFastMarchingQueue,
         };
 
         Path producedPath = new Path()
         {
             Id = ProducedPaths.Count,
-            PickedToSector = pickedToSector,
-            PortalSequenceBorders = portalSequenceBorders,
+            PickedToSector = preallocations.PickedToSector,
+            PortalSequenceBorders = preallocations.PortalSequenceBorders,
             TargetIndex = destinationIndex,
-            TargetSectorCosts = targetSectorCosts,
+            TargetSectorCosts = preallocations.TargetSectorCosts,
             Sources = sources,
             Destination = destination,
             State = PathState.Clean,
             Offset = offset,
-            PortalSequence = portalSequence,
-            PortalTraversalDataArray = portalTraversalDataArray,
-            SectorToPicked = sectorToPicked,
-            FlowFieldLength = flowFieldLength,
+            PortalSequence = preallocations.PortalSequence,
+            PortalTraversalDataArray = preallocations.PortalTraversalDataArray,
+            SectorToPicked = preallocations.SectorToPicked,
+            FlowFieldLength = preallocations.FlowFieldLength,
+            SourcePortalIndexList = preallocations.SourcePortalIndexList,
+            AStartTraverseIndexList = preallocations.AStartTraverseIndexList,
+            TargetSectorPortalIndexList = preallocations.TargetSectorPortalIndexList,
+            PortalTraversalFastMarchingQueue = preallocations.PortalTraversalFastMarchingQueue,
+
             IntegrationStartIndicies = new NativeList<LocalIndex1d>(Allocator.Persistent),
             NewFlowFieldLength = new NativeArray<int>(1, Allocator.Persistent),
         };
@@ -141,21 +148,48 @@ public class PathProducer
     {
 
         CostField pickedCostField = _fieldProducer.GetCostFieldWithOffset(path.Offset);
+        FieldGraph pickedFieldGraph = _fieldProducer.GetFieldGraphWithOffset(path.Offset);
         NativeArray<int> flowFieldLength = path.FlowFieldLength;
         path.FlowField = new UnsafeList<FlowData>(flowFieldLength[0], Allocator.Persistent);
         path.FlowField.Length = flowFieldLength[0];
         path.IntegrationField = new NativeList<IntegrationTile>(flowFieldLength[0], Allocator.Persistent);
         path.IntegrationField.Length = flowFieldLength[0];
+        path.ActiveWaveFrontList = _preallocator.GetActiveWaveFrontListPersistent(path.PickedToSector.Length);
         int2 destinationIndex = path.TargetIndex;
+        
+        //ACTIVE WAVE FRONT SUBMISSION
+        NewActivePortalSubmitJob submitJob = new NewActivePortalSubmitJob()
+        {
+            SectorColAmount = FlowFieldUtilities.SectorColAmount,
+            SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+            SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
+            SectorRowAmount = FlowFieldUtilities.SectorRowAmount,
+            SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
+            FieldColAmount = FlowFieldUtilities.FieldColAmount,
+            TargetIndex2D = destinationIndex,
+
+            SectorToPicked = path.SectorToPicked,
+            PickedToSectors = path.PickedToSector,
+            PortalSequence = path.PortalSequence,
+            PortalSequenceBorders = path.PortalSequenceBorders,
+            WinToSecPtrs = pickedFieldGraph.WinToSecPtrs,
+            PortalNodes = pickedFieldGraph.PortalNodes,
+            WindowNodes = pickedFieldGraph.WindowNodes,
+            ActiveWaveFrontListArray = path.ActiveWaveFrontList,
+        };
 
         //INT FIELD RESET
         IntegrationFieldResetJob resetJob = new IntegrationFieldResetJob()
         {
             IntegrationField = path.IntegrationField,
         };
+        resetJob.Schedule().Complete();
+
+        
+
 
         //LOS
-        LOSJob losjob = new LOSJob()
+        /*LOSJob losjob = new LOSJob()
         {
             TileSize = _tileSize,
             FieldRowAmount = _rowAmount,
@@ -168,10 +202,10 @@ public class PathProducer
             SectorToPicked = path.SectorToPicked,
             IntegrationField = path.IntegrationField,
             BlockedWaveFronts = path.IntegrationStartIndicies,
-        };
+        };*/
         
         //INTEGRATION
-        IntegrationFieldJob intjob = new IntegrationFieldJob()
+        /*IntegrationFieldJob intjob = new IntegrationFieldJob()
         {
             StartIndicies = path.IntegrationStartIndicies,
             Costs = pickedCostField.CostsL,
@@ -181,7 +215,7 @@ public class PathProducer
             SectorMatrixColAmount = _sectorMatrixColAmount,
             FieldColAmount = _columnAmount,
             FieldRowAmount = _rowAmount,
-        };
+        };*/
 
         //FLOW FIELD
         FlowFieldJob ffJob = new FlowFieldJob()
@@ -197,10 +231,31 @@ public class PathProducer
             IntegrationField = path.IntegrationField,
         };
 
-        JobHandle resetHandle = resetJob.Schedule();
-        JobHandle losHandle = losjob.Schedule(resetHandle);
-        JobHandle integrationHandle = intjob.Schedule(losHandle);
-        JobHandle ffHandle = ffJob.Schedule(ffJob.FlowField.Length, 256, integrationHandle);
+        //SCHEDULING
+        JobHandle submitHandle = submitJob.Schedule();
+        submitHandle.Complete();
+        NativeList<JobHandle> intFieldHandles = new NativeList<JobHandle>(path.PickedToSector.Length, Allocator.Temp);
+        for (int i = 0; i < path.PickedToSector.Length; i++)
+        {
+            int sectorIndex = path.PickedToSector[i];
+            NativeSlice<IntegrationTile> integrationSector = new NativeSlice<IntegrationTile>(path.IntegrationField, i * _sectorTileAmount  * _sectorTileAmount + 1, _sectorTileAmount * _sectorTileAmount);
+            NewIntegrationFieldJob intJob = new NewIntegrationFieldJob()
+            {
+                SectorIndex = sectorIndex,
+                StartIndicies = submitJob.ActiveWaveFrontListArray[i],
+                Costs = pickedCostField.CostsL[sectorIndex],
+                IntegrationField = integrationSector,
+                SectorToPicked = path.SectorToPicked,
+                SectorColAmount = _sectorTileAmount,
+                SectorMatrixColAmount = _sectorMatrixColAmount,
+                FieldColAmount = _columnAmount,
+                FieldRowAmount = _rowAmount,
+            };
+            JobHandle intHandle = intJob.Schedule(submitHandle);
+            intFieldHandles.Add(intHandle);
+        }
+
+        JobHandle ffHandle = ffJob.Schedule(ffJob.FlowField.Length, 256, JobHandle.CombineDependencies(intFieldHandles));
         return new PathHandle()
         {
             Handle = ffHandle,

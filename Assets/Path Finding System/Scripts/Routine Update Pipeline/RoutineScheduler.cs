@@ -10,7 +10,7 @@ using UnityEngine.Experimental.Rendering;
 using UnityEngine.Jobs;
 using static UnityEngine.Rendering.VirtualTexturing.Debugging;
 
-public class RoutineSchedulingTree
+public class RoutineScheduler
 {
     PathfindingManager _pathfindingManager;
     AgentRoutineDataProducer _dirCalculator;
@@ -25,7 +25,7 @@ public class RoutineSchedulingTree
     List<JobHandle> _colCalculationHandle;
     List<JobHandle> _avoidanceHandle;
     List<JobHandle> _collisionResolutionHandle;
-    public RoutineSchedulingTree(PathfindingManager pathfindingManager)
+    public RoutineScheduler(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
         _dirCalculator = new AgentRoutineDataProducer(pathfindingManager.AgentDataContainer, pathfindingManager);
@@ -39,11 +39,22 @@ public class RoutineSchedulingTree
         _avoidanceHandle = new List<JobHandle>();
         _collisionResolutionHandle = new List<JobHandle>();
     }
+
+    public void Schedule(List<CostFieldEditJob[]> costEditRequests, List<PortalTraversalJobPack> portalTravRequests)
+    {
+        JobHandle costEditHandle = ScheduleCostEditRequests(costEditRequests);
+        AddMovementDataCalculationHandle(costEditHandle);
+        AddCollisionResolutionJob();
+        AddLocalAvoidanceJob();
+        AddCollisionCalculationJob();
+        //_schedulingTree.SetPortalAdditionTraversalHandles();
+        AddPortalTraversalHandles(portalTravRequests, costEditHandle);
+    }
     public AgentRoutineDataProducer GetRoutineDataProducer()
     {
         return _dirCalculator;
     }
-    public JobHandle ScheduleCostEditRequests(List<CostFieldEditJob[]> costFieldEditRequests)
+    JobHandle ScheduleCostEditRequests(List<CostFieldEditJob[]> costFieldEditRequests)
     {
         NativeList<JobHandle> editHandles = new NativeList<JobHandle>(Allocator.Temp);
         JobHandle lastHandle = new JobHandle();
@@ -71,14 +82,14 @@ public class RoutineSchedulingTree
 
         return lastHandle;
     }
-    public void AddMovementDataCalculationHandle(JobHandle dependency)
+    void AddMovementDataCalculationHandle(JobHandle dependency)
     {
         AgentRoutineDataCalculationJob movDataJob = _dirCalculator.CalculateDirections();
         _movDataCalcHandle.Add(movDataJob.Schedule(movDataJob.AgentMovementData.Length, 64, dependency));
 
         if (FlowFieldUtilities.DebugMode) { _movDataCalcHandle[_movDataCalcHandle.Count - 1].Complete(); }
     }
-    public void AddCollisionResolutionJob()
+    void AddCollisionResolutionJob()
     {
         CollisionResolutionJob colResJob = new CollisionResolutionJob()
         {
@@ -92,7 +103,7 @@ public class RoutineSchedulingTree
 
         if (FlowFieldUtilities.DebugMode) { _collisionResolutionHandle[0].Complete(); }
     }
-    public void AddLocalAvoidanceJob()
+    void AddLocalAvoidanceJob()
     {
         LocalAvoidanceJob avoidanceJob = new LocalAvoidanceJob()
         {
@@ -125,7 +136,7 @@ public class RoutineSchedulingTree
 
         if (FlowFieldUtilities.DebugMode) { _avoidanceHandle[0].Complete(); }
     }
-    public void AddCollisionCalculationJob()
+    void AddCollisionCalculationJob()
     {
         CollisionCalculationJob collisionJob = new CollisionCalculationJob()
         {
@@ -146,7 +157,7 @@ public class RoutineSchedulingTree
 
         if (FlowFieldUtilities.DebugMode) { _colCalculationHandle[0].Complete(); }
     }
-    public void AddPortalTraversalHandles(List<PortalTraversalJobPack> portalTravJobs, JobHandle dependency)
+    void AddPortalTraversalHandles(List<PortalTraversalJobPack> portalTravJobs, JobHandle dependency)
     {
         for (int i = 0; i < portalTravJobs.Count; i++)
         {
@@ -156,7 +167,7 @@ public class RoutineSchedulingTree
         portalTravJobs.Clear();
 
         if (FlowFieldUtilities.DebugMode)
-        {
+        {            
             for (int i = 0; i < _porTravHandles.Count; i++)
             {
                 _porTravHandles[i].Handle.Complete();
@@ -164,7 +175,7 @@ public class RoutineSchedulingTree
             }
         }
     }
-    public void SetPortalAdditionTraversalHandles()
+    void SetPortalAdditionTraversalHandles()
     {
         _pathfindingManager.PathProducer.SetPortalAdditionTraversalHandles(_dirCalculator.AgentOutOfFieldStatusList, _porAddTravHandles, _movDataCalcHandle[0]);
 
@@ -188,7 +199,6 @@ public class RoutineSchedulingTree
                 handle.Handle.Complete();   
                 _pathProdCalcHandles.Add(_pathfindingManager.PathProducer.SchedulePathProductionJob(handle.Path));
                 _porTravHandles.RemoveAtSwapBack(i);
-                
             }
         }
 

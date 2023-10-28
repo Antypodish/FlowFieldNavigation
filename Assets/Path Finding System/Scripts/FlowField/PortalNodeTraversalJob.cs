@@ -712,6 +712,4 @@ public enum PortalTraversalMark : byte
     TargetNeighbour = 32,
     Reduced = 64,
     Source = 128,
-
-
 }

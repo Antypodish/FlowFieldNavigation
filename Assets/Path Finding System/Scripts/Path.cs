@@ -24,6 +24,12 @@ public class Path
     public NativeArray<int> FlowFieldLength;
     public NativeList<LocalIndex1d> IntegrationStartIndicies;
     public NativeArray<int> NewFlowFieldLength;
+    public NativeQueue<int> PortalTraversalFastMarchingQueue;
+    public NativeList<int> AStartTraverseIndexList;
+    public NativeList<int> TargetSectorPortalIndexList;
+    public NativeList<int> SourcePortalIndexList;
+    public NativeList<UnsafeList<ActiveWaveFront>> ActiveWaveFrontList;
+
     public void Dispose()
     {
         NewFlowFieldLength.Dispose();

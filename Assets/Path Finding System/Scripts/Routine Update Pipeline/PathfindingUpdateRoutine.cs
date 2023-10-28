@@ -8,7 +8,7 @@ using UnityEngine;
 public class PathfindingUpdateRoutine
 {
     PathfindingManager _pathfindingManager;
-    RoutineSchedulingTree _schedulingTree;
+    RoutineScheduler _scheduler;
 
     List<CostFieldEditJob[]> _costEditRequests;
     List<PortalTraversalJobPack> _portalTravJobs;
@@ -17,7 +17,7 @@ public class PathfindingUpdateRoutine
     public PathfindingUpdateRoutine(PathfindingManager pathfindingManager, PathProducer pathProducer)
     {
         _pathfindingManager = pathfindingManager;
-        _schedulingTree = new RoutineSchedulingTree(pathfindingManager);
+        _scheduler = new RoutineScheduler(pathfindingManager);
 
         _costEditRequests = new List<CostFieldEditJob[]>();
         _portalTravJobs = new List<PortalTraversalJobPack>();
@@ -26,7 +26,7 @@ public class PathfindingUpdateRoutine
     public void RoutineUpdate(float deltaTime)
     {
         //FORCE COMPLETE JOBS FROM PREVIOUS UPDATE
-        _schedulingTree.ForceCompleteAll();
+        _scheduler.ForceCompleteAll();
 
         _pathfindingManager.PathProducer.Update();
 
@@ -38,24 +38,17 @@ public class PathfindingUpdateRoutine
         _agentAddRequest.Clear();
 
         //SCHEDULE NEW JOBS
-
-        JobHandle costEditHandle = _schedulingTree.ScheduleCostEditRequests(_costEditRequests);
+        _scheduler.Schedule(_costEditRequests, _portalTravJobs);
         _costEditRequests.Clear();
-        _schedulingTree.AddMovementDataCalculationHandle(costEditHandle);
-        _schedulingTree.AddCollisionResolutionJob();
-        _schedulingTree.AddLocalAvoidanceJob(); 
-        _schedulingTree.AddCollisionCalculationJob(); 
-        //_schedulingTree.SetPortalAdditionTraversalHandles();
-        _schedulingTree.AddPortalTraversalHandles(_portalTravJobs, costEditHandle);
         _portalTravJobs.Clear();
     }
-    public RoutineSchedulingTree GetSchedulingTree()
+    public RoutineScheduler GetRoutineScheduler()
     {
-        return _schedulingTree;
+        return _scheduler;
     }
     public void IntermediateLateUpdate()
     {
-        _schedulingTree.TryCompletePredecessorJobs();
+        _scheduler.TryCompletePredecessorJobs();
     }
     public void RequestCostEdit(int2 startingPoint, int2 endPoint, byte newCost)
     {

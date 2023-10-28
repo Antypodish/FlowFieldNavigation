@@ -26,6 +26,7 @@ public class EditorDebuggingController : MonoBehaviour
     [SerializeField] bool _debugLOSPass;
     [SerializeField] bool _debugLOSBlocks;
     [SerializeField] bool _debugFlowField;
+    [SerializeField] bool _debugActiveWaveFronts;
     [Header("Agent Debugger")]
     [SerializeField] bool _debugAgentDirections;
     [SerializeField] bool _debugAgentWaypoint;
@@ -94,6 +95,7 @@ public class EditorDebuggingController : MonoBehaviour
             if (_debugLOSPass && _pathDebugger != null) { _pathDebugger.LOSPassDebug(_agentToDebug); }
             if (_debugLOSBlocks && _pathDebugger != null) { _pathDebugger.LOSBlockDebug(_agentToDebug); }
             if(_debugAgentWaypoint && _agentWaypointDebugger!= null) { _agentWaypointDebugger.Debug(_agentToDebug); }
+            if(_debugActiveWaveFronts && _pathDebugger != null) { _pathDebugger.DebugActiveWaveFronts(_agentToDebug); }
         }
 
         if(_debugAgentDirections && _agentDirectionDebugger != null) { _agentDirectionDebugger.Debug(); }
