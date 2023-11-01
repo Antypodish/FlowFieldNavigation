@@ -144,7 +144,6 @@ public struct AgentData
     public float2 Seperation;
     public float3 Position;
     public float Radius;
-    public Waypoint waypoint;
 
     public byte SplitInterval;
     public byte SplitInfo;

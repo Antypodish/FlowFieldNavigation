@@ -224,6 +224,8 @@ public class PathProducer
             SectorColAmount = _sectorTileAmount,
             SectorMatrixColAmount = _sectorMatrixColAmount,
             SectorMatrixRowAmount = _sectorMatrixRowAmount,
+            SectorMatrixTileAmount = _sectorMatrixRowAmount * _sectorMatrixColAmount,
+            FieldColAmount = _columnAmount,
             SectorRowAmount = _sectorTileAmount,
             SectorToPicked = path.SectorToPicked,
             PickedToSector = path.PickedToSector,

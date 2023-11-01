@@ -142,10 +142,10 @@ public struct LocalAvoidanceJob : IJobParallelFor
                         if (mate.PathId == pahtId)
                         {
                             totalHeading += mate.DesiredDirection;
-                            alignedAgentCount++;
+                            alignedAgentCount = math.select(alignedAgentCount + 1, alignedAgentCount, mate.DesiredDirection.Equals(0));
                         }
                         toalCurrentHeading += math.normalize(mate.CurrentDirection);
-                        curAlignedAgentCount++;
+                        curAlignedAgentCount = math.select(curAlignedAgentCount + 1, curAlignedAgentCount, mate.CurrentDirection.Equals(0));
                         if (mate.Avoidance != 0) { avoiding = true; }
 
                     }

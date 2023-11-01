@@ -4,15 +4,19 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using UnityEngine;
+using System;
 
 [BurstCompile]
 public struct FlowFieldJob : IJobParallelFor
 {
     public int SectorMatrixColAmount;
     public int SectorMatrixRowAmount;
+    public int SectorMatrixTileAmount;
     public int SectorColAmount;
     public int SectorRowAmount;
     public int SectorTileAmount;
+    public int FieldColAmount;
+    public int FieldTileAmount;
     [ReadOnly] public UnsafeList<int> SectorToPicked;
     [ReadOnly] public NativeArray<int> PickedToSector;
     [ReadOnly] public NativeArray<IntegrationTile> IntegrationField;
@@ -21,13 +25,47 @@ public struct FlowFieldJob : IJobParallelFor
     public void Execute(int index)
     {
         if(index == 0) { return; }
-        if (IntegrationField[index].Mark == IntegrationMark.LOSPass && IntegrationField[index].Cost == 0) { FlowField[index] = FlowData.LOS; return; }
-
+        //if (IntegrationField[index].Mark == IntegrationMark.LOSPass && IntegrationField[index].Cost == 0) { FlowField[index] = FlowData.LOS; return; }
+        int smoothCount = 7;
         //DATA
         int localIndex = (index - 1) % SectorTileAmount;
         int pickedSector1d = PickedToSector[(index - 1) / SectorTileAmount];
-        int sectorMatrixTileAmount = SectorMatrixColAmount * SectorMatrixRowAmount;
 
+        int curFlowFieldIndex = index;
+        int curLocalIndex = localIndex;
+        int curPickedSector1d = pickedSector1d;
+        float curIntCost = IntegrationField[curFlowFieldIndex].Cost;
+        /*for(int i = 0; i < smoothCount; i++)
+        {
+            if(curIntCost == 0) { break; }
+            int newFlowFieldIndex = GetNextIndex(curLocalIndex, curPickedSector1d, curIntCost);
+            curFlowFieldIndex = newFlowFieldIndex;
+            curLocalIndex = (newFlowFieldIndex - 1) % SectorTileAmount;
+            curPickedSector1d = PickedToSector[(curFlowFieldIndex - 1) / SectorTileAmount];
+            curIntCost = IntegrationField[curFlowFieldIndex].Cost;
+        }*/
+        int newLocalIndex = curLocalIndex;
+        int newSectorIndex = curPickedSector1d;
+
+        int2 startLocal2d = FlowFieldUtilities.To2D(localIndex, SectorColAmount);
+        int2 newLocal2d = FlowFieldUtilities.To2D(newLocalIndex, SectorColAmount);
+
+        int2 startSector2d = FlowFieldUtilities.To2D(pickedSector1d, SectorMatrixColAmount);
+        int2 newSector2d = FlowFieldUtilities.To2D(newSectorIndex, SectorMatrixColAmount);
+
+
+        int startGeneral1d = FlowFieldUtilities.GetGeneral1d(startLocal2d, startSector2d, SectorColAmount, FieldColAmount);
+        int newGeneral1d = FlowFieldUtilities.GetGeneral1d(newLocal2d, newSector2d, SectorColAmount, FieldColAmount);
+
+        int minIndex = GetIndex(startGeneral1d, curIntCost, curPickedSector1d);
+
+        FlowData flow = new FlowData();
+        flow.SetFlow(startGeneral1d, minIndex, FieldColAmount);
+        FlowField[index] = flow;
+    }
+
+    int GetNextIndex(int localIndex, int pickedSector1d, float curIntCost)
+    {
         //LOCAL INDICIES
         int nLocal1d = localIndex + SectorColAmount;
         int eLocal1d = localIndex + 1;
@@ -72,7 +110,7 @@ public struct FlowFieldJob : IJobParallelFor
         nwLocal1d = math.select(nwLocal1d, nwLocal1d + SectorColAmount, wLocalOverflow);
 
         //SECTOR OVERFLOWS
-        bool nSectorOverflow = nSector1d >= sectorMatrixTileAmount;
+        bool nSectorOverflow = nSector1d >= SectorMatrixTileAmount;
         bool eSectorOverflow = (eSector1d % SectorMatrixColAmount) == 0 && eSector1d != pickedSector1d;
         bool sSectorOverflow = sSector1d < 0;
         bool wSectorOverflow = (pickedSector1d % SectorMatrixColAmount) == 0 && wSector1d != pickedSector1d;
@@ -125,7 +163,6 @@ public struct FlowFieldJob : IJobParallelFor
         int nwSectorMark = SectorToPicked[nwSector1d];
 
         //INTEGRATED COSTS
-        float curIntCost = IntegrationField[index].Cost;
         float nIntCost = float.MaxValue;
         float eIntCost = float.MaxValue;
         float sIntCost = float.MaxValue;
@@ -138,11 +175,11 @@ public struct FlowFieldJob : IJobParallelFor
         if (eSectorMark != 0) { eIntCost = IntegrationField[eSectorMark + eLocal1d].Cost; }
         if (sSectorMark != 0) { sIntCost = IntegrationField[sSectorMark + sLocal1d].Cost; }
         if (wSectorMark != 0) { wIntCost = IntegrationField[wSectorMark + wLocal1d].Cost; }
-        if (neSectorMark != 0 ) { neIntCost = IntegrationField[neSectorMark + neLocal1d].Cost; }
-        if (seSectorMark != 0 ) { seIntCost = IntegrationField[seSectorMark + seLocal1d].Cost; }
-        if (swSectorMark != 0 ) { swIntCost = IntegrationField[swSectorMark + swLocal1d].Cost; }
-        if (nwSectorMark != 0 ) { nwIntCost = IntegrationField[nwSectorMark + nwLocal1d].Cost; }
-        if(curIntCost != float.MaxValue)
+        if (neSectorMark != 0) { neIntCost = IntegrationField[neSectorMark + neLocal1d].Cost; }
+        if (seSectorMark != 0) { seIntCost = IntegrationField[seSectorMark + seLocal1d].Cost; }
+        if (swSectorMark != 0) { swIntCost = IntegrationField[swSectorMark + swLocal1d].Cost; }
+        if (nwSectorMark != 0) { nwIntCost = IntegrationField[nwSectorMark + nwLocal1d].Cost; }
+        if (curIntCost != float.MaxValue)
         {
             if (nIntCost == float.MaxValue)
             {
@@ -166,28 +203,87 @@ public struct FlowFieldJob : IJobParallelFor
             }
         }
         float minCost = float.MaxValue;
-        FlowData minFlow = FlowData.None;
-        if(nIntCost < minCost) { minCost = nIntCost; minFlow = FlowData.N; }
-        if(eIntCost < minCost) { minCost = eIntCost; minFlow = FlowData.E; }
-        if(sIntCost < minCost) { minCost = sIntCost; minFlow = FlowData.S; }
-        if(wIntCost < minCost) { minCost = wIntCost; minFlow = FlowData.W; }
-        if(neIntCost < minCost) { minCost = neIntCost; minFlow = FlowData.NE; }
-        if(seIntCost < minCost) { minCost = seIntCost; minFlow = FlowData.SE; }
-        if(swIntCost < minCost) { minCost = swIntCost; minFlow = FlowData.SW; }
-        if(nwIntCost < minCost) { minCost = nwIntCost; minFlow = FlowData.NW; }
-        FlowField[index] = minFlow;
+        int minIndex = 0;
+        if (nIntCost < minCost) { minCost = nIntCost; minIndex = nLocal1d + nSectorMark; }
+        if (eIntCost < minCost) { minCost = eIntCost; minIndex = eLocal1d + eSectorMark; }
+        if (sIntCost < minCost) { minCost = sIntCost; minIndex = sLocal1d + sSectorMark; }
+        if (wIntCost < minCost) { minCost = wIntCost; minIndex = wLocal1d + wSectorMark; }
+        if (neIntCost < minCost) { minCost = neIntCost; minIndex = neLocal1d + neSectorMark; }
+        if (seIntCost < minCost) { minCost = seIntCost; minIndex = seLocal1d + seSectorMark; }
+        if (swIntCost < minCost) { minCost = swIntCost; minIndex = swLocal1d + swSectorMark; } 
+        if (nwIntCost < minCost) { minCost = nwIntCost; minIndex = nwLocal1d + nwSectorMark; }
+        return minIndex;
+    }
+
+    int GetIndex(int general1d, float cost, int curSector)
+    {
+
+        int2 general2d = FlowFieldUtilities.To2D(general1d, FieldColAmount);
+        int2 botLeft = general2d - new int2(8, 8);
+        int horSize = 16;
+        int verSize = 16;
+
+
+        int indexWithMinCost = general1d;
+        float minCost = cost;
+        for(int i = botLeft.y; i < botLeft.y + verSize; i ++)
+        {
+            for(int j = botLeft.x; j < botLeft.x + horSize; j++)
+            {
+                int2 cur2d = new int2(j, i);
+                if (j < 0 || j >= FieldColAmount || i < 0 || i >= FieldColAmount) { continue; }
+                int cur = FlowFieldUtilities.To1D(cur2d, FieldColAmount);
+                int2 sector2d = FlowFieldUtilities.GetSectorIndex(cur2d, SectorColAmount);
+                int sector1d = FlowFieldUtilities.To1D(sector2d, SectorMatrixColAmount);
+                int sectorMark = SectorToPicked[sector1d];
+                int2 sectorStart = FlowFieldUtilities.GetSectorStartIndex(sector2d, SectorColAmount);
+                int2 local2d = FlowFieldUtilities.GetLocalIndex(cur2d, sectorStart);
+                int local1d = FlowFieldUtilities.To1D(local2d, SectorColAmount);
+
+                int sectorDif = curSector - sector1d;
+                if(sectorMark == 0 || (sectorDif != 0 && sectorDif != 1 && sectorDif != -1 && sectorDif != SectorMatrixColAmount && sectorDif != -SectorMatrixColAmount)) { continue; }
+
+                float newCost = IntegrationField[sectorMark + local1d].Cost;
+                indexWithMinCost = math.select(indexWithMinCost, cur, newCost < minCost);
+                minCost = math.select(minCost, newCost, newCost < minCost);
+            }
+        }
+        return math.select(indexWithMinCost, general1d, minCost == 0);
     }
 }
-public enum FlowData : byte
+[BurstCompile]
+public struct FlowData
 {
-    None = 0,
-    N = 1,
-    NE = 2,
-    E = 3,
-    SE = 4,
-    S = 5,
-    SW = 6,
-    W = 7,
-    NW = 8,
-    LOS,
+    byte _flow;
+
+    public float2 GetFlow(float tileSize)
+    {
+        int verticalMag = (_flow >> 4) & 0b0000_0111;
+        int horizontalMag = _flow & 0b0000_0111;
+
+        bool isVerticalNegative = (_flow & 0b1000_0000) == 0b1000_0000;
+        bool isHorizontalNegative = (_flow & 0b0000_1000) == 0b0000_1000;
+
+        verticalMag = math.select(verticalMag, -(verticalMag + 1), isVerticalNegative);
+        horizontalMag = math.select(horizontalMag, -(horizontalMag+ 1), isHorizontalNegative);
+
+        return math.normalizesafe(new float2(horizontalMag * tileSize, verticalMag * tileSize));
+    }
+    public void SetFlow(int curGeneralIndex, int targetGeneralIndex, int fieldColAmount)
+    {
+        int verticalDif = (targetGeneralIndex / fieldColAmount - curGeneralIndex / fieldColAmount);//-1
+        int horizontalDif = targetGeneralIndex - (curGeneralIndex + verticalDif * fieldColAmount);//+1
+
+        if(verticalDif > 7 || verticalDif < -8 || horizontalDif > 7 || horizontalDif < -8) { return; }
+        bool isVerticalNegative = verticalDif < 0;
+        bool isHorizontalNegative = horizontalDif < 0;
+
+        byte verticalBits = (byte) math.select(verticalDif << 4, ((math.abs(verticalDif) - 1) << 4) | 0b1000_0000, isVerticalNegative);
+        byte horizontalBits = (byte) math.select(horizontalDif, (math.abs(horizontalDif) - 1) | 0b0000_1000, isHorizontalNegative);
+        _flow = (byte)(0 | verticalBits | horizontalBits);
+    }
+    public bool IsLOS()
+    {
+        return _flow == 0b0000_0000;
+    }
 }

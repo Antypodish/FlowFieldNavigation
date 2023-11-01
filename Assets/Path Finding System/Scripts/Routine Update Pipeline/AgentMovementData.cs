@@ -8,7 +8,6 @@ public struct AgentMovementData
     public float2 DesiredDirection;
     public float2 CurrentDirection;
     public float2 SeperationForce;
-    public Waypoint Waypoint;
     public float Speed;
     public int Offset;
     public float Radius;

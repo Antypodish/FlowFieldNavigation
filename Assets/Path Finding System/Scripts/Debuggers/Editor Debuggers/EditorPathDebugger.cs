@@ -265,6 +265,7 @@ public class EditorPathDebugger
         UnsafeList<int> sectorMarks = producedPath.SectorToPicked;
         NativeArray<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset).SectorNodes;
         UnsafeList<FlowData> flowField = producedPath.FlowField;
+        NativeArray<IntegrationTile> integrationField = producedPath.IntegrationField;
         int sectorColAmount = _pathfindingManager.SectorColAmount;
         int sectorTileAmount = sectorColAmount * sectorColAmount;
         for (int i = 0; i < sectorMarks.Length; i++)
@@ -279,11 +280,9 @@ public class EditorPathDebugger
                 int2 local2d = new int2(local1d % sectorColAmount, local1d / sectorColAmount);
                 Vector3 localIndexPos = new Vector3(local2d.x * _tileSize, 0f, local2d.y * _tileSize);
                 Vector3 debugPos = localIndexPos + sectorIndexPos + new Vector3(_tileSize / 2, 0.02f, _tileSize / 2);
-                if (flowField[j] != FlowData.None)
-                {
-                    DrawSquare(debugPos, 0.2f);
-                }
-                if (flowField[j] != FlowData.LOS)
+                if(integrationField[j].Cost == float.MaxValue) { continue; }
+                DrawSquare(debugPos, 0.2f);
+                if (!flowField[j].IsLOS())
                 {
                     DrawFlow(flowField[j], debugPos);
                 }
@@ -304,48 +303,11 @@ public class EditorPathDebugger
         }
         void DrawFlow(FlowData flow, Vector3 pos)
         {
-            pos = pos + new Vector3(0, yOffset, 0);
-
-            if (flow == FlowData.N)
-            {
-                Vector3 dir = pos + new Vector3(0, 0, 0.4f);
-                Gizmos.DrawLine(pos, dir);
-            }
-            else if (flow == FlowData.NE)
-            {
-                Vector3 dir = pos + new Vector3(0.4f, 0, 0.4f);
-                Gizmos.DrawLine(pos, dir);
-            }
-            else if (flow == FlowData.E)
-            {
-                Vector3 dir = pos + new Vector3(0.4f, 0, 0);
-                Gizmos.DrawLine(pos, dir);
-            }
-            else if (flow == FlowData.SE)
-            {
-                Vector3 dir = pos + new Vector3(0.4f, 0, -0.4f);
-                Gizmos.DrawLine(pos, dir);
-            }
-            else if (flow == FlowData.S)
-            {
-                Vector3 dir = pos + new Vector3(0, 0, -0.4f);
-                Gizmos.DrawLine(pos, dir);
-            }
-            else if (flow == FlowData.SW)
-            {
-                Vector3 dir = pos + new Vector3(-0.4f, 0, -0.4f);
-                Gizmos.DrawLine(pos, dir);
-            }
-            else if (flow == FlowData.W)
-            {
-                Vector3 dir = pos + new Vector3(-0.4f, 0, 0);
-                Gizmos.DrawLine(pos, dir);
-            }
-            else if (flow == FlowData.NW)
-            {
-                Vector3 dir = pos + new Vector3(-0.4f, 0, 0.4f);
-                Gizmos.DrawLine(pos, dir);
-            }
+            pos = new Vector3(pos.x, yOffset, pos.z);
+            float2 flowDir = flow.GetFlow(_tileSize);
+            flowDir = math.normalizesafe(flowDir) * 0.4f;
+            Vector3 targetPos = pos + new Vector3(flowDir.x, 0f, flowDir.y);
+            Gizmos.DrawLine(pos, targetPos);
         }
     }
 }
