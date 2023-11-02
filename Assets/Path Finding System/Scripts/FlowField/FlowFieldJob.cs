@@ -25,46 +25,49 @@ public struct FlowFieldJob : IJobParallelFor
     public void Execute(int index)
     {
         if(index == 0) { return; }
-        //if (IntegrationField[index].Mark == IntegrationMark.LOSPass && IntegrationField[index].Cost == 0) { FlowField[index] = FlowData.LOS; return; }
-        int smoothCount = 7;
         //DATA
-        int localIndex = (index - 1) % SectorTileAmount;
-        int pickedSector1d = PickedToSector[(index - 1) / SectorTileAmount];
+        int startLocalIndex = (index - 1) % SectorTileAmount;
+        int startPickedSector1d = PickedToSector[(index - 1) / SectorTileAmount];
 
         int curFlowFieldIndex = index;
-        int curLocalIndex = localIndex;
-        int curPickedSector1d = pickedSector1d;
+        int curLocalIndex = startLocalIndex;
+        int curPickedSector1d = startPickedSector1d;
         float curIntCost = IntegrationField[curFlowFieldIndex].Cost;
-        /*for(int i = 0; i < smoothCount; i++)
+
+        int verDif = 0;
+        int horDif = 0;
+        while(curIntCost != 0)
         {
-            if(curIntCost == 0) { break; }
-            int newFlowFieldIndex = GetNextIndex(curLocalIndex, curPickedSector1d, curIntCost);
+            NewIndexData newIndex = GetNextIndex(curLocalIndex, curPickedSector1d, startPickedSector1d, curIntCost, horDif, verDif);
+            if (newIndex.Index == 0) { break; }
+            int newFlowFieldIndex = newIndex.Index;
+            verDif = newIndex.NewVerDif;
+            horDif = newIndex.NewHorDif;
             curFlowFieldIndex = newFlowFieldIndex;
             curLocalIndex = (newFlowFieldIndex - 1) % SectorTileAmount;
             curPickedSector1d = PickedToSector[(curFlowFieldIndex - 1) / SectorTileAmount];
             curIntCost = IntegrationField[curFlowFieldIndex].Cost;
-        }*/
-        int newLocalIndex = curLocalIndex;
-        int newSectorIndex = curPickedSector1d;
+        }
+        int endLocalIndex = curLocalIndex;
+        int endSectorIndex = curPickedSector1d;
 
-        int2 startLocal2d = FlowFieldUtilities.To2D(localIndex, SectorColAmount);
-        int2 newLocal2d = FlowFieldUtilities.To2D(newLocalIndex, SectorColAmount);
+        int2 startLocal2d = FlowFieldUtilities.To2D(startLocalIndex, SectorColAmount);
+        int2 endLocal2d = FlowFieldUtilities.To2D(endLocalIndex, SectorColAmount);
 
-        int2 startSector2d = FlowFieldUtilities.To2D(pickedSector1d, SectorMatrixColAmount);
-        int2 newSector2d = FlowFieldUtilities.To2D(newSectorIndex, SectorMatrixColAmount);
+        int2 startSector2d = FlowFieldUtilities.To2D(startPickedSector1d, SectorMatrixColAmount);
+        int2 endSector2d = FlowFieldUtilities.To2D(endSectorIndex, SectorMatrixColAmount);
 
 
         int startGeneral1d = FlowFieldUtilities.GetGeneral1d(startLocal2d, startSector2d, SectorColAmount, FieldColAmount);
-        int newGeneral1d = FlowFieldUtilities.GetGeneral1d(newLocal2d, newSector2d, SectorColAmount, FieldColAmount);
+        int endGeneral1d = FlowFieldUtilities.GetGeneral1d(endLocal2d, endSector2d, SectorColAmount, FieldColAmount);
 
-        int minIndex = GetIndex(startGeneral1d, curIntCost, curPickedSector1d);
 
         FlowData flow = new FlowData();
-        flow.SetFlow(startGeneral1d, minIndex, FieldColAmount);
+        flow.SetFlow(startGeneral1d, math.select(endGeneral1d, startGeneral1d, curIntCost == 0), FieldColAmount);
         FlowField[index] = flow;
     }
 
-    int GetNextIndex(int localIndex, int pickedSector1d, float curIntCost)
+    NewIndexData GetNextIndex(int localIndex, int pickedSector1d, int startingSector1d, float curIntCost, int horizontalDif, int verticalDif)
     {
         //LOCAL INDICIES
         int nLocal1d = localIndex + SectorColAmount;
@@ -162,6 +165,26 @@ public struct FlowFieldJob : IJobParallelFor
         int swSectorMark = SectorToPicked[swSector1d];
         int nwSectorMark = SectorToPicked[nwSector1d];
 
+
+        int maxNSector = startingSector1d + SectorMatrixColAmount;
+        int maxESector = startingSector1d + 1;
+        int maxSSector = startingSector1d - SectorMatrixColAmount;
+        int maxWSector = startingSector1d - 1;
+        bool nAdjacent = nSector1d == startingSector1d || nSector1d == maxNSector || nSector1d == maxESector || nSector1d == maxWSector || nSector1d == maxSSector;
+        bool eAdjacent = eSector1d == startingSector1d || eSector1d == maxNSector || eSector1d == maxESector || eSector1d == maxWSector || eSector1d == maxSSector;
+        bool sAdjacent = sSector1d == startingSector1d || sSector1d == maxNSector || sSector1d == maxESector || sSector1d == maxWSector || sSector1d == maxSSector;
+        bool wAdjacent = wSector1d == startingSector1d || wSector1d == maxNSector || wSector1d == maxESector || wSector1d == maxWSector || wSector1d == maxSSector;
+
+        int upperDif = verticalDif + 1;
+        int lowerDif = verticalDif - 1;
+        int rightDif = horizontalDif + 1;
+        int leftDif = horizontalDif - 1;
+
+        bool upAvailable = upperDif <= 7;
+        bool lowAvailable = lowerDif >= -8;
+        bool rightAvailable = rightDif <= 7;
+        bool leftAvailable = leftDif >= -8;
+
         //INTEGRATED COSTS
         float nIntCost = float.MaxValue;
         float eIntCost = float.MaxValue;
@@ -171,14 +194,14 @@ public struct FlowFieldJob : IJobParallelFor
         float seIntCost = float.MaxValue;
         float swIntCost = float.MaxValue;
         float nwIntCost = float.MaxValue;
-        if (nSectorMark != 0) { nIntCost = IntegrationField[nSectorMark + nLocal1d].Cost; }
-        if (eSectorMark != 0) { eIntCost = IntegrationField[eSectorMark + eLocal1d].Cost; }
-        if (sSectorMark != 0) { sIntCost = IntegrationField[sSectorMark + sLocal1d].Cost; }
-        if (wSectorMark != 0) { wIntCost = IntegrationField[wSectorMark + wLocal1d].Cost; }
-        if (neSectorMark != 0) { neIntCost = IntegrationField[neSectorMark + neLocal1d].Cost; }
-        if (seSectorMark != 0) { seIntCost = IntegrationField[seSectorMark + seLocal1d].Cost; }
-        if (swSectorMark != 0) { swIntCost = IntegrationField[swSectorMark + swLocal1d].Cost; }
-        if (nwSectorMark != 0) { nwIntCost = IntegrationField[nwSectorMark + nwLocal1d].Cost; }
+        if (nSectorMark != 0 && nAdjacent && upAvailable) { nIntCost = IntegrationField[nSectorMark + nLocal1d].Cost; }
+        if (eSectorMark != 0 && eAdjacent && rightAvailable) { eIntCost = IntegrationField[eSectorMark + eLocal1d].Cost; }
+        if (sSectorMark != 0 && sAdjacent && lowAvailable) { sIntCost = IntegrationField[sSectorMark + sLocal1d].Cost; }
+        if (wSectorMark != 0 && wAdjacent && leftAvailable) { wIntCost = IntegrationField[wSectorMark + wLocal1d].Cost; }
+        if (neSectorMark != 0 && nAdjacent && eAdjacent && upAvailable && rightAvailable) { neIntCost = IntegrationField[neSectorMark + neLocal1d].Cost; }
+        if (seSectorMark != 0 && sAdjacent && eAdjacent && lowAvailable && rightAvailable) { seIntCost = IntegrationField[seSectorMark + seLocal1d].Cost; }
+        if (swSectorMark != 0 && sAdjacent && wAdjacent &&  lowAvailable && leftAvailable) { swIntCost = IntegrationField[swSectorMark + swLocal1d].Cost; }
+        if (nwSectorMark != 0 && nAdjacent && wAdjacent && upAvailable && leftAvailable) { nwIntCost = IntegrationField[nwSectorMark + nwLocal1d].Cost; }
         if (curIntCost != float.MaxValue)
         {
             if (nIntCost == float.MaxValue)
@@ -202,17 +225,25 @@ public struct FlowFieldJob : IJobParallelFor
                 swIntCost = float.MaxValue;
             }
         }
-        float minCost = float.MaxValue;
+        float minCost = curIntCost;
         int minIndex = 0;
-        if (nIntCost < minCost) { minCost = nIntCost; minIndex = nLocal1d + nSectorMark; }
-        if (eIntCost < minCost) { minCost = eIntCost; minIndex = eLocal1d + eSectorMark; }
-        if (sIntCost < minCost) { minCost = sIntCost; minIndex = sLocal1d + sSectorMark; }
-        if (wIntCost < minCost) { minCost = wIntCost; minIndex = wLocal1d + wSectorMark; }
-        if (neIntCost < minCost) { minCost = neIntCost; minIndex = neLocal1d + neSectorMark; }
-        if (seIntCost < minCost) { minCost = seIntCost; minIndex = seLocal1d + seSectorMark; }
-        if (swIntCost < minCost) { minCost = swIntCost; minIndex = swLocal1d + swSectorMark; } 
-        if (nwIntCost < minCost) { minCost = nwIntCost; minIndex = nwLocal1d + nwSectorMark; }
-        return minIndex;
+        int newVerDif = verticalDif;
+        int newHorDif = horizontalDif;
+        if (nIntCost < minCost) { minCost = nIntCost; minIndex = nLocal1d + nSectorMark; newVerDif = verticalDif + 1; }
+        if (eIntCost < minCost) { minCost = eIntCost; minIndex = eLocal1d + eSectorMark; newHorDif = horizontalDif + 1; }
+        if (sIntCost < minCost) { minCost = sIntCost; minIndex = sLocal1d + sSectorMark; newVerDif = verticalDif - 1; }
+        if (wIntCost < minCost) { minCost = wIntCost; minIndex = wLocal1d + wSectorMark; newHorDif = horizontalDif - 1; }
+        if (neIntCost < minCost) { minCost = neIntCost; minIndex = neLocal1d + neSectorMark; newVerDif = verticalDif + 1; newHorDif = horizontalDif + 1; }
+        if (seIntCost < minCost) { minCost = seIntCost; minIndex = seLocal1d + seSectorMark; newVerDif = verticalDif - 1; newHorDif = horizontalDif + 1; }
+        if (swIntCost < minCost) { minCost = swIntCost; minIndex = swLocal1d + swSectorMark; newVerDif = verticalDif - 1; newHorDif = horizontalDif - 1; } 
+        if (nwIntCost < minCost) { minCost = nwIntCost; minIndex = nwLocal1d + nwSectorMark; newVerDif = verticalDif + 1; newHorDif = horizontalDif - 1; }
+
+        return new NewIndexData()
+        {
+            Index = minIndex,
+            NewHorDif = newHorDif,
+            NewVerDif = newVerDif,
+        };
     }
 
     int GetIndex(int general1d, float cost, int curSector)
@@ -249,6 +280,13 @@ public struct FlowFieldJob : IJobParallelFor
             }
         }
         return math.select(indexWithMinCost, general1d, minCost == 0);
+    }
+
+    private struct NewIndexData
+    {
+        public int Index;
+        public int NewVerDif;
+        public int NewHorDif;
     }
 }
 [BurstCompile]

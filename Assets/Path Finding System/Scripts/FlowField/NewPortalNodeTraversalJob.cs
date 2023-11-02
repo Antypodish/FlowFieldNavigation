@@ -246,7 +246,7 @@ public struct NewPortalNodeTraversalJob : IJob
                 PortalToPortal porToPor = porPtrs[i];
                 int portalIndex = porToPor.Index;
                 PortalTraversalData porData = portalTraversalDataArray[portalIndex];
-                float totalDistance = porData.DistanceFromTarget + porToPor.Distance;
+                float totalDistance = porData.DistanceFromTarget + porToPor.Distance + 1;
                 indexWithMinDistance = math.select(indexWithMinDistance, portalIndex, totalDistance < minDistance);
                 minDistance = math.select(minDistance, totalDistance, totalDistance < minDistance);
             }
@@ -255,7 +255,7 @@ public struct NewPortalNodeTraversalJob : IJob
                 PortalToPortal porToPor = porPtrs[i];
                 int portalIndex = porToPor.Index;
                 PortalTraversalData porData = portalTraversalDataArray[portalIndex];
-                float totalDistance = porData.DistanceFromTarget + porToPor.Distance;
+                float totalDistance = porData.DistanceFromTarget + porToPor.Distance + 1;
                 indexWithMinDistance = math.select(indexWithMinDistance, portalIndex, totalDistance < minDistance);
                 minDistance = math.select(minDistance, totalDistance, totalDistance < minDistance);
             }
