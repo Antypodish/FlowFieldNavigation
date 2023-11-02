@@ -15,6 +15,7 @@ public struct FieldGraph
     public NativeArray<int> WinToSecPtrs;
     public NativeArray<PortalNode> PortalNodes;
     public NativeArray<PortalToPortal> PorToPorPtrs;
+    public NativeList<IslandData> IslandDataList;
     AStarGrid _aStarGrid;
 
     //helper data
@@ -58,6 +59,8 @@ public struct FieldGraph
         WinToSecPtrs = new NativeArray<int>(winToSecPtrAmount, Allocator.Persistent);
         PortalNodes = new NativeArray<PortalNode>(portalAmount + 1, Allocator.Persistent);
         PorToPorPtrs = new NativeArray<PortalToPortal>(porToPorPtrAmount, Allocator.Persistent);
+        IslandDataList = new NativeList<IslandData>(Allocator.Persistent);
+        IslandDataList.Length = 1;
 
         int GetPortalPerWindow(int offset)
         {
@@ -97,6 +100,16 @@ public struct FieldGraph
             PortalPerWindow = _portalPerWindow,
             IntegratedCosts = _aStarGrid._integratedCosts,
             AStarQueue = _aStarGrid._searchQueue,
+        };
+    }
+    public IslandConfigurationJob GetIslandConfigJob()
+    {
+        return new IslandConfigurationJob()
+        {
+            Islands = IslandDataList,
+            PortalEdges = PorToPorPtrs,
+            PortalNodes = PortalNodes,
+            WindowNodes = WindowNodes
         };
     }
     public CostFieldEditJob GetEditJob(BoundaryData bounds, byte newCost)
@@ -216,3 +229,10 @@ public struct FieldGraph
         return portalIndicies;
     }
 }
+
+public enum IslandData : byte
+{
+    Removed,
+    Updating,
+    Uptodate,
+};

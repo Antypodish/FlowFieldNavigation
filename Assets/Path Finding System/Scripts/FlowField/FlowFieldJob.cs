@@ -245,7 +245,6 @@ public struct FlowFieldJob : IJobParallelFor
             NewVerDif = newVerDif,
         };
     }
-
     int GetIndex(int general1d, float cost, int curSector)
     {
 

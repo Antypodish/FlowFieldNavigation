@@ -21,7 +21,9 @@ public class FieldGraphProducer
         for (int i = 0; i < _fieldGraphs.Length; i++)
         {
             FieldGraphConfigurationJob _fieldGraphConfigJob = _fieldGraphs[i].GetConfigJob();
-            combinedHandles[i] = _fieldGraphConfigJob.Schedule();
+            IslandConfigurationJob islandConfigJob = _fieldGraphs[i].GetIslandConfigJob();
+            JobHandle fieldHandle = _fieldGraphConfigJob.Schedule();
+            combinedHandles[i] = islandConfigJob.Schedule(fieldHandle);
         }
         JobHandle.CompleteAll(combinedHandles);
     }
