@@ -40,9 +40,9 @@ public class RoutineScheduler
         _collisionResolutionHandle = new List<JobHandle>();
     }
 
-    public void Schedule(List<CostFieldEditJob[]> costEditRequests, List<PortalTraversalJobPack> portalTravRequests)
+    public void Schedule(List<CostFieldEditJob[]> costEditJobs, IslandReconfigurationJob[] islandReconfigJobs, List<PortalTraversalJobPack> portalTravRequests)
     {
-        JobHandle costEditHandle = ScheduleCostEditRequests(costEditRequests);
+        JobHandle costEditHandle = ScheduleCostEditRequests(costEditJobs, islandReconfigJobs);
         AddMovementDataCalculationHandle(costEditHandle);
         AddCollisionResolutionJob();
         AddLocalAvoidanceJob();
@@ -54,16 +54,21 @@ public class RoutineScheduler
     {
         return _dirCalculator;
     }
-    JobHandle ScheduleCostEditRequests(List<CostFieldEditJob[]> costFieldEditRequests)
+    JobHandle ScheduleCostEditRequests(List<CostFieldEditJob[]> costFieldEditRequests, IslandReconfigurationJob[] islandReconfigJobs)
     {
         NativeList<JobHandle> editHandles = new NativeList<JobHandle>(Allocator.Temp);
         JobHandle lastHandle = new JobHandle();
-
         if (costFieldEditRequests.Count != 0)
         {
             for (int j = 0; j < costFieldEditRequests[0].Length; j++)
             {
-                editHandles.Add(costFieldEditRequests[0][j].Schedule());
+                CostFieldEditJob editJob = costFieldEditRequests[0][j];
+                editJob.EditedSectorIndicies.Clear();
+                editJob.EditedSectorIndexBorders.Clear();
+                editJob.EditedSectorIndexBorders.Add(0);
+
+                JobHandle editHandle = editJob.Schedule();
+                editHandles.Add(editHandle);
             }
             lastHandle = JobHandle.CombineDependencies(editHandles);
             editHandles.Clear();
@@ -72,14 +77,25 @@ public class RoutineScheduler
         {
             for (int j = 0; j < costFieldEditRequests[i].Length; j++)
             {
-                editHandles.Add(costFieldEditRequests[i][j].Schedule(lastHandle));
+
+                JobHandle editHandle = costFieldEditRequests[i][j].Schedule(lastHandle);
+                editHandles.Add(editHandle);
+            }
+            lastHandle = JobHandle.CombineDependencies(editHandles);
+            editHandles.Clear();
+        }
+
+        if(costFieldEditRequests.Count != 0)
+        {
+            for(int i = 0; i < 1; i++)
+            {
+                editHandles.Add(islandReconfigJobs[i].Schedule(lastHandle));
             }
             lastHandle = JobHandle.CombineDependencies(editHandles);
             editHandles.Clear();
         }
 
         if (FlowFieldUtilities.DebugMode) { lastHandle.Complete(); }
-
         return lastHandle;
     }
     void AddMovementDataCalculationHandle(JobHandle dependency)

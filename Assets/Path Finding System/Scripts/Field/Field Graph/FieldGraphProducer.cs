@@ -1,6 +1,8 @@
 ﻿using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
+using System.Diagnostics;
+using UnityEngine;
 
 public class FieldGraphProducer
 {
@@ -33,6 +35,15 @@ public class FieldGraphProducer
         for (int i = 0; i < editJobs.Length; i++)
         {
             editJobs[i] = _fieldGraphs[i].GetEditJob(bounds, newCost);
+        }
+        return editJobs;
+    }
+    public IslandReconfigurationJob[] GetIslandReconfigJobs()
+    {
+        IslandReconfigurationJob[] editJobs = new IslandReconfigurationJob[_fieldGraphs.Length];
+        for (int i = 0; i < _fieldGraphs.Length; i++)
+        {
+            editJobs[i] = _fieldGraphs[i].GetIslandReconfigJob();
         }
         return editJobs;
     }

@@ -29,6 +29,9 @@ public struct CostFieldEditJob : IJob
     public NativeArray<AStarTile> IntegratedCosts;
     public NativeQueue<int> AStarQueue;
     public NativeList<int> EditedSectorIndicies;
+    public NativeList<int> EditedSectorIndexBorders;
+    public NativeArray<IslandData> Islands;
+    public NativeArray<UnsafeList<int>> IslandFields;
 
 
     int _sectorTileAmount;
@@ -37,10 +40,66 @@ public struct CostFieldEditJob : IJob
         _sectorTileAmount = SectorColAmount * SectorColAmount;
         ApplyCostUpdate();
         SetSectorsBetweenBounds();
-        NativeArray<int> windowIndiciesBetweenBounds = GetWindowsBetweenBounds(EditedSectorIndicies);
-        ResetConnectionsIn(EditedSectorIndicies);
+        MarkPortalIslansOfEditedSectorsDirty();
+        NativeArray<int> windowIndiciesBetweenBounds = GetWindowsBetweenBounds();
+        ResetConnectionsIn();
         RecalcualatePortalsAt(windowIndiciesBetweenBounds);
-        RecalculatePortalConnectionsAt(EditedSectorIndicies);
+        RecalculatePortalConnectionsAt();
+    }
+    void MarkPortalIslansOfEditedSectorsDirty()
+    {
+        int start = EditedSectorIndexBorders[EditedSectorIndexBorders.Length - 2];
+        int end = EditedSectorIndexBorders[EditedSectorIndexBorders.Length - 1];
+        NativeSlice<int> editedSectorIndicies = new NativeSlice<int>(EditedSectorIndicies, start, end - start);
+        for (int i = 0; i < editedSectorIndicies.Length; i++)
+        {
+            int sectorIndex = editedSectorIndicies[i];
+            SectorNode sector = SectorNodes[sectorIndex];
+
+            if (sector.IsIslandValid())
+            {
+                PortalNode islandPortal = PortalNodes[sector.SectorIslandPortalIndex];
+                Islands[islandPortal.IslandIndex] = IslandData.Dirty;
+            }
+            else if (sector.IsIslandField)
+            {
+                UnsafeList<int> islandField = IslandFields[sectorIndex];
+                for (int j = 0; j < islandField.Length; j++)
+                {
+                    int islandIndex = islandField[j];
+                    if (islandIndex == int.MaxValue) { continue; }
+                    if(islandIndex < 0)
+                    {
+                        Islands[-islandIndex] = IslandData.Dirty;
+                    }
+                    else
+                    {
+                        Islands[PortalNodes[islandIndex].IslandIndex] = IslandData.Dirty;
+
+                    }
+                }
+                islandField.Clear();
+                IslandFields[sectorIndex] = islandField;
+            }
+            int winPtrStart = sector.SecToWinPtr;
+            int winPtrLen = sector.SecToWinCnt;
+            for (int j = winPtrStart; j < winPtrStart + winPtrLen; j++)
+            {
+                int windowIndex = SecToWinPtrs[j];
+                WindowNode window = WindowNodes[windowIndex];
+                int porStart = window.PorPtr;
+                int porCnt = window.PorCnt;
+
+                for (int k = porStart; k < porStart + porCnt; k++)
+                {
+                    PortalNode portal = PortalNodes[k];
+                    Islands[portal.IslandIndex] = IslandData.Dirty;
+                }
+            }
+            sector.IsIslandField = false;
+            sector.SectorIslandPortalIndex = -1;
+            SectorNodes[sectorIndex] = sector;
+        }
     }
     void ApplyCostUpdate()
     {
@@ -173,6 +232,7 @@ public struct CostFieldEditJob : IJob
                 EditedSectorIndicies.Add(i);
             }
         }
+        EditedSectorIndexBorders.Add(EditedSectorIndicies.Length);
         int GetSectorAmount()
         {
             int amount = sectorRowCount * sectorColCount;
@@ -195,8 +255,11 @@ public struct CostFieldEditJob : IJob
             return amount;
         }
     }
-    NativeArray<int> GetWindowsBetweenBounds(NativeArray<int> helperSectorIndicies)
+    NativeArray<int> GetWindowsBetweenBounds()
     {
+        int start = EditedSectorIndexBorders[EditedSectorIndexBorders.Length - 2];
+        int end = EditedSectorIndexBorders[EditedSectorIndexBorders.Length - 1];
+        NativeSlice<int> helperSectorIndicies = new NativeSlice<int>(EditedSectorIndicies, start, end - start);
         Index2 botLeft = Bounds.BottomLeft;
         Index2 topRight = Bounds.UpperRight;
         int boundLeftC = botLeft.C;
@@ -247,8 +310,11 @@ public struct CostFieldEditJob : IJob
             return false;
         }
     }
-    void ResetConnectionsIn(NativeArray<int> sectorIndicies)
+    void ResetConnectionsIn()
     {
+        int start = EditedSectorIndexBorders[EditedSectorIndexBorders.Length - 2];
+        int end = EditedSectorIndexBorders[EditedSectorIndexBorders.Length - 1];
+        NativeSlice<int> sectorIndicies = new NativeSlice<int>(EditedSectorIndicies, start, end - start);
         for (int i = 0; i < sectorIndicies.Length; i++)
         {
             int pickedSectorIndex = sectorIndicies[i];
@@ -403,8 +469,11 @@ public struct CostFieldEditJob : IJob
             return new PortalNode(portal1, portal2, winPtr);
         }
     }
-    void RecalculatePortalConnectionsAt(NativeArray<int> sectorIndicies)
+    void RecalculatePortalConnectionsAt()
     {
+        int start = EditedSectorIndexBorders[EditedSectorIndexBorders.Length - 2];
+        int end = EditedSectorIndexBorders[EditedSectorIndexBorders.Length - 1];
+        NativeSlice<int> sectorIndicies = new NativeSlice<int>(EditedSectorIndicies, start, end - start);
         //data
         int sectorMatrixColAmount = SectorMatrixColAmount;
         int sectorTileAmount = SectorColAmount;

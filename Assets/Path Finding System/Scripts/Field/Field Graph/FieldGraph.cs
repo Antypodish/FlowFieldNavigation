@@ -16,11 +16,14 @@ public struct FieldGraph
     public NativeArray<PortalNode> PortalNodes;
     public NativeArray<PortalToPortal> PorToPorPtrs;
     public NativeList<IslandData> IslandDataList;
+    public NativeArray<UnsafeList<int>> IslandFields;
     AStarGrid _aStarGrid;
 
     //helper data
     NativeArray<UnsafeList<byte>> _costsL;
     UnsafeList<byte> _costsG;
+    NativeList<int> EditedSectorList;
+    NativeList<int> EditedSectorIndexBorderList;
     float _tileSize;
     int _fieldRowAmount;
     int _fieldColAmount;
@@ -61,6 +64,13 @@ public struct FieldGraph
         PorToPorPtrs = new NativeArray<PortalToPortal>(porToPorPtrAmount, Allocator.Persistent);
         IslandDataList = new NativeList<IslandData>(Allocator.Persistent);
         IslandDataList.Length = 1;
+        IslandFields = new NativeArray<UnsafeList<int>>(_sectorMatrixColAmount * _sectorMatrixRowAmount, Allocator.Persistent);
+        for(int i = 0; i < IslandFields.Length; i++)
+        {
+            IslandFields[i] = new UnsafeList<int>(0, Allocator.Persistent);
+        }
+        EditedSectorList = new NativeList<int>(Allocator.Persistent);
+        EditedSectorIndexBorderList = new NativeList<int>(Allocator.Persistent);
 
         int GetPortalPerWindow(int offset)
         {
@@ -106,6 +116,13 @@ public struct FieldGraph
     {
         return new IslandConfigurationJob()
         {
+            SectorColAmount = FlowFieldUtilities.SectorColAmount,
+            SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+            SectorTileAmount = FlowFieldUtilities.SectorColAmount * FlowFieldUtilities.SectorRowAmount,
+            IslandFields = IslandFields,
+            CostsL = _costsL,
+            SectorNodes = SectorNodes,
+            SecToWinPtrs = SecToWinPtrs,
             Islands = IslandDataList,
             PortalEdges = PorToPorPtrs,
             PortalNodes = PortalNodes,
@@ -134,7 +151,28 @@ public struct FieldGraph
             PortalPerWindow = _portalPerWindow,
             IntegratedCosts = _aStarGrid._integratedCosts,
             AStarQueue = _aStarGrid._searchQueue,
-            EditedSectorIndicies = new NativeList<int>(Allocator.Persistent)
+            EditedSectorIndicies = EditedSectorList,
+            EditedSectorIndexBorders = EditedSectorIndexBorderList,
+            Islands = IslandDataList,
+            IslandFields = IslandFields,
+        };
+    }
+    public IslandReconfigurationJob GetIslandReconfigJob()
+    {
+        return new IslandReconfigurationJob()
+        {
+            SectorColAmount = FlowFieldUtilities.SectorColAmount,
+            SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+            SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
+            SectorNodes = SectorNodes,
+            SecToWinPtrs = SecToWinPtrs,
+            EditedSectorIndicies = EditedSectorList,
+            PortalEdges = PorToPorPtrs,
+            CostsL = _costsL,
+            IslandFields = IslandFields,
+            Islands = IslandDataList,
+            PortalNodes = PortalNodes,
+            WindowNodes = WindowNodes,
         };
     }
     public NativeArray<WindowNode> GetWindowNodesOf(SectorNode sectorNode)
@@ -233,6 +271,6 @@ public struct FieldGraph
 public enum IslandData : byte
 {
     Removed,
-    Updating,
-    Uptodate,
+    Dirty,
+    Clean,
 };

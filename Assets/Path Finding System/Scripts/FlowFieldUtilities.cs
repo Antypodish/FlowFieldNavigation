@@ -1,4 +1,5 @@
-﻿using Unity.Mathematics;
+﻿using System;
+using Unity.Mathematics;
 
 public static class FlowFieldUtilities
 {
@@ -62,5 +63,34 @@ public static class FlowFieldUtilities
         int2 sectorStart = GetSectorStartIndex(sector2d, sectorColAmount);
         int2 general2d = local2d + sectorStart;
         return general2d;
+    }
+    public static int2 GetLocal2dInSector(PortalNode portalNode, int sectorIndex, int sectorMatrixColAmount, int sectorColAmount)
+    {
+        int2 p12d = new int2(portalNode.Portal1.Index.C, portalNode.Portal1.Index.R);
+        int2 p22d = new int2(portalNode.Portal2.Index.C, portalNode.Portal2.Index.R);
+        int2 sector2d = new int2(sectorIndex % sectorMatrixColAmount, sectorIndex / sectorMatrixColAmount);
+
+        int2 p1Secpr2d = p12d / sectorColAmount;
+        int2 p2Secpr2d = p22d / sectorColAmount;
+
+        int2 picked2d = math.select(p22d, p12d, sector2d.Equals(p1Secpr2d));
+        int2 sectorStart = new int2(sector2d.x * sectorColAmount, sector2d.y * sectorColAmount);
+
+        return picked2d - sectorStart;
+    }
+    public static int GetLocal1dInSector(PortalNode portalNode, int sectorIndex, int sectorMatrixColAmount, int sectorColAmount)
+    {
+        int2 p12d = new int2(portalNode.Portal1.Index.C, portalNode.Portal1.Index.R);
+        int2 p22d = new int2(portalNode.Portal2.Index.C, portalNode.Portal2.Index.R);
+        int2 sector2d = new int2(sectorIndex % sectorMatrixColAmount, sectorIndex / sectorMatrixColAmount);
+
+        int2 p1Secpr2d = p12d / sectorColAmount;
+        int2 p2Secpr2d = p22d / sectorColAmount;
+
+        int2 picked2d = math.select(p22d, p12d, sector2d.Equals(p1Secpr2d));
+        int2 sectorStart = new int2(sector2d.x * sectorColAmount, sector2d.y * sectorColAmount);
+        int2 local2d = picked2d - sectorStart;
+
+        return local2d.y * sectorColAmount + local2d.x;
     }
 }

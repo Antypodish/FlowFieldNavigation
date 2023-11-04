@@ -1,11 +1,11 @@
-﻿using Unity.Jobs;
-using Unity.Burst;
+﻿using Unity.Collections.LowLevel.Unsafe;
 using Unity.Collections;
+using Unity.Jobs;
+using Unity.Burst;
 using Unity.Mathematics;
-using Unity.Collections.LowLevel.Unsafe;
 
 [BurstCompile]
-public struct IslandConfigurationJob : IJob
+public struct IslandReconfigurationJob : IJob
 {
     public int SectorTileAmount;
     public int SectorMatrixColAmount;
@@ -14,62 +14,80 @@ public struct IslandConfigurationJob : IJob
     [ReadOnly] public NativeArray<PortalToPortal> PortalEdges;
     [ReadOnly] public NativeArray<WindowNode> WindowNodes;
     [ReadOnly] public NativeArray<int> SecToWinPtrs;
+    [ReadOnly] public NativeList<int> EditedSectorIndicies;
     public NativeArray<SectorNode> SectorNodes;
     public NativeArray<UnsafeList<int>> IslandFields;
     public NativeArray<PortalNode> PortalNodes;
     public NativeList<IslandData> Islands;
+
     public void Execute()
     {
         //PREALLOCATIONS
-        UnsafeStack<int> dfsStack = new UnsafeStack<int>(0);
         UnsafeList<int> islandCalculationMatrix = new UnsafeList<int>(SectorTileAmount, Allocator.Temp);
         islandCalculationMatrix.Length = SectorTileAmount;
-        //CALCULATE PORTAL ISLANDS
-        for (int i = 0; i < WindowNodes.Length; i++)
+        UnsafeStack<int> dfsStack = new UnsafeStack<int>(0);
+        NativeArray<int> editedSectorIndicies = EditedSectorIndicies;
+
+
+        //HANDLE PORTAL ISLANDS
+        for (int i = 0; i < editedSectorIndicies.Length; i++)
         {
-            int portalStart = WindowNodes[i].PorPtr;
-            int portalCount = WindowNodes[i].PorCnt;
-            for(int j = portalStart; j < portalStart + portalCount; j++)
+            int sectorIndex = editedSectorIndicies[i];
+            SectorNode sector = SectorNodes[sectorIndex];
+
+            int winPtrStart = sector.SecToWinPtr;
+            int winPtrLen = sector.SecToWinCnt;
+            for (int j = winPtrStart; j < winPtrStart + winPtrLen; j++)
             {
-                PortalNode firstPortalNode = PortalNodes[j];
-                if (firstPortalNode.IsIslandValid()) { continue; }
-                int suitableIndex = GetSuitableIslandIndex();
-                RunDepthFirstSearch(j, suitableIndex, dfsStack);
+                int windowIndex = SecToWinPtrs[j];
+                WindowNode window = WindowNodes[windowIndex];
+                int porStart = window.PorPtr;
+                int porCnt = window.PorCnt;
+
+                for (int k = porStart; k < porStart + porCnt; k++)
+                {
+                    PortalNode portal = PortalNodes[k];
+                    if (Islands[portal.IslandIndex] == IslandData.Clean) { continue; }
+                    int suitableIslandIndex = GetSuitableIslandIndex();
+                    RunDepthFirstSearch(k, suitableIslandIndex, dfsStack);
+                }
             }
         }
         
-
-        //CALCULATE SECTOR ISLANDS
-        for(int i = 0; i< SectorNodes.Length; i++)
+        //MARK SECTOR ISLANDS
+        for (int i = 0; i < editedSectorIndicies.Length; i++)
         {
-            SectorNode sectorNode = SectorNodes[i];
-            int winStart = sectorNode.SecToWinPtr;
-            int winCnt = sectorNode.SecToWinCnt;
+            int sectorIndex = editedSectorIndicies[i];
+            SectorNode sector = SectorNodes[sectorIndex];
+            if(sector.IsIslandValid() || sector.IsIslandField) { continue; }
 
-            ResetIslandCalculationMatrix(islandCalculationMatrix, i);
+            int winStart = sector.SecToWinPtr;
+            int winCnt = sector.SecToWinCnt;
+
+            ResetIslandCalculationMatrix(islandCalculationMatrix, sectorIndex);
             bool hasUnreachable = false;
             int islandCount = 0;
             int lastIslandPortalIndex = 0;
 
-            for(int j = winStart; j < winStart + winCnt; j++)
+            for (int j = winStart; j < winStart + winCnt; j++)
             {
                 int windowIndex = SecToWinPtrs[j];
                 WindowNode windowNode = WindowNodes[windowIndex];
                 int porStart = windowNode.PorPtr;
                 int porCount = windowNode.PorCnt;
-                for(int k = porStart; k < porStart + porCount; k++)
+                for (int k = porStart; k < porStart + porCount; k++)
                 {
                     PortalNode portalNode = PortalNodes[k];
-                    int local1dAtSector = FlowFieldUtilities.GetLocal1dInSector(portalNode, i, SectorMatrixColAmount, SectorColAmount);
+                    int local1dAtSector = FlowFieldUtilities.GetLocal1dInSector(portalNode, sectorIndex, SectorMatrixColAmount, SectorColAmount);
                     if (islandCalculationMatrix[local1dAtSector] != int.MinValue) { continue; }
                     InsertForIslandCalculationMatrixDFS(local1dAtSector, k, islandCalculationMatrix, dfsStack);
                     islandCount++;
                     lastIslandPortalIndex = k;
                 }
             }
-
+            
             //LOOK FOR UNREACHABLE TILES AND INSERT
-            for(int j = 0; j < islandCalculationMatrix.Length; j++)
+            for (int j = 0; j < islandCalculationMatrix.Length; j++)
             {
                 if (islandCalculationMatrix[j] == int.MinValue)
                 {
@@ -79,44 +97,62 @@ public struct IslandConfigurationJob : IJob
                     hasUnreachable = true;
                 }
             }
-            if(islandCount == 0)
+
+            if (islandCount == 0)
             {
-                sectorNode.SectorIslandPortalIndex = -1;
-                sectorNode.IsIslandField = false;
-                SectorNodes[i] = sectorNode;
+                sector.SectorIslandPortalIndex = -1;
+                sector.IsIslandField = false;
+                SectorNodes[sectorIndex] = sector;
             }
-            else if(islandCount == 1 && !hasUnreachable)
+            else if (islandCount == 1 && !hasUnreachable)
             {
-                sectorNode.SectorIslandPortalIndex = lastIslandPortalIndex;
-                sectorNode.IsIslandField = false;
-                SectorNodes[i] = sectorNode;
+                sector.SectorIslandPortalIndex = lastIslandPortalIndex;
+                sector.IsIslandField = false;
+                SectorNodes[sectorIndex] = sector;
             }
             else
             {
-                sectorNode.SectorIslandPortalIndex = -1;
-                sectorNode.IsIslandField = true;
-                SectorNodes[i] = sectorNode;
+                sector.SectorIslandPortalIndex = -1;
+                sector.IsIslandField = true;
+                SectorNodes[sectorIndex] = sector;
 
-                UnsafeList<int> islandFieldForSector = IslandFields[i];
+                UnsafeList<int> islandFieldForSector = IslandFields[sectorIndex];
                 islandFieldForSector.Length = islandCalculationMatrix.Length;
                 islandFieldForSector.CopyFrom(islandCalculationMatrix);
 
-                IslandFields[i] = islandFieldForSector;
+                IslandFields[sectorIndex] = islandFieldForSector;
             }
         }
-    }
 
+
+
+        //REMOVE DIRTY ISLANDS
+        for(int i = 1; i < Islands.Length; i++)
+        {
+            IslandData island = Islands[i];
+            Islands[i] = island == IslandData.Dirty ? IslandData.Removed : island;
+        }
+
+        //DISPOSE UNUSED ISLAND FIELDS
+        for(int i = 0; i < IslandFields.Length; i++)
+        {
+            UnsafeList<int> islandField = IslandFields[i];
+            if(islandField.Length != 0) { continue; }
+            islandField.TrimExcess();
+            IslandFields[i] = islandField;
+        }
+    }
     void ResetIslandCalculationMatrix(UnsafeList<int> islandCalculationMatrix, int sectorIndex)
     {
         UnsafeList<byte> costs = CostsL[sectorIndex];
-        for(int i = 0; i < islandCalculationMatrix.Length; i++)
+        for (int i = 0; i < islandCalculationMatrix.Length; i++)
         {
             islandCalculationMatrix[i] = math.select(int.MinValue, int.MaxValue, costs[i] == byte.MaxValue);
         }
     }
     bool ListContains(UnsafeList<int> list, int data)
     {
-        for(int i = 0; i < list.Length; i++)
+        for (int i = 0; i < list.Length; i++)
         {
             if (list[i] == data) { return true; }
         }
@@ -191,9 +227,9 @@ public struct IslandConfigurationJob : IJob
 
     int GetSuitableIslandIndex()
     {
-        for(int i = 1; i < Islands.Length; i++)
+        for (int i = 1; i < Islands.Length; i++)
         {
-            if(Islands[i] == IslandData.Removed)
+            if (Islands[i] == IslandData.Removed)
             {
                 Islands[i] = IslandData.Clean;
                 return i;
@@ -223,11 +259,11 @@ public struct IslandConfigurationJob : IJob
             int p2NeighbourStart = curNode.Portal2.PorToPorPtr;
             int p2NeighbourCount = curNode.Portal2.PorToPorCnt;
 
-            for(int i = p1NeighbourStart; i < p1NeighbourStart + p1NeighbourCount; i++)
+            for (int i = p1NeighbourStart; i < p1NeighbourStart + p1NeighbourCount; i++)
             {
                 PortalToPortal portalEdge = PortalEdges[i];
                 PortalNode neighbourPortal = PortalNodes[portalEdge.Index];
-                if (neighbourPortal.IsIslandValid()) { continue; }
+                if (neighbourPortal.IsIslandValid() && Islands[neighbourPortal.IslandIndex] == IslandData.Clean) { continue; }
                 neighbourPortal.IslandIndex = islandIndex;
                 PortalNodes[portalEdge.Index] = neighbourPortal;
                 stack.Push(portalEdge.Index);
@@ -236,7 +272,7 @@ public struct IslandConfigurationJob : IJob
             {
                 PortalToPortal portalEdge = PortalEdges[i];
                 PortalNode neighbourPortal = PortalNodes[portalEdge.Index];
-                if (neighbourPortal.IsIslandValid()) { continue; }
+                if (neighbourPortal.IsIslandValid() && Islands[neighbourPortal.IslandIndex] == IslandData.Clean) { continue; }
                 neighbourPortal.IslandIndex = islandIndex;
                 PortalNodes[portalEdge.Index] = neighbourPortal;
                 stack.Push(portalEdge.Index);
@@ -263,7 +299,7 @@ public struct IslandConfigurationJob : IJob
         }
         public T Pop()
         {
-            if(_data.Length == 0) { return default(T); }
+            if (_data.Length == 0) { return default(T); }
             T item = _data[_data.Length - 1];
             _data.Length = _data.Length - 1;
             return item;

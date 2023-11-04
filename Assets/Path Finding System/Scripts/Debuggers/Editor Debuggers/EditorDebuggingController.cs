@@ -18,7 +18,8 @@ public class EditorDebuggingController : MonoBehaviour
     [SerializeField] bool _portalsOnSector;
     [SerializeField] bool _costsToPortal;
     [SerializeField] bool _AStar;
-    [SerializeField] bool _islands;
+    [SerializeField] bool _portalIslands;
+    [SerializeField] bool _sectorIslands;
     [Header("PathDebugger")]
     [SerializeField] bool _debugPortalTraversalMarks;
     [SerializeField] bool _debugPortalSequence;
@@ -85,7 +86,8 @@ public class EditorDebuggingController : MonoBehaviour
         if(_costsToPortal && _portalDebugger != null) { _portalDebugger.DebugCostsToClickedPortal((int) _costFieldOffset); }
         if(_AStar && _aStarDebugger != null) { _aStarDebugger.DebugAstarForPortal((int) _costFieldOffset); }
         if(_costField && _costFieldDebugger != null) { _costFieldDebugger.DebugCostFieldWithMesh((int) _costFieldOffset); }
-        if(_islands && _islandDebugger != null) { _islandDebugger.Debug((int) _costFieldOffset); }
+        if(_portalIslands && _islandDebugger != null) { _islandDebugger.DebugPortalIslands((int) _costFieldOffset); }
+        if(_sectorIslands && _islandDebugger != null) { _islandDebugger.DebugTileIslands((int) _costFieldOffset); }
 
         if(_agentSelectionController == null) { return; }
         FlowFieldAgent _agentToDebug = _agentSelectionController.DebuggableAgent;

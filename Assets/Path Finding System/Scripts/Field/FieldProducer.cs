@@ -43,6 +43,10 @@ public class FieldProducer
     {
         return _fieldGraphProducer.GetEditJobs(bounds, newCost);
     }
+    public IslandReconfigurationJob[] GetIslandReconfigJobs()
+    {
+        return _fieldGraphProducer.GetIslandReconfigJobs();
+    }
     public NativeArray<int> GetTileToWallObject()
     {
         return _wallProducer.TileToWallObject;
