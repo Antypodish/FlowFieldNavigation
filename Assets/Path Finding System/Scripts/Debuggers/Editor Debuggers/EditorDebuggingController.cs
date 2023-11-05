@@ -20,6 +20,7 @@ public class EditorDebuggingController : MonoBehaviour
     [SerializeField] bool _AStar;
     [SerializeField] bool _portalIslands;
     [SerializeField] bool _sectorIslands;
+    [SerializeField] bool _portalErrorDetection;
     [Header("PathDebugger")]
     [SerializeField] bool _debugPortalTraversalMarks;
     [SerializeField] bool _debugPortalSequence;
@@ -54,6 +55,7 @@ public class EditorDebuggingController : MonoBehaviour
     EditorAvoidanceDirectionDebugger _avoidanceDirectionDebugger;
     EditorSpatialHashGridDebugger _spatialHashGridDebugger;
     EditorIslandDebugger _islandDebugger;
+    EditorSectorPortalErrorDetector _portalErrorDetector;
     private void Start()
     {
         _sectorDebugger = new EditorSectorDebugger(_pathfindingManager);
@@ -69,6 +71,7 @@ public class EditorDebuggingController : MonoBehaviour
         _avoidanceDirectionDebugger = new EditorAvoidanceDirectionDebugger(_pathfindingManager);
         _spatialHashGridDebugger = new EditorSpatialHashGridDebugger(_pathfindingManager);
         _islandDebugger = new EditorIslandDebugger(_pathfindingManager);
+        _portalErrorDetector = new EditorSectorPortalErrorDetector(_pathfindingManager);    
     }
     private void Update()
     {
@@ -88,6 +91,7 @@ public class EditorDebuggingController : MonoBehaviour
         if(_costField && _costFieldDebugger != null) { _costFieldDebugger.DebugCostFieldWithMesh((int) _costFieldOffset); }
         if(_portalIslands && _islandDebugger != null) { _islandDebugger.DebugPortalIslands((int) _costFieldOffset); }
         if(_sectorIslands && _islandDebugger != null) { _islandDebugger.DebugTileIslands((int) _costFieldOffset); }
+        if(_portalErrorDetection && _portalErrorDetector != null) { _portalErrorDetector.Debug((int) _costFieldOffset); }
 
         if(_agentSelectionController == null) { return; }
         FlowFieldAgent _agentToDebug = _agentSelectionController.DebuggableAgent;

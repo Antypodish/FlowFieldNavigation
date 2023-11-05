@@ -87,15 +87,18 @@ public class RoutineScheduler
 
         if(costFieldEditRequests.Count != 0)
         {
-            for(int i = 0; i < 1; i++)
+            for(int i = 0; i < islandReconfigJobs.Length; i++)
             {
                 editHandles.Add(islandReconfigJobs[i].Schedule(lastHandle));
             }
             lastHandle = JobHandle.CombineDependencies(editHandles);
             editHandles.Clear();
         }
-
+        Stopwatch sw = new Stopwatch();
+        sw.Start();
         if (FlowFieldUtilities.DebugMode) { lastHandle.Complete(); }
+        sw.Stop();
+        //if(costFieldEditRequests.Count != 0) { UnityEngine.Debug.Log(sw.Elapsed.TotalMilliseconds); }
         return lastHandle;
     }
     void AddMovementDataCalculationHandle(JobHandle dependency)

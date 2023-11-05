@@ -53,6 +53,11 @@ public class FieldGraphProducer
     }
     public FieldGraph[] GetAllFieldGraphs()
     {
-        return _fieldGraphs;
+        FieldGraph[] newarray = new FieldGraph[_fieldGraphs.Length];
+        for(int i = 0; i <newarray.Length; i++)
+        {
+            newarray[i] = _fieldGraphs[i];
+        }
+        return newarray;
     }
 }

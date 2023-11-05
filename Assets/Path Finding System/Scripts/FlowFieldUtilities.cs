@@ -65,7 +65,7 @@ public static class FlowFieldUtilities
         return general2d;
     }
     public static int2 GetLocal2dInSector(PortalNode portalNode, int sectorIndex, int sectorMatrixColAmount, int sectorColAmount)
-    {
+    { 
         int2 p12d = new int2(portalNode.Portal1.Index.C, portalNode.Portal1.Index.R);
         int2 p22d = new int2(portalNode.Portal2.Index.C, portalNode.Portal2.Index.R);
         int2 sector2d = new int2(sectorIndex % sectorMatrixColAmount, sectorIndex / sectorMatrixColAmount);
@@ -80,17 +80,16 @@ public static class FlowFieldUtilities
     }
     public static int GetLocal1dInSector(PortalNode portalNode, int sectorIndex, int sectorMatrixColAmount, int sectorColAmount)
     {
-        int2 p12d = new int2(portalNode.Portal1.Index.C, portalNode.Portal1.Index.R);
-        int2 p22d = new int2(portalNode.Portal2.Index.C, portalNode.Portal2.Index.R);
-        int2 sector2d = new int2(sectorIndex % sectorMatrixColAmount, sectorIndex / sectorMatrixColAmount);
+        int2 p12d = new int2(portalNode.Portal1.Index.C, portalNode.Portal1.Index.R);//(149,68)
+        int2 p22d = new int2(portalNode.Portal2.Index.C, portalNode.Portal2.Index.R);//(150,68)
+        int2 sector2d = new int2(sectorIndex % sectorMatrixColAmount, sectorIndex / sectorMatrixColAmount);//(15,7)
 
-        int2 p1Secpr2d = p12d / sectorColAmount;
-        int2 p2Secpr2d = p22d / sectorColAmount;
+        int2 p1Secpr2d = p12d / sectorColAmount;//(14,6)
 
-        int2 picked2d = math.select(p22d, p12d, sector2d.Equals(p1Secpr2d));
-        int2 sectorStart = new int2(sector2d.x * sectorColAmount, sector2d.y * sectorColAmount);
-        int2 local2d = picked2d - sectorStart;
+        int2 picked2d = math.select(p22d, p12d, sector2d.Equals(p1Secpr2d));//(150,68)
+        int2 sectorStart = new int2(sector2d.x * sectorColAmount, sector2d.y * sectorColAmount);//(150,70)
+        int2 local2d = picked2d - sectorStart;//(0,-2)
 
-        return local2d.y * sectorColAmount + local2d.x;
+        return local2d.y * sectorColAmount + local2d.x;//-20
     }
 }
