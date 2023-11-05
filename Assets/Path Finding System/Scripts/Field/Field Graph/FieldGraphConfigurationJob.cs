@@ -7,11 +7,11 @@ using Unity.Mathematics;
 [BurstCompile]
 public struct FieldGraphConfigurationJob : IJob
 {
-    public NativeArray<SectorNode> SectorNodes;
+    public UnsafeList<SectorNode> SectorNodes;
     public NativeArray<int> SecToWinPtrs;
     public NativeArray<WindowNode> WindowNodes;
     public NativeArray<int> WinToSecPtrs;
-    public NativeArray<PortalNode> PortalNodes;
+    public UnsafeList<PortalNode> PortalNodes;
     public NativeArray<PortalToPortal> PorToPorPtrs;
     public UnsafeList<byte> Costs;
     public int FieldRowAmount;
@@ -200,7 +200,7 @@ public struct FieldGraphConfigurationJob : IJob
         int fieldRowAmount = FieldRowAmount;
         NativeArray<WindowNode> windowNodes = WindowNodes;
         UnsafeList<byte> costs = Costs;
-        NativeArray<PortalNode> portalNodes = PortalNodes;
+        UnsafeList<PortalNode> portalNodes = PortalNodes;
 
         for (int i = 0; i < windowNodes.Length; i++)
         {
@@ -322,8 +322,8 @@ public struct FieldGraphConfigurationJob : IJob
 
         int sectorColAmount = SectorMatrixColAmount;
         int sectorTileAmount = SectorTileAmount;
-        NativeArray<PortalNode> portalNodes = PortalNodes;
-        NativeArray<SectorNode> sectorNodes = SectorNodes;
+        UnsafeList<PortalNode> portalNodes = PortalNodes;
+        UnsafeList<SectorNode> sectorNodes = SectorNodes;
         NativeArray<PortalToPortal> porPtrs = PorToPorPtrs;
         NativeArray<WindowNode> windowNodes = WindowNodes;
         NativeArray<int> secToWinPtrs = SecToWinPtrs;

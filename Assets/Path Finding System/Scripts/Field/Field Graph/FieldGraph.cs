@@ -9,14 +9,14 @@ using Unity.Collections.LowLevel.Unsafe;
 public struct FieldGraph
 {
     //main graph elements
-    public NativeArray<SectorNode> SectorNodes;
+    public UnsafeList<SectorNode> SectorNodes;
     public NativeArray<int> SecToWinPtrs;
     public NativeArray<WindowNode> WindowNodes;
     public NativeArray<int> WinToSecPtrs;
-    public NativeArray<PortalNode> PortalNodes;
+    public UnsafeList<PortalNode> PortalNodes;
     public NativeArray<PortalToPortal> PorToPorPtrs;
     public NativeList<IslandData> IslandDataList;
-    public NativeArray<UnsafeList<int>> IslandFields;
+    public UnsafeList<UnsafeList<int>> IslandFields;
     AStarGrid _aStarGrid;
 
     //helper data
@@ -56,15 +56,18 @@ public struct FieldGraph
         _costsG = costsG;
         _costsL = costsL;
         _aStarGrid = new AStarGrid(fieldRowAmount, fieldColAmount);
-        SectorNodes = new NativeArray<SectorNode>(sectorAmount, Allocator.Persistent);
+        SectorNodes = new UnsafeList<SectorNode>(sectorAmount, Allocator.Persistent);
+        SectorNodes.Length = sectorAmount;
         SecToWinPtrs = new NativeArray<int>(secToWinPtrAmount, Allocator.Persistent);
         WindowNodes = new NativeArray<WindowNode>(windowAmount, Allocator.Persistent);
         WinToSecPtrs = new NativeArray<int>(winToSecPtrAmount, Allocator.Persistent);
-        PortalNodes = new NativeArray<PortalNode>(portalAmount + 1, Allocator.Persistent);
+        PortalNodes = new UnsafeList<PortalNode>(portalAmount + 1, Allocator.Persistent);
+        PortalNodes.Length = portalAmount;
         PorToPorPtrs = new NativeArray<PortalToPortal>(porToPorPtrAmount, Allocator.Persistent);
         IslandDataList = new NativeList<IslandData>(Allocator.Persistent);
         IslandDataList.Length = 1;
-        IslandFields = new NativeArray<UnsafeList<int>>(_sectorMatrixColAmount * _sectorMatrixRowAmount, Allocator.Persistent);
+        IslandFields = new UnsafeList<UnsafeList<int>>(_sectorMatrixColAmount * _sectorMatrixRowAmount, Allocator.Persistent);
+        IslandFields.Length = _sectorMatrixColAmount * _sectorMatrixRowAmount;
         for(int i = 0; i < IslandFields.Length; i++)
         {
             IslandFields[i] = new UnsafeList<int>(0, Allocator.Persistent);

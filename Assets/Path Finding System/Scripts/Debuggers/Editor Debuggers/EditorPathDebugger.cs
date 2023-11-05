@@ -62,7 +62,7 @@ public class EditorPathDebugger
 
         float tileSize = _pathfindingManager.TileSize;
         FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset);
-        NativeArray<PortalNode> portalNodes = fg.PortalNodes;
+        UnsafeList<PortalNode> portalNodes = fg.PortalNodes;
         NativeArray<PortalTraversalData> portalTraversalDataArray = producedPath.PortalTraversalDataArray;
 
         for (int i = 0; i < portalNodes.Length; i++)
@@ -94,7 +94,7 @@ public class EditorPathDebugger
         
         float tileSize = _pathfindingManager.TileSize;
         FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset);
-        NativeArray<PortalNode> portalNodes = fg.PortalNodes;
+        UnsafeList<PortalNode> portalNodes = fg.PortalNodes;
         NativeList<ActivePortal> porSeq = producedPath.PortalSequence;
         NativeList<int> portSeqBorders = producedPath.PortalSequenceBorders;
         for(int i = 0; i < portSeqBorders.Length - 1; i++)
@@ -138,7 +138,7 @@ public class EditorPathDebugger
         Gizmos.color = Color.black;
         float tileSize = _pathfindingManager.TileSize;
         FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset);
-        NativeArray<SectorNode> sectorNodes = fg.SectorNodes;
+        UnsafeList<SectorNode> sectorNodes = fg.SectorNodes;
         UnsafeList<int> sectorMarks = producedPath.SectorToPicked;
         for (int i = 0; i < sectorMarks.Length; i++)
         {
@@ -163,7 +163,7 @@ public class EditorPathDebugger
         if (!producedPath.IsCalculated) { return; }
         int sectorColAmount = _pathfindingManager.SectorColAmount;
         int sectorTileAmount = sectorColAmount * sectorColAmount;
-        NativeArray<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset).SectorNodes;
+        UnsafeList<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset).SectorNodes;
         UnsafeList<int> sectorMarks = producedPath.SectorToPicked;
         NativeArray<IntegrationTile> integrationField = producedPath.IntegrationField;
         for (int i = 0; i < sectorMarks.Length; i++)
@@ -197,7 +197,7 @@ public class EditorPathDebugger
         string los = "los";
         Gizmos.color = Color.white;
         UnsafeList<int> sectorMarks = producedPath.SectorToPicked;
-        NativeArray<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset).SectorNodes;
+        UnsafeList<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset).SectorNodes;
         NativeArray<IntegrationTile> integrationField = producedPath.IntegrationField;
         int sectorColAmount = _pathfindingManager.SectorColAmount;
         int sectorTileAmount = sectorColAmount * sectorColAmount;
@@ -230,7 +230,7 @@ public class EditorPathDebugger
 
         Gizmos.color = Color.white;
         UnsafeList<int> sectorMarks = producedPath.SectorToPicked;
-        NativeArray<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset).SectorNodes;
+        UnsafeList<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset).SectorNodes;
         NativeArray<IntegrationTile> integrationField = producedPath.IntegrationField;
         int sectorColAmount = _pathfindingManager.SectorColAmount;
         int sectorTileAmount = sectorColAmount * sectorColAmount;
@@ -263,7 +263,7 @@ public class EditorPathDebugger
         float yOffset = 0.2f;
         Gizmos.color = Color.black;
         UnsafeList<int> sectorMarks = producedPath.SectorToPicked;
-        NativeArray<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset).SectorNodes;
+        UnsafeList<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset).SectorNodes;
         UnsafeList<FlowData> flowField = producedPath.FlowField;
         NativeArray<IntegrationTile> integrationField = producedPath.IntegrationField;
         int sectorColAmount = _pathfindingManager.SectorColAmount;

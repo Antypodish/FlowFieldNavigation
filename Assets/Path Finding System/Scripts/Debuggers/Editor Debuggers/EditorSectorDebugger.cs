@@ -1,6 +1,7 @@
 ﻿#if (UNITY_EDITOR) 
 
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 
 public class EditorSectorDebugger
@@ -15,7 +16,7 @@ public class EditorSectorDebugger
     public void DebugSectors(int offset)
     {
         Gizmos.color = Color.black;
-        NativeArray<SectorNode> sectorNodes = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(offset).SectorNodes;
+        UnsafeList<SectorNode> sectorNodes = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(offset).SectorNodes;
         float tileSize = _pathfindingManager.TileSize;
         float yOffset = .02f;
         for(int i = 0; i < sectorNodes.Length; i++)

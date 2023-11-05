@@ -69,7 +69,7 @@ public class EditorAStarDebugger
             {
                 Vector3 hitPos = hit.point;
                 NativeArray<int> portalIndicies = fieldGraph.GetPortalIndicies(fieldGraph.GetSectorNodeAt(hitPos), fieldGraph.WindowNodes);
-                NativeArray<PortalNode> portalNodes = fieldGraph.PortalNodes;
+                UnsafeList<PortalNode> portalNodes = fieldGraph.PortalNodes;
                 Index2 clickedIndex = new Index2(Mathf.FloorToInt(hitPos.z / _tileSize), Mathf.FloorToInt(hitPos.x / _tileSize));
                 for (int i = 0; i < portalIndicies.Length; i++)
                 {

@@ -15,8 +15,9 @@ using UnityEngine.UIElements;
 public class PathProducer
 {
     public List<Path> ProducedPaths;
+    Stack<int> _removedPathIndicies;
+    NativeList<PathData> _pathDataList;
 
-    PathfindingManager _pathfindingManager;
     FieldProducer _fieldProducer;
     PathPreallocator _preallocator;
     int _columnAmount;
@@ -28,7 +29,6 @@ public class PathProducer
 
     public PathProducer(PathfindingManager pathfindingManager)
     {
-        _pathfindingManager = pathfindingManager;
         _fieldProducer = pathfindingManager.FieldProducer;
         _columnAmount = pathfindingManager.ColumnAmount;
         _rowAmount = pathfindingManager.RowAmount;
@@ -38,15 +38,19 @@ public class PathProducer
         _sectorMatrixRowAmount = _rowAmount / _sectorTileAmount;
         ProducedPaths = new List<Path>(1);
         _preallocator = new PathPreallocator(_fieldProducer, _sectorTileAmount * _sectorTileAmount, _sectorMatrixColAmount * _sectorMatrixRowAmount);
+        _removedPathIndicies = new Stack<int>();
+        _pathDataList = new NativeList<PathData>(Allocator.Persistent);
     }
     public void Update()
     {
-        for (int i = ProducedPaths.Count - 1; i >= 0; i--)
+        for (int i = 0; i < ProducedPaths.Count; i++)
         {
             Path path = ProducedPaths[i];
             if (path.State == PathState.ToBeDisposed && path.IsCalculated)
             {
                 path.Dispose();
+                path.State = PathState.Removed;
+                _removedPathIndicies.Push(i);
                 PreallocationPack preallocations = new PreallocationPack()
                 {
                     SectorToPicked = path.SectorToPicked,
@@ -63,11 +67,27 @@ public class PathProducer
                 };
 
                 _preallocator.SendPreallocationsBack(ref preallocations, path.ActiveWaveFrontList, path.Offset);
-                ProducedPaths[ProducedPaths.Count - 1].Id = i;
-                ProducedPaths.RemoveAtSwapBack(i);
             }
         }
         _preallocator.CheckForDeallocations();
+    }
+    public NativeList<PathData> GetPathData()
+    {
+        _pathDataList.Length = ProducedPaths.Count;
+
+        for(int i = 0; i < ProducedPaths.Count; i++)
+        {
+            Path path = ProducedPaths[i];
+            _pathDataList[i] = new PathData()
+            {
+                Index = i,
+                State = path.State,
+                AgentCount = 0,
+                Target = path.Destination,
+                Task = 0,
+            };
+        }
+        return _pathDataList;
     }
     public PortalTraversalJobPack GetPortalTraversalJobPack(NativeArray<float2> sources, Vector2 destination, int offset)
     {
@@ -136,7 +156,15 @@ public class PathProducer
             IntegrationStartIndicies = new NativeList<LocalIndex1d>(Allocator.Persistent),
             NewFlowFieldLength = new NativeArray<int>(1, Allocator.Persistent),
         };
-        ProducedPaths.Add(producedPath);
+        if(_removedPathIndicies.Count != 0)
+        {
+            ProducedPaths[_removedPathIndicies.Pop()] = producedPath;
+        }
+        else
+        {
+            ProducedPaths.Add(producedPath);
+        }
+        
 
         return new PortalTraversalJobPack
         {

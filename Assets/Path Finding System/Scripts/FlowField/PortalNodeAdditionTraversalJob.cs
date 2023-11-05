@@ -24,11 +24,11 @@ public struct PortalNodeAdditionTraversalJob : IJob
     public NativeArray<int> NewFlowFieldLength;
 
     [ReadOnly] public NativeArray<OutOfFieldStatus> AgentOutOfFieldStatusList;
-    [ReadOnly] public NativeArray<SectorNode> SectorNodes;
+    [ReadOnly] public UnsafeList<SectorNode> SectorNodes;
     [ReadOnly] public NativeArray<int> SecToWinPtrs;
     [ReadOnly] public NativeArray<WindowNode> WindowNodes;
     [ReadOnly] public NativeArray<int> WinToSecPtrs;
-    [ReadOnly] public NativeArray<PortalNode> PortalNodes;
+    [ReadOnly] public UnsafeList<PortalNode> PortalNodes;
     [ReadOnly] public NativeArray<PortalToPortal> PorPtrs;
     [ReadOnly] public NativeArray<DijkstraTile> TargetSectorCosts;
     
@@ -125,7 +125,7 @@ public struct PortalNodeAdditionTraversalJob : IJob
     }
     int RunGraphWalkerFrom(int sourcePortalIndex, UnsafeHeap<int> traversalHeap, NativeArray<DijkstraTile> targetSectorCosts, ref UnsafeList<int> traversedIndicies)
     {
-        NativeArray<PortalNode> portalNodes = PortalNodes;
+        UnsafeList<PortalNode> portalNodes = PortalNodes;
         NativeArray<PortalTraversalData> portalTraversalDataArray = PortalTraversalDataArray;
 
         PortalTraversalData curData = PortalTraversalDataArray[sourcePortalIndex];

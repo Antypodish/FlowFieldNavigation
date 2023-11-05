@@ -19,6 +19,5 @@ internal class jobtest : MonoBehaviour
 {
     private void Update()
     {
-
-    }
+    } 
 }

@@ -15,9 +15,9 @@ public struct IslandReconfigurationJob : IJob
     [ReadOnly] public NativeArray<WindowNode> WindowNodes;
     [ReadOnly] public NativeArray<int> SecToWinPtrs;
     [ReadOnly] public NativeList<int> EditedSectorIndicies;
-    public NativeArray<SectorNode> SectorNodes;
-    public NativeArray<UnsafeList<int>> IslandFields;
-    public NativeArray<PortalNode> PortalNodes;
+    public UnsafeList<SectorNode> SectorNodes;
+    public UnsafeList<UnsafeList<int>> IslandFields;
+    public UnsafeList<PortalNode> PortalNodes;
     public NativeList<IslandData> Islands;
 
     public void Execute()

@@ -25,11 +25,11 @@ public struct NewPortalNodeTraversalJob : IJob
     public NativeArray<DijkstraTile> TargetSectorCosts;
     public NativeArray<int> FlowFieldLength;
 
-    [ReadOnly] public NativeArray<SectorNode> SectorNodes;
+    [ReadOnly] public UnsafeList<SectorNode> SectorNodes;
     [ReadOnly] public NativeArray<int> SecToWinPtrs;
     [ReadOnly] public NativeArray<WindowNode> WindowNodes;
     [ReadOnly] public NativeArray<int> WinToSecPtrs;
-    [ReadOnly] public NativeArray<PortalNode> PortalNodes;
+    [ReadOnly] public UnsafeList<PortalNode> PortalNodes;
     [ReadOnly] public NativeArray<PortalToPortal> PorPtrs;
     [ReadOnly] public UnsafeList<byte> Costs;
     [ReadOnly] public NativeArray<SectorDirectionData> LocalDirections;
@@ -200,7 +200,7 @@ public struct NewPortalNodeTraversalJob : IJob
     {
         NativeQueue<int> fastMarchingQueue = FastMarchingQueue;
         NativeArray<PortalTraversalData> portalTraversalDataArray = PortalTraversalDataArray;
-        NativeArray<PortalNode> portalNodes = PortalNodes;
+        UnsafeList<PortalNode> portalNodes = PortalNodes;
         NativeArray<PortalToPortal> porPtrs = PorPtrs;
 
         //MARK TARGET NEIGHBOURS
@@ -293,7 +293,7 @@ public struct NewPortalNodeTraversalJob : IJob
     }
     int RunReductionAStar(int sourcePortalIndex, UnsafeHeap<int> traversalHeap)
     {
-        NativeArray<PortalNode> portalNodes = PortalNodes;
+        UnsafeList<PortalNode> portalNodes = PortalNodes;
         NativeArray<PortalTraversalData> portalTraversalDataArray = PortalTraversalDataArray;
         PortalTraversalData curData = PortalTraversalDataArray[sourcePortalIndex];
         if (curData.HasMark(PortalTraversalMark.AStarPicked))

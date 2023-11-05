@@ -3,7 +3,7 @@
 using UnityEngine;
 using Unity.Collections;
 using UnityEditor;
-using UnityEditor.Experimental.GraphView;
+using Unity.Collections.LowLevel.Unsafe;
 
 
 public class EditorPortalDebugger
@@ -22,7 +22,7 @@ public class EditorPortalDebugger
         Gizmos.color = Color.cyan;
         FieldGraph fieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(offset);
         NativeArray<WindowNode> windowNodes = fieldGraph.WindowNodes;
-        NativeArray<PortalNode> portalNodes = fieldGraph.PortalNodes;
+        UnsafeList<PortalNode> portalNodes = fieldGraph.PortalNodes;
         for(int i = 0; i < windowNodes.Length; i++)
         {
             int porPtr = windowNodes[i].PorPtr;
@@ -43,7 +43,7 @@ public class EditorPortalDebugger
         SetClickedSectorNode(fieldGraph);
 
         NativeArray<int> portalIndicies = fieldGraph.GetPortalIndicies(_clickedSectorNodes, fieldGraph.WindowNodes);
-        NativeArray<PortalNode> portalNodes = fieldGraph.PortalNodes;
+        UnsafeList<PortalNode> portalNodes = fieldGraph.PortalNodes;
         for(int i = 0; i < portalIndicies.Length; i++)
         {
             PortalNode pickedPortalNode = portalNodes[portalIndicies[i]];
@@ -64,7 +64,7 @@ public class EditorPortalDebugger
 
         //debug neighbours of clicked portal
         NativeArray<PortalToPortal> porPtrs = fieldGraph.PorToPorPtrs;
-        NativeArray<PortalNode> portalNodes = fieldGraph.PortalNodes;
+        UnsafeList<PortalNode> portalNodes = fieldGraph.PortalNodes;
         Gizmos.color = Color.black;
         DebugNeighboursAt(_clickedPortalNode.Portal1);
         DebugNeighboursAt(_clickedPortalNode.Portal2);
@@ -144,7 +144,7 @@ public class EditorPortalDebugger
             {
                 Vector3 hitPos = hit.point;
                 NativeArray<int> portalIndicies = fieldGraph.GetPortalIndicies(fieldGraph.GetSectorNodeAt(hitPos), fieldGraph.WindowNodes);
-                NativeArray<PortalNode> portalNodes = fieldGraph.PortalNodes;
+                UnsafeList<PortalNode> portalNodes = fieldGraph.PortalNodes;
                 Index2 clickedIndex = new Index2(Mathf.FloorToInt(hitPos.z / tileSize), Mathf.FloorToInt(hitPos.x / tileSize));
                 for (int i = 0; i < portalIndicies.Length; i++)
                 {

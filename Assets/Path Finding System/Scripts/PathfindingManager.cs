@@ -45,7 +45,7 @@ public class PathfindingManager : MonoBehaviour
 
         PathProducer = new PathProducer(this);
         _pathfindingUpdateRoutine = new PathfindingUpdateRoutine(this, PathProducer);
-        _agentUpdater = new AgentUpdater(AgentDataContainer, this);
+        _agentUpdater = new AgentUpdater(AgentDataContainer);
 
         
     }

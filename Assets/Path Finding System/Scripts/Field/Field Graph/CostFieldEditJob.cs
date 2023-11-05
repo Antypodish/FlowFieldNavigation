@@ -12,11 +12,11 @@ public struct CostFieldEditJob : IJob
 {
     public byte NewCost;
     public BoundaryData Bounds;
-    public NativeArray<SectorNode> SectorNodes;
+    public UnsafeList<SectorNode> SectorNodes;
     public NativeArray<int> SecToWinPtrs;
     public NativeArray<WindowNode> WindowNodes;
     public NativeArray<int> WinToSecPtrs;
-    public NativeArray<PortalNode> PortalNodes;
+    public UnsafeList<PortalNode> PortalNodes;
     public NativeArray<PortalToPortal> PorPtrs;
     public NativeArray<UnsafeList<byte>> CostsL;
     public UnsafeList<byte> CostsG;
@@ -31,7 +31,7 @@ public struct CostFieldEditJob : IJob
     public NativeList<int> EditedSectorIndicies;
     public NativeList<int> EditedSectorIndexBorders;
     public NativeArray<IslandData> Islands;
-    public NativeArray<UnsafeList<int>> IslandFields;
+    public UnsafeList<UnsafeList<int>> IslandFields;
 
 
     int _sectorTileAmount;
@@ -346,7 +346,7 @@ public struct CostFieldEditJob : IJob
         int porToPorCnt = PortalPerWindow * 8 - 2;
         int fieldColAmount = FieldColAmount;
         UnsafeList<byte> costs = CostsG;
-        NativeArray<PortalNode> portalNodes = PortalNodes;
+        UnsafeList<PortalNode> portalNodes = PortalNodes;
 
         for (int i = 0; i < windowIndicies.Length; i++)
         {
@@ -479,7 +479,7 @@ public struct CostFieldEditJob : IJob
         int sectorTileAmount = SectorColAmount;
         NativeArray<WindowNode> windowNodes = WindowNodes;
         NativeArray<int> secToWinPtrs = SecToWinPtrs;
-        NativeArray<PortalNode> portalNodes = PortalNodes;
+        UnsafeList<PortalNode> portalNodes = PortalNodes;
         NativeArray<PortalToPortal> porPtrs = PorPtrs;
         int fieldColAmount = FieldColAmount;
 

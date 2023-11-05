@@ -92,4 +92,5 @@ public static class FlowFieldUtilities
 
         return local2d.y * sectorColAmount + local2d.x;//-20
     }
+    public static int RadiusToOffset(float radius, float tileSize) => (int)math.floor(radius + tileSize / 2);
 }

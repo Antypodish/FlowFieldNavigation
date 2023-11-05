@@ -1,4 +1,5 @@
 ﻿using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -19,10 +20,10 @@ public class EditorSectorPortalErrorDetector
             Gizmos.color = Color.red;
             FieldGraph field = fieldGraphs[i];
 
-            NativeArray<SectorNode> sectors = field.SectorNodes;
+            UnsafeList<SectorNode> sectors = field.SectorNodes;
             NativeArray<int> sectowinptrs = field.SecToWinPtrs;
             NativeArray<WindowNode> windowNodes = field.WindowNodes;
-            NativeArray<PortalNode> portalNodes = field.PortalNodes;
+            UnsafeList<PortalNode> portalNodes = field.PortalNodes;
             for (int j = 0; j < sectors.Length; j++)
             {
                 int sectorIndex = j;

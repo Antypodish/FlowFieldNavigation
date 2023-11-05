@@ -1,6 +1,7 @@
 ﻿#if (UNITY_EDITOR) 
 
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 
 public class EditorSectorGraphDebugger
@@ -18,7 +19,7 @@ public class EditorSectorGraphDebugger
         float yOffset = 0.02f;
         float tileSize = _pathfindingManager.TileSize;
         FieldGraph fieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(offset);
-        NativeArray<SectorNode> sectorNodes = fieldGraph.SectorNodes;
+        UnsafeList<SectorNode> sectorNodes = fieldGraph.SectorNodes;
         for (int i = 0; i < sectorNodes.Length; i++)
         {
             int sectorSize = sectorNodes[i].Sector.Size;

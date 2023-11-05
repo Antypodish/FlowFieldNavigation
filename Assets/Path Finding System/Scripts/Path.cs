@@ -64,4 +64,5 @@ public enum PathState : byte
     Clean = 0,
     ToBeUpdated = 1,
     ToBeDisposed = 2,
+    Removed,
 }
