@@ -62,7 +62,8 @@ public class AgentRoutineDataProducer
     public AgentRoutineDataCalculationJob CalculateDirections()
     {
         NativeList<AgentData> agentDataList = _agentDataContainer.AgentDataList;
-        List<AgentPath> pathList = _agentDataContainer.Paths;
+        NativeList<int> agentCurPaths = _agentDataContainer.AgentCurPathIndicies;
+        List<Path> producedPaths = _pathfindingManager.PathProducer.ProducedPaths;
         TransformAccessArray agentTransforms = _agentDataContainer.AgentTransforms;
 
         
@@ -99,10 +100,12 @@ public class AgentRoutineDataProducer
             NormalToHashed = NormalToHashed,
         };
         spatialHasher.Schedule().Complete();
+
         //FILL AGENT MOVEMENT DATA ARRAY
         for (int i = 0; i < agentDataList.Length; i++)
         {
-            Path curPath = pathList[i].CurPath;
+            if (agentCurPaths[i] == -1) { continue; }
+            Path curPath = producedPaths[agentCurPaths[i]];
 
             if (curPath == null) { continue; }
             int hashedIndex = NormalToHashed[i];

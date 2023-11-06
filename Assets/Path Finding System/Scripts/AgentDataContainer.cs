@@ -16,17 +16,21 @@ public class AgentDataContainer
     public List<FlowFieldAgent> Agents;
     public TransformAccessArray AgentTransforms;
     public NativeList<AgentData> AgentDataList;
-    public List<AgentPath> Paths;
 
+    public NativeList<int> AgentRequestedPathIndicies;
+    public NativeList<int> AgentNewPathIndicies;
+    public NativeList<int> AgentCurPathIndicies;
     PathfindingManager _pathfindingManager;
 
     public AgentDataContainer(PathfindingManager manager)
     {
         _pathfindingManager = manager;
         Agents = new List<FlowFieldAgent>();
-        Paths = new List<AgentPath>();
         AgentTransforms = new TransformAccessArray(0);
         AgentDataList = new NativeList<AgentData>(Allocator.Persistent);
+        AgentNewPathIndicies = new NativeList<int>(0, Allocator.Persistent);
+        AgentCurPathIndicies = new NativeList<int>(0, Allocator.Persistent);
+        AgentRequestedPathIndicies = new NativeList<int>(0, Allocator.Persistent);
     }
     public void Subscribe(FlowFieldAgent agent)
     {
@@ -41,31 +45,20 @@ public class AgentDataContainer
             Position = agent.transform.position,
         };
         Agents.Add(agent);
-        Paths.Add(new AgentPath());
         AgentTransforms.Add(agent.transform);
         AgentDataList.Add(data);
+        AgentNewPathIndicies.Add(-1);
+        AgentCurPathIndicies.Add(-1);
+        AgentRequestedPathIndicies.Add(-1);
     }
     public void UnSubscribe(FlowFieldAgent agent)
     {
         int agentIndex = agent.AgentDataIndex;
         agent.AgentDataIndex = -1;
         Agents.RemoveAtSwapBack(agentIndex);
-        Paths.RemoveAtSwapBack(agentIndex);
         AgentTransforms.RemoveAtSwapBack(agentIndex);
         AgentDataList.RemoveAtSwapBack(agentIndex);
         Agents[agentIndex].AgentDataIndex = agentIndex;
-    }
-    public void SetPath(int agentIndex, Path newPath)
-    {
-        AgentPath path = Paths[agentIndex];
-        if (path.NewPath != null) { path.NewPath.Unsubscribe(); }
-        path.NewPath = newPath;
-        newPath.Subscribe();
-        Paths[agentIndex] = path;
-    }
-    public Path GetPath(int agentIndex)
-    {
-        return Paths[agentIndex].CurPath;
     }
     public void SetSpeed(int agentIndex, float newSpeed)
     {
@@ -131,6 +124,15 @@ public class AgentDataContainer
             positions[i] = new float2(pos3d.x, pos3d.z);
         }
         return positions;
+    }
+    public void SetRequestedPathIndiciesOf(List<FlowFieldAgent> agents, int newPathIndex)
+    {
+        NativeArray<int> reqPathIndicies = AgentRequestedPathIndicies;
+        for(int i = 0; i < agents.Count; i++)
+        {
+            int agentIndex = agents[i].AgentDataIndex;
+            reqPathIndicies[agentIndex] = newPathIndex;
+        }
     }
 }
 public struct AgentData

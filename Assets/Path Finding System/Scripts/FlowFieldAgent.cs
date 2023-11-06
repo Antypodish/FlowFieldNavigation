@@ -23,10 +23,6 @@ public class FlowFieldAgent : MonoBehaviour
         Transform = transform;
         AgentDataIndex = -1;
     }
-    public void SetPath(Path path)
-    {
-        _pathfindingManager.SetPath(AgentDataIndex, path);
-    }
     public Path GetPath()
     {
         return _pathfindingManager.GetPath(AgentDataIndex);

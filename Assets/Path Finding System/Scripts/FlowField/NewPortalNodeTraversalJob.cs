@@ -15,7 +15,7 @@ public struct NewPortalNodeTraversalJob : IJob
     public int SectorColAmount;
     public int SectorMatrixColAmount;
 
-    public NativeArray<float2> SourcePositions;
+    public NativeSlice<float2> SourcePositions;
     public NativeArray<PortalTraversalData> PortalTraversalDataArray;
     public NativeList<ActivePortal> PortalSequence;
 
@@ -65,13 +65,13 @@ public struct NewPortalNodeTraversalJob : IJob
         };
 
         //SET TARGET NEIGHBOUR DATA
-        SetTargetNeighbourPortalData(out int targetIslandIndex);
+        SetTargetNeighbourPortalData();
 
         //START GRAPH WALKER
         PortalSequenceBorders.Add(0);
         UnsafeHeap<int> walkerHeap = new UnsafeHeap<int>(10, Allocator.Temp);
         
-        UnsafeList<int> allSorucePortalIndicies = GetSourcePortalIndicies(targetIslandIndex);
+        UnsafeList<int> allSorucePortalIndicies = GetSourcePortalIndicies();
 
         for (int i = 0; i < allSorucePortalIndicies.Length; i++)
         {
@@ -169,9 +169,10 @@ public struct NewPortalNodeTraversalJob : IJob
         sourcePortalData.Mark |= PortalTraversalMark.AStarPicked;
         PortalTraversalDataArray[originIndex] = sourcePortalData;
     }
-    UnsafeList<int> GetSourcePortalIndicies(int targetIslandIndex)
+    UnsafeList<int> GetSourcePortalIndicies()
     {
         UnsafeList<int> indicies = new UnsafeList<int>(0, Allocator.Temp);
+        int sectorTileAmount = SectorColAmount * SectorColAmount;
         for (int i = 0; i < SourcePositions.Length; i++)
         {
             float2 sourcePos = SourcePositions[i];
@@ -180,6 +181,10 @@ public struct NewPortalNodeTraversalJob : IJob
             int sourceSectorIndexFlat = sourceSectorIndex.y * SectorMatrixColAmount + sourceSectorIndex.x;
 
             //ADD SOURCE SECTOR TO THE PICKED SECTORS
+            if (SectorToPicked[sourceSectorIndexFlat] != 0) { continue; }
+            SectorToPicked[sourceSectorIndexFlat] = PickedToSector.Length * sectorTileAmount + 1;
+            PickedToSector.Add(sourceSectorIndexFlat);
+            //ADD SOURCE SECTOR TO THE PICKED SECTORS
             SetSectorPortalIndicies(sourceSectorIndexFlat, SourcePortalIndexList);
 
             for (int j = 0; j < SourcePortalIndexList.Length; j++)
@@ -187,7 +192,6 @@ public struct NewPortalNodeTraversalJob : IJob
                 int index = SourcePortalIndexList[j];
                 PortalTraversalData travData = PortalTraversalDataArray[index];
                 if (travData.HasMark(PortalTraversalMark.Source)) { continue; }
-                if (PortalNodes[j].IslandIndex != targetIslandIndex) { continue; }
                 travData.Mark |= PortalTraversalMark.Source;
                 PortalTraversalDataArray[index] = travData;
                 indicies.Add(index);
@@ -435,9 +439,8 @@ public struct NewPortalNodeTraversalJob : IJob
         int bigOne = math.max(xDif, yDif);
         return (bigOne - smallOne) * 1f + smallOne * 1.4f;
     }
-    void SetTargetNeighbourPortalData(out int targetIslandIndex)
+    void SetTargetNeighbourPortalData()
     {
-        targetIslandIndex = 0;
         for (int i = 0; i < TargetSectorPortalIndexList.Length; i++)
         {
             int portalNodeIndex = TargetSectorPortalIndexList[i];
@@ -454,7 +457,6 @@ public struct NewPortalNodeTraversalJob : IJob
                 Mark = PortalTraversalMark.TargetNeighbour,
                 NextIndex = -1,
             };
-            targetIslandIndex = PortalNodes[portalNodeIndex].IslandIndex;
         }
     }
     float GetGCostBetweenTargetAndTargetNeighbour(int targetNeighbourIndex)
@@ -523,24 +525,12 @@ public struct NewPortalNodeTraversalJob : IJob
     void AddSourceAndTargetSectors()
     {
         int sectorTileAmount = SectorColAmount * SectorColAmount;
-        for (int i = 0; i < SourcePositions.Length; i++)
+        if (SectorToPicked[_targetSectorIndex1d] == 0)
         {
-            float2 sourcePos = SourcePositions[i];
-            int2 sourceIndex = new int2((int)math.floor(sourcePos.x / FieldTileSize), (int)math.floor(sourcePos.y / FieldTileSize));
-            int2 sourceSectorIndex = sourceIndex / SectorColAmount;
-            int sourceSectorIndexFlat = sourceSectorIndex.y * SectorMatrixColAmount + sourceSectorIndex.x;
-            if (SectorToPicked[sourceSectorIndexFlat] == 0)
-            {
-                SectorToPicked[sourceSectorIndexFlat] = PickedToSector.Length * sectorTileAmount + 1;
-                PickedToSector.Add(sourceSectorIndexFlat);
-            }
-            if(SectorToPicked[_targetSectorIndex1d] == 0)
-            {
-                SectorToPicked[_targetSectorIndex1d] = PickedToSector.Length * sectorTileAmount + 1;
-                PickedToSector.Add(_targetSectorIndex1d);
-            }
-            FlowFieldLength[0] = PickedToSector.Length * sectorTileAmount + 1;
+            SectorToPicked[_targetSectorIndex1d] = PickedToSector.Length * sectorTileAmount + 1;
+            PickedToSector.Add(_targetSectorIndex1d);
         }
+        FlowFieldLength[0] = PickedToSector.Length * sectorTileAmount + 1;
     }
     //HELPERS
     int GetPortalLocalIndexAtSector(PortalNode portalNode, int sectorIndex, int sectorStartIndex)

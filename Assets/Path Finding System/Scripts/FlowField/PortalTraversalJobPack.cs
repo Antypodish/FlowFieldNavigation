@@ -4,14 +4,14 @@ using Unity.Jobs;
 public struct PortalTraversalJobPack
 {
     public NewPortalNodeTraversalJob PortalTravJob;
-    public Path Path;
+    public int PathIndex;
 
-    public PathHandle Schedule(JobHandle dependancy)
+    public PathHandle Schedule()
     {
         return new PathHandle()
         {
-            Handle = PortalTravJob.Schedule(dependancy),
-            Path = Path,
+            Handle = PortalTravJob.Schedule(),
+            PathIndex = PathIndex
         };
     }
 }

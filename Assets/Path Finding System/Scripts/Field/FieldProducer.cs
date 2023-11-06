@@ -67,4 +67,8 @@ public class FieldProducer
     {
         return _costFieldProducer.GetAllCostFields();
     }
+    public NativeArray<IslandFieldProcessor> GetAllIslandFieldProcessors()
+    {
+        return _fieldGraphProducer.GetAllIslandFieldProcessors();
+    }
 }

@@ -21,9 +21,9 @@ public class AgentUpdater
     {
         List<FlowFieldAgent> agents = _agentDataContainer.Agents;
         NativeArray<AgentData> agentDataList = _agentDataContainer.AgentDataList;
-        List<AgentPath> pathList = _agentDataContainer.Paths;
+        //List<AgentPath> pathList = _agentDataContainer.Paths;
         TransformAccessArray agentTransforms = _agentDataContainer.AgentTransforms;
-
+        /*
         //REFRESH PATH
         for (int i = 0; i < agents.Count; i++)
         {
@@ -44,7 +44,7 @@ public class AgentUpdater
                     agentDataList[i] = data;
                 }
             }
-        }
+        }*/
 
         //MOVE
         AgentMovementUpdateJob movJob = new AgentMovementUpdateJob()

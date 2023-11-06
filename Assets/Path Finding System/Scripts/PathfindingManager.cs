@@ -3,6 +3,8 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 using UnityEngine;
+using System.Diagnostics;
+
 public class PathfindingManager : MonoBehaviour
 {
     [SerializeField] TerrainGenerator _terrainGenerator;
@@ -22,7 +24,7 @@ public class PathfindingManager : MonoBehaviour
     public AgentDataContainer AgentDataContainer;
 
     float _lastAgentUpdateTime = 0;
-    PathfindingUpdateRoutine _pathfindingUpdateRoutine;
+    PathfindingUpdateRoutine _pathfindingRoutineUpdater;
     AgentUpdater _agentUpdater;
     private void Awake()
     {
@@ -44,7 +46,7 @@ public class PathfindingManager : MonoBehaviour
         FieldProducer.CreateField(_maxCostfieldOffset, SectorColAmount, SectorMatrixColAmount, SectorMatrixRowAmount, RowAmount, ColumnAmount, TileSize);
 
         PathProducer = new PathProducer(this);
-        _pathfindingUpdateRoutine = new PathfindingUpdateRoutine(this, PathProducer);
+        _pathfindingRoutineUpdater = new PathfindingUpdateRoutine(this, PathProducer);
         _agentUpdater = new AgentUpdater(AgentDataContainer);
 
         
@@ -52,23 +54,15 @@ public class PathfindingManager : MonoBehaviour
     private void Update()
     {
         _agentUpdater.OnUpdate();
-
-        float curTime = Time.realtimeSinceStartup;
-        float deltaTime = curTime - _lastAgentUpdateTime;
-        if (deltaTime >= AgentUpdateFrequency)
-        {
-            _lastAgentUpdateTime = curTime;
-            //_pathfindingUpdateRoutine.RoutineUpdate(deltaTime);
-        }
-        _pathfindingUpdateRoutine.IntermediateLateUpdate();
+        _pathfindingRoutineUpdater.IntermediateLateUpdate();
     }
     private void FixedUpdate()
     {
-        _pathfindingUpdateRoutine.RoutineUpdate(Time.fixedDeltaTime);
+        _pathfindingRoutineUpdater.RoutineUpdate(Time.fixedDeltaTime);
     }
     private void LateUpdate()
     {
-        //_pathfindingUpdateRoutine.IntermediateLateUpdate();
+        _pathfindingRoutineUpdater.IntermediateLateUpdate();
     }
     void SetFlowFieldUtilities()
     {
@@ -89,60 +83,38 @@ public class PathfindingManager : MonoBehaviour
     }
     public void SetDestination(List<FlowFieldAgent> agents, Vector3 target)
     {
-        
-        NativeArray<float2> sources = AgentDataContainer.GetPositionsOf(agents);
-        Vector2 target2 = new Vector2(target.x, target.z);
-
-        //DETERMINE MIN OFFSET
-        float maxRadius = 0;
-        for(int i = 0; i < agents.Count; i++)
-        {
-            float radius = agents[i].GetRadius();
-            maxRadius = radius > maxRadius ? radius : maxRadius;
-        }
-        int offset = Mathf.FloorToInt(maxRadius + 0.5f);
-        
         if (agents.Count == 0) { UnityEngine.Debug.Log("Agent list passed is empty"); return; }
-        //CREATE PATH
-        Path newPath = _pathfindingUpdateRoutine.RequestPath(sources, target2, offset);
-        if (newPath == null) { return; }
-        for(int i = 0; i < agents.Count; i++)
-        {
-            agents[i].SetPath(newPath);
-        }
-        
+        _pathfindingRoutineUpdater.RequestPath(agents, target);
     }
     public NativeArray<UnsafeList<HashTile>> GetSpatialHashGridArray()
     {
-        return _pathfindingUpdateRoutine.GetRoutineScheduler().GetRoutineDataProducer().HashGridArray;
+        return _pathfindingRoutineUpdater.GetRoutineScheduler().GetRoutineDataProducer().HashGridArray;
     }
     public NativeArray<int> GetNormalToHashed()
     {
-        return _pathfindingUpdateRoutine.GetRoutineScheduler().GetRoutineDataProducer().NormalToHashed;
+        return _pathfindingRoutineUpdater.GetRoutineScheduler().GetRoutineDataProducer().NormalToHashed;
     }
     public NativeArray<AgentMovementData> GetAgentMovementData()
     {
-        return _pathfindingUpdateRoutine.GetRoutineScheduler().GetRoutineDataProducer().AgentMovementDataList;
+        return _pathfindingRoutineUpdater.GetRoutineScheduler().GetRoutineDataProducer().AgentMovementDataList;
     }
     public void EditCost(int2 startingPoint, int2 endPoint, byte newCost)
     {
-        _pathfindingUpdateRoutine.RequestCostEdit(startingPoint, endPoint, newCost);
+        _pathfindingRoutineUpdater.RequestCostEdit(startingPoint, endPoint, newCost);
     }
     public void RequestSubscription(FlowFieldAgent agent)
     {
-        _pathfindingUpdateRoutine.RequestAgentAddition(agent);
+        _pathfindingRoutineUpdater.RequestAgentAddition(agent);
     }
     public void UnSubscribe(FlowFieldAgent agent)
     {
         AgentDataContainer.UnSubscribe(agent);
     }
-    public void SetPath(int agentIndex, Path newPath)
-    {
-        AgentDataContainer.SetPath(agentIndex, newPath);
-    }
     public Path GetPath(int agentIndex)
     {
-        return AgentDataContainer.GetPath(agentIndex);
+        int curPathIndex = AgentDataContainer.AgentCurPathIndicies[agentIndex];
+        if(curPathIndex == -1) { return null; }
+        return PathProducer.ProducedPaths[curPathIndex];
     }
     public List<FlowFieldAgent> GetAllAgents()
     {

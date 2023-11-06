@@ -3,5 +3,5 @@
 public struct PathHandle
 {
     public JobHandle Handle;
-    public Path Path;
+    public int PathIndex;
 }

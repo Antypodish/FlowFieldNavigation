@@ -6,13 +6,11 @@ using UnityEngine;
 public class Path
 {
     public int Id;
-    public int Subscriber = 0;
     public int Offset;
     public PathState State;
     public bool IsCalculated = false;
     public int2 TargetIndex;
     public Vector2 Destination;
-    public NativeArray<float2> Sources;
     public NativeArray<PortalTraversalData> PortalTraversalDataArray;
     public NativeList<ActivePortal> PortalSequence;
     public UnsafeList<int> SectorToPicked;
@@ -32,23 +30,10 @@ public class Path
 
     public void Dispose()
     {
-        NewFlowFieldLength.Dispose();
-        IntegrationStartIndicies.Dispose();
-        Sources.Dispose();
-        IntegrationField.Dispose();
-        FlowField.Dispose();
-    }
-    public void Subscribe()
-    {
-        Subscriber++;
-    }
-    public void Unsubscribe()
-    {
-        Subscriber--;
-        if (Subscriber == 0)
-        {
-            State = PathState.ToBeDisposed;
-        }
+        //NewFlowFieldLength.Dispose();
+        //IntegrationStartIndicies.Dispose();
+        //IntegrationField.Dispose();
+        //FlowField.Dispose();
     }
     public void SetState(PathState state)
     {

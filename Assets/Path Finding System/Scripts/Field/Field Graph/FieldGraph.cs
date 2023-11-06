@@ -132,6 +132,19 @@ public struct FieldGraph
             WindowNodes = WindowNodes
         };
     }
+    public IslandFieldProcessor GetIslandFieldProcessor()
+    {
+        return new IslandFieldProcessor()
+        {
+            SectorColAmount = FlowFieldUtilities.SectorColAmount,
+            SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+            TileSize = FlowFieldUtilities.TileSize,
+            FieldColAmount = FlowFieldUtilities.FieldColAmount,
+            SectorNodes = SectorNodes,
+            IslandFields = IslandFields,
+            PortalNodes = PortalNodes,
+        };
+    }
     public CostFieldEditJob GetEditJob(BoundaryData bounds, byte newCost)
     {
         return new CostFieldEditJob()

@@ -15,6 +15,7 @@ using UnityEngine.UIElements;
 public class PathProducer
 {
     public List<Path> ProducedPaths;
+    public NativeList<int> ProducedPathSubscribers;
     Stack<int> _removedPathIndicies;
     NativeList<PathData> _pathDataList;
 
@@ -40,12 +41,16 @@ public class PathProducer
         _preallocator = new PathPreallocator(_fieldProducer, _sectorTileAmount * _sectorTileAmount, _sectorMatrixColAmount * _sectorMatrixRowAmount);
         _removedPathIndicies = new Stack<int>();
         _pathDataList = new NativeList<PathData>(Allocator.Persistent);
+        ProducedPathSubscribers = new NativeList<int>(Allocator.Persistent);
     }
     public void Update()
     {
         for (int i = 0; i < ProducedPaths.Count; i++)
         {
             Path path = ProducedPaths[i];
+            if(path.State == PathState.Removed) { continue; }
+            int subsciriber = ProducedPathSubscribers[i];
+            if(subsciriber == 0 && path.IsCalculated) { path.State = PathState.ToBeDisposed; }
             if (path.State == PathState.ToBeDisposed && path.IsCalculated)
             {
                 path.Dispose();
@@ -89,18 +94,15 @@ public class PathProducer
         }
         return _pathDataList;
     }
-    public PortalTraversalJobPack GetPortalTraversalJobPack(NativeArray<float2> sources, Vector2 destination, int offset)
+    public PortalTraversalJobPack ConstructPath(NativeSlice<float2> positions, PathRequest request)
     {
-        int2 destinationIndex = new int2(Mathf.FloorToInt(destination.x / _tileSize), Mathf.FloorToInt(destination.y / _tileSize));
+        int2 destinationIndex = new int2(Mathf.FloorToInt(request.Destination.x / _tileSize), Mathf.FloorToInt(request.Destination.y / _tileSize));
         int destionationIndexFlat = destinationIndex.y * _columnAmount + destinationIndex.x;
-        CostField pickedCostField = _fieldProducer.GetCostFieldWithOffset(offset);
-        FieldGraph pickedFieldGraph = _fieldProducer.GetFieldGraphWithOffset(offset);
+        CostField pickedCostField = _fieldProducer.GetCostFieldWithOffset(request.MaxOffset);
+        FieldGraph pickedFieldGraph = _fieldProducer.GetFieldGraphWithOffset(request.MaxOffset);
 
-        //returns portal pack with path=null if target is unwalkable
-        if (pickedCostField.CostsG[destionationIndexFlat] == byte.MaxValue) { return new PortalTraversalJobPack(); }
+        PreallocationPack preallocations = _preallocator.GetPreallocations(request.MaxOffset);
 
-        PreallocationPack preallocations = _preallocator.GetPreallocations(offset);
-        
         //TRAVERSAL
         NewPortalNodeTraversalJob traversalJob = new NewPortalNodeTraversalJob()
         {
@@ -110,7 +112,6 @@ public class PathProducer
             FieldTileSize = _tileSize,
             SectorColAmount = _sectorTileAmount,
             SectorMatrixColAmount = _columnAmount / _sectorTileAmount,
-
             PickedToSector = preallocations.PickedToSector,
             PortalSequenceBorders = preallocations.PortalSequenceBorders,
             TargetSectorCosts = preallocations.TargetSectorCosts,
@@ -118,7 +119,7 @@ public class PathProducer
             SecToWinPtrs = pickedFieldGraph.SecToWinPtrs,
             WindowNodes = pickedFieldGraph.WindowNodes,
             WinToSecPtrs = pickedFieldGraph.WinToSecPtrs,
-            SourcePositions = sources,
+            SourcePositions = positions,
             PorPtrs = pickedFieldGraph.PorToPorPtrs,
             SectorNodes = pickedFieldGraph.SectorNodes,
             Costs = pickedCostField.CostsG,
@@ -140,10 +141,9 @@ public class PathProducer
             PortalSequenceBorders = preallocations.PortalSequenceBorders,
             TargetIndex = destinationIndex,
             TargetSectorCosts = preallocations.TargetSectorCosts,
-            Sources = sources,
-            Destination = destination,
+            Destination = request.Destination,
             State = PathState.Clean,
-            Offset = offset,
+            Offset = request.MaxOffset,
             PortalSequence = preallocations.PortalSequence,
             PortalTraversalDataArray = preallocations.PortalTraversalDataArray,
             SectorToPicked = preallocations.SectorToPicked,
@@ -156,25 +156,31 @@ public class PathProducer
             IntegrationStartIndicies = new NativeList<LocalIndex1d>(Allocator.Persistent),
             NewFlowFieldLength = new NativeArray<int>(1, Allocator.Persistent),
         };
-        if(_removedPathIndicies.Count != 0)
+
+        int pathIndex;
+        if (_removedPathIndicies.Count != 0)
         {
-            ProducedPaths[_removedPathIndicies.Pop()] = producedPath;
+            pathIndex = _removedPathIndicies.Pop();
+            ProducedPaths[pathIndex] = producedPath;
+            ProducedPathSubscribers[pathIndex] = request.AgentCount;
         }
         else
         {
+            pathIndex = ProducedPaths.Count;
             ProducedPaths.Add(producedPath);
+            ProducedPathSubscribers.Add(request.AgentCount);
         }
-        
+
 
         return new PortalTraversalJobPack
         {
             PortalTravJob = traversalJob,
-            Path = producedPath,
+            PathIndex = pathIndex,
         };
     }
     public PathHandle SchedulePathProductionJob(Path path)
     {
-
+        /*
         CostField pickedCostField = _fieldProducer.GetCostFieldWithOffset(path.Offset);
         FieldGraph pickedFieldGraph = _fieldProducer.GetFieldGraphWithOffset(path.Offset);
         NativeArray<int> flowFieldLength = path.FlowFieldLength;
@@ -231,7 +237,7 @@ public class PathProducer
             IntegrationField = path.IntegrationField,
             BlockedWaveFronts = path.IntegrationStartIndicies,
         };*/
-        
+
         //INTEGRATION
         /*IntegrationFieldJob intjob = new IntegrationFieldJob()
         {
@@ -244,7 +250,7 @@ public class PathProducer
             FieldColAmount = _columnAmount,
             FieldRowAmount = _rowAmount,
         };*/
-
+        /*
         //FLOW FIELD
         FlowFieldJob ffJob = new FlowFieldJob()
         {
@@ -290,10 +296,11 @@ public class PathProducer
         {
             Handle = ffHandle,
             Path = path,
-        };
+        };*/
+        return new PathHandle();
     }
     public void SetPortalAdditionTraversalHandles(NativeList<OutOfFieldStatus> outOfFieldStatus, List<PathHandle> portalAdditionTraversalHandles, JobHandle dependency)
-    {
+    {/*
         for(int i = 0; i < ProducedPaths.Count; i++)
         {
             Path path = ProducedPaths[i];
@@ -333,7 +340,7 @@ public class PathProducer
                 };
                 portalAdditionTraversalHandles.Add(handle);
             }
-        }
+        }*/
     }
     public JobHandle SchedulePathAdditionJob(Path path)
     {

@@ -14,22 +14,23 @@ public class PathfindingUpdateRoutine
     List<PortalTraversalJobPack> _portalTravJobs;
     List<FlowFieldAgent> _agentAddRequest;
 
+    NativeList<PathRequest> PathRequests;
     public PathfindingUpdateRoutine(PathfindingManager pathfindingManager, PathProducer pathProducer)
     {
         _pathfindingManager = pathfindingManager;
-        _scheduler = new RoutineScheduler(pathfindingManager);
 
         _costEditRequests = new List<CostFieldEditJob[]>();
         _portalTravJobs = new List<PortalTraversalJobPack>();
         _agentAddRequest = new List<FlowFieldAgent>();
+        PathRequests = new NativeList<PathRequest>(Allocator.Persistent);
+        _scheduler = new RoutineScheduler(pathfindingManager);
+
     }
     public void RoutineUpdate(float deltaTime)
     {
         //FORCE COMPLETE JOBS FROM PREVIOUS UPDATE
         _scheduler.ForceCompleteAll();
-
         _pathfindingManager.PathProducer.Update();
-
         //ADD NEW AGENTS
         for (int i = 0; i < _agentAddRequest.Count; i++)
         {
@@ -39,9 +40,12 @@ public class PathfindingUpdateRoutine
 
         //SCHEDULE NEW JOBS
         IslandReconfigurationJob[] islandJobs = _pathfindingManager.FieldProducer.GetIslandReconfigJobs();
-        _scheduler.Schedule(_costEditRequests,  islandJobs, _portalTravJobs);
+        _scheduler.Schedule(_costEditRequests,  islandJobs, PathRequests);
+
+        PathRequests.Clear();
         _costEditRequests.Clear();
         _portalTravJobs.Clear();
+
     }
     public RoutineScheduler GetRoutineScheduler()
     {
@@ -62,14 +66,11 @@ public class PathfindingUpdateRoutine
     {
         _agentAddRequest.Add(agent);
     }
-    public Path RequestPath(NativeArray<float2> sources, Vector2 destination, int offset)
+    public void RequestPath(List<FlowFieldAgent> agents, Vector3 target)
     {
-        
-        PortalTraversalJobPack portalTravJobPack = _pathfindingManager.PathProducer.GetPortalTraversalJobPack(sources, destination, offset);
-        if (portalTravJobPack.Path != null)
-        {
-            _portalTravJobs.Add(portalTravJobPack);
-        }
-        return portalTravJobPack.Path;
+        int newPathIndex = PathRequests.Length;
+        float2 target2d = new float2(target.x, target.z);
+        PathRequests.Add(new PathRequest(target2d));
+        _pathfindingManager.AgentDataContainer.SetRequestedPathIndiciesOf(agents, newPathIndex);
     }
 }

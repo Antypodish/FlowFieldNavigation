@@ -60,4 +60,13 @@ public class FieldGraphProducer
         }
         return newarray;
     }
+    public NativeArray<IslandFieldProcessor> GetAllIslandFieldProcessors()
+    {
+        NativeArray<IslandFieldProcessor> islandFieldProcessors = new NativeArray<IslandFieldProcessor>(_fieldGraphs.Length, Allocator.Persistent);
+        for(int i = 0; i < _fieldGraphs.Length; i++)
+        {
+            islandFieldProcessors[i] = _fieldGraphs[i].GetIslandFieldProcessor();
+        }
+        return islandFieldProcessors;
+    }
 }
