@@ -129,9 +129,10 @@ public class PathProducer
             FlowFieldLength = preallocations.FlowFieldLength,
             PortalTraversalDataArray = preallocations.PortalTraversalDataArray,
             SourcePortalIndexList = preallocations.SourcePortalIndexList,
-            TargetSectorPortalIndexList = preallocations.TargetSectorPortalIndexList,
+            TargetNeighbourPortalIndicies = preallocations.TargetSectorPortalIndexList,
             AStarTraverseIndexList = preallocations.AStartTraverseIndexList,
             FastMarchingQueue = preallocations.PortalTraversalFastMarchingQueue,
+            IslandFields = pickedFieldGraph.IslandFields,
         };
 
         Path producedPath = new Path()

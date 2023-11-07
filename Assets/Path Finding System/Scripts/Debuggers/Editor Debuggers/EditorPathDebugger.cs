@@ -85,6 +85,31 @@ public class EditorPathDebugger
             }
         }
     }
+    public void DebugTargetNeighbourPortals(FlowFieldAgent agent)
+    {
+        if (_pathProducer == null) { return; }
+        if(_pathProducer.ProducedPaths.Count == 0) { return; }
+        Path producedPath = agent.GetPath();
+        if (!producedPath.IsCalculated) { return; }
+
+        float tileSize = _pathfindingManager.TileSize;
+        FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset);
+        UnsafeList<PortalNode> portalNodes = fg.PortalNodes;
+        NativeArray<PortalTraversalData> portalTraversalDataArray = producedPath.PortalTraversalDataArray;
+
+        for (int i = 0; i < portalNodes.Length; i++)
+        {
+            PortalTraversalData travData = portalTraversalDataArray[i];
+            PortalNode node = portalNodes[i];
+            if (travData.HasMark(PortalTraversalMark.TargetNeighbour))
+            {
+                Gizmos.color = Color.magenta;
+                Vector3 portalPos = node.GetPosition(tileSize);
+                Handles.Label(portalPos + new Vector3(0, 0, 0.75f), "d: " + travData.DistanceFromTarget.ToString());
+                Gizmos.DrawSphere(portalPos, 0.25f);
+            }
+        }
+    }
     public void DebugPortalSequence(FlowFieldAgent agent)
     {
         if (_pathProducer == null) { return; }

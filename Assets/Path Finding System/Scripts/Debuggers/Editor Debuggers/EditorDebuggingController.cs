@@ -23,6 +23,7 @@ public class EditorDebuggingController : MonoBehaviour
     [SerializeField] bool _portalErrorDetection;
     [Header("PathDebugger")]
     [SerializeField] bool _debugPortalTraversalMarks;
+    [SerializeField] bool _debugPortalTargetNeighbours;
     [SerializeField] bool _debugPortalSequence;
     [SerializeField] bool _debugPickedSectors;
     [SerializeField] bool _debugIntegrationField;
@@ -106,6 +107,7 @@ public class EditorDebuggingController : MonoBehaviour
             if (_debugLOSBlocks && _pathDebugger != null) { _pathDebugger.LOSBlockDebug(_agentToDebug); }
             if(_debugAgentWaypoint && _agentWaypointDebugger!= null) { _agentWaypointDebugger.Debug(_agentToDebug); }
             if(_debugActiveWaveFronts && _pathDebugger != null) { _pathDebugger.DebugActiveWaveFronts(_agentToDebug); }
+            if(_debugPortalTargetNeighbours && _pathDebugger != null) { _pathDebugger.DebugTargetNeighbourPortals(_agentToDebug); }
         }
 
         if(_debugAgentDirections && _agentDirectionDebugger != null) { _agentDirectionDebugger.Debug(); }
