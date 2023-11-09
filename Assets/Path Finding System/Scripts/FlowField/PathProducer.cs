@@ -69,6 +69,7 @@ public class PathProducer
                     AStartTraverseIndexList = path.AStartTraverseIndexList,
                     TargetSectorPortalIndexList = path.TargetSectorPortalIndexList,
                     PortalTraversalFastMarchingQueue = path.PortalTraversalFastMarchingQueue,
+                    SectorStateTable = path.SectorStateTable,
                 };
 
                 _preallocator.SendPreallocationsBack(ref preallocations, path.ActiveWaveFrontList, path.Offset);
@@ -133,11 +134,14 @@ public class PathProducer
             AStarTraverseIndexList = preallocations.AStartTraverseIndexList,
             FastMarchingQueue = preallocations.PortalTraversalFastMarchingQueue,
             IslandFields = pickedFieldGraph.IslandFields,
+            SectorStateTable = preallocations.SectorStateTable,
         };
-
+        int pathIndex;
+        if (_removedPathIndicies.Count != 0) { pathIndex = _removedPathIndicies.Pop(); }
+        else { pathIndex = ProducedPaths.Count; }
         Path producedPath = new Path()
         {
-            Id = ProducedPaths.Count,
+            Id = pathIndex,
             PickedToSector = preallocations.PickedToSector,
             PortalSequenceBorders = preallocations.PortalSequenceBorders,
             TargetIndex = destinationIndex,
@@ -153,23 +157,20 @@ public class PathProducer
             AStartTraverseIndexList = preallocations.AStartTraverseIndexList,
             TargetSectorPortalIndexList = preallocations.TargetSectorPortalIndexList,
             PortalTraversalFastMarchingQueue = preallocations.PortalTraversalFastMarchingQueue,
-
+            SectorStateTable = preallocations.SectorStateTable,
             IntegrationStartIndicies = new NativeList<LocalIndex1d>(Allocator.Persistent),
             NewFlowFieldLength = new NativeArray<int>(1, Allocator.Persistent),
         };
 
-        int pathIndex;
-        if (_removedPathIndicies.Count != 0)
+        if(ProducedPaths.Count == pathIndex)
         {
-            pathIndex = _removedPathIndicies.Pop();
-            ProducedPaths[pathIndex] = producedPath;
-            ProducedPathSubscribers[pathIndex] = request.AgentCount;
+            ProducedPaths.Add(producedPath);
+            ProducedPathSubscribers.Add(request.AgentCount);
         }
         else
         {
-            pathIndex = ProducedPaths.Count;
-            ProducedPaths.Add(producedPath);
-            ProducedPathSubscribers.Add(request.AgentCount);
+            ProducedPaths[pathIndex] = producedPath;
+            ProducedPathSubscribers[pathIndex] = request.AgentCount;
         }
 
 
@@ -185,7 +186,7 @@ public class PathProducer
         CostField pickedCostField = _fieldProducer.GetCostFieldWithOffset(path.Offset);
         FieldGraph pickedFieldGraph = _fieldProducer.GetFieldGraphWithOffset(path.Offset);
         NativeArray<int> flowFieldLength = path.FlowFieldLength;
-        path.FlowField = new UnsafeList<FlowData>(flowFieldLength[0], Allocator.Persistent);
+        path.FlowField = new UnsafeList<FlowData>(flowFieldLength[0], Allocator.Persistent, NativeArrayOptions.ClearMemory);
         path.FlowField.Length = flowFieldLength[0];
         path.IntegrationField = new NativeList<IntegrationTile>(flowFieldLength[0], Allocator.Persistent);
         path.IntegrationField.Length = flowFieldLength[0];

@@ -27,13 +27,14 @@ public class Path
     public NativeList<int> TargetSectorPortalIndexList;
     public NativeList<int> SourcePortalIndexList;
     public NativeList<UnsafeList<ActiveWaveFront>> ActiveWaveFrontList;
+    public UnsafeList<PathSectorState> SectorStateTable;
 
     public void Dispose()
     {
-        //NewFlowFieldLength.Dispose();
-        //IntegrationStartIndicies.Dispose();
-        //IntegrationField.Dispose();
-        //FlowField.Dispose();
+        NewFlowFieldLength.Dispose();
+        IntegrationStartIndicies.Dispose();
+        IntegrationField.Dispose();
+        FlowField.Dispose();
     }
     public void SetState(PathState state)
     {

@@ -21,6 +21,7 @@ public struct NewPortalNodeTraversalJob : IJob
 
     public NativeList<int> PortalSequenceBorders;
     public UnsafeList<int> SectorToPicked;
+    public UnsafeList<PathSectorState> SectorStateTable;
     public NativeList<int> PickedToSector;
     public NativeArray<DijkstraTile> TargetSectorCosts;
     public NativeArray<int> FlowFieldLength;
@@ -192,6 +193,7 @@ public struct NewPortalNodeTraversalJob : IJob
             if (SectorToPicked[sourceSectorIndexFlat] != 0) { continue; }
             SectorToPicked[sourceSectorIndexFlat] = PickedToSector.Length * sectorTileAmount + 1;
             PickedToSector.Add(sourceSectorIndexFlat);
+            SectorStateTable[sourceSectorIndexFlat] = PathSectorState.Included;
             //ADD SOURCE SECTOR TO THE PICKED SECTORS
             SetSectorPortalIndicies(sourceSectorIndexFlat, SourcePortalIndexList);
 
@@ -526,11 +528,13 @@ public struct NewPortalNodeTraversalJob : IJob
                 {
                     SectorToPicked[win1Sec1Index] = PickedToSector.Length * sectorTileAmount + 1;
                     PickedToSector.Add(win1Sec1Index);
+                    SectorStateTable[win1Sec1Index] = PathSectorState.Included;
                 }
                 if ((win1Sec2Index == win2Sec1Index || win1Sec2Index == win2Sec2Index) && SectorToPicked[win1Sec2Index] == 0)
                 {
                     SectorToPicked[win1Sec2Index] = PickedToSector.Length * sectorTileAmount + 1;
                     PickedToSector.Add(win1Sec2Index);
+                    SectorStateTable[win1Sec2Index] = PathSectorState.Included;
                 }
             }
 
@@ -572,6 +576,7 @@ public struct NewPortalNodeTraversalJob : IJob
         {
             SectorToPicked[_targetSectorIndex1d] = PickedToSector.Length * sectorTileAmount + 1;
             PickedToSector.Add(_targetSectorIndex1d);
+            SectorStateTable[_targetSectorIndex1d] = PathSectorState.Included;
         }
         FlowFieldLength[0] = PickedToSector.Length * sectorTileAmount + 1;
     }

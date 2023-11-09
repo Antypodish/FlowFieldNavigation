@@ -14,4 +14,5 @@ public struct PreallocationPack
     public NativeList<int> AStartTraverseIndexList;
     public NativeList<int> TargetSectorPortalIndexList;
     public NativeList<int> SourcePortalIndexList;
+    public UnsafeList<PathSectorState> SectorStateTable;
 }

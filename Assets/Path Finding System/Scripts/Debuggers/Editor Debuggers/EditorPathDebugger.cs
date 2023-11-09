@@ -305,7 +305,7 @@ public class EditorPathDebugger
                 int2 local2d = new int2(local1d % sectorColAmount, local1d / sectorColAmount);
                 Vector3 localIndexPos = new Vector3(local2d.x * _tileSize, 0f, local2d.y * _tileSize);
                 Vector3 debugPos = localIndexPos + sectorIndexPos + new Vector3(_tileSize / 2, 0.02f, _tileSize / 2);
-                if(integrationField[j].Cost == float.MaxValue) { continue; }
+                if (!flowField[j].IsValid()) { continue; }
                 DrawSquare(debugPos, 0.2f);
                 if (!flowField[j].IsLOS())
                 {

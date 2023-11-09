@@ -63,7 +63,8 @@ public struct FlowFieldJob : IJobParallelFor
 
 
         FlowData flow = new FlowData();
-        flow.SetFlow(startGeneral1d, math.select(endGeneral1d, startGeneral1d, curIntCost == 0), FieldColAmount);
+        flow.SetFlow(startGeneral1d, endGeneral1d, FieldColAmount);
+        if(curIntCost == 0) { flow.SetLOS(); }
         FlowField[index] = flow;
     }
 
@@ -181,9 +182,9 @@ public struct FlowFieldJob : IJobParallelFor
         int leftDif = horizontalDif - 1;
 
         bool upAvailable = upperDif <= 7;
-        bool lowAvailable = lowerDif >= -8;
+        bool lowAvailable = lowerDif >= -7;
         bool rightAvailable = rightDif <= 7;
-        bool leftAvailable = leftDif >= -8;
+        bool leftAvailable = leftDif >= -7;
 
         //INTEGRATED COSTS
         float nIntCost = float.MaxValue;
@@ -245,42 +246,6 @@ public struct FlowFieldJob : IJobParallelFor
             NewVerDif = newVerDif,
         };
     }
-    int GetIndex(int general1d, float cost, int curSector)
-    {
-
-        int2 general2d = FlowFieldUtilities.To2D(general1d, FieldColAmount);
-        int2 botLeft = general2d - new int2(8, 8);
-        int horSize = 16;
-        int verSize = 16;
-
-
-        int indexWithMinCost = general1d;
-        float minCost = cost;
-        for(int i = botLeft.y; i < botLeft.y + verSize; i ++)
-        {
-            for(int j = botLeft.x; j < botLeft.x + horSize; j++)
-            {
-                int2 cur2d = new int2(j, i);
-                if (j < 0 || j >= FieldColAmount || i < 0 || i >= FieldColAmount) { continue; }
-                int cur = FlowFieldUtilities.To1D(cur2d, FieldColAmount);
-                int2 sector2d = FlowFieldUtilities.GetSectorIndex(cur2d, SectorColAmount);
-                int sector1d = FlowFieldUtilities.To1D(sector2d, SectorMatrixColAmount);
-                int sectorMark = SectorToPicked[sector1d];
-                int2 sectorStart = FlowFieldUtilities.GetSectorStartIndex(sector2d, SectorColAmount);
-                int2 local2d = FlowFieldUtilities.GetLocalIndex(cur2d, sectorStart);
-                int local1d = FlowFieldUtilities.To1D(local2d, SectorColAmount);
-
-                int sectorDif = curSector - sector1d;
-                if(sectorMark == 0 || (sectorDif != 0 && sectorDif != 1 && sectorDif != -1 && sectorDif != SectorMatrixColAmount && sectorDif != -SectorMatrixColAmount)) { continue; }
-
-                float newCost = IntegrationField[sectorMark + local1d].Cost;
-                indexWithMinCost = math.select(indexWithMinCost, cur, newCost < minCost);
-                minCost = math.select(minCost, newCost, newCost < minCost);
-            }
-        }
-        return math.select(indexWithMinCost, general1d, minCost == 0);
-    }
-
     private struct NewIndexData
     {
         public int Index;
@@ -311,7 +276,7 @@ public struct FlowData
         int verticalDif = (targetGeneralIndex / fieldColAmount - curGeneralIndex / fieldColAmount);//-1
         int horizontalDif = targetGeneralIndex - (curGeneralIndex + verticalDif * fieldColAmount);//+1
 
-        if(verticalDif > 7 || verticalDif < -8 || horizontalDif > 7 || horizontalDif < -8) { return; }
+        if(verticalDif > 7 || verticalDif < -7 || horizontalDif > 7 || horizontalDif < -7) { return; }
         bool isVerticalNegative = verticalDif < 0;
         bool isHorizontalNegative = horizontalDif < 0;
 
@@ -319,8 +284,16 @@ public struct FlowData
         byte horizontalBits = (byte) math.select(horizontalDif, (math.abs(horizontalDif) - 1) | 0b0000_1000, isHorizontalNegative);
         _flow = (byte)(0 | verticalBits | horizontalBits);
     }
+    public void SetLOS()
+    {
+        _flow = 0b1111_1111;
+    }
     public bool IsLOS()
     {
-        return _flow == 0b0000_0000;
+        return _flow == 0b1111_1111;
+    }
+    public bool IsValid()
+    {
+        return _flow != 0b0000_00000;
     }
 }

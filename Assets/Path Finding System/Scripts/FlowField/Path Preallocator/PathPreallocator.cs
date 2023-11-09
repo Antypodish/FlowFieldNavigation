@@ -11,6 +11,7 @@ internal class PathPreallocator
     NativeIntListFactory _nativeIntListFactory;
     NativeIntQueueFactory _nativeIntQueueFactory;
     ActiveWaveFrontListFactory _activeWaveFrontListFactory;
+    SectorStateTableFactory _sectorStateTableFactory;
     public PathPreallocator(FieldProducer fieldProducer, int sectorTileAmount, int sectorMatrixSectorAmount)
     {
         _porTravDataArrayFactory = new PortalTraversalDataArrayFactory(fieldProducer.GetAllFieldGraphs());
@@ -21,6 +22,7 @@ internal class PathPreallocator
         _nativeIntListFactory = new NativeIntListFactory(0);
         _nativeIntQueueFactory = new NativeIntQueueFactory(0);
         _activeWaveFrontListFactory = new ActiveWaveFrontListFactory(0, 0);
+        _sectorStateTableFactory = new SectorStateTableFactory(0);
     }
     public void CheckForDeallocations()
     {
@@ -42,6 +44,8 @@ internal class PathPreallocator
             SourcePortalIndexList = _nativeIntListFactory.GetNativeIntList(),
             TargetSectorPortalIndexList = _nativeIntListFactory.GetNativeIntList(),
             PortalTraversalFastMarchingQueue = _nativeIntQueueFactory.GetNativeIntQueue(),
+            SectorStateTable = _sectorStateTableFactory.GetSectorStateTable(),
+            
         };
     }
     public void SendPreallocationsBack(ref PreallocationPack preallocations, NativeList<UnsafeList<ActiveWaveFront>> activeWaveFrontList, int offset)
@@ -56,6 +60,7 @@ internal class PathPreallocator
         _nativeIntListFactory.SendNativeIntList(preallocations.AStartTraverseIndexList);
         _nativeIntQueueFactory.SendNativeIntQueue(preallocations.PortalTraversalFastMarchingQueue);
         _activeWaveFrontListFactory.SendActiveWaveFrontList(activeWaveFrontList);
+        _sectorStateTableFactory.SendSectorStateTable(preallocations.SectorStateTable);
     }
     public NativeList<UnsafeList<ActiveWaveFront>> GetActiveWaveFrontListPersistent(int count)
     {
