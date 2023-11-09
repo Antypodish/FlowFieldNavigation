@@ -211,13 +211,6 @@ public class PathProducer
             WindowNodes = pickedFieldGraph.WindowNodes,
             ActiveWaveFrontListArray = path.ActiveWaveFrontList,
         };
-
-        //INT FIELD RESET
-        IntegrationFieldResetJob resetJob = new IntegrationFieldResetJob()
-        {
-            IntegrationField = path.IntegrationField,
-        };
-        resetJob.Schedule().Complete();
         
         //FLOW FIELD
         FlowFieldJob ffJob = new FlowFieldJob()

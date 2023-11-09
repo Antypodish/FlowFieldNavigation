@@ -20,23 +20,28 @@ public class IntegrationFieldFactory
         {
             NativeList<IntegrationTile> field = new NativeList<IntegrationTile>(length, Allocator.Persistent);
             field.Length = length;
+            IntegrationFieldResetJob resetJob = new IntegrationFieldResetJob()
+            {
+                IntegrationField = field,
+            };
+            resetJob.Schedule().Complete();
             return field;
         }
         else
         {
             NativeList<IntegrationTile> field = _integrationFieldContainer[0];
             field.Length = length;
+            IntegrationFieldResetJob resetJob = new IntegrationFieldResetJob()
+            {
+                IntegrationField = field,
+            };
+            resetJob.Schedule().Complete();
             _integrationFieldContainer.RemoveAtSwapBack(0);
             return field;
         }
     }
     public void SendIntegrationField(NativeList<IntegrationTile> integrationField)
     {
-        IntegrationFieldResetJob resetJob = new IntegrationFieldResetJob()
-        {
-            IntegrationField = integrationField,
-        };
-        resetJob.Schedule().Complete();
         _integrationFieldContainer.Add(integrationField);
     }
 }
