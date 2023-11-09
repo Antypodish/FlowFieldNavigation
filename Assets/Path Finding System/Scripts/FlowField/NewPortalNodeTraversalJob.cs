@@ -134,6 +134,9 @@ public struct NewPortalNodeTraversalJob : IJob
             curIndex = curData.NextIndex;
         }
 
+        ActivePortal terminator = new ActivePortal();
+        terminator.SetTerminator();
+        PortalSequence.Add(terminator);
         PortalSequenceBorders.Add(PortalSequence.Length);
     }
     void ResetTraversedIndicies()
@@ -507,7 +510,7 @@ public struct NewPortalNodeTraversalJob : IJob
         {
             int start = PortalSequenceBorders[i];
             int end = PortalSequenceBorders[i + 1];
-            for (int j = start; j < end - 1; j++)
+            for (int j = start; j < end - 2; j++)
             {
                 int portalIndex1 = PortalSequence[j].Index;
                 int portalIndex2 = PortalSequence[j + 1].Index;
@@ -523,7 +526,6 @@ public struct NewPortalNodeTraversalJob : IJob
                 {
                     SectorToPicked[win1Sec1Index] = PickedToSector.Length * sectorTileAmount + 1;
                     PickedToSector.Add(win1Sec1Index);
-
                 }
                 if ((win1Sec2Index == win2Sec1Index || win1Sec2Index == win2Sec2Index) && SectorToPicked[win1Sec2Index] == 0)
                 {
@@ -863,6 +865,16 @@ public struct ActivePortal
 
     public bool IsTargetNode() => Index == -1 && Distance == 0 && NextIndex == -1;
     public bool IsTargetNeighbour() => NextIndex == -1;
+    public void SetTerminator()
+    {
+        Index = -1;
+        Distance = -1;
+        NextIndex = -1;
+    }
+    public bool IsTermintor()
+    {
+        return Index == -1 && Distance == -1 && NextIndex == -1;
+    }
     public static ActivePortal GetTargetNode()
     {
         return new ActivePortal()

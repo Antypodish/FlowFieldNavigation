@@ -126,7 +126,7 @@ public class EditorPathDebugger
         {
             int start = portSeqBorders[i];
             int end = portSeqBorders[i + 1];
-            for(int j = start; j < end - 1; j++)
+            for(int j = start; j < end - 2; j++)
             {
                 Gizmos.color = Color.white;
                 PortalNode firstportalNode = portalNodes[porSeq[j].Index];

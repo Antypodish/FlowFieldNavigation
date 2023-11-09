@@ -34,7 +34,7 @@ public struct NewActivePortalSubmitJob : IJob
             int start = PortalSequenceBorders[i];
             int end = PortalSequenceBorders[i + 1];
             //HANDLE PORTALS EXCEPT TARGET NEIGHBOUR
-            for(int j = start; j < end - 1; j++)
+            for(int j = start; j < end - 2; j++)
             {
                 ActivePortal curPortal = PortalSequence[j];
                 ActivePortal nextPortal = PortalSequence[j + 1];
@@ -71,7 +71,7 @@ public struct NewActivePortalSubmitJob : IJob
             }
             
             //HANDLE TARGET NEIGBOUR POINTING TOWARDS TARGET
-            ActivePortal endPortal = PortalSequence[end - 1];
+            ActivePortal endPortal = PortalSequence[end - 2];
             if (endPortal.IsTargetNeighbour())
             {
                 int endPortalIndex = endPortal.Index;
