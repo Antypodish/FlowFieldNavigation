@@ -26,7 +26,6 @@ public struct AgentRoutineDataCalculationJob : IJobParallelFor
 
         AgentMovementData data = AgentMovementData[index];
 
-
         int2 sector2d = new int2((int)math.floor(data.Position.x / (SectorColAmount * TileSize)), (int)math.floor(data.Position.z / (SectorColAmount * TileSize)));
         int2 general2d = new int2((int)math.floor(data.Position.x / TileSize), (int)math.floor(data.Position.z / TileSize));
         int2 sectorStart2d = sector2d * SectorColAmount;

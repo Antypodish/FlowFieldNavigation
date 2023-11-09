@@ -5,6 +5,7 @@ using Unity.Burst;
 [BurstCompile]
 public struct NewPathToCurPathTransferJob : IJob
 {
+    public NativeArray<AgentData> AgentDataArray;
     public NativeArray<int> AgentCurPathIndicies;
     public NativeArray<int> AgentNewPathIndicies;
     public NativeArray<int> PathSubscribers;
@@ -27,6 +28,10 @@ public struct NewPathToCurPathTransferJob : IJob
                 AgentCurPathIndicies[i] = newPathIndex;
                 AgentNewPathIndicies[i] = -1;
             }
+            AgentData agent = AgentDataArray[i];
+            agent.ClearStatusBit(AgentStatus.HoldGround);
+            agent.SetStatusBit(AgentStatus.Moving);
+            AgentDataArray[i] = agent;
         }
     }
 }

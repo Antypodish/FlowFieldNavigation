@@ -59,13 +59,11 @@ public class AgentRoutineDataProducer
         }
         NormalToHashed = new NativeList<int>(Allocator.Persistent);
     }
-    public AgentRoutineDataCalculationJob CalculateDirections()
+    public void PrepareAgentMovementDataCalculationJob()
     {
         NativeList<AgentData> agentDataList = _agentDataContainer.AgentDataList;
         NativeList<int> agentCurPaths = _agentDataContainer.AgentCurPathIndicies;
         List<Path> producedPaths = _pathfindingManager.PathProducer.ProducedPaths;
-        TransformAccessArray agentTransforms = _agentDataContainer.AgentTransforms;
-
         
         //CLEAR
         AgentMovementDataList.Clear();
@@ -77,13 +75,6 @@ public class AgentRoutineDataProducer
         RoutineResults.Length = agentDataList.Length;
         AgentPositionChangeBuffer.Length = agentDataList.Length;
         NormalToHashed.Length = agentDataList.Length;
-
-        //SET POSITIONS OF AGENT DATA
-        AgentDataSetPositionJob posSetJob = new AgentDataSetPositionJob()
-        {
-            AgentDataArray = agentDataList,
-        };
-        posSetJob.Schedule(agentTransforms).Complete();
 
         //SPATIAL HASHING
         AgentDataSpatialHasherJob spatialHasher = new AgentDataSpatialHasherJob()
@@ -117,8 +108,10 @@ public class AgentRoutineDataProducer
             data.PathId = curPath.Id;
             AgentMovementDataList[hashedIndex] = data;
         }
-        
-        //RETRUN JOB
+    }
+
+    public AgentRoutineDataCalculationJob GetAgentMovementDataCalcJob()
+    {
         return new AgentRoutineDataCalculationJob()
         {
             AgentOutOfFieldStatusList = AgentOutOfFieldStatusList,

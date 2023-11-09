@@ -179,9 +179,9 @@ public class PathProducer
             PathIndex = pathIndex,
         };
     }
-    public PathHandle SchedulePathProductionJob(Path path)
+    public PathHandle SchedulePathProductionJob(int pathIndex)
     {
-        /*
+        Path path = ProducedPaths[pathIndex];
         CostField pickedCostField = _fieldProducer.GetCostFieldWithOffset(path.Offset);
         FieldGraph pickedFieldGraph = _fieldProducer.GetFieldGraphWithOffset(path.Offset);
         NativeArray<int> flowFieldLength = path.FlowFieldLength;
@@ -251,7 +251,7 @@ public class PathProducer
             FieldColAmount = _columnAmount,
             FieldRowAmount = _rowAmount,
         };*/
-        /*
+        
         //FLOW FIELD
         FlowFieldJob ffJob = new FlowFieldJob()
         {
@@ -296,9 +296,8 @@ public class PathProducer
         return new PathHandle()
         {
             Handle = ffHandle,
-            Path = path,
-        };*/
-        return new PathHandle();
+            PathIndex = pathIndex,
+        };
     }
     public void SetPortalAdditionTraversalHandles(NativeList<OutOfFieldStatus> outOfFieldStatus, List<PathHandle> portalAdditionTraversalHandles, JobHandle dependency)
     {/*

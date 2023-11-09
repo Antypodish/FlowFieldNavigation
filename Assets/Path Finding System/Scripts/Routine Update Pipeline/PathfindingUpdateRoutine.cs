@@ -39,8 +39,7 @@ public class PathfindingUpdateRoutine
         _agentAddRequest.Clear();
 
         //SCHEDULE NEW JOBS
-        IslandReconfigurationJob[] islandJobs = _pathfindingManager.FieldProducer.GetIslandReconfigJobs();
-        _scheduler.Schedule(_costEditRequests,  islandJobs, PathRequests);
+        _scheduler.Schedule(_costEditRequests, PathRequests);
 
         PathRequests.Clear();
         _costEditRequests.Clear();
