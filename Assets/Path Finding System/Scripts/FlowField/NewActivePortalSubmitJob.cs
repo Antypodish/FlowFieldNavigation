@@ -54,7 +54,7 @@ public struct NewActivePortalSubmitJob : IJob
                     int pickedSectorIndex = (SectorToPicked[curSec1Index] - 1) / SectorTileAmount;
                     UnsafeList<ActiveWaveFront> activePortals = ActiveWaveFrontListArray[pickedSectorIndex];
                     int activeLocalIndex = GetIndexOfPortalAtSector(PortalNodes[curPortalIndex], curSec1Index);
-                    ActiveWaveFront newActiveWaveFront = new ActiveWaveFront(activeLocalIndex, curPortal.Distance);
+                    ActiveWaveFront newActiveWaveFront = new ActiveWaveFront(activeLocalIndex, curPortal.Distance, j);
                     activePortals.Add(newActiveWaveFront);
                     ActiveWaveFrontListArray[pickedSectorIndex] = activePortals;
 
@@ -64,7 +64,7 @@ public struct NewActivePortalSubmitJob : IJob
                     int pickedSectorIndex = (SectorToPicked[curSec2Index] - 1) / SectorTileAmount;
                     UnsafeList<ActiveWaveFront> activePortals = ActiveWaveFrontListArray[pickedSectorIndex];
                     int activeLocalIndex = GetIndexOfPortalAtSector(PortalNodes[curPortalIndex], curSec2Index);
-                    ActiveWaveFront newActiveWaveFront = new ActiveWaveFront(activeLocalIndex, curPortal.Distance);
+                    ActiveWaveFront newActiveWaveFront = new ActiveWaveFront(activeLocalIndex, curPortal.Distance, j);
                     activePortals.Add(newActiveWaveFront);
                     ActiveWaveFrontListArray[pickedSectorIndex] = activePortals;
                 }
@@ -86,7 +86,7 @@ public struct NewActivePortalSubmitJob : IJob
                     int pickedSectorIndex = (SectorToPicked[endSector1] - 1) / SectorTileAmount;
                     UnsafeList<ActiveWaveFront> activePortals = ActiveWaveFrontListArray[pickedSectorIndex];
                     int activeLocalIndex = GetIndexOfPortalAtSector(PortalNodes[endPortalIndex], endSector1);
-                    ActiveWaveFront newActiveWaveFront = new ActiveWaveFront(activeLocalIndex, endPortal.Distance);
+                    ActiveWaveFront newActiveWaveFront = new ActiveWaveFront(activeLocalIndex, endPortal.Distance, end - 2);
                     if(ActiveWaveFrontExists(newActiveWaveFront, activePortals)) { continue; }
                     activePortals.Add(newActiveWaveFront);
                     ActiveWaveFrontListArray[pickedSectorIndex] = activePortals;
@@ -96,7 +96,7 @@ public struct NewActivePortalSubmitJob : IJob
                     int pickedSectorIndex = (SectorToPicked[endSector2] - 1) / SectorTileAmount;
                     UnsafeList<ActiveWaveFront> activePortals = ActiveWaveFrontListArray[pickedSectorIndex];
                     int activeLocalIndex = GetIndexOfPortalAtSector(PortalNodes[endPortalIndex], endSector2);
-                    ActiveWaveFront newActiveWaveFront = new ActiveWaveFront(activeLocalIndex, endPortal.Distance);
+                    ActiveWaveFront newActiveWaveFront = new ActiveWaveFront(activeLocalIndex, endPortal.Distance, end - 2);
                     if (ActiveWaveFrontExists(newActiveWaveFront, activePortals)) { continue; }
                     activePortals.Add(newActiveWaveFront);
                     ActiveWaveFrontListArray[pickedSectorIndex] = activePortals;
@@ -110,7 +110,7 @@ public struct NewActivePortalSubmitJob : IJob
         int2 targetLocalIndex2d = FlowFieldUtilities.GetLocalIndex(TargetIndex2D, targetSectorStartIndex2d);
         int targetLocalIndex1d = FlowFieldUtilities.To1D(targetLocalIndex2d, SectorColAmount);
         UnsafeList<ActiveWaveFront> targetActivePortals = ActiveWaveFrontListArray[targetPickedSectorIndex];
-        ActiveWaveFront targetFront = new ActiveWaveFront(targetLocalIndex1d, 0f);
+        ActiveWaveFront targetFront = new ActiveWaveFront(targetLocalIndex1d, 0f, -1);
         targetActivePortals.Add(targetFront);
         ActiveWaveFrontListArray[targetPickedSectorIndex] = targetActivePortals;
     }
@@ -146,10 +146,20 @@ public struct ActiveWaveFront
 {
     public int LocalIndex;
     public float Distance;
+    public int PortalSequenceIndex;
 
-    public ActiveWaveFront(int localIndes, float distance)
+    public ActiveWaveFront(int localIndes, float distance, int portalSequenceIndex)
     {
         LocalIndex = localIndes;
         Distance = distance;
+        PortalSequenceIndex = portalSequenceIndex;
+    }
+    public void SetTarget()
+    {
+        PortalSequenceIndex = -1;
+    }
+    public bool IsTarget()
+    {
+        return PortalSequenceIndex == -1;
     }
 }
