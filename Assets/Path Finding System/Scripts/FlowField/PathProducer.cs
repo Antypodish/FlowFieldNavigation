@@ -72,7 +72,7 @@ public class PathProducer
                     SectorStateTable = path.SectorStateTable,
                 };
 
-                _preallocator.SendPreallocationsBack(ref preallocations, path.ActiveWaveFrontList, path.Offset);
+                _preallocator.SendPreallocationsBack(ref preallocations, path.ActiveWaveFrontList, path.FlowField, path.IntegrationField, path.Offset);
             }
         }
         _preallocator.CheckForDeallocations();
@@ -186,10 +186,8 @@ public class PathProducer
         CostField pickedCostField = _fieldProducer.GetCostFieldWithOffset(path.Offset);
         FieldGraph pickedFieldGraph = _fieldProducer.GetFieldGraphWithOffset(path.Offset);
         NativeArray<int> flowFieldLength = path.FlowFieldLength;
-        path.FlowField = new UnsafeList<FlowData>(flowFieldLength[0], Allocator.Persistent, NativeArrayOptions.ClearMemory);
-        path.FlowField.Length = flowFieldLength[0];
-        path.IntegrationField = new NativeList<IntegrationTile>(flowFieldLength[0], Allocator.Persistent);
-        path.IntegrationField.Length = flowFieldLength[0];
+        path.FlowField = _preallocator.GetFlowField(flowFieldLength[0]);
+        path.IntegrationField = _preallocator.GetIntegrationField(flowFieldLength[0]);
         path.ActiveWaveFrontList = _preallocator.GetActiveWaveFrontListPersistent(path.PickedToSector.Length);
         int2 destinationIndex = path.TargetIndex;
         
@@ -220,38 +218,6 @@ public class PathProducer
             IntegrationField = path.IntegrationField,
         };
         resetJob.Schedule().Complete();
-
-        
-
-
-        //LOS
-        /*LOSJob losjob = new LOSJob()
-        {
-            TileSize = _tileSize,
-            FieldRowAmount = _rowAmount,
-            FieldColAmount = _columnAmount,
-            SectorColAmount = _sectorTileAmount,
-            SectorMatrixColAmount = _sectorMatrixColAmount,
-            SectorMatrixRowAmount = _sectorMatrixRowAmount,
-            Costs = pickedCostField.CostsG,
-            Target = destinationIndex,
-            SectorToPicked = path.SectorToPicked,
-            IntegrationField = path.IntegrationField,
-            BlockedWaveFronts = path.IntegrationStartIndicies,
-        };*/
-
-        //INTEGRATION
-        /*IntegrationFieldJob intjob = new IntegrationFieldJob()
-        {
-            StartIndicies = path.IntegrationStartIndicies,
-            Costs = pickedCostField.CostsL,
-            IntegrationField = path.IntegrationField,
-            SectorToPicked = path.SectorToPicked,
-            SectorColAmount = _sectorTileAmount,
-            SectorMatrixColAmount = _sectorMatrixColAmount,
-            FieldColAmount = _columnAmount,
-            FieldRowAmount = _rowAmount,
-        };*/
         
         //FLOW FIELD
         FlowFieldJob ffJob = new FlowFieldJob()

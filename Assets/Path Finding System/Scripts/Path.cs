@@ -33,8 +33,6 @@ public class Path
     {
         NewFlowFieldLength.Dispose();
         IntegrationStartIndicies.Dispose();
-        IntegrationField.Dispose();
-        FlowField.Dispose();
     }
     public void SetState(PathState state)
     {

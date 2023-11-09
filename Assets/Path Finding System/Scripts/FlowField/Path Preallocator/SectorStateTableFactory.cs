@@ -9,11 +9,12 @@ public class SectorStateTableFactory
 
     public SectorStateTableFactory(int preallocationAmount)
     {
-        _pathSectorStateTableContainer = new List<UnsafeList<PathSectorState>>(preallocationAmount);
-        for(int i = 0; i < _pathSectorStateTableContainer.Count; i++)
+        _pathSectorStateTableContainer = new List<UnsafeList<PathSectorState>>();
+        for(int i = 0; i < preallocationAmount; i++)
         {
             UnsafeList<PathSectorState> table = new UnsafeList<PathSectorState>(FlowFieldUtilities.SectorMatrixTileAmount, Allocator.Persistent, NativeArrayOptions.ClearMemory);
             table.Length = FlowFieldUtilities.SectorMatrixTileAmount;
+            _pathSectorStateTableContainer.Add(table);
         }
     }
     public UnsafeList<PathSectorState> GetSectorStateTable()

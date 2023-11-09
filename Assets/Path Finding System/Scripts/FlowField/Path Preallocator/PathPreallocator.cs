@@ -12,6 +12,8 @@ internal class PathPreallocator
     NativeIntQueueFactory _nativeIntQueueFactory;
     ActiveWaveFrontListFactory _activeWaveFrontListFactory;
     SectorStateTableFactory _sectorStateTableFactory;
+    FlowFieldFactory _flowFieldFactory;
+    IntegrationFieldFactory _integrationFieldFactory;
     public PathPreallocator(FieldProducer fieldProducer, int sectorTileAmount, int sectorMatrixSectorAmount)
     {
         _porTravDataArrayFactory = new PortalTraversalDataArrayFactory(fieldProducer.GetAllFieldGraphs());
@@ -23,6 +25,8 @@ internal class PathPreallocator
         _nativeIntQueueFactory = new NativeIntQueueFactory(0);
         _activeWaveFrontListFactory = new ActiveWaveFrontListFactory(0, 0);
         _sectorStateTableFactory = new SectorStateTableFactory(0);
+        _flowFieldFactory = new FlowFieldFactory(0);
+        _integrationFieldFactory = new IntegrationFieldFactory(0);
     }
     public void CheckForDeallocations()
     {
@@ -45,10 +49,9 @@ internal class PathPreallocator
             TargetSectorPortalIndexList = _nativeIntListFactory.GetNativeIntList(),
             PortalTraversalFastMarchingQueue = _nativeIntQueueFactory.GetNativeIntQueue(),
             SectorStateTable = _sectorStateTableFactory.GetSectorStateTable(),
-            
         };
     }
-    public void SendPreallocationsBack(ref PreallocationPack preallocations, NativeList<UnsafeList<ActiveWaveFront>> activeWaveFrontList, int offset)
+    public void SendPreallocationsBack(ref PreallocationPack preallocations, NativeList<UnsafeList<ActiveWaveFront>> activeWaveFrontList, UnsafeList<FlowData> flowField, NativeList<IntegrationTile> integrationField, int offset)
     {
         _porTravDataArrayFactory.SendPortalTraversalDataArray(preallocations.PortalTraversalDataArray, offset);
         _portalSequenceFactory.SendPortalSequences(preallocations.PortalSequence, preallocations.PortalSequenceBorders); 
@@ -61,10 +64,20 @@ internal class PathPreallocator
         _nativeIntQueueFactory.SendNativeIntQueue(preallocations.PortalTraversalFastMarchingQueue);
         _activeWaveFrontListFactory.SendActiveWaveFrontList(activeWaveFrontList);
         _sectorStateTableFactory.SendSectorStateTable(preallocations.SectorStateTable);
+        _flowFieldFactory.SendFlowField(flowField);
+        _integrationFieldFactory.SendIntegrationField(integrationField);
     }
     public NativeList<UnsafeList<ActiveWaveFront>> GetActiveWaveFrontListPersistent(int count)
     {
         return _activeWaveFrontListFactory.GetActiveWaveFrontListPersistent(count);
+    }
+    public UnsafeList<FlowData> GetFlowField(int length)
+    {
+        return _flowFieldFactory.GetFlowfield(length);
+    }
+    public NativeList<IntegrationTile> GetIntegrationField(int length)
+    {
+        return _integrationFieldFactory.GetIntegrationField(length);
     }
     public void AddToActiveWaveFrontList(int count, NativeList<UnsafeList<ActiveWaveFront>> destinationList)
     {
