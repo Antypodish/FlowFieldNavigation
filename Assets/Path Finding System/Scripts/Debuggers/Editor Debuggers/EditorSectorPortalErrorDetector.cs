@@ -45,8 +45,8 @@ public class EditorSectorPortalErrorDetector
                         int2 index1 = new int2(portalNode.Portal1.Index.C, portalNode.Portal1.Index.R);
                         int2 index2 = new int2(portalNode.Portal2.Index.C, portalNode.Portal2.Index.R);
 
-                        bool index1insector = FlowFieldUtilities.GetSectorIndex(index1, FlowFieldUtilities.SectorColAmount).Equals(sector2d);
-                        bool index2insector = FlowFieldUtilities.GetSectorIndex(index2, FlowFieldUtilities.SectorColAmount).Equals(sector2d);
+                        bool index1insector = FlowFieldUtilities.GetSector2D(index1, FlowFieldUtilities.SectorColAmount).Equals(sector2d);
+                        bool index2insector = FlowFieldUtilities.GetSector2D(index2, FlowFieldUtilities.SectorColAmount).Equals(sector2d);
 
                         if(!(index1insector || index2insector))
                         {
@@ -55,8 +55,8 @@ public class EditorSectorPortalErrorDetector
                                 "sector2d: " + sector2d + "\n" +
                                 "portal1 2d: " + index1 + "\n" +
                                 "portal2 2d: " + index2 + "\n" +
-                                "portal1 sector" + FlowFieldUtilities.GetSectorIndex(index1, FlowFieldUtilities.SectorColAmount) + "\n" +
-                                "portal2 sector" + FlowFieldUtilities.GetSectorIndex(index2, FlowFieldUtilities.SectorColAmount);
+                                "portal1 sector" + FlowFieldUtilities.GetSector2D(index1, FlowFieldUtilities.SectorColAmount) + "\n" +
+                                "portal2 sector" + FlowFieldUtilities.GetSector2D(index2, FlowFieldUtilities.SectorColAmount);
 
                             float2 portalPos = (FlowFieldUtilities.IndexToPos(index1, FlowFieldUtilities.TileSize) + FlowFieldUtilities.IndexToPos(index1, FlowFieldUtilities.TileSize)) / 2;
                             float3 portalPos3d = new float3(portalPos.x, 0f, portalPos.y);

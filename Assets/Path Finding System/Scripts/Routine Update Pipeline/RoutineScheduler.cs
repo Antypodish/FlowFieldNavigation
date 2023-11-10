@@ -6,6 +6,7 @@ using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine.Jobs;
+using Unity.Collections.LowLevel.Unsafe;
 
 public class RoutineScheduler
 {
@@ -22,6 +23,8 @@ public class RoutineScheduler
     List<JobHandle> _agentMovementCalculationHandle;
 
     public NativeList<PathRequest> CurrentRequestedPaths;
+    public NativeList<UnsafeList<UnsafeList<FlowData>>> FlowFieldCalculationBuffers;
+    public NativeList<float2> CurrentSourcePositions;
 
     int _costFieldEditRequestCount = 0;
     public RoutineScheduler(PathfindingManager pathfindingManager)
@@ -37,6 +40,8 @@ public class RoutineScheduler
         _costEditHandle = new List<JobHandle>();
         CurrentRequestedPaths = new NativeList<PathRequest>(Allocator.Persistent);
         _islandReconfigHandle = new List<JobHandle>();
+        FlowFieldCalculationBuffers = new NativeList<UnsafeList<UnsafeList<FlowData>>>(Allocator.Persistent);
+        CurrentSourcePositions = new NativeList<float2>(Allocator.Persistent);
     }
 
     public void Schedule(List<CostFieldEditJob[]> costEditJobs, NativeList<PathRequest> newPaths)
@@ -107,7 +112,7 @@ public class RoutineScheduler
                 if (pathHandle.Handle.IsCompleted)
                 {
                     pathHandle.Handle.Complete();
-                    PathHandle pathProdHandle = _pathfindingManager.PathProducer.SchedulePathProductionJob(pathHandle.PathIndex);
+                    PathHandle pathProdHandle = _pathfindingManager.PathProducer.SchedulePathProductionJob(pathHandle.PathIndex, pathHandle.Soruces);
                     _pathProdCalcHandles.Add(pathProdHandle);
                     _porTravHandles.RemoveAtSwapBack(i);
                 }
@@ -154,7 +159,7 @@ public class RoutineScheduler
             {
                 PathHandle pathHandle = _porTravHandles[i];
                 pathHandle.Handle.Complete();
-                PathHandle pathProdHandle = _pathfindingManager.PathProducer.SchedulePathProductionJob(pathHandle.PathIndex);
+                PathHandle pathProdHandle = _pathfindingManager.PathProducer.SchedulePathProductionJob(pathHandle.PathIndex, pathHandle.Soruces);
                 _pathProdCalcHandles.Add(pathProdHandle);
             }
             _porTravHandles.Clear();
@@ -183,6 +188,21 @@ public class RoutineScheduler
             PathSubscribers = _pathfindingManager.PathProducer.ProducedPathSubscribers,
         };
         newPathToCurPathTransferJob.Schedule().Complete();
+        
+        //DISPOSE FLOW FIELD CALCULATION BUFFERS
+        for(int i = 0; i < FlowFieldCalculationBuffers.Length; i++)
+        {
+            UnsafeList<UnsafeList<FlowData>> calculationBuffer = FlowFieldCalculationBuffers[i];
+            for(int j = 0; j < calculationBuffer.Length; j++)
+            {
+                UnsafeList<FlowData> bufferSegment = calculationBuffer[j];
+                bufferSegment.Dispose();
+            }
+            calculationBuffer.Dispose();
+        }
+        FlowFieldCalculationBuffers.Clear();
+        CurrentRequestedPaths.Clear();
+        CurrentSourcePositions.Clear();
 
         SendRoutineResultsToAgents();
     }
@@ -248,13 +268,12 @@ public class RoutineScheduler
         NativeArray<AgentData> agentData = _pathfindingManager.AgentDataContainer.AgentDataList;
         NativeArray<int> newPathIndicies = _pathfindingManager.AgentDataContainer.AgentNewPathIndicies;
         NativeArray<IslandFieldProcessor> islandFieldPorcessor = _pathfindingManager.FieldProducer.GetAllIslandFieldProcessors();
-
         PathfindingTaskOrganizationJob organization = new PathfindingTaskOrganizationJob()
         {
             TileSize = FlowFieldUtilities.TileSize,
             AgentData = agentData,
             AgentNewPathIndicies = newPathIndicies,
-            PathRequestSources = new NativeList<float2>(Allocator.Persistent),
+            PathRequestSources = CurrentSourcePositions,
             IslandFieldProcessors = islandFieldPorcessor,
             NewPaths = CurrentRequestedPaths,
         };
@@ -268,6 +287,7 @@ public class RoutineScheduler
             NativeSlice<float2> pathSources = new NativeSlice<float2>(organization.PathRequestSources, currentpath.SourcePositionStartIndex, currentpath.AgentCount);
             PortalTraversalJobPack porTravJobPack = _pathfindingManager.PathProducer.ConstructPath(pathSources, currentpath);
             PathHandle porTravHandle = SchedulePortalTraversal(porTravJobPack);
+            porTravHandle.Soruces = pathSources;
             _porTravHandles.Add(porTravHandle);
             currentpath.PathIndex = porTravJobPack.PathIndex;
             CurrentRequestedPaths[i] = currentpath;

@@ -10,6 +10,7 @@ using Unity.VisualScripting;
 using Unity.VisualScripting.FullSerializer;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UIElements;
 
 public class PathProducer
@@ -176,11 +177,12 @@ public class PathProducer
 
         return new PortalTraversalJobPack
         {
+            
             PortalTravJob = traversalJob,
             PathIndex = pathIndex,
         };
     }
-    public PathHandle SchedulePathProductionJob(int pathIndex)
+    public PathHandle SchedulePathProductionJob(int pathIndex, NativeSlice<float2> sources)
     {
         Path path = ProducedPaths[pathIndex];
         CostField pickedCostField = _fieldProducer.GetCostFieldWithOffset(path.Offset);
@@ -202,6 +204,7 @@ public class PathProducer
             FieldColAmount = FlowFieldUtilities.FieldColAmount,
             TargetIndex2D = destinationIndex,
 
+            PortalEdges = pickedFieldGraph.PorToPorPtrs,
             SectorToPicked = path.SectorToPicked,
             PickedToSectors = path.PickedToSector,
             PortalSequence = path.PortalSequence,
@@ -211,7 +214,8 @@ public class PathProducer
             WindowNodes = pickedFieldGraph.WindowNodes,
             ActiveWaveFrontListArray = path.ActiveWaveFrontList,
         };
-        
+        submitJob.Schedule().Complete();
+
         //FLOW FIELD
         FlowFieldJob ffJob = new FlowFieldJob()
         {
@@ -229,8 +233,7 @@ public class PathProducer
         };
 
         //SCHEDULING
-        JobHandle submitHandle = submitJob.Schedule();
-        submitHandle.Complete();
+        
         NativeList<JobHandle> intFieldHandles = new NativeList<JobHandle>(path.PickedToSector.Length, Allocator.Temp);
         for (int i = 0; i < path.PickedToSector.Length; i++)
         {
@@ -248,7 +251,7 @@ public class PathProducer
                 FieldColAmount = _columnAmount,
                 FieldRowAmount = _rowAmount,
             };
-            JobHandle intHandle = intJob.Schedule(submitHandle);
+            JobHandle intHandle = intJob.Schedule();
             intFieldHandles.Add(intHandle);
         }
 

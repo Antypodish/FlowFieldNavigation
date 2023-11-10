@@ -122,16 +122,24 @@ public class EditorPathDebugger
         UnsafeList<PortalNode> portalNodes = fg.PortalNodes;
         NativeList<ActivePortal> porSeq = producedPath.PortalSequence;
         NativeList<int> portSeqBorders = producedPath.PortalSequenceBorders;
-        for(int i = 0; i < portSeqBorders.Length - 1; i++)
+        Gizmos.color = Color.white;
+
+        if (porSeq.Length == 0) { return; }
+
+        for (int i = 0; i < portSeqBorders.Length - 1; i++)
         {
             int start = portSeqBorders[i];
-            int end = portSeqBorders[i + 1];
-            for(int j = start; j < end - 2; j++)
+            int curNodeIndex = start;
+            int nextNodeIndex = porSeq[start].NextIndex;
+            while (nextNodeIndex != -1)
             {
-                Gizmos.color = Color.white;
-                PortalNode firstportalNode = portalNodes[porSeq[j].Index];
-                PortalNode secondportalNode = portalNodes[porSeq[j + 1].Index];
-                if(firstportalNode.Portal1.Index.R == 0) { continue; }
+                int curPortalIndex = porSeq[curNodeIndex].Index;
+                int nextPortalIndex = porSeq[nextNodeIndex].Index;
+
+                //DRAW
+                PortalNode firstportalNode = portalNodes[curPortalIndex];
+                PortalNode secondportalNode = portalNodes[nextPortalIndex];
+                if (firstportalNode.Portal1.Index.R == 0) { continue; }
                 Vector3 secondPorPos = secondportalNode.GetPosition(_tileSize);
                 Vector3 firstPorPos = firstportalNode.GetPosition(_tileSize);
 
@@ -140,7 +148,7 @@ public class EditorPathDebugger
                 relativeSecond2d = relativeSecond2d.normalized;
                 Vector2 perpLeft = new Vector2(-relativeSecond2d.y, relativeSecond2d.x);
                 Vector2 perpRight = new Vector2(relativeSecond2d.y, -relativeSecond2d.x);
-                
+
                 Vector2 rightArrow = (perpRight - relativeSecond2d).normalized;
                 Vector2 leftArrow = (perpLeft - relativeSecond2d).normalized;
 
@@ -149,6 +157,9 @@ public class EditorPathDebugger
                 Gizmos.DrawLine(firstPorPos, secondPorPos);
                 Gizmos.DrawLine(secondPorPos, secondPorPos + rightArrow3);
                 Gizmos.DrawLine(secondPorPos, secondPorPos + leftArrow3);
+
+                curNodeIndex = nextNodeIndex;
+                nextNodeIndex = porSeq[nextNodeIndex].NextIndex;
             }
         }
     }

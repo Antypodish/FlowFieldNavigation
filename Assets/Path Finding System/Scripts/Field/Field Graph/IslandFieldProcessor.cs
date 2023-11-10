@@ -16,7 +16,7 @@ public struct IslandFieldProcessor
     public int GetIsland(float2 pos)
     {
         int2 index2d = FlowFieldUtilities.PosTo2D(pos, TileSize);
-        int2 sector2d = FlowFieldUtilities.GetSectorIndex(index2d, SectorColAmount);
+        int2 sector2d = FlowFieldUtilities.GetSector2D(index2d, SectorColAmount);
         int sector1d = FlowFieldUtilities.To1D(sector2d, SectorMatrixColAmount);
         SectorNode sector = SectorNodes[sector1d];
 

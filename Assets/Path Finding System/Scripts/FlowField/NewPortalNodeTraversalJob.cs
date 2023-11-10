@@ -1,4 +1,5 @@
-﻿using Unity.Burst;
+﻿using System;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
@@ -97,47 +98,58 @@ public struct NewPortalNodeTraversalJob : IJob
     }
     void PickPortalSequenceFromFastMarching(int sourcePortal)
     {
+        //NOTE: NextIndex of portalTraversalData is used as:
+        //1. NextIndex in portalTraversalDataArray
+        //2. PortalSequence of corresponding portalTraversalData
+        //For memory optimization reasons :/
+
         PortalTraversalData sourceData = PortalTraversalDataArray[sourcePortal];
         if (sourceData.HasMark(PortalTraversalMark.FastMarchPicked)) { return; }
         if(sourceData.NextIndex == -1) { return; }
 
+        int nextDataIndex = sourceData.NextIndex;
         sourceData.Mark |= PortalTraversalMark.FastMarchPicked;
+        sourceData.NextIndex = PortalSequence.Length;
         PortalTraversalDataArray[sourcePortal] = sourceData;
 
         ActivePortal sourceActivePortal = new ActivePortal()
         {
             Index = sourcePortal,
             Distance = sourceData.DistanceFromTarget,
-            NextIndex = sourceData.NextIndex,
+            NextIndex = PortalSequence.Length + 1,
         };
         PortalSequence.Add(sourceActivePortal);
 
-        int curIndex = sourceData.NextIndex;
+        int curIndex = nextDataIndex;
 
         while(curIndex != -1)
         {
             PortalTraversalData curData = PortalTraversalDataArray[curIndex];
-
+            if (curData.HasMark(PortalTraversalMark.FastMarchPicked))
+            {
+                ActivePortal previousNode = PortalSequence[PortalSequence.Length - 1];
+                previousNode.NextIndex = curData.NextIndex;
+                PortalSequence[PortalSequence.Length - 1] = previousNode;
+                break;
+            }
             //PUSH ACTIVE PORTAL
             ActivePortal curActivePortal = new ActivePortal()
             {
                 Index = curIndex,
                 Distance = curData.DistanceFromTarget,
-                NextIndex = curData.NextIndex,
+                NextIndex = math.select(PortalSequence.Length + 1, -1 , curData.NextIndex == -1),
             };
             PortalSequence.Add(curActivePortal);
 
             //MARK OR STOP
-            if (curData.HasMark(PortalTraversalMark.FastMarchPicked)) { break; }
+            int curDataIndex = curData.NextIndex;
             curData.Mark |= PortalTraversalMark.FastMarchPicked;
+            curData.NextIndex = PortalSequence.Length - 1;
             PortalTraversalDataArray[curIndex] = curData;
 
-            curIndex = curData.NextIndex;
+            curIndex = curDataIndex;
         }
 
-        ActivePortal terminator = new ActivePortal();
-        terminator.SetTerminator();
-        PortalSequence.Add(terminator);
         PortalSequenceBorders.Add(PortalSequence.Length);
     }
     void ResetTraversedIndicies()
@@ -507,43 +519,53 @@ public struct NewPortalNodeTraversalJob : IJob
     }
     void PickSectorsFromPortalSequence()
     {
-        int sectorTileAmount = SectorColAmount * SectorColAmount;
         for (int i = 0; i < PortalSequenceBorders.Length - 1; i++)
         {
             int start = PortalSequenceBorders[i];
             int end = PortalSequenceBorders[i + 1];
-            for (int j = start; j < end - 2; j++)
+            for (int j = start; j < end - 1; j++)
             {
                 int portalIndex1 = PortalSequence[j].Index;
                 int portalIndex2 = PortalSequence[j + 1].Index;
-                int windowIndex1 = PortalNodes[portalIndex1].WinPtr;
-                int windowIndex2 = PortalNodes[portalIndex2].WinPtr;
-                WindowNode winNode1 = WindowNodes[windowIndex1];
-                WindowNode winNode2 = WindowNodes[windowIndex2];
-                int win1Sec1Index = WinToSecPtrs[winNode1.WinToSecPtr];
-                int win1Sec2Index = WinToSecPtrs[winNode1.WinToSecPtr + 1];
-                int win2Sec1Index = WinToSecPtrs[winNode2.WinToSecPtr];
-                int win2Sec2Index = WinToSecPtrs[winNode2.WinToSecPtr + 1];
-                if ((win1Sec1Index == win2Sec1Index || win1Sec1Index == win2Sec2Index) && SectorToPicked[win1Sec1Index] == 0)
-                {
-                    SectorToPicked[win1Sec1Index] = PickedToSector.Length * sectorTileAmount + 1;
-                    PickedToSector.Add(win1Sec1Index);
-                    SectorStateTable[win1Sec1Index] = PathSectorState.Included;
-                }
-                if ((win1Sec2Index == win2Sec1Index || win1Sec2Index == win2Sec2Index) && SectorToPicked[win1Sec2Index] == 0)
-                {
-                    SectorToPicked[win1Sec2Index] = PickedToSector.Length * sectorTileAmount + 1;
-                    PickedToSector.Add(win1Sec2Index);
-                    SectorStateTable[win1Sec2Index] = PathSectorState.Included;
-                }
+                PickSectorsBetweenportals(portalIndex1, portalIndex2);
+            }
+            ActivePortal lastActivePortalInBorder = PortalSequence[end - 1];
+            if(lastActivePortalInBorder.NextIndex != -1)
+            {
+                int portalIndex1 = lastActivePortalInBorder.Index;
+                int portalIndex2 = PortalSequence[lastActivePortalInBorder.NextIndex].Index;
+                PickSectorsBetweenportals(portalIndex1, portalIndex2);
             }
 
         }
-        
+    }
+    void PickSectorsBetweenportals(int portalIndex1, int portalIndex2)
+    {
+        int sectorTileAmount = SectorColAmount * SectorColAmount;
+        int windowIndex1 = PortalNodes[portalIndex1].WinPtr;
+        int windowIndex2 = PortalNodes[portalIndex2].WinPtr;
+        WindowNode winNode1 = WindowNodes[windowIndex1];
+        WindowNode winNode2 = WindowNodes[windowIndex2];
+        int win1Sec1Index = WinToSecPtrs[winNode1.WinToSecPtr];
+        int win1Sec2Index = WinToSecPtrs[winNode1.WinToSecPtr + 1];
+        int win2Sec1Index = WinToSecPtrs[winNode2.WinToSecPtr];
+        int win2Sec2Index = WinToSecPtrs[winNode2.WinToSecPtr + 1];
+        if ((win1Sec1Index == win2Sec1Index || win1Sec1Index == win2Sec2Index) && SectorToPicked[win1Sec1Index] == 0)
+        {
+            SectorToPicked[win1Sec1Index] = PickedToSector.Length * sectorTileAmount + 1;
+            PickedToSector.Add(win1Sec1Index);
+            SectorStateTable[win1Sec1Index] = PathSectorState.Included;
+        }
+        if ((win1Sec2Index == win2Sec1Index || win1Sec2Index == win2Sec2Index) && SectorToPicked[win1Sec2Index] == 0)
+        {
+            SectorToPicked[win1Sec2Index] = PickedToSector.Length * sectorTileAmount + 1;
+            PickedToSector.Add(win1Sec2Index);
+            SectorStateTable[win1Sec2Index] = PathSectorState.Included;
+        }
     }
     public int GetIsland(int2 general2d)
     {
-        int2 sector2d = FlowFieldUtilities.GetSectorIndex(general2d, SectorColAmount);
+        int2 sector2d = FlowFieldUtilities.GetSector2D(general2d, SectorColAmount);
         int sector1d = FlowFieldUtilities.To1D(sector2d, SectorMatrixColAmount);
         SectorNode sector = SectorNodes[sector1d];
 
@@ -889,4 +911,45 @@ public struct ActivePortal
             NextIndex = -1
         };
     }
+}
+[BurstCompile]
+public struct PortalTraversalData
+{
+    public int OriginIndex;
+    public int NextIndex;
+    public float GCost;
+    public float HCost;
+    public float FCost;
+    public float DistanceFromTarget;
+    public PortalTraversalMark Mark;
+
+    public bool HasMark(PortalTraversalMark mark)
+    {
+        return (Mark & mark) == mark;
+    }
+}
+public struct DijkstraTile
+{
+    public byte Cost;
+    public float IntegratedCost;
+    public bool IsAvailable;
+
+    public DijkstraTile(byte cost, float integratedCost, bool isAvailable)
+    {
+        Cost = cost;
+        IntegratedCost = integratedCost;
+        IsAvailable = isAvailable;
+    }
+}
+[Flags]
+public enum PortalTraversalMark : byte
+{
+    Added = 1,
+    Extracted = 2,
+    AStarPicked = 4,
+    FastMarchTraversed = 8,
+    FastMarchPicked = 16,
+    TargetNeighbour = 32,
+    Reduced = 64,
+    Source = 128,
 }
