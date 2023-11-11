@@ -78,7 +78,6 @@ public struct NewPortalNodeTraversalJob : IJob
         UnsafeHeap<int> walkerHeap = new UnsafeHeap<int>(10, Allocator.Temp);
         
         UnsafeList<int> allSorucePortalIndicies = GetSourcePortalIndicies();
-
         for (int i = 0; i < allSorucePortalIndicies.Length; i++)
         {
             int stoppedIndex = RunReductionAStar(allSorucePortalIndicies[i], walkerHeap);
@@ -105,7 +104,6 @@ public struct NewPortalNodeTraversalJob : IJob
 
         PortalTraversalData sourceData = PortalTraversalDataArray[sourcePortal];
         if (sourceData.HasMark(PortalTraversalMark.FastMarchPicked)) { return; }
-        if(sourceData.NextIndex == -1) { return; }
 
         int nextDataIndex = sourceData.NextIndex;
         sourceData.Mark |= PortalTraversalMark.FastMarchPicked;
@@ -118,8 +116,18 @@ public struct NewPortalNodeTraversalJob : IJob
             Distance = sourceData.DistanceFromTarget,
             NextIndex = PortalSequence.Length + 1,
         };
-        PortalSequence.Add(sourceActivePortal);
+        
+        //IF SOURCE IS TARGET NEIGHBOUR
+        if (nextDataIndex == -1)
+        {
+            sourceActivePortal.NextIndex = -1;
+            PortalSequence.Add(sourceActivePortal);
+            PortalSequenceBorders.Add(PortalSequence.Length);
+            return;
+        }
 
+        //IF SOURCE IS NOT TARGET NEIGHBOUR
+        PortalSequence.Add(sourceActivePortal);
         int curIndex = nextDataIndex;
 
         while(curIndex != -1)
@@ -892,16 +900,6 @@ public struct ActivePortal
 
     public bool IsTargetNode() => Index == -1 && Distance == 0 && NextIndex == -1;
     public bool IsTargetNeighbour() => NextIndex == -1;
-    public void SetTerminator()
-    {
-        Index = -1;
-        Distance = -1;
-        NextIndex = -1;
-    }
-    public bool IsTermintor()
-    {
-        return Index == -1 && Distance == -1 && NextIndex == -1;
-    }
     public static ActivePortal GetTargetNode()
     {
         return new ActivePortal()

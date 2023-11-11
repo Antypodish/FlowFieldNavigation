@@ -19,6 +19,7 @@ public class PathProducer
     public NativeList<int> ProducedPathSubscribers;
     Stack<int> _removedPathIndicies;
     NativeList<PathData> _pathDataList;
+    NativeList<UnsafeList<UnsafeList<FlowData>>> _flowFieldCalculationBuffers;
 
     FieldProducer _fieldProducer;
     PathPreallocator _preallocator;
@@ -43,6 +44,7 @@ public class PathProducer
         _removedPathIndicies = new Stack<int>();
         _pathDataList = new NativeList<PathData>(Allocator.Persistent);
         ProducedPathSubscribers = new NativeList<int>(Allocator.Persistent);
+        _flowFieldCalculationBuffers = new NativeList<UnsafeList<UnsafeList<FlowData>>>(Allocator.Persistent);
     }
     public void Update()
     {
@@ -78,6 +80,20 @@ public class PathProducer
         }
         _preallocator.CheckForDeallocations();
     }
+    public void DisposeFlowFieldCalculationBuffers()
+    {
+        for (int i = 0; i < _flowFieldCalculationBuffers.Length; i++)
+        {
+            UnsafeList<UnsafeList<FlowData>> calculationBuffer = _flowFieldCalculationBuffers[i];
+            for (int j = 0; j < calculationBuffer.Length; j++)
+            {
+                UnsafeList<FlowData> bufferSegment = calculationBuffer[j];
+                bufferSegment.Dispose();
+            }
+            calculationBuffer.Dispose();
+        }
+        _flowFieldCalculationBuffers.Clear();
+    }
     public NativeList<PathData> GetPathData()
     {
         _pathDataList.Length = ProducedPaths.Count;
@@ -99,7 +115,6 @@ public class PathProducer
     public PortalTraversalJobPack ConstructPath(NativeSlice<float2> positions, PathRequest request)
     {
         int2 destinationIndex = new int2(Mathf.FloorToInt(request.Destination.x / _tileSize), Mathf.FloorToInt(request.Destination.y / _tileSize));
-        int destionationIndexFlat = destinationIndex.y * _columnAmount + destinationIndex.x;
         CostField pickedCostField = _fieldProducer.GetCostFieldWithOffset(request.MaxOffset);
         FieldGraph pickedFieldGraph = _fieldProducer.GetFieldGraphWithOffset(request.MaxOffset);
 
@@ -216,6 +231,47 @@ public class PathProducer
         };
         submitJob.Schedule().Complete();
 
+        NativeList<int> sectorFlowStartIndiciesToCalculateIntegration = new NativeList<int>(Allocator.TempJob);
+        NativeList<int> sectorFlowStartIndiciesToCalculateFlow = new NativeList<int>(Allocator.TempJob);
+        SourceSectorCalculationJob sectorCalcJob = new SourceSectorCalculationJob()
+        {
+            SectorColAmount = FlowFieldUtilities.SectorColAmount,
+            SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+            SectorSize = FlowFieldUtilities.SectorColAmount * FlowFieldUtilities.TileSize,
+            SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
+            TargetIndex = path.TargetIndex,
+            SectorStateTable = path.SectorStateTable,
+            SectorToPickedTable = path.SectorToPicked,
+            Sources = sources,
+            PortalSequence = path.PortalSequence,
+            ActiveWaveFrontListArray = path.ActiveWaveFrontList,
+            PortalNodes = pickedFieldGraph.PortalNodes,
+            SectorFlowStartIndiciesToCalculateIntegration = sectorFlowStartIndiciesToCalculateIntegration,
+            SectorFlowStartIndiciesToCalculateFlow = sectorFlowStartIndiciesToCalculateFlow,
+        };
+        sectorCalcJob.Schedule().Complete();
+
+        NativeList<JobHandle> intFieldHandles = new NativeList<JobHandle>(path.PickedToSector.Length, Allocator.Temp);
+        for (int i = 0; i < sectorFlowStartIndiciesToCalculateIntegration.Length; i++)
+        {
+            int sectorStart = sectorFlowStartIndiciesToCalculateIntegration[i];
+            int sectorIndex = path.PickedToSector[(sectorStart - 1) / FlowFieldUtilities.SectorTileAmount];
+            NativeSlice<IntegrationTile> integrationSector = new NativeSlice<IntegrationTile>(path.IntegrationField, sectorStart, FlowFieldUtilities.SectorTileAmount);
+            NewIntegrationFieldJob intJob = new NewIntegrationFieldJob()
+            {
+                SectorIndex = sectorIndex,
+                StartIndicies = submitJob.ActiveWaveFrontListArray[(sectorStart - 1) / FlowFieldUtilities.SectorTileAmount],
+                Costs = pickedCostField.CostsL[sectorIndex],
+                IntegrationField = integrationSector,
+                SectorToPicked = path.SectorToPicked,
+                SectorColAmount = _sectorTileAmount,
+                SectorMatrixColAmount = _sectorMatrixColAmount,
+                FieldColAmount = _columnAmount,
+                FieldRowAmount = _rowAmount,
+            };
+            JobHandle intHandle = intJob.Schedule();
+            intFieldHandles.Add(intHandle);
+        }
         //FLOW FIELD
         FlowFieldJob ffJob = new FlowFieldJob()
         {
@@ -231,29 +287,6 @@ public class PathProducer
             FlowField = path.FlowField,
             IntegrationField = path.IntegrationField,
         };
-
-        //SCHEDULING
-        
-        NativeList<JobHandle> intFieldHandles = new NativeList<JobHandle>(path.PickedToSector.Length, Allocator.Temp);
-        for (int i = 0; i < path.PickedToSector.Length; i++)
-        {
-            int sectorIndex = path.PickedToSector[i];
-            NativeSlice<IntegrationTile> integrationSector = new NativeSlice<IntegrationTile>(path.IntegrationField, i * _sectorTileAmount  * _sectorTileAmount + 1, _sectorTileAmount * _sectorTileAmount);
-            NewIntegrationFieldJob intJob = new NewIntegrationFieldJob()
-            {
-                SectorIndex = sectorIndex,
-                StartIndicies = submitJob.ActiveWaveFrontListArray[i],
-                Costs = pickedCostField.CostsL[sectorIndex],
-                IntegrationField = integrationSector,
-                SectorToPicked = path.SectorToPicked,
-                SectorColAmount = _sectorTileAmount,
-                SectorMatrixColAmount = _sectorMatrixColAmount,
-                FieldColAmount = _columnAmount,
-                FieldRowAmount = _rowAmount,
-            };
-            JobHandle intHandle = intJob.Schedule();
-            intFieldHandles.Add(intHandle);
-        }
 
         JobHandle ffHandle = ffJob.Schedule(ffJob.FlowField.Length, 256, JobHandle.CombineDependencies(intFieldHandles));
         return new PathHandle()

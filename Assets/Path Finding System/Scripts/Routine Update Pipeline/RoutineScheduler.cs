@@ -23,7 +23,6 @@ public class RoutineScheduler
     List<JobHandle> _agentMovementCalculationHandle;
 
     public NativeList<PathRequest> CurrentRequestedPaths;
-    public NativeList<UnsafeList<UnsafeList<FlowData>>> FlowFieldCalculationBuffers;
     public NativeList<float2> CurrentSourcePositions;
 
     int _costFieldEditRequestCount = 0;
@@ -40,7 +39,6 @@ public class RoutineScheduler
         _costEditHandle = new List<JobHandle>();
         CurrentRequestedPaths = new NativeList<PathRequest>(Allocator.Persistent);
         _islandReconfigHandle = new List<JobHandle>();
-        FlowFieldCalculationBuffers = new NativeList<UnsafeList<UnsafeList<FlowData>>>(Allocator.Persistent);
         CurrentSourcePositions = new NativeList<float2>(Allocator.Persistent);
     }
 
@@ -188,19 +186,6 @@ public class RoutineScheduler
             PathSubscribers = _pathfindingManager.PathProducer.ProducedPathSubscribers,
         };
         newPathToCurPathTransferJob.Schedule().Complete();
-        
-        //DISPOSE FLOW FIELD CALCULATION BUFFERS
-        for(int i = 0; i < FlowFieldCalculationBuffers.Length; i++)
-        {
-            UnsafeList<UnsafeList<FlowData>> calculationBuffer = FlowFieldCalculationBuffers[i];
-            for(int j = 0; j < calculationBuffer.Length; j++)
-            {
-                UnsafeList<FlowData> bufferSegment = calculationBuffer[j];
-                bufferSegment.Dispose();
-            }
-            calculationBuffer.Dispose();
-        }
-        FlowFieldCalculationBuffers.Clear();
         CurrentRequestedPaths.Clear();
         CurrentSourcePositions.Clear();
 
