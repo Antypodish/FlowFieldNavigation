@@ -220,28 +220,35 @@ public class RoutineScheduler
     }
     void RunPathfindingDataOrganization()
     {
-        if (CurrentRequestedPaths.IsEmpty) { return; }
-
         NativeArray<AgentData> agentData = _pathfindingManager.AgentDataContainer.AgentDataList;
         NativeArray<int> newPathIndicies = _pathfindingManager.AgentDataContainer.AgentNewPathIndicies;
+        NativeArray<int> curPathIndicies = _pathfindingManager.AgentDataContainer.AgentCurPathIndicies;
         NativeArray<IslandFieldProcessor> islandFieldPorcessor = _pathfindingManager.FieldProducer.GetAllIslandFieldProcessors();
+        NativeArray<PathData> currentPathData = _pathfindingManager.PathProducer.GetCurrentPathData();
+
         PathfindingTaskOrganizationJob organization = new PathfindingTaskOrganizationJob()
         {
             TileSize = FlowFieldUtilities.TileSize,
+            SectorColAmount = FlowFieldUtilities.SectorColAmount,
+            SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
             AgentData = agentData,
             AgentNewPathIndicies = newPathIndicies,
-            PathRequestSources = CurrentSourcePositions,
+            AgentCurrentPathIndicies = curPathIndicies,
+            PathfindingSources = CurrentSourcePositions,
             IslandFieldProcessors = islandFieldPorcessor,
             NewPaths = CurrentRequestedPaths,
+            CurrentPaths = currentPathData,
+            PathSubscribers = _pathfindingManager.PathProducer.ProducedPathSubscribers,
         };
         organization.Schedule().Complete();
+        islandFieldPorcessor.Dispose();
 
         //SET PATH INDICIES OF REQUESTED PATHS
         for(int i = 0; i < CurrentRequestedPaths.Length; i++)
         {
             PathRequest currentpath = CurrentRequestedPaths[i];
             if (!currentpath.IsValid()) { continue; }
-            NativeSlice<float2> pathSources = new NativeSlice<float2>(organization.PathRequestSources, currentpath.SourcePositionStartIndex, currentpath.AgentCount);
+            NativeSlice<float2> pathSources = new NativeSlice<float2>(organization.PathfindingSources, currentpath.SourcePositionStartIndex, currentpath.AgentCount);
             PortalTraversalJobPack porTravJobPack = _pathfindingManager.PathProducer.ConstructPath(pathSources, currentpath);
             PathHandle porTravHandle = SchedulePortalTraversal(porTravJobPack);
             porTravHandle.Soruces = pathSources;
@@ -256,7 +263,18 @@ public class RoutineScheduler
             AgentNewPathIndicies = newPathIndicies,
             CurrentRequestedPaths = CurrentRequestedPaths,
         };
-        newpathindiciesSetJob.Schedule().Complete();
+        JobHandle newPathIndiciesHandle = newpathindiciesSetJob.Schedule();
+
+        for(int i = 0; i < currentPathData.Length; i++)
+        {
+            PathData currentPath = currentPathData[i];
+            if(currentPath.Task == 0) { continue; }
+            NativeSlice<float2> sources = new NativeSlice<float2>(organization.PathfindingSources, currentPath.FlowRequestSourceStart, currentPath.FlowRequestSourceCount);
+            _pathfindingManager.PathProducer.RequestFlow(i, sources);
+        }
+
+
+        newPathIndiciesHandle.Complete();
     }
     void ScheduleAgentMovementJobs(JobHandle dependency)
     {

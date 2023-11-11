@@ -16,7 +16,6 @@ public struct NewPortalNodeTraversalJob : IJob
     public int SectorColAmount;
     public int SectorMatrixColAmount;
 
-    public NativeSlice<float2> SourcePositions;
     public NativeArray<PortalTraversalData> PortalTraversalDataArray;
     public NativeList<ActivePortal> PortalSequence;
 
@@ -27,6 +26,7 @@ public struct NewPortalNodeTraversalJob : IJob
     public NativeArray<DijkstraTile> TargetSectorCosts;
     public NativeArray<int> FlowFieldLength;
 
+    [ReadOnly] public NativeSlice<float2> SourcePositions;
     [ReadOnly] public UnsafeList<SectorNode> SectorNodes;
     [ReadOnly] public NativeArray<int> SecToWinPtrs;
     [ReadOnly] public NativeArray<WindowNode> WindowNodes;
@@ -213,7 +213,7 @@ public struct NewPortalNodeTraversalJob : IJob
             if (SectorToPicked[sourceSectorIndexFlat] != 0) { continue; }
             SectorToPicked[sourceSectorIndexFlat] = PickedToSector.Length * sectorTileAmount + 1;
             PickedToSector.Add(sourceSectorIndexFlat);
-            SectorStateTable[sourceSectorIndexFlat] = PathSectorState.Included;
+            SectorStateTable[sourceSectorIndexFlat] |= PathSectorState.Included;
             //ADD SOURCE SECTOR TO THE PICKED SECTORS
             SetSectorPortalIndicies(sourceSectorIndexFlat, SourcePortalIndexList);
 
@@ -561,13 +561,13 @@ public struct NewPortalNodeTraversalJob : IJob
         {
             SectorToPicked[win1Sec1Index] = PickedToSector.Length * sectorTileAmount + 1;
             PickedToSector.Add(win1Sec1Index);
-            SectorStateTable[win1Sec1Index] = PathSectorState.Included;
+            SectorStateTable[win1Sec1Index] |= PathSectorState.Included;
         }
         if ((win1Sec2Index == win2Sec1Index || win1Sec2Index == win2Sec2Index) && SectorToPicked[win1Sec2Index] == 0)
         {
             SectorToPicked[win1Sec2Index] = PickedToSector.Length * sectorTileAmount + 1;
             PickedToSector.Add(win1Sec2Index);
-            SectorStateTable[win1Sec2Index] = PathSectorState.Included;
+            SectorStateTable[win1Sec2Index] |= PathSectorState.Included;
         }
     }
     public int GetIsland(int2 general2d)
@@ -583,7 +583,7 @@ public struct NewPortalNodeTraversalJob : IJob
         else if (sector.IsIslandField)
         {
             int2 sectorStart = FlowFieldUtilities.GetSectorStartIndex(sector2d, SectorColAmount);
-            int2 local2d = FlowFieldUtilities.GetLocalIndex(general2d, sectorStart);
+            int2 local2d = FlowFieldUtilities.GetLocal2D(general2d, sectorStart);
             int local1d = FlowFieldUtilities.To1D(local2d, SectorColAmount);
             int island = IslandFields[sector1d][local1d];
             switch (island)
@@ -605,7 +605,7 @@ public struct NewPortalNodeTraversalJob : IJob
         {
             SectorToPicked[_targetSectorIndex1d] = PickedToSector.Length * sectorTileAmount + 1;
             PickedToSector.Add(_targetSectorIndex1d);
-            SectorStateTable[_targetSectorIndex1d] = PathSectorState.Included;
+            SectorStateTable[_targetSectorIndex1d] |= PathSectorState.Included;
         }
         FlowFieldLength[0] = PickedToSector.Length * sectorTileAmount + 1;
     }

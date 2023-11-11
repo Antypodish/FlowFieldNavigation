@@ -27,7 +27,7 @@ public struct IslandFieldProcessor
         else if (sector.IsIslandField)
         {
             int2 sectorStart = FlowFieldUtilities.GetSectorStartIndex(sector2d, SectorColAmount);
-            int2 local2d = FlowFieldUtilities.GetLocalIndex(index2d, sectorStart);
+            int2 local2d = FlowFieldUtilities.GetLocal2D(index2d, sectorStart);
             int local1d = FlowFieldUtilities.To1D(local2d, SectorColAmount);
             int island = IslandFields[sector1d][local1d];
             switch (island)

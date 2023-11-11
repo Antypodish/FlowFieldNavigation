@@ -64,9 +64,14 @@ public static class FlowFieldUtilities
         int2 sector2d = index / sectorColAmount;
         return sector2d.y * sectorMatrixColAmount + sector2d.x;
     }
-    public static int2 GetLocalIndex(int2 index, int2 sectorStartIndex)
+    public static int2 GetLocal2D(int2 index, int2 sectorStartIndex)
     {
         return index - sectorStartIndex;
+    }
+    public static int GetLocal1D(int2 index, int2 sectorStartIndex, int sectorColAmount)
+    {
+        int2 local2d = index - sectorStartIndex;
+        return local2d.y * sectorColAmount + local2d.x;
     }
     public static int2 GetSectorStartIndex(int2 sectorIndex, int sectorColAmount)
     {

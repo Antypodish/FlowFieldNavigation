@@ -81,7 +81,7 @@ public struct NewActivePortalSubmitJob : IJob
         int targetSectorIndex1d = FlowFieldUtilities.To1D(targetSectorIndex2d, SectorMatrixColAmount);
         int targetPickedSectorIndex = (SectorToPicked[targetSectorIndex1d] - 1) / SectorTileAmount;
         int2 targetSectorStartIndex2d = FlowFieldUtilities.GetSectorStartIndex(targetSectorIndex2d, SectorColAmount);
-        int2 targetLocalIndex2d = FlowFieldUtilities.GetLocalIndex(TargetIndex2D, targetSectorStartIndex2d);
+        int2 targetLocalIndex2d = FlowFieldUtilities.GetLocal2D(TargetIndex2D, targetSectorStartIndex2d);
         int targetLocalIndex1d = FlowFieldUtilities.To1D(targetLocalIndex2d, SectorColAmount);
         UnsafeList<ActiveWaveFront> targetActivePortals = ActiveWaveFrontListArray[targetPickedSectorIndex];
         ActiveWaveFront targetFront = new ActiveWaveFront(targetLocalIndex1d, 0f, -1);
@@ -222,7 +222,7 @@ public struct NewActivePortalSubmitJob : IJob
         int2 i2sectorStart2d = FlowFieldUtilities.GetSectorStartIndex(i2sector2d, SectorColAmount);
         int2 pickedSectorStart2d = math.select(i2sectorStart2d, i1sectorStart2d, i1sector1d == sectorIndex);
         
-        int2 pickedIndexLocal2d = FlowFieldUtilities.GetLocalIndex(pickedIndex2d, pickedSectorStart2d);
+        int2 pickedIndexLocal2d = FlowFieldUtilities.GetLocal2D(pickedIndex2d, pickedSectorStart2d);
         return FlowFieldUtilities.To1D(pickedIndexLocal2d, SectorColAmount);
     }
 }

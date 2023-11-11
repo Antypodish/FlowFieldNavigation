@@ -30,15 +30,15 @@ public struct SourceSectorCalculationJob : IJob
         {
             float2 pos = Sources[i];
             int sector1d = FlowFieldUtilities.PosToSector1D(pos, SectorSize, SectorMatrixColAmount);
-            if (SectorStateTable[sector1d] != PathSectorState.IntegrationCalculated)
+            if ((SectorStateTable[sector1d] & PathSectorState.IntegrationCalculated) != PathSectorState.IntegrationCalculated)
             {
-                SectorStateTable[sector1d] = PathSectorState.IntegrationCalculated;
+                SectorStateTable[sector1d] |= PathSectorState.IntegrationCalculated;
                 int flowStartIndex = SectorToPickedTable[sector1d];
                 SectorFlowStartIndiciesToCalculateIntegration.Add(flowStartIndex);
             }
-            if (SectorStateTable[sector1d] != PathSectorState.FlowCalculated)
+            if ((SectorStateTable[sector1d] & PathSectorState.FlowCalculated) != PathSectorState.FlowCalculated)
             {
-                SectorStateTable[sector1d] = PathSectorState.FlowCalculated;
+                SectorStateTable[sector1d] |= PathSectorState.FlowCalculated;
                 int flowStartIndex = SectorToPickedTable[sector1d];
                 SectorFlowStartIndiciesToCalculateFlow.Add(flowStartIndex);
             }
@@ -54,8 +54,8 @@ public struct SourceSectorCalculationJob : IJob
                 if(portalSequenceNextIndex == -1)
                 {
                     int commonSector = targetSector1d;
-                    if (SectorStateTable[commonSector] == PathSectorState.IntegrationCalculated) { continue; }
-                    SectorStateTable[commonSector] = PathSectorState.IntegrationCalculated;
+                    if ((SectorStateTable[commonSector] & PathSectorState.IntegrationCalculated) == PathSectorState.IntegrationCalculated) { continue; }
+                    SectorStateTable[commonSector] |= PathSectorState.IntegrationCalculated;
                     SectorFlowStartIndiciesToCalculateIntegration.Add(SectorToPickedTable[commonSector]);
                 }
                 else
@@ -64,8 +64,8 @@ public struct SourceSectorCalculationJob : IJob
                     PortalNode curNode = PortalNodes[curPortalSequenceNode.Index];
                     PortalNode nextNode = PortalNodes[nextPortalSequenceNode.Index];
                     int commonSector = FlowFieldUtilities.GetCommonSector(curNode, nextNode, SectorColAmount, SectorMatrixColAmount);
-                    if (SectorStateTable[commonSector] == PathSectorState.IntegrationCalculated) { continue; }
-                    SectorStateTable[commonSector] = PathSectorState.IntegrationCalculated;
+                    if ((SectorStateTable[commonSector] & PathSectorState.IntegrationCalculated) == PathSectorState.IntegrationCalculated) { continue; }
+                    SectorStateTable[commonSector] |= PathSectorState.IntegrationCalculated;
                     SectorFlowStartIndiciesToCalculateIntegration.Add(SectorToPickedTable[commonSector]);
                 }
             }
