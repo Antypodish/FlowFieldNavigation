@@ -84,14 +84,6 @@ public class RoutineScheduler
     }
     public void TryCompletePredecessorJobs()
     {
-        if (_costEditHandle.Count != 0)
-        {
-            if (_costEditHandle[0].IsCompleted)
-            {
-                _costEditHandle[0].Complete();
-                _costEditHandle.RemoveAtSwapBack(0);
-            }
-        }
         if (_islandReconfigHandle.Count != 0)
         {
             if (_islandReconfigHandle[0].IsCompleted)
@@ -114,27 +106,6 @@ public class RoutineScheduler
                     _pathProdCalcHandles.Add(pathProdHandle);
                     _porTravHandles.RemoveAtSwapBack(i);
                 }
-            }
-        }
-        if (_pathProdCalcHandles.Count != 0)
-        {
-            for (int i = 0; i < _pathProdCalcHandles.Count; i++)
-            {
-                PathHandle pathHandle = _pathProdCalcHandles[i];
-                if (pathHandle.Handle.IsCompleted)
-                {
-                    pathHandle.Handle.Complete();
-                    _pathfindingManager.PathProducer.ProducedPaths[pathHandle.PathIndex].IsCalculated = true;
-                    _pathProdCalcHandles.RemoveAtSwapBack(i);
-                }
-            }
-        }
-        if(_agentMovementCalculationHandle.Count != 0)
-        {
-            if (_agentMovementCalculationHandle[0].IsCompleted)
-            {
-                _agentMovementCalculationHandle[0].Complete();
-                _agentMovementCalculationHandle.RemoveAtSwapBack(0);
             }
         }
     }
@@ -185,10 +156,11 @@ public class RoutineScheduler
             AgentNewPathIndicies = _pathfindingManager.AgentDataContainer.AgentNewPathIndicies,
             PathSubscribers = _pathfindingManager.PathProducer.ProducedPathSubscribers,
         };
+        _pathfindingManager.PathProducer.TransferAllFlowFieldCalculationsToTheFlowFields();
+        _pathfindingManager.PathProducer.DisposeFlowFieldCalculationBuffers();
         newPathToCurPathTransferJob.Schedule().Complete();
         CurrentRequestedPaths.Clear();
         CurrentSourcePositions.Clear();
-
         SendRoutineResultsToAgents();
     }
     public AgentRoutineDataProducer GetRoutineDataProducer()

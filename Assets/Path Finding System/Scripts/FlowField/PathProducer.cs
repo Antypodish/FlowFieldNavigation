@@ -19,7 +19,7 @@ public class PathProducer
     public NativeList<int> ProducedPathSubscribers;
     Stack<int> _removedPathIndicies;
     NativeList<PathData> _pathDataList;
-    NativeList<UnsafeList<UnsafeList<FlowData>>> _flowFieldCalculationBuffers;
+    NativeList<FlowFieldCalculationBufferParent> _flowFieldCalculationBuffers;
 
     FieldProducer _fieldProducer;
     PathPreallocator _preallocator;
@@ -44,7 +44,7 @@ public class PathProducer
         _removedPathIndicies = new Stack<int>();
         _pathDataList = new NativeList<PathData>(Allocator.Persistent);
         ProducedPathSubscribers = new NativeList<int>(Allocator.Persistent);
-        _flowFieldCalculationBuffers = new NativeList<UnsafeList<UnsafeList<FlowData>>>(Allocator.Persistent);
+        _flowFieldCalculationBuffers = new NativeList<FlowFieldCalculationBufferParent>(Allocator.Persistent);
     }
     public void Update()
     {
@@ -84,13 +84,14 @@ public class PathProducer
     {
         for (int i = 0; i < _flowFieldCalculationBuffers.Length; i++)
         {
-            UnsafeList<UnsafeList<FlowData>> calculationBuffer = _flowFieldCalculationBuffers[i];
-            for (int j = 0; j < calculationBuffer.Length; j++)
+            FlowFieldCalculationBufferParent calculationBufferParent = _flowFieldCalculationBuffers[i];
+            UnsafeList<FlowFieldCalculationBuffer> bufferParent = calculationBufferParent.BufferParent;
+            for (int j = 0; j < bufferParent.Length; j++)
             {
-                UnsafeList<FlowData> bufferSegment = calculationBuffer[j];
-                bufferSegment.Dispose();
+                UnsafeList<FlowData> buffer = bufferParent[j].Buffer;
+                buffer.Dispose();
             }
-            calculationBuffer.Dispose();
+            bufferParent.Dispose();
         }
         _flowFieldCalculationBuffers.Clear();
     }
@@ -251,7 +252,8 @@ public class PathProducer
         };
         sectorCalcJob.Schedule().Complete();
 
-        NativeList<JobHandle> intFieldHandles = new NativeList<JobHandle>(path.PickedToSector.Length, Allocator.Temp);
+        //SCHEDULE INTEGRATION FIELDS
+        NativeList<JobHandle> intFieldHandles = new NativeList<JobHandle>(Allocator.Temp);
         for (int i = 0; i < sectorFlowStartIndiciesToCalculateIntegration.Length; i++)
         {
             int sectorStart = sectorFlowStartIndiciesToCalculateIntegration[i];
@@ -272,28 +274,76 @@ public class PathProducer
             JobHandle intHandle = intJob.Schedule();
             intFieldHandles.Add(intHandle);
         }
-        //FLOW FIELD
-        FlowFieldJob ffJob = new FlowFieldJob()
-        {
-            SectorTileAmount = _sectorTileAmount * _sectorTileAmount,
-            SectorColAmount = _sectorTileAmount,
-            SectorMatrixColAmount = _sectorMatrixColAmount,
-            SectorMatrixRowAmount = _sectorMatrixRowAmount,
-            SectorMatrixTileAmount = _sectorMatrixRowAmount * _sectorMatrixColAmount,
-            FieldColAmount = _columnAmount,
-            SectorRowAmount = _sectorTileAmount,
-            SectorToPicked = path.SectorToPicked,
-            PickedToSector = path.PickedToSector,
-            FlowField = path.FlowField,
-            IntegrationField = path.IntegrationField,
-        };
+        JobHandle intFieldCombinedHandle = JobHandle.CombineDependencies(intFieldHandles);
 
-        JobHandle ffHandle = ffJob.Schedule(ffJob.FlowField.Length, 256, JobHandle.CombineDependencies(intFieldHandles));
+        //SCHEDULE FLOW FIELDS
+        NativeList<JobHandle> flowfieldHandles = new NativeList<JobHandle>(Allocator.Temp);
+        UnsafeList<FlowFieldCalculationBuffer> bufferParent = new UnsafeList<FlowFieldCalculationBuffer>(sectorFlowStartIndiciesToCalculateFlow.Length, Allocator.Persistent);
+        bufferParent.Length = sectorFlowStartIndiciesToCalculateFlow.Length;
+
+        for (int i = 0; i < sectorFlowStartIndiciesToCalculateFlow.Length; i++)
+        {
+            int sectorStart = sectorFlowStartIndiciesToCalculateFlow[i];
+
+            UnsafeList<FlowData> flowFieldCalculationBuffer = new UnsafeList<FlowData>(FlowFieldUtilities.SectorTileAmount, Allocator.Persistent, NativeArrayOptions.ClearMemory);
+            flowFieldCalculationBuffer.Length = FlowFieldUtilities.SectorTileAmount;
+            FlowFieldJob ffJob = new FlowFieldJob()
+            {
+                SectorTileAmount = _sectorTileAmount * _sectorTileAmount,
+                SectorColAmount = _sectorTileAmount,
+                SectorMatrixColAmount = _sectorMatrixColAmount,
+                SectorMatrixRowAmount = _sectorMatrixRowAmount,
+                SectorMatrixTileAmount = _sectorMatrixRowAmount * _sectorMatrixColAmount,
+                SectorStartIndex = sectorStart,
+                FieldTileAmount = FlowFieldUtilities.FieldTileAmount,
+                FieldColAmount = _columnAmount,
+                SectorRowAmount = _sectorTileAmount,
+                SectorToPicked = path.SectorToPicked,
+                PickedToSector = path.PickedToSector,
+                FlowFieldCalculationBuffer = flowFieldCalculationBuffer,
+                IntegrationField = path.IntegrationField,
+            };
+            JobHandle flowHandle = ffJob.Schedule(flowFieldCalculationBuffer.Length, 256, intFieldCombinedHandle);
+            flowfieldHandles.Add(flowHandle);
+
+            //PUT BUFFER PARENT TO THE INDEX
+            bufferParent[i] = new FlowFieldCalculationBuffer()
+            {
+                FlowFieldStartIndex = sectorStart,
+                Buffer = flowFieldCalculationBuffer,
+            };
+        }
+        //PUSH BUFFER PARENT TO THE LIST
+        FlowFieldCalculationBufferParent parent = new FlowFieldCalculationBufferParent()
+        {
+            PathIndex = pathIndex,
+            BufferParent = bufferParent,
+        };
+        _flowFieldCalculationBuffers.Add(parent);
+
+        JobHandle flowFieldCombinedHandle = JobHandle.CombineDependencies(flowfieldHandles);
         return new PathHandle()
         {
-            Handle = ffHandle,
+            Handle = flowFieldCombinedHandle,
             PathIndex = pathIndex,
         };
+    }
+    public void TransferAllFlowFieldCalculationsToTheFlowFields()
+    {
+        NativeList<JobHandle> handles = new NativeList<JobHandle>(Allocator.Temp);
+        for(int i = 0; i< _flowFieldCalculationBuffers.Length; i++)
+        {
+            FlowFieldCalculationBufferParent parent = _flowFieldCalculationBuffers[i];
+            int pathIndex = parent.PathIndex;
+
+            FlowFieldCalculationTransferJob transferJob = new FlowFieldCalculationTransferJob()
+            {
+                CalculationBufferParent = parent,
+                FlowField = ProducedPaths[pathIndex].FlowField,
+            };
+            handles.Add(transferJob.Schedule());
+        }
+        JobHandle.CombineDependencies(handles).Complete();
     }
     public void SetPortalAdditionTraversalHandles(NativeList<OutOfFieldStatus> outOfFieldStatus, List<PathHandle> portalAdditionTraversalHandles, JobHandle dependency)
     {/*
@@ -376,7 +426,7 @@ public class PathProducer
             SectorRowAmount = _sectorTileAmount,
             SectorToPicked = path.SectorToPicked,
             PickedToSector = path.PickedToSector,
-            FlowField = path.FlowField,
+            FlowFieldCalculationBuffer = path.FlowField,
             IntegrationField = path.IntegrationField,
         };
 

@@ -19,13 +19,13 @@ public class FlowFieldFactory
         if(_flowFieldContainer.Count == 0)
         {
             UnsafeList<FlowData> field = new UnsafeList<FlowData>(length, Allocator.Persistent, NativeArrayOptions.ClearMemory);
-            field.Length = length;
+            field.Resize(length, NativeArrayOptions.ClearMemory);
             return field;
         }
         else
         {
             UnsafeList<FlowData> field = _flowFieldContainer[0];
-            field.Length = length;
+            field.Resize(length, NativeArrayOptions.ClearMemory);
             _flowFieldContainer.RemoveAtSwapBack(0);
             return field;
         }

@@ -229,7 +229,6 @@ public struct NewPortalNodeTraversalJob : IJob
             }
         }
         return indicies;
-
     }
     void RunFastMarching()
     {

@@ -39,6 +39,7 @@ public struct PathfindingTaskOrganizationJob : IJob
             bool destinationUnwalkable = destinationIsland == int.MaxValue;
             if(differentIsland || agentUnwalkable || destinationUnwalkable)
             {
+                UnityEngine.Debug.Log("hi");
                 AgentNewPathIndicies[i] = -1;
                 continue;
             }
@@ -71,7 +72,7 @@ public struct PathfindingTaskOrganizationJob : IJob
             float3 agentPos3 = AgentData[i].Position;
             float2 agentPos = new float2(agentPos3.x, agentPos3.z);
             PathRequestSources[req.SourcePositionStartIndex + req.AgentCount] = agentPos;
-            req.AgentCount++;
+            req.AgentCount = req.AgentCount + 1;
             NewPaths[newPathIndex] = req;
         }
     }

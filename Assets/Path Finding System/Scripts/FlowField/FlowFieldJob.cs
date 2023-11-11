@@ -17,19 +17,20 @@ public struct FlowFieldJob : IJobParallelFor
     public int SectorTileAmount;
     public int FieldColAmount;
     public int FieldTileAmount;
+    public int SectorStartIndex;
     [ReadOnly] public UnsafeList<int> SectorToPicked;
     [ReadOnly] public NativeArray<int> PickedToSector;
     [ReadOnly] public NativeArray<IntegrationTile> IntegrationField;
-    [WriteOnly] public UnsafeList<FlowData> FlowField;
+    [WriteOnly] public UnsafeList<FlowData> FlowFieldCalculationBuffer;
 
     public void Execute(int index)
     {
-        if(index == 0) { return; }
         //DATA
-        int startLocalIndex = (index - 1) % SectorTileAmount;
-        int startPickedSector1d = PickedToSector[(index - 1) / SectorTileAmount];
+        int flowFieldStridedIndex = SectorStartIndex + index;
+        int startLocalIndex = (flowFieldStridedIndex - 1) % SectorTileAmount;
+        int startPickedSector1d = PickedToSector[(flowFieldStridedIndex - 1) / SectorTileAmount];
 
-        int curFlowFieldIndex = index;
+        int curFlowFieldIndex = flowFieldStridedIndex;
         int curLocalIndex = startLocalIndex;
         int curPickedSector1d = startPickedSector1d;
         float curIntCost = IntegrationField[curFlowFieldIndex].Cost;
@@ -65,7 +66,7 @@ public struct FlowFieldJob : IJobParallelFor
         FlowData flow = new FlowData();
         flow.SetFlow(startGeneral1d, endGeneral1d, FieldColAmount);
         if(curIntCost == 0) { flow.SetLOS(); }
-        FlowField[index] = flow;
+        FlowFieldCalculationBuffer[index] = flow;
     }
 
     NewIndexData GetNextIndex(int localIndex, int pickedSector1d, int startingSector1d, float curIntCost, int horizontalDif, int verticalDif)
