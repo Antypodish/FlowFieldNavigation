@@ -14,4 +14,5 @@ public struct PathData
 public enum PathTask : byte
 {
     FlowRequest = 1,
+    PathAdditionRequest = 2,
 }

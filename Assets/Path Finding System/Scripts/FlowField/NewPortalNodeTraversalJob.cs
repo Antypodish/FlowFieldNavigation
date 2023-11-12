@@ -75,7 +75,7 @@ public struct NewPortalNodeTraversalJob : IJob
         }
         //START GRAPH WALKER
         PortalSequenceBorders.Add(0);
-        UnsafeHeap<int> walkerHeap = new UnsafeHeap<int>(10, Allocator.Temp);
+        DoubleUnsafeHeap<int> walkerHeap = new DoubleUnsafeHeap<int>(10, Allocator.Temp);
         
         UnsafeList<int> allSorucePortalIndicies = GetSourcePortalIndicies();
         for (int i = 0; i < allSorucePortalIndicies.Length; i++)
@@ -322,7 +322,7 @@ public struct NewPortalNodeTraversalJob : IJob
             }
         }
     }
-    int RunReductionAStar(int sourcePortalIndex, UnsafeHeap<int> traversalHeap)
+    int RunReductionAStar(int sourcePortalIndex, DoubleUnsafeHeap<int> traversalHeap)
     {
         UnsafeList<PortalNode> portalNodes = PortalNodes;
         NativeArray<PortalTraversalData> portalTraversalDataArray = PortalTraversalDataArray;
@@ -387,7 +387,7 @@ public struct NewPortalNodeTraversalJob : IJob
             por2P2pCnt = curNode.Portal2.PorToPorCnt;
         }
     }
-    void TraverseNeighbours(PortalTraversalData curData, ref UnsafeHeap<int> traversalHeap, int curNodeIndex, int from, int to)
+    void TraverseNeighbours(PortalTraversalData curData, ref DoubleUnsafeHeap<int> traversalHeap, int curNodeIndex, int from, int to)
     {
         for (int i = from; i < to; i++)
         {
@@ -738,7 +738,7 @@ public struct NewPortalNodeTraversalJob : IJob
             return (distanceFromSectorStart % fieldColAmount) + (sectorTileAmount * (distanceFromSectorStart / fieldColAmount));
         }
     }
-    public struct UnsafeHeap<T> where T : unmanaged
+    public struct SingleUnsafeHeap<T> where T : unmanaged
     {
         public UnsafeList<HeapElement<T>> _array;
         public T this[int index]
@@ -755,7 +755,156 @@ public struct NewPortalNodeTraversalJob : IJob
                 return _array.IsEmpty;
             }
         }
-        public UnsafeHeap(int size, Allocator allocator)
+        public SingleUnsafeHeap(int size, Allocator allocator)
+        {
+            _array = new UnsafeList<HeapElement<T>>(size, allocator);
+        }
+        public void Clear()
+        {
+            _array.Clear();
+        }
+        public void Add(T element, float pri)
+        {
+            int elementIndex = _array.Length;
+            _array.Add(new HeapElement<T>(element, pri));
+            if (elementIndex != 0)
+            {
+                HeapifyUp(elementIndex);
+            }
+        }
+        public T GetMin() => _array[0].data;
+        public T ExtractMin()
+        {
+            T min = _array[0].data;
+            HeapElement<T> last = _array[_array.Length - 1];
+            _array[0] = last;
+            _array.Length--;
+            if (_array.Length > 1)
+            {
+                HeapifyDown(0);
+            }
+            return min;
+        }
+        public void SetPriority(int index, float pri)
+        {
+            int length = _array.Length;
+            HeapElement<T> cur = _array[index];
+            cur.pri = pri;
+            _array[index] = cur;
+            int parIndex = index / 2 - 1;
+            int lcIndex = index * 2 + 1;
+            int rcIndex = index * 2 + 2;
+            parIndex = math.select(index, parIndex, parIndex >= 0);
+            lcIndex = math.select(index, lcIndex, lcIndex < length);
+            rcIndex = math.select(index, rcIndex, rcIndex < length);
+            HeapElement<T> parent = _array[parIndex];
+            if (cur.pri < parent.pri)
+            {
+                HeapifyUp(index);
+            }
+            else
+            {
+                HeapifyDown(index);
+            }
+        }
+        public void Dispose()
+        {
+            _array.Dispose();
+        }
+
+        void HeapifyUp(int startIndex)
+        {
+            int curIndex = startIndex;
+            int parIndex = (curIndex - 1) / 2;
+            HeapElement<T> cur = _array[startIndex];
+            HeapElement<T> par = _array[parIndex];
+            bool isCurSmaller = cur.pri < par.pri;
+            while (isCurSmaller)
+            {
+                _array[parIndex] = cur;
+                _array[curIndex] = par;
+                curIndex = parIndex;
+                parIndex = math.select((curIndex - 1) / 2, 0, curIndex == 0);
+                par = _array[parIndex];
+                isCurSmaller = cur.pri < par.pri;
+            }
+        }
+        void HeapifyDown(int startIndex)
+        {
+            int length = _array.Length;
+            int curIndex = startIndex;
+            int lcIndex = startIndex * 2 + 1;
+            int rcIndex = lcIndex + 1;
+            lcIndex = math.select(curIndex, lcIndex, lcIndex < length);
+            rcIndex = math.select(curIndex, rcIndex, rcIndex < length);
+            HeapElement<T> cur;
+            HeapElement<T> lc;
+            HeapElement<T> rc;
+            while (lcIndex != curIndex)
+            {
+                cur = _array[curIndex];
+                lc = _array[lcIndex];
+                rc = _array[rcIndex];
+                bool lcSmallerThanRc = lc.pri < rc.pri;
+                bool lcSmallerThanCur = lc.pri < cur.pri;
+                bool rcSmallerThanCur = rc.pri < cur.pri;
+
+                if (lcSmallerThanRc && lcSmallerThanCur)
+                {
+                    _array[curIndex] = lc;
+                    _array[lcIndex] = cur;
+                    curIndex = lcIndex;
+                    lcIndex = curIndex * 2 + 1;
+                    rcIndex = lcIndex + 1;
+                    lcIndex = math.select(lcIndex, curIndex, lcIndex >= length);
+                    rcIndex = math.select(rcIndex, curIndex, rcIndex >= length);
+                }
+                else if (!lcSmallerThanRc && rcSmallerThanCur)
+                {
+                    _array[curIndex] = rc;
+                    _array[rcIndex] = cur;
+                    curIndex = rcIndex;
+                    lcIndex = curIndex * 2 + 1;
+                    rcIndex = lcIndex + 1;
+                    lcIndex = math.select(lcIndex, curIndex, lcIndex >= length);
+                    rcIndex = math.select(rcIndex, curIndex, rcIndex >= length);
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+        public struct HeapElement<T> where T : unmanaged
+        {
+            public T data;
+            public float pri;
+
+            public HeapElement(T data, float pri)
+            {
+                this.data = data;
+                this.pri = pri;
+            }
+        }
+    }
+    public struct DoubleUnsafeHeap<T> where T : unmanaged
+    {
+        public UnsafeList<HeapElement<T>> _array;
+        public T this[int index]
+        {
+            get
+            {
+                return _array[index].data;
+            }
+        }
+        public bool IsEmpty
+        {
+            get
+            {
+                return _array.IsEmpty;
+            }
+        }
+        public DoubleUnsafeHeap(int size, Allocator allocator)
         {
             _array = new UnsafeList<HeapElement<T>>(size, allocator);
         }
