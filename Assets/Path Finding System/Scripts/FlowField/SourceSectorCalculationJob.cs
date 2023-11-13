@@ -15,7 +15,6 @@ public struct SourceSectorCalculationJob : IJob
     public int SectorMatrixColAmount;
     public int2 TargetIndex;
     [ReadOnly] public NativeSlice<float2> Sources;
-    [ReadOnly] public UnsafeList<PathSectorState> SectorStateTable;
     [ReadOnly] public NativeArray<ActivePortal> PortalSequence;
     [ReadOnly] public UnsafeList<int> SectorToPickedTable;
     [ReadOnly] public NativeArray<UnsafeList<ActiveWaveFront>> ActiveWaveFrontListArray;
@@ -23,6 +22,8 @@ public struct SourceSectorCalculationJob : IJob
 
     [WriteOnly] public NativeList<int> SectorFlowStartIndiciesToCalculateIntegration;
     [WriteOnly] public NativeList<int> SectorFlowStartIndiciesToCalculateFlow;
+
+    public UnsafeList<PathSectorState> SectorStateTable;
     public void Execute()
     {
         int targetSector1d = FlowFieldUtilities.GetSector1D(TargetIndex, SectorColAmount, SectorMatrixColAmount);

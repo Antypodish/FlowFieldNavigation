@@ -1,7 +1,7 @@
 ﻿using Unity.Jobs;
 using Unity.Collections;
 using Unity.Mathematics;
-public struct PathHandle
+public struct NewPathHandle
 {
     public JobHandle Handle;
     public int PathIndex;

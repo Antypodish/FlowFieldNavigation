@@ -3,12 +3,12 @@ using Unity.Jobs;
 
 public struct PortalTraversalJobPack
 {
-    public NewPortalNodeTraversalJob PortalTravJob;
+    public PortalNodeTraversalJob PortalTravJob;
     public int PathIndex;
 
-    public PathHandle Schedule()
+    public NewPathHandle Schedule()
     {
-        return new PathHandle()
+        return new NewPathHandle()
         {
             Handle = PortalTravJob.Schedule(),
             PathIndex = PathIndex

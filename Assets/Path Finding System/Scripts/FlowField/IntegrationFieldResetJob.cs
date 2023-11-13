@@ -11,11 +11,12 @@ using Unity.Jobs;
 [BurstCompile]
 public struct IntegrationFieldResetJob : IJob
 {
+    public int StartIndex;
     public NativeArray<IntegrationTile> IntegrationField;
 
     public void Execute()
     {
-        for(int i = 0; i < IntegrationField.Length; i++)
+        for(int i = StartIndex; i < IntegrationField.Length; i++)
         {
             IntegrationField[i] = new IntegrationTile(float.MaxValue, IntegrationMark.None);
         }

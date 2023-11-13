@@ -13,17 +13,19 @@ public class RoutineScheduler
     PathfindingManager _pathfindingManager;
     AgentRoutineDataProducer _dirCalculator;
 
-    List<PathHandle> _pathProdCalcHandles;
-    NativeList<JobHandle> _pathAdditionHandles;
+    List<NewPathHandle> _pathProdCalcHandles;
 
     List<JobHandle> _costEditHandle;
     List<JobHandle> _islandReconfigHandle;
-    List<PathHandle> _porTravHandles;
-    List<PathHandle> _porAddTravHandles;
+    List<NewPathHandle> _porTravHandles;
     List<JobHandle> _agentMovementCalculationHandle;
+    List<JobHandle> _flowRequestHandles;
+    List<ExistingPathHandle> _additionPortalTravesalHandles;
+    List<ExistingPathHandle> _additionPathConstructionHandles;
 
     public NativeList<PathRequest> CurrentRequestedPaths;
     public NativeList<float2> CurrentSourcePositions;
+    public NativeArray<PathData> ExistingPaths;
 
     int _costFieldEditRequestCount = 0;
     public RoutineScheduler(PathfindingManager pathfindingManager)
@@ -31,20 +33,22 @@ public class RoutineScheduler
         _pathfindingManager = pathfindingManager;
         _dirCalculator = new AgentRoutineDataProducer(pathfindingManager.AgentDataContainer, pathfindingManager);
 
-        _porTravHandles = new List<PathHandle>();
-        _porAddTravHandles = new List<PathHandle>();
+        _porTravHandles = new List<NewPathHandle>();
         _agentMovementCalculationHandle = new List<JobHandle>();
-        _pathProdCalcHandles = new List<PathHandle>();
-        _pathAdditionHandles = new NativeList<JobHandle>(Allocator.Persistent);
+        _pathProdCalcHandles = new List<NewPathHandle>();
         _costEditHandle = new List<JobHandle>();
         CurrentRequestedPaths = new NativeList<PathRequest>(Allocator.Persistent);
         _islandReconfigHandle = new List<JobHandle>();
         CurrentSourcePositions = new NativeList<float2>(Allocator.Persistent);
+        _flowRequestHandles = new List<JobHandle>();
+        _additionPortalTravesalHandles = new List<ExistingPathHandle>();
+        _additionPathConstructionHandles = new List<ExistingPathHandle>();
     }
 
     public void Schedule(List<CostFieldEditJob[]> costEditJobs, NativeList<PathRequest> newPaths)
     {
         _costFieldEditRequestCount = costEditJobs.Count;
+        ExistingPaths = _pathfindingManager.PathProducer.GetCurrentPathData();
         //SCHEDULE COST EDITS
         JobHandle costEditHandle = ScheduleCostEditRequests(costEditJobs);
         JobHandle islandFieldReconfigHandle = ScheduleIslandFieldReconfig(costEditHandle);
@@ -98,11 +102,11 @@ public class RoutineScheduler
         {
             for (int i = 0; i < _porTravHandles.Count; i++)
             {
-                PathHandle pathHandle = _porTravHandles[i];
+                NewPathHandle pathHandle = _porTravHandles[i];
                 if (pathHandle.Handle.IsCompleted)
                 {
                     pathHandle.Handle.Complete();
-                    PathHandle pathProdHandle = _pathfindingManager.PathProducer.SchedulePathProductionJob(pathHandle.PathIndex, pathHandle.Soruces);
+                    NewPathHandle pathProdHandle = _pathfindingManager.PathProducer.SchedulePathProductionJob(pathHandle.PathIndex, pathHandle.Soruces);
                     _pathProdCalcHandles.Add(pathProdHandle);
                     _porTravHandles.RemoveAtSwapBack(i);
                 }
@@ -126,9 +130,9 @@ public class RoutineScheduler
         {
             for (int i = 0; i < _porTravHandles.Count; i++)
             {
-                PathHandle pathHandle = _porTravHandles[i];
+                NewPathHandle pathHandle = _porTravHandles[i];
                 pathHandle.Handle.Complete();
-                PathHandle pathProdHandle = _pathfindingManager.PathProducer.SchedulePathProductionJob(pathHandle.PathIndex, pathHandle.Soruces);
+                NewPathHandle pathProdHandle = _pathfindingManager.PathProducer.SchedulePathProductionJob(pathHandle.PathIndex, pathHandle.Soruces);
                 _pathProdCalcHandles.Add(pathProdHandle);
             }
             _porTravHandles.Clear();
@@ -137,16 +141,47 @@ public class RoutineScheduler
         {
             for (int i = 0; i < _pathProdCalcHandles.Count; i++)
             {
-                PathHandle pathHandle = _pathProdCalcHandles[i];
+                NewPathHandle pathHandle = _pathProdCalcHandles[i];
                 pathHandle.Handle.Complete();
                 _pathfindingManager.PathProducer.ProducedPaths[pathHandle.PathIndex].IsCalculated = true;
             }
             _pathProdCalcHandles.Clear();
         }
+        if(_flowRequestHandles.Count != 0)
+        {
+            for(int i = 0; i < _flowRequestHandles.Count; i++)
+            {
+                _flowRequestHandles[i].Complete();
+            }
+            _flowRequestHandles.Clear();
+        }
         if (_agentMovementCalculationHandle.Count != 0)
         {
             _agentMovementCalculationHandle[0].Complete();
             _agentMovementCalculationHandle.Clear();
+        }
+        if(_additionPortalTravesalHandles.Count != 0)
+        {
+            for(int i = 0; i < _additionPortalTravesalHandles.Count; i++)
+            {
+                ExistingPathHandle existingPathHandle = _additionPortalTravesalHandles[i];
+                existingPathHandle.Handle.Complete();
+                PathData path = ExistingPaths[existingPathHandle.PathIndex];
+                NativeSlice<float2> sources = new NativeSlice<float2>(CurrentSourcePositions, path.FlowRequestSourceStart, path.FlowRequestSourceCount + path.PathAdditionSourceCount);
+                ExistingPathHandle constructionHandle = _pathfindingManager.PathProducer.RequestAdditionPathConstruction(existingPathHandle.PathIndex, sources);
+                _additionPathConstructionHandles.Add(constructionHandle);
+            }
+            _additionPortalTravesalHandles.Clear();
+        }
+        if(_additionPathConstructionHandles.Count != 0)
+        {
+            for(int i = 0; i < _additionPathConstructionHandles.Count; i++)
+            {
+                ExistingPathHandle existingPathHandle = _additionPathConstructionHandles[i];
+                existingPathHandle.Handle.Complete();
+                _pathfindingManager.PathProducer.RefreshFlowFieldLength(existingPathHandle.PathIndex);
+            }
+            _additionPathConstructionHandles.Clear();
         }
         //TRANSFER NEW PATH INDICIES TO CUR PATH INDICIES
         NewPathToCurPathTransferJob newPathToCurPathTransferJob = new NewPathToCurPathTransferJob()
@@ -224,7 +259,6 @@ public class RoutineScheduler
         NativeArray<int> newPathIndicies = _pathfindingManager.AgentDataContainer.AgentNewPathIndicies;
         NativeArray<int> curPathIndicies = _pathfindingManager.AgentDataContainer.AgentCurPathIndicies;
         NativeArray<IslandFieldProcessor> islandFieldPorcessor = _pathfindingManager.FieldProducer.GetAllIslandFieldProcessors();
-        NativeArray<PathData> currentPathData = _pathfindingManager.PathProducer.GetCurrentPathData();
 
         PathfindingTaskOrganizationJob organization = new PathfindingTaskOrganizationJob()
         {
@@ -237,7 +271,7 @@ public class RoutineScheduler
             PathfindingSources = CurrentSourcePositions,
             IslandFieldProcessors = islandFieldPorcessor,
             NewPaths = CurrentRequestedPaths,
-            CurrentPaths = currentPathData,
+            CurrentPaths = ExistingPaths,
             PathSubscribers = _pathfindingManager.PathProducer.ProducedPathSubscribers,
         };
         organization.Schedule().Complete();
@@ -250,7 +284,7 @@ public class RoutineScheduler
             if (!currentpath.IsValid()) { continue; }
             NativeSlice<float2> pathSources = new NativeSlice<float2>(organization.PathfindingSources, currentpath.SourcePositionStartIndex, currentpath.AgentCount);
             PortalTraversalJobPack porTravJobPack = _pathfindingManager.PathProducer.ConstructPath(pathSources, currentpath);
-            PathHandle porTravHandle = SchedulePortalTraversal(porTravJobPack);
+            NewPathHandle porTravHandle = SchedulePortalTraversal(porTravJobPack);
             porTravHandle.Soruces = pathSources;
             _porTravHandles.Add(porTravHandle);
             currentpath.PathIndex = porTravJobPack.PathIndex;
@@ -265,12 +299,28 @@ public class RoutineScheduler
         };
         JobHandle newPathIndiciesHandle = newpathindiciesSetJob.Schedule();
 
-        for(int i = 0; i < currentPathData.Length; i++)
+        for(int i = 0; i < ExistingPaths.Length; i++)
         {
-            PathData currentPath = currentPathData[i];
-            if(currentPath.Task == 0) { continue; }
-            NativeSlice<float2> sources = new NativeSlice<float2>(organization.PathfindingSources, currentPath.FlowRequestSourceStart, currentPath.FlowRequestSourceCount);
-            _pathfindingManager.PathProducer.RequestFlow(i, sources);
+            PathData existingPath = ExistingPaths[i];
+            if(existingPath.Task == 0) { continue; }
+            NativeSlice<float2> flowRequestSources = new NativeSlice<float2>(organization.PathfindingSources, existingPath.FlowRequestSourceStart, existingPath.FlowRequestSourceCount);
+            NativeSlice<float2> pathAdditionSources = new NativeSlice<float2>(organization.PathfindingSources, existingPath.PathAdditionSourceStart, existingPath.PathAdditionSourceCount);
+            bool pathAdditionRequested = (existingPath.Task & PathTask.PathAdditionRequest) == PathTask.PathAdditionRequest;
+            bool flowRequested = (existingPath.Task & PathTask.FlowRequest) == PathTask.FlowRequest;
+            if (pathAdditionRequested)
+            {
+                ExistingPathHandle handle = _pathfindingManager.PathProducer.RequestAdditionPortalTraversal(i, pathAdditionSources);
+                if (FlowFieldUtilities.DebugMode) { handle.Handle.Complete(); }
+                _additionPortalTravesalHandles.Add(handle);
+
+            }
+            else if (flowRequested)
+            {
+                JobHandle flowHandle = _pathfindingManager.PathProducer.RequestFlow(i, flowRequestSources);
+                if (FlowFieldUtilities.DebugMode) { flowHandle.Complete(); }
+
+                _flowRequestHandles.Add(flowHandle);
+            }
         }
 
 
@@ -342,28 +392,15 @@ public class RoutineScheduler
 
         _agentMovementCalculationHandle.Add(collisionHandle);
     }
-    PathHandle SchedulePortalTraversal(PortalTraversalJobPack portalTravJobPack)
+    NewPathHandle SchedulePortalTraversal(PortalTraversalJobPack portalTravJobPack)
     {
-        PathHandle pathHandle = portalTravJobPack.Schedule();
+        NewPathHandle pathHandle = portalTravJobPack.Schedule();
 
         if (FlowFieldUtilities.DebugMode)
         {
             pathHandle.Handle.Complete();
         }
         return pathHandle;        
-    }
-    void SetPortalAdditionTraversalHandles()
-    {
-        _pathfindingManager.PathProducer.SetPortalAdditionTraversalHandles(_dirCalculator.AgentOutOfFieldStatusList, _porAddTravHandles, _agentMovementCalculationHandle[0]);
-
-        if (FlowFieldUtilities.DebugMode)
-        {
-            for (int i = 0; i < _porAddTravHandles.Count; i++)
-            {
-                _porAddTravHandles[i].Handle.Complete();
-            }
-        }
-
     }
 
     

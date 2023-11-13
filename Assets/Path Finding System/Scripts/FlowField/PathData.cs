@@ -10,6 +10,8 @@ public struct PathData
     public UnsafeList<int> SectorToPicked;
     public int FlowRequestSourceStart;
     public int FlowRequestSourceCount;
+    public int PathAdditionSourceStart;
+    public int PathAdditionSourceCount;
 }
 public enum PathTask : byte
 {

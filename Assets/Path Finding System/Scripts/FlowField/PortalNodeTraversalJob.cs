@@ -1,27 +1,15 @@
-﻿using JetBrains.Annotations;
-using Mono.CompilerServices.SymbolWriter;
-using Newtonsoft.Json.Linq;
-using System;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
+﻿using System;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
-using Unity.VisualScripting;
-using UnityEditor.XR;
-using UnityEngine;
-using UnityEngine.Analytics;
-using UnityEngine.Pool;
+using UnityEngine.XR;
+
 
 [BurstCompile]
-public struct NewPortalNodeAdditionTraversalJob : IJob
+public struct PortalNodeTraversalJob : IJob
 {
-    public int PathId;
-    public float HMultiplier;
-    public float GMultiplier;
     public int2 TargetIndex;
     public int FieldColAmount;
     public int FieldRowAmount;
@@ -29,137 +17,161 @@ public struct NewPortalNodeAdditionTraversalJob : IJob
     public int SectorColAmount;
     public int SectorMatrixColAmount;
 
-    public NativeArray<float2> SourcePositions;
     public NativeArray<PortalTraversalData> PortalTraversalDataArray;
     public NativeList<ActivePortal> PortalSequence;
 
     public NativeList<int> PortalSequenceBorders;
     public UnsafeList<int> SectorToPicked;
+    public UnsafeList<PathSectorState> SectorStateTable;
     public NativeList<int> PickedToSector;
     public NativeArray<DijkstraTile> TargetSectorCosts;
     public NativeArray<int> FlowFieldLength;
 
-    [ReadOnly] public NativeArray<OutOfFieldStatus> AgentOutOfFieldStatusList;
-    [ReadOnly] public NativeArray<SectorNode> SectorNodes;
+    [ReadOnly] public NativeSlice<float2> SourcePositions;
+    [ReadOnly] public UnsafeList<SectorNode> SectorNodes;
     [ReadOnly] public NativeArray<int> SecToWinPtrs;
     [ReadOnly] public NativeArray<WindowNode> WindowNodes;
     [ReadOnly] public NativeArray<int> WinToSecPtrs;
-    [ReadOnly] public NativeArray<PortalNode> PortalNodes;
+    [ReadOnly] public UnsafeList<PortalNode> PortalNodes;
     [ReadOnly] public NativeArray<PortalToPortal> PorPtrs;
     [ReadOnly] public UnsafeList<byte> Costs;
     [ReadOnly] public NativeArray<SectorDirectionData> LocalDirections;
+    [ReadOnly] public UnsafeList<UnsafeList<int>> IslandFields;
+
+    public NativeList<int> TargetNeighbourPortalIndicies;
+    public NativeList<int> AStarTraverseIndexList;
+    public NativeList<int> SourcePortalIndexList;
+    public NativeQueue<int> FastMarchingQueue;
 
     int _targetSectorStartIndex1d;
     int _targetSectorIndex1d;
     public void Execute()
     {
-        HMultiplier = 1f; GMultiplier = 1f;
-
-        //SET NEW SECTORS
-        NativeList<int> newSectorIndicies = new NativeList<int>(Allocator.Temp);
-        for (int i = 0; i < AgentOutOfFieldStatusList.Length; i++)
-        {
-            OutOfFieldStatus status = AgentOutOfFieldStatusList[i];
-            if (status.IsOutOfField && status.PathId == PathId)
-            {
-                newSectorIndicies.Add(status.Sector1d);
-            }
-        }
-
         //TARGET DATA
         int2 targetSectorIndex2d = new int2(TargetIndex.x / SectorColAmount, TargetIndex.y / SectorColAmount);
         _targetSectorIndex1d = targetSectorIndex2d.y * SectorMatrixColAmount + targetSectorIndex2d.x;
         int2 _targetSectorStartIndex2d = targetSectorIndex2d * SectorColAmount;
         _targetSectorStartIndex1d = _targetSectorStartIndex2d.y * FieldColAmount + _targetSectorStartIndex2d.x;
-        
+        int targetGeneralIndex1d = TargetIndex.y * FieldColAmount + TargetIndex.x;
+
+        TargetSectorCosts = GetIntegratedCosts(targetGeneralIndex1d);
+
+        //SET TARGET PORTAL DATA
+        PortalTraversalDataArray[PortalTraversalDataArray.Length - 1] = new PortalTraversalData()
+        {
+            OriginIndex = PortalTraversalDataArray.Length - 1,
+            DistanceFromTarget = 0,
+            HCost = float.MaxValue,
+            GCost = float.MaxValue,
+            FCost = float.MaxValue,
+            Mark = PortalTraversalMark.AStarPicked,
+        };
+
+        //SET TARGET NEIGHBOUR DATA
+        SetTargetNeighbourPortalDataAndAddToList();
+        if(TargetNeighbourPortalIndicies.Length == 0)
+        {
+            AddTargetSector();
+            return;
+        }
         //START GRAPH WALKER
         PortalSequenceBorders.Add(0);
-        UnsafeList<int> traversedIndicies = new UnsafeList<int>(10, Allocator.Temp);
-        UnsafeHeap<int> walkerHeap = new UnsafeHeap<int>(10, Allocator.Temp);
-
-        UnsafeList<int> newSourceIndicies = GetSourcePortalIndicies(newSectorIndicies);
-        NativeQueue<int> marchingStartingIndicies = new NativeQueue<int>(Allocator.Temp);
-        for (int i = 0; i < newSourceIndicies.Length; i++)
+        DoubleUnsafeHeap<int> walkerHeap = new DoubleUnsafeHeap<int>(10, Allocator.Temp);
+        
+        UnsafeList<int> allSorucePortalIndicies = GetSourcePortalIndicies();
+        for (int i = 0; i < allSorucePortalIndicies.Length; i++)
         {
-            int stoppedIndex = RunReductionAStar(newSourceIndicies[i], walkerHeap, TargetSectorCosts, ref traversedIndicies, marchingStartingIndicies);
+            int stoppedIndex = RunReductionAStar(allSorucePortalIndicies[i], walkerHeap);
             if (stoppedIndex == -1) { continue; }
-            PickAStarNodes(newSourceIndicies[i], stoppedIndex);
-            ResetTraversedIndicies(ref traversedIndicies);
+            PickAStarNodes(allSorucePortalIndicies[i], stoppedIndex);
+            ResetTraversedIndicies();
             walkerHeap.Clear();
         }
-
-        //RunFastMarching(newSourceIndicies.Length, ref targetSectorPortalIndicies);
-        for (int i = 0; i < newSourceIndicies.Length; i++)
+        
+        RunDijkstra();
+        for(int  i = 0; i < allSorucePortalIndicies.Length; i++)
         {
-            PickPortalSequenceFromFastMarching(newSourceIndicies[i]);
+            PickPortalSequenceFromFastMarching(allSorucePortalIndicies[i]);
         }
         PickSectorsFromPortalSequence();
-        AddSourceAndTargetSectors();
+        AddTargetSector();
     }
     void PickPortalSequenceFromFastMarching(int sourcePortal)
     {
-        PortalTraversalData sourceData = PortalTraversalDataArray[sourcePortal];
-        if (sourceData.HasMark(PortalTraversalMark.FastMarchPicked)) { return; }
-        if (sourceData.NextIndex == -1) { return; }
+        //NOTE: NextIndex of portalTraversalData is used as:
+        //1. NextIndex in portalTraversalDataArray
+        //2. PortalSequence of corresponding portalTraversalData
+        //For memory optimization reasons :/
 
-        sourceData.Mark |= PortalTraversalMark.FastMarchPicked;
+        PortalTraversalData sourceData = PortalTraversalDataArray[sourcePortal];
+
+        if (sourceData.HasMark(PortalTraversalMark.DijkstraPicked)) { return; }
+
+        int nextDataIndex = sourceData.NextIndex;
+        sourceData.Mark |= PortalTraversalMark.DijkstraPicked;
+        sourceData.NextIndex = PortalSequence.Length;
         PortalTraversalDataArray[sourcePortal] = sourceData;
 
         ActivePortal sourceActivePortal = new ActivePortal()
         {
             Index = sourcePortal,
             Distance = sourceData.DistanceFromTarget,
-            NextIndex = sourceData.NextIndex,
+            NextIndex = PortalSequence.Length + 1,
         };
-        PortalSequence.Add(sourceActivePortal);
+        
+        //IF SOURCE IS TARGET NEIGHBOUR
+        if (nextDataIndex == -1)
+        {
+            sourceActivePortal.NextIndex = -1;
+            PortalSequence.Add(sourceActivePortal);
+            PortalSequenceBorders.Add(PortalSequence.Length);
+            return;
+        }
 
-        int curIndex = sourceData.NextIndex;
+        //IF SOURCE IS NOT TARGET NEIGHBOUR
+        PortalSequence.Add(sourceActivePortal);
+        int curIndex = nextDataIndex;
 
         while (curIndex != -1)
         {
             PortalTraversalData curData = PortalTraversalDataArray[curIndex];
-
+            if (curData.HasMark(PortalTraversalMark.DijkstraPicked))
+            {
+                ActivePortal previousNode = PortalSequence[PortalSequence.Length - 1];
+                previousNode.NextIndex = curData.NextIndex;
+                PortalSequence[PortalSequence.Length - 1] = previousNode;
+                break;
+            }
             //PUSH ACTIVE PORTAL
             ActivePortal curActivePortal = new ActivePortal()
             {
                 Index = curIndex,
                 Distance = curData.DistanceFromTarget,
-                NextIndex = curData.NextIndex,
+                NextIndex = math.select(PortalSequence.Length + 1, -1 , curData.NextIndex == -1),
             };
             PortalSequence.Add(curActivePortal);
 
             //MARK OR STOP
-            if (curData.HasMark(PortalTraversalMark.FastMarchPicked)) { break; }
-            curData.Mark |= PortalTraversalMark.FastMarchPicked;
+            int curDataIndex = curData.NextIndex;
+            curData.Mark |= PortalTraversalMark.DijkstraPicked;
+            curData.NextIndex = PortalSequence.Length - 1;
             PortalTraversalDataArray[curIndex] = curData;
 
-            curIndex = curData.NextIndex;
+            curIndex = curDataIndex;
         }
-
         PortalSequenceBorders.Add(PortalSequence.Length);
     }
-    float2 GetPortalPos(int portalNodeIndex)
+    void ResetTraversedIndicies()
     {
-        PortalNode node = PortalNodes[portalNodeIndex];
-        Index2 index1 = node.Portal1.Index;
-        Index2 index2 = node.Portal2.Index;
-
-        float2 pos1 = new float2(FieldTileSize / 2 + FieldTileSize * index1.C, FieldTileSize / 2 + FieldTileSize * index1.R);
-        float2 pos2 = new float2(FieldTileSize / 2 + FieldTileSize * index2.C, FieldTileSize / 2 + FieldTileSize * index2.R);
-
-        return (pos1 + pos2) / 2;
-    }
-    void ResetTraversedIndicies(ref UnsafeList<int> traversedIndicies)
-    {
-        PortalTraversalMark bitsToSet = ~(PortalTraversalMark.Added | PortalTraversalMark.Extracted);
-        for (int i = 0; i < traversedIndicies.Length; i++)
+        PortalTraversalMark bitsToSet = ~(PortalTraversalMark.AStarTraversed | PortalTraversalMark.AStarExtracted);
+        for (int i = 0; i < AStarTraverseIndexList.Length; i++)
         {
-            int index = traversedIndicies[i];
+            int index = AStarTraverseIndexList[i];
             PortalTraversalData travData = PortalTraversalDataArray[index];
             travData.Mark &= bitsToSet;
             PortalTraversalDataArray[index] = travData;
         }
-        traversedIndicies.Clear();
+        AStarTraverseIndexList.Clear();
     }
     void PickAStarNodes(int sourceNodeIndex, int stoppedIndex)
     {
@@ -186,52 +198,159 @@ public struct NewPortalNodeAdditionTraversalJob : IJob
         sourcePortalData.Mark |= PortalTraversalMark.AStarPicked;
         PortalTraversalDataArray[originIndex] = sourcePortalData;
     }
-    UnsafeList<int> GetSourcePortalIndicies(NativeList<int> newSectorIndicies)
+    UnsafeList<int> GetSourcePortalIndicies()
     {
+        int targetIsland = GetIsland(TargetIndex);
         UnsafeList<int> indicies = new UnsafeList<int>(0, Allocator.Temp);
+        int sectorTileAmount = SectorColAmount * SectorColAmount;
         for (int i = 0; i < SourcePositions.Length; i++)
         {
-            UnsafeList<int> sourcePortalIndicies = GetPortalIndicies(newSectorIndicies[i]);
+            float2 sourcePos = SourcePositions[i];
+            int2 sourceIndex = new int2((int)math.floor(sourcePos.x / FieldTileSize), (int)math.floor(sourcePos.y / FieldTileSize));
+            int2 sourceSectorIndex = sourceIndex / SectorColAmount;
+            int sourceSectorIndexFlat = sourceSectorIndex.y * SectorMatrixColAmount + sourceSectorIndex.x;
 
-            for (int j = 0; j < sourcePortalIndicies.Length; j++)
+            //ADD SOURCE SECTOR TO THE PICKED SECTORS
+            if (SectorToPicked[sourceSectorIndexFlat] != 0) { continue; }
+            SectorToPicked[sourceSectorIndexFlat] = PickedToSector.Length * sectorTileAmount + 1;
+            PickedToSector.Add(sourceSectorIndexFlat);
+            SectorStateTable[sourceSectorIndexFlat] |= PathSectorState.Included;
+            //ADD SOURCE SECTOR TO THE PICKED SECTORS
+            SetSectorPortalIndicies(sourceSectorIndexFlat, SourcePortalIndexList);
+
+            for (int j = 0; j < SourcePortalIndexList.Length; j++)
             {
-                int index = sourcePortalIndicies[j];
-                PortalTraversalData travData = PortalTraversalDataArray[index];
-                if (travData.HasMark(PortalTraversalMark.Source)) { continue; }
-                travData.Mark |= PortalTraversalMark.Source;
-                PortalTraversalDataArray[index] = travData;
+                int index = SourcePortalIndexList[j];
+                if (PortalNodes[index].IslandIndex != targetIsland) { continue; }
                 indicies.Add(index);
             }
         }
         return indicies;
-
     }
-    void RunFastMarching(int sourcePortalCount, ref UnsafeList<int> targetSectorPortalIndicies)
+    void RunDijkstra()
     {
+        SingleUnsafeHeap<int> travHeap = new SingleUnsafeHeap<int>(0, Allocator.Temp);
         NativeArray<PortalTraversalData> portalTraversalDataArray = PortalTraversalDataArray;
-        NativeArray<PortalNode> portalNodes = PortalNodes;
+        UnsafeList<PortalNode> portalNodes = PortalNodes;
         NativeArray<PortalToPortal> porPtrs = PorPtrs;
-        NativeQueue<int> marchQueue = new NativeQueue<int>(Allocator.Temp);
 
         //MARK TARGET NEIGHBOURS
-        for (int i = 0; i < targetSectorPortalIndicies.Length; i++)
+        for (int i = 0; i < TargetNeighbourPortalIndicies.Length; i++)
         {
-            int index = targetSectorPortalIndicies[i];
+            int index = TargetNeighbourPortalIndicies[i];
+            PortalTraversalData targetNeighbour = PortalTraversalDataArray[index];
+            targetNeighbour.Mark |= PortalTraversalMark.DijkstraTraversed;
+            PortalTraversalDataArray[index] = targetNeighbour;
+        }
+
+        for (int i = 0; i < TargetNeighbourPortalIndicies.Length; i++)
+        {
+            int index = TargetNeighbourPortalIndicies[i];
+            float distanceFromTarget = portalTraversalDataArray[index].DistanceFromTarget;
+            EnqueueNeighbours(index, distanceFromTarget);
+        }
+
+        int curIndex = GetNextIndex();
+        while (curIndex != -1)
+        {
+            float distanceFromTarget = portalTraversalDataArray[curIndex].DistanceFromTarget;
+            EnqueueNeighbours(curIndex, distanceFromTarget);
+            curIndex = GetNextIndex();
+        }
+        int GetNextIndex()
+        {
+            if (travHeap.IsEmpty) { return - 1; }
+            int nextMinIndex = travHeap.ExtractMin();
+            PortalTraversalData nextMinTraversalData = portalTraversalDataArray[nextMinIndex];
+            while (nextMinTraversalData.HasMark(PortalTraversalMark.DijstraExtracted))
+            {
+                if (travHeap.IsEmpty) { return -1; }
+                nextMinIndex = travHeap.ExtractMin();
+                nextMinTraversalData = portalTraversalDataArray[nextMinIndex];
+            }
+            nextMinTraversalData.Mark |= PortalTraversalMark.DijstraExtracted;
+            portalTraversalDataArray[nextMinIndex] = nextMinTraversalData;
+            return nextMinIndex;
+        }
+        void EnqueueNeighbours(int index, float gCost)
+        {
+            PortalNode portal = portalNodes[index];
+            int por1Ptr = portal.Portal1.PorToPorPtr;
+            int por1Cnt = portal.Portal1.PorToPorCnt;
+            int por2Ptr = portal.Portal2.PorToPorPtr;
+            int por2Cnt = portal.Portal2.PorToPorCnt;
+
+            for (int i = por1Ptr; i < por1Ptr + por1Cnt; i++)
+            {
+                int portalIndex = porPtrs[i].Index;
+                float portalDistance = porPtrs[i].Distance;
+                PortalTraversalData porData = portalTraversalDataArray[portalIndex];
+                if (!porData.HasMark(PortalTraversalMark.Reduced) || porData.HasMark(PortalTraversalMark.DijstraExtracted)) { continue; }
+                if (porData.HasMark(PortalTraversalMark.DijkstraTraversed))
+                {
+                    float newGCost = gCost + portalDistance + 1;
+                    if(porData.DistanceFromTarget <= newGCost) { continue; }
+                    porData.DistanceFromTarget = newGCost;
+                    porData.NextIndex = index;
+                    portalTraversalDataArray[portalIndex] = porData;
+                    travHeap.Add(portalIndex, newGCost);
+                    continue;
+                }
+                porData.Mark |= PortalTraversalMark.DijkstraTraversed;
+                porData.DistanceFromTarget = gCost + portalDistance + 1;
+                porData.NextIndex = index;
+                portalTraversalDataArray[portalIndex] = porData;
+                travHeap.Add(portalIndex, gCost + portalDistance + 1);
+            }
+            for (int i = por2Ptr; i < por2Ptr + por2Cnt; i++)
+            {
+                int portalIndex = porPtrs[i].Index;
+                float portalDistance = porPtrs[i].Distance;
+                PortalTraversalData porData = portalTraversalDataArray[portalIndex];
+                if (!porData.HasMark(PortalTraversalMark.Reduced) || porData.HasMark(PortalTraversalMark.DijstraExtracted)) { continue; }
+                if (porData.HasMark(PortalTraversalMark.DijkstraTraversed))
+                {
+                    float newGCost = gCost + portalDistance + 1;
+                    if (porData.DistanceFromTarget <= newGCost) { continue; }
+                    porData.DistanceFromTarget = newGCost;
+                    porData.NextIndex = index;
+                    portalTraversalDataArray[portalIndex] = porData;
+                    travHeap.Add(portalIndex, newGCost);
+                    continue;
+                }
+                porData.Mark |= PortalTraversalMark.DijkstraTraversed;
+                porData.DistanceFromTarget = gCost + portalDistance + 1;
+                porData.NextIndex = index;
+                portalTraversalDataArray[portalIndex] = porData;
+                travHeap.Add(portalIndex, gCost + portalDistance + 1);
+            }
+        }
+    }
+    void RunFastMarching()
+    {/*
+        NativeQueue<int> fastMarchingQueue = FastMarchingQueue;
+        NativeArray<PortalTraversalData> portalTraversalDataArray = PortalTraversalDataArray;
+        UnsafeList<PortalNode> portalNodes = PortalNodes;
+        NativeArray<PortalToPortal> porPtrs = PorPtrs;
+
+        //MARK TARGET NEIGHBOURS
+        for(int i = 0; i< TargetNeighbourPortalIndicies.Length; i++)
+        {
+            int index = TargetNeighbourPortalIndicies[i];
             PortalTraversalData targetNeighbour = PortalTraversalDataArray[index];
             targetNeighbour.Mark |= PortalTraversalMark.FastMarchTraversed;
             PortalTraversalDataArray[index] = targetNeighbour;
-            sourcePortalCount = math.select(sourcePortalCount, sourcePortalCount - 1, targetNeighbour.HasMark(PortalTraversalMark.Source));
         }
-
-        for (int i = 0; i < targetSectorPortalIndicies.Length; i++)
+        
+        for(int i = 0; i< TargetNeighbourPortalIndicies.Length; i++)
         {
-            int index = targetSectorPortalIndicies[i];
+            int index = TargetNeighbourPortalIndicies[i];
             EnqueueNeighbours(index);
         }
 
-        while (!marchQueue.IsEmpty())
+        while (!fastMarchingQueue.IsEmpty())
         {
-            int curIndex = marchQueue.Dequeue();
+            int curIndex = fastMarchingQueue.Dequeue();
 
             //GET BEST NEIGHBOUR
             PortalNode portal = portalNodes[curIndex];
@@ -246,7 +365,7 @@ public struct NewPortalNodeAdditionTraversalJob : IJob
                 PortalToPortal porToPor = porPtrs[i];
                 int portalIndex = porToPor.Index;
                 PortalTraversalData porData = portalTraversalDataArray[portalIndex];
-                float totalDistance = porData.DistanceFromTarget + porToPor.Distance;
+                float totalDistance = porData.DistanceFromTarget + porToPor.Distance + 1;
                 indexWithMinDistance = math.select(indexWithMinDistance, portalIndex, totalDistance < minDistance);
                 minDistance = math.select(minDistance, totalDistance, totalDistance < minDistance);
             }
@@ -255,19 +374,16 @@ public struct NewPortalNodeAdditionTraversalJob : IJob
                 PortalToPortal porToPor = porPtrs[i];
                 int portalIndex = porToPor.Index;
                 PortalTraversalData porData = portalTraversalDataArray[portalIndex];
-                float totalDistance = porData.DistanceFromTarget + porToPor.Distance;
+                float totalDistance = porData.DistanceFromTarget + porToPor.Distance + 1;
                 indexWithMinDistance = math.select(indexWithMinDistance, portalIndex, totalDistance < minDistance);
                 minDistance = math.select(minDistance, totalDistance, totalDistance < minDistance);
             }
+
             //APPLY COST AND ORIGIN
             PortalTraversalData curData = PortalTraversalDataArray[curIndex];
             curData.NextIndex = indexWithMinDistance;
             curData.DistanceFromTarget = minDistance;
             PortalTraversalDataArray[curIndex] = curData;
-
-            //BREAK IF FINISHED
-            sourcePortalCount = math.select(sourcePortalCount, sourcePortalCount - 1, curData.HasMark(PortalTraversalMark.Source));
-            if (sourcePortalCount <= 0) { return; }
 
             //ENQUEUE NEIGHBOURS
             EnqueueNeighbours(curIndex);
@@ -281,29 +397,30 @@ public struct NewPortalNodeAdditionTraversalJob : IJob
             int por2Ptr = portal.Portal2.PorToPorPtr;
             int por2Cnt = portal.Portal2.PorToPorCnt;
 
-            for (int i = por1Ptr; i < por1Ptr + por1Cnt; i++)
+            for(int i = por1Ptr; i < por1Ptr + por1Cnt; i++)
             {
                 int portalIndex = porPtrs[i].Index;
                 PortalTraversalData porData = portalTraversalDataArray[portalIndex];
                 if (porData.HasMark(PortalTraversalMark.FastMarchTraversed) || !porData.HasMark(PortalTraversalMark.Reduced)) { continue; }
                 porData.Mark |= PortalTraversalMark.FastMarchTraversed;
                 portalTraversalDataArray[portalIndex] = porData;
-                marchQueue.Enqueue(portalIndex);
+                fastMarchingQueue.Enqueue(portalIndex);
             }
             for (int i = por2Ptr; i < por2Ptr + por2Cnt; i++)
             {
+
                 int portalIndex = porPtrs[i].Index;
                 PortalTraversalData porData = portalTraversalDataArray[portalIndex];
                 if (porData.HasMark(PortalTraversalMark.FastMarchTraversed) || !porData.HasMark(PortalTraversalMark.Reduced)) { continue; }
                 porData.Mark |= PortalTraversalMark.FastMarchTraversed;
                 portalTraversalDataArray[portalIndex] = porData;
-                marchQueue.Enqueue(portalIndex);
+                fastMarchingQueue.Enqueue(portalIndex);
             }
-        }
+        }*/
     }
-    int RunReductionAStar(int sourcePortalIndex, UnsafeHeap<int> traversalHeap, NativeArray<DijkstraTile> targetSectorCosts, ref UnsafeList<int> traversedIndicies, NativeQueue<int> marchingStartIndicies)
+    int RunReductionAStar(int sourcePortalIndex, DoubleUnsafeHeap<int> traversalHeap)
     {
-        NativeArray<PortalNode> portalNodes = PortalNodes;
+        UnsafeList<PortalNode> portalNodes = PortalNodes;
         NativeArray<PortalTraversalData> portalTraversalDataArray = PortalTraversalDataArray;
         PortalTraversalData curData = PortalTraversalDataArray[sourcePortalIndex];
         if (curData.HasMark(PortalTraversalMark.AStarPicked))
@@ -317,10 +434,10 @@ public struct NewPortalNodeAdditionTraversalJob : IJob
             FCost = 0,
             GCost = 0,
             HCost = float.MaxValue,
-            Mark = curData.Mark | PortalTraversalMark.AStarPicked | PortalTraversalMark.Added | PortalTraversalMark.Reduced,
+            Mark = curData.Mark | PortalTraversalMark.AStarPicked | PortalTraversalMark.AStarTraversed | PortalTraversalMark.Reduced,
             OriginIndex = sourcePortalIndex,
-            DistanceFromTarget = float.MaxValue,
             NextIndex = -1,
+            DistanceFromTarget = curData.DistanceFromTarget,
         };
         PortalTraversalDataArray[sourcePortalIndex] = curData;
 
@@ -333,15 +450,15 @@ public struct NewPortalNodeAdditionTraversalJob : IJob
         int por2P2pCnt = curNode.Portal2.PorToPorCnt;
 
         //HANDLE NEIGHBOURS
-        traversedIndicies.Add(curNodeIndex);
-        TraverseNeighbours(curData, ref traversalHeap, ref traversedIndicies, targetSectorCosts, curNodeIndex, por1P2pIdx, por1P2pIdx + por1P2pCnt);
-        TraverseNeighbours(curData, ref traversalHeap, ref traversedIndicies, targetSectorCosts, curNodeIndex, por2P2pIdx, por2P2pIdx + por2P2pCnt);
+        AStarTraverseIndexList.Add(curNodeIndex);
+        TraverseNeighbours(curData, ref traversalHeap, curNodeIndex, por1P2pIdx, por1P2pIdx + por1P2pCnt);
+        TraverseNeighbours(curData, ref traversalHeap, curNodeIndex, por2P2pIdx, por2P2pIdx + por2P2pCnt);
         SetNextNode();
 
         while (!curData.HasMark(PortalTraversalMark.AStarPicked))
         {
-            TraverseNeighbours(curData, ref traversalHeap, ref traversedIndicies, targetSectorCosts, curNodeIndex, por1P2pIdx, por1P2pIdx + por1P2pCnt);
-            TraverseNeighbours(curData, ref traversalHeap, ref traversedIndicies, targetSectorCosts, curNodeIndex, por2P2pIdx, por2P2pIdx + por2P2pCnt);
+            TraverseNeighbours(curData, ref traversalHeap, curNodeIndex, por1P2pIdx, por1P2pIdx + por1P2pCnt);
+            TraverseNeighbours(curData, ref traversalHeap, curNodeIndex, por2P2pIdx, por2P2pIdx + por2P2pCnt);
             SetNextNode();
         }
         return curNodeIndex;
@@ -350,12 +467,12 @@ public struct NewPortalNodeAdditionTraversalJob : IJob
             if (traversalHeap.IsEmpty) { return; }
             int nextMinIndex = traversalHeap.ExtractMin();
             PortalTraversalData nextMinTraversalData = portalTraversalDataArray[nextMinIndex];
-            while (nextMinTraversalData.HasMark(PortalTraversalMark.Extracted))
+            while (nextMinTraversalData.HasMark(PortalTraversalMark.AStarExtracted))
             {
                 nextMinIndex = traversalHeap.ExtractMin();
                 nextMinTraversalData = portalTraversalDataArray[nextMinIndex];
             }
-            nextMinTraversalData.Mark |= PortalTraversalMark.Extracted;
+            nextMinTraversalData.Mark |= PortalTraversalMark.AStarExtracted;
             curData = nextMinTraversalData;
             portalTraversalDataArray[nextMinIndex] = curData;
             curNodeIndex = nextMinIndex;
@@ -366,19 +483,19 @@ public struct NewPortalNodeAdditionTraversalJob : IJob
             por2P2pCnt = curNode.Portal2.PorToPorCnt;
         }
     }
-    void TraverseNeighbours(PortalTraversalData curData, ref UnsafeHeap<int> traversalHeap, ref UnsafeList<int> traversedIndicies, NativeArray<DijkstraTile> targetSectorCosts, int curNodeIndex, int from, int to)
+    void TraverseNeighbours(PortalTraversalData curData, ref DoubleUnsafeHeap<int> traversalHeap, int curNodeIndex, int from, int to)
     {
         for (int i = from; i < to; i++)
         {
             PortalToPortal neighbourConnection = PorPtrs[i];
             PortalNode portalNode = PortalNodes[neighbourConnection.Index];
             PortalTraversalData traversalData = PortalTraversalDataArray[neighbourConnection.Index];
-            if (traversalData.HasMark(PortalTraversalMark.Added))
+            if (traversalData.HasMark(PortalTraversalMark.AStarTraversed))
             {
                 float newGCost = curData.GCost + neighbourConnection.Distance;
                 if (newGCost < traversalData.GCost)
                 {
-                    float newFCost = traversalData.HCost * HMultiplier + newGCost * GMultiplier;
+                    float newFCost = traversalData.HCost + newGCost;
                     traversalData.GCost = newGCost;
                     traversalData.FCost = newFCost;
                     traversalData.OriginIndex = curNodeIndex;
@@ -390,27 +507,27 @@ public struct NewPortalNodeAdditionTraversalJob : IJob
             {
                 float hCost = GetHCost(portalNode.Portal1.Index);
                 float gCost = curData.GCost + neighbourConnection.Distance;
-                float fCost = hCost * HMultiplier + gCost * GMultiplier;
+                float fCost = hCost * gCost;
                 traversalData.HCost = hCost;
                 traversalData.GCost = gCost;
                 traversalData.FCost = fCost;
-                traversalData.Mark |= PortalTraversalMark.Added | PortalTraversalMark.Reduced;
+                traversalData.Mark |= PortalTraversalMark.AStarTraversed | PortalTraversalMark.Reduced;
                 traversalData.OriginIndex = curNodeIndex;
                 PortalTraversalDataArray[neighbourConnection.Index] = traversalData;
                 traversalHeap.Add(neighbourConnection.Index, traversalData.FCost, traversalData.HCost);
-                traversedIndicies.Add(neighbourConnection.Index);
+                AStarTraverseIndexList.Add(neighbourConnection.Index);
             }
         }
         if (curData.HasMark(PortalTraversalMark.TargetNeighbour))
         {
             int targetNodeIndex = PortalNodes.Length - 1;
             PortalTraversalData traversalData = PortalTraversalDataArray[targetNodeIndex];
-            if (traversalData.HasMark(PortalTraversalMark.Added))
+            if (traversalData.HasMark(PortalTraversalMark.AStarTraversed))
             {
-                float newGCost = curData.GCost + GetGCostBetweenTargetAndTargetNeighbour(curNodeIndex, targetSectorCosts);
+                float newGCost = curData.GCost + GetGCostBetweenTargetAndTargetNeighbour(curNodeIndex);
                 if (newGCost < traversalData.GCost)
                 {
-                    float newFCost = traversalData.HCost * HMultiplier + newGCost * GMultiplier;
+                    float newFCost = traversalData.HCost + newGCost;
                     traversalData.GCost = newGCost;
                     traversalData.FCost = newFCost;
                     traversalData.OriginIndex = curNodeIndex;
@@ -421,16 +538,16 @@ public struct NewPortalNodeAdditionTraversalJob : IJob
             else
             {
                 float hCost = 0f;
-                float gCost = curData.GCost + GetGCostBetweenTargetAndTargetNeighbour(curNodeIndex, targetSectorCosts);
-                float fCost = hCost * HMultiplier + gCost * GMultiplier;
+                float gCost = curData.GCost + GetGCostBetweenTargetAndTargetNeighbour(curNodeIndex);
+                float fCost = hCost + gCost;
                 traversalData.HCost = hCost;
                 traversalData.GCost = gCost;
                 traversalData.FCost = fCost;
-                traversalData.Mark |= PortalTraversalMark.Added;
+                traversalData.Mark |= PortalTraversalMark.AStarTraversed;
                 traversalData.OriginIndex = curNodeIndex;
                 PortalTraversalDataArray[targetNodeIndex] = traversalData;
                 traversalHeap.Add(targetNodeIndex, traversalData.FCost, traversalData.HCost);
-                traversedIndicies.Add(targetNodeIndex);
+                AStarTraverseIndexList.Add(targetNodeIndex);
             }
         }
     }
@@ -438,37 +555,47 @@ public struct NewPortalNodeAdditionTraversalJob : IJob
     {
         int2 newNodePos = new int2(nodePos.C, nodePos.R);
         int2 targetPos = TargetIndex;
-
+        
         int xDif = math.abs(newNodePos.x - targetPos.x);
         int yDif = math.abs(newNodePos.y - targetPos.y);
         int smallOne = math.min(xDif, yDif);
         int bigOne = math.max(xDif, yDif);
         return (bigOne - smallOne) * 1f + smallOne * 1.4f;
     }
-    void SetTargetNeighbourPortalData(UnsafeList<int> targetSectorPortalIndicies, NativeArray<DijkstraTile> integratedCostsAtTargetSector)
+    void SetTargetNeighbourPortalDataAndAddToList()
     {
-        for (int i = 0; i < targetSectorPortalIndicies.Length; i++)
+        SectorNode sectorNode = SectorNodes[_targetSectorIndex1d];
+        int winPtr = sectorNode.SecToWinPtr;
+        int winCnt = sectorNode.SecToWinCnt;
+        for (int i = 0; i < winCnt; i++)
         {
-            int portalNodeIndex = targetSectorPortalIndicies[i];
-            int portalLocalIndexAtSector = GetPortalLocalIndexAtSector(PortalNodes[portalNodeIndex], _targetSectorIndex1d, _targetSectorStartIndex1d);
-            float integratedCost = integratedCostsAtTargetSector[portalLocalIndexAtSector].IntegratedCost;
-            if (integratedCost == float.MaxValue) { continue; }
-            PortalTraversalDataArray[portalNodeIndex] = new PortalTraversalData()
+            WindowNode windowNode = WindowNodes[SecToWinPtrs[winPtr + i]];
+            int porPtr = windowNode.PorPtr;
+            int porCnt = windowNode.PorCnt;
+            for (int j = porPtr; j < porCnt + porPtr; j++)
             {
-                DistanceFromTarget = integratedCost,
-                FCost = float.MaxValue,
-                GCost = float.MaxValue,
-                HCost = float.MaxValue,
-                OriginIndex = portalNodeIndex,
-                Mark = PortalTraversalMark.TargetNeighbour,
-                NextIndex = -1,
-            };
+                int portalNodeIndex = j;
+                int portalLocalIndexAtSector = GetPortalLocalIndexAtSector(PortalNodes[portalNodeIndex], _targetSectorIndex1d, _targetSectorStartIndex1d);
+                float integratedCost = TargetSectorCosts[portalLocalIndexAtSector].IntegratedCost;
+                if (integratedCost == float.MaxValue) { continue; }
+                PortalTraversalDataArray[portalNodeIndex] = new PortalTraversalData()
+                {
+                    DistanceFromTarget = integratedCost,
+                    FCost = float.MaxValue,
+                    GCost = float.MaxValue,
+                    HCost = float.MaxValue,
+                    OriginIndex = portalNodeIndex,
+                    Mark = PortalTraversalMark.TargetNeighbour,
+                    NextIndex = -1,
+                };
+                TargetNeighbourPortalIndicies.Add(portalNodeIndex);
+            }
         }
     }
-    float GetGCostBetweenTargetAndTargetNeighbour(int targetNeighbourIndex, NativeArray<DijkstraTile> targetSectorCosts)
+    float GetGCostBetweenTargetAndTargetNeighbour(int targetNeighbourIndex)
     {
         int portalLocalIndexAtSector = GetPortalLocalIndexAtSector(PortalNodes[targetNeighbourIndex], _targetSectorIndex1d, _targetSectorStartIndex1d);
-        return targetSectorCosts[portalLocalIndexAtSector].IntegratedCost;
+        return TargetSectorCosts[portalLocalIndexAtSector].IntegratedCost;
     }
     NativeArray<DijkstraTile> GetIntegratedCosts(int targetIndex)
     {
@@ -477,9 +604,8 @@ public struct NewPortalNodeAdditionTraversalJob : IJob
         CalculateIntegratedCosts(integratedCosts, aStarQueue, SectorNodes[_targetSectorIndex1d].Sector, targetIndex);
         return integratedCosts;
     }
-    UnsafeList<int> GetPortalIndicies(int targetSectorIndexF)
+    void SetSectorPortalIndicies(int targetSectorIndexF, NativeList<int> destinationList)
     {
-        UnsafeList<int> portalIndicies = new UnsafeList<int>(0, Allocator.Temp);
         SectorNode sectorNode = SectorNodes[targetSectorIndexF];
         int winPtr = sectorNode.SecToWinPtr;
         int winCnt = sectorNode.SecToWinCnt;
@@ -490,15 +616,12 @@ public struct NewPortalNodeAdditionTraversalJob : IJob
             int porCnt = windowNode.PorCnt;
             for (int j = 0; j < porCnt; j++)
             {
-                portalIndicies.Add(j + porPtr);
+                destinationList.Add(j + porPtr);
             }
         }
-        return portalIndicies;
     }
     void PickSectorsFromPortalSequence()
     {
-        int sectorTileAmount = SectorColAmount * SectorColAmount;
-        int pickedSectorAmount = 0;
         for (int i = 0; i < PortalSequenceBorders.Length - 1; i++)
         {
             int start = PortalSequenceBorders[i];
@@ -507,47 +630,80 @@ public struct NewPortalNodeAdditionTraversalJob : IJob
             {
                 int portalIndex1 = PortalSequence[j].Index;
                 int portalIndex2 = PortalSequence[j + 1].Index;
-                int windowIndex1 = PortalNodes[portalIndex1].WinPtr;
-                int windowIndex2 = PortalNodes[portalIndex2].WinPtr;
-                WindowNode winNode1 = WindowNodes[windowIndex1];
-                WindowNode winNode2 = WindowNodes[windowIndex2];
-                int win1Sec1Index = WinToSecPtrs[winNode1.WinToSecPtr];
-                int win1Sec2Index = WinToSecPtrs[winNode1.WinToSecPtr + 1];
-                int win2Sec1Index = WinToSecPtrs[winNode2.WinToSecPtr];
-                int win2Sec2Index = WinToSecPtrs[winNode2.WinToSecPtr + 1];
-                if ((win1Sec1Index == win2Sec1Index || win1Sec1Index == win2Sec2Index) && SectorToPicked[win1Sec1Index] == 0)
-                {
-                    SectorToPicked[win1Sec1Index] = pickedSectorAmount * sectorTileAmount + 1;
-                    PickedToSector.Add(win1Sec1Index);
-                    pickedSectorAmount++;
-                }
-                if ((win1Sec2Index == win2Sec1Index || win1Sec2Index == win2Sec2Index) && SectorToPicked[win1Sec2Index] == 0)
-                {
-                    SectorToPicked[win1Sec2Index] = pickedSectorAmount * sectorTileAmount + 1;
-                    PickedToSector.Add(win1Sec2Index);
-                    pickedSectorAmount++;
-                }
-
+                PickSectorsBetweenportals(portalIndex1, portalIndex2);
+            }
+            ActivePortal lastActivePortalInBorder = PortalSequence[end - 1];
+            if(lastActivePortalInBorder.NextIndex != -1)
+            {
+                int portalIndex1 = lastActivePortalInBorder.Index;
+                int portalIndex2 = PortalSequence[lastActivePortalInBorder.NextIndex].Index;
+                PickSectorsBetweenportals(portalIndex1, portalIndex2);
             }
 
         }
-
     }
-    void AddSourceAndTargetSectors()
+    void PickSectorsBetweenportals(int portalIndex1, int portalIndex2)
     {
         int sectorTileAmount = SectorColAmount * SectorColAmount;
-        for (int i = 0; i < SourcePositions.Length; i++)
+        int windowIndex1 = PortalNodes[portalIndex1].WinPtr;
+        int windowIndex2 = PortalNodes[portalIndex2].WinPtr;
+        WindowNode winNode1 = WindowNodes[windowIndex1];
+        WindowNode winNode2 = WindowNodes[windowIndex2];
+        int win1Sec1Index = WinToSecPtrs[winNode1.WinToSecPtr];
+        int win1Sec2Index = WinToSecPtrs[winNode1.WinToSecPtr + 1];
+        int win2Sec1Index = WinToSecPtrs[winNode2.WinToSecPtr];
+        int win2Sec2Index = WinToSecPtrs[winNode2.WinToSecPtr + 1];
+        if ((win1Sec1Index == win2Sec1Index || win1Sec1Index == win2Sec2Index) && SectorToPicked[win1Sec1Index] == 0)
         {
-            float2 sourcePos = SourcePositions[i];
-            int2 sourceIndex = new int2((int)math.floor(sourcePos.x / FieldTileSize), (int)math.floor(sourcePos.y / FieldTileSize));
-            int2 sourceSectorIndex = sourceIndex / SectorColAmount;
-            int sourceSectorIndexFlat = sourceSectorIndex.y * SectorMatrixColAmount + sourceSectorIndex.x;
-            SectorToPicked[sourceSectorIndexFlat] = PickedToSector.Length * sectorTileAmount + 1;
-            PickedToSector.Add(sourceSectorIndexFlat);
+            SectorToPicked[win1Sec1Index] = PickedToSector.Length * sectorTileAmount + 1;
+            PickedToSector.Add(win1Sec1Index);
+            SectorStateTable[win1Sec1Index] |= PathSectorState.Included;
+        }
+        if ((win1Sec2Index == win2Sec1Index || win1Sec2Index == win2Sec2Index) && SectorToPicked[win1Sec2Index] == 0)
+        {
+            SectorToPicked[win1Sec2Index] = PickedToSector.Length * sectorTileAmount + 1;
+            PickedToSector.Add(win1Sec2Index);
+            SectorStateTable[win1Sec2Index] |= PathSectorState.Included;
+        }
+    }
+    public int GetIsland(int2 general2d)
+    {
+        int2 sector2d = FlowFieldUtilities.GetSector2D(general2d, SectorColAmount);
+        int sector1d = FlowFieldUtilities.To1D(sector2d, SectorMatrixColAmount);
+        SectorNode sector = SectorNodes[sector1d];
+
+        if (sector.IsIslandValid())
+        {
+            return PortalNodes[sector.SectorIslandPortalIndex].IslandIndex;
+        }
+        else if (sector.IsIslandField)
+        {
+            int2 sectorStart = FlowFieldUtilities.GetSectorStartIndex(sector2d, SectorColAmount);
+            int2 local2d = FlowFieldUtilities.GetLocal2D(general2d, sectorStart);
+            int local1d = FlowFieldUtilities.To1D(local2d, SectorColAmount);
+            int island = IslandFields[sector1d][local1d];
+            switch (island)
+            {
+                case < 0:
+                    return -island;
+                case int.MaxValue:
+                    return int.MaxValue;
+                default:
+                    return PortalNodes[island].IslandIndex;
+            }
+        }
+        return int.MaxValue;
+    }
+    void AddTargetSector()
+    {
+        int sectorTileAmount = SectorColAmount * SectorColAmount;
+        if (SectorToPicked[_targetSectorIndex1d] == 0)
+        {
             SectorToPicked[_targetSectorIndex1d] = PickedToSector.Length * sectorTileAmount + 1;
             PickedToSector.Add(_targetSectorIndex1d);
-            FlowFieldLength[0] = PickedToSector.Length * sectorTileAmount + 1;
+            SectorStateTable[_targetSectorIndex1d] |= PathSectorState.Included;
         }
+        FlowFieldLength[0] = PickedToSector.Length * sectorTileAmount + 1;
     }
     //HELPERS
     int GetPortalLocalIndexAtSector(PortalNode portalNode, int sectorIndex, int sectorStartIndex)
@@ -678,7 +834,7 @@ public struct NewPortalNodeAdditionTraversalJob : IJob
             return (distanceFromSectorStart % fieldColAmount) + (sectorTileAmount * (distanceFromSectorStart / fieldColAmount));
         }
     }
-    public struct UnsafeHeap<T> where T : unmanaged
+    public struct SingleUnsafeHeap<T> where T : unmanaged
     {
         public UnsafeList<HeapElement<T>> _array;
         public T this[int index]
@@ -695,7 +851,156 @@ public struct NewPortalNodeAdditionTraversalJob : IJob
                 return _array.IsEmpty;
             }
         }
-        public UnsafeHeap(int size, Allocator allocator)
+        public SingleUnsafeHeap(int size, Allocator allocator)
+        {
+            _array = new UnsafeList<HeapElement<T>>(size, allocator);
+        }
+        public void Clear()
+        {
+            _array.Clear();
+        }
+        public void Add(T element, float pri)
+        {
+            int elementIndex = _array.Length;
+            _array.Add(new HeapElement<T>(element, pri));
+            if (elementIndex != 0)
+            {
+                HeapifyUp(elementIndex);
+            }
+        }
+        public T GetMin() => _array[0].data;
+        public T ExtractMin()
+        {
+            T min = _array[0].data;
+            HeapElement<T> last = _array[_array.Length - 1];
+            _array[0] = last;
+            _array.Length--;
+            if (_array.Length > 1)
+            {
+                HeapifyDown(0);
+            }
+            return min;
+        }
+        public void SetPriority(int index, float pri)
+        {
+            int length = _array.Length;
+            HeapElement<T> cur = _array[index];
+            cur.pri = pri;
+            _array[index] = cur;
+            int parIndex = index / 2 - 1;
+            int lcIndex = index * 2 + 1;
+            int rcIndex = index * 2 + 2;
+            parIndex = math.select(index, parIndex, parIndex >= 0);
+            lcIndex = math.select(index, lcIndex, lcIndex < length);
+            rcIndex = math.select(index, rcIndex, rcIndex < length);
+            HeapElement<T> parent = _array[parIndex];
+            if (cur.pri < parent.pri)
+            {
+                HeapifyUp(index);
+            }
+            else
+            {
+                HeapifyDown(index);
+            }
+        }
+        public void Dispose()
+        {
+            _array.Dispose();
+        }
+
+        void HeapifyUp(int startIndex)
+        {
+            int curIndex = startIndex;
+            int parIndex = (curIndex - 1) / 2;
+            HeapElement<T> cur = _array[startIndex];
+            HeapElement<T> par = _array[parIndex];
+            bool isCurSmaller = cur.pri < par.pri;
+            while (isCurSmaller)
+            {
+                _array[parIndex] = cur;
+                _array[curIndex] = par;
+                curIndex = parIndex;
+                parIndex = math.select((curIndex - 1) / 2, 0, curIndex == 0);
+                par = _array[parIndex];
+                isCurSmaller = cur.pri < par.pri;
+            }
+        }
+        void HeapifyDown(int startIndex)
+        {
+            int length = _array.Length;
+            int curIndex = startIndex;
+            int lcIndex = startIndex * 2 + 1;
+            int rcIndex = lcIndex + 1;
+            lcIndex = math.select(curIndex, lcIndex, lcIndex < length);
+            rcIndex = math.select(curIndex, rcIndex, rcIndex < length);
+            HeapElement<T> cur;
+            HeapElement<T> lc;
+            HeapElement<T> rc;
+            while (lcIndex != curIndex)
+            {
+                cur = _array[curIndex];
+                lc = _array[lcIndex];
+                rc = _array[rcIndex];
+                bool lcSmallerThanRc = lc.pri < rc.pri;
+                bool lcSmallerThanCur = lc.pri < cur.pri;
+                bool rcSmallerThanCur = rc.pri < cur.pri;
+
+                if (lcSmallerThanRc && lcSmallerThanCur)
+                {
+                    _array[curIndex] = lc;
+                    _array[lcIndex] = cur;
+                    curIndex = lcIndex;
+                    lcIndex = curIndex * 2 + 1;
+                    rcIndex = lcIndex + 1;
+                    lcIndex = math.select(lcIndex, curIndex, lcIndex >= length);
+                    rcIndex = math.select(rcIndex, curIndex, rcIndex >= length);
+                }
+                else if (!lcSmallerThanRc && rcSmallerThanCur)
+                {
+                    _array[curIndex] = rc;
+                    _array[rcIndex] = cur;
+                    curIndex = rcIndex;
+                    lcIndex = curIndex * 2 + 1;
+                    rcIndex = lcIndex + 1;
+                    lcIndex = math.select(lcIndex, curIndex, lcIndex >= length);
+                    rcIndex = math.select(rcIndex, curIndex, rcIndex >= length);
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+        public struct HeapElement<T> where T : unmanaged
+        {
+            public T data;
+            public float pri;
+
+            public HeapElement(T data, float pri)
+            {
+                this.data = data;
+                this.pri = pri;
+            }
+        }
+    }
+    public struct DoubleUnsafeHeap<T> where T : unmanaged
+    {
+        public UnsafeList<HeapElement<T>> _array;
+        public T this[int index]
+        {
+            get
+            {
+                return _array[index].data;
+            }
+        }
+        public bool IsEmpty
+        {
+            get
+            {
+                return _array.IsEmpty;
+            }
+        }
+        public DoubleUnsafeHeap(int size, Allocator allocator)
         {
             _array = new UnsafeList<HeapElement<T>>(size, allocator);
         }
@@ -829,4 +1134,63 @@ public struct NewPortalNodeAdditionTraversalJob : IJob
             }
         }
     }
+}
+[BurstCompile]
+public struct ActivePortal
+{
+    public int Index;
+    public int NextIndex;
+    public float Distance;
+
+    public bool IsTargetNode() => Index == -1 && Distance == 0 && NextIndex == -1;
+    public bool IsTargetNeighbour() => NextIndex == -1;
+    public static ActivePortal GetTargetNode()
+    {
+        return new ActivePortal()
+        {
+            Index = -1,
+            Distance = 0,
+            NextIndex = -1
+        };
+    }
+}
+[BurstCompile]
+public struct PortalTraversalData
+{
+    public int OriginIndex;
+    public int NextIndex;
+    public float GCost;
+    public float HCost;
+    public float FCost;
+    public float DistanceFromTarget;
+    public PortalTraversalMark Mark;
+    public bool HasMark(PortalTraversalMark mark)
+    {
+        return (Mark & mark) == mark;
+    }
+}
+public struct DijkstraTile
+{
+    public byte Cost;
+    public float IntegratedCost;
+    public bool IsAvailable;
+
+    public DijkstraTile(byte cost, float integratedCost, bool isAvailable)
+    {
+        Cost = cost;
+        IntegratedCost = integratedCost;
+        IsAvailable = isAvailable;
+    }
+}
+[Flags]
+public enum PortalTraversalMark : byte
+{
+    AStarTraversed = 1,
+    AStarExtracted = 2,
+    AStarPicked = 4,
+    DijkstraTraversed = 8,
+    DijkstraPicked = 16,
+    DijstraExtracted = 32,
+    TargetNeighbour = 64,
+    Reduced = 128,
 }

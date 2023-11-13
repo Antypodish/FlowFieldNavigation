@@ -69,7 +69,7 @@ public class EditorPathDebugger
         {
             PortalTraversalData travData = portalTraversalDataArray[i];
             PortalNode node = portalNodes[i];
-            if (travData.HasMark(PortalTraversalMark.FastMarchPicked))
+            if (travData.HasMark(PortalTraversalMark.DijkstraPicked))
             {
                 Gizmos.color = Color.white;
                 Vector3 portalPos = node.GetPosition(tileSize);

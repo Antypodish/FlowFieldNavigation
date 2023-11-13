@@ -43,7 +43,6 @@ public struct PathfindingTaskOrganizationJob : IJob
             bool destinationUnwalkable = destinationIsland == int.MaxValue;
             if(differentIsland || agentUnwalkable || destinationUnwalkable)
             {
-                UnityEngine.Debug.Log("hi");
                 AgentNewPathIndicies[i] = -1;
                 continue;
             }
@@ -55,7 +54,7 @@ public struct PathfindingTaskOrganizationJob : IJob
             pathRequestSourceLength++;
         }
         
-        //EVALUATE OUT-OF-FIELD AGENTS
+        //EVALUATE FLOW REQUESTS AND PATH ADDITION REQUESTS
         for(int i = 0; i < AgentData.Length; i++)
         {
             float3 agentPosition3d = AgentData[i].Position;
@@ -71,13 +70,25 @@ public struct PathfindingTaskOrganizationJob : IJob
             int agentLocal1d = FlowFieldUtilities.GetLocal1D(agentGeneral2d, agentSectorStart2d, SectorColAmount);
             int sectorFlowStartIndex = curPathData.SectorToPicked[agentSector1d];
             FlowData flow = curPathData.FlowField[sectorFlowStartIndex + agentLocal1d];
-            if (flow.IsValid()) { continue; }
             PathSectorState sectorState = curPathData.SectorStateTable[agentSector1d];
-            if((sectorState & PathSectorState.FlowCalculated) == PathSectorState.FlowCalculated || sectorState == 0) { continue; }
-            curPathData.FlowRequestSourceCount++;
-            CurrentPaths[curPathIndex] = curPathData;
-            agentPathfindingState[i] |= PathTask.FlowRequest;
-            pathRequestSourceLength++;
+            bool sectorIncluded = sectorState != 0;
+            bool flowCalculated = (sectorState & PathSectorState.FlowCalculated) == PathSectorState.FlowCalculated;
+            bool canGetFlow = flow.IsValid();
+            if (!sectorIncluded || (flowCalculated && !canGetFlow))
+            {
+                curPathData.PathAdditionSourceCount++;
+                CurrentPaths[curPathIndex] = curPathData;
+                agentPathfindingState[i] |= PathTask.PathAdditionRequest;
+                pathRequestSourceLength++;
+            }
+            else if (sectorIncluded && !flowCalculated && !canGetFlow)
+            {
+                curPathData.FlowRequestSourceCount++;
+                CurrentPaths[curPathIndex] = curPathData;
+                agentPathfindingState[i] |= PathTask.FlowRequest;
+                pathRequestSourceLength++;
+            }
+
         }
         PathfindingSources.Length = pathRequestSourceLength;
 
@@ -91,17 +102,33 @@ public struct PathfindingTaskOrganizationJob : IJob
             req.AgentCount = 0;
             NewPaths[i] = req;
         }
-
+        //SET CUR PATH SOURCE START INDICIES
         for (int i = 0; i < CurrentPaths.Length; i++)
         {
             PathData curPath = CurrentPaths[i];
-            if(curPath.State == PathState.Removed || curPath.FlowRequestSourceCount == 0) { continue; }
-            curPath.Task |= PathTask.FlowRequest; 
-            curPath.FlowRequestSourceStart = sourceCurIndex;
-            sourceCurIndex += curPath.FlowRequestSourceCount;
-            curPath.FlowRequestSourceCount = 0;
-            CurrentPaths[i] = curPath;
+            bool removed = curPath.State == PathState.Removed;
+            bool hasFlowRequest = curPath.FlowRequestSourceCount != 0;
+            bool hasPathAdditionRequest = curPath.PathAdditionSourceCount != 0;
+            if (removed) { continue; }
+            if (hasFlowRequest)
+            {
+                curPath.Task |= PathTask.FlowRequest;
+                curPath.FlowRequestSourceStart = sourceCurIndex;
+                sourceCurIndex += curPath.FlowRequestSourceCount;
+                curPath.FlowRequestSourceCount = 0;
+                CurrentPaths[i] = curPath;
+            }
+            if (hasPathAdditionRequest)
+            {
+                curPath.Task |= PathTask.PathAdditionRequest;
+                curPath.PathAdditionSourceStart = sourceCurIndex;
+                sourceCurIndex += curPath.PathAdditionSourceCount;
+                curPath.PathAdditionSourceCount = 0;
+                CurrentPaths[i] = curPath;
+            }
+            
         }
+
         //SUBMIT PATH REQ SOURCES
         for (int i = 0; i < AgentData.Length; i++)
         {
@@ -120,15 +147,26 @@ public struct PathfindingTaskOrganizationJob : IJob
             else if(curPathIndex != -1)
             {
                 bool agentFlowRequested = (agentPathfindingState[i] & PathTask.FlowRequest) == PathTask.FlowRequest;
-                if (!agentFlowRequested) { continue; }
-                PathData curPath = CurrentPaths[curPathIndex];
-                bool pathFlowRequested = (curPath.Task & PathTask.FlowRequest) == PathTask.FlowRequest;
-                if (!pathFlowRequested) { continue; }
-                float3 agentPos3 = AgentData[i].Position;
-                float2 agentPos = new float2(agentPos3.x, agentPos3.z);
-                PathfindingSources[curPath.FlowRequestSourceStart + curPath.FlowRequestSourceCount] = agentPos;
-                curPath.FlowRequestSourceCount++;
-                CurrentPaths[curPathIndex] = curPath;
+                bool agentPathAdditionRequested = (agentPathfindingState[i] & PathTask.PathAdditionRequest) == PathTask.PathAdditionRequest;
+                if (agentFlowRequested)
+                {
+                    PathData curPath = CurrentPaths[curPathIndex];
+                    float3 agentPos3 = AgentData[i].Position;
+                    float2 agentPos = new float2(agentPos3.x, agentPos3.z);
+                    PathfindingSources[curPath.FlowRequestSourceStart + curPath.FlowRequestSourceCount] = agentPos;
+                    curPath.FlowRequestSourceCount++;
+                    CurrentPaths[curPathIndex] = curPath;
+                }
+                if (agentPathAdditionRequested)
+                {
+                    PathData curPath = CurrentPaths[curPathIndex];
+                    float3 agentPos3 = AgentData[i].Position;
+                    float2 agentPos = new float2(agentPos3.x, agentPos3.z);
+                    PathfindingSources[curPath.PathAdditionSourceStart + curPath.PathAdditionSourceCount] = agentPos;
+                    curPath.PathAdditionSourceCount++;
+                    CurrentPaths[curPathIndex] = curPath;
+                }
+
             }
         }
     }

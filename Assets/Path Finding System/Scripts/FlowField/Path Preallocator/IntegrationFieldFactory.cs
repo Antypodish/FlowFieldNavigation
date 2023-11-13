@@ -22,6 +22,7 @@ public class IntegrationFieldFactory
             field.Length = length;
             IntegrationFieldResetJob resetJob = new IntegrationFieldResetJob()
             {
+                StartIndex = 0,
                 IntegrationField = field,
             };
             resetJob.Schedule().Complete();
@@ -33,6 +34,7 @@ public class IntegrationFieldFactory
             field.Length = length;
             IntegrationFieldResetJob resetJob = new IntegrationFieldResetJob()
             {
+                StartIndex = 0,
                 IntegrationField = field,
             };
             resetJob.Schedule().Complete();
