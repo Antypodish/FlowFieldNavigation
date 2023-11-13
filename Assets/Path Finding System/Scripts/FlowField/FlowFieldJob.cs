@@ -22,6 +22,7 @@ public struct FlowFieldJob : IJobParallelFor
     [ReadOnly] public NativeArray<int> PickedToSector;
     [ReadOnly] public NativeArray<IntegrationTile> IntegrationField;
     [WriteOnly] public UnsafeList<FlowData> FlowFieldCalculationBuffer;
+    [ReadOnly] public NativeArray<UnsafeList<byte>> Costs;
 
     public void Execute(int index)
     {
@@ -39,8 +40,8 @@ public struct FlowFieldJob : IJobParallelFor
         int horDif = 0;
         while(curIntCost != 0)
         {
-            NewIndexData newIndex = GetNextIndex(curLocalIndex, curPickedSector1d, startPickedSector1d, curIntCost, horDif, verDif);
-            if (newIndex.Index == 0) { break; }
+            NewIndexData newIndex = GetNextIndex(startLocalIndex, curLocalIndex, curPickedSector1d, startPickedSector1d, curIntCost, horDif, verDif);
+            if (newIndex.Index == 0 || (newIndex.Index == -1)) { break; }
             int newFlowFieldIndex = newIndex.Index;
             verDif = newIndex.NewVerDif;
             horDif = newIndex.NewHorDif;
@@ -69,7 +70,7 @@ public struct FlowFieldJob : IJobParallelFor
         FlowFieldCalculationBuffer[index] = flow;
     }
 
-    NewIndexData GetNextIndex(int localIndex, int pickedSector1d, int startingSector1d, float curIntCost, int horizontalDif, int verticalDif)
+    NewIndexData GetNextIndex(int originalLocal1d, int localIndex, int pickedSector1d, int originalSector1d, float curIntCost, int horizontalDif, int verticalDif)
     {
         //LOCAL INDICIES
         int nLocal1d = localIndex + SectorColAmount;
@@ -157,6 +158,27 @@ public struct FlowFieldJob : IJobParallelFor
             swLocal1d = localIndex;
         }
 
+        //RETURN IF IS CORNER
+        bool nBlocked = Costs[nSector1d][nLocal1d] == byte.MaxValue;
+        bool eBlocked = Costs[eSector1d][eLocal1d] == byte.MaxValue;
+        bool sBlocked = Costs[sSector1d][sLocal1d] == byte.MaxValue;
+        bool wBlocked = Costs[wSector1d][wLocal1d] == byte.MaxValue;
+        bool neBlocked = Costs[neSector1d][neLocal1d] == byte.MaxValue;
+        bool seBlocked = Costs[seSector1d][seLocal1d] == byte.MaxValue;
+        bool swBlocked = Costs[swSector1d][swLocal1d] == byte.MaxValue;
+        bool nwBlocked = Costs[nwSector1d][nwLocal1d] == byte.MaxValue;
+
+        bool neCorner = neBlocked && !nBlocked && !eBlocked;
+        bool seCorner = seBlocked && !sBlocked && !eBlocked;
+        bool swCorner = swBlocked && !sBlocked && !wBlocked;
+        bool nwCorner = nwBlocked && !nBlocked && !wBlocked;
+
+        bool moved = horizontalDif != 0 || verticalDif != 0;
+        if((neCorner || seCorner || swCorner || nwCorner) && moved)
+        {
+            return new NewIndexData() { Index = -1, };
+        }
+
         //SECTOR MARKS
         int nSectorMark = SectorToPicked[nSector1d];
         int eSectorMark = SectorToPicked[eSector1d];
@@ -168,14 +190,14 @@ public struct FlowFieldJob : IJobParallelFor
         int nwSectorMark = SectorToPicked[nwSector1d];
 
 
-        int maxNSector = startingSector1d + SectorMatrixColAmount;
-        int maxESector = startingSector1d + 1;
-        int maxSSector = startingSector1d - SectorMatrixColAmount;
-        int maxWSector = startingSector1d - 1;
-        bool nAdjacent = nSector1d == startingSector1d || nSector1d == maxNSector || nSector1d == maxESector || nSector1d == maxWSector || nSector1d == maxSSector;
-        bool eAdjacent = eSector1d == startingSector1d || eSector1d == maxNSector || eSector1d == maxESector || eSector1d == maxWSector || eSector1d == maxSSector;
-        bool sAdjacent = sSector1d == startingSector1d || sSector1d == maxNSector || sSector1d == maxESector || sSector1d == maxWSector || sSector1d == maxSSector;
-        bool wAdjacent = wSector1d == startingSector1d || wSector1d == maxNSector || wSector1d == maxESector || wSector1d == maxWSector || wSector1d == maxSSector;
+        int maxNSector = originalSector1d + SectorMatrixColAmount;
+        int maxESector = originalSector1d + 1;
+        int maxSSector = originalSector1d - SectorMatrixColAmount;
+        int maxWSector = originalSector1d - 1;
+        bool nAdjacent = nSector1d == originalSector1d || nSector1d == maxNSector || nSector1d == maxESector || nSector1d == maxWSector || nSector1d == maxSSector;
+        bool eAdjacent = eSector1d == originalSector1d || eSector1d == maxNSector || eSector1d == maxESector || eSector1d == maxWSector || eSector1d == maxSSector;
+        bool sAdjacent = sSector1d == originalSector1d || sSector1d == maxNSector || sSector1d == maxESector || sSector1d == maxWSector || sSector1d == maxSSector;
+        bool wAdjacent = wSector1d == originalSector1d || wSector1d == maxNSector || wSector1d == maxESector || wSector1d == maxWSector || wSector1d == maxSSector;
 
         int upperDif = verticalDif + 1;
         int lowerDif = verticalDif - 1;

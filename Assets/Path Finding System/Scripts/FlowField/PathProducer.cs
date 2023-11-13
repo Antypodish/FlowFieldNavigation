@@ -332,6 +332,7 @@ public class PathProducer
                 PickedToSector = path.PickedToSector,
                 FlowFieldCalculationBuffer = flowFieldCalculationBuffer,
                 IntegrationField = path.IntegrationField,
+                Costs = pickedCostField.CostsL,
             };
             JobHandle flowHandle = ffJob.Schedule(flowFieldCalculationBuffer.Length, 256, intFieldCombinedHandle);
             flowfieldHandles.Add(flowHandle);
@@ -471,6 +472,7 @@ public class PathProducer
                 PickedToSector = path.PickedToSector,
                 FlowFieldCalculationBuffer = flowFieldCalculationBuffer,
                 IntegrationField = path.IntegrationField,
+                Costs = pickedCostField.CostsL,
             };
             JobHandle flowHandle = ffJob.Schedule(flowFieldCalculationBuffer.Length, 256, intFieldCombinedHandle);
             flowfieldHandles.Add(flowHandle);
@@ -605,6 +607,7 @@ public class PathProducer
                 PickedToSector = path.PickedToSector,
                 FlowFieldCalculationBuffer = flowFieldCalculationBuffer,
                 IntegrationField = path.IntegrationField,
+                Costs = pickedCostField.CostsL,
             };
             JobHandle flowHandle = ffJob.Schedule(flowFieldCalculationBuffer.Length, 256, intFieldCombinedHandle);
             flowfieldHandles.Add(flowHandle);
