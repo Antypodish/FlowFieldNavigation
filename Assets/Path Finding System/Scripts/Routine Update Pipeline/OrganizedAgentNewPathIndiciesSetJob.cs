@@ -6,14 +6,14 @@ using Unity.Burst;
 public struct OrganizedAgentNewPathIndiciesSetJob : IJob
 {
     public NativeArray<int> AgentNewPathIndicies;
-    [ReadOnly] public NativeArray<PathRequest> CurrentRequestedPaths;
+    [ReadOnly] public NativeArray<PathRequest> RequestedPaths;
     public void Execute()
     {
         for (int i = 0; i < AgentNewPathIndicies.Length; i++)
         {
             int pathReqIndex = AgentNewPathIndicies[i];
             if (pathReqIndex < 0) { continue; }
-            PathRequest path = CurrentRequestedPaths[pathReqIndex];
+            PathRequest path = RequestedPaths[pathReqIndex];
             if (!path.IsValid()) { continue; }
             AgentNewPathIndicies[i] = path.PathIndex;
         }

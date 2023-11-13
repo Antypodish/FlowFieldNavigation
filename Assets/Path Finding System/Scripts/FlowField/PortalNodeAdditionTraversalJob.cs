@@ -209,9 +209,9 @@ public struct PortalNodeAdditionTraversalJob : IJob
         for (int i = 0; i < DijkstraStartIndicies.Length; i++)
         {
             int index = DijkstraStartIndicies[i];
-            PortalTraversalData startData = PortalTraversalDataArray[index];
-            startData.Mark |= PortalTraversalMark.DijkstraTraversed;
-            PortalTraversalDataArray[index] = startData;
+            //PortalTraversalData startData = PortalTraversalDataArray[index];
+            //startData.Mark |= PortalTraversalMark.DijkstraTraversed;
+            //PortalTraversalDataArray[index] = startData;
         }
 
         for (int i = 0; i < DijkstraStartIndicies.Length; i++)
