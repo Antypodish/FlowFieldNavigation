@@ -26,6 +26,7 @@ public struct ActivePortalSubmitJob : IJob
     [ReadOnly] public NativeArray<int> PortalSequenceBorders;
 
     public NativeArray<UnsafeList<ActiveWaveFront>> ActiveWaveFrontListArray;
+    public NativeList<int> NotActivatedPortals;
     
 
     public void Execute()
@@ -87,6 +88,7 @@ public struct ActivePortalSubmitJob : IJob
         ActiveWaveFront targetFront = new ActiveWaveFront(targetLocalIndex1d, 0f, -1);
         targetActivePortals.Add(targetFront);
         ActiveWaveFrontListArray[targetPickedSectorIndex] = targetActivePortals;
+        UnityEngine.Debug.Log(NotActivatedPortals.Length);
     }
 
     void AddCommonSectorsBetweenPortalsToTheWaveFront(int curPortalSequenceIndex, int nextPortalSequenceIndex)
@@ -154,6 +156,10 @@ public struct ActivePortalSubmitJob : IJob
                 activePortals.Add(newActiveWaveFront);
                 ActiveWaveFrontListArray[pickedSectorIndex] = activePortals;
             }
+        }
+        else
+        {
+            NotActivatedPortals.Add(curPortalSequenceIndex);
         }
     }
     

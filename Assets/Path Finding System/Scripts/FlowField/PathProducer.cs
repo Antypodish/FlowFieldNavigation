@@ -237,6 +237,7 @@ public class PathProducer
             PortalTraversalFastMarchingQueue = preallocations.PortalTraversalFastMarchingQueue,
             SectorStateTable = preallocations.SectorStateTable,
             PathAdditionSequenceBorderStartIndex = new NativeArray<int>(1, Allocator.Persistent),
+            NotActivePortalList = new NativeList<int>(Allocator.Persistent),
         };
 
         if(ProducedPaths.Count == pathIndex)
@@ -388,6 +389,7 @@ public class PathProducer
             PortalNodes = pickedFieldGraph.PortalNodes,
             WindowNodes = pickedFieldGraph.WindowNodes,
             ActiveWaveFrontListArray = path.ActiveWaveFrontList,
+            NotActivatedPortals = path.NotActivePortalList,
         };
         submitJob.Schedule().Complete();
 
@@ -533,6 +535,7 @@ public class PathProducer
             PortalNodes = pickedFieldGraph.PortalNodes,
             WindowNodes = pickedFieldGraph.WindowNodes,
             ActiveWaveFrontListArray = path.ActiveWaveFrontList,
+            NotActivatedPortals = path.NotActivePortalList,
         };
         submitJob.Schedule().Complete();
 

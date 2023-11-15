@@ -27,10 +27,12 @@ public class Path
     public NativeList<UnsafeList<ActiveWaveFront>> ActiveWaveFrontList;
     public UnsafeList<PathSectorState> SectorStateTable;
     public NativeArray<int> PathAdditionSequenceBorderStartIndex;
+    public NativeList<int> NotActivePortalList;
 
     public void Dispose()
     {
         PathAdditionSequenceBorderStartIndex.Dispose();
+        NotActivePortalList.Dispose();
     }
     public void SetState(PathState state)
     {

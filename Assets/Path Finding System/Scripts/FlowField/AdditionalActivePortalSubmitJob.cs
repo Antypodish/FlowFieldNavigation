@@ -27,7 +27,7 @@ public struct AdditionalActivePortalSubmitJob : IJob
     [ReadOnly] public NativeArray<int> PortalSequenceBorders;
 
     public NativeArray<UnsafeList<ActiveWaveFront>> ActiveWaveFrontListArray;
-
+    public NativeList<int> NotActivatedPortals;
 
     public void Execute()
     {
@@ -38,13 +38,21 @@ public struct AdditionalActivePortalSubmitJob : IJob
             //HANDLE PORTALS EXCEPT TARGET NEIGHBOUR
             for (int j = start; j < end - 1; j++)
             {
-                AddCommonSectorsBetweenPortalsToTheWaveFront(j, j + 1);
+                bool submitted = AddCommonSectorsBetweenPortalsToTheWaveFront(j, j + 1);
+                if (!submitted)
+                {
+                    NotActivatedPortals.Add(j);
+                }
             }
             ActivePortal endPortal = PortalSequence[end - 1];
             //HANDLE MERGING PORTAL
             if (!endPortal.IsTargetNeighbour())
             {
-                AddCommonSectorsBetweenPortalsToTheWaveFront(end - 1, endPortal.NextIndex);
+                bool submitted = AddCommonSectorsBetweenPortalsToTheWaveFront(end - 1, endPortal.NextIndex);
+                if (!submitted)
+                {
+                    NotActivatedPortals.Add(end - 1);
+                }
             }
             //HANDLE TARGET NEIGBOUR POINTING TOWARDS TARGET
             else
@@ -78,8 +86,53 @@ public struct AdditionalActivePortalSubmitJob : IJob
                 }
             }
         }
+        for(int i = NotActivatedPortals.Length - 1; i >= 0; i--)
+        {
+            int seqIndex1 = NotActivatedPortals[i];
+            ActivePortal portal1 = PortalSequence[seqIndex1];
+            if (!portal1.IsTargetNeighbour())
+            {
+                bool submitted = AddCommonSectorsBetweenPortalsToTheWaveFront(seqIndex1, portal1.NextIndex);
+                if (submitted)
+                {
+                    NotActivatedPortals.RemoveAtSwapBack(i);
+                }
+            }
+            else
+            {
+                int endPortalIndex = portal1.Index;
+                int endPortalWinIndex = PortalNodes[endPortalIndex].WinPtr;
+                WindowNode endPortalWinNode = WindowNodes[endPortalWinIndex];
+                int endSector1 = WinToSecPtrs[endPortalWinNode.WinToSecPtr];
+                int endSector2 = WinToSecPtrs[endPortalWinNode.WinToSecPtr + 1];
+                int2 targetSector2d = FlowFieldUtilities.GetSector2D(TargetIndex2D, SectorColAmount);
+                int targetSector1d = FlowFieldUtilities.To1D(targetSector2d, SectorMatrixColAmount);
+                if (targetSector1d != endSector1 && SectorToPicked[endSector1] != 0)
+                {
+                    int pickedSectorIndex = (SectorToPicked[endSector1] - 1) / SectorTileAmount;
+                    UnsafeList<ActiveWaveFront> activePortals = ActiveWaveFrontListArray[pickedSectorIndex];
+                    int activeLocalIndex = GetIndexOfPortalAtSector(PortalNodes[endPortalIndex], endSector1);
+                    ActiveWaveFront newActiveWaveFront = new ActiveWaveFront(activeLocalIndex, portal1.Distance, seqIndex1 - 1);
+                    if (ActiveWaveFrontExists(newActiveWaveFront, activePortals)) { continue; }
+                    activePortals.Add(newActiveWaveFront);
+                    ActiveWaveFrontListArray[pickedSectorIndex] = activePortals;
+                }
+                else if (SectorToPicked[endSector2] != 0)
+                {
+                    int pickedSectorIndex = (SectorToPicked[endSector2] - 1) / SectorTileAmount;
+                    UnsafeList<ActiveWaveFront> activePortals = ActiveWaveFrontListArray[pickedSectorIndex];
+                    int activeLocalIndex = GetIndexOfPortalAtSector(PortalNodes[endPortalIndex], endSector2);
+                    ActiveWaveFront newActiveWaveFront = new ActiveWaveFront(activeLocalIndex, portal1.Distance, seqIndex1 - 1);
+                    if (ActiveWaveFrontExists(newActiveWaveFront, activePortals)) { continue; }
+                    activePortals.Add(newActiveWaveFront);
+                    ActiveWaveFrontListArray[pickedSectorIndex] = activePortals;
+                }
+                NotActivatedPortals.RemoveAtSwapBack(i);
+            }
+
+        }
     }
-    void AddCommonSectorsBetweenPortalsToTheWaveFront(int curPortalSequenceIndex, int nextPortalSequenceIndex)
+    bool AddCommonSectorsBetweenPortalsToTheWaveFront(int curPortalSequenceIndex, int nextPortalSequenceIndex)
     {
         ActivePortal curPortal = PortalSequence[curPortalSequenceIndex];
         ActivePortal nextPortal = PortalSequence[nextPortalSequenceIndex];
@@ -106,7 +159,7 @@ public struct AdditionalActivePortalSubmitJob : IJob
             ActiveWaveFront newActiveWaveFront = new ActiveWaveFront(activeLocalIndex, curPortal.Distance, curPortalSequenceIndex);
             activePortals.Add(newActiveWaveFront);
             ActiveWaveFrontListArray[pickedSectorIndex] = activePortals;
-
+            return true;
         }
         else if (!sector2Common && sector2Included)
         {
@@ -116,6 +169,7 @@ public struct AdditionalActivePortalSubmitJob : IJob
             ActiveWaveFront newActiveWaveFront = new ActiveWaveFront(activeLocalIndex, curPortal.Distance, curPortalSequenceIndex);
             activePortals.Add(newActiveWaveFront);
             ActiveWaveFrontListArray[pickedSectorIndex] = activePortals;
+            return true;
         }
         else if (sector1Common && sector2Common && sector1Included && sector2Included)
         {
@@ -144,7 +198,9 @@ public struct AdditionalActivePortalSubmitJob : IJob
                 activePortals.Add(newActiveWaveFront);
                 ActiveWaveFrontListArray[pickedSectorIndex] = activePortals;
             }
+            return true;
         }
+        return false;
     }
 
     bool IsConnected(Portal portal, int portalNodeIndex)
