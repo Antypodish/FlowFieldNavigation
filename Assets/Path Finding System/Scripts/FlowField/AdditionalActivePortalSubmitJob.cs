@@ -31,7 +31,7 @@ public struct AdditionalActivePortalSubmitJob : IJob
 
     public void Execute()
     {
-        for (int i = 0; i < PortalSequenceBorders.Length - 1; i++)
+        for (int i = SequenceBorderListStartIndex; i < PortalSequenceBorders.Length - 1; i++)
         {
             int start = PortalSequenceBorders[i];
             int end = PortalSequenceBorders[i + 1];

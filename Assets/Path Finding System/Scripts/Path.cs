@@ -20,19 +20,17 @@ public class Path
     public NativeArray<DijkstraTile> TargetSectorCosts;
     public NativeList<int> PortalSequenceBorders;
     public NativeArray<int> FlowFieldLength;
-    public NativeList<LocalIndex1d> IntegrationStartIndicies;
-    public NativeArray<int> NewFlowFieldLength;
     public NativeQueue<int> PortalTraversalFastMarchingQueue;
     public NativeList<int> AStartTraverseIndexList;
     public NativeList<int> TargetSectorPortalIndexList;
     public NativeList<int> SourcePortalIndexList;
     public NativeList<UnsafeList<ActiveWaveFront>> ActiveWaveFrontList;
     public UnsafeList<PathSectorState> SectorStateTable;
+    public NativeArray<int> PathAdditionSequenceBorderStartIndex;
 
     public void Dispose()
     {
-        NewFlowFieldLength.Dispose();
-        IntegrationStartIndicies.Dispose();
+        PathAdditionSequenceBorderStartIndex.Dispose();
     }
     public void SetState(PathState state)
     {

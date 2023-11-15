@@ -127,6 +127,7 @@ public class PathProducer
     public ExistingPathHandle RequestAdditionPortalTraversal(int pathIndex, NativeSlice<float2> sources)
     {
         Path path = ProducedPaths[pathIndex];
+        path.PathAdditionSequenceBorderStartIndex[0] = path.PortalSequenceBorders.Length - 1;
         FieldGraph pickedFieldGraph = _fieldProducer.GetFieldGraphWithOffset(path.Offset);
         PortalNodeAdditionTraversalJob additionTrav = new PortalNodeAdditionTraversalJob()
         {
@@ -235,8 +236,7 @@ public class PathProducer
             TargetSectorPortalIndexList = preallocations.TargetSectorPortalIndexList,
             PortalTraversalFastMarchingQueue = preallocations.PortalTraversalFastMarchingQueue,
             SectorStateTable = preallocations.SectorStateTable,
-            IntegrationStartIndicies = new NativeList<LocalIndex1d>(Allocator.Persistent),
-            NewFlowFieldLength = new NativeArray<int>(1, Allocator.Persistent),
+            PathAdditionSequenceBorderStartIndex = new NativeArray<int>(1, Allocator.Persistent),
         };
 
         if(ProducedPaths.Count == pathIndex)
@@ -370,6 +370,7 @@ public class PathProducer
         //ACTIVE WAVE FRONT SUBMISSION
         AdditionalActivePortalSubmitJob submitJob = new AdditionalActivePortalSubmitJob()
         {
+            SequenceBorderListStartIndex = path.PathAdditionSequenceBorderStartIndex[0],
             SectorColAmount = FlowFieldUtilities.SectorColAmount,
             SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
             SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,

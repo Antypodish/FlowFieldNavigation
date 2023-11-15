@@ -88,6 +88,7 @@ public struct ActivePortalSubmitJob : IJob
         targetActivePortals.Add(targetFront);
         ActiveWaveFrontListArray[targetPickedSectorIndex] = targetActivePortals;
     }
+
     void AddCommonSectorsBetweenPortalsToTheWaveFront(int curPortalSequenceIndex, int nextPortalSequenceIndex)
     {
         ActivePortal curPortal = PortalSequence[curPortalSequenceIndex];

@@ -72,9 +72,10 @@ public struct PathfindingTaskOrganizationJob : IJob
             FlowData flow = curPathData.FlowField[sectorFlowStartIndex + agentLocal1d];
             PathSectorState sectorState = curPathData.SectorStateTable[agentSector1d];
             bool sectorIncluded = sectorState != 0;
+            bool sectorSource = (sectorState & PathSectorState.Source) == PathSectorState.Source;
             bool flowCalculated = (sectorState & PathSectorState.FlowCalculated) == PathSectorState.FlowCalculated;
             bool canGetFlow = flow.IsValid();
-            if (!sectorIncluded || (flowCalculated && !canGetFlow))
+            if (!sectorSource && (!sectorIncluded || (flowCalculated && !canGetFlow)))
             {
                 curPathData.PathAdditionSourceCount++;
                 CurrentPaths[curPathIndex] = curPathData;

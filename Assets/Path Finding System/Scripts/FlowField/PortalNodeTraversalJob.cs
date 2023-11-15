@@ -214,7 +214,7 @@ public struct PortalNodeTraversalJob : IJob
             if (SectorToPicked[sourceSectorIndexFlat] != 0) { continue; }
             SectorToPicked[sourceSectorIndexFlat] = PickedToSector.Length * sectorTileAmount + 1;
             PickedToSector.Add(sourceSectorIndexFlat);
-            SectorStateTable[sourceSectorIndexFlat] |= PathSectorState.Included;
+            SectorStateTable[sourceSectorIndexFlat] |= PathSectorState.Included | PathSectorState.Source;
             //ADD SOURCE SECTOR TO THE PICKED SECTORS
             SetSectorPortalIndicies(sourceSectorIndexFlat, SourcePortalIndexList);
 

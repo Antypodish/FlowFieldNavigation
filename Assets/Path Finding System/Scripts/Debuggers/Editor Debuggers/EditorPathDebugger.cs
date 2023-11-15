@@ -8,7 +8,7 @@ using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Analytics;
-
+using System.Diagnostics;
 public class EditorPathDebugger
 {
     PathProducer _pathProducer;
@@ -30,6 +30,9 @@ public class EditorPathDebugger
         Path producedPath = agent.GetPath();
         if (!producedPath.IsCalculated) { return; }
 
+        Stopwatch sw = new Stopwatch();
+        sw.Start();
+
         float tileSize = _pathfindingManager.TileSize;
         int sectorColAmount = FlowFieldUtilities.SectorColAmount;
 
@@ -37,12 +40,14 @@ public class EditorPathDebugger
         NativeArray<UnsafeList<ActiveWaveFront>> waveFronts = producedPath.ActiveWaveFrontList;
         NativeArray<int> pickedToSector = producedPath.PickedToSector;
         Gizmos.color = Color.red;
+        int total = 0;
         for (int i = 0; i < pickedToSector.Length; i++)
         {
             int sectorIndex = pickedToSector[i];
             int2 sector2d = FlowFieldUtilities.To2D(sectorIndex, FlowFieldUtilities.SectorMatrixColAmount);
             UnsafeList<ActiveWaveFront> fronts = waveFronts[i];
-            for(int j = 0; j < fronts.Length; j++)
+            total += fronts.Length;
+            for (int j = 0; j < fronts.Length; j++)
             {
                 ActiveWaveFront front = fronts[j];
                 int2 local2d = FlowFieldUtilities.To2D(front.LocalIndex, sectorColAmount);
@@ -52,6 +57,8 @@ public class EditorPathDebugger
                 Gizmos.DrawCube(pos3, new Vector3(0.6f, 0.6f, 0.6f));
             }            
         }
+        sw.Stop();
+        UnityEngine.Debug.Log("list length: " +total);
     }
     public void DebugPortalTraversalMarks(FlowFieldAgent agent)
     {
