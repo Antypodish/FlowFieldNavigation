@@ -135,5 +135,16 @@ public static class FlowFieldUtilities
         int n1p2sector1d = n1p2sector2d.y * sectorMatrixColAmount + n1p2sector2d.x;
         return math.select(n1p2sector1d, n1p1sector1d, isn1p1sectorCommon);
     }
+    public static void GetSectors(PortalNode node1, int sectorColAmount, int sectorMatrixColAmount, out int sector1, out int sector2)
+    {
+        int2 n1p1index2d = new int2(node1.Portal1.Index.C, node1.Portal1.Index.R);
+        int2 n1p2index2d = new int2(node1.Portal2.Index.C, node1.Portal2.Index.R);
+
+        int2 n1p1sector2d = n1p1index2d / sectorColAmount;
+        int2 n1p2sector2d = n1p2index2d / sectorColAmount;
+
+        sector1 = n1p1sector2d.y * sectorMatrixColAmount + n1p1sector2d.x;
+        sector2 = n1p2sector2d.y * sectorMatrixColAmount + n1p2sector2d.x;
+    }
     public static int RadiusToOffset(float radius, float tileSize) => (int)math.floor(radius + tileSize / 2);
 }

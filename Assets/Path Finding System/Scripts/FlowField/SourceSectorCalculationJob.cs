@@ -64,8 +64,27 @@ public struct SourceSectorCalculationJob : IJob
                     ActivePortal nextPortalSequenceNode = PortalSequence[portalSequenceNextIndex];
                     PortalNode curNode = PortalNodes[curPortalSequenceNode.Index];
                     PortalNode nextNode = PortalNodes[nextPortalSequenceNode.Index];
-                    int commonSector = FlowFieldUtilities.GetCommonSector(curNode, nextNode, SectorColAmount, SectorMatrixColAmount);
-                    if ((SectorStateTable[commonSector] & PathSectorState.IntegrationCalculated) == PathSectorState.IntegrationCalculated) { continue; }
+                    FlowFieldUtilities.GetSectors(curNode, SectorColAmount, SectorMatrixColAmount, out int curSec1, out int curSec2);
+                    FlowFieldUtilities.GetSectors(nextNode, SectorColAmount, SectorMatrixColAmount, out int nextSec1, out int nextSec2);
+
+                    bool curSec1Common = curSec1 == nextSec1 || curSec1 == nextSec2;
+                    bool curSec2Common = curSec2 == nextSec1 || curSec2 == nextSec2;
+                    if (!curSec1Common && !curSec2Common) { continue; }
+                    if(curSec1Common && curSec2Common)
+                    {
+                        if ((SectorStateTable[curSec1] & PathSectorState.IntegrationCalculated) != PathSectorState.IntegrationCalculated)
+                        {
+                            SectorStateTable[curSec1] |= PathSectorState.IntegrationCalculated;
+                            SectorFlowStartIndiciesToCalculateIntegration.Add(SectorToPickedTable[curSec1]);
+                        }
+                        if ((SectorStateTable[curSec2] & PathSectorState.IntegrationCalculated) != PathSectorState.IntegrationCalculated)
+                        {
+                            SectorStateTable[curSec2] |= PathSectorState.IntegrationCalculated;
+                            SectorFlowStartIndiciesToCalculateIntegration.Add(SectorToPickedTable[curSec2]);
+                        }
+                        continue;
+                    }
+                    int commonSector = curSec1Common ? curSec1 : curSec2;
                     SectorStateTable[commonSector] |= PathSectorState.IntegrationCalculated;
                     SectorFlowStartIndiciesToCalculateIntegration.Add(SectorToPickedTable[commonSector]);
                 }

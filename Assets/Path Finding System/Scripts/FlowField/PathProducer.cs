@@ -315,7 +315,7 @@ public class PathProducer
         for (int i = 0; i < sectorFlowStartIndiciesToCalculateFlow.Length; i++)
         {
             int sectorStart = sectorFlowStartIndiciesToCalculateFlow[i];
-
+            if(sectorStart == 0) { UnityEngine.Debug.Log("hüü"); }
             UnsafeList<FlowData> flowFieldCalculationBuffer = new UnsafeList<FlowData>(FlowFieldUtilities.SectorTileAmount, Allocator.Persistent, NativeArrayOptions.ClearMemory);
             flowFieldCalculationBuffer.Length = FlowFieldUtilities.SectorTileAmount;
             FlowFieldJob ffJob = new FlowFieldJob()
@@ -457,6 +457,7 @@ public class PathProducer
         for (int i = 0; i < sectorFlowStartIndiciesToCalculateFlow.Length; i++)
         {
             int sectorStart = sectorFlowStartIndiciesToCalculateFlow[i];
+            if (sectorStart == 0) { UnityEngine.Debug.Log("hüü"); }
 
             UnsafeList<FlowData> flowFieldCalculationBuffer = new UnsafeList<FlowData>(FlowFieldUtilities.SectorTileAmount, Allocator.Persistent, NativeArrayOptions.ClearMemory);
             flowFieldCalculationBuffer.Length = FlowFieldUtilities.SectorTileAmount;
@@ -593,6 +594,7 @@ public class PathProducer
         for (int i = 0; i < sectorFlowStartIndiciesToCalculateFlow.Length; i++)
         {
             int sectorStart = sectorFlowStartIndiciesToCalculateFlow[i];
+            if (sectorStart == 0) { UnityEngine.Debug.Log("hüü"); }
 
             UnsafeList<FlowData> flowFieldCalculationBuffer = new UnsafeList<FlowData>(FlowFieldUtilities.SectorTileAmount, Allocator.Persistent, NativeArrayOptions.ClearMemory);
             flowFieldCalculationBuffer.Length = FlowFieldUtilities.SectorTileAmount;

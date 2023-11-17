@@ -127,6 +127,8 @@ public class RoutineScheduler
     }
     public void ForceCompleteAll()
     {
+        Stopwatch sw = new Stopwatch();
+        sw.Start();
         //COST EDIT
         if (_costEditHandle.Count != 0)
         {
@@ -214,6 +216,8 @@ public class RoutineScheduler
         CurrentRequestedPaths.Clear();
         CurrentSourcePositions.Clear();
         SendRoutineResultsToAgents();
+        sw.Stop();
+        //if(sw.Elapsed.TotalMilliseconds > 1) { UnityEngine.Debug.Log(sw.Elapsed.TotalMilliseconds); }
     }
     public AgentRoutineDataProducer GetRoutineDataProducer()
     {

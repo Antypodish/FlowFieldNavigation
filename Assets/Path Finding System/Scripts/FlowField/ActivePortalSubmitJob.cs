@@ -88,7 +88,6 @@ public struct ActivePortalSubmitJob : IJob
         ActiveWaveFront targetFront = new ActiveWaveFront(targetLocalIndex1d, 0f, -1);
         targetActivePortals.Add(targetFront);
         ActiveWaveFrontListArray[targetPickedSectorIndex] = targetActivePortals;
-        UnityEngine.Debug.Log(NotActivatedPortals.Length);
     }
 
     void AddCommonSectorsBetweenPortalsToTheWaveFront(int curPortalSequenceIndex, int nextPortalSequenceIndex)

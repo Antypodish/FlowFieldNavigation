@@ -65,7 +65,6 @@ public struct PortalNodeAdditionTraversalJob : IJob
             PickPortalSequenceFromFastMarching(allSorucePortalIndicies[i]);
         }
         PickSectorsFromPortalSequence();
-
     }
     void PickPortalSequenceFromFastMarching(int sourcePortal)
     {
