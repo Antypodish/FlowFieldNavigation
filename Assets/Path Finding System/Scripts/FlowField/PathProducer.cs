@@ -174,13 +174,47 @@ public class PathProducer
         path.FlowField = flowfield;
     }
 
-    public PortalTraversalJobPack ConstructPath(NativeSlice<float2> positions, PathRequest request)
+    public NewPathHandle ConstructPath(NativeSlice<float2> positions, PathRequest request)
     {
         int2 destinationIndex = new int2(Mathf.FloorToInt(request.Destination.x / _tileSize), Mathf.FloorToInt(request.Destination.y / _tileSize));
         CostField pickedCostField = _fieldProducer.GetCostFieldWithOffset(request.MaxOffset);
         FieldGraph pickedFieldGraph = _fieldProducer.GetFieldGraphWithOffset(request.MaxOffset);
 
         PreallocationPack preallocations = _preallocator.GetPreallocations(request.MaxOffset);
+
+        PortalTraversalReductionJob reductionJob = new PortalTraversalReductionJob()
+        {
+            TargetIndex = destinationIndex,
+            FieldColAmount = _columnAmount,
+            FieldRowAmount = _rowAmount,
+            FieldTileSize = _tileSize,
+            SectorColAmount = _sectorTileAmount,
+            SectorMatrixColAmount = _columnAmount / _sectorTileAmount,
+            PickedToSector = preallocations.PickedToSector,
+            TargetSectorCosts = preallocations.TargetSectorCosts,
+            PortalNodes = pickedFieldGraph.PortalNodes,
+            SecToWinPtrs = pickedFieldGraph.SecToWinPtrs,
+            WindowNodes = pickedFieldGraph.WindowNodes,
+            WinToSecPtrs = pickedFieldGraph.WinToSecPtrs,
+            SourcePositions = positions,
+            PorPtrs = pickedFieldGraph.PorToPorPtrs,
+            SectorNodes = pickedFieldGraph.SectorNodes,
+            Costs = pickedCostField.CostsG,
+            LocalDirections = _fieldProducer.GetSectorDirections(),
+            SectorToPicked = preallocations.SectorToPicked,
+            FlowFieldLength = preallocations.FlowFieldLength,
+            PortalTraversalDataArray = preallocations.PortalTraversalDataArray,
+            SourcePortalIndexList = preallocations.SourcePortalIndexList,
+            TargetNeighbourPortalIndicies = preallocations.TargetSectorPortalIndexList,
+            AStarTraverseIndexList = preallocations.AStartTraverseIndexList,
+            IslandFields = pickedFieldGraph.IslandFields,
+            SectorStateTable = preallocations.SectorStateTable,
+        };
+        Stopwatch sw = new Stopwatch();
+        sw.Start();
+        reductionJob.Schedule().Complete();
+        sw.Stop();
+        UnityEngine.Debug.Log("reduction: " + sw.Elapsed.TotalMilliseconds);
 
         //TRAVERSAL
         PortalNodeTraversalJob traversalJob = new PortalNodeTraversalJob()
@@ -201,19 +235,21 @@ public class PathProducer
             SourcePositions = positions,
             PorPtrs = pickedFieldGraph.PorToPorPtrs,
             SectorNodes = pickedFieldGraph.SectorNodes,
-            Costs = pickedCostField.CostsG,
-            LocalDirections = _fieldProducer.GetSectorDirections(),
             PortalSequence = preallocations.PortalSequence,
             SectorToPicked = preallocations.SectorToPicked,
             FlowFieldLength = preallocations.FlowFieldLength,
             PortalTraversalDataArray = preallocations.PortalTraversalDataArray,
-            SourcePortalIndexList = preallocations.SourcePortalIndexList,
             TargetNeighbourPortalIndicies = preallocations.TargetSectorPortalIndexList,
-            AStarTraverseIndexList = preallocations.AStartTraverseIndexList,
-            FastMarchingQueue = preallocations.PortalTraversalFastMarchingQueue,
-            IslandFields = pickedFieldGraph.IslandFields,
             SectorStateTable = preallocations.SectorStateTable,
+            SourcePortals = preallocations.SourcePortalIndexList,
         };
+
+        JobHandle travHandle = traversalJob.Schedule();
+        sw = new Stopwatch();
+        sw.Start();
+        travHandle.Complete();
+        sw.Stop();
+        UnityEngine.Debug.Log("trav: " + sw.Elapsed.TotalMilliseconds);
         int pathIndex;
         if (_removedPathIndicies.Count != 0) { pathIndex = _removedPathIndicies.Pop(); }
         else { pathIndex = ProducedPaths.Count; }
@@ -252,9 +288,10 @@ public class PathProducer
         }
 
 
-        return new PortalTraversalJobPack
+        return new NewPathHandle()
         {
-            PortalTravJob = traversalJob,
+            Soruces = positions,
+            Handle = travHandle,
             PathIndex = pathIndex,
         };
     }

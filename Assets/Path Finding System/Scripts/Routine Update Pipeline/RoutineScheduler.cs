@@ -316,11 +316,10 @@ public class RoutineScheduler
             PathRequest currentpath = CurrentRequestedPaths[i];
             if (!currentpath.IsValid()) { continue; }
             NativeSlice<float2> pathSources = new NativeSlice<float2>(organization.PathfindingSources, currentpath.SourcePositionStartIndex, currentpath.AgentCount);
-            PortalTraversalJobPack porTravJobPack = _pathfindingManager.PathProducer.ConstructPath(pathSources, currentpath);
-            NewPathHandle porTravHandle = SchedulePortalTraversal(porTravJobPack);
+            NewPathHandle porTravHandle = SchedulePortalTraversal(pathSources, currentpath);
             porTravHandle.Soruces = pathSources;
             _porTravHandles.Add(porTravHandle);
-            currentpath.PathIndex = porTravJobPack.PathIndex;
+            currentpath.PathIndex = porTravHandle.PathIndex;
             CurrentRequestedPaths[i] = currentpath;
         }
 
@@ -437,9 +436,9 @@ public class RoutineScheduler
 
         _agentMovementCalculationHandle.Add(tensionHandle);
     }
-    NewPathHandle SchedulePortalTraversal(PortalTraversalJobPack portalTravJobPack)
+    NewPathHandle SchedulePortalTraversal(NativeSlice<float2> sources, PathRequest currentPath)
     {
-        NewPathHandle pathHandle = portalTravJobPack.Schedule();
+        NewPathHandle pathHandle = _pathfindingManager.PathProducer.ConstructPath(sources, currentPath);
 
         if (FlowFieldUtilities.DebugMode)
         {
