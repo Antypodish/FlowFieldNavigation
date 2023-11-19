@@ -26,7 +26,7 @@ public struct PortalNodeTraversalJob : IJob
     public NativeList<int> PickedToSector;
     public NativeArray<DijkstraTile> TargetSectorCosts;
     public NativeArray<int> FlowFieldLength;
-    public NativeArray<int> SourcePortals;
+    public NativeList<int> SourcePortals;
 
     [ReadOnly] public NativeSlice<float2> SourcePositions;
     [ReadOnly] public UnsafeList<SectorNode> SectorNodes;
@@ -56,9 +56,10 @@ public struct PortalNodeTraversalJob : IJob
         //START GRAPH WALKER
         PortalSequenceBorders.Add(0);
         RunDijkstra();
-        for(int  i = 0; i < SourcePortals.Length; i++)
+        NativeArray<int> sourcePortalsAsArray = SourcePortals;
+        for(int  i = 0; i < sourcePortalsAsArray.Length; i++)
         {
-            PickPortalSequenceFromFastMarching(SourcePortals[i]);
+            PickPortalSequenceFromFastMarching(sourcePortalsAsArray[i]);
         }
         PickSectorsFromPortalSequence();
         AddTargetSector();

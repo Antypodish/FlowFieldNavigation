@@ -128,17 +128,16 @@ public class PathProducer
     {
         Path path = ProducedPaths[pathIndex];
         path.PathAdditionSequenceBorderStartIndex[0] = path.PortalSequenceBorders.Length - 1;
+
         FieldGraph pickedFieldGraph = _fieldProducer.GetFieldGraphWithOffset(path.Offset);
-        PortalNodeAdditionTraversalJob additionTrav = new PortalNodeAdditionTraversalJob()
+
+        PortalNodeAdditionReductionJob reductionJob = new PortalNodeAdditionReductionJob()
         {
             TargetIndex = path.TargetIndex,
-            FieldColAmount = _columnAmount,
-            FieldRowAmount = _rowAmount,
             FieldTileSize = _tileSize,
             SectorColAmount = _sectorTileAmount,
             SectorMatrixColAmount = _columnAmount / _sectorTileAmount,
             PickedToSector = path.PickedToSector,
-            PortalSequenceBorders = path.PortalSequenceBorders,
             TargetSectorCosts = path.TargetSectorCosts,
             PortalNodes = pickedFieldGraph.PortalNodes,
             SecToWinPtrs = pickedFieldGraph.SecToWinPtrs,
@@ -147,22 +146,43 @@ public class PathProducer
             SourcePositions = sources,
             PorPtrs = pickedFieldGraph.PorToPorPtrs,
             SectorNodes = pickedFieldGraph.SectorNodes,
+            SectorToPicked = path.SectorToPicked,
+            PortalTraversalDataArray = path.PortalTraversalDataArray,
+            SourcePortalIndexList = path.SourcePortalIndexList,
+            AStarTraverseIndexList = path.AStartTraverseIndexList,
+            IslandFields = pickedFieldGraph.IslandFields,
+            SectorStateTable = path.SectorStateTable,
+            DijkstraStartIndicies = new NativeList<int>(Allocator.Persistent),
+        };
+
+        PortalNodeAdditionTraversalJob travJob = new PortalNodeAdditionTraversalJob()
+        {
+            SectorColAmount = _sectorTileAmount,
+            SectorMatrixColAmount = _columnAmount / _sectorTileAmount,
+            PickedToSector = path.PickedToSector,
+            PortalSequenceBorders = path.PortalSequenceBorders,
+            PortalNodes = pickedFieldGraph.PortalNodes,
+            WindowNodes = pickedFieldGraph.WindowNodes,
+            WinToSecPtrs = pickedFieldGraph.WinToSecPtrs,
+            PorPtrs = pickedFieldGraph.PorToPorPtrs,
+            SectorNodes = pickedFieldGraph.SectorNodes,
             PortalSequence = path.PortalSequence,
             SectorToPicked = path.SectorToPicked,
             FlowFieldLength = path.FlowFieldLength,
             PortalTraversalDataArray = path.PortalTraversalDataArray,
             SourcePortalIndexList = path.SourcePortalIndexList,
-            TargetNeighbourPortalIndicies = path.TargetSectorPortalIndexList,
-            AStarTraverseIndexList = path.AStartTraverseIndexList,
             IslandFields = pickedFieldGraph.IslandFields,
             SectorStateTable = path.SectorStateTable,
-            DijkstraStartIndicies = new NativeList<int>(Allocator.Persistent),
+            DijkstraStartIndicies = reductionJob.DijkstraStartIndicies,
             AddedPortalSequenceBorderStartIndex = path.PortalSequenceBorders.Length,
         };
 
+        JobHandle reductHandle = reductionJob.Schedule();
+        JobHandle travHandle = travJob.Schedule(reductHandle);
+
         return new ExistingPathHandle
         {
-            Handle = additionTrav.Schedule(),
+            Handle = travHandle,
             PathIndex = pathIndex
         };
     }
@@ -210,11 +230,6 @@ public class PathProducer
             IslandFields = pickedFieldGraph.IslandFields,
             SectorStateTable = preallocations.SectorStateTable,
         };
-        Stopwatch sw = new Stopwatch();
-        sw.Start();
-        reductionJob.Schedule().Complete();
-        sw.Stop();
-        UnityEngine.Debug.Log("reduction: " + sw.Elapsed.TotalMilliseconds);
 
         //TRAVERSAL
         PortalNodeTraversalJob traversalJob = new PortalNodeTraversalJob()
@@ -244,12 +259,9 @@ public class PathProducer
             SourcePortals = preallocations.SourcePortalIndexList,
         };
 
-        JobHandle travHandle = traversalJob.Schedule();
-        sw = new Stopwatch();
-        sw.Start();
-        travHandle.Complete();
-        sw.Stop();
-        UnityEngine.Debug.Log("trav: " + sw.Elapsed.TotalMilliseconds);
+        JobHandle reductHandle = reductionJob.Schedule();
+        JobHandle travHandle = traversalJob.Schedule(reductHandle);
+
         int pathIndex;
         if (_removedPathIndicies.Count != 0) { pathIndex = _removedPathIndicies.Pop(); }
         else { pathIndex = ProducedPaths.Count; }
