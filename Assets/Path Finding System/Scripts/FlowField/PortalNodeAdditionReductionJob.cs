@@ -102,12 +102,19 @@ public struct PortalNodeAdditionReductionJob : IJob
             int sourceSectorIndexFlat = sourceSectorIndex.y * SectorMatrixColAmount + sourceSectorIndex.x;
 
             //ADD SOURCE SECTOR TO THE PICKED SECTORS
-            if (SectorToPicked[sourceSectorIndexFlat] != 0) { continue; }
-            SectorToPicked[sourceSectorIndexFlat] = PickedToSector.Length * sectorTileAmount + 1;
-            PickedToSector.Add(sourceSectorIndexFlat);
-            SectorStateTable[sourceSectorIndexFlat] |= PathSectorState.Included | PathSectorState.Source;
-            //ADD SOURCE SECTOR TO THE PICKED SECTORS
-            SetSectorPortalIndicies(sourceSectorIndexFlat, SourcePortalIndexList, targetIsland);
+            PathSectorState sectorState = SectorStateTable[sourceSectorIndexFlat];
+            if((sectorState & PathSectorState.Included) != PathSectorState.Included)
+            {
+                SectorToPicked[sourceSectorIndexFlat] = PickedToSector.Length * sectorTileAmount + 1;
+                PickedToSector.Add(sourceSectorIndexFlat);
+                SectorStateTable[sourceSectorIndexFlat] |= PathSectorState.Included | PathSectorState.Source;
+                SetSectorPortalIndicies(sourceSectorIndexFlat, SourcePortalIndexList, targetIsland);
+            }
+            else if((sectorState & PathSectorState.Source) != PathSectorState.Source)
+            {
+                SectorStateTable[sourceSectorIndexFlat] |= PathSectorState.Source;
+                SetSectorPortalIndicies(sourceSectorIndexFlat, SourcePortalIndexList, targetIsland);
+            }            
         }
     }
     int RunReductionAStar(int sourcePortalIndex, DoubleUnsafeHeap<int> traversalHeap)

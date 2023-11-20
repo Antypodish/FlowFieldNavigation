@@ -28,7 +28,7 @@ public struct AdditionalActivePortalSubmitJob : IJob
 
     public NativeArray<UnsafeList<ActiveWaveFront>> ActiveWaveFrontListArray;
     public NativeList<int> NotActivatedPortals;
-
+    public UnsafeList<PathSectorState> SectorStateTable;
     public void Execute()
     {
         for (int i = SequenceBorderListStartIndex; i < PortalSequenceBorders.Length - 1; i++)
@@ -73,6 +73,9 @@ public struct AdditionalActivePortalSubmitJob : IJob
                     if (ActiveWaveFrontExists(newActiveWaveFront, activePortals)) { continue; }
                     activePortals.Add(newActiveWaveFront);
                     ActiveWaveFrontListArray[pickedSectorIndex] = activePortals;
+                    PathSectorState sectorState = SectorStateTable[endSector1];
+                    sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
+                    SectorStateTable[endSector1] = sectorState;
                 }
                 else if (SectorToPicked[endSector2] != 0)
                 {
@@ -83,6 +86,9 @@ public struct AdditionalActivePortalSubmitJob : IJob
                     if (ActiveWaveFrontExists(newActiveWaveFront, activePortals)) { continue; }
                     activePortals.Add(newActiveWaveFront);
                     ActiveWaveFrontListArray[pickedSectorIndex] = activePortals;
+                    PathSectorState sectorState = SectorStateTable[endSector2];
+                    sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
+                    SectorStateTable[endSector2] = sectorState;
                 }
             }
         }
@@ -116,6 +122,9 @@ public struct AdditionalActivePortalSubmitJob : IJob
                     if (ActiveWaveFrontExists(newActiveWaveFront, activePortals)) { continue; }
                     activePortals.Add(newActiveWaveFront);
                     ActiveWaveFrontListArray[pickedSectorIndex] = activePortals;
+                    PathSectorState sectorState = SectorStateTable[endSector1];
+                    sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
+                    SectorStateTable[endSector1] = sectorState;
                 }
                 else if (SectorToPicked[endSector2] != 0)
                 {
@@ -126,6 +135,9 @@ public struct AdditionalActivePortalSubmitJob : IJob
                     if (ActiveWaveFrontExists(newActiveWaveFront, activePortals)) { continue; }
                     activePortals.Add(newActiveWaveFront);
                     ActiveWaveFrontListArray[pickedSectorIndex] = activePortals;
+                    PathSectorState sectorState = SectorStateTable[endSector2];
+                    sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
+                    SectorStateTable[endSector2] = sectorState;
                 }
                 NotActivatedPortals.RemoveAtSwapBack(i);
             }
@@ -159,6 +171,9 @@ public struct AdditionalActivePortalSubmitJob : IJob
             ActiveWaveFront newActiveWaveFront = new ActiveWaveFront(activeLocalIndex, curPortal.Distance, curPortalSequenceIndex);
             activePortals.Add(newActiveWaveFront);
             ActiveWaveFrontListArray[pickedSectorIndex] = activePortals;
+            PathSectorState sectorState = SectorStateTable[curSec1Index];
+            sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
+            SectorStateTable[curSec1Index] = sectorState;
             return true;
         }
         else if (!sector2Common && sector2Included)
@@ -169,6 +184,9 @@ public struct AdditionalActivePortalSubmitJob : IJob
             ActiveWaveFront newActiveWaveFront = new ActiveWaveFront(activeLocalIndex, curPortal.Distance, curPortalSequenceIndex);
             activePortals.Add(newActiveWaveFront);
             ActiveWaveFrontListArray[pickedSectorIndex] = activePortals;
+            PathSectorState sectorState = SectorStateTable[curSec2Index];
+            sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
+            SectorStateTable[curSec2Index] = sectorState;
             return true;
         }
         else if (sector1Common && sector2Common && sector1Included && sector2Included)
@@ -186,6 +204,9 @@ public struct AdditionalActivePortalSubmitJob : IJob
                 ActiveWaveFront newActiveWaveFront = new ActiveWaveFront(activeLocalIndex, curPortal.Distance, curPortalSequenceIndex);
                 activePortals.Add(newActiveWaveFront);
                 ActiveWaveFrontListArray[pickedSectorIndex] = activePortals;
+                PathSectorState sectorState = SectorStateTable[sector1d];
+                sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
+                SectorStateTable[sector1d] = sectorState;
             }
             else
             {
@@ -197,6 +218,9 @@ public struct AdditionalActivePortalSubmitJob : IJob
                 ActiveWaveFront newActiveWaveFront = new ActiveWaveFront(activeLocalIndex, curPortal.Distance, curPortalSequenceIndex);
                 activePortals.Add(newActiveWaveFront);
                 ActiveWaveFrontListArray[pickedSectorIndex] = activePortals;
+                PathSectorState sectorState = SectorStateTable[sector1d];
+                sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
+                SectorStateTable[sector1d] = sectorState;
             }
             return true;
         }

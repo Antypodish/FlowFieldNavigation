@@ -1,19 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
+﻿using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
-using Unity.Jobs.LowLevel.Unsafe;
 using Unity.Mathematics;
-using Unity.VisualScripting;
-using Unity.VisualScripting.FullSerializer;
-using UnityEditor;
-using UnityEditor.PackageManager.Requests;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.UIElements;
 
 public class PathProducer
 {
@@ -193,7 +183,6 @@ public class PathProducer
         flowfield.Resize(path.FlowFieldLength[0], NativeArrayOptions.ClearMemory);
         path.FlowField = flowfield;
     }
-
     public NewPathHandle ConstructPath(NativeSlice<float2> positions, PathRequest request)
     {
         int2 destinationIndex = new int2(Mathf.FloorToInt(request.Destination.x / _tileSize), Mathf.FloorToInt(request.Destination.y / _tileSize));
@@ -331,7 +320,8 @@ public class PathProducer
             SectorFlowStartIndiciesToCalculateFlow = sectorFlowStartIndiciesToCalculateFlow,
         };
         sectorCalcJob.Schedule().Complete();
-
+        //UnityEngine.Debug.Log("flow: " + sectorFlowStartIndiciesToCalculateFlow.Length);
+        //UnityEngine.Debug.Log("int: " + sectorFlowStartIndiciesToCalculateIntegration.Length);
         //SCHEDULE INTEGRATION FIELDS
         NativeList<JobHandle> intFieldHandles = new NativeList<JobHandle>(Allocator.Temp);
         for (int i = 0; i < sectorFlowStartIndiciesToCalculateIntegration.Length; i++)
@@ -440,6 +430,7 @@ public class PathProducer
             WindowNodes = pickedFieldGraph.WindowNodes,
             ActiveWaveFrontListArray = path.ActiveWaveFrontList,
             NotActivatedPortals = path.NotActivePortalList,
+            SectorStateTable = path.SectorStateTable,
         };
         submitJob.Schedule().Complete();
 

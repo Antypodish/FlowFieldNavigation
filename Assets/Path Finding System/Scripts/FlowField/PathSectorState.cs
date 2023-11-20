@@ -1,4 +1,6 @@
-﻿public enum PathSectorState : byte
+﻿using System;
+[Flags]
+public enum PathSectorState : byte
 {
     Included = 1,
     Source = 2,
