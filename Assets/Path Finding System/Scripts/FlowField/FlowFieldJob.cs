@@ -45,6 +45,7 @@ public struct FlowFieldJob : IJobParallelFor
         int horDif = 0;
         int bestLocal1d = startLocalIndex;
         int bestSector1d = startPickedSector1d;
+        float bestIntCost = curIntCost;
         float2 startPos = FlowFieldUtilities.LocalIndexToPos(startLocalIndex, startPickedSector1d, SectorMatrixColAmount, SectorColAmount, TileSize, sectorSize);
         float2 lastCornerPos = 0;
         CornerBlockDirection lastCornerBlockDirection = CornerBlockDirection.None;
@@ -88,6 +89,7 @@ public struct FlowFieldJob : IJobParallelFor
                 {
                     bestLocal1d = newLocalIndex;
                     bestSector1d = newPickedSector1d;
+                    bestIntCost = newIntCost;
                 }
                 verDif = newVerDif;
                 horDif = newHorDif;
@@ -107,6 +109,7 @@ public struct FlowFieldJob : IJobParallelFor
                 curIntCost = newIntCost;
                 bestLocal1d = curLocalIndex;
                 bestSector1d = curPickedSector1d;
+                bestIntCost = curIntCost;
             }
         }
 
@@ -116,7 +119,7 @@ public struct FlowFieldJob : IJobParallelFor
         int endGeneral1d = FlowFieldUtilities.GetGeneral1d(endLocal2d, endSector2d, SectorColAmount, FieldColAmount);
         FlowData flow = new FlowData();
         flow.SetFlow(startGeneral1d, endGeneral1d, FieldColAmount);
-        if (curIntCost == 0) { flow.SetLOS(); }
+        if (bestIntCost == 0) { flow.SetLOS(); }
         FlowFieldCalculationBuffer[index] = flow;
     }
 
@@ -404,7 +407,7 @@ public struct FlowFieldJob : IJobParallelFor
         bool isExaminedYCloser = examinedDistanceVector.y < cornerDistanceVector.y;
         return isExaminedXCloser ^ isExaminedYCloser;
     }
-    [Flags]
+
     private enum CornerBlockDirection : byte
     {
         None = 0,
@@ -417,49 +420,5 @@ public struct FlowFieldJob : IJobParallelFor
         public int NewVerDif;
         public int NewHorDif;
         public CornerBlockDirection CornerBlockDirection;
-    }
-}
-[BurstCompile]
-public struct FlowData
-{
-    byte _flow;
-
-    public float2 GetFlow(float tileSize)
-    {
-        int verticalMag = (_flow >> 4) & 0b0000_0111;
-        int horizontalMag = _flow & 0b0000_0111;
-
-        bool isVerticalNegative = (_flow & 0b1000_0000) == 0b1000_0000;
-        bool isHorizontalNegative = (_flow & 0b0000_1000) == 0b0000_1000;
-
-        verticalMag = math.select(verticalMag, -(verticalMag + 1), isVerticalNegative);
-        horizontalMag = math.select(horizontalMag, -(horizontalMag + 1), isHorizontalNegative);
-
-        return math.normalizesafe(new float2(horizontalMag * tileSize, verticalMag * tileSize));
-    }
-    public void SetFlow(int curGeneralIndex, int targetGeneralIndex, int fieldColAmount)
-    {
-        int verticalDif = (targetGeneralIndex / fieldColAmount - curGeneralIndex / fieldColAmount);//-1
-        int horizontalDif = targetGeneralIndex - (curGeneralIndex + verticalDif * fieldColAmount);//+1
-
-        if (verticalDif > 7 || verticalDif < -7 || horizontalDif > 7 || horizontalDif < -7) { return; }
-        bool isVerticalNegative = verticalDif < 0;
-        bool isHorizontalNegative = horizontalDif < 0;
-
-        byte verticalBits = (byte)math.select(verticalDif << 4, ((math.abs(verticalDif) - 1) << 4) | 0b1000_0000, isVerticalNegative);
-        byte horizontalBits = (byte)math.select(horizontalDif, (math.abs(horizontalDif) - 1) | 0b0000_1000, isHorizontalNegative);
-        _flow = (byte)(0 | verticalBits | horizontalBits);
-    }
-    public void SetLOS()
-    {
-        _flow = 0b1111_1111;
-    }
-    public bool IsLOS()
-    {
-        return _flow == 0b1111_1111;
-    }
-    public bool IsValid()
-    {
-        return _flow != 0b0000_00000;
     }
 }
