@@ -369,6 +369,7 @@ public class PathProducer
             flowFieldCalculationBuffer.Length = FlowFieldUtilities.SectorTileAmount;
             FlowFieldJob ffJob = new FlowFieldJob()
             {
+                TileSize = FlowFieldUtilities.TileSize,
                 SectorTileAmount = _sectorTileAmount * _sectorTileAmount,
                 SectorColAmount = _sectorTileAmount,
                 SectorMatrixColAmount = _sectorMatrixColAmount,
@@ -512,6 +513,7 @@ public class PathProducer
             flowFieldCalculationBuffer.Length = FlowFieldUtilities.SectorTileAmount;
             FlowFieldJob ffJob = new FlowFieldJob()
             {
+                TileSize = FlowFieldUtilities.TileSize,
                 SectorTileAmount = _sectorTileAmount * _sectorTileAmount,
                 SectorColAmount = _sectorTileAmount,
                 SectorMatrixColAmount = _sectorMatrixColAmount,
@@ -649,6 +651,7 @@ public class PathProducer
             flowFieldCalculationBuffer.Length = FlowFieldUtilities.SectorTileAmount;
             FlowFieldJob ffJob = new FlowFieldJob()
             {
+                TileSize = FlowFieldUtilities.TileSize,
                 SectorTileAmount = _sectorTileAmount * _sectorTileAmount,
                 SectorColAmount = _sectorTileAmount,
                 SectorMatrixColAmount = _sectorMatrixColAmount,

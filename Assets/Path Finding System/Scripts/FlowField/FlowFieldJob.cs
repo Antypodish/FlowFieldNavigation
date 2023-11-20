@@ -18,6 +18,7 @@ public struct FlowFieldJob : IJobParallelFor
     public int FieldColAmount;
     public int FieldTileAmount;
     public int SectorStartIndex;
+    public float TileSize;
     [ReadOnly] public UnsafeList<int> SectorToPicked;
     [ReadOnly] public NativeArray<int> PickedToSector;
     [ReadOnly] public NativeArray<IntegrationTile> IntegrationField;
@@ -26,52 +27,105 @@ public struct FlowFieldJob : IJobParallelFor
 
     public void Execute(int index)
     {
-        //DATA
+        //START DATA
+        float sectorSize = SectorColAmount * TileSize;
         int flowFieldStridedIndex = SectorStartIndex + index;
         int startLocalIndex = (flowFieldStridedIndex - 1) % SectorTileAmount;
         int startPickedSector1d = PickedToSector[(flowFieldStridedIndex - 1) / SectorTileAmount];
+        int2 startLocal2d = FlowFieldUtilities.To2D(startLocalIndex, SectorColAmount);
+        int2 startSector2d = FlowFieldUtilities.To2D(startPickedSector1d, SectorMatrixColAmount);
+        int2 startGeneral2d = FlowFieldUtilities.GetGeneral2d(startLocal2d, startSector2d, SectorColAmount, FieldColAmount);
 
+        //LOOP DATA
         int curFlowFieldIndex = flowFieldStridedIndex;
         int curLocalIndex = startLocalIndex;
         int curPickedSector1d = startPickedSector1d;
         float curIntCost = IntegrationField[curFlowFieldIndex].Cost;
-
         int verDif = 0;
         int horDif = 0;
-        while(curIntCost != 0)
+        int bestLocal1d = startLocalIndex;
+        int bestSector1d = startPickedSector1d;
+        float2 startPos = FlowFieldUtilities.LocalIndexToPos(startLocalIndex, startPickedSector1d, SectorMatrixColAmount, SectorColAmount, TileSize, sectorSize);
+        float2 lastCornerPos = 0;
+        CornerBlockDirection lastCornerBlockDirection = CornerBlockDirection.None;
+        //LOOP
+        while (curIntCost != 0)
         {
-            NewIndexData newIndex = GetNextIndex(startLocalIndex, curLocalIndex, curPickedSector1d, startPickedSector1d, curIntCost, horDif, verDif);
-            if (newIndex.Index == 0 || (newIndex.Index == -1)) { break; }
+            NewIndexData newIndex = GetNextIndex(curLocalIndex, curPickedSector1d, startPickedSector1d, curIntCost, horDif, verDif, startGeneral2d, startPos);
+            if (newIndex.Index == 0) { break; }
+
             int newFlowFieldIndex = newIndex.Index;
-            verDif = newIndex.NewVerDif;
-            horDif = newIndex.NewHorDif;
-            curFlowFieldIndex = newFlowFieldIndex;
-            curLocalIndex = (newFlowFieldIndex - 1) % SectorTileAmount;
-            curPickedSector1d = PickedToSector[(curFlowFieldIndex - 1) / SectorTileAmount];
-            curIntCost = IntegrationField[curFlowFieldIndex].Cost;
+            int newVerDif = newIndex.NewVerDif;
+            int newHorDif = newIndex.NewHorDif;
+            int newLocalIndex = (newFlowFieldIndex - 1) % SectorTileAmount;
+            int newPickedSector1d = PickedToSector[(newFlowFieldIndex - 1) / SectorTileAmount];
+            float newIntCost = IntegrationField[newFlowFieldIndex].Cost;
+
+            if (newIndex.CornerBlockDirection != CornerBlockDirection.None)
+            {
+                if(lastCornerBlockDirection == CornerBlockDirection.None)
+                {
+                    float2 curIndexPos = FlowFieldUtilities.LocalIndexToPos(curLocalIndex, curPickedSector1d, SectorMatrixColAmount, SectorColAmount, TileSize, sectorSize);
+                    lastCornerPos = curIndexPos;
+                    lastCornerBlockDirection = newIndex.CornerBlockDirection;
+                }
+                else
+                {
+                    float2 curIndexPos = FlowFieldUtilities.LocalIndexToPos(curLocalIndex, curPickedSector1d, SectorMatrixColAmount, SectorColAmount, TileSize, sectorSize);
+                    if (!IsBlocked(startPos, lastCornerPos, lastCornerBlockDirection, curIndexPos))
+                    {
+                        lastCornerPos = curIndexPos;
+                        lastCornerBlockDirection = newIndex.CornerBlockDirection;
+                    }
+                }
+                
+            }
+
+            if (lastCornerBlockDirection != CornerBlockDirection.None)
+            {
+                float2 newIndexPos = FlowFieldUtilities.LocalIndexToPos(newLocalIndex, newPickedSector1d, SectorMatrixColAmount, SectorColAmount, TileSize, sectorSize);
+                if (!IsBlocked(startPos, lastCornerPos, lastCornerBlockDirection, newIndexPos))
+                {
+                    bestLocal1d = newLocalIndex;
+                    bestSector1d = newPickedSector1d;
+                }
+                verDif = newVerDif;
+                horDif = newHorDif;
+                curFlowFieldIndex = newFlowFieldIndex;
+                curLocalIndex = newLocalIndex;
+                curPickedSector1d = newPickedSector1d;
+                curIntCost = newIntCost;
+            }
+            else
+            {
+                
+                verDif = newVerDif;
+                horDif = newHorDif;
+                curFlowFieldIndex = newFlowFieldIndex;
+                curLocalIndex = newLocalIndex;
+                curPickedSector1d = newPickedSector1d;
+                curIntCost = newIntCost;
+                bestLocal1d = curLocalIndex;
+                bestSector1d = curPickedSector1d;
+            }
         }
-        int endLocalIndex = curLocalIndex;
-        int endSectorIndex = curPickedSector1d;
 
-        int2 startLocal2d = FlowFieldUtilities.To2D(startLocalIndex, SectorColAmount);
-        int2 endLocal2d = FlowFieldUtilities.To2D(endLocalIndex, SectorColAmount);
-
-        int2 startSector2d = FlowFieldUtilities.To2D(startPickedSector1d, SectorMatrixColAmount);
-        int2 endSector2d = FlowFieldUtilities.To2D(endSectorIndex, SectorMatrixColAmount);
-
-
+        int2 endLocal2d = FlowFieldUtilities.To2D(bestLocal1d, SectorColAmount);
+        int2 endSector2d = FlowFieldUtilities.To2D(bestSector1d, SectorMatrixColAmount);
         int startGeneral1d = FlowFieldUtilities.GetGeneral1d(startLocal2d, startSector2d, SectorColAmount, FieldColAmount);
         int endGeneral1d = FlowFieldUtilities.GetGeneral1d(endLocal2d, endSector2d, SectorColAmount, FieldColAmount);
-
-
         FlowData flow = new FlowData();
         flow.SetFlow(startGeneral1d, endGeneral1d, FieldColAmount);
-        if(curIntCost == 0) { flow.SetLOS(); }
+        if (curIntCost == 0) { flow.SetLOS(); }
         FlowFieldCalculationBuffer[index] = flow;
     }
 
-    NewIndexData GetNextIndex(int originalLocal1d, int localIndex, int pickedSector1d, int originalSector1d, float curIntCost, int horizontalDif, int verticalDif)
+    NewIndexData GetNextIndex(int localIndex, int pickedSector1d, int originalSector1d, float curIntCost, int horizontalDif, int verticalDif, int2 startGeneral2d, float2 startPos)
     {
+        int2 curLocal2d = FlowFieldUtilities.To2D(localIndex, SectorColAmount);
+        int2 curSector2d = FlowFieldUtilities.To2D(pickedSector1d, SectorMatrixColAmount);
+        int2 curGeneral2d = FlowFieldUtilities.GetGeneral2d(curLocal2d, curSector2d, SectorColAmount, FieldColAmount);
+
         //LOCAL INDICIES
         int nLocal1d = localIndex + SectorColAmount;
         int eLocal1d = localIndex + 1;
@@ -158,7 +212,10 @@ public struct FlowFieldJob : IJobParallelFor
             swLocal1d = localIndex;
         }
 
-        //RETURN IF IS CORNER
+        //SIGHT CORNER OUTPUT
+        CornerBlockDirection cornerDir = CornerBlockDirection.None;
+
+        //SIGHT CORNER TEST
         bool nBlocked = Costs[nSector1d][nLocal1d] == byte.MaxValue;
         bool eBlocked = Costs[eSector1d][eLocal1d] == byte.MaxValue;
         bool sBlocked = Costs[sSector1d][sLocal1d] == byte.MaxValue;
@@ -174,10 +231,69 @@ public struct FlowFieldJob : IJobParallelFor
         bool nwCorner = nwBlocked && !nBlocked && !wBlocked;
 
         bool moved = horizontalDif != 0 || verticalDif != 0;
-        if((neCorner || seCorner || swCorner || nwCorner) && moved)
+
+        float2 tileOffset = new float2(TileSize / 2, TileSize / 2);
+        if (neCorner)
         {
-            return new NewIndexData() { Index = -1, };
+            int2 neSector2d = FlowFieldUtilities.To2D(neSector1d, SectorMatrixColAmount);
+            int2 neLocal2d = FlowFieldUtilities.To2D(neLocal1d, SectorColAmount);
+            int2 neGeneral2d = FlowFieldUtilities.GetGeneral2d(neLocal2d, neSector2d, SectorColAmount, FieldColAmount);
+            if(IsSightCorner(startGeneral2d, curGeneral2d, neGeneral2d))
+            {
+                float2 nePos = (float2)neGeneral2d + tileOffset;
+                float2 curPos = (float2)curGeneral2d + tileOffset;
+                float2 neDir = nePos - startPos;
+                float2 curDir = curPos - startPos;
+                bool isRight = curDir.x * neDir.y + curDir.y * -neDir.x < 0;
+                cornerDir |= isRight ? CornerBlockDirection.Right : CornerBlockDirection.Left;
+            }
         }
+        if (seCorner)
+        {
+            int2 seSector2d = FlowFieldUtilities.To2D(seSector1d, SectorMatrixColAmount);
+            int2 seLocal2d = FlowFieldUtilities.To2D(seLocal1d, SectorColAmount);
+            int2 seGeneral2d = FlowFieldUtilities.GetGeneral2d(seLocal2d, seSector2d, SectorColAmount, FieldColAmount);
+            if (IsSightCorner(startGeneral2d, curGeneral2d, seGeneral2d))
+            {
+                float2 sePos = (float2)seGeneral2d + tileOffset;
+                float2 curPos = (float2)curGeneral2d + tileOffset;
+                float2 seDir = sePos - startPos;
+                float2 curDir = curPos - startPos;
+                bool isRight = curDir.x * seDir.y + curDir.y * -seDir.x < 0;
+                cornerDir |= isRight ? CornerBlockDirection.Right : CornerBlockDirection.Left;
+            }
+        }
+        if (swCorner)
+        {
+            int2 swSector2d = FlowFieldUtilities.To2D(swSector1d, SectorMatrixColAmount);
+            int2 swLocal2d = FlowFieldUtilities.To2D(swLocal1d, SectorColAmount);
+            int2 swGeneral2d = FlowFieldUtilities.GetGeneral2d(swLocal2d, swSector2d, SectorColAmount, FieldColAmount);
+            if (IsSightCorner(startGeneral2d, curGeneral2d, swGeneral2d))
+            {
+                float2 swPos = (float2)swGeneral2d + tileOffset;
+                float2 curPos = (float2)curGeneral2d + tileOffset;
+                float2 swDir = swPos - startPos;
+                float2 curDir = curPos - startPos;
+                bool isRight = curDir.x * swDir.y + curDir.y * -swDir.x < 0;
+                cornerDir |= isRight ? CornerBlockDirection.Right : CornerBlockDirection.Left;
+            }
+        }
+        if (nwCorner)
+        {
+            int2 nwSector2d = FlowFieldUtilities.To2D(nwSector1d, SectorMatrixColAmount);
+            int2 nwLocal2d = FlowFieldUtilities.To2D(nwLocal1d, SectorColAmount);
+            int2 nwGeneral2d = FlowFieldUtilities.GetGeneral2d(nwLocal2d, nwSector2d, SectorColAmount, FieldColAmount);
+            if (IsSightCorner(startGeneral2d, curGeneral2d, nwGeneral2d))
+            {
+                float2 nwPos = (float2)nwGeneral2d + tileOffset;
+                float2 curPos = (float2)curGeneral2d + tileOffset;
+                float2 nwDir = nwPos - startPos;
+                float2 curDir = curPos - startPos;
+                bool isRight = curDir.x * nwDir.y + curDir.y * -nwDir.x < 0;
+                cornerDir |= isRight ? CornerBlockDirection.Right : CornerBlockDirection.Left;
+            }
+        }
+        cornerDir = moved ? cornerDir : CornerBlockDirection.None;
 
         //SECTOR MARKS
         int nSectorMark = SectorToPicked[nSector1d];
@@ -224,7 +340,7 @@ public struct FlowFieldJob : IJobParallelFor
         if (wSectorMark != 0 && wAdjacent && leftAvailable) { wIntCost = IntegrationField[wSectorMark + wLocal1d].Cost; }
         if (neSectorMark != 0 && nAdjacent && eAdjacent && upAvailable && rightAvailable) { neIntCost = IntegrationField[neSectorMark + neLocal1d].Cost; }
         if (seSectorMark != 0 && sAdjacent && eAdjacent && lowAvailable && rightAvailable) { seIntCost = IntegrationField[seSectorMark + seLocal1d].Cost; }
-        if (swSectorMark != 0 && sAdjacent && wAdjacent &&  lowAvailable && leftAvailable) { swIntCost = IntegrationField[swSectorMark + swLocal1d].Cost; }
+        if (swSectorMark != 0 && sAdjacent && wAdjacent && lowAvailable && leftAvailable) { swIntCost = IntegrationField[swSectorMark + swLocal1d].Cost; }
         if (nwSectorMark != 0 && nAdjacent && wAdjacent && upAvailable && leftAvailable) { nwIntCost = IntegrationField[nwSectorMark + nwLocal1d].Cost; }
         if (curIntCost != float.MaxValue)
         {
@@ -259,7 +375,7 @@ public struct FlowFieldJob : IJobParallelFor
         if (wIntCost < minCost) { minCost = wIntCost; minIndex = wLocal1d + wSectorMark; newHorDif = horizontalDif - 1; }
         if (neIntCost < minCost) { minCost = neIntCost; minIndex = neLocal1d + neSectorMark; newVerDif = verticalDif + 1; newHorDif = horizontalDif + 1; }
         if (seIntCost < minCost) { minCost = seIntCost; minIndex = seLocal1d + seSectorMark; newVerDif = verticalDif - 1; newHorDif = horizontalDif + 1; }
-        if (swIntCost < minCost) { minCost = swIntCost; minIndex = swLocal1d + swSectorMark; newVerDif = verticalDif - 1; newHorDif = horizontalDif - 1; } 
+        if (swIntCost < minCost) { minCost = swIntCost; minIndex = swLocal1d + swSectorMark; newVerDif = verticalDif - 1; newHorDif = horizontalDif - 1; }
         if (nwIntCost < minCost) { minCost = nwIntCost; minIndex = nwLocal1d + nwSectorMark; newVerDif = verticalDif + 1; newHorDif = horizontalDif - 1; }
 
         return new NewIndexData()
@@ -267,13 +383,40 @@ public struct FlowFieldJob : IJobParallelFor
             Index = minIndex,
             NewHorDif = newHorDif,
             NewVerDif = newVerDif,
+            CornerBlockDirection = cornerDir,
         };
     }
+    bool IsBlocked(float2 startPos, float2 cornerPos, CornerBlockDirection blockDirection, float2 examinedPos)
+    {
+        float2 cornerDir = cornerPos - startPos;
+        float2 examinedDir = examinedPos - startPos;
+        float rightTestDot = cornerDir.x * examinedDir.y + cornerDir.y * -examinedDir.x;
+        bool isRightBlocked = (blockDirection & CornerBlockDirection.Right) == CornerBlockDirection.Right;
+        bool isLeftBlocked = (blockDirection & CornerBlockDirection.Left) == CornerBlockDirection.Left;
+        bool isBlocked = (isRightBlocked && rightTestDot < 0) || (isLeftBlocked && rightTestDot >= 0);
+        return isBlocked;
+    }
+    bool IsSightCorner(int2 startGeneral2d, int2 examinedGeneral2d, int2 cornerGeneral2d)
+    {
+        int2 examinedDistanceVector = math.abs(examinedGeneral2d - startGeneral2d);
+        int2 cornerDistanceVector = math.abs(cornerGeneral2d - startGeneral2d);
+        bool isExaminedXCloser = examinedDistanceVector.x < cornerDistanceVector.x;
+        bool isExaminedYCloser = examinedDistanceVector.y < cornerDistanceVector.y;
+        return isExaminedXCloser ^ isExaminedYCloser;
+    }
+    [Flags]
+    private enum CornerBlockDirection : byte
+    {
+        None = 0,
+        Right = 1,
+        Left = 2,
+    };
     private struct NewIndexData
     {
         public int Index;
         public int NewVerDif;
         public int NewHorDif;
+        public CornerBlockDirection CornerBlockDirection;
     }
 }
 [BurstCompile]
@@ -290,7 +433,7 @@ public struct FlowData
         bool isHorizontalNegative = (_flow & 0b0000_1000) == 0b0000_1000;
 
         verticalMag = math.select(verticalMag, -(verticalMag + 1), isVerticalNegative);
-        horizontalMag = math.select(horizontalMag, -(horizontalMag+ 1), isHorizontalNegative);
+        horizontalMag = math.select(horizontalMag, -(horizontalMag + 1), isHorizontalNegative);
 
         return math.normalizesafe(new float2(horizontalMag * tileSize, verticalMag * tileSize));
     }
@@ -299,12 +442,12 @@ public struct FlowData
         int verticalDif = (targetGeneralIndex / fieldColAmount - curGeneralIndex / fieldColAmount);//-1
         int horizontalDif = targetGeneralIndex - (curGeneralIndex + verticalDif * fieldColAmount);//+1
 
-        if(verticalDif > 7 || verticalDif < -7 || horizontalDif > 7 || horizontalDif < -7) { return; }
+        if (verticalDif > 7 || verticalDif < -7 || horizontalDif > 7 || horizontalDif < -7) { return; }
         bool isVerticalNegative = verticalDif < 0;
         bool isHorizontalNegative = horizontalDif < 0;
 
-        byte verticalBits = (byte) math.select(verticalDif << 4, ((math.abs(verticalDif) - 1) << 4) | 0b1000_0000, isVerticalNegative);
-        byte horizontalBits = (byte) math.select(horizontalDif, (math.abs(horizontalDif) - 1) | 0b0000_1000, isHorizontalNegative);
+        byte verticalBits = (byte)math.select(verticalDif << 4, ((math.abs(verticalDif) - 1) << 4) | 0b1000_0000, isVerticalNegative);
+        byte horizontalBits = (byte)math.select(horizontalDif, (math.abs(horizontalDif) - 1) | 0b0000_1000, isHorizontalNegative);
         _flow = (byte)(0 | verticalBits | horizontalBits);
     }
     public void SetLOS()

@@ -55,7 +55,7 @@ public class PathfindingManager : MonoBehaviour
     private void Update()
     {
         _agentUpdater.OnUpdate();
-        //_pathfindingRoutineUpdater.IntermediateLateUpdate();
+        _pathfindingRoutineUpdater.IntermediateLateUpdate();
 
         float curTime = Time.realtimeSinceStartup;
         float timePassed = curTime - _lastAgentUpdateTime;
@@ -65,9 +65,14 @@ public class PathfindingManager : MonoBehaviour
             _pathfindingRoutineUpdater.RoutineUpdate(timePassed);
         }
     }
+    private void FixedUpdate()
+    {
+        //_pathfindingRoutineUpdater.RoutineUpdate(Time.fixedDeltaTime);
+
+    }
     private void LateUpdate()
     {
-        //_pathfindingRoutineUpdater.IntermediateLateUpdate();
+        _pathfindingRoutineUpdater.IntermediateLateUpdate();
     }
     void SetFlowFieldUtilities()
     {

@@ -42,6 +42,13 @@ public static class FlowFieldUtilities
         int2 general2d = To2D(general1d, fieldColAmount);
         return new float2(general2d.x * tileSize + tileSize / 2, general2d.y * tileSize + tileSize / 2);
     }
+    public static float2 LocalIndexToPos(int local1d, int sector1d, int sectorMatrixColAmount, int sectorColAmount, float tileSize, float sectorSize)
+    {
+        float2 sectorStartPos = new float2((sector1d % sectorMatrixColAmount) * sectorSize, (sector1d / sectorMatrixColAmount) * sectorSize);
+        float2 indexOffset = new float2((local1d % sectorColAmount) * tileSize, (local1d / sectorColAmount) * tileSize);
+        float2 tileCenter = new float2(tileSize / 2, tileSize / 2);
+        return sectorStartPos + indexOffset + tileCenter;
+    }
     public static int2 PosToSector2D(float2 pos, float sectorSize)
     {
         return new int2((int)math.floor(pos.x / sectorSize), (int)math.floor(pos.y / sectorSize));

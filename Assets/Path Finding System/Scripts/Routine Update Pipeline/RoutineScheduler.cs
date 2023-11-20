@@ -374,23 +374,6 @@ public class RoutineScheduler
         AgentRoutineDataCalculationJob movDataJob = _dirCalculator.GetAgentMovementDataCalcJob();
         JobHandle movDataHandle = movDataJob.Schedule(movDataJob.AgentMovementData.Length, 64, dependency);
 
-        //SCHEDULE WALL COLLISION JOB
-        CollisionCalculationJob collisionJob = new CollisionCalculationJob()
-        {
-            DeltaTime = _pathfindingManager.AgentUpdateFrequency,
-            TileSize = _pathfindingManager.TileSize,
-            FieldColAmount = _pathfindingManager.ColumnAmount,
-            FieldRowAmount = _pathfindingManager.RowAmount,
-            VertexSequence = _pathfindingManager.FieldProducer.GetVertexSequence(),
-            EdgeDirections = _pathfindingManager.FieldProducer.GetEdgeDirections(),
-            TileToWallObject = _pathfindingManager.FieldProducer.GetTileToWallObject(),
-            WallObjectList = _pathfindingManager.FieldProducer.GetWallObjectList(),
-            AgentMovementData = _dirCalculator.AgentMovementDataList,
-            RoutineResultArray = _dirCalculator.RoutineResults,
-            AgentPositionChangeBuffer = _dirCalculator.AgentPositionChangeBuffer,
-        };
-        JobHandle collisionHandle = collisionJob.Schedule(collisionJob.AgentMovementData.Length, 64, movDataHandle);
-
         //SCHEDULE AGENT COLLISION JOB
         CollisionResolutionJob colResJob = new CollisionResolutionJob()
         {
@@ -399,7 +382,7 @@ public class RoutineScheduler
             HashGridArray = _dirCalculator.HashGridArray,
             SpatialGridUtils = new AgentSpatialGridUtils(0),
         };
-        JobHandle colResHandle = colResJob.Schedule(colResJob.AgentMovementDataArray.Length, 4, collisionHandle);
+        JobHandle colResHandle = colResJob.Schedule(colResJob.AgentMovementDataArray.Length, 4, movDataHandle);
 
         //SCHEDULE LOCAL AVODANCE JOB
         LocalAvoidanceJob avoidanceJob = new LocalAvoidanceJob()
@@ -431,10 +414,27 @@ public class RoutineScheduler
         };
         JobHandle tensionHandle = tensionResJob.Schedule(avoidanceHandle);
 
+        //SCHEDULE WALL COLLISION JOB
+        CollisionCalculationJob collisionJob = new CollisionCalculationJob()
+        {
+            DeltaTime = _pathfindingManager.AgentUpdateFrequency,
+            TileSize = _pathfindingManager.TileSize,
+            FieldColAmount = _pathfindingManager.ColumnAmount,
+            FieldRowAmount = _pathfindingManager.RowAmount,
+            VertexSequence = _pathfindingManager.FieldProducer.GetVertexSequence(),
+            EdgeDirections = _pathfindingManager.FieldProducer.GetEdgeDirections(),
+            TileToWallObject = _pathfindingManager.FieldProducer.GetTileToWallObject(),
+            WallObjectList = _pathfindingManager.FieldProducer.GetWallObjectList(),
+            AgentMovementData = _dirCalculator.AgentMovementDataList,
+            RoutineResultArray = _dirCalculator.RoutineResults,
+            AgentPositionChangeBuffer = _dirCalculator.AgentPositionChangeBuffer,
+        };
+        JobHandle collisionHandle = collisionJob.Schedule(collisionJob.AgentMovementData.Length, 64, tensionHandle);
 
-        if (FlowFieldUtilities.DebugMode) { tensionHandle.Complete(); }
 
-        _agentMovementCalculationHandle.Add(tensionHandle);
+        if (FlowFieldUtilities.DebugMode) { collisionHandle.Complete(); }
+
+        _agentMovementCalculationHandle.Add(collisionHandle);
     }
     NewPathHandle SchedulePortalTraversal(NativeSlice<float2> sources, PathRequest currentPath)
     {

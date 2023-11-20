@@ -13,12 +13,11 @@ public struct CollisionResolutionJob : IJobParallelFor
     public AgentSpatialGridUtils SpatialGridUtils;
     [ReadOnly] public NativeArray<AgentMovementData> AgentMovementDataArray;
     [ReadOnly] public NativeArray<UnsafeList<HashTile>> HashGridArray;
-    public NativeArray<float2> AgentPositionChangeBuffer;
+    [WriteOnly] public NativeArray<float2> AgentPositionChangeBuffer;
     public void Execute(int index)
     {
         AgentMovementData agentData = AgentMovementDataArray[index];
         if((agentData.Status & AgentStatus.Moving) != AgentStatus.Moving) { return; }
-        if (!AgentPositionChangeBuffer[index].Equals(0)) { return; }
         float2 agentPos = new float2(agentData.Position.x, agentData.Position.z);
         float2 totalResolution = 0;
         float agentRadius = agentData.Radius;

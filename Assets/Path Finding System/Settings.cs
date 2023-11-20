@@ -15,10 +15,10 @@ namespace Assets.Path_Finding_System
         private void Start()
         {
             _prevFps = maxFps;
-            QualitySettings.vSyncCount = 0;
-            QualitySettings.antiAliasing = 0;
-            QualitySettings.shadows = ShadowQuality.Disable;
-            QualitySettings.SetQualityLevel(0);
+            //QualitySettings.vSyncCount = 0;
+            //QualitySettings.antiAliasing = 0;
+            //QualitySettings.shadows = ShadowQuality.Disable;
+            //QualitySettings.SetQualityLevel(0);
             Application.targetFrameRate = maxFps;
         }
         private void Update()
