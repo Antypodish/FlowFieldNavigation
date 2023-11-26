@@ -19,7 +19,7 @@ public static class FlowFieldUtilities
     public static float BaseSpatialGridSize;
     public static float MinAgentSize;
     public static float MaxAgentSize;
-
+    public static float LOSRange;
     public static int To1D(int2 index2, int colAmount)
     {
         return index2.y * colAmount + index2.x;
@@ -80,6 +80,17 @@ public static class FlowFieldUtilities
         int2 local2d = index - sectorStartIndex;
         return local2d.y * sectorColAmount + local2d.x;
     }
+    public static LocalIndex1d GetLocal1D(int2 general2d, int sectorColAmount, int sectorMatrixColAmount)
+    {
+        int2 sector2d = general2d / sectorColAmount;
+        int2 local2d = general2d - (sector2d * sectorColAmount);
+        int sector1d = sector2d.y * sectorMatrixColAmount + sector2d.x;
+        return new LocalIndex1d()
+        {
+            sector = sector1d,
+            index = local2d.y * sectorColAmount + local2d.x,
+        };
+    }
     public static int2 GetSectorStartIndex(int2 sectorIndex, int sectorColAmount)
     {
         return new int2(sectorIndex.x * sectorColAmount, sectorIndex.y * sectorColAmount);
@@ -96,6 +107,11 @@ public static class FlowFieldUtilities
         int2 sectorStart = GetSectorStartIndex(sector2d, sectorColAmount);
         int2 general2d = local2d + sectorStart;
         return general2d;
+    }
+    public static int2 GetGeneral2d(int local1d, int sector1d, int sectorMatrixColAmount, int sectorColAmount)
+    {
+        int2 sectorStart2d = new int2(sector1d % sectorMatrixColAmount * sectorColAmount, sector1d / sectorMatrixColAmount * sectorColAmount);
+        return sectorStart2d + new int2(local1d % sectorColAmount, local1d / sectorColAmount);
     }
     public static int2 GetLocal2dInSector(PortalNode portalNode, int sectorIndex, int sectorMatrixColAmount, int sectorColAmount)
     {

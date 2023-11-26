@@ -11,6 +11,7 @@ public class PathfindingManager : MonoBehaviour
     [SerializeField] int _maxCostfieldOffset;
     [SerializeField] public float AgentUpdateFrequency;
     [SerializeField] public float BaseSpatialGridSize;
+    [SerializeField] public float LineOfSightRange;
 
     [HideInInspector] public float TileSize;
     [HideInInspector] public int RowAmount;
@@ -90,6 +91,7 @@ public class PathfindingManager : MonoBehaviour
         FlowFieldUtilities.BaseSpatialGridSize = BaseSpatialGridSize;
         FlowFieldUtilities.MinAgentSize = 0;
         FlowFieldUtilities.MaxAgentSize = (_maxCostfieldOffset * TileSize * 2) + TileSize;
+        FlowFieldUtilities.LOSRange = LineOfSightRange;
     }
     public void SetDestination(List<FlowFieldAgent> agents, Vector3 target)
     {

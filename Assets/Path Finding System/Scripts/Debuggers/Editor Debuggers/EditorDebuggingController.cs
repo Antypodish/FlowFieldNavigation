@@ -27,7 +27,6 @@ public class EditorDebuggingController : MonoBehaviour
     [SerializeField] bool _debugPortalSequence;
     [SerializeField] bool _debugPickedSectors;
     [SerializeField] bool _debugIntegrationField;
-    [SerializeField] bool _debugLOSPass;
     [SerializeField] bool _debugLOSBlocks;
     [SerializeField] bool _debugFlowField;
     [SerializeField] bool _debugActiveWaveFronts;
@@ -103,7 +102,6 @@ public class EditorDebuggingController : MonoBehaviour
             if (_debugPickedSectors && _pathDebugger != null) { _pathDebugger.DebugPickedSectors(_agentToDebug); }
             if (_debugIntegrationField && _pathDebugger != null) { _pathDebugger.DebugIntegrationField(_agentToDebug); }
             if (_debugFlowField && _pathDebugger != null) { _pathDebugger.DebugFlowField(_agentToDebug); }
-            if (_debugLOSPass && _pathDebugger != null) { _pathDebugger.LOSPassDebug(_agentToDebug); }
             if (_debugLOSBlocks && _pathDebugger != null) { _pathDebugger.LOSBlockDebug(_agentToDebug); }
             if(_debugAgentWaypoint && _agentWaypointDebugger!= null) { _agentWaypointDebugger.Debug(_agentToDebug); }
             if(_debugActiveWaveFronts && _pathDebugger != null) { _pathDebugger.DebugActiveWaveFronts(_agentToDebug); }

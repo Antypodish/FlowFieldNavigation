@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Unity.Burst;
+using Unity.Burst.CompilerServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
@@ -17,6 +18,8 @@ using UnityEngine.Jobs;
 
 internal class jobtest : MonoBehaviour
 {
+    public int2 target;
+
     private void Update()
     {
     }

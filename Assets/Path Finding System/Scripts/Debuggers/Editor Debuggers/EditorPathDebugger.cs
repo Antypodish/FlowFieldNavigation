@@ -224,40 +224,6 @@ public class EditorPathDebugger
             
         }
     }
-    public void LOSPassDebug(FlowFieldAgent agent)
-    {
-        if (_pathProducer == null) { return; }
-        if (_pathProducer.ProducedPaths.Count == 0) { return; }
-        Path producedPath = agent.GetPath();
-        if (!producedPath.IsCalculated) { return; }
-
-        string los = "los";
-        Gizmos.color = Color.white;
-        UnsafeList<int> sectorMarks = producedPath.SectorToPicked;
-        UnsafeList<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset).SectorNodes;
-        NativeArray<IntegrationTile> integrationField = producedPath.IntegrationField;
-        int sectorColAmount = _pathfindingManager.SectorColAmount;
-        int sectorTileAmount = sectorColAmount * sectorColAmount;
-        for (int i = 0; i < sectorMarks.Length; i++)
-        {
-            if (sectorMarks[i] == 0) { continue; }
-            int pickedStartIndex = sectorMarks[i];
-            for (int j = pickedStartIndex; j < pickedStartIndex + sectorTileAmount; j++)
-            {
-                if (integrationField[j].Mark == IntegrationMark.LOSPass)
-                {
-                    int2 sectorIndex = new int2(sectorNodes[i].Sector.StartIndex.C, sectorNodes[i].Sector.StartIndex.R);
-                    Vector3 sectorIndexPos = new Vector3(sectorIndex.x * _tileSize, 0f, sectorIndex.y * _tileSize);
-                    int local1d = (j - 1) % sectorTileAmount;
-                    int2 local2d = new int2(local1d % sectorColAmount, local1d / sectorColAmount);
-                    Vector3 localIndexPos = new Vector3(local2d.x * _tileSize, 0f, local2d.y * _tileSize);
-                    Vector3 debugPos = localIndexPos + sectorIndexPos + new Vector3(_tileSize / 2, 0.02f, _tileSize / 2);
-                    Handles.Label(debugPos, los);
-                }
-            }
-        }
-
-    }
     public void LOSBlockDebug(FlowFieldAgent agent)
     {
         if (_pathProducer == null) { return; }
@@ -265,7 +231,6 @@ public class EditorPathDebugger
         Path producedPath = agent.GetPath();
         if (!producedPath.IsCalculated) { return; }
 
-        Gizmos.color = Color.white;
         UnsafeList<int> sectorMarks = producedPath.SectorToPicked;
         UnsafeList<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset).SectorNodes;
         NativeArray<IntegrationTile> integrationField = producedPath.IntegrationField;
@@ -277,8 +242,20 @@ public class EditorPathDebugger
             int pickedStartIndex = sectorMarks[i];
             for (int j = pickedStartIndex; j < pickedStartIndex + sectorTileAmount; j++)
             {
-                if (integrationField[j].Mark == IntegrationMark.LOSBlock)
+                if ((integrationField[j].Mark & IntegrationMark.LOSBlock) == IntegrationMark.LOSBlock)
                 {
+                    Gizmos.color = Color.white;
+                    int2 sectorIndex = new int2(sectorNodes[i].Sector.StartIndex.C, sectorNodes[i].Sector.StartIndex.R);
+                    Vector3 sectorIndexPos = new Vector3(sectorIndex.x * _tileSize, 0f, sectorIndex.y * _tileSize);
+                    int local1d = (j - 1) % sectorTileAmount;
+                    int2 local2d = new int2(local1d % sectorColAmount, local1d / sectorColAmount);
+                    Vector3 localIndexPos = new Vector3(local2d.x * _tileSize, 0f, local2d.y * _tileSize);
+                    Vector3 debugPos = localIndexPos + sectorIndexPos + new Vector3(_tileSize / 2, 0.02f, _tileSize / 2);
+                    Gizmos.DrawCube(debugPos, new Vector3(0.3f, 0.3f, 0.3f));
+                }
+                else if ((integrationField[j].Mark & IntegrationMark.LOSC) == IntegrationMark.LOSC)
+                {
+                    Gizmos.color = Color.black;
                     int2 sectorIndex = new int2(sectorNodes[i].Sector.StartIndex.C, sectorNodes[i].Sector.StartIndex.R);
                     Vector3 sectorIndexPos = new Vector3(sectorIndex.x * _tileSize, 0f, sectorIndex.y * _tileSize);
                     int local1d = (j - 1) % sectorTileAmount;
@@ -298,7 +275,6 @@ public class EditorPathDebugger
         if (!producedPath.IsCalculated) { return; }
 
         float yOffset = 0.2f;
-        Gizmos.color = Color.black;
         UnsafeList<int> sectorMarks = producedPath.SectorToPicked;
         UnsafeList<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset).SectorNodes;
         UnsafeList<FlowData> flowField = producedPath.FlowField;
@@ -319,11 +295,25 @@ public class EditorPathDebugger
                 Vector3 debugPos = localIndexPos + sectorIndexPos + new Vector3(_tileSize / 2, 0.02f, _tileSize / 2);
                 if(j >= flowField.Length) { continue; }
                 if (!flowField[j].IsValid()) { continue; }
+                SetColor(j);
                 DrawSquare(debugPos, 0.2f);
                 if (!flowField[j].IsLOS())
                 {
                     DrawFlow(flowField[j], debugPos);
                 }
+            }
+        }
+
+        void SetColor(int flowIndex)
+        {
+            IntegrationTile tile = integrationField[flowIndex];
+            if ((tile.Mark & IntegrationMark.LOSPass) == IntegrationMark.LOSPass)
+            {
+                Gizmos.color = Color.white;
+            }
+            else
+            {
+                Gizmos.color = Color.black;
             }
         }
 

@@ -8,12 +8,12 @@ using Unity.Mathematics;
 public struct NewIntegrationFieldJob : IJob
 {
     public int SectorIndex;
-    [ReadOnly] public UnsafeList<ActiveWaveFront> StartIndicies;
     public int FieldColAmount;
     public int FieldRowAmount;
     public int SectorColAmount;
     public int SectorMatrixColAmount;
     [NativeDisableContainerSafetyRestriction] public NativeSlice<IntegrationTile> IntegrationField;
+    [ReadOnly] public UnsafeList<ActiveWaveFront> StartIndicies;
     [ReadOnly] public UnsafeList<int> SectorToPicked;
     [ReadOnly] public UnsafeList<byte> Costs;
     public void Execute()
@@ -24,13 +24,10 @@ public struct NewIntegrationFieldJob : IJob
     {
         //DATA
         NativeSlice<IntegrationTile> integrationField = IntegrationField;
-        UnsafeList<int> sectorMarks = SectorToPicked;
         UnsafeList<byte> costs = Costs;
         NativeQueue<LocalIndex1d> integrationQueue = new NativeQueue<LocalIndex1d>(Allocator.Temp);
-        int fieldColAmount = FieldColAmount;
         int sectorColAmount = SectorColAmount;
         int sectorTileAmount = sectorColAmount * sectorColAmount;
-        int sectorMatrixColAmount = SectorMatrixColAmount;
         ///////////LOOKUP TABLE////////////////
         ///////////////////////////////////////
         int nLocal1d;
@@ -41,27 +38,10 @@ public struct NewIntegrationFieldJob : IJob
         int seLocal1d;
         int swLocal1d;
         int nwLocal1d;
-        int nSector1d;
-        int eSector1d;
-        int sSector1d;
-        int wSector1d;
-        int neSector1d;
-        int seSector1d;
-        int swSector1d;
-        int nwSector1d;
         bool nBlocked;
         bool eBlocked;
         bool sBlocked;
         bool wBlocked;
-        int curSectorMark;
-        int nSectorMark;
-        int eSectorMark;
-        int sSectorMark;
-        int wSectorMark;
-        int neSectorMark;
-        int seSectorMark;
-        int swSectorMark;
-        int nwSectorMark;
         float curIntCost;
         float nIntCost;
         float eIntCost;
@@ -81,10 +61,11 @@ public struct NewIntegrationFieldJob : IJob
         for(int i = 0; i < StartIndicies.Length; i++)
         {
             ActiveWaveFront front = StartIndicies[i];
+            IntegrationTile startTile = integrationField[front.LocalIndex];
             integrationField[front.LocalIndex] = new IntegrationTile()
             {
                 Cost = front.Distance,
-                Mark = IntegrationMark.Integrated,
+                Mark = startTile.Mark,
             };
         }
         for (int i = 0; i < StartIndicies.Length; i++)
@@ -101,7 +82,7 @@ public struct NewIntegrationFieldJob : IJob
             float newCost = GetCost();
             IntegrationTile tile = integrationField[cur.index];
             tile.Cost = newCost;
-            tile.Mark = IntegrationMark.Integrated;
+            tile.Mark = ~((~ tile.Mark) | IntegrationMark.Awaiting);
             curIntCost = newCost;
             integrationField[cur.index] = tile;
             Enqueue();
@@ -162,10 +143,10 @@ public struct NewIntegrationFieldJob : IJob
             nwIntCost = integrationField[nwLocal1d].Cost;
 
             //AVAILABILITY
-            nAvailable = !nBlocked && !nLocalOverflow && (nMark == IntegrationMark.None || nMark == IntegrationMark.Integrated);
-            eAvailable = !eBlocked && !eLocalOverflow && (eMark == IntegrationMark.None || eMark == IntegrationMark.Integrated);
-            sAvailable = !sBlocked && !sLocalOverflow && (sMark == IntegrationMark.None || sMark == IntegrationMark.Integrated);
-            wAvailable = !wBlocked && !wLocalOverflow && (wMark == IntegrationMark.None || wMark == IntegrationMark.Integrated);
+            nAvailable = !nBlocked && !nLocalOverflow && (nMark & IntegrationMark.Awaiting) != IntegrationMark.Awaiting;
+            eAvailable = !eBlocked && !eLocalOverflow && (eMark & IntegrationMark.Awaiting) != IntegrationMark.Awaiting;
+            sAvailable = !sBlocked && !sLocalOverflow && (sMark & IntegrationMark.Awaiting) != IntegrationMark.Awaiting;
+            wAvailable = !wBlocked && !wLocalOverflow && (wMark & IntegrationMark.Awaiting) != IntegrationMark.Awaiting;
         }
         void Enqueue()
         {
@@ -176,28 +157,28 @@ public struct NewIntegrationFieldJob : IJob
             if (nAvailable && nDif > 2f)
             {
                 IntegrationTile tile = integrationField[nLocal1d];
-                tile.Mark = IntegrationMark.Awaiting;
+                tile.Mark |= IntegrationMark.Awaiting;
                 integrationField[nLocal1d] = tile;
                 integrationQueue.Enqueue(new LocalIndex1d(nLocal1d, 0));
             }
             if (eAvailable && eDif > 2f)
             {
                 IntegrationTile tile = integrationField[eLocal1d];
-                tile.Mark = IntegrationMark.Awaiting;
+                tile.Mark |= IntegrationMark.Awaiting;
                 integrationField[eLocal1d] = tile;
                 integrationQueue.Enqueue(new LocalIndex1d(eLocal1d, 0));
             }
             if (sAvailable && sDif > 2f)
             {
                 IntegrationTile tile = integrationField[sLocal1d];
-                tile.Mark = IntegrationMark.Awaiting;
+                tile.Mark |= IntegrationMark.Awaiting;
                 integrationField[sLocal1d] = tile;
                 integrationQueue.Enqueue(new LocalIndex1d(sLocal1d, 0));
             }
             if (wAvailable && wDif > 2f)
             {
                 IntegrationTile tile = integrationField[wLocal1d];
-                tile.Mark = IntegrationMark.Awaiting;
+                tile.Mark |= IntegrationMark.Awaiting;
                 integrationField[wLocal1d] = tile;
                 integrationQueue.Enqueue(new LocalIndex1d(wLocal1d, 0));
             }
@@ -223,33 +204,6 @@ public struct NewIntegrationFieldJob : IJob
             costToReturn = math.select(costToReturn, swCost, swCost < costToReturn);
             costToReturn = math.select(costToReturn, nwCost, nwCost < costToReturn);
             return costToReturn;
-        }
-        int To1D(int2 index2, int colAmount)
-        {
-            return index2.y * colAmount + index2.x;
-        }
-        int2 To2D(int index, int colAmount)
-        {
-            return new int2(index % colAmount, index / colAmount);
-        }
-        int2 GetSectorIndex(int2 index)
-        {
-            return new int2(index.x / sectorColAmount, index.y / sectorColAmount);
-        }
-        int2 GetLocalIndex(int2 index, int2 sectorStartIndex)
-        {
-            return index - sectorStartIndex;
-        }
-        int2 GetSectorStartIndex(int2 sectorIndex)
-        {
-            return new int2(sectorIndex.x * sectorColAmount, sectorIndex.y * sectorColAmount);
-        }
-        int GetGeneralIndex1d(int local1d, int sector1d)
-        {
-            int2 sector2d = To2D(sector1d, sectorMatrixColAmount);
-            int2 sectorStartIndex = GetSectorStartIndex(sector2d);
-            int2 local2d = To2D(local1d, sectorColAmount);
-            return To1D(sectorStartIndex + local2d, fieldColAmount);
         }
     }
 }

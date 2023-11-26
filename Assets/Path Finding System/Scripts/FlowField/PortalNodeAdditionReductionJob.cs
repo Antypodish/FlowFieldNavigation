@@ -208,7 +208,7 @@ public struct PortalNodeAdditionReductionJob : IJob
             {
                 float hCost = GetHCost(portalNode.Portal1.Index);
                 float gCost = curData.GCost + neighbourConnection.Distance;
-                float fCost = hCost * gCost;
+                float fCost = hCost + gCost;
                 traversalData.HCost = hCost;
                 traversalData.GCost = gCost;
                 traversalData.FCost = fCost;

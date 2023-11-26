@@ -4,7 +4,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
-
+using System.Diagnostics;
 public class PathProducer
 {
     public List<Path> ProducedPaths;
@@ -603,6 +603,24 @@ public class PathProducer
         };
         sectorCalcJob.Schedule().Complete();
 
+        NewLOSIntegrationJob losjob = new NewLOSIntegrationJob()
+        {
+            SectorColAmount = FlowFieldUtilities.SectorColAmount,
+            SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+            SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
+            SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
+            FieldColAmount = FlowFieldUtilities.FieldColAmount,
+            MaxLOSRange = FlowFieldUtilities.LOSRange,
+            TileSize = FlowFieldUtilities.TileSize,
+            FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
+            
+            Costs = pickedCostField.CostsL,
+            SectorToPicked = path.SectorToPicked,
+            IntegrationField = path.IntegrationField,
+            Target = path.TargetIndex,
+        };
+        JobHandle losHandle = losjob.Schedule();
+
 
         //SCHEDULE INTEGRATION FIELDS
         NativeList<JobHandle> intFieldHandles = new NativeList<JobHandle>(Allocator.Temp);
@@ -623,7 +641,7 @@ public class PathProducer
                 FieldColAmount = _columnAmount,
                 FieldRowAmount = _rowAmount,
             };
-            JobHandle intHandle = intJob.Schedule();
+            JobHandle intHandle = intJob.Schedule(losHandle);
             intFieldHandles.Add(intHandle);
         }
         JobHandle intFieldCombinedHandle = JobHandle.CombineDependencies(intFieldHandles);
