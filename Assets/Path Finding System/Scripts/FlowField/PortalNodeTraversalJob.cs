@@ -45,14 +45,10 @@ public struct PortalNodeTraversalJob : IJob
         {
             return;
         }
-
         //TARGET DATA
         int2 targetSectorIndex2d = new int2(TargetIndex.x / SectorColAmount, TargetIndex.y / SectorColAmount);
         _targetSectorIndex1d = targetSectorIndex2d.y * SectorMatrixColAmount + targetSectorIndex2d.x;
         int2 _targetSectorStartIndex2d = targetSectorIndex2d * SectorColAmount;
-
-
-
         //START GRAPH WALKER
         PortalSequenceBorders.Add(0);
         RunDijkstra();

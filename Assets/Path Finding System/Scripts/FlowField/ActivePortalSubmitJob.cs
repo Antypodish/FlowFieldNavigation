@@ -66,7 +66,7 @@ public struct ActivePortalSubmitJob : IJob
                     activePortals.Add(newActiveWaveFront);
                     ActiveWaveFrontListArray[pickedSectorIndex] = activePortals;
                 }
-                else if(SectorToPicked[endSector2] != 0)
+                else if(targetSector1d != endSector2 && SectorToPicked[endSector2] != 0)
                 {
                     int pickedSectorIndex = (SectorToPicked[endSector2] - 1) / SectorTileAmount;
                     UnsafeList<ActiveWaveFront> activePortals = ActiveWaveFrontListArray[pickedSectorIndex];
@@ -75,6 +75,10 @@ public struct ActivePortalSubmitJob : IJob
                     if (ActiveWaveFrontExists(newActiveWaveFront, activePortals)) { continue; }
                     activePortals.Add(newActiveWaveFront);
                     ActiveWaveFrontListArray[pickedSectorIndex] = activePortals;
+                }
+                else
+                {
+                    NotActivatedPortals.Add(end - 1);
                 }
             }
         }

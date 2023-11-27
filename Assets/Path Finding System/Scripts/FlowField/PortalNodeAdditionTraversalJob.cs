@@ -37,11 +37,11 @@ public struct PortalNodeAdditionTraversalJob : IJob
         NativeArray<int> sourcePortalsAsArray = SourcePortalIndexList;
         for (int i = 0; i < sourcePortalsAsArray.Length; i++)
         {
-            PickPortalSequenceFromFastMarching(sourcePortalsAsArray[i]);
+            PickPortalSequenceFromDijkstra(sourcePortalsAsArray[i]);
         }
         PickSectorsFromPortalSequence();
     }
-    void PickPortalSequenceFromFastMarching(int sourcePortal)
+    void PickPortalSequenceFromDijkstra(int sourcePortal)
     {
         //NOTE: NextIndex of portalTraversalData is used as:
         //1. NextIndex in portalTraversalDataArray

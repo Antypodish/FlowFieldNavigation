@@ -77,7 +77,7 @@ public struct AdditionalActivePortalSubmitJob : IJob
                     sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
                     SectorStateTable[endSector1] = sectorState;
                 }
-                else if (SectorToPicked[endSector2] != 0)
+                else if (targetSector1d != endSector2 && SectorToPicked[endSector2] != 0)
                 {
                     int pickedSectorIndex = (SectorToPicked[endSector2] - 1) / SectorTileAmount;
                     UnsafeList<ActiveWaveFront> activePortals = ActiveWaveFrontListArray[pickedSectorIndex];
@@ -89,6 +89,10 @@ public struct AdditionalActivePortalSubmitJob : IJob
                     PathSectorState sectorState = SectorStateTable[endSector2];
                     sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
                     SectorStateTable[endSector2] = sectorState;
+                }
+                else
+                {
+                    NotActivatedPortals.Add(end - 1);
                 }
             }
         }
@@ -125,8 +129,9 @@ public struct AdditionalActivePortalSubmitJob : IJob
                     PathSectorState sectorState = SectorStateTable[endSector1];
                     sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
                     SectorStateTable[endSector1] = sectorState;
+                    NotActivatedPortals.RemoveAtSwapBack(i);
                 }
-                else if (SectorToPicked[endSector2] != 0)
+                else if (targetSector1d != endSector2 && SectorToPicked[endSector2] != 0)
                 {
                     int pickedSectorIndex = (SectorToPicked[endSector2] - 1) / SectorTileAmount;
                     UnsafeList<ActiveWaveFront> activePortals = ActiveWaveFrontListArray[pickedSectorIndex];
@@ -138,8 +143,8 @@ public struct AdditionalActivePortalSubmitJob : IJob
                     PathSectorState sectorState = SectorStateTable[endSector2];
                     sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
                     SectorStateTable[endSector2] = sectorState;
+                    NotActivatedPortals.RemoveAtSwapBack(i);
                 }
-                NotActivatedPortals.RemoveAtSwapBack(i);
             }
 
         }
