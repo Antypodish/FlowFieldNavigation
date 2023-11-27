@@ -328,7 +328,7 @@ public class PathProducer
         JobHandle losHandle = new JobHandle();
         if (!IsLOSCalculated(path) && ContainsSectorsWithinLOSRange(sectorFlowStartIndiciesToCalculateIntegration, path))
         {
-            NewLOSIntegrationJob losjob = new NewLOSIntegrationJob()
+            LOSIntegrationJob losjob = new LOSIntegrationJob()
             {
                 SectorColAmount = FlowFieldUtilities.SectorColAmount,
                 SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
@@ -354,7 +354,7 @@ public class PathProducer
             int sectorStart = sectorFlowStartIndiciesToCalculateIntegration[i];
             int sectorIndex = path.PickedToSector[(sectorStart - 1) / FlowFieldUtilities.SectorTileAmount];
             NativeSlice<IntegrationTile> integrationSector = new NativeSlice<IntegrationTile>(path.IntegrationField, sectorStart, FlowFieldUtilities.SectorTileAmount);
-            NewIntegrationFieldJob intJob = new NewIntegrationFieldJob()
+            IntegrationFieldJob intJob = new IntegrationFieldJob()
             {
                 SectorIndex = sectorIndex,
                 StartIndicies = path.ActiveWaveFrontList[(sectorStart - 1) / FlowFieldUtilities.SectorTileAmount],
@@ -514,7 +514,7 @@ public class PathProducer
             };
             JobHandle loscleanHandle = losClean.Schedule();
 
-            NewLOSIntegrationJob losjob = new NewLOSIntegrationJob()
+            LOSIntegrationJob losjob = new LOSIntegrationJob()
             {
                 SectorColAmount = FlowFieldUtilities.SectorColAmount,
                 SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
@@ -534,7 +534,7 @@ public class PathProducer
         }
         else if(ContainsSectorsWithinLOSRange(sectorFlowStartIndiciesToCalculateIntegration, path))
         {
-            NewLOSIntegrationJob losjob = new NewLOSIntegrationJob()
+            LOSIntegrationJob losjob = new LOSIntegrationJob()
             {
                 SectorColAmount = FlowFieldUtilities.SectorColAmount,
                 SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
@@ -559,7 +559,7 @@ public class PathProducer
             int sectorStart = sectorFlowStartIndiciesToCalculateIntegration[i];
             int sectorIndex = path.PickedToSector[(sectorStart - 1) / FlowFieldUtilities.SectorTileAmount];
             NativeSlice<IntegrationTile> integrationSector = new NativeSlice<IntegrationTile>(path.IntegrationField, sectorStart, FlowFieldUtilities.SectorTileAmount);
-            NewIntegrationFieldJob intJob = new NewIntegrationFieldJob()
+            IntegrationFieldJob intJob = new IntegrationFieldJob()
             {
                 SectorIndex = sectorIndex,
                 StartIndicies = submitJob.ActiveWaveFrontListArray[(sectorStart - 1) / FlowFieldUtilities.SectorTileAmount],
@@ -692,7 +692,7 @@ public class PathProducer
         JobHandle losHandle = new JobHandle();
         if(ContainsSectorsWithinLOSRange(sectorFlowStartIndiciesToCalculateIntegration, path))
         {
-            NewLOSIntegrationJob losjob = new NewLOSIntegrationJob()
+            LOSIntegrationJob losjob = new LOSIntegrationJob()
             {
                 SectorColAmount = FlowFieldUtilities.SectorColAmount,
                 SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
@@ -719,7 +719,7 @@ public class PathProducer
             int sectorStart = sectorFlowStartIndiciesToCalculateIntegration[i];
             int sectorIndex = path.PickedToSector[(sectorStart - 1) / FlowFieldUtilities.SectorTileAmount];
             NativeSlice<IntegrationTile> integrationSector = new NativeSlice<IntegrationTile>(path.IntegrationField, sectorStart, FlowFieldUtilities.SectorTileAmount);
-            NewIntegrationFieldJob intJob = new NewIntegrationFieldJob()
+            IntegrationFieldJob intJob = new IntegrationFieldJob()
             {
                 SectorIndex = sectorIndex,
                 StartIndicies = submitJob.ActiveWaveFrontListArray[(sectorStart - 1) / FlowFieldUtilities.SectorTileAmount],

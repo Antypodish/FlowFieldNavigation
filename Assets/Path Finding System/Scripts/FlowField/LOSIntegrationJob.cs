@@ -113,11 +113,10 @@ public struct LOSIntegrationJob : IJob
             index = targetLocal1d,
         };
         integrationQueue.Enqueue(targetLocal);
-        IntegrationTile targetTile = IntegrationField[sectorToPickedTable[targetSector1d] + targetLocal1d];
         IntegrationField[sectorToPickedTable[targetSector1d] + targetLocal1d] = new IntegrationTile()
         {
-            Cost = targetTile.Cost,
-            Mark = targetTile.Mark | IntegrationMark.LOSPass,
+            Cost = float.MaxValue,
+            Mark = IntegrationMark.LOSPass,
         };
 
         //LOOP
@@ -470,11 +469,12 @@ public struct LOSIntegrationJob : IJob
         }
     }
 
-    enum Quadrant : byte
-    {
-        Q1 = 0,
-        Q2 = 1,
-        Q3 = 2,
-        Q4 = 3
-    };
+    
 }   
+enum Quadrant : byte
+{
+    Q1 = 0,
+    Q2 = 1,
+    Q3 = 2,
+    Q4 = 3
+};
