@@ -28,11 +28,13 @@ public class Path
     public UnsafeList<PathSectorState> SectorStateTable;
     public NativeArray<int> PathAdditionSequenceBorderStartIndex;
     public NativeList<int> NotActivePortalList;
+    public NativeArray<int> NewPickedSectorStartIndex;
 
     public void Dispose()
     {
         PathAdditionSequenceBorderStartIndex.Dispose();
         NotActivePortalList.Dispose();
+        NewPickedSectorStartIndex.Dispose();
     }
     public void SetState(PathState state)
     {

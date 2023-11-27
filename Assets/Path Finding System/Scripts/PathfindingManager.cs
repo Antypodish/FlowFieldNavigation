@@ -11,7 +11,7 @@ public class PathfindingManager : MonoBehaviour
     [SerializeField] int _maxCostfieldOffset;
     [SerializeField] public float AgentUpdateFrequency;
     [SerializeField] public float BaseSpatialGridSize;
-    [SerializeField] public float LineOfSightRange;
+    [SerializeField] public int LineOfSightRange;
 
     [HideInInspector] public float TileSize;
     [HideInInspector] public int RowAmount;

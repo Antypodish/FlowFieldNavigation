@@ -5,6 +5,8 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 using System.Diagnostics;
+using System.IO;
+
 public class PathProducer
 {
     public List<Path> ProducedPaths;
@@ -118,6 +120,7 @@ public class PathProducer
     {
         Path path = ProducedPaths[pathIndex];
         path.PathAdditionSequenceBorderStartIndex[0] = path.PortalSequenceBorders.Length - 1;
+        path.NewPickedSectorStartIndex[0] = path.PickedToSector.Length;
 
         FieldGraph pickedFieldGraph = _fieldProducer.GetFieldGraphWithOffset(path.Offset);
 
@@ -148,7 +151,7 @@ public class PathProducer
         PortalNodeAdditionTraversalJob travJob = new PortalNodeAdditionTraversalJob()
         {
             SectorColAmount = _sectorTileAmount,
-            SectorMatrixColAmount = _columnAmount / _sectorTileAmount,
+            SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
             PickedToSector = path.PickedToSector,
             PortalSequenceBorders = path.PortalSequenceBorders,
             PortalNodes = pickedFieldGraph.PortalNodes,
@@ -275,6 +278,7 @@ public class PathProducer
             SectorStateTable = preallocations.SectorStateTable,
             PathAdditionSequenceBorderStartIndex = new NativeArray<int>(1, Allocator.Persistent),
             NotActivePortalList = new NativeList<int>(Allocator.Persistent),
+            NewPickedSectorStartIndex = new NativeArray<int>(1, Allocator.Persistent),
         };
 
         if(ProducedPaths.Count == pathIndex)
@@ -320,8 +324,29 @@ public class PathProducer
             SectorFlowStartIndiciesToCalculateFlow = sectorFlowStartIndiciesToCalculateFlow,
         };
         sectorCalcJob.Schedule().Complete();
-        //UnityEngine.Debug.Log("flow: " + sectorFlowStartIndiciesToCalculateFlow.Length);
-        //UnityEngine.Debug.Log("int: " + sectorFlowStartIndiciesToCalculateIntegration.Length);
+
+        JobHandle losHandle = new JobHandle();
+        if (!IsLOSCalculated(path) && ContainsSectorsWithinLOSRange(sectorFlowStartIndiciesToCalculateIntegration, path))
+        {
+            NewLOSIntegrationJob losjob = new NewLOSIntegrationJob()
+            {
+                SectorColAmount = FlowFieldUtilities.SectorColAmount,
+                SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+                SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
+                SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
+                FieldColAmount = FlowFieldUtilities.FieldColAmount,
+                MaxLOSRange = FlowFieldUtilities.LOSRange,
+                TileSize = FlowFieldUtilities.TileSize,
+                FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
+
+                Costs = pickedCostField.CostsL,
+                SectorToPicked = path.SectorToPicked,
+                IntegrationField = path.IntegrationField,
+                Target = path.TargetIndex,
+            };
+            losHandle = losjob.Schedule();
+        }
+
         //SCHEDULE INTEGRATION FIELDS
         NativeList<JobHandle> intFieldHandles = new NativeList<JobHandle>(Allocator.Temp);
         for (int i = 0; i < sectorFlowStartIndiciesToCalculateIntegration.Length; i++)
@@ -341,7 +366,7 @@ public class PathProducer
                 FieldColAmount = _columnAmount,
                 FieldRowAmount = _rowAmount,
             };
-            JobHandle intHandle = intJob.Schedule();
+            JobHandle intHandle = intJob.Schedule(losHandle);
             intFieldHandles.Add(intHandle);
         }
         JobHandle intFieldCombinedHandle = JobHandle.CombineDependencies(intFieldHandles);
@@ -467,6 +492,67 @@ public class PathProducer
         };
         resJob.Schedule().Complete();
 
+        //CALCULATE LOS IF NEEDED
+
+        JobHandle losHandle = new JobHandle();
+        int newAddedSectorStart = path.NewPickedSectorStartIndex[0];
+        int newAddedSectorLength = path.PickedToSector.Length - newAddedSectorStart;
+        NativeSlice<int> newAddedSectors = new NativeSlice<int>(path.PickedToSector, newAddedSectorStart, newAddedSectorLength);
+        if (IsLOSCalculated(path) && ContainsSectorsWithinLOSRange(newAddedSectors, path))
+        {
+            LOSCleanJob losClean = new LOSCleanJob()
+            {
+                SectorColAmount = FlowFieldUtilities.SectorColAmount,
+                SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+                SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
+                SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
+                LOSRange = FlowFieldUtilities.LOSRange,
+                Target = path.TargetIndex,
+
+                SectorToPickedTable = path.SectorToPicked,
+                IntegrationField = path.IntegrationField,
+            };
+            JobHandle loscleanHandle = losClean.Schedule();
+
+            NewLOSIntegrationJob losjob = new NewLOSIntegrationJob()
+            {
+                SectorColAmount = FlowFieldUtilities.SectorColAmount,
+                SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+                SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
+                SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
+                FieldColAmount = FlowFieldUtilities.FieldColAmount,
+                MaxLOSRange = FlowFieldUtilities.LOSRange,
+                TileSize = FlowFieldUtilities.TileSize,
+                FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
+
+                Costs = pickedCostField.CostsL,
+                SectorToPicked = path.SectorToPicked,
+                IntegrationField = path.IntegrationField,
+                Target = path.TargetIndex,
+            };
+            losHandle = losjob.Schedule(loscleanHandle);
+        }
+        else if(ContainsSectorsWithinLOSRange(sectorFlowStartIndiciesToCalculateIntegration, path))
+        {
+            NewLOSIntegrationJob losjob = new NewLOSIntegrationJob()
+            {
+                SectorColAmount = FlowFieldUtilities.SectorColAmount,
+                SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+                SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
+                SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
+                FieldColAmount = FlowFieldUtilities.FieldColAmount,
+                MaxLOSRange = FlowFieldUtilities.LOSRange,
+                TileSize = FlowFieldUtilities.TileSize,
+                FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
+
+                Costs = pickedCostField.CostsL,
+                SectorToPicked = path.SectorToPicked,
+                IntegrationField = path.IntegrationField,
+                Target = path.TargetIndex,
+            };
+            losHandle = losjob.Schedule();
+        }
+
         NativeList<JobHandle> intFieldHandles = new NativeList<JobHandle>(Allocator.Temp);
         for (int i = 0; i < sectorFlowStartIndiciesToCalculateIntegration.Length; i++)
         {
@@ -485,7 +571,7 @@ public class PathProducer
                 FieldColAmount = _columnAmount,
                 FieldRowAmount = _rowAmount,
             };
-            JobHandle intHandle = intJob.Schedule();
+            JobHandle intHandle = intJob.Schedule(losHandle);
             intFieldHandles.Add(intHandle);
         }
         JobHandle intFieldCombinedHandle = JobHandle.CombineDependencies(intFieldHandles);
@@ -603,24 +689,28 @@ public class PathProducer
         };
         sectorCalcJob.Schedule().Complete();
 
-        NewLOSIntegrationJob losjob = new NewLOSIntegrationJob()
+        JobHandle losHandle = new JobHandle();
+        if(ContainsSectorsWithinLOSRange(sectorFlowStartIndiciesToCalculateIntegration, path))
         {
-            SectorColAmount = FlowFieldUtilities.SectorColAmount,
-            SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
-            SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
-            SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
-            FieldColAmount = FlowFieldUtilities.FieldColAmount,
-            MaxLOSRange = FlowFieldUtilities.LOSRange,
-            TileSize = FlowFieldUtilities.TileSize,
-            FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
-            
-            Costs = pickedCostField.CostsL,
-            SectorToPicked = path.SectorToPicked,
-            IntegrationField = path.IntegrationField,
-            Target = path.TargetIndex,
-        };
-        JobHandle losHandle = losjob.Schedule();
+            NewLOSIntegrationJob losjob = new NewLOSIntegrationJob()
+            {
+                SectorColAmount = FlowFieldUtilities.SectorColAmount,
+                SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+                SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
+                SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
+                FieldColAmount = FlowFieldUtilities.FieldColAmount,
+                MaxLOSRange = FlowFieldUtilities.LOSRange,
+                TileSize = FlowFieldUtilities.TileSize,
+                FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
 
+                Costs = pickedCostField.CostsL,
+                SectorToPicked = path.SectorToPicked,
+                IntegrationField = path.IntegrationField,
+                Target = path.TargetIndex,
+            };
+            losHandle = losjob.Schedule();
+        }
+        
 
         //SCHEDULE INTEGRATION FIELDS
         NativeList<JobHandle> intFieldHandles = new NativeList<JobHandle>(Allocator.Temp);
@@ -719,5 +809,83 @@ public class PathProducer
             handles.Add(transferJob.Schedule());
         }
         JobHandle.CombineDependencies(handles).Complete();
+    }
+
+    bool IsLOSCalculated(Path path)
+    {
+        int sectorColAmount = FlowFieldUtilities.SectorColAmount;
+        int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
+        LocalIndex1d localIndex = FlowFieldUtilities.GetLocal1D(path.TargetIndex, sectorColAmount, sectorMatrixColAmount);
+        IntegrationTile tile = path.IntegrationField[path.SectorToPicked[localIndex.sector] + localIndex.index];
+        return (tile.Mark & IntegrationMark.LOSPass) == IntegrationMark.LOSPass;
+    }
+    bool ContainsSectorsWithinLOSRange(NativeArray<int> integrationRequestedSectors, Path path)
+    {
+        int losRange = FlowFieldUtilities.LOSRange;
+        int sectorColAmount = FlowFieldUtilities.SectorColAmount;
+        int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
+        int sectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount;
+        int sectorTileAmount = FlowFieldUtilities.SectorTileAmount;
+
+        int2 targetSector2d = FlowFieldUtilities.GetSector2D(path.TargetIndex, sectorColAmount);
+        int extensionLength = losRange / sectorColAmount + math.select(0, 1, losRange % sectorColAmount > 0);
+        int2 rangeTopRightSector = targetSector2d + new int2(extensionLength, extensionLength);
+        int2 rangeBotLeftSector = targetSector2d - new int2(extensionLength, extensionLength);
+        rangeTopRightSector = new int2()
+        {
+            x = math.select(rangeTopRightSector.x, sectorMatrixColAmount - 1, rangeTopRightSector.x >= sectorMatrixColAmount),
+            y = math.select(rangeTopRightSector.y, sectorMatrixRowAmount - 1, rangeTopRightSector.y >= sectorMatrixRowAmount)
+        };
+        rangeBotLeftSector = new int2()
+        {
+            x = math.select(rangeBotLeftSector.x, 0, rangeBotLeftSector.x < 0),
+            y = math.select(rangeBotLeftSector.y, 0, rangeBotLeftSector.y < 0)
+        };
+        for (int i = 0; i < integrationRequestedSectors.Length; i++)
+        {
+            int sectorFlowStart = integrationRequestedSectors[i];
+            int sector1d = path.PickedToSector[(sectorFlowStart - 1) / sectorTileAmount];
+            int sectorCol = sector1d % sectorMatrixColAmount;
+            int sectorRow = sector1d / sectorMatrixColAmount;
+
+            bool withinColRange = sectorCol >= rangeBotLeftSector.x && sectorCol <= rangeTopRightSector.x;
+            bool withinRowRange = sectorRow >= rangeBotLeftSector.y && sectorRow <= rangeTopRightSector.y;
+            if(withinColRange && withinRowRange) { return true; }
+        }
+        return false;
+    }
+    bool ContainsSectorsWithinLOSRange(NativeSlice<int> sectors, Path path)
+    {
+        int losRange = FlowFieldUtilities.LOSRange;
+        int sectorColAmount = FlowFieldUtilities.SectorColAmount;
+        int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
+        int sectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount;
+        int sectorTileAmount = FlowFieldUtilities.SectorTileAmount;
+
+        int2 targetSector2d = FlowFieldUtilities.GetSector2D(path.TargetIndex, sectorColAmount);
+        int extensionLength = losRange / sectorColAmount + math.select(0, 1, losRange % sectorColAmount > 0);
+        int2 rangeTopRightSector = targetSector2d + new int2(extensionLength, extensionLength);
+        int2 rangeBotLeftSector = targetSector2d - new int2(extensionLength, extensionLength);
+        rangeTopRightSector = new int2()
+        {
+            x = math.select(rangeTopRightSector.x, sectorMatrixColAmount - 1, rangeTopRightSector.x >= sectorMatrixColAmount),
+            y = math.select(rangeTopRightSector.y, sectorMatrixRowAmount - 1, rangeTopRightSector.y >= sectorMatrixRowAmount)
+        };
+        rangeBotLeftSector = new int2()
+        {
+            x = math.select(rangeBotLeftSector.x, 0, rangeBotLeftSector.x < 0),
+            y = math.select(rangeBotLeftSector.y, 0, rangeBotLeftSector.y < 0)
+        };
+        for (int i = 0; i < sectors.Length; i++)
+        {
+            int sector1d = sectors[i];
+            int sectorCol = sector1d % sectorMatrixColAmount;
+            int sectorRow = sector1d / sectorMatrixColAmount;
+
+            bool withinColRange = sectorCol >= rangeBotLeftSector.x && sectorCol <= rangeTopRightSector.x;
+            bool withinRowRange = sectorRow >= rangeBotLeftSector.y && sectorRow <= rangeTopRightSector.y;
+            if (withinColRange && withinRowRange) { return true; }
+        }
+        return false;
     }
 }

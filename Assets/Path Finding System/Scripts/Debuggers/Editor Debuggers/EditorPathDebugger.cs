@@ -297,10 +297,7 @@ public class EditorPathDebugger
                 if (!flowField[j].IsValid()) { continue; }
                 SetColor(j);
                 DrawSquare(debugPos, 0.2f);
-                if (!flowField[j].IsLOS())
-                {
-                    DrawFlow(flowField[j], debugPos);
-                }
+                DrawFlow(flowField[j], debugPos, producedPath.Destination);
             }
         }
 
@@ -329,8 +326,18 @@ public class EditorPathDebugger
             Gizmos.DrawLine(botLeft, topLeft);
             Gizmos.DrawLine(topLeft, topRight);
         }
-        void DrawFlow(FlowData flow, Vector3 pos)
+        void DrawFlow(FlowData flow, Vector3 pos, float2 destination)
         {
+            if (flow.IsLOS())
+            {
+                pos = new Vector3(pos.x, yOffset, pos.z);
+                float3 destination3 = new float3(destination.x, yOffset, destination.y);
+                float3 dirToDes = destination3 - (float3) pos;
+                dirToDes = math.normalizesafe(dirToDes) * 0.4f;
+                Vector3 target = pos + (Vector3) dirToDes;
+                Gizmos.DrawLine(pos, target);
+                return;
+            }
             pos = new Vector3(pos.x, yOffset, pos.z);
             float2 flowDir = flow.GetFlow(_tileSize);
             flowDir = math.normalizesafe(flowDir) * 0.4f;

@@ -4,6 +4,7 @@ using Unity.Mathematics;
 using Unity.Jobs;
 using Unity.Burst;
 using System;
+using static UnityEngine.GraphicsBuffer;
 
 [BurstCompile]
 public struct PortalNodeAdditionReductionJob : IJob 
@@ -31,7 +32,6 @@ public struct PortalNodeAdditionReductionJob : IJob
     public NativeList<int> AStarTraverseIndexList;
     public NativeList<int> SourcePortalIndexList;
     public NativeList<int> DijkstraStartIndicies;
-
     int _targetSectorIndex1d;
     public void Execute()
     {

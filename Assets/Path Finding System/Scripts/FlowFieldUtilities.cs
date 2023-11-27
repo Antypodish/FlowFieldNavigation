@@ -19,7 +19,7 @@ public static class FlowFieldUtilities
     public static float BaseSpatialGridSize;
     public static float MinAgentSize;
     public static float MaxAgentSize;
-    public static float LOSRange;
+    public static int LOSRange;
     public static int To1D(int2 index2, int colAmount)
     {
         return index2.y * colAmount + index2.x;

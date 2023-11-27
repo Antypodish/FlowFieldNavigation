@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -10,9 +11,8 @@ using Unity.Mathematics;
 public struct PortalNodeAdditionTraversalJob : IJob
 {
     public int SectorColAmount;
-    public int SectorMatrixColAmount;
     public int AddedPortalSequenceBorderStartIndex;
-
+    public int SectorMatrixColAmount;
     public NativeArray<PortalTraversalData> PortalTraversalDataArray;
     public NativeList<ActivePortal> PortalSequence;
     public NativeList<int> PortalSequenceBorders;
