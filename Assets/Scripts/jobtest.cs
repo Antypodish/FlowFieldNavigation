@@ -15,12 +15,19 @@ using Unity.VisualScripting.Antlr3.Runtime.Tree;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Jobs;
+using System;
 
 internal class jobtest : MonoBehaviour
 {
     public int2 target;
 
+
+    private void Start()
+    {
+
+    }
     private void Update()
     {
+
     }
 }
