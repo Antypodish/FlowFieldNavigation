@@ -4,20 +4,25 @@ using Unity.Mathematics;
 public struct UnsafeLOSBitmap
 {
     UnsafeList<byte> _bytes;
-    int _bitCount;
-    public int BitCount { get { return _bitCount; } }
-    public int ByteCount { get { return _bytes.Length; } }
+
+    public int Length
+    {
+        get { return _bytes.Length; }
+    }
+
     public UnsafeLOSBitmap(int size, Allocator allocator, NativeArrayOptions option = NativeArrayOptions.UninitializedMemory)
     {
         int byteCount = size / 8 + math.select(0, 1, size % 8 > 0);
         _bytes = new UnsafeList<byte>(byteCount, allocator, option);
         _bytes.Length = byteCount;
-        _bitCount = size;
     }
 
     public int GetByteIndex(int bitIndex) => bitIndex / 8;
     public int GetBitRank(int bitIndex) => bitIndex % 8;
-
+    public void Resize(int newLength, NativeArrayOptions option)
+    {
+        _bytes.Resize(newLength, option);
+    }
     public void SetByte(int byteIndex, byte newBits)
     {
         _bytes[byteIndex] = newBits;
@@ -27,22 +32,27 @@ public struct UnsafeLOSBitmap
         int byteIndex = bitIndex / 8;
         _bytes[byteIndex] = newBits;
     }
-    public void SetBitsOfByteUntil(int byteIndex, int untilBitRank, byte byteToSet)
+    public void SetBitsOfByteUntil(int byteIndex, int untilBitRankIncluding, byte byteToSet)
     {
+        int byteToSetShiftCount = 7 - untilBitRankIncluding;
+        int curByteShiftCount = untilBitRankIncluding + 1;
+
         byte curByte = _bytes[byteIndex];
-        curByte = (byte)(curByte >> untilBitRank);
-        curByte = (byte)(curByte << untilBitRank);
-        byteToSet = (byte)(byteToSet << untilBitRank);
-        byteToSet = (byte)(byteToSet >> untilBitRank);
+        curByte = (byte)(curByte >> curByteShiftCount);
+        curByte = (byte)(curByte << curByteShiftCount);
+        byteToSet = (byte)(byteToSet << byteToSetShiftCount);
+        byteToSet = (byte)(byteToSet >> byteToSetShiftCount);
         _bytes[byteIndex] = (byte)(curByte | byteToSet);
     }
-    public void SetBitsOfByteAfter(int byteIndex, int afterBitRank, byte byteToSet)
+    public void SetBitsOfByteStartingFrom(int byteIndex, int startingFromBitRank, byte byteToSet)
     {
+        int curByteShiftCount = 8 - startingFromBitRank;
+        int byteToSetShiftCount = startingFromBitRank; 
         byte curByte = _bytes[byteIndex];
-        curByte = (byte)(curByte << afterBitRank);
-        curByte = (byte)(curByte >> afterBitRank);
-        byteToSet = (byte)(byteToSet >> afterBitRank);
-        byteToSet = (byte)(byteToSet << afterBitRank);
+        curByte = (byte)(curByte << curByteShiftCount);
+        curByte = (byte)(curByte >> curByteShiftCount);
+        byteToSet = (byte)(byteToSet >> byteToSetShiftCount);
+        byteToSet = (byte)(byteToSet << byteToSetShiftCount);
         _bytes[byteIndex] = (byte)(curByte | byteToSet);
     }
     public bool IsLOS(int integrationIndex)
