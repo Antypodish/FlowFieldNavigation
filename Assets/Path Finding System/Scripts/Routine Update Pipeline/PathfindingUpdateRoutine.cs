@@ -72,4 +72,13 @@ public class PathfindingUpdateRoutine
         PathRequests.Add(new PathRequest(target2d));
         _pathfindingManager.AgentDataContainer.SetRequestedPathIndiciesOf(agents, newPathIndex);
     }
+    public void RequestPath(List<FlowFieldAgent> agents, FlowFieldAgent targetAgent)
+    {
+        int newPathIndex = PathRequests.Length;
+        int targetAgentIndex = targetAgent.AgentDataIndex;
+        PathRequest request = new PathRequest(0);
+        request.SetDynamicDestination(targetAgentIndex);
+        PathRequests.Add(request);
+        _pathfindingManager.AgentDataContainer.SetRequestedPathIndiciesOf(agents, newPathIndex);
+    }
 }

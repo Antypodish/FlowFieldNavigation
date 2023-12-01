@@ -8,6 +8,8 @@ public class Path
     public int Id;
     public int Offset;
     public PathState State;
+    public PathType Type;
+    public int TargetAgentIndex;
     public bool IsCalculated = false;
     public int2 TargetIndex;
     public Vector2 Destination;

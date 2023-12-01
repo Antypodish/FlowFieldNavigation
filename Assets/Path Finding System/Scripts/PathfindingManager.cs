@@ -4,6 +4,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 using UnityEngine;
 using System.Diagnostics;
+using static UnityEngine.GraphicsBuffer;
 
 public class PathfindingManager : MonoBehaviour
 {
@@ -97,6 +98,11 @@ public class PathfindingManager : MonoBehaviour
     {
         if (agents.Count == 0) { UnityEngine.Debug.Log("Agent list passed is empty"); return; }
         _pathfindingRoutineUpdater.RequestPath(agents, target);
+    }
+    public void SetDestination(List<FlowFieldAgent> agents, FlowFieldAgent targetAgent)
+    {
+        if (agents.Count == 0) { UnityEngine.Debug.Log("Agent list passed is empty"); return; }
+        _pathfindingRoutineUpdater.RequestPath(agents, targetAgent);
     }
     public NativeArray<UnsafeList<HashTile>> GetSpatialHashGridArray()
     {

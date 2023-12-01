@@ -23,6 +23,20 @@ public struct PathfindingTaskOrganizationJob : IJob
         NativeArray<PathTask> agentPathfindingState = new NativeArray<PathTask>(AgentData.Length, Allocator.Temp);
 
         int pathRequestSourceLength = 0;
+
+        //SET DESTINATION FOR DYNAMIC PATH REQUESTS
+        for(int i = 0; i < NewPaths.Length; i++)
+        {
+            PathRequest newpath = NewPaths[i];
+            if(newpath.PathType == PathType.DynamicDestination)
+            {
+                float3 targetAgentPos = AgentData[newpath.TargetAgentIndex].Position;
+                float2 targetAgentPos2 = new float2(targetAgentPos.x, targetAgentPos.z);
+                newpath.Destination = targetAgentPos2;
+                NewPaths[i] = newpath;
+            }
+        }
+
         //EVALUATE PATH REQUEST
         for (int i = 0; i < AgentData.Length; i++)
         {
@@ -47,8 +61,7 @@ public struct PathfindingTaskOrganizationJob : IJob
                 continue;
             }
 
-            newPath.MinOffset = math.min(agentOffset, newPath.MinOffset);
-            newPath.MaxOffset = math.max(agentOffset, newPath.MaxOffset);
+            newPath.Offset = math.max(agentOffset, newPath.Offset);
             newPath.AgentCount++;
             NewPaths[newPathIndex] = newPath;
             pathRequestSourceLength++;
@@ -176,20 +189,32 @@ public struct PathfindingTaskOrganizationJob : IJob
 public struct PathRequest
 {
     public float2 Destination;
-    public int MinOffset;
-    public int MaxOffset;
+    public int Offset;
     public int AgentCount;
     public int SourcePositionStartIndex;
     public int PathIndex;
+    public PathType PathType;
+    public int TargetAgentIndex;
 
     public PathRequest(float2 destination)
     {
         Destination = destination;
-        MinOffset = int.MaxValue;
-        MaxOffset = int.MinValue;
+        Offset = int.MinValue;
         AgentCount = 0;
         SourcePositionStartIndex = 0;
         PathIndex = 0;
+        PathType = PathType.StaticDestination;
+        TargetAgentIndex = 0;
+    }
+    public void SetDynamicDestination(int targetAgentIndex)
+    {
+        PathType = PathType.DynamicDestination;
+        TargetAgentIndex = targetAgentIndex;
+    }
+    public void SetStaticDestination(float2 destination)
+    {
+        PathType = PathType.StaticDestination;
+        Destination = destination;
     }
 
     public bool IsValid() => AgentCount != 0;

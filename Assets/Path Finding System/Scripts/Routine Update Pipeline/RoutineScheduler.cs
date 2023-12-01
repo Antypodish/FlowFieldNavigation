@@ -314,6 +314,10 @@ public class RoutineScheduler
         for(int i = 0; i < CurrentRequestedPaths.Length; i++)
         {
             PathRequest currentpath = CurrentRequestedPaths[i];
+            if (currentpath.PathType == PathType.DynamicDestination)
+            {
+                UnityEngine.Debug.Log("hü");
+            }
             if (!currentpath.IsValid()) { continue; }
             NativeSlice<float2> pathSources = new NativeSlice<float2>(organization.PathfindingSources, currentpath.SourcePositionStartIndex, currentpath.AgentCount);
             NewPathHandle porTravHandle = SchedulePortalTraversal(pathSources, currentpath);
@@ -321,6 +325,7 @@ public class RoutineScheduler
             _porTravHandles.Add(porTravHandle);
             currentpath.PathIndex = porTravHandle.PathIndex;
             CurrentRequestedPaths[i] = currentpath;
+            
         }
 
         //SET NEW PATH INDICIES OF AGENTS

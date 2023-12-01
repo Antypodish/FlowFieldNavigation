@@ -167,16 +167,31 @@ public class AgentSelectionController : MonoBehaviour
     }
     void SetDestination()
     {
+        bool forceGroundDestination = Input.GetKey(KeyCode.LeftShift);
         List<FlowFieldAgent> agents = SelectedAgents;
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
-        if (Physics.Raycast(ray, out hit, float.PositiveInfinity, 8))
+        if (forceGroundDestination)
         {
-            Vector3 destination = hit.point;
-            
-            _pathfindingManager.SetDestination(agents, destination);
-            
+            if (Physics.Raycast(ray, out hit, float.PositiveInfinity, 8))
+            {
+                Vector3 destination = hit.point;
+                _pathfindingManager.SetDestination(agents, destination);
+            }
+            return;
         }
+        if (Physics.Raycast(ray, out hit, float.PositiveInfinity, 1 | 8))
+        {
+            FlowFieldAgent agent = hit.collider.gameObject.GetComponent<FlowFieldAgent>();
+            if (agent == null)
+            {
+                Vector3 destination = hit.point;
+                _pathfindingManager.SetDestination(agents, destination);
+                return;
+            }
+            _pathfindingManager.SetDestination(agents, agent);
+        }
+
     }
     void DeselectAllAgents()
     {

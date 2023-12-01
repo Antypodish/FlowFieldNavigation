@@ -197,10 +197,10 @@ public class PathProducer
     public NewPathHandle ConstructPath(NativeSlice<float2> positions, PathRequest request)
     {
         int2 destinationIndex = new int2(Mathf.FloorToInt(request.Destination.x / _tileSize), Mathf.FloorToInt(request.Destination.y / _tileSize));
-        CostField pickedCostField = _fieldProducer.GetCostFieldWithOffset(request.MaxOffset);
-        FieldGraph pickedFieldGraph = _fieldProducer.GetFieldGraphWithOffset(request.MaxOffset);
+        CostField pickedCostField = _fieldProducer.GetCostFieldWithOffset(request.Offset);
+        FieldGraph pickedFieldGraph = _fieldProducer.GetFieldGraphWithOffset(request.Offset);
 
-        PreallocationPack preallocations = _preallocator.GetPreallocations(request.MaxOffset);
+        PreallocationPack preallocations = _preallocator.GetPreallocations(request.Offset);
 
         PortalTraversalReductionJob reductionJob = new PortalTraversalReductionJob()
         {
@@ -274,7 +274,7 @@ public class PathProducer
             TargetSectorCosts = preallocations.TargetSectorCosts,
             Destination = request.Destination,
             State = PathState.Clean,
-            Offset = request.MaxOffset,
+            Offset = request.Offset,
             PortalSequence = preallocations.PortalSequence,
             PortalTraversalDataArray = preallocations.PortalTraversalDataArray,
             SectorToPicked = preallocations.SectorToPicked,
