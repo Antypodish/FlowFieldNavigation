@@ -30,15 +30,6 @@ public struct FlowFieldJob : IJobParallelFor
         //START DATA
         float sectorSize = SectorColAmount * TileSize;
         int flowFieldStridedIndex = SectorStartIndex + index;
-
-        //LOS PAS
-        if ((IntegrationField[flowFieldStridedIndex].Mark & IntegrationMark.LOSPass) == IntegrationMark.LOSPass)
-        {
-            FlowData losflow = new FlowData();
-            losflow.SetLOS();
-            FlowFieldCalculationBuffer[index] = losflow;
-            return;
-        }
         int startLocalIndex = (flowFieldStridedIndex - 1) % SectorTileAmount;
         int startPickedSector1d = PickedToSector[(flowFieldStridedIndex - 1) / SectorTileAmount];
         int2 startLocal2d = FlowFieldUtilities.To2D(startLocalIndex, SectorColAmount);

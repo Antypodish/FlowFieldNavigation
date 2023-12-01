@@ -41,7 +41,6 @@ public struct LOSTransferJob : IJob
                 int sector1d = row * SectorMatrixColAmount + col;
                 int sectorIntegrationStart = SectorToPickedTable[sector1d];
                 if (sectorIntegrationStart == 0) { continue; }
-
                 Transfer(sectorIntegrationStart);
             }
         }
@@ -53,16 +52,17 @@ public struct LOSTransferJob : IJob
 
         //HANDLE STARTING BITS
         int startByteIndex = LOSBitmap.GetByteIndex(integrationStartIndex);
+        int startBitIndex = startByteIndex * 8;
         int startBitRank = LOSBitmap.GetBitRank(integrationStartIndex);
 
-        IntegrationTile startTile1 = IntegrationField[integrationStartIndex];
-        IntegrationTile startTile2 = IntegrationField[integrationStartIndex + 1];
-        IntegrationTile startTile3 = IntegrationField[integrationStartIndex + 2];
-        IntegrationTile startTile4 = IntegrationField[integrationStartIndex + 3];
-        IntegrationTile startTile5 = IntegrationField[integrationStartIndex + 4];
-        IntegrationTile startTile6 = IntegrationField[integrationStartIndex + 5];
-        IntegrationTile startTile7 = IntegrationField[integrationStartIndex + 6];
-        IntegrationTile startTile8 = IntegrationField[integrationStartIndex + 7];
+        IntegrationTile startTile1 = IntegrationField[startBitIndex];
+        IntegrationTile startTile2 = IntegrationField[startBitIndex + 1];
+        IntegrationTile startTile3 = IntegrationField[startBitIndex + 2];
+        IntegrationTile startTile4 = IntegrationField[startBitIndex + 3];
+        IntegrationTile startTile5 = IntegrationField[startBitIndex + 4];
+        IntegrationTile startTile6 = IntegrationField[startBitIndex + 5];
+        IntegrationTile startTile7 = IntegrationField[startBitIndex + 6];
+        IntegrationTile startTile8 = IntegrationField[startBitIndex + 7];
         bool startTile1Los = (startTile1.Mark & IntegrationMark.LOSPass) == IntegrationMark.LOSPass;
         bool startTile2Los = (startTile2.Mark & IntegrationMark.LOSPass) == IntegrationMark.LOSPass;
         bool startTile3Los = (startTile3.Mark & IntegrationMark.LOSPass) == IntegrationMark.LOSPass;
@@ -80,23 +80,22 @@ public struct LOSTransferJob : IJob
         int startTile7Mask = math.select(0, 64, startTile7Los);
         int startTile8Mask = math.select(0, 128, startTile8Los);
         int startMask = startTile1Mask | startTile2Mask | startTile3Mask | startTile4Mask | startTile5Mask | startTile6Mask | startTile7Mask | startTile8Mask;
-        LOSBitmap.SetBitsOfByteStartingFrom(startByteIndex, startBitRank, (byte) startMask);
+        LOSBitmap.SetByteOfBit(startBitIndex, (byte)startMask);
 
         int start = integrationStartIndex + 8 - startBitRank;
         int end = integrationStartIndex + SectorTileAmount - 8;
-
         //HANDLE MIDDLE BITS
         int i;
-        for(i = start; i < end; i += 8)
+        for (i = start; i < end; i += 8)
         {
-            IntegrationTile tile1 = IntegrationField[integrationStartIndex];
-            IntegrationTile tile2 = IntegrationField[integrationStartIndex + 1];
-            IntegrationTile tile3 = IntegrationField[integrationStartIndex + 2];
-            IntegrationTile tile4 = IntegrationField[integrationStartIndex + 3];
-            IntegrationTile tile5 = IntegrationField[integrationStartIndex + 4];
-            IntegrationTile tile6 = IntegrationField[integrationStartIndex + 5];
-            IntegrationTile tile7 = IntegrationField[integrationStartIndex + 6];
-            IntegrationTile tile8 = IntegrationField[integrationStartIndex + 7];
+            IntegrationTile tile1 = IntegrationField[i];
+            IntegrationTile tile2 = IntegrationField[i + 1];
+            IntegrationTile tile3 = IntegrationField[i + 2];
+            IntegrationTile tile4 = IntegrationField[i + 3];
+            IntegrationTile tile5 = IntegrationField[i + 4];
+            IntegrationTile tile6 = IntegrationField[i + 5];
+            IntegrationTile tile7 = IntegrationField[i + 6];
+            IntegrationTile tile8 = IntegrationField[i + 7];
             bool tile1Los = (tile1.Mark & IntegrationMark.LOSPass) == IntegrationMark.LOSPass;
             bool tile2Los = (tile2.Mark & IntegrationMark.LOSPass) == IntegrationMark.LOSPass;
             bool tile3Los = (tile3.Mark & IntegrationMark.LOSPass) == IntegrationMark.LOSPass;
@@ -118,16 +117,17 @@ public struct LOSTransferJob : IJob
         }
 
         int lastByteIndex = LOSBitmap.GetByteIndex(i);
+        int lastByteBitStartIndex = lastByteIndex * 8;
         int lastBitRank = LOSBitmap.GetBitRank(integrationStartIndex + SectorTileAmount - 1);
 
-        IntegrationTile lastTile1 = IntegrationField[math.select(i, 0, i > lastIndexOfSector)];
-        IntegrationTile lastTile2 = IntegrationField[math.select(i + 1, 0, i + 1 > lastIndexOfSector)];
-        IntegrationTile lastTile3 = IntegrationField[math.select(i + 2, 0, i + 2 > lastIndexOfSector)];
-        IntegrationTile lastTile4 = IntegrationField[math.select(i + 3, 0, i + 3 > lastIndexOfSector)];
-        IntegrationTile lastTile5 = IntegrationField[math.select(i + 4, 0, i + 4 > lastIndexOfSector)];
-        IntegrationTile lastTile6 = IntegrationField[math.select(i + 5, 0, i + 5 > lastIndexOfSector)];
-        IntegrationTile lastTile7 = IntegrationField[math.select(i + 6, 0, i + 6 > lastIndexOfSector)];
-        IntegrationTile lastTile8 = IntegrationField[math.select(i + 7, 0, i + 7 > lastIndexOfSector)];
+        IntegrationTile lastTile1 = IntegrationField[math.select(lastByteBitStartIndex, 0, lastByteBitStartIndex > lastIndexOfSector)];
+        IntegrationTile lastTile2 = IntegrationField[math.select(lastByteBitStartIndex + 1, 0, lastByteBitStartIndex + 1 > lastIndexOfSector)];
+        IntegrationTile lastTile3 = IntegrationField[math.select(lastByteBitStartIndex + 2, 0, lastByteBitStartIndex + 2 > lastIndexOfSector)];
+        IntegrationTile lastTile4 = IntegrationField[math.select(lastByteBitStartIndex + 3, 0, lastByteBitStartIndex + 3 > lastIndexOfSector)];
+        IntegrationTile lastTile5 = IntegrationField[math.select(lastByteBitStartIndex + 4, 0, lastByteBitStartIndex + 4 > lastIndexOfSector)];
+        IntegrationTile lastTile6 = IntegrationField[math.select(lastByteBitStartIndex + 5, 0, lastByteBitStartIndex + 5 > lastIndexOfSector)];
+        IntegrationTile lastTile7 = IntegrationField[math.select(lastByteBitStartIndex + 6, 0, lastByteBitStartIndex + 6 > lastIndexOfSector)];
+        IntegrationTile lastTile8 = IntegrationField[math.select(lastByteBitStartIndex + 7, 0, lastByteBitStartIndex + 7 > lastIndexOfSector)];
         bool lastTile1Los = (lastTile1.Mark & IntegrationMark.LOSPass) == IntegrationMark.LOSPass;
         bool lastTile2Los = (lastTile2.Mark & IntegrationMark.LOSPass) == IntegrationMark.LOSPass;
         bool lastTile3Los = (lastTile3.Mark & IntegrationMark.LOSPass) == IntegrationMark.LOSPass;

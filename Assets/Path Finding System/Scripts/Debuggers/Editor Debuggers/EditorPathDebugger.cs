@@ -278,6 +278,7 @@ public class EditorPathDebugger
         UnsafeList<int> sectorMarks = producedPath.SectorToPicked;
         UnsafeList<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset).SectorNodes;
         UnsafeList<FlowData> flowField = producedPath.FlowField;
+        UnsafeLOSBitmap losmap = producedPath.LOSMap;
         NativeArray<IntegrationTile> integrationField = producedPath.IntegrationField;
         int sectorColAmount = _pathfindingManager.SectorColAmount;
         int sectorTileAmount = sectorColAmount * sectorColAmount;
@@ -297,14 +298,14 @@ public class EditorPathDebugger
                 if (!flowField[j].IsValid()) { continue; }
                 SetColor(j);
                 DrawSquare(debugPos, 0.2f);
-                DrawFlow(flowField[j], debugPos, producedPath.Destination);
+                DrawFlow(j, debugPos, producedPath.Destination);
             }
         }
 
         void SetColor(int flowIndex)
         {
-            IntegrationTile tile = integrationField[flowIndex];
-            if ((tile.Mark & IntegrationMark.LOSPass) == IntegrationMark.LOSPass)
+            
+            if (losmap.IsLOS(flowIndex))
             {
                 Gizmos.color = Color.white;
             }
@@ -326,9 +327,9 @@ public class EditorPathDebugger
             Gizmos.DrawLine(botLeft, topLeft);
             Gizmos.DrawLine(topLeft, topRight);
         }
-        void DrawFlow(FlowData flow, Vector3 pos, float2 destination)
+        void DrawFlow(int flowIndex, Vector3 pos, float2 destination)
         {
-            if (flow.IsLOS())
+            if (losmap.IsLOS(flowIndex))
             {
                 pos = new Vector3(pos.x, yOffset, pos.z);
                 float3 destination3 = new float3(destination.x, yOffset, destination.y);
@@ -339,7 +340,7 @@ public class EditorPathDebugger
                 return;
             }
             pos = new Vector3(pos.x, yOffset, pos.z);
-            float2 flowDir = flow.GetFlow(_tileSize);
+            float2 flowDir = flowField[flowIndex].GetFlow(_tileSize);
             flowDir = math.normalizesafe(flowDir) * 0.4f;
             Vector3 targetPos = pos + new Vector3(flowDir.x, 0f, flowDir.y);
             Gizmos.DrawLine(pos, targetPos);

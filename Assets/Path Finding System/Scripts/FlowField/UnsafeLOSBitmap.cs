@@ -47,7 +47,7 @@ public struct UnsafeLOSBitmap
     public void SetBitsOfByteStartingFrom(int byteIndex, int startingFromBitRank, byte byteToSet)
     {
         int curByteShiftCount = 8 - startingFromBitRank;
-        int byteToSetShiftCount = startingFromBitRank; 
+        int byteToSetShiftCount = startingFromBitRank;
         byte curByte = _bytes[byteIndex];
         curByte = (byte)(curByte << curByteShiftCount);
         curByte = (byte)(curByte >> curByteShiftCount);

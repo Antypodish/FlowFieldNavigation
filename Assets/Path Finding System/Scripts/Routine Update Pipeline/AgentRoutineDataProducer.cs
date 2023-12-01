@@ -102,10 +102,12 @@ public class AgentRoutineDataProducer
             int hashedIndex = NormalToHashed[i];
             AgentMovementData data = AgentMovementDataList[hashedIndex];
             data.FlowField = curPath.FlowField;
+            data.LOSMap = curPath.LOSMap;
             data.Destination = curPath.Destination;
             data.SectorToPicked = curPath.SectorToPicked;
             data.Offset = curPath.Offset;
             data.PathId = curPath.Id;
+            
             AgentMovementDataList[hashedIndex] = data;
         }
     }

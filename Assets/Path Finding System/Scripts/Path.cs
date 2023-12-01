@@ -29,12 +29,17 @@ public class Path
     public NativeArray<int> PathAdditionSequenceBorderStartIndex;
     public NativeList<int> NotActivePortalList;
     public NativeArray<int> NewPickedSectorStartIndex;
-
+    public NativeList<int> SectorFlowStartIndiciesToCalculateIntegration;
+    public NativeList<int> SectorFlowStartIndiciesToCalculateFlow;
+    public UnsafeLOSBitmap LOSMap;
     public void Dispose()
     {
         PathAdditionSequenceBorderStartIndex.Dispose();
         NotActivePortalList.Dispose();
         NewPickedSectorStartIndex.Dispose();
+        SectorFlowStartIndiciesToCalculateFlow.Dispose();
+        SectorFlowStartIndiciesToCalculateIntegration.Dispose();
+        LOSMap.Dispose();
     }
     public void SetState(PathState state)
     {

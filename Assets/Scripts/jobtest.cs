@@ -19,14 +19,9 @@ using System;
 
 internal class jobtest : MonoBehaviour
 {
-    public int2 target;
-
-
-    private void Start()
-    {
-
-    }
+    public int Length;
     private void Update()
     {
+
     }
 }

@@ -6,6 +6,8 @@ using Unity.Mathematics;
 using UnityEngine;
 using System.Diagnostics;
 using System.IO;
+using UnityEditor.PackageManager.Requests;
+using UnityEngine.UIElements;
 
 public class PathProducer
 {
@@ -14,6 +16,7 @@ public class PathProducer
     Stack<int> _removedPathIndicies;
     NativeList<PathData> _pathDataList;
     NativeList<FlowFieldCalculationBufferParent> _flowFieldCalculationBuffers;
+    NativeList<int> _losCalculatedPaths;
 
     FieldProducer _fieldProducer;
     PathPreallocator _preallocator;
@@ -39,6 +42,7 @@ public class PathProducer
         _pathDataList = new NativeList<PathData>(Allocator.Persistent);
         ProducedPathSubscribers = new NativeList<int>(Allocator.Persistent);
         _flowFieldCalculationBuffers = new NativeList<FlowFieldCalculationBufferParent>(Allocator.Persistent);
+        _losCalculatedPaths = new NativeList<int>(Allocator.Persistent);
     }
     public void Update()
     {
@@ -185,6 +189,10 @@ public class PathProducer
         UnsafeList<FlowData> flowfield = path.FlowField;
         flowfield.Resize(path.FlowFieldLength[0], NativeArrayOptions.ClearMemory);
         path.FlowField = flowfield;
+
+        UnsafeLOSBitmap losmap = path.LOSMap;
+        losmap.Resize(path.FlowFieldLength[0], NativeArrayOptions.ClearMemory);
+        path.LOSMap = losmap;
     }
     public NewPathHandle ConstructPath(NativeSlice<float2> positions, PathRequest request)
     {
@@ -279,6 +287,8 @@ public class PathProducer
             PathAdditionSequenceBorderStartIndex = new NativeArray<int>(1, Allocator.Persistent),
             NotActivePortalList = new NativeList<int>(Allocator.Persistent),
             NewPickedSectorStartIndex = new NativeArray<int>(1, Allocator.Persistent),
+            SectorFlowStartIndiciesToCalculateIntegration = new NativeList<int>(Allocator.Persistent),
+            SectorFlowStartIndiciesToCalculateFlow = new NativeList<int>(Allocator.Persistent),
         };
 
         if(ProducedPaths.Count == pathIndex)
@@ -345,6 +355,7 @@ public class PathProducer
                 Target = path.TargetIndex,
             };
             losHandle = losjob.Schedule();
+            _losCalculatedPaths.Add(pathIndex);
         }
 
         //SCHEDULE INTEGRATION FIELDS
@@ -531,6 +542,7 @@ public class PathProducer
                 Target = path.TargetIndex,
             };
             losHandle = losjob.Schedule(loscleanHandle);
+            _losCalculatedPaths.Add(pathIndex);
         }
         else if(ContainsSectorsWithinLOSRange(sectorFlowStartIndiciesToCalculateIntegration, path))
         {
@@ -551,6 +563,7 @@ public class PathProducer
                 Target = path.TargetIndex,
             };
             losHandle = losjob.Schedule();
+            _losCalculatedPaths.Add(pathIndex);
         }
 
         NativeList<JobHandle> intFieldHandles = new NativeList<JobHandle>(Allocator.Temp);
@@ -641,6 +654,7 @@ public class PathProducer
         NativeArray<int> flowFieldLength = path.FlowFieldLength;
         path.FlowField = _preallocator.GetFlowField(flowFieldLength[0]);
         path.IntegrationField = _preallocator.GetIntegrationField(flowFieldLength[0]);
+        path.LOSMap = new UnsafeLOSBitmap(flowFieldLength[0], Allocator.Persistent, NativeArrayOptions.ClearMemory);
         path.ActiveWaveFrontList = _preallocator.GetActiveWaveFrontListPersistent(path.PickedToSector.Length);
         int2 destinationIndex = path.TargetIndex;
         
@@ -709,6 +723,7 @@ public class PathProducer
                 Target = path.TargetIndex,
             };
             losHandle = losjob.Schedule();
+            _losCalculatedPaths.Add(pathIndex);
         }
         
 
@@ -796,6 +811,25 @@ public class PathProducer
     public void TransferAllFlowFieldCalculationsToTheFlowFields()
     {
         NativeList<JobHandle> handles = new NativeList<JobHandle>(Allocator.Temp);
+
+        for(int i = 0; i < _losCalculatedPaths.Length; i++)
+        {
+            Path path = ProducedPaths[_losCalculatedPaths[i]];
+            LOSTransferJob losTransfer = new LOSTransferJob()
+            {
+                SectorColAmount = FlowFieldUtilities.SectorColAmount,
+                SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+                SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
+                SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
+                LOSRange = FlowFieldUtilities.LOSRange,
+                SectorToPickedTable = path.SectorToPicked,
+                LOSBitmap = path.LOSMap,
+                IntegrationField = path.IntegrationField,
+                Target = path.TargetIndex,
+            };
+            handles.Add(losTransfer.Schedule());
+        }
+        _losCalculatedPaths.Clear();
         for(int i = 0; i< _flowFieldCalculationBuffers.Length; i++)
         {
             FlowFieldCalculationBufferParent parent = _flowFieldCalculationBuffers[i];
@@ -810,7 +844,6 @@ public class PathProducer
         }
         JobHandle.CombineDependencies(handles).Complete();
     }
-
     bool IsLOSCalculated(Path path)
     {
         int sectorColAmount = FlowFieldUtilities.SectorColAmount;

@@ -69,9 +69,10 @@ public struct AgentRoutineDataCalculationJob : IJobParallelFor
         };
 
         FlowData flowData = data.FlowField[sectorMark + local1d];
+        bool isLos = data.LOSMap.IsLOS(sectorMark + local1d);
         float2 agentPos = new float2(data.Position.x, data.Position.z);
         float2 destination = data.Destination;
-        float2 flow = math.select(flowData.GetFlow(tileSize), math.normalizesafe(destination - agentPos), flowData.IsLOS());
+        float2 flow = math.select(flowData.GetFlow(tileSize), math.normalizesafe(destination - agentPos), isLos);
         flow = math.select(GetSmoothFlow(data.DesiredDirection, flow, data.Speed), flow, math.dot(data.DesiredDirection, flow) < 0.7f);
         flow = math.select(0f, flow, flowData.IsValid());
         data.DesiredDirection = flow;
