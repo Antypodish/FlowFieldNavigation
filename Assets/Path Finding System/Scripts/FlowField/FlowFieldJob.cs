@@ -119,7 +119,6 @@ public struct FlowFieldJob : IJobParallelFor
         int endGeneral1d = FlowFieldUtilities.GetGeneral1d(endLocal2d, endSector2d, SectorColAmount, FieldColAmount);
         FlowData flow = new FlowData();
         flow.SetFlow(startGeneral1d, endGeneral1d, FieldColAmount);
-        if (bestIntCost == 0) { flow.SetLOS(); }
         FlowFieldCalculationBuffer[index] = flow;
     }
 

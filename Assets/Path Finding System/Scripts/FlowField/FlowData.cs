@@ -31,14 +31,6 @@ public struct FlowData
         byte horizontalBits = (byte)math.select(horizontalDif, (math.abs(horizontalDif) - 1) | 0b0000_1000, isHorizontalNegative);
         _flow = (byte)(0 | verticalBits | horizontalBits);
     }
-    public void SetLOS()
-    {
-        _flow = 0b1111_1111;
-    }
-    public bool IsLOS()
-    {
-        return _flow == 0b1111_1111;
-    }
     public bool IsValid()
     {
         return _flow != 0b0000_00000;

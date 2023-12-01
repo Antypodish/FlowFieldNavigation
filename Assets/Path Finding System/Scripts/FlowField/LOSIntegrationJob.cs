@@ -107,15 +107,17 @@ public struct LOSIntegrationJob : IJob
         int2 targetSectorStart = FlowFieldUtilities.GetSectorStartIndex(targetSector2d, sectorColAmount);
         int targetLocal1d = FlowFieldUtilities.GetLocal1D(Target, targetSectorStart, sectorColAmount);
         int targetSector1d = FlowFieldUtilities.To1D(targetSector2d, sectorMatrixColAmount);
+        int targetSectorMark = sectorToPickedTable[targetSector1d];
         LocalIndex1d targetLocal = new LocalIndex1d()
         {
             sector = targetSector1d,
             index = targetLocal1d,
         };
         integrationQueue.Enqueue(targetLocal);
-        IntegrationField[sectorToPickedTable[targetSector1d] + targetLocal1d] = new IntegrationTile()
+        IntegrationTile targetTile = IntegrationField[targetSectorMark + targetLocal1d];
+        IntegrationField[targetSectorMark + targetLocal1d] = new IntegrationTile()
         {
-            Cost = float.MaxValue,
+            Cost = targetTile.Cost,
             Mark = IntegrationMark.LOSPass,
         };
 

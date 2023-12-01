@@ -294,7 +294,6 @@ public class EditorPathDebugger
                 int2 local2d = new int2(local1d % sectorColAmount, local1d / sectorColAmount);
                 Vector3 localIndexPos = new Vector3(local2d.x * _tileSize, 0f, local2d.y * _tileSize);
                 Vector3 debugPos = localIndexPos + sectorIndexPos + new Vector3(_tileSize / 2, 0.02f, _tileSize / 2);
-                if(j >= flowField.Length) { continue; }
                 if (!flowField[j].IsValid()) { continue; }
                 SetColor(j);
                 DrawSquare(debugPos, 0.2f);
@@ -345,6 +344,18 @@ public class EditorPathDebugger
             Vector3 targetPos = pos + new Vector3(flowDir.x, 0f, flowDir.y);
             Gizmos.DrawLine(pos, targetPos);
         }
+    }
+
+    public void DebugDestination(FlowFieldAgent agent)
+    {
+        if (agent == null) { return; }
+        Path path = agent.GetPath();
+        if(path == null) { return; }
+
+        Vector2 destination = path.Destination;
+        Vector3 destination3 = new Vector3(destination.x, 0.1f, destination.y);
+        Gizmos.color = Color.blue;
+        Gizmos.DrawSphere(destination3, 0.3f);
     }
 }
 #endif

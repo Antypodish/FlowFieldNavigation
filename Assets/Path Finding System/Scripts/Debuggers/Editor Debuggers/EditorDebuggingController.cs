@@ -22,6 +22,7 @@ public class EditorDebuggingController : MonoBehaviour
     [SerializeField] bool _sectorIslands;
     [SerializeField] bool _portalErrorDetection;
     [Header("PathDebugger")]
+    [SerializeField] bool _debugDestination;
     [SerializeField] bool _debugPortalTraversalMarks;
     [SerializeField] bool _debugPortalTargetNeighbours;
     [SerializeField] bool _debugPortalSequence;
@@ -71,7 +72,7 @@ public class EditorDebuggingController : MonoBehaviour
         _avoidanceDirectionDebugger = new EditorAvoidanceDirectionDebugger(_pathfindingManager);
         _spatialHashGridDebugger = new EditorSpatialHashGridDebugger(_pathfindingManager);
         _islandDebugger = new EditorIslandDebugger(_pathfindingManager);
-        _portalErrorDetector = new EditorSectorPortalErrorDetector(_pathfindingManager);    
+        _portalErrorDetector = new EditorSectorPortalErrorDetector(_pathfindingManager);
     }
     private void Update()
     {
@@ -106,6 +107,7 @@ public class EditorDebuggingController : MonoBehaviour
             if(_debugAgentWaypoint && _agentWaypointDebugger!= null) { _agentWaypointDebugger.Debug(_agentToDebug); }
             if(_debugActiveWaveFronts && _pathDebugger != null) { _pathDebugger.DebugActiveWaveFronts(_agentToDebug); }
             if(_debugPortalTargetNeighbours && _pathDebugger != null) { _pathDebugger.DebugTargetNeighbourPortals(_agentToDebug); }
+            if(_debugDestination && _pathDebugger != null) { _pathDebugger.DebugDestination(_agentToDebug); }
         }
 
         if(_debugAgentDirections && _agentDirectionDebugger != null) { _agentDirectionDebugger.Debug(); }
