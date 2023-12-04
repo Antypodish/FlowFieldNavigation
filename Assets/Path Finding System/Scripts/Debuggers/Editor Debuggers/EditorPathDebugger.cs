@@ -124,7 +124,6 @@ public class EditorPathDebugger
         NativeList<ActivePortal> porSeq = producedPath.PortalSequence;
         NativeList<int> portSeqBorders = producedPath.PortalSequenceBorders;
         Gizmos.color = Color.white;
-
         if (porSeq.Length == 0) { return; }
 
         for (int i = 0; i < portSeqBorders.Length - 1; i++)

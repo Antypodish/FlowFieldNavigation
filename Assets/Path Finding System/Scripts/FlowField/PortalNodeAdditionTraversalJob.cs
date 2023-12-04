@@ -10,9 +10,13 @@ using Unity.Mathematics;
 [BurstCompile]
 public struct PortalNodeAdditionTraversalJob : IJob
 {
+    public int2 Target;
     public int SectorColAmount;
     public int AddedPortalSequenceBorderStartIndex;
     public int SectorMatrixColAmount;
+    public int SectorMatrixRowAmount;
+    public int SectorTileAmount;
+    public int LOSRange;
     public NativeArray<PortalTraversalData> PortalTraversalDataArray;
     public NativeList<ActivePortal> PortalSequence;
     public NativeList<int> PortalSequenceBorders;
@@ -27,9 +31,11 @@ public struct PortalNodeAdditionTraversalJob : IJob
     [ReadOnly] public UnsafeList<PortalNode> PortalNodes;
     [ReadOnly] public NativeArray<PortalToPortal> PorPtrs;
     [ReadOnly] public UnsafeList<UnsafeList<int>> IslandFields;
+    [ReadOnly] public NativeArray<int> NewPickedSectorStartIndex;
 
     public NativeList<int> SourcePortalIndexList;
     public NativeList<int> DijkstraStartIndicies;
+    public NativeArray<SectorsWihinLOSArgument> SectorWithinLOSState;
 
     public void Execute()
     {
@@ -40,6 +46,16 @@ public struct PortalNodeAdditionTraversalJob : IJob
             PickPortalSequenceFromDijkstra(sourcePortalsAsArray[i]);
         }
         PickSectorsFromPortalSequence();
+
+        int newAddedSectorStart = NewPickedSectorStartIndex[0];
+        int newAddedSectorCount = PickedToSector.Length - newAddedSectorStart;
+        NativeSlice<int> newAddedSectors = new NativeSlice<int>(PickedToSector, newAddedSectorStart, newAddedSectorCount);
+        if (ContainsSectorsWithinLOSRange(newAddedSectors))
+        {
+            SectorsWihinLOSArgument argument = SectorWithinLOSState[0];
+            argument |= SectorsWihinLOSArgument.AddedSectorWithinLOS;
+            SectorWithinLOSState[0] = argument;
+        }
     }
     void PickPortalSequenceFromDijkstra(int sourcePortal)
     {
@@ -246,33 +262,39 @@ public struct PortalNodeAdditionTraversalJob : IJob
 
         }
     }
-    public int GetIsland(int2 general2d)
+    bool ContainsSectorsWithinLOSRange(NativeSlice<int> sectors)
     {
-        int2 sector2d = FlowFieldUtilities.GetSector2D(general2d, SectorColAmount);
-        int sector1d = FlowFieldUtilities.To1D(sector2d, SectorMatrixColAmount);
-        SectorNode sector = SectorNodes[sector1d];
+        int losRange = LOSRange;
+        int sectorColAmount = SectorColAmount;
+        int sectorMatrixColAmount = SectorMatrixColAmount;
+        int sectorMatrixRowAmount = SectorMatrixRowAmount;
+        int sectorTileAmount = SectorTileAmount;
 
-        if (sector.IsIslandValid())
+        int2 targetSector2d = FlowFieldUtilities.GetSector2D(Target, sectorColAmount);
+        int extensionLength = losRange / sectorColAmount + math.select(0, 1, losRange % sectorColAmount > 0);
+        int2 rangeTopRightSector = targetSector2d + new int2(extensionLength, extensionLength);
+        int2 rangeBotLeftSector = targetSector2d - new int2(extensionLength, extensionLength);
+        rangeTopRightSector = new int2()
         {
-            return PortalNodes[sector.SectorIslandPortalIndex].IslandIndex;
-        }
-        else if (sector.IsIslandField)
+            x = math.select(rangeTopRightSector.x, sectorMatrixColAmount - 1, rangeTopRightSector.x >= sectorMatrixColAmount),
+            y = math.select(rangeTopRightSector.y, sectorMatrixRowAmount - 1, rangeTopRightSector.y >= sectorMatrixRowAmount)
+        };
+        rangeBotLeftSector = new int2()
         {
-            int2 sectorStart = FlowFieldUtilities.GetSectorStartIndex(sector2d, SectorColAmount);
-            int2 local2d = FlowFieldUtilities.GetLocal2D(general2d, sectorStart);
-            int local1d = FlowFieldUtilities.To1D(local2d, SectorColAmount);
-            int island = IslandFields[sector1d][local1d];
-            switch (island)
-            {
-                case < 0:
-                    return -island;
-                case int.MaxValue:
-                    return int.MaxValue;
-                default:
-                    return PortalNodes[island].IslandIndex;
-            }
+            x = math.select(rangeBotLeftSector.x, 0, rangeBotLeftSector.x < 0),
+            y = math.select(rangeBotLeftSector.y, 0, rangeBotLeftSector.y < 0)
+        };
+        for (int i = 0; i < sectors.Length; i++)
+        {
+            int sector1d = sectors[i];
+            int sectorCol = sector1d % sectorMatrixColAmount;
+            int sectorRow = sector1d / sectorMatrixColAmount;
+
+            bool withinColRange = sectorCol >= rangeBotLeftSector.x && sectorCol <= rangeTopRightSector.x;
+            bool withinRowRange = sectorRow >= rangeBotLeftSector.y && sectorRow <= rangeTopRightSector.y;
+            if (withinColRange && withinRowRange) { return true; }
         }
-        return int.MaxValue;
+        return false;
     }
     public struct SingleUnsafeHeap<T> where T : unmanaged
     {

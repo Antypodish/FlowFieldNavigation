@@ -13,19 +13,27 @@ public struct SourceSectorCalculationJob : IJob
     public int SectorColAmount;
     public int SectorTileAmount;
     public int SectorMatrixColAmount;
+    public int SectorMatrixRowAmount;
+    public int LOSRange;
     public int2 TargetIndex;
     [ReadOnly] public NativeSlice<float2> Sources;
     [ReadOnly] public NativeArray<ActivePortal> PortalSequence;
     [ReadOnly] public UnsafeList<int> SectorToPickedTable;
+    [ReadOnly] public NativeArray<int> PickedToSectorTable;
     [ReadOnly] public NativeArray<UnsafeList<ActiveWaveFront>> ActiveWaveFrontListArray;
     [ReadOnly] public UnsafeList<PortalNode> PortalNodes;
 
-    [WriteOnly] public NativeList<int> SectorFlowStartIndiciesToCalculateIntegration;
-    [WriteOnly] public NativeList<int> SectorFlowStartIndiciesToCalculateFlow;
+    public NativeList<int> SectorFlowStartIndiciesToCalculateIntegration;
+    public NativeList<int> SectorFlowStartIndiciesToCalculateFlow;
 
     public UnsafeList<PathSectorState> SectorStateTable;
+    public NativeArray<SectorsWihinLOSArgument> SectorWithinLOSState;
     public void Execute()
     {
+        SectorFlowStartIndiciesToCalculateFlow.Clear();
+        SectorFlowStartIndiciesToCalculateIntegration.Clear();
+
+
         int targetSector1d = FlowFieldUtilities.GetSector1D(TargetIndex, SectorColAmount, SectorMatrixColAmount);
         for (int i = 0; i < Sources.Length; i++)
         {
@@ -90,5 +98,47 @@ public struct SourceSectorCalculationJob : IJob
                 }
             }
         }
+
+        if (ContainsSectorsWithinLOSRange(SectorFlowStartIndiciesToCalculateIntegration))
+        {
+            SectorsWihinLOSArgument argument = SectorWithinLOSState[0];
+            argument |= SectorsWihinLOSArgument.RequestedSectorWithinLOS;
+            SectorWithinLOSState[0] = argument;
+        }
+    }
+    bool ContainsSectorsWithinLOSRange(NativeArray<int> integrationRequestedSectors)
+    {
+        int losRange = LOSRange;
+        int sectorColAmount = SectorColAmount;
+        int sectorMatrixColAmount = SectorMatrixColAmount;
+        int sectorMatrixRowAmount = SectorMatrixRowAmount;
+        int sectorTileAmount = SectorTileAmount;
+
+        int2 targetSector2d = FlowFieldUtilities.GetSector2D(TargetIndex, sectorColAmount);
+        int extensionLength = losRange / sectorColAmount + math.select(0, 1, losRange % sectorColAmount > 0);
+        int2 rangeTopRightSector = targetSector2d + new int2(extensionLength, extensionLength);
+        int2 rangeBotLeftSector = targetSector2d - new int2(extensionLength, extensionLength);
+        rangeTopRightSector = new int2()
+        {
+            x = math.select(rangeTopRightSector.x, sectorMatrixColAmount - 1, rangeTopRightSector.x >= sectorMatrixColAmount),
+            y = math.select(rangeTopRightSector.y, sectorMatrixRowAmount - 1, rangeTopRightSector.y >= sectorMatrixRowAmount)
+        };
+        rangeBotLeftSector = new int2()
+        {
+            x = math.select(rangeBotLeftSector.x, 0, rangeBotLeftSector.x < 0),
+            y = math.select(rangeBotLeftSector.y, 0, rangeBotLeftSector.y < 0)
+        };
+        for (int i = 0; i < integrationRequestedSectors.Length; i++)
+        {
+            int sectorFlowStart = integrationRequestedSectors[i];
+            int sector1d = PickedToSectorTable[(sectorFlowStart - 1) / sectorTileAmount];
+            int sectorCol = sector1d % sectorMatrixColAmount;
+            int sectorRow = sector1d / sectorMatrixColAmount;
+
+            bool withinColRange = sectorCol >= rangeBotLeftSector.x && sectorCol <= rangeTopRightSector.x;
+            bool withinRowRange = sectorRow >= rangeBotLeftSector.y && sectorRow <= rangeTopRightSector.y;
+            if (withinColRange && withinRowRange) { return true; }
+        }
+        return false;
     }
 }

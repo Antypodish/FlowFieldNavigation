@@ -61,7 +61,7 @@ public class PathfindingManager : MonoBehaviour
 
         float curTime = Time.realtimeSinceStartup;
         float timePassed = curTime - _lastAgentUpdateTime;
-        if (timePassed >= 0.016f)
+        if (timePassed >= AgentUpdateFrequency)
         {
             _lastAgentUpdateTime = curTime;
             _pathfindingRoutineUpdater.RoutineUpdate(timePassed);

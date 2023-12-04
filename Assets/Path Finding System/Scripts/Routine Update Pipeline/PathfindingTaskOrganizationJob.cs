@@ -116,6 +116,7 @@ public struct PathfindingTaskOrganizationJob : IJob
             req.AgentCount = 0;
             NewPaths[i] = req;
         }
+        
         //SET CUR PATH SOURCE START INDICIES
         for (int i = 0; i < CurrentPaths.Length; i++)
         {
@@ -140,7 +141,6 @@ public struct PathfindingTaskOrganizationJob : IJob
                 curPath.PathAdditionSourceCount = 0;
                 CurrentPaths[i] = curPath;
             }
-            
         }
 
         //SUBMIT PATH REQ SOURCES
@@ -180,7 +180,6 @@ public struct PathfindingTaskOrganizationJob : IJob
                     curPath.PathAdditionSourceCount++;
                     CurrentPaths[curPathIndex] = curPath;
                 }
-
             }
         }
     }

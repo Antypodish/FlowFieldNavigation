@@ -34,6 +34,7 @@ public class Path
     public NativeList<int> SectorFlowStartIndiciesToCalculateIntegration;
     public NativeList<int> SectorFlowStartIndiciesToCalculateFlow;
     public UnsafeLOSBitmap LOSMap;
+    public NativeArray<SectorsWihinLOSArgument> SectorWithinLOSState;
     public void Dispose()
     {
         PathAdditionSequenceBorderStartIndex.Dispose();
@@ -42,14 +43,14 @@ public class Path
         SectorFlowStartIndiciesToCalculateFlow.Dispose();
         SectorFlowStartIndiciesToCalculateIntegration.Dispose();
         LOSMap.Dispose();
+        SectorWithinLOSState.Dispose();
     }
-    public void SetState(PathState state)
+    public bool LOSCalculated()
     {
-        State = state;
-    }
-    public FlowData GetFlow(int local1d, int sector1d)
-    {
-        return FlowField[SectorToPicked[sector1d] + local1d];
+        int sectorColAmount = FlowFieldUtilities.SectorColAmount;
+        int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
+        LocalIndex1d local = FlowFieldUtilities.GetLocal1D(TargetIndex, sectorColAmount, sectorMatrixColAmount);
+        return (IntegrationField[SectorToPicked[local.sector] + local.index].Mark & IntegrationMark.LOSPass) == IntegrationMark.LOSPass;
     }
 }
 public enum PathState : byte
@@ -59,3 +60,9 @@ public enum PathState : byte
     ToBeDisposed = 2,
     Removed,
 }
+public enum SectorsWihinLOSArgument : byte
+{
+    None = 0,
+    RequestedSectorWithinLOS = 1,
+    AddedSectorWithinLOS = 2,
+};
