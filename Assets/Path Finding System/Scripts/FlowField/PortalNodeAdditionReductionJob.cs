@@ -15,7 +15,6 @@ public struct PortalNodeAdditionReductionJob : IJob
     public int SectorMatrixColAmount;
 
     public NativeArray<PortalTraversalData> PortalTraversalDataArray;
-    public UnsafeList<int> SectorToPicked;
     public UnsafeList<PathSectorState> SectorStateTable;
     public NativeList<int> PickedToSector;
     public NativeArray<DijkstraTile> TargetSectorCosts;
@@ -105,7 +104,6 @@ public struct PortalNodeAdditionReductionJob : IJob
             PathSectorState sectorState = SectorStateTable[sourceSectorIndexFlat];
             if((sectorState & PathSectorState.Included) != PathSectorState.Included)
             {
-                SectorToPicked[sourceSectorIndexFlat] = PickedToSector.Length * sectorTileAmount + 1;
                 PickedToSector.Add(sourceSectorIndexFlat);
                 SectorStateTable[sourceSectorIndexFlat] |= PathSectorState.Included | PathSectorState.Source;
                 SetSectorPortalIndicies(sourceSectorIndexFlat, SourcePortalIndexList, targetIsland);

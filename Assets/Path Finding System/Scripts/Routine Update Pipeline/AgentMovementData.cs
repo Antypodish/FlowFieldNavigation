@@ -18,7 +18,7 @@ public struct AgentMovementData
     public AgentRoutineStatus RoutineStatus;
     public UnsafeList<FlowData> FlowField;
     public UnsafeLOSBitmap LOSMap;
-    public UnsafeList<int> SectorToPicked;
+    public int SectorFlowStride;
     public int PathId;
     public int TensionPowerIndex;
 

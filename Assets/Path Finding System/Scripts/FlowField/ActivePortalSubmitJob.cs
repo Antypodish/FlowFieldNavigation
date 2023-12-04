@@ -20,7 +20,7 @@ public struct ActivePortalSubmitJob : IJob
     [ReadOnly] public NativeArray<PortalToPortal> PortalEdges;
     [ReadOnly] public NativeArray<WindowNode> WindowNodes;
     [ReadOnly] public NativeArray<int> WinToSecPtrs;
-    [ReadOnly] public NativeArray<int> PickedToSectors;
+    [ReadOnly] public NativeArray<int> PickedToSector;
     [ReadOnly] public UnsafeList<int> SectorToPicked;
     [ReadOnly] public NativeArray<ActivePortal> PortalSequence;
     [ReadOnly] public NativeArray<int> PortalSequenceBorders;

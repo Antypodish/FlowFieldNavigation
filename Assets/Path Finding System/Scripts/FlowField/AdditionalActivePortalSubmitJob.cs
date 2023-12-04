@@ -21,16 +21,25 @@ public struct AdditionalActivePortalSubmitJob : IJob
     [ReadOnly] public NativeArray<PortalToPortal> PortalEdges;
     [ReadOnly] public NativeArray<WindowNode> WindowNodes;
     [ReadOnly] public NativeArray<int> WinToSecPtrs;
-    [ReadOnly] public NativeArray<int> PickedToSectors;
+    [ReadOnly] public NativeArray<int> PickedToSector;
     [ReadOnly] public UnsafeList<int> SectorToPicked;
     [ReadOnly] public NativeArray<ActivePortal> PortalSequence;
     [ReadOnly] public NativeArray<int> PortalSequenceBorders;
+    [ReadOnly] public NativeArray<int> NewSectorStartIndex;
 
     public NativeArray<UnsafeList<ActiveWaveFront>> ActiveWaveFrontListArray;
     public NativeList<int> NotActivatedPortals;
     public UnsafeList<PathSectorState> SectorStateTable;
     public void Execute()
     {
+        //CALCULATE SECTOR TO PICKED
+        for (int i = NewSectorStartIndex[0]; i < PickedToSector.Length; i++)
+        {
+            SectorToPicked[PickedToSector[i]] = i * SectorTileAmount + 1;
+        }
+
+
+
         for (int i = SequenceBorderListStartIndex; i < PortalSequenceBorders.Length - 1; i++)
         {
             int start = PortalSequenceBorders[i];

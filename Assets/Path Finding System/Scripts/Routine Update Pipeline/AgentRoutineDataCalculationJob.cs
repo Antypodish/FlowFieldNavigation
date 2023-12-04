@@ -48,8 +48,7 @@ public struct AgentRoutineDataCalculationJob : IJobParallelFor
             AgentMovementData[index] = data;
             return;
         }
-        int sectorMark = data.SectorToPicked[sector1d];
-        if (sectorMark == 0)
+        if (data.SectorFlowStride == 0)
         {
             AgentOutOfFieldStatusList[index] = new OutOfFieldStatus()
             {
@@ -68,8 +67,8 @@ public struct AgentRoutineDataCalculationJob : IJobParallelFor
             Sector1d = (ushort)sector1d,
         };
 
-        FlowData flowData = data.FlowField[sectorMark + local1d];
-        bool isLos = data.LOSMap.IsLOS(sectorMark + local1d);
+        FlowData flowData = data.FlowField[data.SectorFlowStride + local1d];
+        bool isLos = data.LOSMap.IsLOS(data.SectorFlowStride + local1d);
         float2 agentPos = new float2(data.Position.x, data.Position.z);
         float2 destination = data.Destination;
         float2 flow = math.select(flowData.GetFlow(tileSize), math.normalizesafe(destination - agentPos), isLos);

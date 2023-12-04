@@ -32,7 +32,7 @@ internal class ActivePortalSubmissionScheduler
 
             PortalEdges = pickedFieldGraph.PorToPorPtrs,
             SectorToPicked = path.SectorToPicked,
-            PickedToSectors = path.PickedToSector,
+            PickedToSector = path.PickedToSector,
             PortalSequence = path.PortalSequence,
             PortalSequenceBorders = path.PortalSequenceBorders,
             WinToSecPtrs = pickedFieldGraph.WinToSecPtrs,

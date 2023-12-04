@@ -22,7 +22,7 @@ internal class AdditionActivePortalSubmissionScheduler
         _pathProducer.ResizeActiveWaveFrontList(newSecorCount, path.ActiveWaveFrontList);
 
         //ACTIVE WAVE FRONT SUBMISSION
-        ActivePortalSubmitJob submitJob = new ActivePortalSubmitJob()
+        AdditionalActivePortalSubmitJob submitJob = new AdditionalActivePortalSubmitJob()
         {
             SectorColAmount = FlowFieldUtilities.SectorColAmount,
             SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
@@ -31,10 +31,11 @@ internal class AdditionActivePortalSubmissionScheduler
             SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
             FieldColAmount = FlowFieldUtilities.FieldColAmount,
             TargetIndex2D = path.TargetIndex,
+            SequenceBorderListStartIndex = path.PathAdditionSequenceBorderStartIndex[0],
 
             PortalEdges = pickedFieldGraph.PorToPorPtrs,
             SectorToPicked = path.SectorToPicked,
-            PickedToSectors = path.PickedToSector,
+            PickedToSector = path.PickedToSector,
             PortalSequence = path.PortalSequence,
             PortalSequenceBorders = path.PortalSequenceBorders,
             WinToSecPtrs = pickedFieldGraph.WinToSecPtrs,
@@ -42,6 +43,8 @@ internal class AdditionActivePortalSubmissionScheduler
             WindowNodes = pickedFieldGraph.WindowNodes,
             ActiveWaveFrontListArray = path.ActiveWaveFrontList,
             NotActivatedPortals = path.NotActivePortalList,
+            SectorStateTable = path.SectorStateTable,
+            NewSectorStartIndex = path.NewPickedSectorStartIndex,
         };
         JobHandle submitHandle = submitJob.Schedule();
         if (FlowFieldUtilities.DebugMode) { submitHandle.Complete(); }

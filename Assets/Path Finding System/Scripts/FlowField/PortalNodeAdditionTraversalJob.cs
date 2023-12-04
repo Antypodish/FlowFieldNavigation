@@ -20,7 +20,6 @@ public struct PortalNodeAdditionTraversalJob : IJob
     public NativeArray<PortalTraversalData> PortalTraversalDataArray;
     public NativeList<ActivePortal> PortalSequence;
     public NativeList<int> PortalSequenceBorders;
-    public UnsafeList<int> SectorToPicked;
     public UnsafeList<PathSectorState> SectorStateTable;
     public NativeList<int> PickedToSector;
     public NativeArray<int> FlowFieldLength;
@@ -248,15 +247,15 @@ public struct PortalNodeAdditionTraversalJob : IJob
         int win1Sec2Index = WinToSecPtrs[winNode1.WinToSecPtr + 1];
         int win2Sec1Index = WinToSecPtrs[winNode2.WinToSecPtr];
         int win2Sec2Index = WinToSecPtrs[winNode2.WinToSecPtr + 1];
-        if ((win1Sec1Index == win2Sec1Index || win1Sec1Index == win2Sec2Index) && SectorToPicked[win1Sec1Index] == 0)
+        bool sector1Included = (SectorStateTable[win1Sec1Index] & PathSectorState.Included) == PathSectorState.Included;
+        bool sector2Included = (SectorStateTable[win1Sec2Index] & PathSectorState.Included) == PathSectorState.Included;
+        if ((win1Sec1Index == win2Sec1Index || win1Sec1Index == win2Sec2Index) && !sector1Included)
         {
-            SectorToPicked[win1Sec1Index] = PickedToSector.Length * sectorTileAmount + 1;
             PickedToSector.Add(win1Sec1Index);
             SectorStateTable[win1Sec1Index] |= PathSectorState.Included;
         }
-        if ((win1Sec2Index == win2Sec1Index || win1Sec2Index == win2Sec2Index) && SectorToPicked[win1Sec2Index] == 0)
+        if ((win1Sec2Index == win2Sec1Index || win1Sec2Index == win2Sec2Index) && !sector2Included)
         {
-            SectorToPicked[win1Sec2Index] = PickedToSector.Length * sectorTileAmount + 1;
             PickedToSector.Add(win1Sec2Index);
             SectorStateTable[win1Sec2Index] |= PathSectorState.Included;
 

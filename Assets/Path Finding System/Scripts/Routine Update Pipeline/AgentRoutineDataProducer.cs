@@ -93,6 +93,8 @@ public class AgentRoutineDataProducer
         spatialHasher.Schedule().Complete();
 
         //FILL AGENT MOVEMENT DATA ARRAY
+        float sectorSize = FlowFieldUtilities.SectorColAmount * FlowFieldUtilities.TileSize;
+        int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
         for (int i = 0; i < agentDataList.Length; i++)
         {
             if (agentCurPaths[i] == -1) { continue; }
@@ -104,7 +106,7 @@ public class AgentRoutineDataProducer
             data.FlowField = curPath.FlowField;
             data.LOSMap = curPath.LOSMap;
             data.Destination = curPath.Destination;
-            data.SectorToPicked = curPath.SectorToPicked;
+            data.SectorFlowStride = curPath.SectorToPicked[FlowFieldUtilities.PosToSector1D(new float2(data.Position.x, data.Position.z), sectorSize, sectorMatrixColAmount)];
             data.Offset = curPath.Offset;
             data.PathId = curPath.Id;
             
