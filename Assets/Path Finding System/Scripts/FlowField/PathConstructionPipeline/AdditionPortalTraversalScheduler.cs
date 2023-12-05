@@ -9,7 +9,7 @@ using UnityEngine.EventSystems;
 internal class AdditionPortalTraversalScheduler
 {
     PathfindingManager _pathfindingManager;
-    PathProducer _pathProducer;
+    PathContainer _pathProducer;
     AdditionActivePortalSubmissionScheduler _additionActivePortalSubmissionScheduler;
     RequestedSectorCalculationScheduler _requestedSectorCalculationScheduler;
     NativeList<HandleWithPathIndex> ScheduledAdditionPortalTraversals;

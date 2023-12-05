@@ -15,7 +15,7 @@ public class PathfindingUpdateRoutine
     List<FlowFieldAgent> _agentAddRequest;
 
     NativeList<PathRequest> PathRequests;
-    public PathfindingUpdateRoutine(PathfindingManager pathfindingManager, PathProducer pathProducer)
+    public PathfindingUpdateRoutine(PathfindingManager pathfindingManager, PathContainer pathProducer)
     {
         _pathfindingManager = pathfindingManager;
 

@@ -11,7 +11,7 @@ using UnityEngine.Analytics;
 using System.Diagnostics;
 public class EditorPathDebugger
 {
-    PathProducer _pathProducer;
+    PathContainer _pathProducer;
     PathfindingManager _pathfindingManager;
     FieldProducer _fieldProducer;
     float _tileSize;

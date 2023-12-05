@@ -12,7 +12,7 @@ public struct PathfindingTaskOrganizationJob : IJob
     public NativeArray<AgentData> AgentData;
     public NativeArray<int> AgentNewPathIndicies;
     public NativeArray<int> AgentCurrentPathIndicies;
-    public NativeArray<PathRequest> NewPaths;
+    public NativeList<PathRequest> NewPaths;
     public NativeArray<PathData> CurrentPaths;
     public NativeArray<int> PathSubscribers;
 
@@ -24,16 +24,44 @@ public struct PathfindingTaskOrganizationJob : IJob
 
         int pathRequestSourceLength = 0;
 
-        //SET DESTINATION FOR DYNAMIC PATH REQUESTS
-        for(int i = 0; i < NewPaths.Length; i++)
+        //CHECK IF DYNAMIC PATH TARGETS ARE MOVED
+        for(int i = 0; i < CurrentPaths.Length; i++)
         {
-            PathRequest newpath = NewPaths[i];
+            PathData curPath = CurrentPaths[i];
+            if(curPath.State == PathState.Removed || curPath.Type == PathType.StaticDestination) { continue; }
+            float3 targetAgentPos = AgentData[curPath.TargetAgentIndex].Position;
+            float2 targetAgentPos2 = new float2(targetAgentPos.x, targetAgentPos.z);
+            int2 oldTargetIndex = (int2)math.floor(curPath.Target / TileSize);
+            int2 newTargetIndex = (int2)math.floor(targetAgentPos2 / TileSize);
+            if(oldTargetIndex.Equals(newTargetIndex)) { continue; }
+            curPath.ReconstructionRequestIndex = NewPaths.Length;
+            CurrentPaths[i] = curPath;
+            PathRequest reconReq = new PathRequest();
+            reconReq.SetDynamicDestination(curPath.TargetAgentIndex);
+            NewPaths.Add(reconReq);
+        }
+
+        //SET NEW PATHS OF AGENTS WHOSE PATHS ARE RECONSTRUCTED
+        for(int i = 0; i < AgentCurrentPathIndicies.Length; i++)
+        {
+            int curPathIndex = AgentCurrentPathIndicies[i];
+            if(curPathIndex == -1) { continue; }
+            PathData curPath = CurrentPaths[curPathIndex];
+            if(curPath.State == PathState.Removed || curPath.ReconstructionRequestIndex == -1) { continue; }
+            AgentNewPathIndicies[i] = curPath.ReconstructionRequestIndex;
+        }
+
+        NativeArray<PathRequest> newPathsAsArray = NewPaths;
+        //SET DESTINATION FOR DYNAMIC PATH REQUESTS
+        for(int i = 0; i < newPathsAsArray.Length; i++)
+        {
+            PathRequest newpath = newPathsAsArray[i];
             if(newpath.PathType == PathType.DynamicDestination)
             {
                 float3 targetAgentPos = AgentData[newpath.TargetAgentIndex].Position;
                 float2 targetAgentPos2 = new float2(targetAgentPos.x, targetAgentPos.z);
                 newpath.Destination = targetAgentPos2;
-                NewPaths[i] = newpath;
+                newPathsAsArray[i] = newpath;
             }
         }
 
@@ -48,7 +76,7 @@ public struct PathfindingTaskOrganizationJob : IJob
 
             float2 agentPosition2d = new float2(agentPosition3d.x, agentPosition3d.z);
             int agentOffset = FlowFieldUtilities.RadiusToOffset(agentRadius, TileSize);
-            PathRequest newPath = NewPaths[newPathIndex];
+            PathRequest newPath = newPathsAsArray[newPathIndex];
             int agentIsland = IslandFieldProcessors[agentOffset].GetIsland(agentPosition2d);
             int destinationIsland = IslandFieldProcessors[agentOffset].GetIsland(newPath.Destination);
             
@@ -63,7 +91,7 @@ public struct PathfindingTaskOrganizationJob : IJob
 
             newPath.Offset = math.max(agentOffset, newPath.Offset);
             newPath.AgentCount++;
-            NewPaths[newPathIndex] = newPath;
+            newPathsAsArray[newPathIndex] = newPath;
             pathRequestSourceLength++;
         }
         
@@ -108,13 +136,13 @@ public struct PathfindingTaskOrganizationJob : IJob
 
         int sourceCurIndex = 0;
         //SET PATH REQUEST SOURCE START INDICIES OF PATH REQUESTS
-        for(int i = 0; i < NewPaths.Length; i++)
+        for(int i = 0; i < newPathsAsArray.Length; i++)
         {
-            PathRequest req = NewPaths[i];
+            PathRequest req = newPathsAsArray[i];
             req.SourcePositionStartIndex = sourceCurIndex;
             sourceCurIndex += req.AgentCount;
             req.AgentCount = 0;
-            NewPaths[i] = req;
+            newPathsAsArray[i] = req;
         }
         
         //SET CUR PATH SOURCE START INDICIES
@@ -151,12 +179,12 @@ public struct PathfindingTaskOrganizationJob : IJob
 
             if (newPathIndex != -1)
             {
-                PathRequest req = NewPaths[newPathIndex];
+                PathRequest req = newPathsAsArray[newPathIndex];
                 float3 agentPos3 = AgentData[i].Position;
                 float2 agentPos = new float2(agentPos3.x, agentPos3.z);
                 PathfindingSources[req.SourcePositionStartIndex + req.AgentCount] = agentPos;
                 req.AgentCount = req.AgentCount + 1;
-                NewPaths[newPathIndex] = req;
+                newPathsAsArray[newPathIndex] = req;
             }
             else if(curPathIndex != -1)
             {

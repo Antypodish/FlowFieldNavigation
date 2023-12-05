@@ -9,40 +9,22 @@ using System.IO;
 using UnityEditor.PackageManager.Requests;
 using UnityEngine.UIElements;
 
-public class PathProducer
+public class PathContainer
 {
     public List<Path> ProducedPaths;
     public NativeList<int> ProducedPathSubscribers;
     Stack<int> _removedPathIndicies;
-    NativeList<PathData> _pathDataList;
-    NativeList<FlowFieldCalculationBufferParent> _flowFieldCalculationBuffers;
-    NativeList<int> _losCalculatedPaths;
 
     FieldProducer _fieldProducer;
     PathPreallocator _preallocator;
-    int _columnAmount;
-    int _rowAmount;
-    float _tileSize;
-    int _sectorTileAmount;
-    int _sectorMatrixColAmount;
-    int _sectorMatrixRowAmount;
 
-    public PathProducer(PathfindingManager pathfindingManager)
+    public PathContainer(PathfindingManager pathfindingManager)
     {
         _fieldProducer = pathfindingManager.FieldProducer;
-        _columnAmount = pathfindingManager.ColumnAmount;
-        _rowAmount = pathfindingManager.RowAmount;
-        _tileSize = pathfindingManager.TileSize;
-        _sectorTileAmount = pathfindingManager.SectorColAmount;
-        _sectorMatrixColAmount = _columnAmount / _sectorTileAmount;
-        _sectorMatrixRowAmount = _rowAmount / _sectorTileAmount;
         ProducedPaths = new List<Path>(1);
-        _preallocator = new PathPreallocator(_fieldProducer, _sectorTileAmount * _sectorTileAmount, _sectorMatrixColAmount * _sectorMatrixRowAmount);
+        _preallocator = new PathPreallocator(_fieldProducer, FlowFieldUtilities.SectorTileAmount, FlowFieldUtilities.SectorMatrixTileAmount);
         _removedPathIndicies = new Stack<int>();
-        _pathDataList = new NativeList<PathData>(Allocator.Persistent);
         ProducedPathSubscribers = new NativeList<int>(Allocator.Persistent);
-        _flowFieldCalculationBuffers = new NativeList<FlowFieldCalculationBufferParent>(Allocator.Persistent);
-        _losCalculatedPaths = new NativeList<int>(Allocator.Persistent);
     }
     public void Update()
     {
@@ -80,7 +62,7 @@ public class PathProducer
     }
     public int CreatePath(PathRequest request)
     {
-        int2 destinationIndex = new int2(Mathf.FloorToInt(request.Destination.x / _tileSize), Mathf.FloorToInt(request.Destination.y / _tileSize));
+        int2 destinationIndex = new int2(Mathf.FloorToInt(request.Destination.x / FlowFieldUtilities.TileSize), Mathf.FloorToInt(request.Destination.y / FlowFieldUtilities.TileSize));
         PreallocationPack preallocations = _preallocator.GetPreallocations(request.Offset);
 
         int pathIndex;
@@ -90,6 +72,8 @@ public class PathProducer
         Path producedPath = new Path()
         {
             IsCalculated = true,
+            Type = request.PathType,
+            TargetAgentIndex = request.TargetAgentIndex,
             Id = pathIndex,
             PickedToSector = preallocations.PickedToSector,
             PortalSequenceBorders = preallocations.PortalSequenceBorders,
@@ -164,6 +148,9 @@ public class PathProducer
                 SectorStateTable = path.SectorStateTable,
                 SectorToPicked = path.SectorToPicked,
                 FlowField = path.FlowField,
+                ReconstructionRequestIndex = -1,
+                Type = path.Type,
+                TargetAgentIndex = path.TargetAgentIndex,
             };
         }
     }

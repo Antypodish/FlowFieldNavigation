@@ -8,7 +8,7 @@ using Unity.Mathematics;
 public class FlowCalculationScheduler
 {
     PathfindingManager _pathfindingManager;
-    PathProducer _pathProducer;
+    PathContainer _pathProducer;
 
     NativeList<HandleWithPathIndex> ScheduledFlow;
     NativeList<int> _flowFieldResizedPaths;

@@ -1,4 +1,5 @@
-﻿using Unity.Collections;
+﻿using System;
+using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -7,7 +8,7 @@ using UnityEditor.PackageManager.Requests;
 internal class PortalTraversalScheduler
 {
     PathfindingManager _pathfindingManager;
-    PathProducer _pathProducer;
+    PathContainer _pathProducer;
     ActivePortalSubmissionScheduler _activePortalSubmissionScheduler;
     RequestedSectorCalculationScheduler _requestedSectorCalculationScheduler;
 
@@ -97,7 +98,7 @@ internal class PortalTraversalScheduler
         ScheduledPortalTraversals.Add(pathHandle);
     }
 
-    public void TryComplete(NativeArray<PathRequest> requestedPaths, NativeArray<float2> sources)
+    public void TryComplete(NativeList<PathRequest> requestedPaths, NativeArray<float2> sources)
     {
         for(int i = ScheduledPortalTraversals.Length - 1; i >= 0; i--)
         {
@@ -119,7 +120,7 @@ internal class PortalTraversalScheduler
         }
 
     }
-    public void ForceComplete(NativeArray<PathRequest> requestedPaths, NativeArray<float2> sources)
+    public void ForceComplete(NativeList<PathRequest> requestedPaths, NativeArray<float2> sources)
     {
         for (int i = ScheduledPortalTraversals.Length - 1; i >= 0; i--)
         {

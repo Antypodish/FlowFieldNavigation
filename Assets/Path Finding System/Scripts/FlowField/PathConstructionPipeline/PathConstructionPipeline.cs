@@ -6,14 +6,14 @@ using Unity.Mathematics;
 public class PathConstructionPipeline
 {
     PathfindingManager _pathfindingManager;
-    PathProducer _pathProducer;
+    PathContainer _pathProducer;
     PortalTraversalScheduler _portalTravesalScheduler;
     RequestedSectorCalculationScheduler _requestedSectorCalculationScheduler;
     AdditionPortalTraversalScheduler _additionPortalTraversalScheduler;
 
     NativeList<PathData> ExistingPathData;
     NativeList<float2> SourcePositions;
-    NativeArray<PathRequest> RequestedPaths;
+    NativeList<PathRequest> RequestedPaths;
     public PathConstructionPipeline(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
@@ -25,7 +25,7 @@ public class PathConstructionPipeline
         SourcePositions = new NativeList<float2>(Allocator.Persistent);
     }
 
-    public void EvaluatePathRequests(NativeArray<PathRequest> requestedPaths)
+    public void EvaluatePathRequests(NativeList<PathRequest> requestedPaths)
     {
         //RESET CONTAINERS
         ExistingPathData.Clear();
