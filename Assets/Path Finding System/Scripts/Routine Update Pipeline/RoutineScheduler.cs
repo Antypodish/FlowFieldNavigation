@@ -20,7 +20,6 @@ public class RoutineScheduler
 
     public NativeList<PathRequest> CurrentRequestedPaths;
     public NativeList<float2> CurrentSourcePositions;
-    public NativeList<PathData> ExistingPaths;
 
     int _costFieldEditRequestCount = 0;
     public RoutineScheduler(PathfindingManager pathfindingManager)
@@ -32,14 +31,12 @@ public class RoutineScheduler
         CurrentRequestedPaths = new NativeList<PathRequest>(Allocator.Persistent);
         _islandReconfigHandle = new List<JobHandle>();
         CurrentSourcePositions = new NativeList<float2>(Allocator.Persistent);
-        ExistingPaths = new NativeList<PathData>(Allocator.Persistent);
         _pathConstructionPipeline = new PathConstructionPipeline(pathfindingManager);
     }
 
     public void Schedule(List<CostFieldEditJob[]> costEditJobs, NativeList<PathRequest> newPaths)
     {
         _costFieldEditRequestCount = costEditJobs.Count;
-        _pathfindingManager.PathProducer.GetCurrentPathData(ExistingPaths);
 
         //SCHEDULE COST EDITS
         JobHandle costEditHandle = ScheduleCostEditRequests(costEditJobs);

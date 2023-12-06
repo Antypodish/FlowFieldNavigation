@@ -1,4 +1,5 @@
-﻿using Unity.Mathematics;
+﻿using System;
+using Unity.Mathematics;
 using Unity.Collections.LowLevel.Unsafe;
 public struct PathData
 {
@@ -6,6 +7,7 @@ public struct PathData
     public PathTask Task;
     public PathState State;
     public PathType Type;
+    public bool OutOfReach;
     public UnsafeList<FlowData> FlowField;
     public UnsafeList<PathSectorState> SectorStateTable;
     public UnsafeList<int> SectorToPicked;
@@ -16,8 +18,9 @@ public struct PathData
     public int PathAdditionSourceCount;
     public int ReconstructionRequestIndex;
 }
+[Flags]
 public enum PathTask : byte
 {
     FlowRequest = 1,
     PathAdditionRequest = 2,
-}
+};

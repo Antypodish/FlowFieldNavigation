@@ -4,6 +4,7 @@ using Unity.Mathematics;
 using Unity.Jobs;
 using Unity.Burst;
 using System;
+using System.IO;
 
 [BurstCompile]
 public struct PortalTraversalReductionJob : IJob
@@ -49,7 +50,7 @@ public struct PortalTraversalReductionJob : IJob
         _targetSectorStartIndex1d = _targetSectorStartIndex2d.y * FieldColAmount + _targetSectorStartIndex2d.x;
         int targetGeneralIndex1d = TargetIndex.y * FieldColAmount + TargetIndex.x;
 
-        TargetSectorCosts = GetIntegratedCosts(targetGeneralIndex1d);
+        SetIntegratedCosts(targetGeneralIndex1d);
 
         //SET TARGET PORTAL DATA
         PortalTraversalDataArray[PortalTraversalDataArray.Length - 1] = new PortalTraversalData()
@@ -330,12 +331,10 @@ public struct PortalTraversalReductionJob : IJob
         int portalLocalIndexAtSector = GetPortalLocalIndexAtSector(PortalNodes[targetNeighbourIndex], _targetSectorIndex1d, _targetSectorStartIndex1d);
         return TargetSectorCosts[portalLocalIndexAtSector].IntegratedCost;
     }
-    NativeArray<DijkstraTile> GetIntegratedCosts(int targetIndex)
+    void SetIntegratedCosts(int targetIndex)
     {
-        NativeArray<DijkstraTile> integratedCosts = new NativeArray<DijkstraTile>(SectorColAmount * SectorColAmount, Allocator.Temp);
         NativeQueue<int> aStarQueue = new NativeQueue<int>(Allocator.Temp);
-        CalculateIntegratedCosts(integratedCosts, aStarQueue, SectorNodes[_targetSectorIndex1d].Sector, targetIndex);
-        return integratedCosts;
+        CalculateIntegratedCosts(TargetSectorCosts, aStarQueue, SectorNodes[_targetSectorIndex1d].Sector, targetIndex);
     }
     void SetSectorPortalIndicies(int targetSectorIndexF, NativeList<int> destinationList, int targetIsland)
     {

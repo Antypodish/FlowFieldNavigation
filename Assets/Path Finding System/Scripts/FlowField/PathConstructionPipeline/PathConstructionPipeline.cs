@@ -32,11 +32,11 @@ public class PathConstructionPipeline
         SourcePositions.Clear();
 
         RequestedPaths = requestedPaths;
-        _pathProducer.GetCurrentPathData(ExistingPathData);
         NativeArray<AgentData> agentData = _pathfindingManager.AgentDataContainer.AgentDataList;
         NativeArray<int> newPathIndicies = _pathfindingManager.AgentDataContainer.AgentNewPathIndicies;
         NativeArray<int> curPathIndicies = _pathfindingManager.AgentDataContainer.AgentCurPathIndicies;
         NativeArray<IslandFieldProcessor> islandFieldPorcessor = _pathfindingManager.FieldProducer.GetAllIslandFieldProcessors();
+        _pathProducer.GetCurrentPathData(ExistingPathData, agentData.AsReadOnly());
 
         PathfindingTaskOrganizationJob organization = new PathfindingTaskOrganizationJob()
         {

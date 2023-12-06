@@ -17,9 +17,10 @@ public class PathContainer
 
     FieldProducer _fieldProducer;
     PathPreallocator _preallocator;
-
+    PathfindingManager _pathfindingManager;
     public PathContainer(PathfindingManager pathfindingManager)
     {
+        _pathfindingManager = pathfindingManager;
         _fieldProducer = pathfindingManager.FieldProducer;
         ProducedPaths = new List<Path>(1);
         _preallocator = new PathPreallocator(_fieldProducer, FlowFieldUtilities.SectorTileAmount, FlowFieldUtilities.SectorMatrixTileAmount);
@@ -54,7 +55,6 @@ public class PathContainer
                     PortalTraversalFastMarchingQueue = path.PortalTraversalFastMarchingQueue,
                     SectorStateTable = path.SectorStateTable,
                 };
-
                 _preallocator.SendPreallocationsBack(ref preallocations, path.ActiveWaveFrontList, path.FlowField, path.IntegrationField, path.Offset);
             }
         }
@@ -125,8 +125,11 @@ public class PathContainer
     {
         _preallocator.AddToActiveWaveFrontList(newLength, activeWaveFrontList);
     }
-    public void GetCurrentPathData(NativeList<PathData> currentPathData)
+    public void GetCurrentPathData(NativeList<PathData> currentPathData, NativeArray<AgentData>.ReadOnly agentData)
     {
+        float tileSize = FlowFieldUtilities.TileSize;
+        int sectorColAmount = FlowFieldUtilities.SectorColAmount;
+        int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
         currentPathData.Length = ProducedPaths.Count;
 
         for(int i = 0; i < ProducedPaths.Count; i++)
@@ -138,20 +141,49 @@ public class PathContainer
                 {
                     State = PathState.Removed,
                 };
-                continue;
             }
-            currentPathData[i] = new PathData()
+            else if(path.Type == PathType.StaticDestination)
             {
-                State = path.State,
-                Target = path.Destination,
-                Task = 0,
-                SectorStateTable = path.SectorStateTable,
-                SectorToPicked = path.SectorToPicked,
-                FlowField = path.FlowField,
-                ReconstructionRequestIndex = -1,
-                Type = path.Type,
-                TargetAgentIndex = path.TargetAgentIndex,
-            };
+                currentPathData[i] = new PathData()
+                {
+                    State = path.State,
+                    Target = path.Destination,
+                    Task = 0,
+                    SectorStateTable = path.SectorStateTable,
+                    SectorToPicked = path.SectorToPicked,
+                    FlowField = path.FlowField,
+                    ReconstructionRequestIndex = -1,
+                    Type = path.Type,
+                    TargetAgentIndex = path.TargetAgentIndex,
+                };
+            }
+            else if(path.Type == PathType.DynamicDestination)
+            {
+                float3 targetAgentPos = agentData[path.TargetAgentIndex].Position;
+                float2 targetAgentPos2 = new float2(targetAgentPos.x, targetAgentPos.z);
+                int2 oldTargetIndex = path.TargetIndex;
+                int2 newTargetIndex = (int2)math.floor(targetAgentPos2 / tileSize);
+                int oldSector = FlowFieldUtilities.GetSector1D(oldTargetIndex, sectorColAmount, sectorMatrixColAmount);
+                LocalIndex1d newLocal = FlowFieldUtilities.GetLocal1D(newTargetIndex, sectorColAmount, sectorMatrixColAmount);
+                bool outOfReach = oldSector != newLocal.sector;
+                DijkstraTile targetTile = path.TargetSectorCosts[newLocal.index];
+                outOfReach = outOfReach || targetTile.IntegratedCost == float.MaxValue;
+                path.Destination = targetAgentPos2;
+                path.TargetIndex = newTargetIndex;
+                currentPathData[i] = new PathData()
+                {
+                    State = path.State,
+                    Target = path.Destination,
+                    Task = 0,
+                    SectorStateTable = path.SectorStateTable,
+                    SectorToPicked = path.SectorToPicked,
+                    FlowField = path.FlowField,
+                    ReconstructionRequestIndex = -1,
+                    Type = path.Type,
+                    TargetAgentIndex = path.TargetAgentIndex,
+                    OutOfReach = outOfReach,
+                };
+            }
         }
     }
 }

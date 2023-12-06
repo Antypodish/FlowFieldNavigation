@@ -5,6 +5,7 @@ using Unity.Jobs;
 using Unity.Burst;
 using System;
 using static UnityEngine.GraphicsBuffer;
+using System.IO;
 
 [BurstCompile]
 public struct PortalNodeAdditionReductionJob : IJob 
@@ -17,7 +18,7 @@ public struct PortalNodeAdditionReductionJob : IJob
     public NativeArray<PortalTraversalData> PortalTraversalDataArray;
     public UnsafeList<PathSectorState> SectorStateTable;
     public NativeList<int> PickedToSector;
-    public NativeArray<DijkstraTile> TargetSectorCosts;
+    public NativeArray<DijkstraTile>.ReadOnly TargetSectorCosts;
 
     [ReadOnly] public NativeSlice<float2> SourcePositions;
     [ReadOnly] public UnsafeList<SectorNode> SectorNodes;

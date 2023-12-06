@@ -28,12 +28,7 @@ public struct PathfindingTaskOrganizationJob : IJob
         for(int i = 0; i < CurrentPaths.Length; i++)
         {
             PathData curPath = CurrentPaths[i];
-            if(curPath.State == PathState.Removed || curPath.Type == PathType.StaticDestination) { continue; }
-            float3 targetAgentPos = AgentData[curPath.TargetAgentIndex].Position;
-            float2 targetAgentPos2 = new float2(targetAgentPos.x, targetAgentPos.z);
-            int2 oldTargetIndex = (int2)math.floor(curPath.Target / TileSize);
-            int2 newTargetIndex = (int2)math.floor(targetAgentPos2 / TileSize);
-            if(oldTargetIndex.Equals(newTargetIndex)) { continue; }
+            if(curPath.State == PathState.Removed || curPath.Type == PathType.StaticDestination || !curPath.OutOfReach) { continue; }
             curPath.ReconstructionRequestIndex = NewPaths.Length;
             CurrentPaths[i] = curPath;
             PathRequest reconReq = new PathRequest();
