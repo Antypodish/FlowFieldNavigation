@@ -7,7 +7,7 @@ public struct PathData
     public PathTask Task;
     public PathState State;
     public PathType Type;
-    public bool OutOfReach;
+    public DynamicDestinationState DestinationState;
     public UnsafeList<FlowData> FlowField;
     public UnsafeList<PathSectorState> SectorStateTable;
     public UnsafeList<int> SectorToPicked;
@@ -23,4 +23,10 @@ public enum PathTask : byte
 {
     FlowRequest = 1,
     PathAdditionRequest = 2,
+};
+public enum DynamicDestinationState : byte
+{
+    None,
+    Moved,
+    OutOfReach,
 };

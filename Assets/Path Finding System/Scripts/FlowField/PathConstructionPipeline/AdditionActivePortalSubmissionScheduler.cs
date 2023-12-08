@@ -14,9 +14,9 @@ internal class AdditionActivePortalSubmissionScheduler
         _pathProducer = pathfindingManager.PathProducer;
     }
 
-    public HandleWithPathIndex ScheduleActivePortalSubmission(int pathIndex)
+    public PathPipelineInfoWithHandle ScheduleActivePortalSubmission(PathPipelineInfoWithHandle pathInfo)
     {
-        Path path = _pathProducer.ProducedPaths[pathIndex];
+        Path path = _pathProducer.ProducedPaths[pathInfo.PathIndex];
         FieldGraph pickedFieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(path.Offset);
         int newSecorCount = path.PickedToSector.Length - path.ActiveWaveFrontList.Length;
         _pathProducer.ResizeActiveWaveFrontList(newSecorCount, path.ActiveWaveFrontList);
@@ -47,7 +47,8 @@ internal class AdditionActivePortalSubmissionScheduler
             NewSectorStartIndex = path.NewPickedSectorStartIndex,
         };
         JobHandle submitHandle = submitJob.Schedule();
+        pathInfo.Handle = submitHandle;
         if (FlowFieldUtilities.DebugMode) { submitHandle.Complete(); }
-        return new HandleWithPathIndex(submitHandle, pathIndex);
+        return pathInfo;
     }
 }

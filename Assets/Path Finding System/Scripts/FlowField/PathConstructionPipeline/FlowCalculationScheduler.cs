@@ -9,30 +9,31 @@ public class FlowCalculationScheduler
 {
     PathfindingManager _pathfindingManager;
     PathContainer _pathProducer;
-
-    NativeList<HandleWithPathIndex> ScheduledFlow;
-    NativeList<int> _flowFieldResizedPaths;
-    NativeList<int> _losCalculatedPaths;
+    LOSIntegrationScheduler _losIntegrationScheduler;
+    NativeList<PathPipelineInfoWithHandle> ScheduledFlow;
     NativeList<FlowFieldCalculationBufferParent> _flowFieldCalculationBuffers;
-
-    public FlowCalculationScheduler(PathfindingManager pathfindingManager)
+    NativeList<JobHandle> _flowTransferHandles;
+    NativeList<int> _flowFieldResizedPaths;
+    public FlowCalculationScheduler(PathfindingManager pathfindingManager, LOSIntegrationScheduler losIntegrationScheduler)
     {
         _pathfindingManager = pathfindingManager;
         _pathProducer = pathfindingManager.PathProducer;
-        ScheduledFlow = new NativeList<HandleWithPathIndex>(Allocator.Persistent);
-        _losCalculatedPaths = new NativeList<int>(Allocator.Persistent);
+        ScheduledFlow = new NativeList<PathPipelineInfoWithHandle>(Allocator.Persistent);
         _flowFieldCalculationBuffers = new NativeList<FlowFieldCalculationBufferParent>(Allocator.Persistent);
+        _flowTransferHandles = new NativeList<JobHandle>(Allocator.Persistent);
+        _losIntegrationScheduler = losIntegrationScheduler;
         _flowFieldResizedPaths = new NativeList<int>(Allocator.Persistent);
     }
 
-    public void ScheduleFlow(int pathIndex)
+    public void ScheduleFlow(PathPipelineInfoWithHandle pathInfo)
     {
-        Path path = _pathProducer.ProducedPaths[pathIndex];
+        Path path = _pathProducer.ProducedPaths[pathInfo.PathIndex];
         CostField pickedCostField = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(path.Offset);
-
+        
+        //RESET NEW INT FIELD INDICIES
         int lastIntegrationFieldLength = path.IntegrationField.Length;
         int curIntegrationFieldLength = path.FlowFieldLength[0];
-        if(lastIntegrationFieldLength != curIntegrationFieldLength)
+        if (lastIntegrationFieldLength != curIntegrationFieldLength)
         {
             path.IntegrationField.Resize(curIntegrationFieldLength, NativeArrayOptions.UninitializedMemory);
             //RESET NEW INT FIELD INDICIES
@@ -42,71 +43,8 @@ public class FlowCalculationScheduler
                 IntegrationField = path.IntegrationField,
             };
             resJob.Schedule().Complete();
-            _flowFieldResizedPaths.Add(pathIndex);
+            _flowFieldResizedPaths.Add(pathInfo.PathIndex);
         }
-
-
-        JobHandle losHandle = new JobHandle();
-        bool requestedSectorWithinLOS = (path.SectorWithinLOSState[0] & SectorsWihinLOSArgument.RequestedSectorWithinLOS) == SectorsWihinLOSArgument.RequestedSectorWithinLOS;
-        bool addedSectorWithinLOS = (path.SectorWithinLOSState[0] & SectorsWihinLOSArgument.AddedSectorWithinLOS) == SectorsWihinLOSArgument.AddedSectorWithinLOS;
-        bool losCalculated = path.LOSCalculated();
-        if(losCalculated && addedSectorWithinLOS)
-        {
-            LOSCleanJob losClean = new LOSCleanJob()
-            {
-                SectorColAmount = FlowFieldUtilities.SectorColAmount,
-                SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
-                SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
-                SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
-                LOSRange = FlowFieldUtilities.LOSRange,
-                Target = path.TargetIndex,
-
-                SectorToPickedTable = path.SectorToPicked,
-                IntegrationField = path.IntegrationField,
-            };
-            JobHandle loscleanHandle = losClean.Schedule();
-
-            LOSIntegrationJob losjob = new LOSIntegrationJob()
-            {
-                SectorColAmount = FlowFieldUtilities.SectorColAmount,
-                SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
-                SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
-                SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
-                FieldColAmount = FlowFieldUtilities.FieldColAmount,
-                MaxLOSRange = FlowFieldUtilities.LOSRange,
-                TileSize = FlowFieldUtilities.TileSize,
-                FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
-
-                Costs = pickedCostField.CostsL,
-                SectorToPicked = path.SectorToPicked,
-                IntegrationField = path.IntegrationField,
-                Target = path.TargetIndex,
-            };
-            losHandle = losjob.Schedule(loscleanHandle);
-            _losCalculatedPaths.Add(pathIndex);
-        }
-        else if (requestedSectorWithinLOS)
-        {
-            LOSIntegrationJob losjob = new LOSIntegrationJob()
-            {
-                SectorColAmount = FlowFieldUtilities.SectorColAmount,
-                SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
-                SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
-                SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
-                FieldColAmount = FlowFieldUtilities.FieldColAmount,
-                MaxLOSRange = FlowFieldUtilities.LOSRange,
-                TileSize = FlowFieldUtilities.TileSize,
-                FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
-
-                Costs = pickedCostField.CostsL,
-                SectorToPicked = path.SectorToPicked,
-                IntegrationField = path.IntegrationField,
-                Target = path.TargetIndex,
-            };
-            losHandle = losjob.Schedule();
-            _losCalculatedPaths.Add(pathIndex);
-        }
-        path.SectorWithinLOSState[0] = SectorsWihinLOSArgument.None;
 
         //SCHEDULE INTEGRATION FIELDS
         NativeList<JobHandle> intFieldHandles = new NativeList<JobHandle>(Allocator.Temp);
@@ -129,7 +67,7 @@ public class FlowCalculationScheduler
                 FieldColAmount = FlowFieldUtilities.FieldColAmount,
                 FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
             };
-            JobHandle intHandle = intJob.Schedule(losHandle);
+            JobHandle intHandle = intJob.Schedule();
             intFieldHandles.Add(intHandle);
         }
         JobHandle intFieldCombinedHandle = JobHandle.CombineDependencies(intFieldHandles);
@@ -174,69 +112,54 @@ public class FlowCalculationScheduler
                 Buffer = flowFieldCalculationBuffer,
             };
         }
-        sectorFlowStartIndiciesToCalculateFlow.Dispose();
-        sectorFlowStartIndiciesToCalculateIntegration.Dispose();
+
         //PUSH BUFFER PARENT TO THE LIST
         FlowFieldCalculationBufferParent parent = new FlowFieldCalculationBufferParent()
         {
-            PathIndex = pathIndex,
+            PathIndex = pathInfo.PathIndex,
             BufferParent = bufferParent,
         };
         _flowFieldCalculationBuffers.Add(parent);
 
         JobHandle flowFieldCombinedHandle = JobHandle.CombineDependencies(flowfieldHandles);
-        //IF LOS IS REQUESTED BUT NO FLOW FIELD OR INTEGRATION... YEAH...
-        JobHandle combinedHandle = JobHandle.CombineDependencies(flowFieldCombinedHandle, losHandle);
+        _losIntegrationScheduler.ScheduleLOS(pathInfo, flowFieldCombinedHandle);
 
-        if (FlowFieldUtilities.DebugMode) { combinedHandle.Complete(); }
-        ScheduledFlow.Add(new HandleWithPathIndex(combinedHandle, pathIndex));
+        if (FlowFieldUtilities.DebugMode) { flowFieldCombinedHandle.Complete(); }
+        pathInfo.Handle = flowFieldCombinedHandle;
+        ScheduledFlow.Add(pathInfo);
     }
     public void TryComplete()
     {
         for (int i = ScheduledFlow.Length - 1; i >= 0; i--)
         {
-            HandleWithPathIndex flowHandle = ScheduledFlow[i];
+            PathPipelineInfoWithHandle flowHandle = ScheduledFlow[i];
             if (flowHandle.Handle.IsCompleted)
             {
                 flowHandle.Handle.Complete();
                 ScheduledFlow.RemoveAtSwapBack(i);
             }
         }
+        _losIntegrationScheduler.TryComplete();
     }
     public void ForceComplete()
     {
         for (int i = ScheduledFlow.Length - 1; i >= 0; i--)
         {
-            HandleWithPathIndex flowHandle = ScheduledFlow[i];
+            PathPipelineInfoWithHandle flowHandle = ScheduledFlow[i];
             flowHandle.Handle.Complete();
         }
         ScheduledFlow.Clear();
+        _losIntegrationScheduler.ForceComplete();
         RefreshResizedFlowFieldLengths();
-        TransferAllFlowFieldCalculationsToTheFlowFields();
+        _losIntegrationScheduler.ScheduleLOSTransfers();
+        ScheduleFlowTransfers();
+        _losIntegrationScheduler.CompleteLOSTransfers();
+        CompleteFlowTransfers();
         DisposeFlowFieldCalculationBuffers();
     }
-    void TransferAllFlowFieldCalculationsToTheFlowFields()
+    void ScheduleFlowTransfers()
     {
-        NativeList<JobHandle> handles = new NativeList<JobHandle>(Allocator.Temp);
         List<Path> producedPaths = _pathProducer.ProducedPaths;
-        for (int i = 0; i < _losCalculatedPaths.Length; i++)
-        {
-            Path path = producedPaths[_losCalculatedPaths[i]];
-            LOSTransferJob losTransfer = new LOSTransferJob()
-            {
-                SectorColAmount = FlowFieldUtilities.SectorColAmount,
-                SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
-                SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
-                SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
-                LOSRange = FlowFieldUtilities.LOSRange,
-                SectorToPickedTable = path.SectorToPicked,
-                LOSBitmap = path.LOSMap,
-                IntegrationField = path.IntegrationField,
-                Target = path.TargetIndex,
-            };
-            handles.Add(losTransfer.Schedule());
-        }
-        _losCalculatedPaths.Clear();
         for (int i = 0; i < _flowFieldCalculationBuffers.Length; i++)
         {
             FlowFieldCalculationBufferParent parent = _flowFieldCalculationBuffers[i];
@@ -247,12 +170,14 @@ public class FlowCalculationScheduler
                 CalculationBufferParent = parent,
                 FlowField = producedPaths[pathIndex].FlowField,
             };
-            handles.Add(transferJob.Schedule());
-        }
-        
-        for(int i = 0; i < handles.Length; i++)
+            _flowTransferHandles.Add(transferJob.Schedule());
+        }   
+    }
+    void CompleteFlowTransfers()
+    {
+        for (int i = 0; i < _flowTransferHandles.Length; i++)
         {
-            handles[i].Complete();
+            _flowTransferHandles[i].Complete();
         }
     }
     void DisposeFlowFieldCalculationBuffers()
@@ -273,7 +198,7 @@ public class FlowCalculationScheduler
     void RefreshResizedFlowFieldLengths()
     {
         List<Path> producedPaths = _pathProducer.ProducedPaths;
-        for(int i = 0; i < _flowFieldResizedPaths.Length; i++)
+        for (int i = 0; i < _flowFieldResizedPaths.Length; i++)
         {
             int pathIndex = _flowFieldResizedPaths[i];
             Path path = producedPaths[pathIndex];

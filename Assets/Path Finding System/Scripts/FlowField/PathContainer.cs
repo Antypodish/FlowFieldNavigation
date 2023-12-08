@@ -168,6 +168,8 @@ public class PathContainer
                 bool outOfReach = oldSector != newLocal.sector;
                 DijkstraTile targetTile = path.TargetSectorCosts[newLocal.index];
                 outOfReach = outOfReach || targetTile.IntegratedCost == float.MaxValue;
+                DynamicDestinationState destinationState = oldTargetIndex.Equals(newTargetIndex) ? DynamicDestinationState.None : DynamicDestinationState.Moved;
+                destinationState = outOfReach ? DynamicDestinationState.OutOfReach : destinationState;
                 path.Destination = targetAgentPos2;
                 path.TargetIndex = newTargetIndex;
                 currentPathData[i] = new PathData()
@@ -181,7 +183,7 @@ public class PathContainer
                     ReconstructionRequestIndex = -1,
                     Type = path.Type,
                     TargetAgentIndex = path.TargetAgentIndex,
-                    OutOfReach = outOfReach,
+                    DestinationState = destinationState,
                 };
             }
         }

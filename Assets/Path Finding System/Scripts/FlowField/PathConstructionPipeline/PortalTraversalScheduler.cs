@@ -4,6 +4,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEditor.PackageManager.Requests;
+using UnityEngine.Networking.Match;
 
 internal class PortalTraversalScheduler
 {
@@ -12,18 +13,18 @@ internal class PortalTraversalScheduler
     ActivePortalSubmissionScheduler _activePortalSubmissionScheduler;
     RequestedSectorCalculationScheduler _requestedSectorCalculationScheduler;
 
-    NativeList<HandleWithReqAndPathIndex> ScheduledPortalTraversals;
+    NativeList<RequestPipelineInfoWithHandle> ScheduledPortalTraversals;
     public PortalTraversalScheduler(PathfindingManager pathfindingManager, RequestedSectorCalculationScheduler requestedSectorCalculationScheduler)
     {
-        ScheduledPortalTraversals = new NativeList<HandleWithReqAndPathIndex>(Allocator.Persistent);
+        ScheduledPortalTraversals = new NativeList<RequestPipelineInfoWithHandle>(Allocator.Persistent);
         _pathfindingManager = pathfindingManager;
         _pathProducer = _pathfindingManager.PathProducer;
         _activePortalSubmissionScheduler = new ActivePortalSubmissionScheduler(pathfindingManager);
         _requestedSectorCalculationScheduler = requestedSectorCalculationScheduler;
     }
-    public void SchedulePortalTraversalFor(int pathIndex, int requestIndex, NativeSlice<float2> sources)
+    public void SchedulePortalTraversalFor(RequestPipelineInfoWithHandle reqInfo, NativeSlice<float2> sources)
     {
-        Path path = _pathfindingManager.PathProducer.ProducedPaths[pathIndex];
+        Path path = _pathfindingManager.PathProducer.ProducedPaths[reqInfo.PathIndex];
         int2 destinationIndex = path.TargetIndex;
         CostField pickedCostField = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(path.Offset);
         FieldGraph pickedFieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(path.Offset);
@@ -88,52 +89,47 @@ internal class PortalTraversalScheduler
         JobHandle travHandle = traversalJob.Schedule(reductHandle);
         if (FlowFieldUtilities.DebugMode) { travHandle.Complete(); }
 
-        HandleWithReqAndPathIndex pathHandle = new HandleWithReqAndPathIndex()
-        {
-            Handle = travHandle,
-            PathIndex = pathIndex,
-            RequestIndex = requestIndex,
-        };
-        ScheduledPortalTraversals.Add(pathHandle);
+        reqInfo.Handle = travHandle;
+        ScheduledPortalTraversals.Add(reqInfo);
     }
 
     public void TryComplete(NativeList<PathRequest> requestedPaths, NativeArray<float2> sources)
     {
         for(int i = ScheduledPortalTraversals.Length - 1; i >= 0; i--)
         {
-            HandleWithReqAndPathIndex porTravHandle = ScheduledPortalTraversals[i];
-            if (porTravHandle.Handle.IsCompleted)
+            RequestPipelineInfoWithHandle reqInfo = ScheduledPortalTraversals[i];
+            if (reqInfo.Handle.IsCompleted)
             {
-                porTravHandle.Handle.Complete();
-                _pathProducer.FinalizePathBuffers(porTravHandle.PathIndex);
-                ScheduledPortalTraversals.RemoveAtSwapBack(i);
+                reqInfo.Handle.Complete();
+                _pathProducer.FinalizePathBuffers(reqInfo.PathIndex);
 
                 //SCHEDULE ACTIVE PORTAL SUBMISSION
-                HandleWithReqAndPathIndex activePorHandle = _activePortalSubmissionScheduler.ScheduleActivePortalSubmission(porTravHandle.PathIndex, porTravHandle.RequestIndex);
-
+                RequestPipelineInfoWithHandle portalSubmissionReqInfo = _activePortalSubmissionScheduler.ScheduleActivePortalSubmission(reqInfo);
+                PathPipelineInfoWithHandle portalSubmissionPathInfo = portalSubmissionReqInfo.ToPathPipelineInfoWithHandle();
                 //SCHEDULE REQUESTED SECTOR CALCULATION
-                PathRequest pathReq = requestedPaths[porTravHandle.RequestIndex];
+                PathRequest pathReq = requestedPaths[reqInfo.RequestIndex];
                 NativeSlice<float2> sourcePositions = new NativeSlice<float2>(sources, pathReq.SourcePositionStartIndex, pathReq.AgentCount);
-                _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(activePorHandle.PathIndex, activePorHandle.Handle, sourcePositions);
+                _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(portalSubmissionPathInfo, portalSubmissionPathInfo.Handle, sourcePositions);
+
+                ScheduledPortalTraversals.RemoveAtSwapBack(i);
             }
         }
-
     }
     public void ForceComplete(NativeList<PathRequest> requestedPaths, NativeArray<float2> sources)
     {
         for (int i = ScheduledPortalTraversals.Length - 1; i >= 0; i--)
         {
-            HandleWithReqAndPathIndex porTravHandle = ScheduledPortalTraversals[i];
-            porTravHandle.Handle.Complete();
-            _pathProducer.FinalizePathBuffers(porTravHandle.PathIndex);
+            RequestPipelineInfoWithHandle reqInfo = ScheduledPortalTraversals[i];
+            reqInfo.Handle.Complete();
+            _pathProducer.FinalizePathBuffers(reqInfo.PathIndex);
 
             //SCHEDULE ACTIVE PORTAL SUBMISSION
-            HandleWithReqAndPathIndex activePorHandle = _activePortalSubmissionScheduler.ScheduleActivePortalSubmission(porTravHandle.PathIndex, porTravHandle.RequestIndex);
-
+            RequestPipelineInfoWithHandle portalSubmissionReqInfo = _activePortalSubmissionScheduler.ScheduleActivePortalSubmission(reqInfo);
+            PathPipelineInfoWithHandle portalSubmissionPathInfo = portalSubmissionReqInfo.ToPathPipelineInfoWithHandle();
             //SCHEDULE REQUESTED SECTOR CALCULATION
-            PathRequest pathReq = requestedPaths[porTravHandle.RequestIndex];
+            PathRequest pathReq = requestedPaths[reqInfo.RequestIndex];
             NativeSlice<float2> sourcePositions = new NativeSlice<float2>(sources, pathReq.SourcePositionStartIndex, pathReq.AgentCount);
-            _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(activePorHandle.PathIndex, activePorHandle.Handle, sourcePositions);
+            _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(portalSubmissionPathInfo, portalSubmissionPathInfo.Handle, sourcePositions);
         }
         ScheduledPortalTraversals.Clear();
     }

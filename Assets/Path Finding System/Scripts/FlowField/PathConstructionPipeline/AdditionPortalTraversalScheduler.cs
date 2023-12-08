@@ -12,19 +12,19 @@ internal class AdditionPortalTraversalScheduler
     PathContainer _pathProducer;
     AdditionActivePortalSubmissionScheduler _additionActivePortalSubmissionScheduler;
     RequestedSectorCalculationScheduler _requestedSectorCalculationScheduler;
-    NativeList<HandleWithPathIndex> ScheduledAdditionPortalTraversals;
+    NativeList<PathPipelineInfoWithHandle> ScheduledAdditionPortalTraversals;
 
     public AdditionPortalTraversalScheduler(PathfindingManager pathfindingManager, RequestedSectorCalculationScheduler requestedSectorCalculationScheduler)
     {
-        ScheduledAdditionPortalTraversals = new NativeList<HandleWithPathIndex>(Allocator.Persistent);
+        ScheduledAdditionPortalTraversals = new NativeList<PathPipelineInfoWithHandle>(Allocator.Persistent);
         _pathfindingManager = pathfindingManager;
         _pathProducer = _pathfindingManager.PathProducer;
         _additionActivePortalSubmissionScheduler = new AdditionActivePortalSubmissionScheduler(pathfindingManager);
         _requestedSectorCalculationScheduler = requestedSectorCalculationScheduler;
     }
-    public void SchedulePortalTraversalFor(int pathIndex, NativeSlice<float2> sources)
+    public void SchedulePortalTraversalFor(PathPipelineInfoWithHandle pathInfo, NativeSlice<float2> sources)
     {
-        Path path = _pathProducer.ProducedPaths[pathIndex];
+        Path path = _pathProducer.ProducedPaths[pathInfo.PathIndex];
         path.PathAdditionSequenceBorderStartIndex[0] = path.PortalSequenceBorders.Length - 1;
         path.NewPickedSectorStartIndex[0] = path.PickedToSector.Length;
 
@@ -84,29 +84,26 @@ internal class AdditionPortalTraversalScheduler
         JobHandle travHandle = travJob.Schedule(reductHandle);
 
         if (FlowFieldUtilities.DebugMode) { travHandle.Complete(); }
-        HandleWithPathIndex pathHandle = new HandleWithPathIndex()
-        {
-            Handle = travHandle,
-            PathIndex = pathIndex,
-        };
-        ScheduledAdditionPortalTraversals.Add(pathHandle);
+        pathInfo.Handle = travHandle;
+        ScheduledAdditionPortalTraversals.Add(pathInfo);
     }
 
     public void TryComplete(NativeArray<PathData> existingPaths, NativeArray<float2> sources)
     {
         for(int i = ScheduledAdditionPortalTraversals.Length - 1; i >= 0; i--)
         {
-            HandleWithPathIndex addPorTravHandle = ScheduledAdditionPortalTraversals[i];
-            if (addPorTravHandle.Handle.IsCompleted)
+            PathPipelineInfoWithHandle pathInfo = ScheduledAdditionPortalTraversals[i];
+            if (pathInfo.Handle.IsCompleted)
             {
-                addPorTravHandle.Handle.Complete();
+                pathInfo.Handle.Complete();
                 ScheduledAdditionPortalTraversals.RemoveAtSwapBack(i);
 
                 //SCHEDULE ADDITION ACTIVE PORTAL SUBMIT JOB
-                HandleWithPathIndex _addActivePorSubmitHandle = _additionActivePortalSubmissionScheduler.ScheduleActivePortalSubmission(addPorTravHandle.PathIndex);
-                PathData existingPath = existingPaths[addPorTravHandle.PathIndex];
+                PathPipelineInfoWithHandle _addActivePorSubmitHandle = _additionActivePortalSubmissionScheduler.ScheduleActivePortalSubmission(pathInfo);
+                PathData existingPath = existingPaths[pathInfo.PathIndex];
                 NativeSlice<float2> sourcePositions = new NativeSlice<float2>(sources, existingPath.FlowRequestSourceStart, existingPath.FlowRequestSourceCount + existingPath.PathAdditionSourceCount);
-                _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(addPorTravHandle.PathIndex, _addActivePorSubmitHandle.Handle, sourcePositions);
+                _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pathInfo, _addActivePorSubmitHandle.Handle, sourcePositions);
+
             }
         }
     }
@@ -114,15 +111,15 @@ internal class AdditionPortalTraversalScheduler
     {
         for (int i = ScheduledAdditionPortalTraversals.Length - 1; i >= 0; i--)
         {
-            HandleWithPathIndex addPorTravHandle = ScheduledAdditionPortalTraversals[i];
-            addPorTravHandle.Handle.Complete();
+            PathPipelineInfoWithHandle pathInfo = ScheduledAdditionPortalTraversals[i];
+            pathInfo.Handle.Complete();
             ScheduledAdditionPortalTraversals.RemoveAtSwapBack(i);
 
             //SCHEDULE ADDITION ACTIVE PORTAL SUBMIT JOB
-            HandleWithPathIndex _addActivePorSubmitHandle = _additionActivePortalSubmissionScheduler.ScheduleActivePortalSubmission(addPorTravHandle.PathIndex);
-            PathData existingPath = existingPaths[addPorTravHandle.PathIndex];
+            PathPipelineInfoWithHandle _addActivePorSubmitHandle = _additionActivePortalSubmissionScheduler.ScheduleActivePortalSubmission(pathInfo);
+            PathData existingPath = existingPaths[pathInfo.PathIndex];
             NativeSlice<float2> sourcePositions = new NativeSlice<float2>(sources, existingPath.FlowRequestSourceStart, existingPath.FlowRequestSourceCount + existingPath.PathAdditionSourceCount);
-            _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(addPorTravHandle.PathIndex, _addActivePorSubmitHandle.Handle, sourcePositions);
+            _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pathInfo, _addActivePorSubmitHandle.Handle, sourcePositions);
 
         }
         ScheduledAdditionPortalTraversals.Clear();

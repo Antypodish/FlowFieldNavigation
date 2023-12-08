@@ -14,9 +14,9 @@ internal class ActivePortalSubmissionScheduler
         _pathProducer = pathfindingManager.PathProducer;
     }
 
-    public HandleWithReqAndPathIndex ScheduleActivePortalSubmission(int pathIndex, int requestIndex)
+    public RequestPipelineInfoWithHandle ScheduleActivePortalSubmission(RequestPipelineInfoWithHandle reqInfo)
     {
-        Path path = _pathProducer.ProducedPaths[pathIndex];
+        Path path = _pathProducer.ProducedPaths[reqInfo.PathIndex];
         FieldGraph pickedFieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(path.Offset);
 
         //ACTIVE WAVE FRONT SUBMISSION
@@ -45,6 +45,7 @@ internal class ActivePortalSubmissionScheduler
 
         if (FlowFieldUtilities.DebugMode) { submitHandle.Complete(); }
 
-        return new HandleWithReqAndPathIndex(submitHandle, pathIndex, requestIndex);
+        reqInfo.Handle = submitHandle;
+        return reqInfo;
     }
 }

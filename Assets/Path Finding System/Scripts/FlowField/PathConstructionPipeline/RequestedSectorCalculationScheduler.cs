@@ -8,19 +8,19 @@ public class RequestedSectorCalculationScheduler
     PathfindingManager _pathfindingManager;
     PathContainer _pathProducer;
     FlowCalculationScheduler _flowCalculationScheduler;
-    NativeList<HandleWithPathIndex> ScheduledRequestedSectorCalculations;
+    NativeList<PathPipelineInfoWithHandle> ScheduledRequestedSectorCalculations;
 
-    public RequestedSectorCalculationScheduler(PathfindingManager pathfindingManager)
+    public RequestedSectorCalculationScheduler(PathfindingManager pathfindingManager, LOSIntegrationScheduler losScheduler)
     {
         _pathfindingManager = pathfindingManager;
         _pathProducer = pathfindingManager.PathProducer;
-        ScheduledRequestedSectorCalculations = new NativeList<HandleWithPathIndex>(Allocator.Persistent);
-        _flowCalculationScheduler = new FlowCalculationScheduler(pathfindingManager);
+        ScheduledRequestedSectorCalculations = new NativeList<PathPipelineInfoWithHandle>(Allocator.Persistent);
+        _flowCalculationScheduler = new FlowCalculationScheduler(pathfindingManager, losScheduler);
     }
 
-    public void ScheduleRequestedSectorCalculation(int pathIndex, JobHandle activePortalSubmissionHandle, NativeSlice<float2> sources)
+    public void ScheduleRequestedSectorCalculation(PathPipelineInfoWithHandle pathInfo, JobHandle activePortalSubmissionHandle, NativeSlice<float2> sources)
     {
-        Path path = _pathProducer.ProducedPaths[pathIndex];
+        Path path = _pathProducer.ProducedPaths[pathInfo.PathIndex];
         FieldGraph pickedFieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(path.Offset);
         //SOURCE SECTOR CALCULATION
         SourceSectorCalculationJob sectorCalcJob = new SourceSectorCalculationJob()
@@ -45,21 +45,18 @@ public class RequestedSectorCalculationScheduler
         };
         JobHandle sourceSectorHandle = sectorCalcJob.Schedule(activePortalSubmissionHandle);
         if (FlowFieldUtilities.DebugMode) { sourceSectorHandle.Complete(); }
-        ScheduledRequestedSectorCalculations.Add(new HandleWithPathIndex(sourceSectorHandle, pathIndex));
-    }
 
+        ScheduledRequestedSectorCalculations.Add(new PathPipelineInfoWithHandle(sourceSectorHandle, pathInfo.PathIndex));
+    }
     public void TryComplete()
     {
         for (int i = ScheduledRequestedSectorCalculations.Length - 1; i >= 0; i--)
         {
-            HandleWithPathIndex sectorReqHandle = ScheduledRequestedSectorCalculations[i];
-            if (sectorReqHandle.Handle.IsCompleted)
-            {
-                sectorReqHandle.Handle.Complete();
-                _flowCalculationScheduler.ScheduleFlow(sectorReqHandle.PathIndex);
-                ScheduledRequestedSectorCalculations.RemoveAtSwapBack(i);
-            }
+            PathPipelineInfoWithHandle pathInfo = ScheduledRequestedSectorCalculations[i];
+            pathInfo.Handle.Complete();
+            _flowCalculationScheduler.ScheduleFlow(pathInfo);
         }
+        ScheduledRequestedSectorCalculations.Clear();
         _flowCalculationScheduler.TryComplete();
     }
 
@@ -67,9 +64,9 @@ public class RequestedSectorCalculationScheduler
     {
         for (int i = ScheduledRequestedSectorCalculations.Length - 1; i >= 0; i--)
         {
-            HandleWithPathIndex sectorReqHandle = ScheduledRequestedSectorCalculations[i];
-            sectorReqHandle.Handle.Complete();
-            _flowCalculationScheduler.ScheduleFlow(sectorReqHandle.PathIndex);
+            PathPipelineInfoWithHandle pathInfo = ScheduledRequestedSectorCalculations[i];
+            pathInfo.Handle.Complete();
+            _flowCalculationScheduler.ScheduleFlow(pathInfo);
         }
         ScheduledRequestedSectorCalculations.Clear();
         _flowCalculationScheduler.ForceComplete();

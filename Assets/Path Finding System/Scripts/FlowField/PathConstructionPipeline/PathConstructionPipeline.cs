@@ -10,6 +10,7 @@ public class PathConstructionPipeline
     PortalTraversalScheduler _portalTravesalScheduler;
     RequestedSectorCalculationScheduler _requestedSectorCalculationScheduler;
     AdditionPortalTraversalScheduler _additionPortalTraversalScheduler;
+    LOSIntegrationScheduler _losIntegrationScheduler;
 
     NativeList<PathData> ExistingPathData;
     NativeList<float2> SourcePositions;
@@ -18,7 +19,8 @@ public class PathConstructionPipeline
     {
         _pathfindingManager = pathfindingManager;
         _pathProducer = pathfindingManager.PathProducer;
-        _requestedSectorCalculationScheduler = new RequestedSectorCalculationScheduler(pathfindingManager);
+        _losIntegrationScheduler = new LOSIntegrationScheduler(pathfindingManager);
+        _requestedSectorCalculationScheduler = new RequestedSectorCalculationScheduler(pathfindingManager, _losIntegrationScheduler);
         _portalTravesalScheduler = new PortalTraversalScheduler(pathfindingManager, _requestedSectorCalculationScheduler);
         _additionPortalTraversalScheduler = new AdditionPortalTraversalScheduler(pathfindingManager, _requestedSectorCalculationScheduler);
         ExistingPathData = new NativeList<PathData>(Allocator.Persistent);
@@ -62,7 +64,8 @@ public class PathConstructionPipeline
             if (!currentpath.IsValid()) { continue; }
             NativeSlice<float2> pathSources = new NativeSlice<float2>(organization.PathfindingSources, currentpath.SourcePositionStartIndex, currentpath.AgentCount);
             int newPathIndex = _pathProducer.CreatePath(currentpath);
-            _portalTravesalScheduler.SchedulePortalTraversalFor(newPathIndex, i, pathSources);
+            RequestPipelineInfoWithHandle requestInfo = new RequestPipelineInfoWithHandle(new JobHandle(), newPathIndex, i);
+            _portalTravesalScheduler.SchedulePortalTraversalFor(requestInfo, pathSources);
             currentpath.PathIndex = newPathIndex;
             requestedPaths[i] = currentpath;
         }
@@ -79,22 +82,30 @@ public class PathConstructionPipeline
         for (int i = 0; i < ExistingPathData.Length; i++)
         {
             PathData existingPath = ExistingPathData[i];
-            if (existingPath.Task == 0) { continue; }
+            if (existingPath.Task == 0 && existingPath.DestinationState != DynamicDestinationState.Moved) { continue; }
             NativeSlice<float2> flowRequestSources = new NativeSlice<float2>(organization.PathfindingSources, existingPath.FlowRequestSourceStart, existingPath.FlowRequestSourceCount);
             NativeSlice<float2> pathAdditionSources = new NativeSlice<float2>(organization.PathfindingSources, existingPath.PathAdditionSourceStart, existingPath.PathAdditionSourceCount);
+            PathPipelineInfoWithHandle pathInfo = new PathPipelineInfoWithHandle(new JobHandle(), i, existingPath.DestinationState);
             bool pathAdditionRequested = (existingPath.Task & PathTask.PathAdditionRequest) == PathTask.PathAdditionRequest;
             bool flowRequested = (existingPath.Task & PathTask.FlowRequest) == PathTask.FlowRequest;
+            bool destinationMoved = existingPath.DestinationState == DynamicDestinationState.Moved;
             if (pathAdditionRequested)
             {
-                _additionPortalTraversalScheduler.SchedulePortalTraversalFor(i, pathAdditionSources);
+                _additionPortalTraversalScheduler.SchedulePortalTraversalFor(pathInfo, pathAdditionSources);
             }
             else if (flowRequested)
             {
-                _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(i, new JobHandle(), flowRequestSources); 
+                _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pathInfo, new JobHandle(), flowRequestSources);
+            }
+            else if (destinationMoved)
+            {
+                _losIntegrationScheduler.ScheduleLOS(pathInfo);
             }
         }
 
         newPathIndiciesHandle.Complete();
+
+        TryComplete();
     }
 
     public void TryComplete()
@@ -110,27 +121,39 @@ public class PathConstructionPipeline
         _requestedSectorCalculationScheduler.ForceComplete();
     }
 }
-public struct HandleWithReqAndPathIndex
+public struct RequestPipelineInfoWithHandle
 {
     public JobHandle Handle;
     public int PathIndex;
     public int RequestIndex;
+    public DynamicDestinationState DestinationState;
 
-    public HandleWithReqAndPathIndex(JobHandle handle, int pathIndex, int requestIndex)
+    public RequestPipelineInfoWithHandle(JobHandle handle, int pathIndex, int requestIndex, DynamicDestinationState destinationState = DynamicDestinationState.None)
     { 
         Handle = handle; 
         PathIndex = pathIndex; 
-        RequestIndex = requestIndex; 
+        RequestIndex = requestIndex;
+        DestinationState = destinationState;
+    }
+    public PathPipelineInfoWithHandle ToPathPipelineInfoWithHandle()
+    {
+        return new PathPipelineInfoWithHandle()
+        {
+            Handle = Handle,
+            PathIndex = PathIndex,
+            DestinationState = DestinationState,
+        };
     }
 }
-public struct HandleWithPathIndex
+public struct PathPipelineInfoWithHandle
 {
     public JobHandle Handle;
     public int PathIndex;
-
-    public HandleWithPathIndex(JobHandle handle, int pathIndex) 
+    public DynamicDestinationState DestinationState;
+    public PathPipelineInfoWithHandle(JobHandle handle, int pathIndex, DynamicDestinationState destinationState = DynamicDestinationState.None) 
     { 
-        Handle = handle; 
-        PathIndex = pathIndex; 
+        Handle = handle;
+        PathIndex = pathIndex;
+        DestinationState = destinationState;
     }
 }
