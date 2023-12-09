@@ -63,7 +63,7 @@ public class AgentRoutineDataProducer
     {
         NativeList<AgentData> agentDataList = _agentDataContainer.AgentDataList;
         NativeList<int> agentCurPaths = _agentDataContainer.AgentCurPathIndicies;
-        List<Path> producedPaths = _pathfindingManager.PathProducer.ProducedPaths;
+        List<Path> producedPaths = _pathfindingManager.PathContainer.ProducedPaths;
         
         //CLEAR
         AgentMovementDataList.Clear();

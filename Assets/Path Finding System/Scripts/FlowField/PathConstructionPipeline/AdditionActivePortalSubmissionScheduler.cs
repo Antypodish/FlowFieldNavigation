@@ -11,7 +11,7 @@ internal class AdditionActivePortalSubmissionScheduler
     public AdditionActivePortalSubmissionScheduler(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
-        _pathProducer = pathfindingManager.PathProducer;
+        _pathProducer = pathfindingManager.PathContainer;
     }
 
     public PathPipelineInfoWithHandle ScheduleActivePortalSubmission(PathPipelineInfoWithHandle pathInfo)

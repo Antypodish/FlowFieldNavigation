@@ -17,7 +17,7 @@ public class LOSIntegrationScheduler
     public LOSIntegrationScheduler(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
-        _pathProducer = pathfindingManager.PathProducer;
+        _pathProducer = pathfindingManager.PathContainer;
         ScheduledLOS = new NativeList<PathPipelineInfoWithHandle>(Allocator.Persistent);
         _losCalculatedPaths = new NativeList<int>(Allocator.Persistent);
         _transferHandles = new NativeList<JobHandle>(Allocator.Persistent);

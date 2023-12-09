@@ -106,7 +106,6 @@ public class RoutineScheduler
             _islandReconfigHandle.RemoveAtSwapBack(0);
             _pathConstructionPipeline.EvaluatePathRequests(CurrentRequestedPaths);
         }
-        _pathConstructionPipeline.ForceComplete();
 
         //AGENT MOV
         if (_agentMovementCalculationHandle.Count != 0)
@@ -115,13 +114,15 @@ public class RoutineScheduler
             _agentMovementCalculationHandle.Clear();
         }
 
+        _pathConstructionPipeline.ForceComplete();
+
         //TRANSFER NEW PATH INDICIES TO CUR PATH INDICIES
         NewPathToCurPathTransferJob newPathToCurPathTransferJob = new NewPathToCurPathTransferJob()
         {
             AgentDataArray = _pathfindingManager.AgentDataContainer.AgentDataList,
             AgentCurPathIndicies = _pathfindingManager.AgentDataContainer.AgentCurPathIndicies,
             AgentNewPathIndicies = _pathfindingManager.AgentDataContainer.AgentNewPathIndicies,
-            PathSubscribers = _pathfindingManager.PathProducer.ProducedPathSubscribers,
+            PathSubscribers = _pathfindingManager.PathContainer.ProducedPathSubscribers,
         };
         newPathToCurPathTransferJob.Schedule().Complete();
         CurrentRequestedPaths.Clear();

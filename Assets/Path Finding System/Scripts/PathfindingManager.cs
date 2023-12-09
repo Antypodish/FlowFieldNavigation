@@ -22,7 +22,7 @@ public class PathfindingManager : MonoBehaviour
     [HideInInspector] public int SectorMatrixRowAmount;
 
     public FieldProducer FieldProducer;
-    public PathContainer PathProducer;
+    public PathContainer PathContainer;
     public AgentDataContainer AgentDataContainer;
 
     float _lastAgentUpdateTime = 0;
@@ -48,8 +48,8 @@ public class PathfindingManager : MonoBehaviour
         FieldProducer = new FieldProducer(_terrainGenerator.WalkabilityData, SectorColAmount);
         FieldProducer.CreateField(_maxCostfieldOffset, SectorColAmount, SectorMatrixColAmount, SectorMatrixRowAmount, RowAmount, ColumnAmount, TileSize);
 
-        PathProducer = new PathContainer(this);
-        _pathfindingRoutineUpdater = new PathfindingUpdateRoutine(this, PathProducer);
+        PathContainer = new PathContainer(this);
+        _pathfindingRoutineUpdater = new PathfindingUpdateRoutine(this, PathContainer);
         _agentUpdater = new AgentUpdater(AgentDataContainer);
 
         
@@ -132,7 +132,7 @@ public class PathfindingManager : MonoBehaviour
     {
         int curPathIndex = AgentDataContainer.AgentCurPathIndicies[agentIndex];
         if(curPathIndex == -1) { return null; }
-        return PathProducer.ProducedPaths[curPathIndex];
+        return PathContainer.ProducedPaths[curPathIndex];
     }
     public List<FlowFieldAgent> GetAllAgents()
     {

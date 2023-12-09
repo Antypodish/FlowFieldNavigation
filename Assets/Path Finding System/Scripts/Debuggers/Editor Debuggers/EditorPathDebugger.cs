@@ -9,6 +9,8 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Analytics;
 using System.Diagnostics;
+using Unity.Jobs;
+
 public class EditorPathDebugger
 {
     PathContainer _pathProducer;
@@ -18,10 +20,88 @@ public class EditorPathDebugger
 
     public EditorPathDebugger(PathfindingManager pathfindingManager)
     {
-        _pathProducer = pathfindingManager.PathProducer;
+        _pathProducer = pathfindingManager.PathContainer;
         _pathfindingManager = pathfindingManager;
         _fieldProducer = pathfindingManager.FieldProducer;
         _tileSize = pathfindingManager.TileSize;
+    }
+    public void DebugDynamicAreaIntegration(FlowFieldAgent agent)
+    {
+        if (_pathProducer == null) { return; }
+        if (_pathProducer.ProducedPaths.Count == 0) { return; }
+        Path producedPath = agent.GetPath();
+        if (!producedPath.IsCalculated) { return; }
+
+        UnsafeList<SectorFlowStart> pickedSectorFlowStarts = producedPath.DynamicArea.PickedSectorFlowStarts;
+        NativeArray<IntegrationTile> integrationField = producedPath.DynamicArea.IntegrationField;
+
+        for (int i = 0; i < pickedSectorFlowStarts.Length; i++)
+        {
+            int pickedSectorFlowStart = pickedSectorFlowStarts[i].FlowStartIndex;
+            int pickedSectorIndex = pickedSectorFlowStarts[i].SectorIndex;
+
+            for (int j = pickedSectorFlowStart; j < pickedSectorFlowStart + FlowFieldUtilities.SectorTileAmount; j++)
+            {
+                int local1d = (j - 1) % FlowFieldUtilities.SectorTileAmount;
+                float2 debugPos = FlowFieldUtilities.LocalIndexToPos(local1d, pickedSectorIndex, FlowFieldUtilities.SectorMatrixColAmount, FlowFieldUtilities.SectorColAmount, FlowFieldUtilities.TileSize, FlowFieldUtilities.TileSize * FlowFieldUtilities.SectorColAmount);
+                Vector3 debugPos3 = new Vector3(debugPos.x, 0.02f, debugPos.y);
+                float cost = integrationField[j].Cost;
+                if (cost != float.MaxValue)
+                {
+                    Handles.Label(debugPos3, cost.ToString());
+                }
+            }
+        }
+    }
+    public void DebugDynamicAreaFlow(FlowFieldAgent agent)
+    {
+        if (_pathProducer == null) { return; }
+        if (_pathProducer.ProducedPaths.Count == 0) { return; }
+        Path producedPath = agent.GetPath();
+        if (!producedPath.IsCalculated) { return; }
+
+        float yOffset = 0.2f;
+        UnsafeList<SectorFlowStart> pickedSectorFlowStarts = producedPath.DynamicArea.PickedSectorFlowStarts;
+        UnsafeList<FlowData> flowField = producedPath.DynamicArea.FlowField;
+        Gizmos.color = Color.magenta;
+        for (int i = 0; i < pickedSectorFlowStarts.Length; i++)
+        {
+            int pickedSectorFlowStart = pickedSectorFlowStarts[i].FlowStartIndex;
+            int pickedSectorIndex = pickedSectorFlowStarts[i].SectorIndex;
+
+            for (int j = pickedSectorFlowStart; j < pickedSectorFlowStart + FlowFieldUtilities.SectorTileAmount; j++)
+            {
+                int local1d = (j - 1) % FlowFieldUtilities.SectorTileAmount;
+                float2 debugPos = FlowFieldUtilities.LocalIndexToPos(local1d, pickedSectorIndex, FlowFieldUtilities.SectorMatrixColAmount, FlowFieldUtilities.SectorColAmount, FlowFieldUtilities.TileSize, FlowFieldUtilities.TileSize * FlowFieldUtilities.SectorColAmount);
+                Vector3 debugPos3 = new Vector3(debugPos.x, 0.02f, debugPos.y);
+                if(j >= flowField.Length) { continue; }
+                FlowData flow = flowField[j];
+                if (!flow.IsValid()) { continue; }
+                DrawSquare(debugPos3, 0.2f);
+                DrawFlow(j, debugPos3, producedPath.Destination);
+            }
+        }
+
+        void DrawSquare(Vector3 pos, float size)
+        {
+            Vector3 botLeft = new Vector3(pos.x - size / 2, yOffset, pos.z - size / 2);
+            Vector3 botRight = new Vector3(pos.x + size / 2, yOffset, pos.z - size / 2);
+            Vector3 topLeft = new Vector3(pos.x - size / 2, yOffset, pos.z + size / 2);
+            Vector3 topRight = new Vector3(pos.x + size / 2, yOffset, pos.z + size / 2);
+
+            Gizmos.DrawLine(topRight, botRight);
+            Gizmos.DrawLine(botRight, botLeft);
+            Gizmos.DrawLine(botLeft, topLeft);
+            Gizmos.DrawLine(topLeft, topRight);
+        }
+        void DrawFlow(int flowIndex, Vector3 pos, float2 destination)
+        {
+            pos = new Vector3(pos.x, yOffset, pos.z);
+            float2 flowDir = flowField[flowIndex].GetFlow(_tileSize);
+            flowDir = math.normalizesafe(flowDir) * 0.4f;
+            Vector3 targetPos = pos + new Vector3(flowDir.x, 0f, flowDir.y);
+            Gizmos.DrawLine(pos, targetPos);
+        }
     }
     public void DebugActiveWaveFronts(FlowFieldAgent agent)
     {

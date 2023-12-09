@@ -30,7 +30,7 @@ public class PathfindingUpdateRoutine
     {
         //FORCE COMPLETE JOBS FROM PREVIOUS UPDATE
         _scheduler.ForceCompleteAll();
-        _pathfindingManager.PathProducer.Update();
+        _pathfindingManager.PathContainer.Update();
         //ADD NEW AGENTS
         for (int i = 0; i < _agentAddRequest.Count; i++)
         {

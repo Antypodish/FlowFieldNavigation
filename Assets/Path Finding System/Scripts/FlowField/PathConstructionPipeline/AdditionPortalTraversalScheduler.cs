@@ -18,7 +18,7 @@ internal class AdditionPortalTraversalScheduler
     {
         ScheduledAdditionPortalTraversals = new NativeList<PathPipelineInfoWithHandle>(Allocator.Persistent);
         _pathfindingManager = pathfindingManager;
-        _pathProducer = _pathfindingManager.PathProducer;
+        _pathProducer = _pathfindingManager.PathContainer;
         _additionActivePortalSubmissionScheduler = new AdditionActivePortalSubmissionScheduler(pathfindingManager);
         _requestedSectorCalculationScheduler = requestedSectorCalculationScheduler;
     }

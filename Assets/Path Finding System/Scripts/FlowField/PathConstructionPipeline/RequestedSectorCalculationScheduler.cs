@@ -13,7 +13,7 @@ public class RequestedSectorCalculationScheduler
     public RequestedSectorCalculationScheduler(PathfindingManager pathfindingManager, LOSIntegrationScheduler losScheduler)
     {
         _pathfindingManager = pathfindingManager;
-        _pathProducer = pathfindingManager.PathProducer;
+        _pathProducer = pathfindingManager.PathContainer;
         ScheduledRequestedSectorCalculations = new NativeList<PathPipelineInfoWithHandle>(Allocator.Persistent);
         _flowCalculationScheduler = new FlowCalculationScheduler(pathfindingManager, losScheduler);
     }

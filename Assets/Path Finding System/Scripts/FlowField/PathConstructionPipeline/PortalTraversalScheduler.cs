@@ -18,13 +18,13 @@ internal class PortalTraversalScheduler
     {
         ScheduledPortalTraversals = new NativeList<RequestPipelineInfoWithHandle>(Allocator.Persistent);
         _pathfindingManager = pathfindingManager;
-        _pathProducer = _pathfindingManager.PathProducer;
+        _pathProducer = _pathfindingManager.PathContainer;
         _activePortalSubmissionScheduler = new ActivePortalSubmissionScheduler(pathfindingManager);
         _requestedSectorCalculationScheduler = requestedSectorCalculationScheduler;
     }
     public void SchedulePortalTraversalFor(RequestPipelineInfoWithHandle reqInfo, NativeSlice<float2> sources)
     {
-        Path path = _pathfindingManager.PathProducer.ProducedPaths[reqInfo.PathIndex];
+        Path path = _pathfindingManager.PathContainer.ProducedPaths[reqInfo.PathIndex];
         int2 destinationIndex = path.TargetIndex;
         CostField pickedCostField = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(path.Offset);
         FieldGraph pickedFieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(path.Offset);

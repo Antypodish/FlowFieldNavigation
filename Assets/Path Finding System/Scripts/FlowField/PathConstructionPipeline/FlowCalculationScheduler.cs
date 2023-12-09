@@ -17,7 +17,7 @@ public class FlowCalculationScheduler
     public FlowCalculationScheduler(PathfindingManager pathfindingManager, LOSIntegrationScheduler losIntegrationScheduler)
     {
         _pathfindingManager = pathfindingManager;
-        _pathProducer = pathfindingManager.PathProducer;
+        _pathProducer = pathfindingManager.PathContainer;
         ScheduledFlow = new NativeList<PathPipelineInfoWithHandle>(Allocator.Persistent);
         _flowFieldCalculationBuffers = new NativeList<FlowFieldCalculationBufferParent>(Allocator.Persistent);
         _flowTransferHandles = new NativeList<JobHandle>(Allocator.Persistent);

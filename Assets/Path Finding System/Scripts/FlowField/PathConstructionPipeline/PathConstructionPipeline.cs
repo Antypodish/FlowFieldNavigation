@@ -11,6 +11,7 @@ public class PathConstructionPipeline
     RequestedSectorCalculationScheduler _requestedSectorCalculationScheduler;
     AdditionPortalTraversalScheduler _additionPortalTraversalScheduler;
     LOSIntegrationScheduler _losIntegrationScheduler;
+    DynamicAreaScheduler _dynamicAreaScheduler;
 
     NativeList<PathData> ExistingPathData;
     NativeList<float2> SourcePositions;
@@ -18,11 +19,12 @@ public class PathConstructionPipeline
     public PathConstructionPipeline(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
-        _pathProducer = pathfindingManager.PathProducer;
+        _pathProducer = pathfindingManager.PathContainer;
         _losIntegrationScheduler = new LOSIntegrationScheduler(pathfindingManager);
         _requestedSectorCalculationScheduler = new RequestedSectorCalculationScheduler(pathfindingManager, _losIntegrationScheduler);
         _portalTravesalScheduler = new PortalTraversalScheduler(pathfindingManager, _requestedSectorCalculationScheduler);
         _additionPortalTraversalScheduler = new AdditionPortalTraversalScheduler(pathfindingManager, _requestedSectorCalculationScheduler);
+        _dynamicAreaScheduler = new DynamicAreaScheduler(pathfindingManager);
         ExistingPathData = new NativeList<PathData>(Allocator.Persistent);
         SourcePositions = new NativeList<float2>(Allocator.Persistent);
     }
@@ -52,7 +54,7 @@ public class PathConstructionPipeline
             IslandFieldProcessors = islandFieldPorcessor,
             NewPaths = requestedPaths,
             CurrentPaths = ExistingPathData,
-            PathSubscribers = _pathfindingManager.PathProducer.ProducedPathSubscribers,
+            PathSubscribers = _pathfindingManager.PathContainer.ProducedPathSubscribers,
         };
         organization.Schedule().Complete();
         islandFieldPorcessor.Dispose();
@@ -99,6 +101,7 @@ public class PathConstructionPipeline
             }
             else if (destinationMoved)
             {
+                _dynamicAreaScheduler.ScheduleDynamicArea(pathInfo);
                 _losIntegrationScheduler.ScheduleLOS(pathInfo);
             }
         }
@@ -116,6 +119,7 @@ public class PathConstructionPipeline
     }
     public void ForceComplete()
     {
+        _dynamicAreaScheduler.ForceComplete();
         _portalTravesalScheduler.ForceComplete(RequestedPaths, SourcePositions);
         _additionPortalTraversalScheduler.ForceComplete(ExistingPathData, SourcePositions);
         _requestedSectorCalculationScheduler.ForceComplete();

@@ -31,6 +31,8 @@ public class EditorDebuggingController : MonoBehaviour
     [SerializeField] bool _debugLOSBlocks;
     [SerializeField] bool _debugFlowField;
     [SerializeField] bool _debugActiveWaveFronts;
+    [SerializeField] bool _debugDynamicAreaIntegration;
+    [SerializeField] bool _debugDynamicAreaFlow;
     [Header("Agent Debugger")]
     [SerializeField] bool _debugAgentDirections;
     [SerializeField] bool _debugAgentWaypoint;
@@ -108,9 +110,11 @@ public class EditorDebuggingController : MonoBehaviour
             if(_debugActiveWaveFronts && _pathDebugger != null) { _pathDebugger.DebugActiveWaveFronts(_agentToDebug); }
             if(_debugPortalTargetNeighbours && _pathDebugger != null) { _pathDebugger.DebugTargetNeighbourPortals(_agentToDebug); }
             if(_debugDestination && _pathDebugger != null) { _pathDebugger.DebugDestination(_agentToDebug); }
+            if (_debugDynamicAreaIntegration && _pathDebugger != null) { _pathDebugger.DebugDynamicAreaIntegration(_agentToDebug); }
+            if (_debugDynamicAreaFlow && _pathDebugger != null) { _pathDebugger.DebugDynamicAreaFlow(_agentToDebug); }
         }
 
-        if(_debugAgentDirections && _agentDirectionDebugger != null) { _agentDirectionDebugger.Debug(); }
+        if (_debugAgentDirections && _agentDirectionDebugger != null) { _agentDirectionDebugger.Debug(); }
         if(_debugAgentsHoldingGround && _holdGroundDebugger != null) { _holdGroundDebugger.Debug(); }
         if(_debugAgentSeperationRadius && _agentRadiusDebugger != null) { _agentRadiusDebugger.DebugSeperationRadius(); }
         if (_debugAvoidanceDirections && _avoidanceDirectionDebugger != null) { _avoidanceDirectionDebugger.Debug(); }

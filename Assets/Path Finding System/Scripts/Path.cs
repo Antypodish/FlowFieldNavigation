@@ -13,6 +13,7 @@ public class Path
     public bool IsCalculated = false;
     public int2 TargetIndex;
     public Vector2 Destination;
+    public DynamicArea DynamicArea;
     public NativeArray<PortalTraversalData> PortalTraversalDataArray;
     public NativeList<ActivePortal> PortalSequence;
     public UnsafeList<int> SectorToPicked;
@@ -44,6 +45,7 @@ public class Path
         SectorFlowStartIndiciesToCalculateIntegration.Dispose();
         LOSMap.Dispose();
         SectorWithinLOSState.Dispose();
+        DynamicArea.Dispose();
     }
     public bool LOSCalculated()
     {

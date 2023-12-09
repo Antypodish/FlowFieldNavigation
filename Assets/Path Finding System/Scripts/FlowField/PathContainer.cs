@@ -97,6 +97,13 @@ public class PathContainer
             SectorFlowStartIndiciesToCalculateIntegration = new NativeList<int>(Allocator.Persistent),
             SectorFlowStartIndiciesToCalculateFlow = new NativeList<int>(Allocator.Persistent),
             SectorWithinLOSState = new NativeArray<SectorsWihinLOSArgument>(1, Allocator.Persistent),
+            DynamicArea = new DynamicArea()
+            {
+                PickedSectorFlowStarts = new UnsafeList<SectorFlowStart>(0, Allocator.Persistent),
+                FlowField = new UnsafeList<FlowData>(0, Allocator.Persistent),
+                FlowFieldCalculationBuffer = new UnsafeList<FlowData>(0, Allocator.Persistent),
+                IntegrationField = new NativeList<IntegrationTile>(0, Allocator.Persistent),
+            }
         };
 
         if (ProducedPaths.Count == pathIndex)
