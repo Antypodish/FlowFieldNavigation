@@ -103,11 +103,14 @@ public class DynamicAreaScheduler
             Costs = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(path.Offset).CostsL,
         };
 
-        JobHandle flowHandle = flowJob.Schedule(flowField.Length, 64, integrationHandle);
+        JobHandle flowHandle = flowJob.Schedule(flowFieldCalculationBuffer.Length, 64, integrationHandle);
         
         pathInfo.Handle = flowHandle;
 
+        if (FlowFieldUtilities.DebugMode) { { pathInfo.Handle.Complete(); } }
         _scheduledDynamicAreas.Add(pathInfo);
+
+
 
         bool WithinBounds(int2 sectorIndex)
         {
@@ -121,7 +124,7 @@ public class DynamicAreaScheduler
         NativeList<JobHandle> handles = new NativeList<JobHandle>(Allocator.Temp);
         for(int i = 0; i <_scheduledDynamicAreas.Length; i++)
         {
-            PathPipelineInfoWithHandle pathInfo = _scheduledDynamicAreas[0];
+            PathPipelineInfoWithHandle pathInfo = _scheduledDynamicAreas[i];
             pathInfo.Handle.Complete();
             Path path = producedPaths[pathInfo.PathIndex];
             UnsafeList<FlowData> flowField = path.DynamicArea.FlowField;

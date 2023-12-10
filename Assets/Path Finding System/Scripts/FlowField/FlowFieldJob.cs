@@ -392,11 +392,12 @@ public struct FlowFieldJob : IJobParallelFor
     {
         float2 cornerDir = cornerPos - startPos;
         float2 examinedDir = examinedPos - startPos;
+        float aproximityTest = math.dot(cornerDir, examinedDir);
         float rightTestDot = cornerDir.x * examinedDir.y + cornerDir.y * -examinedDir.x;
         bool isRightBlocked = (blockDirection & CornerBlockDirection.Right) == CornerBlockDirection.Right;
         bool isLeftBlocked = (blockDirection & CornerBlockDirection.Left) == CornerBlockDirection.Left;
         bool isBlocked = (isRightBlocked && rightTestDot < 0) || (isLeftBlocked && rightTestDot >= 0);
-        return isBlocked;
+        return isBlocked || aproximityTest <= 0;
     }
     bool IsSightCorner(int2 startGeneral2d, int2 examinedGeneral2d, int2 cornerGeneral2d)
     {

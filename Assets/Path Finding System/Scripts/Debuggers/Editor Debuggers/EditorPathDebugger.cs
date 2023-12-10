@@ -10,6 +10,7 @@ using UnityEngine;
 using UnityEngine.Analytics;
 using System.Diagnostics;
 using Unity.Jobs;
+using static UnityEditor.PlayerSettings;
 
 public class EditorPathDebugger
 {
@@ -63,7 +64,7 @@ public class EditorPathDebugger
         float yOffset = 0.2f;
         UnsafeList<SectorFlowStart> pickedSectorFlowStarts = producedPath.DynamicArea.PickedSectorFlowStarts;
         UnsafeList<FlowData> flowField = producedPath.DynamicArea.FlowField;
-        Gizmos.color = Color.magenta;
+        Gizmos.color = Color.blue;
         for (int i = 0; i < pickedSectorFlowStarts.Length; i++)
         {
             int pickedSectorFlowStart = pickedSectorFlowStarts[i].FlowStartIndex;
@@ -358,7 +359,8 @@ public class EditorPathDebugger
         UnsafeList<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset).SectorNodes;
         UnsafeList<FlowData> flowField = producedPath.FlowField;
         UnsafeLOSBitmap losmap = producedPath.LOSMap;
-        NativeArray<IntegrationTile> integrationField = producedPath.IntegrationField;
+        UnsafeList<SectorFlowStart> dynamicAreaFlowStarts = producedPath.DynamicArea.PickedSectorFlowStarts;
+        UnsafeList<FlowData> dynamicAreaFlowField = producedPath.DynamicArea.FlowFieldCalculationBuffer;
         int sectorColAmount = _pathfindingManager.SectorColAmount;
         int sectorTileAmount = sectorColAmount * sectorColAmount;
         for (int i = 0; i < sectorMarks.Length; i++)
@@ -374,24 +376,61 @@ public class EditorPathDebugger
                 Vector3 localIndexPos = new Vector3(local2d.x * _tileSize, 0f, local2d.y * _tileSize);
                 Vector3 debugPos = localIndexPos + sectorIndexPos + new Vector3(_tileSize / 2, 0.02f, _tileSize / 2);
                 if(j >= flowField.Length) { continue; }
-                if (!flowField[j].IsValid()) { continue; }
-                SetColor(j);
-                DrawSquare(debugPos, 0.2f);
-                DrawFlow(j, debugPos, producedPath.Destination);
+                if(HasLOS(i, local1d))
+                {
+                    Gizmos.color = Color.white;
+                    DrawSquare(debugPos, 0.2f);
+                    DrawLOS(debugPos, producedPath.Destination);
+                }
+                else if(HasDynamicFlow(i, local1d))
+                {
+                    Gizmos.color = Color.blue;
+                    DrawSquare(debugPos, 0.2f);
+                    DrawFlow(GetDynamicFlow(i, local1d), debugPos);
+                }
+                else
+                {
+                    Gizmos.color = Color.black;
+                    FlowData flowData = GetFlow(i, local1d);
+                    if (flowData.IsValid())
+                    {
+                        DrawSquare(debugPos, 0.2f);
+                        DrawFlow(flowData, debugPos);
+                    }
+                }
             }
         }
-
-        void SetColor(int flowIndex)
+        bool HasLOS(int sectorIndex, int localIndex)
         {
-            
-            if (losmap.IsLOS(flowIndex))
+            return losmap.IsLOS(sectorMarks[sectorIndex] + localIndex);
+        }
+        bool HasDynamicFlow(int sectorIndex, int localIndex)
+        {
+            int sectorFlowStart = 0;
+            for(int i = 0; i < dynamicAreaFlowStarts.Length; i++)
             {
-                Gizmos.color = Color.white;
+                SectorFlowStart flowStart = dynamicAreaFlowStarts[i];
+                sectorFlowStart = math.select(sectorFlowStart, flowStart.FlowStartIndex, flowStart.SectorIndex == sectorIndex);
             }
-            else
+            if(sectorFlowStart == 0) { return false; }
+
+            return dynamicAreaFlowField[sectorFlowStart + localIndex].IsValid();
+        }
+
+        FlowData GetFlow(int sectorIndex, int localIndex)
+        {
+            return flowField[sectorMarks[sectorIndex] + localIndex];
+        }
+
+        FlowData GetDynamicFlow(int sectorIndex, int localIndex)
+        {
+            int sectorFlowStart = 0;
+            for (int i = 0; i < dynamicAreaFlowStarts.Length; i++)
             {
-                Gizmos.color = Color.black;
+                SectorFlowStart flowStart = dynamicAreaFlowStarts[i];
+                sectorFlowStart = math.select(sectorFlowStart, flowStart.FlowStartIndex, flowStart.SectorIndex == sectorIndex);
             }
+            return dynamicAreaFlowField[sectorFlowStart + localIndex];
         }
 
         void DrawSquare(Vector3 pos, float size)
@@ -406,20 +445,19 @@ public class EditorPathDebugger
             Gizmos.DrawLine(botLeft, topLeft);
             Gizmos.DrawLine(topLeft, topRight);
         }
-        void DrawFlow(int flowIndex, Vector3 pos, float2 destination)
+        void DrawLOS(Vector3 pos, float2 destination)
         {
-            if (losmap.IsLOS(flowIndex))
-            {
-                pos = new Vector3(pos.x, yOffset, pos.z);
-                float3 destination3 = new float3(destination.x, yOffset, destination.y);
-                float3 dirToDes = destination3 - (float3) pos;
-                dirToDes = math.normalizesafe(dirToDes) * 0.4f;
-                Vector3 target = pos + (Vector3) dirToDes;
-                Gizmos.DrawLine(pos, target);
-                return;
-            }
             pos = new Vector3(pos.x, yOffset, pos.z);
-            float2 flowDir = flowField[flowIndex].GetFlow(_tileSize);
+            float3 destination3 = new float3(destination.x, yOffset, destination.y);
+            float3 dirToDes = destination3 - (float3)pos;
+            dirToDes = math.normalizesafe(dirToDes) * 0.4f;
+            Vector3 target = pos + (Vector3)dirToDes;
+            Gizmos.DrawLine(pos, target);
+        }
+        void DrawFlow(FlowData flowData, Vector3 pos)
+        {
+            pos = new Vector3(pos.x, yOffset, pos.z);
+            float2 flowDir = flowData.GetFlow(_tileSize);
             flowDir = math.normalizesafe(flowDir) * 0.4f;
             Vector3 targetPos = pos + new Vector3(flowDir.x, 0f, flowDir.y);
             Gizmos.DrawLine(pos, targetPos);
