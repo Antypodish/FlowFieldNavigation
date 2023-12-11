@@ -20,7 +20,7 @@ public struct FieldGraph
     AStarGrid _aStarGrid;
 
     //helper data
-    NativeArray<UnsafeList<byte>> _costsL;
+    NativeArray<byte> _costsL;
     UnsafeList<byte> _costsG;
     NativeList<int> EditedSectorList;
     NativeList<int> EditedSectorIndexBorderList;
@@ -31,7 +31,7 @@ public struct FieldGraph
     int _sectorMatrixRowAmount;
     int _sectorMatrixColAmount;
     int _portalPerWindow;
-    public FieldGraph(UnsafeList<byte> costsG, NativeArray<UnsafeList<byte>> costsL, int sectorSize, int fieldRowAmount, int fieldColAmount, int costFieldOffset, float tileSize)
+    public FieldGraph(UnsafeList<byte> costsG, NativeArray<byte> costsL, int sectorSize, int fieldRowAmount, int fieldColAmount, int costFieldOffset, float tileSize)
     {
         //size calculations
         int sectorMatrixRowAmount = fieldRowAmount / sectorSize;

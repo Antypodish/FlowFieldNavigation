@@ -15,7 +15,7 @@ public struct IntegrationFieldJob : IJob
     [NativeDisableContainerSafetyRestriction] public NativeSlice<IntegrationTile> IntegrationField;
     [ReadOnly] public UnsafeList<ActiveWaveFront> StartIndicies;
     [ReadOnly] public UnsafeList<int> SectorToPicked;
-    [ReadOnly] public UnsafeList<byte> Costs;
+    [ReadOnly] public NativeSlice<byte> Costs;
     public void Execute()
     {
         Integrate();
@@ -24,7 +24,7 @@ public struct IntegrationFieldJob : IJob
     {
         //DATA
         NativeSlice<IntegrationTile> integrationField = IntegrationField;
-        UnsafeList<byte> costs = Costs;
+        NativeSlice<byte> costs = Costs;
         NativeQueue<LocalIndex1d> integrationQueue = new NativeQueue<LocalIndex1d>(Allocator.Temp);
         int sectorColAmount = SectorColAmount;
         int sectorTileAmount = sectorColAmount * sectorColAmount;

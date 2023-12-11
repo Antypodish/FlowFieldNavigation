@@ -59,15 +59,15 @@ public class EditorCostFieldDebugger
     public void DebugCostFieldWithMesh(int offset)
     {
         Gizmos.color = Color.black;
-        NativeArray<UnsafeList<byte>> costs = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(offset).CostsL;
+        NativeArray<byte> costs = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(offset).CostsL;
         float yOffset = .02f;
         float tileSize = _pathfindingManager.TileSize;
         int sectorColAmount = _pathfindingManager.SectorColAmount;
         int sectorMatrixColAmount = _pathfindingManager.SectorMatrixColAmount;
 
-        for (int s = 0; s < costs.Length; s++)
+        for (int s = 0; s < FlowFieldUtilities.SectorMatrixTileAmount; s++)
         {
-            UnsafeList<byte> sector = costs[s];
+            NativeSlice<byte> sector = new NativeSlice<byte>(costs, s * FlowFieldUtilities.SectorTileAmount, FlowFieldUtilities.SectorTileAmount);
             Vector3 sectorStartPos = GetSectorStartPosition(s, sectorMatrixColAmount, sectorColAmount, tileSize);
             for (int i = 0; i < sector.Length; i++)
             {

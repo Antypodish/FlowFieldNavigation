@@ -23,7 +23,7 @@ public struct FlowFieldJob : IJobParallelFor
     [ReadOnly] public NativeArray<int> PickedToSector;
     [ReadOnly] public NativeArray<IntegrationTile> IntegrationField;
     [WriteOnly] public UnsafeList<FlowData> FlowFieldCalculationBuffer;
-    [ReadOnly] public NativeArray<UnsafeList<byte>> Costs;
+    [ReadOnly] public NativeArray<byte> Costs;
 
     public void Execute(int index)
     {
@@ -218,14 +218,14 @@ public struct FlowFieldJob : IJobParallelFor
         CornerBlockDirection cornerDir = CornerBlockDirection.None;
 
         //SIGHT CORNER TEST
-        bool nBlocked = Costs[nSector1d][nLocal1d] == byte.MaxValue;
-        bool eBlocked = Costs[eSector1d][eLocal1d] == byte.MaxValue;
-        bool sBlocked = Costs[sSector1d][sLocal1d] == byte.MaxValue;
-        bool wBlocked = Costs[wSector1d][wLocal1d] == byte.MaxValue;
-        bool neBlocked = Costs[neSector1d][neLocal1d] == byte.MaxValue;
-        bool seBlocked = Costs[seSector1d][seLocal1d] == byte.MaxValue;
-        bool swBlocked = Costs[swSector1d][swLocal1d] == byte.MaxValue;
-        bool nwBlocked = Costs[nwSector1d][nwLocal1d] == byte.MaxValue;
+        bool nBlocked = Costs[nSector1d * SectorTileAmount + nLocal1d] == byte.MaxValue;
+        bool eBlocked = Costs[eSector1d * SectorTileAmount + eLocal1d] == byte.MaxValue;
+        bool sBlocked = Costs[sSector1d * SectorTileAmount + sLocal1d] == byte.MaxValue;
+        bool wBlocked = Costs[wSector1d * SectorTileAmount + wLocal1d] == byte.MaxValue;
+        bool neBlocked = Costs[neSector1d * SectorTileAmount + neLocal1d] == byte.MaxValue;
+        bool seBlocked = Costs[seSector1d * SectorTileAmount + seLocal1d] == byte.MaxValue;
+        bool swBlocked = Costs[swSector1d * SectorTileAmount + swLocal1d] == byte.MaxValue;
+        bool nwBlocked = Costs[nwSector1d * SectorTileAmount + nwLocal1d] == byte.MaxValue;
 
         bool neCorner = neBlocked && !nBlocked && !eBlocked;
         bool seCorner = seBlocked && !sBlocked && !eBlocked;

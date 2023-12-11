@@ -10,7 +10,7 @@ public struct IslandReconfigurationJob : IJob
     public int SectorTileAmount;
     public int SectorMatrixColAmount;
     public int SectorColAmount;
-    [ReadOnly] public NativeArray<UnsafeList<byte>> CostsL;
+    [ReadOnly] public NativeArray<byte> CostsL;
     [ReadOnly] public NativeArray<PortalToPortal> PortalEdges;
     [ReadOnly] public NativeArray<WindowNode> WindowNodes;
     [ReadOnly] public NativeArray<int> SecToWinPtrs;
@@ -144,7 +144,7 @@ public struct IslandReconfigurationJob : IJob
     }
     void ResetIslandCalculationMatrix(UnsafeList<int> islandCalculationMatrix, int sectorIndex)
     {
-        UnsafeList<byte> costs = CostsL[sectorIndex];
+        NativeSlice<byte> costs = new NativeSlice<byte>(CostsL, sectorIndex * SectorTileAmount, SectorTileAmount);
         for (int i = 0; i < islandCalculationMatrix.Length; i++)
         {
             islandCalculationMatrix[i] = math.select(int.MinValue, int.MaxValue, costs[i] == byte.MaxValue);

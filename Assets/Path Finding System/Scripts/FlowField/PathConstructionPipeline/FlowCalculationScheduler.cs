@@ -60,7 +60,7 @@ public class FlowCalculationScheduler
             {
                 SectorIndex = sectorIndex,
                 StartIndicies = path.ActiveWaveFrontList[(sectorStart - 1) / FlowFieldUtilities.SectorTileAmount],
-                Costs = pickedCostField.CostsL[sectorIndex],
+                Costs = new NativeSlice<byte>(pickedCostField.CostsL, sectorIndex * FlowFieldUtilities.SectorTileAmount, FlowFieldUtilities.SectorTileAmount),
                 IntegrationField = integrationSector,
                 SectorToPicked = locationData.SectorToPicked,
                 SectorColAmount = FlowFieldUtilities.SectorColAmount,

@@ -18,7 +18,7 @@ public struct CostFieldEditJob : IJob
     public NativeArray<int> WinToSecPtrs;
     public UnsafeList<PortalNode> PortalNodes;
     public NativeArray<PortalToPortal> PorPtrs;
-    public NativeArray<UnsafeList<byte>> CostsL;
+    public NativeArray<byte> CostsL;
     public UnsafeList<byte> CostsG;
     public int FieldColAmount;
     public int FieldRowAmount;
@@ -132,12 +132,12 @@ public struct CostFieldEditJob : IJob
         LocalIndex1d localBotLeft = GetLocalIndex(botLeft);
         LocalIndex1d startLocal1d = localBotLeft;
         LocalIndex1d curLocalIndex = localBotLeft;
-        UnsafeList<byte> costSector;
+        NativeSlice<byte> costSector;
         for(int i = 0; i <= northCount; i++)
         {
             for(int j = 0; j <= eastCount; j++)
             {
-                costSector = CostsL[curLocalIndex.sector];
+                costSector = new NativeSlice<byte>(CostsL, curLocalIndex.sector * sectorTileAmount, sectorTileAmount);
                 costSector[curLocalIndex.index] = NewCost;
                 curLocalIndex = GetEast(curLocalIndex);
             }

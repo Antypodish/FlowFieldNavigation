@@ -21,7 +21,7 @@ public struct LOSIntegrationJob : IJob
     public int SectorMatrixRowAmount;
     public int SectorTileAmount;
 
-    [ReadOnly] public NativeArray<UnsafeList<byte>> Costs;
+    [ReadOnly] public NativeArray<byte> Costs;
     public UnsafeList<int> SectorToPicked;
     public NativeArray<IntegrationTile> IntegrationField;
     public void Execute()
@@ -33,7 +33,7 @@ public struct LOSIntegrationJob : IJob
         int2 targetGeneral2d = Target;
         UnsafeList<int> sectorToPickedTable = SectorToPicked;
         NativeQueue<LocalIndex1d> integrationQueue = new NativeQueue<LocalIndex1d>(Allocator.Temp);
-        NativeArray<UnsafeList<byte>> costs = Costs;
+        NativeArray<byte> costs = Costs;
         NativeArray<IntegrationTile> integrationField = IntegrationField;
 
 
@@ -215,22 +215,14 @@ public struct LOSIntegrationJob : IJob
             nwTile = integrationField[nwSectorMark + nwLocal1d];
 
             //COSTS
-            UnsafeList<byte> nCosts = costs[nSector1d];
-            UnsafeList<byte> eCosts = costs[eSector1d];
-            UnsafeList<byte> sCosts = costs[sSector1d];
-            UnsafeList<byte> wCosts = costs[wSector1d];
-            UnsafeList<byte> neCosts = costs[neSector1d];
-            UnsafeList<byte> seCosts = costs[seSector1d];
-            UnsafeList<byte> swCosts = costs[swSector1d];
-            UnsafeList<byte> nwCosts = costs[nwSector1d];
-            nUnwalkable = nCosts[nLocal1d] == byte.MaxValue;
-            eUnwalkable = eCosts[eLocal1d] == byte.MaxValue;
-            sUnwalkable = sCosts[sLocal1d] == byte.MaxValue;
-            wUnwalkable = wCosts[wLocal1d] == byte.MaxValue;
-            neUnwalkable = neCosts[neLocal1d] == byte.MaxValue;
-            seUnwalkable = seCosts[seLocal1d] == byte.MaxValue;
-            swUnwalkable = swCosts[swLocal1d] == byte.MaxValue;
-            nwUnwalkable = nwCosts[nwLocal1d] == byte.MaxValue;
+            nUnwalkable = costs[nSector1d * sectorTileAmount + nLocal1d] == byte.MaxValue;
+            eUnwalkable = costs[eSector1d * sectorTileAmount + eLocal1d] == byte.MaxValue;
+            sUnwalkable = costs[sSector1d * sectorTileAmount + sLocal1d] == byte.MaxValue;
+            wUnwalkable = costs[wSector1d * sectorTileAmount + wLocal1d] == byte.MaxValue;
+            neUnwalkable = costs[neSector1d * sectorTileAmount + neLocal1d] == byte.MaxValue;
+            seUnwalkable = costs[seSector1d * sectorTileAmount + seLocal1d] == byte.MaxValue;
+            swUnwalkable = costs[swSector1d * sectorTileAmount + swLocal1d] == byte.MaxValue;
+            nwUnwalkable = costs[nwSector1d * sectorTileAmount + nwLocal1d] == byte.MaxValue;
 
             //TILES
             nTile = integrationField[nSectorMark + nLocal1d];
@@ -406,7 +398,7 @@ public struct LOSIntegrationJob : IJob
                     //MARK
                     int2 general2d = new int2(x, y) * reflection + offset;
                     LocalIndex1d localIndex = FlowFieldUtilities.GetLocal1D(general2d, sectorColAmount, sectorMatrixColAmount);
-                    if (costs[localIndex.sector][localIndex.index] == byte.MaxValue) { break; }
+                    if (costs[localIndex.sector * sectorTileAmount + localIndex.index] == byte.MaxValue) { break; }
                     if (GetDistanceFromStart(general2d) > maxLosRange) { break; }
                     int sectorMark = sectorToPickedTable[localIndex.sector];
                     if (sectorMark == 0) { continue; }
@@ -445,7 +437,7 @@ public struct LOSIntegrationJob : IJob
                     //MARK
                     int2 general2d = new int2(y, x) * reflection + offset;
                     LocalIndex1d localIndex = FlowFieldUtilities.GetLocal1D(general2d, sectorColAmount, sectorMatrixColAmount);
-                    if (costs[localIndex.sector][localIndex.index] == byte.MaxValue) { break; }
+                    if (costs[localIndex.sector *sectorTileAmount + localIndex.index] == byte.MaxValue) { break; }
                     if (GetDistanceFromStart(general2d) > maxLosRange) { break; }
                     int sectorMark = sectorToPickedTable[localIndex.sector];
                     if (sectorMark == 0) { continue; }

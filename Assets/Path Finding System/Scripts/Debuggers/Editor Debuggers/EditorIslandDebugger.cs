@@ -117,7 +117,7 @@ public class EditorIslandDebugger
         float tileSize = FlowFieldUtilities.TileSize;
         FieldGraph fieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(offset);
         UnsafeList<SectorNode> sectorNodes = fieldGraph.SectorNodes;
-        NativeArray<UnsafeList<byte>> costsl = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(offset).CostsL;
+        NativeArray<byte> costsl = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(offset).CostsL;
         UnsafeList<UnsafeList<int>> islandFields = fieldGraph.IslandFields;
         UnsafeList<PortalNode> portalNodes = fieldGraph.PortalNodes;
         for (int i = 0; i < sectorNodes.Length; i++)
@@ -155,7 +155,7 @@ public class EditorIslandDebugger
         {
             Gizmos.color = _colors[islandIndex % _colors.Length];
             int2 sector2d = FlowFieldUtilities.To2D(sectorIndex, FlowFieldUtilities.SectorMatrixColAmount);
-            UnsafeList<byte> costs = costsl[sectorIndex];
+            NativeSlice<byte> costs = new NativeSlice<byte>(costsl, sectorIndex * FlowFieldUtilities.SectorTileAmount, FlowFieldUtilities.SectorTileAmount);
             for (int i = 0; i < costs.Length; i++)
             {
                 byte cost = costs[i];

@@ -15,7 +15,7 @@ public partial struct DynamicAreaIntegrationJob : IJob
     public int SectorTileAmount;
     public int FieldColAmount;
 
-    [ReadOnly] public NativeArray<UnsafeList<byte>> Costs;
+    [ReadOnly] public NativeArray<byte> Costs;
     [ReadOnly] public UnsafeList<SectorFlowStart> PickedSectorFlowStarts;
     public NativeArray<IntegrationTile> IntegrationField;
     public void Execute()
@@ -31,7 +31,7 @@ public partial struct DynamicAreaIntegrationJob : IJob
         }
 
 
-        NativeArray<UnsafeList<byte>> costs = Costs;
+        NativeArray<byte> costs = Costs;
         NativeArray<IntegrationTile> integrationField = IntegrationField;
         NativeQueue<LocalIndex1d> integrationQueue = new NativeQueue<LocalIndex1d>(Allocator.Temp);
         int sectorColAmount = SectorColAmount;
@@ -188,19 +188,10 @@ public partial struct DynamicAreaIntegrationJob : IJob
             nwTile = integrationField[nwSectorFlowStart + nwLocal1d];
             curTile = integrationField[curSectorFlowStart + curLocal1d];
 
-            //COSTS
-            UnsafeList<byte> nCosts = costs[nSector1d];
-            UnsafeList<byte> eCosts = costs[eSector1d];
-            UnsafeList<byte> sCosts = costs[sSector1d];
-            UnsafeList<byte> wCosts = costs[wSector1d];
-            UnsafeList<byte> neCosts = costs[neSector1d];
-            UnsafeList<byte> seCosts = costs[seSector1d];
-            UnsafeList<byte> swCosts = costs[swSector1d];
-            UnsafeList<byte> nwCosts = costs[nwSector1d];
-            nUnwalkable = nCosts[nLocal1d] == byte.MaxValue;
-            eUnwalkable = eCosts[eLocal1d] == byte.MaxValue;
-            sUnwalkable = sCosts[sLocal1d] == byte.MaxValue;
-            wUnwalkable = wCosts[wLocal1d] == byte.MaxValue;
+            nUnwalkable = costs[nSector1d * sectorTileAmount + nLocal1d] == byte.MaxValue;
+            eUnwalkable = costs[eSector1d * sectorTileAmount + eLocal1d] == byte.MaxValue;
+            sUnwalkable = costs[sSector1d * sectorTileAmount + sLocal1d] == byte.MaxValue;
+            wUnwalkable = costs[wSector1d * sectorTileAmount + wLocal1d] == byte.MaxValue;
 
             nEnqueueable = nTile.Mark == IntegrationMark.None && !nUnwalkable && nSectorFlowStart != 0;
             eEnqueueable = eTile.Mark == IntegrationMark.None && !eUnwalkable && eSectorFlowStart != 0;

@@ -8,7 +8,7 @@ public class CostField
 {
     public int Offset;
     public UnsafeList<byte> CostsG;
-    public NativeArray<UnsafeList<byte>> CostsL;
+    public NativeArray<byte> CostsL;
 
     public CostField(WalkabilityData walkabilityData, int offset, int sectorColAmount, int sectorMatrixColAmount, int sectorMatrixRowAmount)
     {
@@ -20,7 +20,7 @@ public class CostField
         //configure costs
         CostsG = new UnsafeList<byte>(fieldRowAmount * fieldColAmount, Allocator.Persistent);
         CostsG.Length = fieldColAmount * fieldRowAmount;
-        CostsL = new NativeArray<UnsafeList<byte>>(sectorMatrixColAmount * sectorMatrixRowAmount, Allocator.Persistent);
+        CostsL = new NativeArray<byte>(fieldColAmount * fieldRowAmount, Allocator.Persistent);
         CalculateCosts();
         ConvertToNewCosts();
 
@@ -64,14 +64,7 @@ public class CostField
         }
         void ConvertToNewCosts()
         {
-            //INITIALIZE SECTORS
-            for(int i = 0; i < CostsL.Length; i++)
-            {
-                UnsafeList<byte> sector = new UnsafeList<byte>(sectorColAmount * sectorColAmount, Allocator.Persistent);
-                sector.Length = sectorColAmount * sectorColAmount;
-                CostsL[i] = sector;
-            }
-
+            int sectorTileAmount = FlowFieldUtilities.SectorTileAmount;
             //SET COSTS
             for (int y = 0; y < fieldRowAmount; y += sectorColAmount)
             {
@@ -85,7 +78,7 @@ public class CostField
                     int sector1d = sector2d.y * sectorMatrixColAmount + sector2d.x;
                     int sectorDownLeft = sectorStart1d;
                     int sectorUpLeft = sectorEnd1d - sectorColAmount;
-                    UnsafeList<byte> curSector = CostsL[sector1d];
+                    NativeSlice<byte> curSector = new NativeSlice<byte>(CostsL, sector1d * sectorTileAmount, sectorTileAmount);
                     for (int i = sectorDownLeft; i < sectorUpLeft; i += fieldColAmount)
                     {
                         for(int j = i; j < i + sectorColAmount; j++)
