@@ -46,6 +46,7 @@ public class RoutineScheduler
 
         //SET POSITIONS OF AGENT DATA
         NativeArray<AgentData> agentData = _pathfindingManager.AgentDataContainer.AgentDataList;
+
         TransformAccessArray agentTransforms = _pathfindingManager.AgentDataContainer.AgentTransforms;
         AgentDataSetPositionJob posSetJob = new AgentDataSetPositionJob()
         {
@@ -73,6 +74,7 @@ public class RoutineScheduler
 
         _dirCalculator.PrepareAgentMovementDataCalculationJob();
 
+        _pathConstructionPipeline.ShcedulePathRequestEvalutaion(CurrentRequestedPaths, islandFieldReconfigHandle);
         ScheduleAgentMovementJobs(costEditHandle);
     }
     public void TryCompletePredecessorJobs()
@@ -84,8 +86,6 @@ public class RoutineScheduler
             {
                 _islandReconfigHandle[0].Complete();
                 _islandReconfigHandle.RemoveAtSwapBack(0);
-
-                _pathConstructionPipeline.EvaluatePathRequests(CurrentRequestedPaths);
             }
         }
 
@@ -104,7 +104,6 @@ public class RoutineScheduler
         {
             _islandReconfigHandle[0].Complete();
             _islandReconfigHandle.RemoveAtSwapBack(0);
-            _pathConstructionPipeline.EvaluatePathRequests(CurrentRequestedPaths);
         }
 
         //AGENT MOV
@@ -253,7 +252,7 @@ public class RoutineScheduler
         _agentMovementCalculationHandle.Add(collisionHandle);
     }
 
-    
+
     public void SendRoutineResultsToAgents()
     {
         NativeArray<RoutineResult> routineResults = _dirCalculator.RoutineResults;

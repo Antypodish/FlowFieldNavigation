@@ -9,12 +9,11 @@ public struct PathfindingTaskOrganizationJob : IJob
     public float TileSize;
     public int SectorColAmount;
     public int SectorMatrixColAmount;
-    public NativeArray<AgentData> AgentData;
+    [ReadOnly] public NativeArray<AgentData> AgentData;
     public NativeArray<int> AgentNewPathIndicies;
-    public NativeArray<int> AgentCurrentPathIndicies;
+    [ReadOnly] public NativeArray<int> AgentCurrentPathIndicies;
     public NativeList<PathRequest> NewPaths;
     public NativeArray<PathData> CurrentPaths;
-    public NativeArray<int> PathSubscribers;
 
     [ReadOnly] public NativeArray<IslandFieldProcessor> IslandFieldProcessors;
     public NativeList<float2> PathfindingSources;
