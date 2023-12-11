@@ -134,6 +134,10 @@ public class PathfindingManager : MonoBehaviour
         if(curPathIndex == -1) { return null; }
         return PathContainer.ProducedPaths[curPathIndex];
     }
+    public int GetPathIndex(int agentIndex)
+    {
+        return AgentDataContainer.AgentCurPathIndicies[agentIndex];
+    }
     public List<FlowFieldAgent> GetAllAgents()
     {
         return AgentDataContainer.Agents;

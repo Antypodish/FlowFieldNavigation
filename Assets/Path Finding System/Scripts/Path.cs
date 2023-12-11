@@ -16,7 +16,6 @@ public class Path
     public DynamicArea DynamicArea;
     public NativeArray<PortalTraversalData> PortalTraversalDataArray;
     public NativeList<ActivePortal> PortalSequence;
-    public UnsafeList<int> SectorToPicked;
     public NativeList<int> PickedToSector;
     public NativeList<IntegrationTile> IntegrationField;
     public UnsafeList<FlowData> FlowField;
@@ -47,12 +46,12 @@ public class Path
         SectorWithinLOSState.Dispose();
         DynamicArea.Dispose();
     }
-    public bool LOSCalculated()
+    public bool LOSCalculated(UnsafeList<int> sectorToPicked)
     {
         int sectorColAmount = FlowFieldUtilities.SectorColAmount;
         int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
         LocalIndex1d local = FlowFieldUtilities.GetLocal1D(TargetIndex, sectorColAmount, sectorMatrixColAmount);
-        return (IntegrationField[SectorToPicked[local.sector] + local.index].Mark & IntegrationMark.LOSPass) == IntegrationMark.LOSPass;
+        return (IntegrationField[sectorToPicked[local.sector] + local.index].Mark & IntegrationMark.LOSPass) == IntegrationMark.LOSPass;
     }
 }
 public enum PathState : byte

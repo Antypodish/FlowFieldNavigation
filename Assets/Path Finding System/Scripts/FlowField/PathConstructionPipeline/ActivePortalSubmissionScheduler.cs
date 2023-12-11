@@ -17,6 +17,7 @@ internal class ActivePortalSubmissionScheduler
     public RequestPipelineInfoWithHandle ScheduleActivePortalSubmission(RequestPipelineInfoWithHandle reqInfo)
     {
         Path path = _pathProducer.ProducedPaths[reqInfo.PathIndex];
+        PathLocationData locationData = _pathProducer.PathLocationDataList[reqInfo.PathIndex];
         FieldGraph pickedFieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(path.Offset);
 
         //ACTIVE WAVE FRONT SUBMISSION
@@ -31,7 +32,7 @@ internal class ActivePortalSubmissionScheduler
             TargetIndex2D = path.TargetIndex,
 
             PortalEdges = pickedFieldGraph.PorToPorPtrs,
-            SectorToPicked = path.SectorToPicked,
+            SectorToPicked = locationData.SectorToPicked,
             PickedToSector = path.PickedToSector,
             PortalSequence = path.PortalSequence,
             PortalSequenceBorders = path.PortalSequenceBorders,

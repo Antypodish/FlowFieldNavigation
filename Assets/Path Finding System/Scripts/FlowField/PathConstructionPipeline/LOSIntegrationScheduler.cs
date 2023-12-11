@@ -4,6 +4,7 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
+using UnityEngine.Networking.Match;
 
 public class LOSIntegrationScheduler
 {
@@ -26,12 +27,13 @@ public class LOSIntegrationScheduler
     public void ScheduleLOS(PathPipelineInfoWithHandle pathInfo, JobHandle flowHandle = new JobHandle())
     {
         Path path = _pathProducer.ProducedPaths[pathInfo.PathIndex];
+        PathLocationData locationData = _pathProducer.PathLocationDataList[pathInfo.PathIndex];
         CostField pickedCostField = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(path.Offset);
 
         JobHandle losHandle = flowHandle;
         bool requestedSectorWithinLOS = (path.SectorWithinLOSState[0] & SectorsWihinLOSArgument.RequestedSectorWithinLOS) == SectorsWihinLOSArgument.RequestedSectorWithinLOS;
         bool addedSectorWithinLOS = (path.SectorWithinLOSState[0] & SectorsWihinLOSArgument.AddedSectorWithinLOS) == SectorsWihinLOSArgument.AddedSectorWithinLOS;
-        bool losCalculated = path.LOSCalculated();
+        bool losCalculated = path.LOSCalculated(locationData.SectorToPicked);
         bool destinationMoved = pathInfo.DestinationState == DynamicDestinationState.Moved;
         if (losCalculated && (addedSectorWithinLOS || destinationMoved))
         {
@@ -44,7 +46,7 @@ public class LOSIntegrationScheduler
                 LOSRange = FlowFieldUtilities.LOSRange,
                 Target = path.TargetIndex,
 
-                SectorToPickedTable = path.SectorToPicked,
+                SectorToPickedTable = locationData.SectorToPicked,
                 IntegrationField = path.IntegrationField,
             };
             JobHandle loscleanHandle = losClean.Schedule(flowHandle);
@@ -61,7 +63,7 @@ public class LOSIntegrationScheduler
                 FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
 
                 Costs = pickedCostField.CostsL,
-                SectorToPicked = path.SectorToPicked,
+                SectorToPicked = locationData.SectorToPicked,
                 IntegrationField = path.IntegrationField,
                 Target = path.TargetIndex,
             };
@@ -82,7 +84,7 @@ public class LOSIntegrationScheduler
                 FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
 
                 Costs = pickedCostField.CostsL,
-                SectorToPicked = path.SectorToPicked,
+                SectorToPicked = locationData.SectorToPicked,
                 IntegrationField = path.IntegrationField,
                 Target = path.TargetIndex,
             };
@@ -122,6 +124,7 @@ public class LOSIntegrationScheduler
         for (int i = 0; i < _losCalculatedPaths.Length; i++)
         {
             Path path = producedPaths[_losCalculatedPaths[i]];
+            PathLocationData locationData = _pathProducer.PathLocationDataList[_losCalculatedPaths[i]];
             LOSTransferJob losTransfer = new LOSTransferJob()
             {
                 SectorColAmount = FlowFieldUtilities.SectorColAmount,
@@ -129,7 +132,7 @@ public class LOSIntegrationScheduler
                 SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
                 SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
                 LOSRange = FlowFieldUtilities.LOSRange,
-                SectorToPickedTable = path.SectorToPicked,
+                SectorToPickedTable = locationData.SectorToPicked,
                 LOSBitmap = path.LOSMap,
                 IntegrationField = path.IntegrationField,
                 Target = path.TargetIndex,

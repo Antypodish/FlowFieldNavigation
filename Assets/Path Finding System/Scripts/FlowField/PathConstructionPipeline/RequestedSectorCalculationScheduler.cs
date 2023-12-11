@@ -21,6 +21,7 @@ public class RequestedSectorCalculationScheduler
     public void ScheduleRequestedSectorCalculation(PathPipelineInfoWithHandle pathInfo, JobHandle activePortalSubmissionHandle, NativeSlice<float2> sources)
     {
         Path path = _pathProducer.ProducedPaths[pathInfo.PathIndex];
+        PathLocationData locationData = _pathProducer.PathLocationDataList[pathInfo.PathIndex];
         FieldGraph pickedFieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(path.Offset);
         //SOURCE SECTOR CALCULATION
         SourceSectorCalculationJob sectorCalcJob = new SourceSectorCalculationJob()
@@ -33,7 +34,7 @@ public class RequestedSectorCalculationScheduler
             SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
             TargetIndex = path.TargetIndex,
             SectorStateTable = path.SectorStateTable,
-            SectorToPickedTable = path.SectorToPicked,
+            SectorToPickedTable = locationData.SectorToPicked,
             Sources = sources,
             PortalSequence = path.PortalSequence,
             ActiveWaveFrontListArray = path.ActiveWaveFrontList,

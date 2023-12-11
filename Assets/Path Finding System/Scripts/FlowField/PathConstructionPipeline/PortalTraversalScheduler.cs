@@ -25,6 +25,7 @@ internal class PortalTraversalScheduler
     public void SchedulePortalTraversalFor(RequestPipelineInfoWithHandle reqInfo, NativeSlice<float2> sources)
     {
         Path path = _pathfindingManager.PathContainer.ProducedPaths[reqInfo.PathIndex];
+        PathLocationData locationData = _pathProducer.PathLocationDataList[reqInfo.PathIndex];
         int2 destinationIndex = path.TargetIndex;
         CostField pickedCostField = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(path.Offset);
         FieldGraph pickedFieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(path.Offset);
@@ -48,7 +49,7 @@ internal class PortalTraversalScheduler
             SectorNodes = pickedFieldGraph.SectorNodes,
             Costs = pickedCostField.CostsG,
             LocalDirections = _pathfindingManager.FieldProducer.GetSectorDirections(),
-            SectorToPicked = path.SectorToPicked,
+            SectorToPicked = locationData.SectorToPicked,
             FlowFieldLength = path.FlowFieldLength,
             PortalTraversalDataArray = path.PortalTraversalDataArray,
             SourcePortalIndexList = path.SourcePortalIndexList,
@@ -77,7 +78,7 @@ internal class PortalTraversalScheduler
             PorPtrs = pickedFieldGraph.PorToPorPtrs,
             SectorNodes = pickedFieldGraph.SectorNodes,
             PortalSequence = path.PortalSequence,
-            SectorToPicked = path.SectorToPicked,
+            SectorToPicked = locationData.SectorToPicked,
             FlowFieldLength = path.FlowFieldLength,
             PortalTraversalDataArray = path.PortalTraversalDataArray,
             TargetNeighbourPortalIndicies = path.TargetSectorPortalIndexList,

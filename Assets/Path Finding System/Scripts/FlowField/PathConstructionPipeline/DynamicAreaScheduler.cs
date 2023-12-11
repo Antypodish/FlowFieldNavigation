@@ -19,9 +19,10 @@ public class DynamicAreaScheduler
     public void ScheduleDynamicArea(PathPipelineInfoWithHandle pathInfo)
     {
         Path path = _pathContainer.ProducedPaths[pathInfo.PathIndex];
+        PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
         DynamicArea dynamicArea = path.DynamicArea;
         NativeList<IntegrationTile> integrationField = dynamicArea.IntegrationField;
-        UnsafeList<SectorFlowStart> pickedSectorFlowStarts = dynamicArea.PickedSectorFlowStarts;
+        UnsafeList<SectorFlowStart> pickedSectorFlowStarts = locationData.DynamicAreaPickedSectorFlowStarts;
         UnsafeList<FlowData> flowField = dynamicArea.FlowField;
         UnsafeList<FlowData> flowFieldCalculationBuffer = dynamicArea.FlowFieldCalculationBuffer;
 
@@ -64,11 +65,13 @@ public class DynamicAreaScheduler
         dynamicArea = new DynamicArea()
         {
             IntegrationField = integrationField,
-            PickedSectorFlowStarts = pickedSectorFlowStarts,
             FlowField = flowField,
             FlowFieldCalculationBuffer = flowFieldCalculationBuffer,
         };
         path.DynamicArea = dynamicArea;
+
+        locationData.DynamicAreaPickedSectorFlowStarts = pickedSectorFlowStarts;
+        _pathContainer.PathLocationDataList[pathInfo.PathIndex] = locationData;
 
         DynamicAreaIntegrationJob integration = new DynamicAreaIntegrationJob()
         {

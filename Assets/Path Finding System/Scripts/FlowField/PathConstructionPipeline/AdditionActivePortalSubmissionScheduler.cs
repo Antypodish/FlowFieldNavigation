@@ -17,6 +17,7 @@ internal class AdditionActivePortalSubmissionScheduler
     public PathPipelineInfoWithHandle ScheduleActivePortalSubmission(PathPipelineInfoWithHandle pathInfo)
     {
         Path path = _pathProducer.ProducedPaths[pathInfo.PathIndex];
+        PathLocationData locationData = _pathProducer.PathLocationDataList[pathInfo.PathIndex];
         FieldGraph pickedFieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(path.Offset);
         int newSecorCount = path.PickedToSector.Length - path.ActiveWaveFrontList.Length;
         _pathProducer.ResizeActiveWaveFrontList(newSecorCount, path.ActiveWaveFrontList);
@@ -34,7 +35,7 @@ internal class AdditionActivePortalSubmissionScheduler
             SequenceBorderListStartIndex = path.PathAdditionSequenceBorderStartIndex[0],
 
             PortalEdges = pickedFieldGraph.PorToPorPtrs,
-            SectorToPicked = path.SectorToPicked,
+            SectorToPicked = locationData.SectorToPicked,
             PickedToSector = path.PickedToSector,
             PortalSequence = path.PortalSequence,
             PortalSequenceBorders = path.PortalSequenceBorders,

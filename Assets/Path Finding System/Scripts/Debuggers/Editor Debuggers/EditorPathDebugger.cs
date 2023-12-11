@@ -33,7 +33,8 @@ public class EditorPathDebugger
         Path producedPath = agent.GetPath();
         if (!producedPath.IsCalculated) { return; }
 
-        UnsafeList<SectorFlowStart> pickedSectorFlowStarts = producedPath.DynamicArea.PickedSectorFlowStarts;
+        PathLocationData locationData = _pathfindingManager.PathContainer.PathLocationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
+        UnsafeList<SectorFlowStart> pickedSectorFlowStarts = locationData.DynamicAreaPickedSectorFlowStarts;
         NativeArray<IntegrationTile> integrationField = producedPath.DynamicArea.IntegrationField;
 
         for (int i = 0; i < pickedSectorFlowStarts.Length; i++)
@@ -62,7 +63,8 @@ public class EditorPathDebugger
         if (!producedPath.IsCalculated) { return; }
 
         float yOffset = 0.2f;
-        UnsafeList<SectorFlowStart> pickedSectorFlowStarts = producedPath.DynamicArea.PickedSectorFlowStarts;
+        PathLocationData locationData = _pathfindingManager.PathContainer.PathLocationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
+        UnsafeList<SectorFlowStart> pickedSectorFlowStarts = locationData.DynamicAreaPickedSectorFlowStarts;
         UnsafeList<FlowData> flowField = producedPath.DynamicArea.FlowField;
         Gizmos.color = Color.blue;
         for (int i = 0; i < pickedSectorFlowStarts.Length; i++)
@@ -251,12 +253,13 @@ public class EditorPathDebugger
         Path producedPath = agent.GetPath();
         if (!producedPath.IsCalculated) { return; }
 
+        PathLocationData locationData = _pathfindingManager.PathContainer.PathLocationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
         float yOffset = 0.3f;
         Gizmos.color = Color.black;
         float tileSize = _pathfindingManager.TileSize;
         FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset);
         UnsafeList<SectorNode> sectorNodes = fg.SectorNodes;
-        UnsafeList<int> sectorMarks = producedPath.SectorToPicked;
+        UnsafeList<int> sectorMarks = locationData.SectorToPicked;
         for (int i = 0; i < sectorMarks.Length; i++)
         {
             if (sectorMarks[i] == 0) { continue; }
@@ -278,10 +281,11 @@ public class EditorPathDebugger
         if (_pathProducer.ProducedPaths.Count == 0) { return; }
         Path producedPath = agent.GetPath();
         if (!producedPath.IsCalculated) { return; }
+        PathLocationData locationData = _pathfindingManager.PathContainer.PathLocationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
         int sectorColAmount = _pathfindingManager.SectorColAmount;
         int sectorTileAmount = sectorColAmount * sectorColAmount;
         UnsafeList<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset).SectorNodes;
-        UnsafeList<int> sectorMarks = producedPath.SectorToPicked;
+        UnsafeList<int> sectorMarks = locationData.SectorToPicked;
         NativeArray<IntegrationTile> integrationField = producedPath.IntegrationField;
         for (int i = 0; i < sectorMarks.Length; i++)
         {
@@ -311,7 +315,8 @@ public class EditorPathDebugger
         Path producedPath = agent.GetPath();
         if (!producedPath.IsCalculated) { return; }
 
-        UnsafeList<int> sectorMarks = producedPath.SectorToPicked;
+        PathLocationData locationData = _pathfindingManager.PathContainer.PathLocationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
+        UnsafeList<int> sectorMarks = locationData.SectorToPicked;
         UnsafeList<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset).SectorNodes;
         NativeArray<IntegrationTile> integrationField = producedPath.IntegrationField;
         int sectorColAmount = _pathfindingManager.SectorColAmount;
@@ -354,12 +359,13 @@ public class EditorPathDebugger
         Path producedPath = agent.GetPath();
         if (!producedPath.IsCalculated) { return; }
 
+        PathLocationData locationData = _pathfindingManager.PathContainer.PathLocationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
         float yOffset = 0.2f;
-        UnsafeList<int> sectorMarks = producedPath.SectorToPicked;
+        UnsafeList<int> sectorMarks = locationData.SectorToPicked;
         UnsafeList<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset).SectorNodes;
         UnsafeList<FlowData> flowField = producedPath.FlowField;
         UnsafeLOSBitmap losmap = producedPath.LOSMap;
-        UnsafeList<SectorFlowStart> dynamicAreaFlowStarts = producedPath.DynamicArea.PickedSectorFlowStarts;
+        UnsafeList<SectorFlowStart> dynamicAreaFlowStarts = locationData.DynamicAreaPickedSectorFlowStarts;
         UnsafeList<FlowData> dynamicAreaFlowField = producedPath.DynamicArea.FlowFieldCalculationBuffer;
         int sectorColAmount = _pathfindingManager.SectorColAmount;
         int sectorTileAmount = sectorColAmount * sectorColAmount;

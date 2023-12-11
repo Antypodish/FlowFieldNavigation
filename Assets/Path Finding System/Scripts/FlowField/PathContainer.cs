@@ -12,6 +12,7 @@ using UnityEngine.UIElements;
 public class PathContainer
 {
     public List<Path> ProducedPaths;
+    public NativeList<PathLocationData> PathLocationDataList;
     public NativeList<int> ProducedPathSubscribers;
     Stack<int> _removedPathIndicies;
 
@@ -26,23 +27,26 @@ public class PathContainer
         _preallocator = new PathPreallocator(_fieldProducer, FlowFieldUtilities.SectorTileAmount, FlowFieldUtilities.SectorMatrixTileAmount);
         _removedPathIndicies = new Stack<int>();
         ProducedPathSubscribers = new NativeList<int>(Allocator.Persistent);
+        PathLocationDataList = new NativeList<PathLocationData>(1, Allocator.Persistent);
     }
     public void Update()
     {
         for (int i = 0; i < ProducedPaths.Count; i++)
         {
             Path path = ProducedPaths[i];
+            PathLocationData locationData = PathLocationDataList[i];
             if(path.State == PathState.Removed) { continue; }
             int subsciriber = ProducedPathSubscribers[i];
             if(subsciriber == 0 && path.IsCalculated) { path.State = PathState.ToBeDisposed; }
             if (path.State == PathState.ToBeDisposed && path.IsCalculated)
             {
                 path.Dispose();
+                locationData.Dispose();
                 path.State = PathState.Removed;
                 _removedPathIndicies.Push(i);
                 PreallocationPack preallocations = new PreallocationPack()
                 {
-                    SectorToPicked = path.SectorToPicked,
+                    SectorToPicked = locationData.SectorToPicked,
                     PickedToSector = path.PickedToSector,
                     PortalSequence = path.PortalSequence,
                     PortalSequenceBorders = path.PortalSequenceBorders,
@@ -84,7 +88,6 @@ public class PathContainer
             Offset = request.Offset,
             PortalSequence = preallocations.PortalSequence,
             PortalTraversalDataArray = preallocations.PortalTraversalDataArray,
-            SectorToPicked = preallocations.SectorToPicked,
             FlowFieldLength = preallocations.FlowFieldLength,
             SourcePortalIndexList = preallocations.SourcePortalIndexList,
             AStartTraverseIndexList = preallocations.AStartTraverseIndexList,
@@ -99,21 +102,28 @@ public class PathContainer
             SectorWithinLOSState = new NativeArray<SectorsWihinLOSArgument>(1, Allocator.Persistent),
             DynamicArea = new DynamicArea()
             {
-                PickedSectorFlowStarts = new UnsafeList<SectorFlowStart>(0, Allocator.Persistent),
                 FlowField = new UnsafeList<FlowData>(0, Allocator.Persistent),
                 FlowFieldCalculationBuffer = new UnsafeList<FlowData>(0, Allocator.Persistent),
                 IntegrationField = new NativeList<IntegrationTile>(0, Allocator.Persistent),
             }
         };
 
+        PathLocationData locationData = new PathLocationData()
+        {
+            SectorToPicked = preallocations.SectorToPicked,
+            DynamicAreaPickedSectorFlowStarts = new UnsafeList<SectorFlowStart>(0, Allocator.Persistent),
+        };
+
         if (ProducedPaths.Count == pathIndex)
         {
             ProducedPaths.Add(producedPath);
+            PathLocationDataList.Add(locationData);
             ProducedPathSubscribers.Add(request.AgentCount);
         }
         else
         {
             ProducedPaths[pathIndex] = producedPath;
+            PathLocationDataList[pathIndex] = locationData;
             ProducedPathSubscribers[pathIndex] = request.AgentCount;
         }
 
@@ -142,7 +152,8 @@ public class PathContainer
         for(int i = 0; i < ProducedPaths.Count; i++)
         {
             Path path = ProducedPaths[i];
-            if(path.State == PathState.Removed)
+            PathLocationData locationData = PathLocationDataList[i];
+            if (path.State == PathState.Removed)
             {
                 currentPathData[i] = new PathData()
                 {
@@ -157,7 +168,7 @@ public class PathContainer
                     Target = path.Destination,
                     Task = 0,
                     SectorStateTable = path.SectorStateTable,
-                    SectorToPicked = path.SectorToPicked,
+                    SectorToPicked = locationData.SectorToPicked,
                     FlowField = path.FlowField,
                     ReconstructionRequestIndex = -1,
                     Type = path.Type,
@@ -185,7 +196,7 @@ public class PathContainer
                     Target = path.Destination,
                     Task = 0,
                     SectorStateTable = path.SectorStateTable,
-                    SectorToPicked = path.SectorToPicked,
+                    SectorToPicked = locationData.SectorToPicked,
                     FlowField = path.FlowField,
                     ReconstructionRequestIndex = -1,
                     Type = path.Type,

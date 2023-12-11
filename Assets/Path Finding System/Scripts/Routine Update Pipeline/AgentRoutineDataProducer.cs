@@ -13,6 +13,7 @@ using Unity.VisualScripting;
 using UnityEditor.Rendering.Universal;
 using UnityEngine;
 using UnityEngine.Jobs;
+using UnityEngine.Networking.Match;
 using UnityEngine.Rendering;
 
 public class AgentRoutineDataProducer
@@ -64,7 +65,7 @@ public class AgentRoutineDataProducer
         NativeList<AgentData> agentDataList = _agentDataContainer.AgentDataList;
         NativeList<int> agentCurPaths = _agentDataContainer.AgentCurPathIndicies;
         List<Path> producedPaths = _pathfindingManager.PathContainer.ProducedPaths;
-        
+        NativeList<PathLocationData> pathLocationDataList = _pathfindingManager.PathContainer.PathLocationDataList;
         //CLEAR
         AgentMovementDataList.Clear();
         AgentPositionChangeBuffer.Clear();
@@ -99,6 +100,7 @@ public class AgentRoutineDataProducer
         {
             if (agentCurPaths[i] == -1) { continue; }
             Path curPath = producedPaths[agentCurPaths[i]];
+            PathLocationData locationData = pathLocationDataList[agentCurPaths[i]];
 
             if (curPath == null) { continue; }
             int hashedIndex = NormalToHashed[i];
@@ -106,7 +108,7 @@ public class AgentRoutineDataProducer
             data.FlowField = curPath.FlowField;
             data.LOSMap = curPath.LOSMap;
             data.Destination = curPath.Destination;
-            data.SectorFlowStride = curPath.SectorToPicked[FlowFieldUtilities.PosToSector1D(new float2(data.Position.x, data.Position.z), sectorSize, sectorMatrixColAmount)];
+            data.SectorFlowStride = locationData.SectorToPicked[FlowFieldUtilities.PosToSector1D(new float2(data.Position.x, data.Position.z), sectorSize, sectorMatrixColAmount)];
             data.Offset = curPath.Offset;
             data.PathId = curPath.Id;
             

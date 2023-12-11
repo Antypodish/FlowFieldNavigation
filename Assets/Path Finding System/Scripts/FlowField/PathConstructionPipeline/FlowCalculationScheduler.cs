@@ -28,6 +28,7 @@ public class FlowCalculationScheduler
     public void ScheduleFlow(PathPipelineInfoWithHandle pathInfo)
     {
         Path path = _pathProducer.ProducedPaths[pathInfo.PathIndex];
+        PathLocationData locationData = _pathProducer.PathLocationDataList[pathInfo.PathIndex];
         CostField pickedCostField = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(path.Offset);
         
         //RESET NEW INT FIELD INDICIES
@@ -61,7 +62,7 @@ public class FlowCalculationScheduler
                 StartIndicies = path.ActiveWaveFrontList[(sectorStart - 1) / FlowFieldUtilities.SectorTileAmount],
                 Costs = pickedCostField.CostsL[sectorIndex],
                 IntegrationField = integrationSector,
-                SectorToPicked = path.SectorToPicked,
+                SectorToPicked = locationData.SectorToPicked,
                 SectorColAmount = FlowFieldUtilities.SectorColAmount,
                 SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
                 FieldColAmount = FlowFieldUtilities.FieldColAmount,
@@ -96,7 +97,7 @@ public class FlowCalculationScheduler
                 FieldTileAmount = FlowFieldUtilities.FieldTileAmount,
                 FieldColAmount = FlowFieldUtilities.FieldColAmount,
                 SectorRowAmount = FlowFieldUtilities.SectorRowAmount,
-                SectorToPicked = path.SectorToPicked,
+                SectorToPicked = locationData.SectorToPicked,
                 PickedToSector = path.PickedToSector,
                 FlowFieldCalculationBuffer = flowFieldCalculationBuffer,
                 IntegrationField = path.IntegrationField,
