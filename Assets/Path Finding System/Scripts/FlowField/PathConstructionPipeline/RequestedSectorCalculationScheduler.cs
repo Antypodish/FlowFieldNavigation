@@ -6,22 +6,23 @@ using Unity.Mathematics;
 public class RequestedSectorCalculationScheduler
 {
     PathfindingManager _pathfindingManager;
-    PathContainer _pathProducer;
+    PathContainer _pathContainer;
     FlowCalculationScheduler _flowCalculationScheduler;
     NativeList<PathPipelineInfoWithHandle> ScheduledRequestedSectorCalculations;
 
     public RequestedSectorCalculationScheduler(PathfindingManager pathfindingManager, LOSIntegrationScheduler losScheduler)
     {
         _pathfindingManager = pathfindingManager;
-        _pathProducer = pathfindingManager.PathContainer;
+        _pathContainer = pathfindingManager.PathContainer;
         ScheduledRequestedSectorCalculations = new NativeList<PathPipelineInfoWithHandle>(Allocator.Persistent);
         _flowCalculationScheduler = new FlowCalculationScheduler(pathfindingManager, losScheduler);
     }
 
     public void ScheduleRequestedSectorCalculation(PathPipelineInfoWithHandle pathInfo, JobHandle activePortalSubmissionHandle, NativeSlice<float2> sources)
     {
-        Path path = _pathProducer.ProducedPaths[pathInfo.PathIndex];
-        PathLocationData locationData = _pathProducer.PathLocationDataList[pathInfo.PathIndex];
+        Path path = _pathContainer.ProducedPaths[pathInfo.PathIndex];
+        PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
+        UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathInfo.PathIndex];
         FieldGraph pickedFieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(path.Offset);
         //SOURCE SECTOR CALCULATION
         SourceSectorCalculationJob sectorCalcJob = new SourceSectorCalculationJob()
@@ -33,11 +34,11 @@ public class RequestedSectorCalculationScheduler
             SectorSize = FlowFieldUtilities.SectorColAmount * FlowFieldUtilities.TileSize,
             SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
             TargetIndex = path.TargetIndex,
-            SectorStateTable = path.SectorStateTable,
+            SectorStateTable = sectorStateTable,
             SectorToPickedTable = locationData.SectorToPicked,
             Sources = sources,
             PortalSequence = path.PortalSequence,
-            ActiveWaveFrontListArray = path.ActiveWaveFrontList,
+            ActiveWaveFrontListArray = path.ActivePortalList,
             PortalNodes = pickedFieldGraph.PortalNodes,
             SectorFlowStartIndiciesToCalculateIntegration = path.SectorFlowStartIndiciesToCalculateIntegration,
             SectorFlowStartIndiciesToCalculateFlow = path.SectorFlowStartIndiciesToCalculateFlow,

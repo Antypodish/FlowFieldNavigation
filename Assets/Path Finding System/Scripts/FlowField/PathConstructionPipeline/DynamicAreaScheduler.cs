@@ -23,7 +23,6 @@ public class DynamicAreaScheduler
         DynamicArea dynamicArea = path.DynamicArea;
         NativeList<IntegrationTile> integrationField = dynamicArea.IntegrationField;
         UnsafeList<SectorFlowStart> pickedSectorFlowStarts = locationData.DynamicAreaPickedSectorFlowStarts;
-        UnsafeList<FlowData> flowField = dynamicArea.FlowField;
         UnsafeList<FlowData> flowFieldCalculationBuffer = dynamicArea.FlowFieldCalculationBuffer;
 
         int2 targetSectorIndex = FlowFieldUtilities.GetSector2D(path.TargetIndex, FlowFieldUtilities.SectorColAmount);
@@ -65,7 +64,6 @@ public class DynamicAreaScheduler
         dynamicArea = new DynamicArea()
         {
             IntegrationField = integrationField,
-            FlowField = flowField,
             FlowFieldCalculationBuffer = flowFieldCalculationBuffer,
         };
         path.DynamicArea = dynamicArea;
@@ -124,13 +122,15 @@ public class DynamicAreaScheduler
     public void ForceComplete()
     {
         List<Path> producedPaths = _pathContainer.ProducedPaths;
+        NativeList<PathFlowData> pathFlowDataList = _pathContainer.PathFlowDataList;
         NativeList<JobHandle> handles = new NativeList<JobHandle>(Allocator.Temp);
         for(int i = 0; i <_scheduledDynamicAreas.Length; i++)
         {
             PathPipelineInfoWithHandle pathInfo = _scheduledDynamicAreas[i];
             pathInfo.Handle.Complete();
             Path path = producedPaths[pathInfo.PathIndex];
-            UnsafeList<FlowData> flowField = path.DynamicArea.FlowField;
+            PathFlowData pathFlowData = pathFlowDataList[pathInfo.PathIndex];
+            UnsafeList<FlowData> flowField = pathFlowData.DynamicAreaFlowField;
             UnsafeList<FlowData> flowCalculationBuffer = path.DynamicArea.FlowFieldCalculationBuffer;
             flowField.Resize(flowCalculationBuffer.Length, NativeArrayOptions.UninitializedMemory);
             flowField.Length = flowCalculationBuffer.Length;
@@ -140,7 +140,7 @@ public class DynamicAreaScheduler
                 Source = flowCalculationBuffer,
             };
             handles.Add(copyJob.Schedule());
-            path.DynamicArea.FlowField = flowField;
+            pathFlowData.DynamicAreaFlowField = flowField;
         }
         _scheduledDynamicAreas.Clear();
 

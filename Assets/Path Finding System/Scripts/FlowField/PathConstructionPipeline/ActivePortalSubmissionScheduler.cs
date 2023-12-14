@@ -39,7 +39,7 @@ internal class ActivePortalSubmissionScheduler
             WinToSecPtrs = pickedFieldGraph.WinToSecPtrs,
             PortalNodes = pickedFieldGraph.PortalNodes,
             WindowNodes = pickedFieldGraph.WindowNodes,
-            ActiveWaveFrontListArray = path.ActiveWaveFrontList,
+            ActiveWaveFrontListArray = path.ActivePortalList,
             NotActivatedPortals = path.NotActivePortalList,
         };
         JobHandle submitHandle = submitJob.Schedule();

@@ -9,7 +9,7 @@ using UnityEngine.Networking.Match;
 internal class PortalTraversalScheduler
 {
     PathfindingManager _pathfindingManager;
-    PathContainer _pathProducer;
+    PathContainer _pathContainer;
     ActivePortalSubmissionScheduler _activePortalSubmissionScheduler;
     RequestedSectorCalculationScheduler _requestedSectorCalculationScheduler;
 
@@ -18,14 +18,15 @@ internal class PortalTraversalScheduler
     {
         ScheduledPortalTraversals = new NativeList<RequestPipelineInfoWithHandle>(Allocator.Persistent);
         _pathfindingManager = pathfindingManager;
-        _pathProducer = _pathfindingManager.PathContainer;
+        _pathContainer = _pathfindingManager.PathContainer;
         _activePortalSubmissionScheduler = new ActivePortalSubmissionScheduler(pathfindingManager);
         _requestedSectorCalculationScheduler = requestedSectorCalculationScheduler;
     }
     public void SchedulePortalTraversalFor(RequestPipelineInfoWithHandle reqInfo, NativeSlice<float2> sources)
     {
         Path path = _pathfindingManager.PathContainer.ProducedPaths[reqInfo.PathIndex];
-        PathLocationData locationData = _pathProducer.PathLocationDataList[reqInfo.PathIndex];
+        PathLocationData locationData = _pathContainer.PathLocationDataList[reqInfo.PathIndex];
+        UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[reqInfo.PathIndex];
         int2 destinationIndex = path.TargetIndex;
         CostField pickedCostField = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(path.Offset);
         FieldGraph pickedFieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(path.Offset);
@@ -56,7 +57,7 @@ internal class PortalTraversalScheduler
             TargetNeighbourPortalIndicies = path.TargetSectorPortalIndexList,
             AStarTraverseIndexList = path.AStartTraverseIndexList,
             IslandFields = pickedFieldGraph.IslandFields,
-            SectorStateTable = path.SectorStateTable,
+            SectorStateTable = sectorStateTable,
         };
 
         //TRAVERSAL
@@ -82,7 +83,7 @@ internal class PortalTraversalScheduler
             FlowFieldLength = path.FlowFieldLength,
             PortalTraversalDataArray = path.PortalTraversalDataArray,
             TargetNeighbourPortalIndicies = path.TargetSectorPortalIndexList,
-            SectorStateTable = path.SectorStateTable,
+            SectorStateTable = sectorStateTable,
             SourcePortals = path.SourcePortalIndexList,
         };
 
@@ -102,7 +103,7 @@ internal class PortalTraversalScheduler
             if (reqInfo.Handle.IsCompleted)
             {
                 reqInfo.Handle.Complete();
-                _pathProducer.FinalizePathBuffers(reqInfo.PathIndex);
+                _pathContainer.FinalizePathBuffers(reqInfo.PathIndex);
 
                 //SCHEDULE ACTIVE PORTAL SUBMISSION
                 RequestPipelineInfoWithHandle portalSubmissionReqInfo = _activePortalSubmissionScheduler.ScheduleActivePortalSubmission(reqInfo);
@@ -122,7 +123,7 @@ internal class PortalTraversalScheduler
         {
             RequestPipelineInfoWithHandle reqInfo = ScheduledPortalTraversals[i];
             reqInfo.Handle.Complete();
-            _pathProducer.FinalizePathBuffers(reqInfo.PathIndex);
+            _pathContainer.FinalizePathBuffers(reqInfo.PathIndex);
 
             //SCHEDULE ACTIVE PORTAL SUBMISSION
             RequestPipelineInfoWithHandle portalSubmissionReqInfo = _activePortalSubmissionScheduler.ScheduleActivePortalSubmission(reqInfo);

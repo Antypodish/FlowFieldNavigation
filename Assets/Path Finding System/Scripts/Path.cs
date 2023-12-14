@@ -5,20 +5,18 @@ using UnityEngine;
 
 public class Path
 {
-    public int Id;
     public int Offset;
     public PathState State;
-    public PathType Type;
+    public DestinationType DestinationType;
     public int TargetAgentIndex;
     public bool IsCalculated = false;
     public int2 TargetIndex;
-    public Vector2 Destination;
+    public float2 Destination;
     public DynamicArea DynamicArea;
     public NativeArray<PortalTraversalData> PortalTraversalDataArray;
     public NativeList<ActivePortal> PortalSequence;
     public NativeList<int> PickedToSector;
     public NativeList<IntegrationTile> IntegrationField;
-    public UnsafeList<FlowData> FlowField;
     public NativeArray<DijkstraTile> TargetSectorCosts;
     public NativeList<int> PortalSequenceBorders;
     public NativeArray<int> FlowFieldLength;
@@ -26,14 +24,12 @@ public class Path
     public NativeList<int> AStartTraverseIndexList;
     public NativeList<int> TargetSectorPortalIndexList;
     public NativeList<int> SourcePortalIndexList;
-    public NativeList<UnsafeList<ActiveWaveFront>> ActiveWaveFrontList;
-    public UnsafeList<PathSectorState> SectorStateTable;
+    public NativeList<UnsafeList<ActiveWaveFront>> ActivePortalList;
     public NativeArray<int> PathAdditionSequenceBorderStartIndex;
     public NativeList<int> NotActivePortalList;
     public NativeArray<int> NewPickedSectorStartIndex;
     public NativeList<int> SectorFlowStartIndiciesToCalculateIntegration;
     public NativeList<int> SectorFlowStartIndiciesToCalculateFlow;
-    public UnsafeLOSBitmap LOSMap;
     public NativeArray<SectorsWihinLOSArgument> SectorWithinLOSState;
     public void Dispose()
     {
@@ -42,7 +38,6 @@ public class Path
         NewPickedSectorStartIndex.Dispose();
         SectorFlowStartIndiciesToCalculateFlow.Dispose();
         SectorFlowStartIndiciesToCalculateIntegration.Dispose();
-        LOSMap.Dispose();
         SectorWithinLOSState.Dispose();
         DynamicArea.Dispose();
     }
@@ -54,6 +49,7 @@ public class Path
         return (IntegrationField[sectorToPicked[local.sector] + local.index].Mark & IntegrationMark.LOSPass) == IntegrationMark.LOSPass;
     }
 }
+
 public enum PathState : byte
 {
     Clean = 0,

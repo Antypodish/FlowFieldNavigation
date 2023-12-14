@@ -8,7 +8,7 @@ using Unity.Mathematics;
 public class FlowCalculationScheduler
 {
     PathfindingManager _pathfindingManager;
-    PathContainer _pathProducer;
+    PathContainer _pathContainer;
     LOSIntegrationScheduler _losIntegrationScheduler;
     NativeList<PathPipelineInfoWithHandle> ScheduledFlow;
     NativeList<FlowFieldCalculationBufferParent> _flowFieldCalculationBuffers;
@@ -17,7 +17,7 @@ public class FlowCalculationScheduler
     public FlowCalculationScheduler(PathfindingManager pathfindingManager, LOSIntegrationScheduler losIntegrationScheduler)
     {
         _pathfindingManager = pathfindingManager;
-        _pathProducer = pathfindingManager.PathContainer;
+        _pathContainer = pathfindingManager.PathContainer;
         ScheduledFlow = new NativeList<PathPipelineInfoWithHandle>(Allocator.Persistent);
         _flowFieldCalculationBuffers = new NativeList<FlowFieldCalculationBufferParent>(Allocator.Persistent);
         _flowTransferHandles = new NativeList<JobHandle>(Allocator.Persistent);
@@ -27,8 +27,8 @@ public class FlowCalculationScheduler
 
     public void ScheduleFlow(PathPipelineInfoWithHandle pathInfo)
     {
-        Path path = _pathProducer.ProducedPaths[pathInfo.PathIndex];
-        PathLocationData locationData = _pathProducer.PathLocationDataList[pathInfo.PathIndex];
+        Path path = _pathContainer.ProducedPaths[pathInfo.PathIndex];
+        PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
         CostField pickedCostField = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(path.Offset);
         
         //RESET NEW INT FIELD INDICIES
@@ -59,7 +59,7 @@ public class FlowCalculationScheduler
             IntegrationFieldJob intJob = new IntegrationFieldJob()
             {
                 SectorIndex = sectorIndex,
-                StartIndicies = path.ActiveWaveFrontList[(sectorStart - 1) / FlowFieldUtilities.SectorTileAmount],
+                StartIndicies = path.ActivePortalList[(sectorStart - 1) / FlowFieldUtilities.SectorTileAmount],
                 Costs = new NativeSlice<byte>(pickedCostField.CostsL, sectorIndex * FlowFieldUtilities.SectorTileAmount, FlowFieldUtilities.SectorTileAmount),
                 IntegrationField = integrationSector,
                 SectorToPicked = locationData.SectorToPicked,
@@ -160,7 +160,7 @@ public class FlowCalculationScheduler
     }
     void ScheduleFlowTransfers()
     {
-        List<Path> producedPaths = _pathProducer.ProducedPaths;
+        NativeList<PathFlowData> flowDataList = _pathContainer.PathFlowDataList;
         for (int i = 0; i < _flowFieldCalculationBuffers.Length; i++)
         {
             FlowFieldCalculationBufferParent parent = _flowFieldCalculationBuffers[i];
@@ -169,7 +169,7 @@ public class FlowCalculationScheduler
             FlowFieldCalculationTransferJob transferJob = new FlowFieldCalculationTransferJob()
             {
                 CalculationBufferParent = parent,
-                FlowField = producedPaths[pathIndex].FlowField,
+                FlowField = flowDataList[pathIndex].FlowField,
             };
             _flowTransferHandles.Add(transferJob.Schedule());
         }   
@@ -198,18 +198,23 @@ public class FlowCalculationScheduler
     }
     void RefreshResizedFlowFieldLengths()
     {
-        List<Path> producedPaths = _pathProducer.ProducedPaths;
+        List<Path> producedPaths = _pathContainer.ProducedPaths;
+        NativeList<PathFlowData> flowDataList = _pathContainer.PathFlowDataList;
         for (int i = 0; i < _flowFieldResizedPaths.Length; i++)
         {
             int pathIndex = _flowFieldResizedPaths[i];
             Path path = producedPaths[pathIndex];
-            UnsafeList<FlowData> flowfield = path.FlowField;
-            flowfield.Resize(path.FlowFieldLength[0], NativeArrayOptions.ClearMemory);
-            path.FlowField = flowfield;
+            PathFlowData flowData = flowDataList[pathIndex];
 
-            UnsafeLOSBitmap losmap = path.LOSMap;
+            UnsafeList<FlowData> flowfield = flowData.FlowField;
+            flowfield.Resize(path.FlowFieldLength[0], NativeArrayOptions.ClearMemory);
+            flowData.FlowField = flowfield;
+
+            UnsafeLOSBitmap losmap = flowData.LOSMap;
             losmap.Resize(path.FlowFieldLength[0], NativeArrayOptions.ClearMemory);
-            path.LOSMap = losmap;
+            flowData.LOSMap = losmap;
+
+            flowDataList[pathIndex] = flowData;
         }
         _flowFieldResizedPaths.Clear();
     }

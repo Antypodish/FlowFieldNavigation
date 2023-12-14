@@ -9,7 +9,7 @@ using UnityEngine.EventSystems;
 internal class AdditionPortalTraversalScheduler
 {
     PathfindingManager _pathfindingManager;
-    PathContainer _pathProducer;
+    PathContainer _pathContainer;
     AdditionActivePortalSubmissionScheduler _additionActivePortalSubmissionScheduler;
     RequestedSectorCalculationScheduler _requestedSectorCalculationScheduler;
     NativeList<PathPipelineInfoWithHandle> ScheduledAdditionPortalTraversals;
@@ -18,13 +18,14 @@ internal class AdditionPortalTraversalScheduler
     {
         ScheduledAdditionPortalTraversals = new NativeList<PathPipelineInfoWithHandle>(Allocator.Persistent);
         _pathfindingManager = pathfindingManager;
-        _pathProducer = _pathfindingManager.PathContainer;
+        _pathContainer = _pathfindingManager.PathContainer;
         _additionActivePortalSubmissionScheduler = new AdditionActivePortalSubmissionScheduler(pathfindingManager);
         _requestedSectorCalculationScheduler = requestedSectorCalculationScheduler;
     }
     public void SchedulePortalTraversalFor(PathPipelineInfoWithHandle pathInfo, NativeSlice<float2> sources)
     {
-        Path path = _pathProducer.ProducedPaths[pathInfo.PathIndex];
+        Path path = _pathContainer.ProducedPaths[pathInfo.PathIndex];
+        UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathInfo.PathIndex];
         path.PathAdditionSequenceBorderStartIndex[0] = path.PortalSequenceBorders.Length - 1;
         path.NewPickedSectorStartIndex[0] = path.PickedToSector.Length;
 
@@ -49,7 +50,7 @@ internal class AdditionPortalTraversalScheduler
             SourcePortalIndexList = path.SourcePortalIndexList,
             AStarTraverseIndexList = path.AStartTraverseIndexList,
             IslandFields = pickedFieldGraph.IslandFields,
-            SectorStateTable = path.SectorStateTable,
+            SectorStateTable = sectorStateTable,
             DijkstraStartIndicies = new NativeList<int>(Allocator.Persistent),
         };
 
@@ -73,7 +74,7 @@ internal class AdditionPortalTraversalScheduler
             PortalTraversalDataArray = path.PortalTraversalDataArray,
             SourcePortalIndexList = path.SourcePortalIndexList,
             IslandFields = pickedFieldGraph.IslandFields,
-            SectorStateTable = path.SectorStateTable,
+            SectorStateTable = sectorStateTable,
             DijkstraStartIndicies = reductionJob.DijkstraStartIndicies,
             AddedPortalSequenceBorderStartIndex = path.PortalSequenceBorders.Length,
             SectorWithinLOSState = path.SectorWithinLOSState,

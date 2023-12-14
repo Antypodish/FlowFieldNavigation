@@ -64,8 +64,9 @@ public class EditorPathDebugger
 
         float yOffset = 0.2f;
         PathLocationData locationData = _pathfindingManager.PathContainer.PathLocationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
+        PathFlowData flowData = _pathfindingManager.PathContainer.PathFlowDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
         UnsafeList<SectorFlowStart> pickedSectorFlowStarts = locationData.DynamicAreaPickedSectorFlowStarts;
-        UnsafeList<FlowData> flowField = producedPath.DynamicArea.FlowField;
+        UnsafeList<FlowData> flowField = flowData.DynamicAreaFlowField;
         Gizmos.color = Color.blue;
         for (int i = 0; i < pickedSectorFlowStarts.Length; i++)
         {
@@ -118,7 +119,7 @@ public class EditorPathDebugger
         int sectorColAmount = FlowFieldUtilities.SectorColAmount;
 
         FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset);
-        NativeArray<UnsafeList<ActiveWaveFront>> waveFronts = producedPath.ActiveWaveFrontList;
+        NativeArray<UnsafeList<ActiveWaveFront>> waveFronts = producedPath.ActivePortalList;
         NativeArray<int> pickedToSector = producedPath.PickedToSector;
         Gizmos.color = Color.red;
         for (int i = 0; i < pickedToSector.Length; i++)
@@ -360,11 +361,12 @@ public class EditorPathDebugger
         if (!producedPath.IsCalculated) { return; }
 
         PathLocationData locationData = _pathfindingManager.PathContainer.PathLocationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
+        PathFlowData pathFlowData = _pathfindingManager.PathContainer.PathFlowDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
         float yOffset = 0.2f;
         UnsafeList<int> sectorMarks = locationData.SectorToPicked;
         UnsafeList<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset).SectorNodes;
-        UnsafeList<FlowData> flowField = producedPath.FlowField;
-        UnsafeLOSBitmap losmap = producedPath.LOSMap;
+        UnsafeList<FlowData> flowField = pathFlowData.FlowField;
+        UnsafeLOSBitmap losmap = pathFlowData.LOSMap;
         UnsafeList<SectorFlowStart> dynamicAreaFlowStarts = locationData.DynamicAreaPickedSectorFlowStarts;
         UnsafeList<FlowData> dynamicAreaFlowField = producedPath.DynamicArea.FlowFieldCalculationBuffer;
         int sectorColAmount = _pathfindingManager.SectorColAmount;

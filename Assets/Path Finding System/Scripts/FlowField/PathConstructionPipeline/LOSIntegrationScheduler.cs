@@ -121,10 +121,14 @@ public class LOSIntegrationScheduler
     public void ScheduleLOSTransfers()
     {
         List<Path> producedPaths = _pathProducer.ProducedPaths;
+        NativeList<PathLocationData> pathLocationDataList = _pathProducer.PathLocationDataList;
+        NativeList<PathFlowData> pathFlowDataList = _pathProducer.PathFlowDataList;
         for (int i = 0; i < _losCalculatedPaths.Length; i++)
         {
-            Path path = producedPaths[_losCalculatedPaths[i]];
-            PathLocationData locationData = _pathProducer.PathLocationDataList[_losCalculatedPaths[i]];
+            int pathIndex = _losCalculatedPaths[i];
+            Path path = producedPaths[pathIndex];
+            PathLocationData locationData = pathLocationDataList[pathIndex];
+            PathFlowData flowData = pathFlowDataList[pathIndex];
             LOSTransferJob losTransfer = new LOSTransferJob()
             {
                 SectorColAmount = FlowFieldUtilities.SectorColAmount,
@@ -133,7 +137,7 @@ public class LOSIntegrationScheduler
                 SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
                 LOSRange = FlowFieldUtilities.LOSRange,
                 SectorToPickedTable = locationData.SectorToPicked,
-                LOSBitmap = path.LOSMap,
+                LOSBitmap = flowData.LOSMap,
                 IntegrationField = path.IntegrationField,
                 Target = path.TargetIndex,
             };

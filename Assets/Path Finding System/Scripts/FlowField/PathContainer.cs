@@ -13,6 +13,8 @@ public class PathContainer
 {
     public List<Path> ProducedPaths;
     public NativeList<PathLocationData> PathLocationDataList;
+    public NativeList<PathFlowData> PathFlowDataList;
+    public NativeList<UnsafeList<PathSectorState>> PathSectorStateTableList;
     public NativeList<int> ProducedPathSubscribers;
     Stack<int> _removedPathIndicies;
 
@@ -28,6 +30,8 @@ public class PathContainer
         _removedPathIndicies = new Stack<int>();
         ProducedPathSubscribers = new NativeList<int>(Allocator.Persistent);
         PathLocationDataList = new NativeList<PathLocationData>(1, Allocator.Persistent);
+        PathFlowDataList = new NativeList<PathFlowData>(Allocator.Persistent);
+        PathSectorStateTableList = new NativeList<UnsafeList<PathSectorState>>(Allocator.Persistent);
     }
     public void Update()
     {
@@ -35,6 +39,8 @@ public class PathContainer
         {
             Path path = ProducedPaths[i];
             PathLocationData locationData = PathLocationDataList[i];
+            PathFlowData flowData = PathFlowDataList[i];
+            UnsafeList<PathSectorState> sectorStateTable = PathSectorStateTableList[i];
             if(path.State == PathState.Removed) { continue; }
             int subsciriber = ProducedPathSubscribers[i];
             if(subsciriber == 0 && path.IsCalculated) { path.State = PathState.ToBeDisposed; }
@@ -42,6 +48,7 @@ public class PathContainer
             {
                 path.Dispose();
                 locationData.Dispose();
+                flowData.Dispose();
                 path.State = PathState.Removed;
                 _removedPathIndicies.Push(i);
                 PreallocationPack preallocations = new PreallocationPack()
@@ -57,9 +64,9 @@ public class PathContainer
                     AStartTraverseIndexList = path.AStartTraverseIndexList,
                     TargetSectorPortalIndexList = path.TargetSectorPortalIndexList,
                     PortalTraversalFastMarchingQueue = path.PortalTraversalFastMarchingQueue,
-                    SectorStateTable = path.SectorStateTable,
+                    SectorStateTable = sectorStateTable,
                 };
-                _preallocator.SendPreallocationsBack(ref preallocations, path.ActiveWaveFrontList, path.FlowField, path.IntegrationField, path.Offset);
+                _preallocator.SendPreallocationsBack(ref preallocations, path.ActivePortalList, flowData.FlowField, path.IntegrationField, path.Offset);
             }
         }
         _preallocator.CheckForDeallocations();
@@ -76,9 +83,8 @@ public class PathContainer
         Path producedPath = new Path()
         {
             IsCalculated = true,
-            Type = request.Type,
+            DestinationType = request.Type,
             TargetAgentIndex = request.TargetAgentIndex,
-            Id = pathIndex,
             PickedToSector = preallocations.PickedToSector,
             PortalSequenceBorders = preallocations.PortalSequenceBorders,
             TargetIndex = destinationIndex,
@@ -93,7 +99,6 @@ public class PathContainer
             AStartTraverseIndexList = preallocations.AStartTraverseIndexList,
             TargetSectorPortalIndexList = preallocations.TargetSectorPortalIndexList,
             PortalTraversalFastMarchingQueue = preallocations.PortalTraversalFastMarchingQueue,
-            SectorStateTable = preallocations.SectorStateTable,
             PathAdditionSequenceBorderStartIndex = new NativeArray<int>(1, Allocator.Persistent),
             NotActivePortalList = new NativeList<int>(Allocator.Persistent),
             NewPickedSectorStartIndex = new NativeArray<int>(1, Allocator.Persistent),
@@ -102,7 +107,6 @@ public class PathContainer
             SectorWithinLOSState = new NativeArray<SectorsWihinLOSArgument>(1, Allocator.Persistent),
             DynamicArea = new DynamicArea()
             {
-                FlowField = new UnsafeList<FlowData>(0, Allocator.Persistent),
                 FlowFieldCalculationBuffer = new UnsafeList<FlowData>(0, Allocator.Persistent),
                 IntegrationField = new NativeList<IntegrationTile>(0, Allocator.Persistent),
             }
@@ -114,16 +118,25 @@ public class PathContainer
             DynamicAreaPickedSectorFlowStarts = new UnsafeList<SectorFlowStart>(0, Allocator.Persistent),
         };
 
+        PathFlowData flowData = new PathFlowData()
+        {
+            DynamicAreaFlowField = new UnsafeList<FlowData>(0, Allocator.Persistent),
+        };
+
         if (ProducedPaths.Count == pathIndex)
         {
             ProducedPaths.Add(producedPath);
             PathLocationDataList.Add(locationData);
+            PathFlowDataList.Add(flowData);
+            PathSectorStateTableList.Add(preallocations.SectorStateTable);
             ProducedPathSubscribers.Add(request.SourceCount);
         }
         else
         {
             ProducedPaths[pathIndex] = producedPath;
             PathLocationDataList[pathIndex] = locationData;
+            PathFlowDataList[pathIndex] = flowData;
+            PathSectorStateTableList[pathIndex] = preallocations.SectorStateTable;
             ProducedPathSubscribers[pathIndex] = request.SourceCount;
         }
 
@@ -132,11 +145,14 @@ public class PathContainer
     public void FinalizePathBuffers(int pathIndex)
     {
         Path path = ProducedPaths[pathIndex];
+        PathFlowData pathFlowData = PathFlowDataList[pathIndex];
         NativeArray<int> flowFieldLength = path.FlowFieldLength;
-        path.FlowField = _preallocator.GetFlowField(flowFieldLength[0]);
+        pathFlowData.FlowField = _preallocator.GetFlowField(flowFieldLength[0]);
+        pathFlowData.LOSMap = new UnsafeLOSBitmap(flowFieldLength[0], Allocator.Persistent, NativeArrayOptions.ClearMemory);
         path.IntegrationField = _preallocator.GetIntegrationField(flowFieldLength[0]);
-        path.LOSMap = new UnsafeLOSBitmap(flowFieldLength[0], Allocator.Persistent, NativeArrayOptions.ClearMemory);
-        path.ActiveWaveFrontList = _preallocator.GetActiveWaveFrontListPersistent(path.PickedToSector.Length);
+        path.ActivePortalList = _preallocator.GetActiveWaveFrontListPersistent(path.PickedToSector.Length);
+
+        PathFlowDataList[pathIndex] = pathFlowData;
     }
     public void ResizeActiveWaveFrontList(int newLength, NativeList<UnsafeList<ActiveWaveFront>> activeWaveFrontList)
     {
@@ -153,6 +169,8 @@ public class PathContainer
         {
             Path path = ProducedPaths[i];
             PathLocationData locationData = PathLocationDataList[i];
+            PathFlowData flowData = PathFlowDataList[i];
+            UnsafeList<PathSectorState> sectorStateTable = PathSectorStateTableList[i];
             if (path.State == PathState.Removed)
             {
                 currentPathData[i] = new PathData()
@@ -160,22 +178,22 @@ public class PathContainer
                     State = PathState.Removed,
                 };
             }
-            else if(path.Type == PathType.StaticDestination)
+            else if(path.DestinationType == DestinationType.StaticDestination)
             {
                 currentPathData[i] = new PathData()
                 {
                     State = path.State,
                     Target = path.Destination,
                     Task = 0,
-                    SectorStateTable = path.SectorStateTable,
+                    SectorStateTable = sectorStateTable,
                     SectorToPicked = locationData.SectorToPicked,
-                    FlowField = path.FlowField,
+                    FlowField = flowData.FlowField,
                     ReconstructionRequestIndex = -1,
-                    Type = path.Type,
+                    Type = path.DestinationType,
                     TargetAgentIndex = path.TargetAgentIndex,
                 };
             }
-            else if(path.Type == PathType.DynamicDestination)
+            else if(path.DestinationType == DestinationType.DynamicDestination)
             {
                 float3 targetAgentPos = agentData[path.TargetAgentIndex].Position;
                 float2 targetAgentPos2 = new float2(targetAgentPos.x, targetAgentPos.z);
@@ -195,11 +213,11 @@ public class PathContainer
                     State = path.State,
                     Target = path.Destination,
                     Task = 0,
-                    SectorStateTable = path.SectorStateTable,
+                    SectorStateTable = sectorStateTable,
                     SectorToPicked = locationData.SectorToPicked,
-                    FlowField = path.FlowField,
+                    FlowField = flowData.FlowField,
                     ReconstructionRequestIndex = -1,
-                    Type = path.Type,
+                    Type = path.DestinationType,
                     TargetAgentIndex = path.TargetAgentIndex,
                     DestinationState = destinationState,
                 };

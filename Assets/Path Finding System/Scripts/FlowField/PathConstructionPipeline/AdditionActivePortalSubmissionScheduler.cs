@@ -6,21 +6,22 @@ using Unity.Mathematics;
 internal class AdditionActivePortalSubmissionScheduler
 {
     PathfindingManager _pathfindingManager;
-    PathContainer _pathProducer;
+    PathContainer _pathContainer;
 
     public AdditionActivePortalSubmissionScheduler(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
-        _pathProducer = pathfindingManager.PathContainer;
+        _pathContainer = pathfindingManager.PathContainer;
     }
 
     public PathPipelineInfoWithHandle ScheduleActivePortalSubmission(PathPipelineInfoWithHandle pathInfo)
     {
-        Path path = _pathProducer.ProducedPaths[pathInfo.PathIndex];
-        PathLocationData locationData = _pathProducer.PathLocationDataList[pathInfo.PathIndex];
+        Path path = _pathContainer.ProducedPaths[pathInfo.PathIndex];
+        PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
+        UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathInfo.PathIndex];
         FieldGraph pickedFieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(path.Offset);
-        int newSecorCount = path.PickedToSector.Length - path.ActiveWaveFrontList.Length;
-        _pathProducer.ResizeActiveWaveFrontList(newSecorCount, path.ActiveWaveFrontList);
+        int newSecorCount = path.PickedToSector.Length - path.ActivePortalList.Length;
+        _pathContainer.ResizeActiveWaveFrontList(newSecorCount, path.ActivePortalList);
 
         //ACTIVE WAVE FRONT SUBMISSION
         AdditionalActivePortalSubmitJob submitJob = new AdditionalActivePortalSubmitJob()
@@ -42,9 +43,9 @@ internal class AdditionActivePortalSubmissionScheduler
             WinToSecPtrs = pickedFieldGraph.WinToSecPtrs,
             PortalNodes = pickedFieldGraph.PortalNodes,
             WindowNodes = pickedFieldGraph.WindowNodes,
-            ActiveWaveFrontListArray = path.ActiveWaveFrontList,
+            ActiveWaveFrontListArray = path.ActivePortalList,
             NotActivatedPortals = path.NotActivePortalList,
-            SectorStateTable = path.SectorStateTable,
+            SectorStateTable = sectorStateTable,
             NewSectorStartIndex = path.NewPickedSectorStartIndex,
         };
         JobHandle submitHandle = submitJob.Schedule();

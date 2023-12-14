@@ -6,13 +6,11 @@ using Unity.Mathematics;
 public struct DynamicArea
 {
     public NativeList<IntegrationTile> IntegrationField;
-    public UnsafeList<FlowData> FlowField;
     public UnsafeList<FlowData> FlowFieldCalculationBuffer;
 
     public void Dispose()
     {
         if (IntegrationField.IsCreated) { IntegrationField.Dispose(); }
-        if (FlowField.IsCreated) { FlowField.Dispose(); }
         if (FlowFieldCalculationBuffer.IsCreated) { FlowFieldCalculationBuffer.Dispose(); }
     }
 }

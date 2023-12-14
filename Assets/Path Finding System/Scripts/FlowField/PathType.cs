@@ -1,4 +1,4 @@
-﻿public enum PathType : byte
+﻿public enum DestinationType : byte
 {
     None = 0,
     StaticDestination = 1,

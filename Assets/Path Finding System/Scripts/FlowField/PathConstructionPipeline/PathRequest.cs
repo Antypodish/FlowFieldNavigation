@@ -6,13 +6,13 @@ public struct PathRequest
     public int TargetAgentIndex;
     public int DerivedRequestStartIndex;
     public int DerivedRequestCount;
-    public PathType Type;
+    public DestinationType Type;
     public ushort OffsetMask;
 
     public PathRequest(float2 destination)
     {
         Destination = destination;
-        Type = PathType.StaticDestination;
+        Type = DestinationType.StaticDestination;
         TargetAgentIndex = 0;
         DerivedRequestCount = 0;
         DerivedRequestStartIndex = 0;
@@ -22,7 +22,7 @@ public struct PathRequest
     public PathRequest(int targetAgentIndex)
     {
         TargetAgentIndex = targetAgentIndex;
-        Type = PathType.DynamicDestination;
+        Type = DestinationType.DynamicDestination;
         Destination = 0;
         DerivedRequestCount = 0;
         DerivedRequestStartIndex = 0;
@@ -37,7 +37,7 @@ public struct OffsetDerivedPathRequest
     public int DerivedFialRequestStartIndex;
     public int DerivedFinalRequestCount;
     public int Offset;
-    public PathType Type;
+    public DestinationType Type;
 
     public OffsetDerivedPathRequest(PathRequest initialPathRequest, int offset)
     {
@@ -51,7 +51,7 @@ public struct OffsetDerivedPathRequest
 
     public bool IsCreated()
     {
-        return Type != PathType.None;
+        return Type != DestinationType.None;
     }
 }
 
@@ -64,7 +64,7 @@ public struct FinalPathRequest
     public int Offset;
     public int PathIndex;
     public int SourceIsland;
-    public PathType Type;
+    public DestinationType Type;
 
     public FinalPathRequest(OffsetDerivedPathRequest derivedReq, int sourceIsland)
     {
@@ -84,7 +84,7 @@ public struct PostponedPathRequests
 {
     public float2 Destination;
     public int TargetAgentIndex;
-    public PathType Type;
+    public DestinationType Type;
 
     public PostponedPathRequests(FinalPathRequest finalRequest)
     {

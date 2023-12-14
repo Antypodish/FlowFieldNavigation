@@ -16,7 +16,7 @@ public struct CurrentPathReconstructionDeterminationJob : IJob
         for (int i = 0; i < CurrentPaths.Length; i++)
         {
             PathData curPath = CurrentPaths[i];
-            if (curPath.State == PathState.Removed || curPath.Type == PathType.StaticDestination || curPath.DestinationState != DynamicDestinationState.OutOfReach) { continue; }
+            if (curPath.State == PathState.Removed || curPath.Type == DestinationType.StaticDestination || curPath.DestinationState != DynamicDestinationState.OutOfReach) { continue; }
             curPath.ReconstructionRequestIndex = PathRequests.Length;
             CurrentPaths[i] = curPath;
             PathRequest reconReq = new PathRequest(curPath.TargetAgentIndex);

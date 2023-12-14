@@ -66,6 +66,7 @@ public class AgentRoutineDataProducer
         NativeList<int> agentCurPaths = _agentDataContainer.AgentCurPathIndicies;
         List<Path> producedPaths = _pathfindingManager.PathContainer.ProducedPaths;
         NativeList<PathLocationData> pathLocationDataList = _pathfindingManager.PathContainer.PathLocationDataList;
+        NativeList<PathFlowData> pathFlowDataList = _pathfindingManager.PathContainer.PathFlowDataList;
         //CLEAR
         AgentMovementDataList.Clear();
         AgentPositionChangeBuffer.Clear();
@@ -98,19 +99,20 @@ public class AgentRoutineDataProducer
         int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
         for (int i = 0; i < agentDataList.Length; i++)
         {
-            if (agentCurPaths[i] == -1) { continue; }
-            Path curPath = producedPaths[agentCurPaths[i]];
-            PathLocationData locationData = pathLocationDataList[agentCurPaths[i]];
-
+            int agentCurPathIndex = agentCurPaths[i];
+            if (agentCurPathIndex == -1) { continue; }
+            Path curPath = producedPaths[agentCurPathIndex];
+            PathLocationData locationData = pathLocationDataList[agentCurPathIndex];
+            PathFlowData flowData = pathFlowDataList[agentCurPathIndex];
             if (curPath == null) { continue; }
             int hashedIndex = NormalToHashed[i];
             AgentMovementData data = AgentMovementDataList[hashedIndex];
-            data.FlowField = curPath.FlowField;
-            data.LOSMap = curPath.LOSMap;
+            data.FlowField = flowData.FlowField;
+            data.LOSMap = flowData.LOSMap;
             data.Destination = curPath.Destination;
             data.SectorFlowStride = locationData.SectorToPicked[FlowFieldUtilities.PosToSector1D(new float2(data.Position.x, data.Position.z), sectorSize, sectorMatrixColAmount)];
             data.Offset = curPath.Offset;
-            data.PathId = curPath.Id;
+            data.PathId = agentCurPathIndex;
             
             AgentMovementDataList[hashedIndex] = data;
         }
