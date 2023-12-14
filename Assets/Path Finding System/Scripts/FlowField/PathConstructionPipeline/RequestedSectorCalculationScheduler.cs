@@ -21,7 +21,9 @@ public class RequestedSectorCalculationScheduler
     public void ScheduleRequestedSectorCalculation(PathPipelineInfoWithHandle pathInfo, JobHandle activePortalSubmissionHandle, NativeSlice<float2> sources)
     {
         Path path = _pathContainer.ProducedPaths[pathInfo.PathIndex];
+        PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
         PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
+        PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathInfo.PathIndex];
         UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathInfo.PathIndex];
         FieldGraph pickedFieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(path.Offset);
         //SOURCE SECTOR CALCULATION
@@ -33,11 +35,11 @@ public class RequestedSectorCalculationScheduler
             LOSRange = FlowFieldUtilities.LOSRange,
             SectorSize = FlowFieldUtilities.SectorColAmount * FlowFieldUtilities.TileSize,
             SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
-            TargetIndex = path.TargetIndex,
+            TargetIndex = destinationData.TargetIndex,
             SectorStateTable = sectorStateTable,
             SectorToPickedTable = locationData.SectorToPicked,
             Sources = sources,
-            PortalSequence = path.PortalSequence,
+            PortalSequence = portalTraversalData.PortalSequence,
             ActiveWaveFrontListArray = path.ActivePortalList,
             PortalNodes = pickedFieldGraph.PortalNodes,
             SectorFlowStartIndiciesToCalculateIntegration = path.SectorFlowStartIndiciesToCalculateIntegration,

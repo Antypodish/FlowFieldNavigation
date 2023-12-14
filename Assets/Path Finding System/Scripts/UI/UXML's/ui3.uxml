@@ -13,7 +13,7 @@
                 <ui:Label text="Press &apos;A&apos; to add more agents" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255);" />
                 <ui:Label text="Press &apos;S&apos; to stop selected agents" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255);" />
                 <ui:Label text="Hold &apos;LShift&apos; to force ground destination" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255);" />
-                <ui:Toggle label="Debug Mode" name="DebugModeToggle" style="color: rgb(255, 255, 255); width: auto;" />
+                <ui:Toggle label="Debug Mode" name="DebugModeToggle" value="false" style="color: rgb(255, 255, 255); width: auto;" />
                 <ui:Toggle label="Debug CostField" name="CostFieldToggle" style="color: rgb(255, 255, 255);" />
                 <ui:Toggle label="Debug FlowField" name="FlowFieldToggle" style="color: rgb(255, 255, 255);" />
                 <ui:Toggle label="Debug IntegrationField" name="IntegrationFieldToggle" style="font-size: 14px; color: rgb(255, 255, 255);" />

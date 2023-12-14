@@ -1,6 +1,6 @@
 ﻿using Unity.Collections;
 
-public struct PathProtalTraversalData
+public struct PathPortalTraversalData
 {
     public NativeArray<PortalTraversalData> PortalTraversalDataArray;
     public NativeList<ActivePortal> PortalSequence;
@@ -10,4 +10,10 @@ public struct PathProtalTraversalData
     public NativeList<int> SourcePortalIndexList;
     public NativeArray<int> PathAdditionSequenceBorderStartIndex;
     public NativeArray<int> NewPickedSectorStartIndex;
+
+    public void Dispose()
+    {
+        PathAdditionSequenceBorderStartIndex.Dispose();
+        NewPickedSectorStartIndex.Dispose();
+    }
 }

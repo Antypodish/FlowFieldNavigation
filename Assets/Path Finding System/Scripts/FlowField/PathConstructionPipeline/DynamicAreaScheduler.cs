@@ -19,13 +19,14 @@ public class DynamicAreaScheduler
     public void ScheduleDynamicArea(PathPipelineInfoWithHandle pathInfo)
     {
         Path path = _pathContainer.ProducedPaths[pathInfo.PathIndex];
+        PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
         PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
         DynamicArea dynamicArea = path.DynamicArea;
         NativeList<IntegrationTile> integrationField = dynamicArea.IntegrationField;
         UnsafeList<SectorFlowStart> pickedSectorFlowStarts = locationData.DynamicAreaPickedSectorFlowStarts;
         UnsafeList<FlowData> flowFieldCalculationBuffer = dynamicArea.FlowFieldCalculationBuffer;
 
-        int2 targetSectorIndex = FlowFieldUtilities.GetSector2D(path.TargetIndex, FlowFieldUtilities.SectorColAmount);
+        int2 targetSectorIndex = FlowFieldUtilities.GetSector2D(destinationData.TargetIndex, FlowFieldUtilities.SectorColAmount);
         int2 nsector2d = targetSectorIndex + new int2(0, 1);
         int2 esector2d = targetSectorIndex + new int2(1, 0);
         int2 ssector2d = targetSectorIndex + new int2(0, -1);
@@ -77,7 +78,7 @@ public class DynamicAreaScheduler
             SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
             SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
             FieldColAmount = FlowFieldUtilities.FieldColAmount,
-            TargetIndex = path.TargetIndex,
+            TargetIndex = destinationData.TargetIndex,
             Costs = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(path.Offset).CostsL,
             PickedSectorFlowStarts = pickedSectorFlowStarts,
             IntegrationField = integrationField,

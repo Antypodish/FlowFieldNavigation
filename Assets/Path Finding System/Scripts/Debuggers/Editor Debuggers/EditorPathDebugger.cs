@@ -14,22 +14,22 @@ using static UnityEditor.PlayerSettings;
 
 public class EditorPathDebugger
 {
-    PathContainer _pathProducer;
+    PathContainer _pathContainer;
     PathfindingManager _pathfindingManager;
     FieldProducer _fieldProducer;
     float _tileSize;
 
     public EditorPathDebugger(PathfindingManager pathfindingManager)
     {
-        _pathProducer = pathfindingManager.PathContainer;
+        _pathContainer = pathfindingManager.PathContainer;
         _pathfindingManager = pathfindingManager;
         _fieldProducer = pathfindingManager.FieldProducer;
         _tileSize = pathfindingManager.TileSize;
     }
     public void DebugDynamicAreaIntegration(FlowFieldAgent agent)
     {
-        if (_pathProducer == null) { return; }
-        if (_pathProducer.ProducedPaths.Count == 0) { return; }
+        if (_pathContainer == null) { return; }
+        if (_pathContainer.ProducedPaths.Count == 0) { return; }
         Path producedPath = agent.GetPath();
         if (!producedPath.IsCalculated) { return; }
 
@@ -57,12 +57,13 @@ public class EditorPathDebugger
     }
     public void DebugDynamicAreaFlow(FlowFieldAgent agent)
     {
-        if (_pathProducer == null) { return; }
-        if (_pathProducer.ProducedPaths.Count == 0) { return; }
+        if (_pathContainer == null) { return; }
+        if (_pathContainer.ProducedPaths.Count == 0) { return; }
         Path producedPath = agent.GetPath();
         if (!producedPath.IsCalculated) { return; }
 
         float yOffset = 0.2f;
+        PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
         PathLocationData locationData = _pathfindingManager.PathContainer.PathLocationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
         PathFlowData flowData = _pathfindingManager.PathContainer.PathFlowDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
         UnsafeList<SectorFlowStart> pickedSectorFlowStarts = locationData.DynamicAreaPickedSectorFlowStarts;
@@ -82,7 +83,7 @@ public class EditorPathDebugger
                 FlowData flow = flowField[j];
                 if (!flow.IsValid()) { continue; }
                 DrawSquare(debugPos3, 0.2f);
-                DrawFlow(j, debugPos3, producedPath.Destination);
+                DrawFlow(j, debugPos3, destinationData.Destination);
             }
         }
 
@@ -109,8 +110,8 @@ public class EditorPathDebugger
     }
     public void DebugActiveWaveFronts(FlowFieldAgent agent)
     {
-        if (_pathProducer == null) { return; }
-        if (_pathProducer.ProducedPaths.Count == 0) { return; }
+        if (_pathContainer == null) { return; }
+        if (_pathContainer.ProducedPaths.Count == 0) { return; }
         Path producedPath = agent.GetPath();
         if (!producedPath.IsCalculated) { return; }
 
@@ -140,15 +141,16 @@ public class EditorPathDebugger
     }
     public void DebugPortalTraversalMarks(FlowFieldAgent agent)
     {
-        if (_pathProducer == null) { return; }
-        if(_pathProducer.ProducedPaths.Count == 0) { return; }
+        if (_pathContainer == null) { return; }
+        if(_pathContainer.ProducedPaths.Count == 0) { return; }
         Path producedPath = agent.GetPath();
         if (!producedPath.IsCalculated) { return; }
 
+        PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
         float tileSize = _pathfindingManager.TileSize;
         FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset);
         UnsafeList<PortalNode> portalNodes = fg.PortalNodes;
-        NativeArray<PortalTraversalData> portalTraversalDataArray = producedPath.PortalTraversalDataArray;
+        NativeArray<PortalTraversalData> portalTraversalDataArray = portalTraversalData.PortalTraversalDataArray;
 
         for (int i = 0; i < portalNodes.Length; i++)
         {
@@ -172,15 +174,16 @@ public class EditorPathDebugger
     }
     public void DebugTargetNeighbourPortals(FlowFieldAgent agent)
     {
-        if (_pathProducer == null) { return; }
-        if(_pathProducer.ProducedPaths.Count == 0) { return; }
+        if (_pathContainer == null) { return; }
+        if(_pathContainer.ProducedPaths.Count == 0) { return; }
         Path producedPath = agent.GetPath();
         if (!producedPath.IsCalculated) { return; }
 
+        PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[agent.AgentDataIndex];
         float tileSize = _pathfindingManager.TileSize;
         FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset);
         UnsafeList<PortalNode> portalNodes = fg.PortalNodes;
-        NativeArray<PortalTraversalData> portalTraversalDataArray = producedPath.PortalTraversalDataArray;
+        NativeArray<PortalTraversalData> portalTraversalDataArray = portalTraversalData.PortalTraversalDataArray;
 
         for (int i = 0; i < portalNodes.Length; i++)
         {
@@ -197,16 +200,17 @@ public class EditorPathDebugger
     }
     public void DebugPortalSequence(FlowFieldAgent agent)
     {
-        if (_pathProducer == null) { return; }
-        if (_pathProducer.ProducedPaths.Count == 0) { return; }
+        if (_pathContainer == null) { return; }
+        if (_pathContainer.ProducedPaths.Count == 0) { return; }
         Path producedPath = agent.GetPath();
         if (!producedPath.IsCalculated) { return; }
-        
+
+        PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
         float tileSize = _pathfindingManager.TileSize;
         FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(producedPath.Offset);
         UnsafeList<PortalNode> portalNodes = fg.PortalNodes;
-        NativeList<ActivePortal> porSeq = producedPath.PortalSequence;
-        NativeList<int> portSeqBorders = producedPath.PortalSequenceBorders;
+        NativeList<ActivePortal> porSeq = portalTraversalData.PortalSequence;
+        NativeList<int> portSeqBorders = portalTraversalData.PortalSequenceBorders;
         Gizmos.color = Color.white;
         if (porSeq.Length == 0) { return; }
 
@@ -249,8 +253,8 @@ public class EditorPathDebugger
     }
     public void DebugPickedSectors(FlowFieldAgent agent)
     {
-        if (_pathProducer == null) { return; }
-        if (_pathProducer.ProducedPaths.Count == 0) { return; }
+        if (_pathContainer == null) { return; }
+        if (_pathContainer.ProducedPaths.Count == 0) { return; }
         Path producedPath = agent.GetPath();
         if (!producedPath.IsCalculated) { return; }
 
@@ -278,8 +282,8 @@ public class EditorPathDebugger
     }
     public void DebugIntegrationField(FlowFieldAgent agent)
     {
-        if (_pathProducer == null) { return; }
-        if (_pathProducer.ProducedPaths.Count == 0) { return; }
+        if (_pathContainer == null) { return; }
+        if (_pathContainer.ProducedPaths.Count == 0) { return; }
         Path producedPath = agent.GetPath();
         if (!producedPath.IsCalculated) { return; }
         PathLocationData locationData = _pathfindingManager.PathContainer.PathLocationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
@@ -311,8 +315,8 @@ public class EditorPathDebugger
     }
     public void LOSBlockDebug(FlowFieldAgent agent)
     {
-        if (_pathProducer == null) { return; }
-        if (_pathProducer.ProducedPaths.Count == 0) { return; }
+        if (_pathContainer == null) { return; }
+        if (_pathContainer.ProducedPaths.Count == 0) { return; }
         Path producedPath = agent.GetPath();
         if (!producedPath.IsCalculated) { return; }
 
@@ -355,11 +359,12 @@ public class EditorPathDebugger
     }
     public void DebugFlowField(FlowFieldAgent agent)
     {
-        if (_pathProducer == null) { return; }
-        if (_pathProducer.ProducedPaths.Count == 0) { return; }
+        if (_pathContainer == null) { return; }
+        if (_pathContainer.ProducedPaths.Count == 0) { return; }
         Path producedPath = agent.GetPath();
         if (!producedPath.IsCalculated) { return; }
 
+        PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
         PathLocationData locationData = _pathfindingManager.PathContainer.PathLocationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
         PathFlowData pathFlowData = _pathfindingManager.PathContainer.PathFlowDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
         float yOffset = 0.2f;
@@ -388,7 +393,7 @@ public class EditorPathDebugger
                 {
                     Gizmos.color = Color.white;
                     DrawSquare(debugPos, 0.2f);
-                    DrawLOS(debugPos, producedPath.Destination);
+                    DrawLOS(debugPos, destinationData.Destination);
                 }
                 else if(HasDynamicFlow(i, local1d))
                 {
@@ -478,7 +483,8 @@ public class EditorPathDebugger
         Path path = agent.GetPath();
         if(path == null) { return; }
 
-        Vector2 destination = path.Destination;
+        PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
+        Vector2 destination = destinationData.Destination;
         Vector3 destination3 = new Vector3(destination.x, 0.1f, destination.y);
         Gizmos.color = Color.blue;
         Gizmos.DrawSphere(destination3, 0.3f);

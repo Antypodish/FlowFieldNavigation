@@ -25,9 +25,11 @@ internal class PortalTraversalScheduler
     public void SchedulePortalTraversalFor(RequestPipelineInfoWithHandle reqInfo, NativeSlice<float2> sources)
     {
         Path path = _pathfindingManager.PathContainer.ProducedPaths[reqInfo.PathIndex];
+        PathDestinationData destinationData = _pathContainer.PathDestinationDataList[reqInfo.PathIndex];
         PathLocationData locationData = _pathContainer.PathLocationDataList[reqInfo.PathIndex];
+        PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[reqInfo.PathIndex];
         UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[reqInfo.PathIndex];
-        int2 destinationIndex = path.TargetIndex;
+        int2 destinationIndex = destinationData.TargetIndex;
         CostField pickedCostField = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(path.Offset);
         FieldGraph pickedFieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(path.Offset);
 
@@ -52,10 +54,10 @@ internal class PortalTraversalScheduler
             LocalDirections = _pathfindingManager.FieldProducer.GetSectorDirections(),
             SectorToPicked = locationData.SectorToPicked,
             FlowFieldLength = path.FlowFieldLength,
-            PortalTraversalDataArray = path.PortalTraversalDataArray,
-            SourcePortalIndexList = path.SourcePortalIndexList,
-            TargetNeighbourPortalIndicies = path.TargetSectorPortalIndexList,
-            AStarTraverseIndexList = path.AStartTraverseIndexList,
+            PortalTraversalDataArray = portalTraversalData.PortalTraversalDataArray,
+            SourcePortalIndexList = portalTraversalData.SourcePortalIndexList,
+            TargetNeighbourPortalIndicies = portalTraversalData.TargetSectorPortalIndexList,
+            AStarTraverseIndexList = portalTraversalData.AStartTraverseIndexList,
             IslandFields = pickedFieldGraph.IslandFields,
             SectorStateTable = sectorStateTable,
         };
@@ -70,7 +72,7 @@ internal class PortalTraversalScheduler
             SectorColAmount = FlowFieldUtilities.SectorColAmount,
             SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
             PickedToSector = path.PickedToSector,
-            PortalSequenceBorders = path.PortalSequenceBorders,
+            PortalSequenceBorders = portalTraversalData.PortalSequenceBorders,
             PortalNodes = pickedFieldGraph.PortalNodes,
             SecToWinPtrs = pickedFieldGraph.SecToWinPtrs,
             WindowNodes = pickedFieldGraph.WindowNodes,
@@ -78,13 +80,13 @@ internal class PortalTraversalScheduler
             SourcePositions = sources,
             PorPtrs = pickedFieldGraph.PorToPorPtrs,
             SectorNodes = pickedFieldGraph.SectorNodes,
-            PortalSequence = path.PortalSequence,
+            PortalSequence = portalTraversalData.PortalSequence,
             SectorToPicked = locationData.SectorToPicked,
             FlowFieldLength = path.FlowFieldLength,
-            PortalTraversalDataArray = path.PortalTraversalDataArray,
-            TargetNeighbourPortalIndicies = path.TargetSectorPortalIndexList,
+            PortalTraversalDataArray = portalTraversalData.PortalTraversalDataArray,
+            TargetNeighbourPortalIndicies = portalTraversalData.TargetSectorPortalIndexList,
             SectorStateTable = sectorStateTable,
-            SourcePortals = path.SourcePortalIndexList,
+            SourcePortals = portalTraversalData.SourcePortalIndexList,
         };
 
         JobHandle reductHandle = reductionJob.Schedule();

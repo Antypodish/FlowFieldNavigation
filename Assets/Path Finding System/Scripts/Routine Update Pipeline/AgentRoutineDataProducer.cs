@@ -67,6 +67,7 @@ public class AgentRoutineDataProducer
         List<Path> producedPaths = _pathfindingManager.PathContainer.ProducedPaths;
         NativeList<PathLocationData> pathLocationDataList = _pathfindingManager.PathContainer.PathLocationDataList;
         NativeList<PathFlowData> pathFlowDataList = _pathfindingManager.PathContainer.PathFlowDataList;
+        NativeList<PathDestinationData> pathDestinationDataList = _pathfindingManager.PathContainer.PathDestinationDataList;
         //CLEAR
         AgentMovementDataList.Clear();
         AgentPositionChangeBuffer.Clear();
@@ -102,6 +103,7 @@ public class AgentRoutineDataProducer
             int agentCurPathIndex = agentCurPaths[i];
             if (agentCurPathIndex == -1) { continue; }
             Path curPath = producedPaths[agentCurPathIndex];
+            PathDestinationData destinationData = pathDestinationDataList[agentCurPathIndex];
             PathLocationData locationData = pathLocationDataList[agentCurPathIndex];
             PathFlowData flowData = pathFlowDataList[agentCurPathIndex];
             if (curPath == null) { continue; }
@@ -109,7 +111,7 @@ public class AgentRoutineDataProducer
             AgentMovementData data = AgentMovementDataList[hashedIndex];
             data.FlowField = flowData.FlowField;
             data.LOSMap = flowData.LOSMap;
-            data.Destination = curPath.Destination;
+            data.Destination = destinationData.Destination;
             data.SectorFlowStride = locationData.SectorToPicked[FlowFieldUtilities.PosToSector1D(new float2(data.Position.x, data.Position.z), sectorSize, sectorMatrixColAmount)];
             data.Offset = curPath.Offset;
             data.PathId = agentCurPathIndex;

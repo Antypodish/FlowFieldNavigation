@@ -9,7 +9,7 @@ using UnityEngine.Networking.Match;
 public class LOSIntegrationScheduler
 {
     PathfindingManager _pathfindingManager;
-    PathContainer _pathProducer;
+    PathContainer _pathContainer;
 
     NativeList<PathPipelineInfoWithHandle> ScheduledLOS;
     NativeList<int> _losCalculatedPaths;
@@ -18,7 +18,7 @@ public class LOSIntegrationScheduler
     public LOSIntegrationScheduler(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
-        _pathProducer = pathfindingManager.PathContainer;
+        _pathContainer = pathfindingManager.PathContainer;
         ScheduledLOS = new NativeList<PathPipelineInfoWithHandle>(Allocator.Persistent);
         _losCalculatedPaths = new NativeList<int>(Allocator.Persistent);
         _transferHandles = new NativeList<JobHandle>(Allocator.Persistent);
@@ -26,14 +26,15 @@ public class LOSIntegrationScheduler
 
     public void ScheduleLOS(PathPipelineInfoWithHandle pathInfo, JobHandle flowHandle = new JobHandle())
     {
-        Path path = _pathProducer.ProducedPaths[pathInfo.PathIndex];
-        PathLocationData locationData = _pathProducer.PathLocationDataList[pathInfo.PathIndex];
+        Path path = _pathContainer.ProducedPaths[pathInfo.PathIndex];
+        PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
+        PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
         CostField pickedCostField = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(path.Offset);
 
         JobHandle losHandle = flowHandle;
         bool requestedSectorWithinLOS = (path.SectorWithinLOSState[0] & SectorsWihinLOSArgument.RequestedSectorWithinLOS) == SectorsWihinLOSArgument.RequestedSectorWithinLOS;
         bool addedSectorWithinLOS = (path.SectorWithinLOSState[0] & SectorsWihinLOSArgument.AddedSectorWithinLOS) == SectorsWihinLOSArgument.AddedSectorWithinLOS;
-        bool losCalculated = path.LOSCalculated(locationData.SectorToPicked);
+        bool losCalculated = _pathContainer.IsLOSCalculated(pathInfo.PathIndex);
         bool destinationMoved = pathInfo.DestinationState == DynamicDestinationState.Moved;
         if (losCalculated && (addedSectorWithinLOS || destinationMoved))
         {
@@ -44,7 +45,7 @@ public class LOSIntegrationScheduler
                 SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
                 SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
                 LOSRange = FlowFieldUtilities.LOSRange,
-                Target = path.TargetIndex,
+                Target = destinationData.TargetIndex,
 
                 SectorToPickedTable = locationData.SectorToPicked,
                 IntegrationField = path.IntegrationField,
@@ -65,7 +66,7 @@ public class LOSIntegrationScheduler
                 Costs = pickedCostField.CostsL,
                 SectorToPicked = locationData.SectorToPicked,
                 IntegrationField = path.IntegrationField,
-                Target = path.TargetIndex,
+                Target = destinationData.TargetIndex,
             };
             losHandle = losjob.Schedule(loscleanHandle);
             _losCalculatedPaths.Add(pathInfo.PathIndex);
@@ -86,7 +87,7 @@ public class LOSIntegrationScheduler
                 Costs = pickedCostField.CostsL,
                 SectorToPicked = locationData.SectorToPicked,
                 IntegrationField = path.IntegrationField,
-                Target = path.TargetIndex,
+                Target = destinationData.TargetIndex,
             };
             losHandle = losjob.Schedule(flowHandle);
             _losCalculatedPaths.Add(pathInfo.PathIndex);
@@ -120,13 +121,15 @@ public class LOSIntegrationScheduler
     }
     public void ScheduleLOSTransfers()
     {
-        List<Path> producedPaths = _pathProducer.ProducedPaths;
-        NativeList<PathLocationData> pathLocationDataList = _pathProducer.PathLocationDataList;
-        NativeList<PathFlowData> pathFlowDataList = _pathProducer.PathFlowDataList;
+        List<Path> producedPaths = _pathContainer.ProducedPaths;
+        NativeList<PathLocationData> pathLocationDataList = _pathContainer.PathLocationDataList;
+        NativeList<PathFlowData> pathFlowDataList = _pathContainer.PathFlowDataList;
+        NativeList<PathDestinationData> pathDestinationDataList = _pathContainer.PathDestinationDataList;
         for (int i = 0; i < _losCalculatedPaths.Length; i++)
         {
             int pathIndex = _losCalculatedPaths[i];
             Path path = producedPaths[pathIndex];
+            PathDestinationData destinationData = pathDestinationDataList[pathIndex];
             PathLocationData locationData = pathLocationDataList[pathIndex];
             PathFlowData flowData = pathFlowDataList[pathIndex];
             LOSTransferJob losTransfer = new LOSTransferJob()
@@ -139,7 +142,7 @@ public class LOSIntegrationScheduler
                 SectorToPickedTable = locationData.SectorToPicked,
                 LOSBitmap = flowData.LOSMap,
                 IntegrationField = path.IntegrationField,
-                Target = path.TargetIndex,
+                Target = destinationData.TargetIndex,
             };
             _transferHandles.Add(losTransfer.Schedule());
         }

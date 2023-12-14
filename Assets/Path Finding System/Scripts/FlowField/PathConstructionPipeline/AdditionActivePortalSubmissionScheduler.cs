@@ -17,7 +17,9 @@ internal class AdditionActivePortalSubmissionScheduler
     public PathPipelineInfoWithHandle ScheduleActivePortalSubmission(PathPipelineInfoWithHandle pathInfo)
     {
         Path path = _pathContainer.ProducedPaths[pathInfo.PathIndex];
+        PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
         PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
+        PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathInfo.PathIndex];
         UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathInfo.PathIndex];
         FieldGraph pickedFieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(path.Offset);
         int newSecorCount = path.PickedToSector.Length - path.ActivePortalList.Length;
@@ -32,21 +34,21 @@ internal class AdditionActivePortalSubmissionScheduler
             SectorRowAmount = FlowFieldUtilities.SectorRowAmount,
             SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
             FieldColAmount = FlowFieldUtilities.FieldColAmount,
-            TargetIndex2D = path.TargetIndex,
-            SequenceBorderListStartIndex = path.PathAdditionSequenceBorderStartIndex[0],
+            TargetIndex2D = destinationData.TargetIndex,
+            SequenceBorderListStartIndex = portalTraversalData.PathAdditionSequenceBorderStartIndex[0],
 
             PortalEdges = pickedFieldGraph.PorToPorPtrs,
             SectorToPicked = locationData.SectorToPicked,
             PickedToSector = path.PickedToSector,
-            PortalSequence = path.PortalSequence,
-            PortalSequenceBorders = path.PortalSequenceBorders,
+            PortalSequence = portalTraversalData.PortalSequence,
+            PortalSequenceBorders = portalTraversalData.PortalSequenceBorders,
             WinToSecPtrs = pickedFieldGraph.WinToSecPtrs,
             PortalNodes = pickedFieldGraph.PortalNodes,
             WindowNodes = pickedFieldGraph.WindowNodes,
             ActiveWaveFrontListArray = path.ActivePortalList,
             NotActivatedPortals = path.NotActivePortalList,
             SectorStateTable = sectorStateTable,
-            NewSectorStartIndex = path.NewPickedSectorStartIndex,
+            NewSectorStartIndex = portalTraversalData.NewPickedSectorStartIndex,
         };
         JobHandle submitHandle = submitJob.Schedule();
         pathInfo.Handle = submitHandle;

@@ -25,15 +25,17 @@ internal class AdditionPortalTraversalScheduler
     public void SchedulePortalTraversalFor(PathPipelineInfoWithHandle pathInfo, NativeSlice<float2> sources)
     {
         Path path = _pathContainer.ProducedPaths[pathInfo.PathIndex];
+        PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
         UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathInfo.PathIndex];
-        path.PathAdditionSequenceBorderStartIndex[0] = path.PortalSequenceBorders.Length - 1;
-        path.NewPickedSectorStartIndex[0] = path.PickedToSector.Length;
+        PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathInfo.PathIndex];
+        portalTraversalData.PathAdditionSequenceBorderStartIndex[0] = portalTraversalData.PortalSequenceBorders.Length - 1;
+        portalTraversalData.NewPickedSectorStartIndex[0] = path.PickedToSector.Length;
 
         FieldGraph pickedFieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(path.Offset);
 
         PortalNodeAdditionReductionJob reductionJob = new PortalNodeAdditionReductionJob()
         {
-            TargetIndex = path.TargetIndex,
+            TargetIndex = destinationData.TargetIndex,
             FieldTileSize = FlowFieldUtilities.TileSize,
             SectorColAmount = FlowFieldUtilities.SectorColAmount,
             SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
@@ -46,9 +48,9 @@ internal class AdditionPortalTraversalScheduler
             SourcePositions = sources,
             PorPtrs = pickedFieldGraph.PorToPorPtrs,
             SectorNodes = pickedFieldGraph.SectorNodes,
-            PortalTraversalDataArray = path.PortalTraversalDataArray,
-            SourcePortalIndexList = path.SourcePortalIndexList,
-            AStarTraverseIndexList = path.AStartTraverseIndexList,
+            PortalTraversalDataArray = portalTraversalData.PortalTraversalDataArray,
+            SourcePortalIndexList = portalTraversalData.SourcePortalIndexList,
+            AStarTraverseIndexList = portalTraversalData.AStartTraverseIndexList,
             IslandFields = pickedFieldGraph.IslandFields,
             SectorStateTable = sectorStateTable,
             DijkstraStartIndicies = new NativeList<int>(Allocator.Persistent),
@@ -61,24 +63,24 @@ internal class AdditionPortalTraversalScheduler
             SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
             SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
             LOSRange = FlowFieldUtilities.LOSRange,
-            Target = path.TargetIndex,
+            Target = destinationData.TargetIndex,
             PickedToSector = path.PickedToSector,
-            PortalSequenceBorders = path.PortalSequenceBorders,
+            PortalSequenceBorders = portalTraversalData.PortalSequenceBorders,
             PortalNodes = pickedFieldGraph.PortalNodes,
             WindowNodes = pickedFieldGraph.WindowNodes,
             WinToSecPtrs = pickedFieldGraph.WinToSecPtrs,
             PorPtrs = pickedFieldGraph.PorToPorPtrs,
             SectorNodes = pickedFieldGraph.SectorNodes,
-            PortalSequence = path.PortalSequence,
+            PortalSequence = portalTraversalData.PortalSequence,
             FlowFieldLength = path.FlowFieldLength,
-            PortalTraversalDataArray = path.PortalTraversalDataArray,
-            SourcePortalIndexList = path.SourcePortalIndexList,
+            PortalTraversalDataArray = portalTraversalData.PortalTraversalDataArray,
+            SourcePortalIndexList = portalTraversalData.SourcePortalIndexList,
             IslandFields = pickedFieldGraph.IslandFields,
             SectorStateTable = sectorStateTable,
             DijkstraStartIndicies = reductionJob.DijkstraStartIndicies,
-            AddedPortalSequenceBorderStartIndex = path.PortalSequenceBorders.Length,
+            AddedPortalSequenceBorderStartIndex = portalTraversalData.PortalSequenceBorders.Length,
             SectorWithinLOSState = path.SectorWithinLOSState,
-            NewPickedSectorStartIndex = path.NewPickedSectorStartIndex,
+            NewPickedSectorStartIndex = portalTraversalData.NewPickedSectorStartIndex,
         };
 
         JobHandle reductHandle = reductionJob.Schedule();
