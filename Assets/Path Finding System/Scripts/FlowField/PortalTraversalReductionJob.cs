@@ -21,7 +21,7 @@ public struct PortalTraversalReductionJob : IJob
     public UnsafeList<int> SectorToPicked;
     public UnsafeList<PathSectorState> SectorStateTable;
     public NativeList<int> PickedToSector;
-    public NativeArray<DijkstraTile> TargetSectorCosts;
+    public UnsafeList<DijkstraTile> TargetSectorCosts;
     public NativeArray<int> FlowFieldLength;
 
     [ReadOnly] public NativeSlice<float2> SourcePositions;
@@ -413,7 +413,7 @@ public struct PortalTraversalReductionJob : IJob
     }
 
     //TARGET SECTOR COST CALCULATION WITH DIJKSTRA
-    void CalculateIntegratedCosts(NativeArray<DijkstraTile> integratedCosts, NativeQueue<int> aStarQueue, Sector sector, int targetIndexFlat)
+    void CalculateIntegratedCosts(UnsafeList<DijkstraTile> integratedCosts, NativeQueue<int> aStarQueue, Sector sector, int targetIndexFlat)
     {
         //DATA
         int sectorTileAmount = SectorColAmount;

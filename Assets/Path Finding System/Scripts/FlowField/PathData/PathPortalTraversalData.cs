@@ -10,6 +10,7 @@ public struct PathPortalTraversalData
     public NativeList<int> SourcePortalIndexList;
     public NativeArray<int> PathAdditionSequenceBorderStartIndex;
     public NativeArray<int> NewPickedSectorStartIndex;
+    public NativeArray<DijkstraTile> TargetSectorCosts;
 
     public void Dispose()
     {

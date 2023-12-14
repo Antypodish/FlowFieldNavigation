@@ -10,7 +10,7 @@ public class Path
     public DynamicArea DynamicArea;
     public NativeList<int> PickedToSector;
     public NativeList<IntegrationTile> IntegrationField;
-    public NativeArray<DijkstraTile> TargetSectorCosts;
+    public UnsafeList<DijkstraTile> TargetSectorCosts;
     public NativeArray<int> FlowFieldLength;
     public NativeQueue<int> PortalTraversalFastMarchingQueue;
     public NativeList<UnsafeList<ActiveWaveFront>> ActivePortalList;

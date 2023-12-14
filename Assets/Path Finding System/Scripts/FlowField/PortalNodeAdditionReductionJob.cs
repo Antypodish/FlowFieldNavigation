@@ -18,7 +18,7 @@ public struct PortalNodeAdditionReductionJob : IJob
     public NativeArray<PortalTraversalData> PortalTraversalDataArray;
     public UnsafeList<PathSectorState> SectorStateTable;
     public NativeList<int> PickedToSector;
-    public NativeArray<DijkstraTile>.ReadOnly TargetSectorCosts;
+    public UnsafeList<DijkstraTile> TargetSectorCosts;
 
     [ReadOnly] public NativeSlice<float2> SourcePositions;
     [ReadOnly] public UnsafeList<SectorNode> SectorNodes;
