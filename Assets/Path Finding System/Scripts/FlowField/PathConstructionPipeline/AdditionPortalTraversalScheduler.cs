@@ -40,7 +40,7 @@ internal class AdditionPortalTraversalScheduler
             SectorColAmount = FlowFieldUtilities.SectorColAmount,
             SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
             PickedToSector = path.PickedToSector,
-            TargetSectorCosts = path.TargetSectorCosts,
+            TargetSectorCosts = _pathContainer.TargetSectorIntegrationList[pathInfo.PathIndex],
             PortalNodes = pickedFieldGraph.PortalNodes,
             SecToWinPtrs = pickedFieldGraph.SecToWinPtrs,
             WindowNodes = pickedFieldGraph.WindowNodes,

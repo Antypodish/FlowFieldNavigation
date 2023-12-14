@@ -17,6 +17,7 @@ public class PathContainer
     public NativeList<UnsafeList<PathSectorState>> PathSectorStateTableList;
     public NativeList<PathDestinationData> PathDestinationDataList;
     public NativeList<PathState> PathStateList;
+    public NativeList<UnsafeList<DijkstraTile>> TargetSectorIntegrationList;
     public List<PathPortalTraversalData> PathPortalTraversalDataList;
     public NativeList<int> ProducedPathSubscribers;
     Stack<int> _removedPathIndicies;
@@ -38,6 +39,7 @@ public class PathContainer
         PathPortalTraversalDataList = new List<PathPortalTraversalData>();
         PathDestinationDataList = new NativeList<PathDestinationData>(Allocator.Persistent);
         PathStateList = new NativeList<PathState>(Allocator.Persistent);
+        TargetSectorIntegrationList = new NativeList<UnsafeList<DijkstraTile>>(Allocator.Persistent);
     }
     public void Update()
     {
@@ -54,7 +56,7 @@ public class PathContainer
                 PathFlowData flowData = PathFlowDataList[i];
                 UnsafeList<PathSectorState> sectorStateTable = PathSectorStateTableList[i];
                 PathPortalTraversalData portalTraversalData = PathPortalTraversalDataList[i];
-
+                UnsafeList<DijkstraTile> targetSectorIntegration = TargetSectorIntegrationList[i];
                 path.Dispose();
                 locationData.Dispose();
                 flowData.Dispose();
@@ -68,7 +70,7 @@ public class PathContainer
                     PortalSequence = portalTraversalData.PortalSequence,
                     PortalSequenceBorders = portalTraversalData.PortalSequenceBorders,
                     PortalTraversalDataArray = portalTraversalData.PortalTraversalDataArray,
-                    TargetSectorCosts = path.TargetSectorCosts,
+                    TargetSectorCosts = targetSectorIntegration,
                     FlowFieldLength = path.FlowFieldLength,
                     SourcePortalIndexList = portalTraversalData.SourcePortalIndexList,
                     AStartTraverseIndexList = portalTraversalData.AStartTraverseIndexList,
@@ -94,7 +96,6 @@ public class PathContainer
         {
             IsCalculated = true,
             PickedToSector = preallocations.PickedToSector,
-            TargetSectorCosts = preallocations.TargetSectorCosts,
             Offset = request.Offset,
             FlowFieldLength = preallocations.FlowFieldLength,
             PortalTraversalFastMarchingQueue = preallocations.PortalTraversalFastMarchingQueue,
@@ -147,6 +148,7 @@ public class PathContainer
             PathPortalTraversalDataList.Add(portalTraversalData);
             PathDestinationDataList.Add(destinationData);
             PathStateList.Add(PathState.Clean);
+            TargetSectorIntegrationList.Add(preallocations.TargetSectorCosts);
             ProducedPathSubscribers.Add(request.SourceCount);
         }
         else
@@ -158,6 +160,7 @@ public class PathContainer
             PathPortalTraversalDataList[pathIndex] = portalTraversalData;
             PathDestinationDataList[pathIndex] = destinationData;
             PathStateList[pathIndex] = PathState.Clean;
+            TargetSectorIntegrationList[pathIndex] = preallocations.TargetSectorCosts;
             ProducedPathSubscribers[pathIndex] = request.SourceCount;
         }
 
@@ -204,6 +207,7 @@ public class PathContainer
             UnsafeList<PathSectorState> sectorStateTable = PathSectorStateTableList[i];
             PathDestinationData destinationData = PathDestinationDataList[i];
             PathState pathState = PathStateList[i];
+            UnsafeList<DijkstraTile> targetSectorIntegration = TargetSectorIntegrationList[i];
             if (pathState == PathState.Removed)
             {
                 currentPathData[i] = new PathData()
@@ -235,7 +239,7 @@ public class PathContainer
                 int oldSector = FlowFieldUtilities.GetSector1D(oldTargetIndex, sectorColAmount, sectorMatrixColAmount);
                 LocalIndex1d newLocal = FlowFieldUtilities.GetLocal1D(newTargetIndex, sectorColAmount, sectorMatrixColAmount);
                 bool outOfReach = oldSector != newLocal.sector;
-                DijkstraTile targetTile = path.TargetSectorCosts[newLocal.index];
+                DijkstraTile targetTile = targetSectorIntegration[newLocal.index];
                 outOfReach = outOfReach || targetTile.IntegratedCost == float.MaxValue;
                 DynamicDestinationState destinationState = oldTargetIndex.Equals(newTargetIndex) ? DynamicDestinationState.None : DynamicDestinationState.Moved;
                 destinationState = outOfReach ? DynamicDestinationState.OutOfReach : destinationState;

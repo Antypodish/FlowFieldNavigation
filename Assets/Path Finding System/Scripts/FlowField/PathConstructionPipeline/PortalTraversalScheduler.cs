@@ -42,7 +42,7 @@ internal class PortalTraversalScheduler
             SectorColAmount = FlowFieldUtilities.SectorColAmount,
             SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
             PickedToSector = path.PickedToSector,
-            TargetSectorCosts = path.TargetSectorCosts,
+            TargetSectorCosts = _pathContainer.TargetSectorIntegrationList[reqInfo.PathIndex],
             PortalNodes = pickedFieldGraph.PortalNodes,
             SecToWinPtrs = pickedFieldGraph.SecToWinPtrs,
             WindowNodes = pickedFieldGraph.WindowNodes,
