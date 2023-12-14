@@ -1,5 +1,6 @@
 ﻿public enum PathType : byte
 {
-    StaticDestination,
-    DynamicDestination,
+    None = 0,
+    StaticDestination = 1,
+    DynamicDestination = 2,
 };

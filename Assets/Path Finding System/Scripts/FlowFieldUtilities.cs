@@ -170,4 +170,24 @@ public static class FlowFieldUtilities
         sector2 = n1p2sector2d.y * sectorMatrixColAmount + n1p2sector2d.x;
     }
     public static int RadiusToOffset(float radius, float tileSize) => (int)math.floor(radius + tileSize / 2);
+    public static float GetCostBetween(int sector1, int local1, int sector2, int local2, int sectorColAmount, int sectorMatrixColAmount)
+    {
+        int2x2 sectors2d = new int2x2()
+        {
+            c0 = new int2(sector1 % sectorMatrixColAmount, sector1 / sectorMatrixColAmount),
+            c1 = new int2(sector2 % sectorMatrixColAmount, sector2 / sectorMatrixColAmount),
+        };
+        int2x2 locals2d = new int2x2()
+        {
+            c0 = new int2(local1 % sectorColAmount, local1 / sectorColAmount),
+            c1 = new int2(local2 % sectorColAmount, local2 / sectorColAmount),
+        };
+        int2x2 sectorStartIndicies = sectors2d * sectorColAmount;
+        int2 general2d1 = sectorStartIndicies.c0 + locals2d.c0;
+        int2 general2d2 = sectorStartIndicies.c1 + locals2d.c1;
+        int2 change = math.abs(general2d2 - general2d1);
+        int minComponent = math.min(change.x, change.y);
+        int maxComponent = math.max(change.x, change.y);
+        return minComponent * 1.4f + (maxComponent - minComponent);
+    }
 }

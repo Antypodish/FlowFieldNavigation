@@ -22,6 +22,5 @@ internal class jobtest : MonoBehaviour
     public int Length;
     private void Update()
     {
-
     }
 }

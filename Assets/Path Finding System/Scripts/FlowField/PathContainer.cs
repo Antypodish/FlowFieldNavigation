@@ -64,7 +64,7 @@ public class PathContainer
         }
         _preallocator.CheckForDeallocations();
     }
-    public int CreatePath(PathRequest request)
+    public int CreatePath(FinalPathRequest request)
     {
         int2 destinationIndex = new int2(Mathf.FloorToInt(request.Destination.x / FlowFieldUtilities.TileSize), Mathf.FloorToInt(request.Destination.y / FlowFieldUtilities.TileSize));
         PreallocationPack preallocations = _preallocator.GetPreallocations(request.Offset);
@@ -76,7 +76,7 @@ public class PathContainer
         Path producedPath = new Path()
         {
             IsCalculated = true,
-            Type = request.PathType,
+            Type = request.Type,
             TargetAgentIndex = request.TargetAgentIndex,
             Id = pathIndex,
             PickedToSector = preallocations.PickedToSector,
@@ -118,13 +118,13 @@ public class PathContainer
         {
             ProducedPaths.Add(producedPath);
             PathLocationDataList.Add(locationData);
-            ProducedPathSubscribers.Add(request.AgentCount);
+            ProducedPathSubscribers.Add(request.SourceCount);
         }
         else
         {
             ProducedPaths[pathIndex] = producedPath;
             PathLocationDataList[pathIndex] = locationData;
-            ProducedPathSubscribers[pathIndex] = request.AgentCount;
+            ProducedPathSubscribers[pathIndex] = request.SourceCount;
         }
 
         return pathIndex;

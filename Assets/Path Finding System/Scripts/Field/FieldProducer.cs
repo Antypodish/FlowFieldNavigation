@@ -71,4 +71,8 @@ public class FieldProducer
     {
         return _fieldGraphProducer.GetAllIslandFieldProcessors();
     }
+    public UnsafeListReadOnly<byte>[] GetAllCostFieldCostsAsUnsafeListReadonly()
+    {
+        return _costFieldProducer.GetAllCostsAsUnsafeListReadonly();
+    }
 }

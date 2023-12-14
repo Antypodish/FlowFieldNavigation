@@ -42,4 +42,39 @@ public struct IslandFieldProcessor
         }
         return int.MaxValue;
     }
+    public int GetIsland(int sectorIndex, int localIndex)
+    {
+        SectorNode sector = SectorNodes[sectorIndex];
+
+        if (sector.IsIslandValid())
+        {
+            return PortalNodes[sector.SectorIslandPortalIndex].IslandIndex;
+        }
+        else if (sector.IsIslandField)
+        {
+            int island = IslandFields[sectorIndex][localIndex];
+            switch (island)
+            {
+                case < 0:
+                    return -island;
+                case int.MaxValue:
+                    return int.MaxValue;
+                default:
+                    return PortalNodes[island].IslandIndex;
+            }
+        }
+        return int.MaxValue;
+    }
+    public bool GetIslandIfNotField(int sector1d, out int islandOut)
+    {
+        SectorNode sector = SectorNodes[sector1d];
+
+        if (sector.IsIslandValid())
+        {
+            islandOut = PortalNodes[sector.SectorIslandPortalIndex].IslandIndex;
+            return true;
+        }
+        islandOut = 0;
+        return false;
+    }
 }

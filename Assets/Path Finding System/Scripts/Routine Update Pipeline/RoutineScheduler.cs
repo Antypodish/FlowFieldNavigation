@@ -21,6 +21,7 @@ public class RoutineScheduler
     public NativeList<PathRequest> CurrentRequestedPaths;
     public NativeList<float2> CurrentSourcePositions;
 
+    NativeList<UnsafeListReadOnly<byte>> _costFieldCosts;
     int _costFieldEditRequestCount = 0;
     public RoutineScheduler(PathfindingManager pathfindingManager)
     {
@@ -32,11 +33,19 @@ public class RoutineScheduler
         _islandReconfigHandle = new List<JobHandle>();
         CurrentSourcePositions = new NativeList<float2>(Allocator.Persistent);
         _pathConstructionPipeline = new PathConstructionPipeline(pathfindingManager);
+        _costFieldCosts = new NativeList<UnsafeListReadOnly<byte>>(Allocator.Persistent);
     }
 
     public void Schedule(List<CostFieldEditJob[]> costEditJobs, NativeList<PathRequest> newPaths)
     {
         _costFieldEditRequestCount = costEditJobs.Count;
+        //REFRESH COST FIELD COSTS
+        UnsafeListReadOnly<byte>[] costFielCosts = _pathfindingManager.GetAllCostFieldCostsAsUnsafeListReadonly();
+        _costFieldCosts.Length = costFielCosts.Length;
+        for(int i = 0; i < costFielCosts.Length; i++)
+        {
+            _costFieldCosts[i] = costFielCosts[i];
+        }
 
         //SCHEDULE COST EDITS
         JobHandle costEditHandle = ScheduleCostEditRequests(costEditJobs);
@@ -74,7 +83,7 @@ public class RoutineScheduler
 
         _dirCalculator.PrepareAgentMovementDataCalculationJob();
 
-        _pathConstructionPipeline.ShcedulePathRequestEvalutaion(CurrentRequestedPaths, islandFieldReconfigHandle);
+        _pathConstructionPipeline.ShcedulePathRequestEvalutaion(CurrentRequestedPaths, _costFieldCosts, islandFieldReconfigHandle);
         ScheduleAgentMovementJobs(costEditHandle);
     }
     public void TryCompletePredecessorJobs()

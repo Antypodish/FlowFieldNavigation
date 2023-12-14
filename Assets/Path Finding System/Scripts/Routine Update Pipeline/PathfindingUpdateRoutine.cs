@@ -76,8 +76,7 @@ public class PathfindingUpdateRoutine
     {
         int newPathIndex = PathRequests.Length;
         int targetAgentIndex = targetAgent.AgentDataIndex;
-        PathRequest request = new PathRequest(0);
-        request.SetDynamicDestination(targetAgentIndex);
+        PathRequest request = new PathRequest(targetAgentIndex);
         PathRequests.Add(request);
         _pathfindingManager.AgentDataContainer.SetRequestedPathIndiciesOf(agents, newPathIndex);
     }
