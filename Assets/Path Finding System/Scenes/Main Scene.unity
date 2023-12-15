@@ -123,6 +123,18 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!114 &86685056 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5571130920343903277, guid: 6171110bace36bb42a195b4ce00d2d41,
+    type: 3}
+  m_PrefabInstance: {fileID: 5571130921982071616}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41f44e5c3e18bed4e98a5c39ad784199, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &330585546 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7273620610478753695, guid: a222553a8d76c3b4f84192d5037f50bc,
@@ -357,6 +369,18 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &670569814 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1861988047, guid: 6171110bace36bb42a195b4ce00d2d41,
+    type: 3}
+  m_PrefabInstance: {fileID: 5571130921982071616}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -469,6 +493,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7f0954277a5e3694aa1c77d4546aa096, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &1641109499 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6801257226500458837, guid: 6171110bace36bb42a195b4ce00d2d41,
+    type: 3}
+  m_PrefabInstance: {fileID: 5571130921982071616}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1641109501
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1641109499}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 373c38d5727487d4d85850cc47469165, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _pathfindingManager: {fileID: 2058839523}
+  _agentSelectionController: {fileID: 86685056}
+  _debugUIDoc: {fileID: 670569814}
 --- !u!114 &2058839523 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8734084087838304231, guid: 5e3867b8afbc0bb49a0027ab49965980,
@@ -941,7 +986,8 @@ PrefabInstance:
       propertyPath: _pathfindingManager
       value: 
       objectReference: {fileID: 2058839523}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 7696368590267340441, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
 --- !u!1001 &7273620610725417557
 PrefabInstance:

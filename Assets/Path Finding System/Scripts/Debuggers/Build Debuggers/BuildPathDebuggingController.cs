@@ -7,11 +7,6 @@ public class BuildPathDebuggingController : MonoBehaviour
     [SerializeField] PathfindingManager _pathfindingManager;
     [SerializeField] AgentSelectionController _agentSelectionController;
     [SerializeField] UIDocument _debugUIDoc;
-    [SerializeField] Material _costFieldDebugMaterial;
-    [SerializeField] Material _integrationFieldDebugMaterial;
-    [SerializeField] Material _portalSequenceDebugMaterial;
-    [SerializeField] Material _losDebugMaterial;
-    [SerializeField] Material _targetDebugMaterial;
 
     Toggle _debugModeToggle;
     Toggle _costFieldToggle;

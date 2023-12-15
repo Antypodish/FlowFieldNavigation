@@ -5,21 +5,25 @@ using Unity.Mathematics;
 [BurstCompile]
 public struct CurrentPathReconstructionDeterminationJob : IJob
 {
-    [ReadOnly] public NativeArray<AgentData> AgentDataArray; 
-    public NativeArray<PathData> CurrentPaths;
+    [ReadOnly] public NativeArray<AgentData> AgentDataArray;
+    [ReadOnly] public NativeArray<PathState> PathStateArray;
+    [ReadOnly] public NativeArray<PathDestinationData> PathDestinationDataArray;
+    public NativeArray<PathRoutineData> PathRoutineDataArray;
     public NativeArray<int> AgentNewPathIndicies;
     [ReadOnly] public NativeArray<int> AgentCurPathIndicies;
     public NativeList<PathRequest> PathRequests;
     public void Execute()
     {
         //CHECK IF DYNAMIC PATH TARGETS ARE MOVED
-        for (int i = 0; i < CurrentPaths.Length; i++)
+        for (int i = 0; i < PathRoutineDataArray.Length; i++)
         {
-            PathData curPath = CurrentPaths[i];
-            if (curPath.State == PathState.Removed || curPath.Type == DestinationType.StaticDestination || curPath.DestinationState != DynamicDestinationState.OutOfReach) { continue; }
-            curPath.ReconstructionRequestIndex = PathRequests.Length;
-            CurrentPaths[i] = curPath;
-            PathRequest reconReq = new PathRequest(curPath.TargetAgentIndex);
+            PathState curPathState = PathStateArray[i];
+            PathDestinationData curDestinationData = PathDestinationDataArray[i];
+            PathRoutineData curRoutineData = PathRoutineDataArray[i];
+            if (curPathState == PathState.Removed || curDestinationData.DestinationType == DestinationType.StaticDestination || curRoutineData.DestinationState != DynamicDestinationState.OutOfReach) { continue; }
+            curRoutineData.ReconstructionRequestIndex = PathRequests.Length;
+            PathRoutineDataArray[i] = curRoutineData;
+            PathRequest reconReq = new PathRequest(curDestinationData.TargetAgentIndex);
 
             float3 targetAgentPos = AgentDataArray[reconReq.TargetAgentIndex].Position;
             float2 targetAgentPos2 = new float2(targetAgentPos.x, targetAgentPos.z);
@@ -33,9 +37,10 @@ public struct CurrentPathReconstructionDeterminationJob : IJob
         {
             int curPathIndex = AgentCurPathIndicies[i];
             if (curPathIndex == -1) { continue; }
-            PathData curPath = CurrentPaths[curPathIndex];
-            if (curPath.State == PathState.Removed || curPath.ReconstructionRequestIndex == -1) { continue; }
-            AgentNewPathIndicies[i] = curPath.ReconstructionRequestIndex;
+            PathRoutineData curRoutineData = PathRoutineDataArray[curPathIndex];
+            PathState curPathState = PathStateArray[curPathIndex];
+            if (curPathState == PathState.Removed || curRoutineData.ReconstructionRequestIndex == -1) { continue; }
+            AgentNewPathIndicies[i] = curRoutineData.ReconstructionRequestIndex;
         }
     }
 }

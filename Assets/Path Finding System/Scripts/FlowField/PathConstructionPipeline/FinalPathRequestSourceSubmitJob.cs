@@ -12,8 +12,9 @@ public struct FinalPathRequestSourceSubmitJob : IJob
     [ReadOnly] public NativeReference<int> PathRequestSourceCount;
     [ReadOnly] public NativeReference<int> CurrentPathSourceCount;
     [ReadOnly] public NativeArray<PathTask> AgentTasks;
+    [ReadOnly] public NativeArray<PathState> PathStateArray;
+    public NativeArray<PathRoutineData> PathRoutineDataArray;
     public NativeList<FinalPathRequest> FinalPathRequests;
-    public NativeArray<PathData> CurrentPaths;
     public NativeList<float2> Sources;
 
     public void Execute()
@@ -32,28 +33,29 @@ public struct FinalPathRequestSourceSubmitJob : IJob
         }
 
         //SET CUR PATH SOURCE START INDICIES
-        for (int i = 0; i < CurrentPaths.Length; i++)
+        for (int i = 0; i < PathRoutineDataArray.Length; i++)
         {
-            PathData curPath = CurrentPaths[i];
-            bool removed = curPath.State == PathState.Removed;
-            bool hasFlowRequest = curPath.FlowRequestSourceCount != 0;
-            bool hasPathAdditionRequest = curPath.PathAdditionSourceCount != 0;
+            PathRoutineData curRoutineData = PathRoutineDataArray[i];
+            PathState curPathState = PathStateArray[i];
+            bool removed = curPathState == PathState.Removed;
+            bool hasFlowRequest = curRoutineData.FlowRequestSourceCount != 0;
+            bool hasPathAdditionRequest = curRoutineData.PathAdditionSourceCount != 0;
             if (removed) { continue; }
             if (hasFlowRequest)
             {
-                curPath.Task |= PathTask.FlowRequest;
-                curPath.FlowRequestSourceStart = sourceCurIndex;
-                sourceCurIndex += curPath.FlowRequestSourceCount;
-                curPath.FlowRequestSourceCount = 0;
-                CurrentPaths[i] = curPath;
+                curRoutineData.Task |= PathTask.FlowRequest;
+                curRoutineData.FlowRequestSourceStart = sourceCurIndex;
+                sourceCurIndex += curRoutineData.FlowRequestSourceCount;
+                curRoutineData.FlowRequestSourceCount = 0;
+                PathRoutineDataArray[i] = curRoutineData;
             }
             if (hasPathAdditionRequest)
             {
-                curPath.Task |= PathTask.PathAdditionRequest;
-                curPath.PathAdditionSourceStart = sourceCurIndex;
-                sourceCurIndex += curPath.PathAdditionSourceCount;
-                curPath.PathAdditionSourceCount = 0;
-                CurrentPaths[i] = curPath;
+                curRoutineData.Task |= PathTask.PathAdditionRequest;
+                curRoutineData.PathAdditionSourceStart = sourceCurIndex;
+                sourceCurIndex += curRoutineData.PathAdditionSourceCount;
+                curRoutineData.PathAdditionSourceCount = 0;
+                PathRoutineDataArray[i] = curRoutineData;
             }
         }
 
@@ -74,7 +76,7 @@ public struct FinalPathRequestSourceSubmitJob : IJob
             }
             else if (curPathIndex != -1)
             {
-                PathData curPath = CurrentPaths[curPathIndex];
+                PathRoutineData curRoutineData = PathRoutineDataArray[curPathIndex];
                 PathTask agentTask = AgentTasks[i];
                 bool agentFlowRequested = (agentTask & PathTask.FlowRequest) == PathTask.FlowRequest;
                 bool agentPathAdditionRequested = (agentTask & PathTask.PathAdditionRequest) == PathTask.PathAdditionRequest;
@@ -82,17 +84,17 @@ public struct FinalPathRequestSourceSubmitJob : IJob
                 {
                     float3 agentPos3 = AgentDataArray[i].Position;
                     float2 agentPos = new float2(agentPos3.x, agentPos3.z);
-                    Sources[curPath.FlowRequestSourceStart + curPath.FlowRequestSourceCount] = agentPos;
-                    curPath.FlowRequestSourceCount++;
-                    CurrentPaths[curPathIndex] = curPath;
+                    Sources[curRoutineData.FlowRequestSourceStart + curRoutineData.FlowRequestSourceCount] = agentPos;
+                    curRoutineData.FlowRequestSourceCount++;
+                    PathRoutineDataArray[curPathIndex] = curRoutineData;
                 }
                 if (agentPathAdditionRequested)
                 {
                     float3 agentPos3 = AgentDataArray[i].Position;
                     float2 agentPos = new float2(agentPos3.x, agentPos3.z);
-                    Sources[curPath.PathAdditionSourceStart + curPath.PathAdditionSourceCount] = agentPos;
-                    curPath.PathAdditionSourceCount++;
-                    CurrentPaths[curPathIndex] = curPath;
+                    Sources[curRoutineData.PathAdditionSourceStart + curRoutineData.PathAdditionSourceCount] = agentPos;
+                    curRoutineData.PathAdditionSourceCount++;
+                    PathRoutineDataArray[curPathIndex] = curRoutineData;
                 }
             }
         }

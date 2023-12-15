@@ -9,14 +9,13 @@ public class PathConstructionPipeline
     const int _FinalPathRequestExpansionJobCount = 12;
 
     PathfindingManager _pathfindingManager;
-    PathContainer _pathProducer;
+    PathContainer _pathContainer;
     PortalTraversalScheduler _portalTravesalScheduler;
     RequestedSectorCalculationScheduler _requestedSectorCalculationScheduler;
     AdditionPortalTraversalScheduler _additionPortalTraversalScheduler;
     LOSIntegrationScheduler _losIntegrationScheduler;
     DynamicAreaScheduler _dynamicAreaScheduler;
 
-    NativeList<PathData> ExistingPathData;
     NativeList<float2> SourcePositions;
     NativeList<OffsetDerivedPathRequest> OffsetDerivedPathRequests;
     NativeList<FinalPathRequest> FinalPathRequests;
@@ -28,13 +27,12 @@ public class PathConstructionPipeline
     public PathConstructionPipeline(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
-        _pathProducer = pathfindingManager.PathContainer;
+        _pathContainer = pathfindingManager.PathContainer;
         _losIntegrationScheduler = new LOSIntegrationScheduler(pathfindingManager);
         _requestedSectorCalculationScheduler = new RequestedSectorCalculationScheduler(pathfindingManager, _losIntegrationScheduler);
         _portalTravesalScheduler = new PortalTraversalScheduler(pathfindingManager, _requestedSectorCalculationScheduler);
         _additionPortalTraversalScheduler = new AdditionPortalTraversalScheduler(pathfindingManager, _requestedSectorCalculationScheduler);
         _dynamicAreaScheduler = new DynamicAreaScheduler(pathfindingManager);
-        ExistingPathData = new NativeList<PathData>(Allocator.Persistent);
         SourcePositions = new NativeList<float2>(Allocator.Persistent);
         _pathfindingTaskOrganizationHandle = new List<JobHandle>(1);
         OffsetDerivedPathRequests = new NativeList<OffsetDerivedPathRequest>(Allocator.Persistent);
@@ -47,7 +45,6 @@ public class PathConstructionPipeline
     public void ShcedulePathRequestEvalutaion(NativeList<PathRequest> requestedPaths, NativeArray<UnsafeListReadOnly<byte>> costFieldCosts, JobHandle islandFieldHandleAsDependency)
     {
         //RESET CONTAINERS
-        ExistingPathData.Clear();
         SourcePositions.Clear();
         OffsetDerivedPathRequests.Clear();
         FinalPathRequests.Clear();
@@ -55,48 +52,76 @@ public class PathConstructionPipeline
         CurrentPathSourceCount.Value = 0;
         
         
-        NativeArray<AgentData> agentData = _pathfindingManager.AgentDataContainer.AgentDataList;
-        NativeArray<int> newPathIndicies = _pathfindingManager.AgentDataContainer.AgentNewPathIndicies;
-        NativeArray<int> curPathIndicies = _pathfindingManager.AgentDataContainer.AgentCurPathIndicies;
+        NativeArray<AgentData> agentDataArray = _pathfindingManager.AgentDataContainer.AgentDataList;
+        NativeArray<int> AgentNewPathIndicies = _pathfindingManager.AgentDataContainer.AgentNewPathIndicies;
+        NativeArray<int> AgentCurPathIndicies = _pathfindingManager.AgentDataContainer.AgentCurPathIndicies;
         IslandFieldProcessors = _pathfindingManager.FieldProducer.GetAllIslandFieldProcessors();
-        _pathProducer.GetCurrentPathData(ExistingPathData, agentData.AsReadOnly());
+        NativeArray<UnsafeList<DijkstraTile>> targetSectorIntegrations = _pathContainer.TargetSectorIntegrationList;
+        NativeArray<PathLocationData> pathLocationDataArray = _pathContainer.PathLocationDataList;
+        NativeArray<PathFlowData> pathFlowDataArray = _pathContainer.PathFlowDataList;
+        NativeArray<PathState> pathStateArray = _pathContainer.PathStateList;
+        NativeArray<PathDestinationData> pathDestinationDataArray = _pathContainer.PathDestinationDataList;
+        NativeArray<PathRoutineData> pathRoutineDataArray = _pathContainer.PathRoutineDataList;
+        NativeArray<UnsafeList<PathSectorState>> pathSectorStateTables = _pathContainer.PathSectorStateTableList;
 
 
-        AgentPathTaskList.Length = agentData.Length;
+        AgentPathTaskList.Length = agentDataArray.Length;
         NativeArrayCleaningJob<PathTask> agentTaskCleaning = new NativeArrayCleaningJob<PathTask>()
         {
             Array = AgentPathTaskList,
         };
         JobHandle agentTaskCleaningHandle = agentTaskCleaning.Schedule();
+        PathRoutineDataResetJob routineDataReset = new PathRoutineDataResetJob()
+        {
+            PathOrganizationDataArray = pathRoutineDataArray,
+        };
+        JobHandle routineDataResetHandle = routineDataReset.Schedule(islandFieldHandleAsDependency);
+        PathRoutineDataCalculationJob routineDataCalculation = new PathRoutineDataCalculationJob()
+        {
+            SectorColAmount = FlowFieldUtilities.SectorColAmount,
+            SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+            TileSize = FlowFieldUtilities.TileSize,
+            PathSectorStateTables = pathSectorStateTables,
+            PathStateArray = pathStateArray,
+            TargetSectorIntegrations = targetSectorIntegrations,
+            AgentDataArray = agentDataArray,
+            PathDestinationDataArray = pathDestinationDataArray,
+            PathFlowDataArray = pathFlowDataArray,
+            PathLocationDataArray = pathLocationDataArray,
+            PathOrganizationDataArray = pathRoutineDataArray,
+        };
+        JobHandle routineDataCalculationHandle = routineDataCalculation.Schedule(pathRoutineDataArray.Length, 64, routineDataResetHandle);
 
         CurrentPathReconstructionDeterminationJob reconstructionDetermination = new CurrentPathReconstructionDeterminationJob()
         {
-            AgentCurPathIndicies = curPathIndicies,
-            AgentNewPathIndicies = newPathIndicies,
-            AgentDataArray = agentData,
-            CurrentPaths = ExistingPathData,
+            AgentCurPathIndicies = AgentCurPathIndicies,
+            AgentNewPathIndicies = AgentNewPathIndicies,
+            AgentDataArray = agentDataArray,
             PathRequests = requestedPaths,
+            PathStateArray = pathStateArray,
+            PathDestinationDataArray = pathDestinationDataArray,
+            PathRoutineDataArray = pathRoutineDataArray,
         };
-        JobHandle reconstructionDeterminationHandle = reconstructionDetermination.Schedule(islandFieldHandleAsDependency);
+        JobHandle reconstructionDeterminationHandle = reconstructionDetermination.Schedule(routineDataCalculationHandle);
 
         PathRequestOffsetDerivationJob offsetDerivation = new PathRequestOffsetDerivationJob()
         {
             TileSize = FlowFieldUtilities.TileSize,
-            AgentDataArray = agentData,
+            AgentDataArray = agentDataArray,
             InitialPathRequests = requestedPaths,
             DerivedPathRequests = OffsetDerivedPathRequests,
-            NewAgentPathIndicies = newPathIndicies,
+            NewAgentPathIndicies = AgentNewPathIndicies,
         };
         JobHandle offsetDerivationHandle = offsetDerivation.Schedule(reconstructionDeterminationHandle);
 
         PathRequestIslandDerivationJob islandDerivation = new PathRequestIslandDerivationJob()
         {
             TileSize = FlowFieldUtilities.TileSize,
-            AgentDataArray = agentData,
+            AgentDataArray = agentDataArray,
             DerivedPathRequests = OffsetDerivedPathRequests,
             FinalPathRequests = FinalPathRequests,
             IslandFieldProcesorsPerOffset = IslandFieldProcessors,
-            NewAgentPathIndicies = newPathIndicies,
+            NewAgentPathIndicies = AgentNewPathIndicies,
             PathRequestSourceCount = PathRequestSourceCount,
         };
         JobHandle islandDerivationHandle = islandDerivation.Schedule(offsetDerivationHandle);
@@ -130,28 +155,31 @@ public class PathConstructionPipeline
             SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
             TileSize = FlowFieldUtilities.TileSize,
             CurrentPathSourceCount = CurrentPathSourceCount,
-            AgentCurrentPathIndicies = curPathIndicies,
-            AgentDataArray = agentData,
-            AgentNewPathIndicies = newPathIndicies,
-            CurrentPaths = ExistingPathData,
+            AgentCurrentPathIndicies = AgentCurPathIndicies,
+            AgentDataArray = agentDataArray,
+            AgentNewPathIndicies = AgentNewPathIndicies,
             AgentPathTasks = AgentPathTaskList,
+            PathSectorStateTableArray = pathSectorStateTables,
+            PathFlowDataArray = pathFlowDataArray,
+            PathLocationDataArray = pathLocationDataArray,
+            PathRoutineDataArray = pathRoutineDataArray,
         };
         JobHandle updateDeterminationHandle = updateDetermination.Schedule(JobHandle.CombineDependencies(islandDerivationHandle, agentTaskCleaningHandle));
-        
         FinalPathRequestSourceSubmitJob sourceSubmit = new FinalPathRequestSourceSubmitJob()
         {
             Sources = SourcePositions,
-            AgentNewPathIndicies = newPathIndicies,
-            AgentCurPathIndicies = curPathIndicies,
-            AgentDataArray = agentData,
+            AgentNewPathIndicies = AgentNewPathIndicies,
+            AgentCurPathIndicies = AgentCurPathIndicies,
+            AgentDataArray = agentDataArray,
             FinalPathRequests = FinalPathRequests,
-            CurrentPaths = ExistingPathData,
             PathRequestSourceCount = PathRequestSourceCount,
             CurrentPathSourceCount = CurrentPathSourceCount,
             AgentTasks = AgentPathTaskList,
+            PathStateArray = pathStateArray,
+            PathRoutineDataArray = pathRoutineDataArray,
         };
-
-        JobHandle sourceSubmitHandle = sourceSubmit.Schedule(JobHandle.CombineDependencies(combinedExpansionHanlde, updateDeterminationHandle));
+        JobHandle sourceSubmitHandle = sourceSubmit.Schedule(JobHandle.CombineDependencies(combinedExpansionHanlde, updateDeterminationHandle, routineDataCalculationHandle));
+        if (FlowFieldUtilities.DebugMode) { sourceSubmitHandle.Complete(); }
         _pathfindingTaskOrganizationHandle.Add(sourceSubmitHandle);
     }
     void CompletePathEvaluation()
@@ -170,7 +198,7 @@ public class PathConstructionPipeline
             FinalPathRequest currentpath = FinalPathRequests[i];
             if (!currentpath.IsValid()) { continue; }
             NativeSlice<float2> pathSources = new NativeSlice<float2>(SourcePositions, currentpath.SourcePositionStartIndex, currentpath.SourceCount);
-            int newPathIndex = _pathProducer.CreatePath(currentpath);
+            int newPathIndex = _pathContainer.CreatePath(currentpath);
             RequestPipelineInfoWithHandle requestInfo = new RequestPipelineInfoWithHandle(new JobHandle(), newPathIndex, i);
             _portalTravesalScheduler.SchedulePortalTraversalFor(requestInfo, pathSources);
             currentpath.PathIndex = newPathIndex;
@@ -184,18 +212,19 @@ public class PathConstructionPipeline
             RequestedPaths = FinalPathRequests,
         };
         JobHandle newPathIndiciesHandle = newpathindiciesSetJob.Schedule();
-        
+
         //SCHEDULE PATH ADDITIONS AND FLOW REQUESTS
-        for (int i = 0; i < ExistingPathData.Length; i++)
+        NativeArray<PathRoutineData> pathRoutineDataArray = _pathContainer.PathRoutineDataList;
+        for (int i = 0; i < pathRoutineDataArray.Length; i++)
         {
-            PathData existingPath = ExistingPathData[i];
-            if (existingPath.Task == 0 && existingPath.DestinationState != DynamicDestinationState.Moved) { continue; }
-            NativeSlice<float2> flowRequestSources = new NativeSlice<float2>(SourcePositions, existingPath.FlowRequestSourceStart, existingPath.FlowRequestSourceCount);
-            NativeSlice<float2> pathAdditionSources = new NativeSlice<float2>(SourcePositions, existingPath.PathAdditionSourceStart, existingPath.PathAdditionSourceCount);
-            PathPipelineInfoWithHandle pathInfo = new PathPipelineInfoWithHandle(new JobHandle(), i, existingPath.DestinationState);
-            bool pathAdditionRequested = (existingPath.Task & PathTask.PathAdditionRequest) == PathTask.PathAdditionRequest;
-            bool flowRequested = (existingPath.Task & PathTask.FlowRequest) == PathTask.FlowRequest;
-            bool destinationMoved = existingPath.DestinationState == DynamicDestinationState.Moved;
+            PathRoutineData curPathRoutineData = pathRoutineDataArray[i];
+            if (curPathRoutineData.Task == 0 && curPathRoutineData.DestinationState != DynamicDestinationState.Moved) { continue; }
+            NativeSlice<float2> flowRequestSources = new NativeSlice<float2>(SourcePositions, curPathRoutineData.FlowRequestSourceStart, curPathRoutineData.FlowRequestSourceCount);
+            NativeSlice<float2> pathAdditionSources = new NativeSlice<float2>(SourcePositions, curPathRoutineData.PathAdditionSourceStart, curPathRoutineData.PathAdditionSourceCount);
+            PathPipelineInfoWithHandle pathInfo = new PathPipelineInfoWithHandle(new JobHandle(), i, curPathRoutineData.DestinationState);
+            bool pathAdditionRequested = (curPathRoutineData.Task & PathTask.PathAdditionRequest) == PathTask.PathAdditionRequest;
+            bool flowRequested = (curPathRoutineData.Task & PathTask.FlowRequest) == PathTask.FlowRequest;
+            bool destinationMoved = curPathRoutineData.DestinationState == DynamicDestinationState.Moved;
             if (pathAdditionRequested)
             {
                 _additionPortalTraversalScheduler.SchedulePortalTraversalFor(pathInfo, pathAdditionSources);
@@ -229,7 +258,7 @@ public class PathConstructionPipeline
         if (_pathfindingTaskOrganizationHandle.Count == 0)
         {
             _portalTravesalScheduler.TryComplete(FinalPathRequests, SourcePositions);
-            _additionPortalTraversalScheduler.TryComplete(ExistingPathData, SourcePositions);
+            _additionPortalTraversalScheduler.TryComplete(SourcePositions);
             _requestedSectorCalculationScheduler.TryComplete();
         }
     }
@@ -242,7 +271,7 @@ public class PathConstructionPipeline
         }
         _dynamicAreaScheduler.ForceComplete();
         _portalTravesalScheduler.ForceComplete(FinalPathRequests, SourcePositions);
-        _additionPortalTraversalScheduler.ForceComplete(ExistingPathData, SourcePositions);
+        _additionPortalTraversalScheduler.ForceComplete(SourcePositions);
         _requestedSectorCalculationScheduler.ForceComplete();
     }
 }

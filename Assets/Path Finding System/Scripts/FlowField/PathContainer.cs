@@ -18,6 +18,7 @@ public class PathContainer
     public NativeList<PathDestinationData> PathDestinationDataList;
     public NativeList<PathState> PathStateList;
     public NativeList<UnsafeList<DijkstraTile>> TargetSectorIntegrationList;
+    public NativeList<PathRoutineData> PathRoutineDataList;
     public List<PathPortalTraversalData> PathPortalTraversalDataList;
     public NativeList<int> ProducedPathSubscribers;
     Stack<int> _removedPathIndicies;
@@ -40,6 +41,7 @@ public class PathContainer
         PathDestinationDataList = new NativeList<PathDestinationData>(Allocator.Persistent);
         PathStateList = new NativeList<PathState>(Allocator.Persistent);
         TargetSectorIntegrationList = new NativeList<UnsafeList<DijkstraTile>>(Allocator.Persistent);
+        PathRoutineDataList = new NativeList<PathRoutineData>(Allocator.Persistent);
     }
     public void Update()
     {
@@ -149,6 +151,7 @@ public class PathContainer
             PathDestinationDataList.Add(destinationData);
             PathStateList.Add(PathState.Clean);
             TargetSectorIntegrationList.Add(preallocations.TargetSectorCosts);
+            PathRoutineDataList.Add(new PathRoutineData());
             ProducedPathSubscribers.Add(request.SourceCount);
         }
         else
@@ -161,6 +164,7 @@ public class PathContainer
             PathDestinationDataList[pathIndex] = destinationData;
             PathStateList[pathIndex] = PathState.Clean;
             TargetSectorIntegrationList[pathIndex] = preallocations.TargetSectorCosts;
+            PathRoutineDataList[pathIndex] = new PathRoutineData();
             ProducedPathSubscribers[pathIndex] = request.SourceCount;
         }
 
@@ -201,7 +205,6 @@ public class PathContainer
 
         for(int i = 0; i < ProducedPaths.Count; i++)
         {
-            Path path = ProducedPaths[i];
             PathLocationData locationData = PathLocationDataList[i];
             PathFlowData flowData = PathFlowDataList[i];
             UnsafeList<PathSectorState> sectorStateTable = PathSectorStateTableList[i];
