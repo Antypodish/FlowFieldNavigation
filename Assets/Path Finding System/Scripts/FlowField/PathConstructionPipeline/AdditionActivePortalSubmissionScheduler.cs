@@ -21,6 +21,7 @@ internal class AdditionActivePortalSubmissionScheduler
         PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
         PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathInfo.PathIndex];
         UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathInfo.PathIndex];
+        SectorBitArray sectorBitArray = _pathContainer.PathSectorBitArrays[pathInfo.PathIndex];
         FieldGraph pickedFieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
         int newSecorCount = path.PickedToSector.Length - path.ActivePortalList.Length;
         _pathContainer.ResizeActiveWaveFrontList(newSecorCount, path.ActivePortalList);
@@ -49,6 +50,7 @@ internal class AdditionActivePortalSubmissionScheduler
             NotActivatedPortals = path.NotActivePortalList,
             SectorStateTable = sectorStateTable,
             NewSectorStartIndex = portalTraversalData.NewPickedSectorStartIndex,
+            SectorBitArray = sectorBitArray,
         };
         JobHandle submitHandle = submitJob.Schedule();
         pathInfo.Handle = submitHandle;

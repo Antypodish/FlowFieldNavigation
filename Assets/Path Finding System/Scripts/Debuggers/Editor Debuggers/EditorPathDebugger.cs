@@ -264,12 +264,20 @@ public class EditorPathDebugger
 
         PathLocationData locationData = _pathfindingManager.PathContainer.PathLocationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
         PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
+        SectorBitArray sectorBitArray = _pathfindingManager.PathContainer.PathSectorBitArrays[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
         float yOffset = 0.3f;
         Gizmos.color = Color.black;
         float tileSize = _pathfindingManager.TileSize;
         FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
         UnsafeList<SectorNode> sectorNodes = fg.SectorNodes;
         UnsafeList<int> sectorMarks = locationData.SectorToPicked;
+
+        for(int i = 0; i < sectorMarks.Length; i++)
+        {
+            if (sectorMarks[i] == 0 && sectorBitArray.HasBit(i)) { UnityEngine.Debug.Log("woooo"); }
+            if (sectorMarks[i] != 0 && !sectorBitArray.HasBit(i)) { UnityEngine.Debug.Log("woooo"); }
+        }
+
         for (int i = 0; i < sectorMarks.Length; i++)
         {
             if (sectorMarks[i] == 0) { continue; }

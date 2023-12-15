@@ -19,16 +19,15 @@ public class PathContainer
     public NativeList<PathState> PathStateList;
     public NativeList<UnsafeList<DijkstraTile>> TargetSectorIntegrationList;
     public NativeList<PathRoutineData> PathRoutineDataList;
+    public NativeList<SectorBitArray> PathSectorBitArrays;
     public List<PathPortalTraversalData> PathPortalTraversalDataList;
     public NativeList<int> ProducedPathSubscribers;
     Stack<int> _removedPathIndicies;
 
     FieldProducer _fieldProducer;
     PathPreallocator _preallocator;
-    PathfindingManager _pathfindingManager;
     public PathContainer(PathfindingManager pathfindingManager)
     {
-        _pathfindingManager = pathfindingManager;
         _fieldProducer = pathfindingManager.FieldProducer;
         ProducedPaths = new List<Path>(1);
         _preallocator = new PathPreallocator(_fieldProducer, FlowFieldUtilities.SectorTileAmount, FlowFieldUtilities.SectorMatrixTileAmount);
@@ -42,6 +41,7 @@ public class PathContainer
         PathStateList = new NativeList<PathState>(Allocator.Persistent);
         TargetSectorIntegrationList = new NativeList<UnsafeList<DijkstraTile>>(Allocator.Persistent);
         PathRoutineDataList = new NativeList<PathRoutineData>(Allocator.Persistent);
+        PathSectorBitArrays = new NativeList<SectorBitArray>(Allocator.Persistent);
     }
     public void Update()
     {
@@ -60,6 +60,8 @@ public class PathContainer
                 PathPortalTraversalData portalTraversalData = PathPortalTraversalDataList[i];
                 UnsafeList<DijkstraTile> targetSectorIntegration = TargetSectorIntegrationList[i];
                 PathDestinationData destinationData = PathDestinationDataList[i];
+                SectorBitArray sectorBitArray = PathSectorBitArrays[i];
+                sectorBitArray.Dispose();
                 path.Dispose();
                 locationData.Dispose();
                 flowData.Dispose();
@@ -157,6 +159,7 @@ public class PathContainer
             PathStateList.Add(PathState.Clean);
             TargetSectorIntegrationList.Add(preallocations.TargetSectorCosts);
             PathRoutineDataList.Add(new PathRoutineData());
+            PathSectorBitArrays.Add(new SectorBitArray(FlowFieldUtilities.SectorMatrixTileAmount, Allocator.Persistent));
             ProducedPathSubscribers.Add(request.SourceCount);
         }
         else
@@ -170,6 +173,7 @@ public class PathContainer
             PathStateList[pathIndex] = PathState.Clean;
             TargetSectorIntegrationList[pathIndex] = preallocations.TargetSectorCosts;
             PathRoutineDataList[pathIndex] = new PathRoutineData();
+            PathSectorBitArrays[pathIndex] = new SectorBitArray(FlowFieldUtilities.SectorMatrixTileAmount, Allocator.Persistent);
             ProducedPathSubscribers[pathIndex] = request.SourceCount;
         }
 

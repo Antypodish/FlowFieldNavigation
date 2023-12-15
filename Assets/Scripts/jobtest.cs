@@ -20,7 +20,8 @@ using System;
 internal class jobtest : MonoBehaviour
 {
     public int Length;
-    private void Update()
+    public int batch;
+    private void Start()
     {
     }
 }

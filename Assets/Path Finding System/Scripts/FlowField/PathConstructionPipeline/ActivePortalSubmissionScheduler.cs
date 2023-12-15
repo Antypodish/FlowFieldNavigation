@@ -1,7 +1,4 @@
-﻿using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
-using Unity.Jobs;
-using Unity.Mathematics;
+﻿using Unity.Jobs;
 
 internal class ActivePortalSubmissionScheduler
 {
@@ -20,6 +17,7 @@ internal class ActivePortalSubmissionScheduler
         PathDestinationData destinationData = _pathContainer.PathDestinationDataList[reqInfo.PathIndex];
         PathLocationData locationData = _pathContainer.PathLocationDataList[reqInfo.PathIndex];
         PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[reqInfo.PathIndex];
+        SectorBitArray sectorBitArray = _pathContainer.PathSectorBitArrays[reqInfo.PathIndex];
         FieldGraph pickedFieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
 
         //ACTIVE WAVE FRONT SUBMISSION
@@ -43,6 +41,7 @@ internal class ActivePortalSubmissionScheduler
             WindowNodes = pickedFieldGraph.WindowNodes,
             ActiveWaveFrontListArray = path.ActivePortalList,
             NotActivatedPortals = path.NotActivePortalList,
+            SectorBitArray = sectorBitArray,
         };
         JobHandle submitHandle = submitJob.Schedule();
 

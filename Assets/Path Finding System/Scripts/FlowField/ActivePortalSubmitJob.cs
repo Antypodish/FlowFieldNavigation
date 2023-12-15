@@ -25,12 +25,19 @@ public struct ActivePortalSubmitJob : IJob
     [ReadOnly] public NativeArray<ActivePortal> PortalSequence;
     [ReadOnly] public NativeArray<int> PortalSequenceBorders;
 
+    public SectorBitArray SectorBitArray;
     public NativeArray<UnsafeList<ActiveWaveFront>> ActiveWaveFrontListArray;
     public NativeList<int> NotActivatedPortals;
     
 
     public void Execute()
     {
+        for (int i = 0; i < PickedToSector.Length; i++)
+        {
+            int pickedSector = PickedToSector[i];
+            SectorBitArray.SetSector(pickedSector);
+        }
+
         for (int i = 0; i < PortalSequenceBorders.Length - 1; i++)
         {
             int start = PortalSequenceBorders[i];
