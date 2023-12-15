@@ -59,6 +59,7 @@ public class PathContainer
                 UnsafeList<PathSectorState> sectorStateTable = PathSectorStateTableList[i];
                 PathPortalTraversalData portalTraversalData = PathPortalTraversalDataList[i];
                 UnsafeList<DijkstraTile> targetSectorIntegration = TargetSectorIntegrationList[i];
+                PathDestinationData destinationData = PathDestinationDataList[i];
                 path.Dispose();
                 locationData.Dispose();
                 flowData.Dispose();
@@ -80,13 +81,17 @@ public class PathContainer
                     PortalTraversalFastMarchingQueue = path.PortalTraversalFastMarchingQueue,
                     SectorStateTable = sectorStateTable,
                 };
-                _preallocator.SendPreallocationsBack(ref preallocations, path.ActivePortalList, flowData.FlowField, path.IntegrationField, path.Offset);
+                _preallocator.SendPreallocationsBack(ref preallocations, path.ActivePortalList, flowData.FlowField, path.IntegrationField, destinationData.Offset);
             }
         }
         _preallocator.CheckForDeallocations();
     }
     public int CreatePath(FinalPathRequest request)
     {
+        if(request.Type == DestinationType.DynamicDestination)
+        {
+
+        }
         int2 destinationIndex = new int2(Mathf.FloorToInt(request.Destination.x / FlowFieldUtilities.TileSize), Mathf.FloorToInt(request.Destination.y / FlowFieldUtilities.TileSize));
         PreallocationPack preallocations = _preallocator.GetPreallocations(request.Offset);
 
@@ -98,7 +103,6 @@ public class PathContainer
         {
             IsCalculated = true,
             PickedToSector = preallocations.PickedToSector,
-            Offset = request.Offset,
             FlowFieldLength = preallocations.FlowFieldLength,
             PortalTraversalFastMarchingQueue = preallocations.PortalTraversalFastMarchingQueue,
             NotActivePortalList = new NativeList<int>(Allocator.Persistent),
@@ -117,6 +121,7 @@ public class PathContainer
             TargetAgentIndex = request.TargetAgentIndex,
             TargetIndex = destinationIndex,
             Destination = request.Destination,
+            Offset = request.Offset,
         };
 
         PathLocationData locationData = new PathLocationData()

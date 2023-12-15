@@ -30,8 +30,8 @@ internal class PortalTraversalScheduler
         PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[reqInfo.PathIndex];
         UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[reqInfo.PathIndex];
         int2 destinationIndex = destinationData.TargetIndex;
-        CostField pickedCostField = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(path.Offset);
-        FieldGraph pickedFieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(path.Offset);
+        CostField pickedCostField = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(destinationData.Offset);
+        FieldGraph pickedFieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
 
         PortalTraversalReductionJob reductionJob = new PortalTraversalReductionJob()
         {

@@ -71,6 +71,7 @@ public class PathConstructionPipeline
             Array = AgentPathTaskList,
         };
         JobHandle agentTaskCleaningHandle = agentTaskCleaning.Schedule();
+
         PathRoutineDataResetJob routineDataReset = new PathRoutineDataResetJob()
         {
             PathOrganizationDataArray = pathRoutineDataArray,
@@ -81,6 +82,10 @@ public class PathConstructionPipeline
             SectorColAmount = FlowFieldUtilities.SectorColAmount,
             SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
             TileSize = FlowFieldUtilities.TileSize,
+            SectorRowAmount = FlowFieldUtilities.SectorRowAmount,
+            SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
+            FieldColAmount = FlowFieldUtilities.FieldColAmount,
+            FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
             PathSectorStateTables = pathSectorStateTables,
             PathStateArray = pathStateArray,
             TargetSectorIntegrations = targetSectorIntegrations,
@@ -89,6 +94,8 @@ public class PathConstructionPipeline
             PathFlowDataArray = pathFlowDataArray,
             PathLocationDataArray = pathLocationDataArray,
             PathOrganizationDataArray = pathRoutineDataArray,
+            IslandFieldProcessors = IslandFieldProcessors,
+            CostFields = costFieldCosts,
         };
         JobHandle routineDataCalculationHandle = routineDataCalculation.Schedule(pathRoutineDataArray.Length, 64, routineDataResetHandle);
 
@@ -102,7 +109,24 @@ public class PathConstructionPipeline
             PathDestinationDataArray = pathDestinationDataArray,
             PathRoutineDataArray = pathRoutineDataArray,
         };
-        JobHandle reconstructionDeterminationHandle = reconstructionDetermination.Schedule(routineDataCalculationHandle);
+        JobHandle reconstructionDeterminationHandle = reconstructionDetermination.Schedule(JobHandle.CombineDependencies(routineDataCalculationHandle, agentTaskCleaningHandle));
+
+        CurrentPathUpdateDeterminationJob updateDetermination = new CurrentPathUpdateDeterminationJob()
+        {
+            SectorColAmount = FlowFieldUtilities.SectorColAmount,
+            SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+            TileSize = FlowFieldUtilities.TileSize,
+            CurrentPathSourceCount = CurrentPathSourceCount,
+            AgentCurrentPathIndicies = AgentCurPathIndicies,
+            AgentDataArray = agentDataArray,
+            AgentNewPathIndicies = AgentNewPathIndicies,
+            AgentPathTasks = AgentPathTaskList,
+            PathSectorStateTableArray = pathSectorStateTables,
+            PathFlowDataArray = pathFlowDataArray,
+            PathLocationDataArray = pathLocationDataArray,
+            PathRoutineDataArray = pathRoutineDataArray,
+        };
+        JobHandle updateDeterminationHandle = updateDetermination.Schedule(reconstructionDeterminationHandle);
 
         PathRequestOffsetDerivationJob offsetDerivation = new PathRequestOffsetDerivationJob()
         {
@@ -112,7 +136,7 @@ public class PathConstructionPipeline
             DerivedPathRequests = OffsetDerivedPathRequests,
             NewAgentPathIndicies = AgentNewPathIndicies,
         };
-        JobHandle offsetDerivationHandle = offsetDerivation.Schedule(reconstructionDeterminationHandle);
+        JobHandle offsetDerivationHandle = offsetDerivation.Schedule(updateDeterminationHandle);
 
         PathRequestIslandDerivationJob islandDerivation = new PathRequestIslandDerivationJob()
         {
@@ -149,22 +173,6 @@ public class PathConstructionPipeline
         }
         JobHandle combinedExpansionHanlde = JobHandle.CombineDependencies(handles);
 
-        CurrentPathUpdateDeterminationJob updateDetermination = new CurrentPathUpdateDeterminationJob()
-        {
-            SectorColAmount = FlowFieldUtilities.SectorColAmount,
-            SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
-            TileSize = FlowFieldUtilities.TileSize,
-            CurrentPathSourceCount = CurrentPathSourceCount,
-            AgentCurrentPathIndicies = AgentCurPathIndicies,
-            AgentDataArray = agentDataArray,
-            AgentNewPathIndicies = AgentNewPathIndicies,
-            AgentPathTasks = AgentPathTaskList,
-            PathSectorStateTableArray = pathSectorStateTables,
-            PathFlowDataArray = pathFlowDataArray,
-            PathLocationDataArray = pathLocationDataArray,
-            PathRoutineDataArray = pathRoutineDataArray,
-        };
-        JobHandle updateDeterminationHandle = updateDetermination.Schedule(JobHandle.CombineDependencies(islandDerivationHandle, agentTaskCleaningHandle));
         FinalPathRequestSourceSubmitJob sourceSubmit = new FinalPathRequestSourceSubmitJob()
         {
             Sources = SourcePositions,
@@ -178,7 +186,7 @@ public class PathConstructionPipeline
             PathStateArray = pathStateArray,
             PathRoutineDataArray = pathRoutineDataArray,
         };
-        JobHandle sourceSubmitHandle = sourceSubmit.Schedule(JobHandle.CombineDependencies(combinedExpansionHanlde, updateDeterminationHandle, routineDataCalculationHandle));
+        JobHandle sourceSubmitHandle = sourceSubmit.Schedule(JobHandle.CombineDependencies(combinedExpansionHanlde, islandDerivationHandle));
         if (FlowFieldUtilities.DebugMode) { sourceSubmitHandle.Complete(); }
         _pathfindingTaskOrganizationHandle.Add(sourceSubmitHandle);
     }

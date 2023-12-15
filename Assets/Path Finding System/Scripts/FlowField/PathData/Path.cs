@@ -5,7 +5,6 @@ using UnityEngine;
 
 public class Path
 {
-    public int Offset;
     public bool IsCalculated = false;
     public DynamicArea DynamicArea;
     public NativeList<int> PickedToSector;

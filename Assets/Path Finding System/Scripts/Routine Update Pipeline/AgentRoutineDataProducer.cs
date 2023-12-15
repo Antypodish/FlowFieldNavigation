@@ -113,7 +113,7 @@ public class AgentRoutineDataProducer
             data.LOSMap = flowData.LOSMap;
             data.Destination = destinationData.Destination;
             data.SectorFlowStride = locationData.SectorToPicked[FlowFieldUtilities.PosToSector1D(new float2(data.Position.x, data.Position.z), sectorSize, sectorMatrixColAmount)];
-            data.Offset = curPath.Offset;
+            data.Offset = destinationData.Offset;
             data.PathId = agentCurPathIndex;
             
             AgentMovementDataList[hashedIndex] = data;

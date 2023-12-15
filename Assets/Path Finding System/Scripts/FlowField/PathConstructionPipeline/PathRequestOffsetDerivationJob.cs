@@ -17,6 +17,19 @@ public struct PathRequestOffsetDerivationJob : IJob
     
     public void Execute()
     {
+        //SET DESTINATIONS OF DYNAMIC PATH REQUESTS
+        for(int i = 0; i < InitialPathRequests.Length; i++)
+        {
+            PathRequest request = InitialPathRequests[i];
+            if(request.Type == DestinationType.DynamicDestination)
+            {
+                float3 targetAgentPos = AgentDataArray[request.TargetAgentIndex].Position;
+                float2 targetAgentPos2 = new float2(targetAgentPos.x, targetAgentPos.z);
+                request.Destination = targetAgentPos2;
+                InitialPathRequests[i] = request;
+            }
+        }
+
         //DETERMINE OFFSETS
         int derivedPathRequestCount = 0;
         for (int i = 0; i < NewAgentPathIndicies.Length; i++)

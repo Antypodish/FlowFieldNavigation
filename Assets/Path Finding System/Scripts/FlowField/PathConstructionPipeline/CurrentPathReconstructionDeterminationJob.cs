@@ -28,7 +28,6 @@ public struct CurrentPathReconstructionDeterminationJob : IJob
             float3 targetAgentPos = AgentDataArray[reconReq.TargetAgentIndex].Position;
             float2 targetAgentPos2 = new float2(targetAgentPos.x, targetAgentPos.z);
             reconReq.Destination = targetAgentPos2;
-
             PathRequests.Add(reconReq);
         }
 
