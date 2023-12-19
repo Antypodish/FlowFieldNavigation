@@ -29,12 +29,12 @@ public class FieldGraphProducer
         }
         JobHandle.CompleteAll(combinedHandles);
     }
-    public CostFieldEditJob[] GetEditJobs(BoundaryData bounds, byte newCost)
+    public CostFieldEditJob[] GetEditJobs(NativeArray<CostEditRequest>.ReadOnly costEditRequests)
     {
         CostFieldEditJob[] editJobs = new CostFieldEditJob[_fieldGraphs.Length];
         for (int i = 0; i < editJobs.Length; i++)
         {
-            editJobs[i] = _fieldGraphs[i].GetEditJob(bounds, newCost);
+            editJobs[i] = _fieldGraphs[i].GetEditJob(costEditRequests);
         }
         return editJobs;
     }

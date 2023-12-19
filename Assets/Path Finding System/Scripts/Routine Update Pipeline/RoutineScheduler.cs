@@ -7,6 +7,7 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine.Jobs;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEditor;
 
 public class RoutineScheduler
 {
@@ -22,6 +23,7 @@ public class RoutineScheduler
     public NativeList<float2> CurrentSourcePositions;
 
     NativeList<UnsafeListReadOnly<byte>> _costFieldCosts;
+    NativeList<SectorBitArray> EditedSectorBitArray;
     int _costFieldEditRequestCount = 0;
     public RoutineScheduler(PathfindingManager pathfindingManager)
     {
@@ -34,11 +36,14 @@ public class RoutineScheduler
         CurrentSourcePositions = new NativeList<float2>(Allocator.Persistent);
         _pathConstructionPipeline = new PathConstructionPipeline(pathfindingManager);
         _costFieldCosts = new NativeList<UnsafeListReadOnly<byte>>(Allocator.Persistent);
+        EditedSectorBitArray = new NativeList<SectorBitArray>(Allocator.Persistent);
     }
 
-    public void Schedule(List<CostFieldEditJob[]> costEditJobs, NativeList<PathRequest> newPaths)
+    public void Schedule(NativeArray<CostEditRequest>.ReadOnly costEditRequests, NativeList<PathRequest> newPaths)
     {
-        _costFieldEditRequestCount = costEditJobs.Count;
+        _costFieldEditRequestCount = costEditRequests.Length;
+        EditedSectorBitArray.Clear();
+
         //REFRESH COST FIELD COSTS
         UnsafeListReadOnly<byte>[] costFielCosts = _pathfindingManager.GetAllCostFieldCostsAsUnsafeListReadonly();
         _costFieldCosts.Length = costFielCosts.Length;
@@ -48,8 +53,8 @@ public class RoutineScheduler
         }
 
         //SCHEDULE COST EDITS
-        JobHandle costEditHandle = ScheduleCostEditRequests(costEditJobs);
-        JobHandle islandFieldReconfigHandle = ScheduleIslandFieldReconfig(costEditHandle);
+        JobHandle costEditHandle = ScheduleCostEditRequests(costEditRequests);
+        JobHandle islandFieldReconfigHandle = ScheduleIslandFieldReconfig(costEditHandle, costEditRequests.Length);
         _costEditHandle.Add(costEditHandle);
         _islandReconfigHandle.Add(islandFieldReconfigHandle);
 
@@ -83,7 +88,7 @@ public class RoutineScheduler
 
         _dirCalculator.PrepareAgentMovementDataCalculationJob();
 
-        _pathConstructionPipeline.ShcedulePathRequestEvalutaion(CurrentRequestedPaths, _costFieldCosts, islandFieldReconfigHandle);
+        _pathConstructionPipeline.ShcedulePathRequestEvalutaion(CurrentRequestedPaths, _costFieldCosts, EditedSectorBitArray.AsArray().AsReadOnly(), islandFieldReconfigHandle);
         ScheduleAgentMovementJobs(costEditHandle);
     }
     public void TryCompletePredecessorJobs()
@@ -141,52 +146,37 @@ public class RoutineScheduler
     {
         return _dirCalculator;
     }
-    JobHandle ScheduleCostEditRequests(List<CostFieldEditJob[]> costFieldEditRequests)
+    JobHandle ScheduleCostEditRequests(NativeArray<CostEditRequest>.ReadOnly costEditRequests)
     {
+        if(costEditRequests.Length == 0) { return new JobHandle(); }
+
+        CostFieldEditJob[] costFieldEditJobsForEachOffsest = _pathfindingManager.FieldProducer.GetCostFieldEditJobs(costEditRequests);
         NativeList<JobHandle> editHandles = new NativeList<JobHandle>(Allocator.Temp);
-        JobHandle lastHandle = new JobHandle();
-        if (costFieldEditRequests.Count != 0)
-        {
-            for (int j = 0; j < costFieldEditRequests[0].Length; j++)
-            {
-                CostFieldEditJob editJob = costFieldEditRequests[0][j];
-                editJob.EditedSectorIndicies.Clear();
-                editJob.EditedSectorIndexBorders.Clear();
-                editJob.EditedSectorIndexBorders.Add(0);
 
-                JobHandle editHandle = editJob.Schedule();
-                editHandles.Add(editHandle);
-            }
-            lastHandle = JobHandle.CombineDependencies(editHandles);
-            editHandles.Clear();
-        }
-        for (int i = 1; i < costFieldEditRequests.Count; i++)
+        for(int i = 0; i < costFieldEditJobsForEachOffsest.Length; i++)
         {
-            for (int j = 0; j < costFieldEditRequests[i].Length; j++)
-            {
-
-                JobHandle editHandle = costFieldEditRequests[i][j].Schedule(lastHandle);
-                editHandles.Add(editHandle);
-            }
-            lastHandle = JobHandle.CombineDependencies(editHandles);
-            editHandles.Clear();
+            CostFieldEditJob costEdit = costFieldEditJobsForEachOffsest[i];
+            EditedSectorBitArray.Add(costEdit.EditedSectorBits);
+            JobHandle editHandle = costEdit.Schedule();
+            editHandles.Add(editHandle);
         }
-        if (FlowFieldUtilities.DebugMode) { lastHandle.Complete(); }
-        return lastHandle;
+        JobHandle cominedHandle = JobHandle.CombineDependencies(editHandles);
+        editHandles.Dispose();
+        if (FlowFieldUtilities.DebugMode) { cominedHandle.Complete(); }
+        return cominedHandle;
     }
-    JobHandle ScheduleIslandFieldReconfig(JobHandle dependency)
+    JobHandle ScheduleIslandFieldReconfig(JobHandle dependency, int costEditRequestCount)
     {
+        if(costEditRequestCount == 0) { return new JobHandle(); }
+
         JobHandle combinedHandles = new JobHandle();
-        if (_costFieldEditRequestCount != 0)
+        IslandReconfigurationJob[] islandReconfigJobs = _pathfindingManager.FieldProducer.GetIslandReconfigJobs();
+        NativeArray<JobHandle> handlesToCombine = new NativeArray<JobHandle>(islandReconfigJobs.Length, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
+        for (int i = 0; i < islandReconfigJobs.Length; i++)
         {
-            IslandReconfigurationJob[] islandReconfigJobs = _pathfindingManager.FieldProducer.GetIslandReconfigJobs();
-            NativeArray<JobHandle> handlesToCombine = new NativeArray<JobHandle>(islandReconfigJobs.Length, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
-            for (int i = 0; i < islandReconfigJobs.Length; i++)
-            {
-                handlesToCombine[i] = islandReconfigJobs[i].Schedule(dependency);
-            }
-            combinedHandles = JobHandle.CombineDependencies(handlesToCombine);
+            handlesToCombine[i] = islandReconfigJobs[i].Schedule(dependency);
         }
+        combinedHandles = JobHandle.CombineDependencies(handlesToCombine);
 
         if (FlowFieldUtilities.DebugMode) { combinedHandles.Complete(); }
 

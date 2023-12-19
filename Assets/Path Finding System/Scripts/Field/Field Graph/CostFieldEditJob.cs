@@ -5,13 +5,13 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.VisualScripting;
+using UnityEditor.PackageManager.UI;
 using UnityEngine;
 
 [BurstCompile]
 public struct CostFieldEditJob : IJob
 {
-    public byte NewCost;
-    public BoundaryData Bounds;
+    public NativeArray<CostEditRequest>.ReadOnly CostEditRequests;
     public UnsafeList<SectorNode> SectorNodes;
     public NativeArray<int> SecToWinPtrs;
     public NativeArray<WindowNode> WindowNodes;
@@ -29,31 +29,31 @@ public struct CostFieldEditJob : IJob
     public NativeArray<AStarTile> IntegratedCosts;
     public NativeQueue<int> AStarQueue;
     public NativeList<int> EditedSectorIndicies;
-    public NativeList<int> EditedSectorIndexBorders;
+    public NativeList<int> EditedWindowIndicies;
+    public NativeBitArray EditedWindowMarks;
     public NativeArray<IslandData> Islands;
     public UnsafeList<UnsafeList<int>> IslandFields;
+    public SectorBitArray EditedSectorBits;
 
-
-    int _sectorTileAmount;
     public void Execute()
     {
-        _sectorTileAmount = SectorColAmount * SectorColAmount;
+        EditedSectorBits.Clear();
+        EditedWindowIndicies.Clear();
+        EditedWindowMarks.Clear();
+        EditedSectorIndicies.Clear();
+
         ApplyCostUpdate();
         SetSectorsBetweenBounds();
         MarkPortalIslansOfEditedSectorsDirty();
-        NativeArray<int> windowIndiciesBetweenBounds = GetWindowsBetweenBounds();
         ResetConnectionsIn();
-        RecalcualatePortalsAt(windowIndiciesBetweenBounds);
+        RecalcualatePortalsAt();
         RecalculatePortalConnectionsAt();
     }
     void MarkPortalIslansOfEditedSectorsDirty()
     {
-        int start = EditedSectorIndexBorders[EditedSectorIndexBorders.Length - 2];
-        int end = EditedSectorIndexBorders[EditedSectorIndexBorders.Length - 1];
-        NativeSlice<int> editedSectorIndicies = new NativeSlice<int>(EditedSectorIndicies, start, end - start);
-        for (int i = 0; i < editedSectorIndicies.Length; i++)
+        for (int i = 0; i < EditedSectorIndicies.Length; i++)
         {
-            int sectorIndex = editedSectorIndicies[i];
+            int sectorIndex = EditedSectorIndicies[i];
             SectorNode sector = SectorNodes[sectorIndex];
 
             if (sector.IsIslandValid())
@@ -105,45 +105,53 @@ public struct CostFieldEditJob : IJob
     {
         int sectorColAmount = SectorColAmount;
         int sectorMatrixColAmount = SectorMatrixColAmount;
-        //APPLY FOR GENERAL COST FIELD
-        Index2 botLeft = Bounds.BottomLeft;
-        Index2 topRight = Bounds.UpperRight;
-        if (botLeft.R == 0) { botLeft.R += 1; }
-        if (botLeft.C == 0) { botLeft.C += 1; }
-        if (topRight.R == FieldRowAmount - 1) { topRight.R -= 1; }
-        if(topRight.C == FieldColAmount - 1) { topRight.C -= 1; }
-
-        int bound1Flat = botLeft.R * FieldColAmount + botLeft.C;
-        int bound2Flat = topRight.R * FieldColAmount + topRight.C;
-        int colDif = topRight.C - botLeft.C;
-
-        for(int r = bound1Flat; r <= bound2Flat - colDif; r += FieldColAmount)
-        {
-            for(int i = r; i <= r + colDif; i++)
-            {
-                CostsG[i] = NewCost;
-            }
-        }
-
-        //APPLY FOR LOCAL COST FIELD
-        int eastCount = topRight.C - botLeft.C;
-        int northCount = topRight.R - botLeft.R;
         int sectorTileAmount = SectorColAmount * SectorColAmount;
-        LocalIndex1d localBotLeft = GetLocalIndex(botLeft);
-        LocalIndex1d startLocal1d = localBotLeft;
-        LocalIndex1d curLocalIndex = localBotLeft;
-        NativeSlice<byte> costSector;
-        for(int i = 0; i <= northCount; i++)
+        //APPLY FOR GENERAL COST FIELD
+
+        for (int i = 0; i < CostEditRequests.Length; i++)
         {
-            for(int j = 0; j <= eastCount; j++)
+            CostEditRequest costEdit = CostEditRequests[i];
+            Index2 botLeft = new Index2(costEdit.BoundaryBotLeft.y, costEdit.BoundaryBotLeft.x);
+            Index2 topRight = new Index2(costEdit.BoundaryTopRight.y, costEdit.BoundaryTopRight.x);
+            if (botLeft.R == 0) { botLeft.R += 1; }
+            if (botLeft.C == 0) { botLeft.C += 1; }
+            if (topRight.R == FieldRowAmount - 1) { topRight.R -= 1; }
+            if (topRight.C == FieldColAmount - 1) { topRight.C -= 1; }
+
+            int bound1Flat = botLeft.R * FieldColAmount + botLeft.C;
+            int bound2Flat = topRight.R * FieldColAmount + topRight.C;
+            int colDif = topRight.C - botLeft.C;
+
+            for (int r = bound1Flat; r <= bound2Flat - colDif; r += FieldColAmount)
             {
-                costSector = new NativeSlice<byte>(CostsL, curLocalIndex.sector * sectorTileAmount, sectorTileAmount);
-                costSector[curLocalIndex.index] = NewCost;
-                curLocalIndex = GetEast(curLocalIndex);
+                for (int index = r; index <= r + colDif; index++)
+                {
+                    CostsG[index] = costEdit.NewCost;
+                }
             }
-            startLocal1d = GetNorth(startLocal1d);
-            curLocalIndex = startLocal1d;
+
+            //APPLY FOR LOCAL COST FIELD
+            int eastCount = topRight.C - botLeft.C;
+            int northCount = topRight.R - botLeft.R;
+            LocalIndex1d localBotLeft = GetLocalIndex(botLeft);
+            LocalIndex1d startLocal1d = localBotLeft;
+            LocalIndex1d curLocalIndex = localBotLeft;
+            NativeSlice<byte> costSector;
+            for (int index = 0; index <= northCount; index++)
+            {
+                for (int j = 0; j <= eastCount; j++)
+                {
+                    costSector = new NativeSlice<byte>(CostsL, curLocalIndex.sector * sectorTileAmount, sectorTileAmount);
+                    costSector[curLocalIndex.index] = costEdit.NewCost;
+                    curLocalIndex = GetEast(curLocalIndex);
+                }
+                startLocal1d = GetNorth(startLocal1d);
+                curLocalIndex = startLocal1d;
+            }
         }
+        
+
+        
 
         LocalIndex1d GetLocalIndex(Index2 index)
         {
@@ -174,150 +182,114 @@ public struct CostFieldEditJob : IJob
     }
     void SetSectorsBetweenBounds()
     {
-        Index2 botLeft = Bounds.BottomLeft;
-        Index2 topRight = Bounds.UpperRight;
-        int bottomLeftRow = botLeft.R / SectorColAmount;
-        int bottomLeftCol = botLeft.C / SectorColAmount;
-        int upperRightRow = topRight.R / SectorColAmount;
-        int upperRightCol = topRight.C / SectorColAmount;
+        for(int index = 0; index < CostEditRequests.Length; index++)
+        {
+            CostEditRequest costEdit = CostEditRequests[index];
 
-        int bottomLeft = bottomLeftRow * SectorMatrixColAmount + bottomLeftCol;
-        int upperRight = upperRightRow * SectorMatrixColAmount + upperRightCol;
+            Index2 botLeft = new Index2(costEdit.BoundaryBotLeft.y, costEdit.BoundaryBotLeft.x);
+            Index2 topRight = new Index2(costEdit.BoundaryTopRight.y, costEdit.BoundaryTopRight.x);
+            int bottomLeftRow = botLeft.R / SectorColAmount;
+            int bottomLeftCol = botLeft.C / SectorColAmount;
+            int upperRightRow = topRight.R / SectorColAmount;
+            int upperRightCol = topRight.C / SectorColAmount;
 
-        bool isSectorOnTop = upperRight / SectorMatrixColAmount == SectorMatrixRowAmount - 1;
-        bool isSectorOnBot = bottomLeft - SectorMatrixColAmount < 0;
-        bool isSectorOnRight = (upperRight + 1) % SectorMatrixColAmount == 0;
-        bool isSectorOnLeft = bottomLeft % SectorMatrixColAmount == 0;
+            int bottomLeft = bottomLeftRow * SectorMatrixColAmount + bottomLeftCol;
+            int upperRight = upperRightRow * SectorMatrixColAmount + upperRightCol;
 
-        bool doesIntersectLowerSectors = botLeft.R % SectorColAmount == 0;
-        bool doesIntersectUpperSectors = (topRight.R + 1) % SectorColAmount == 0;
-        bool doesIntersectLeftSectors = botLeft.C % SectorColAmount == 0;
-        bool doesIntersectRightSectors = (topRight.C + 1) % SectorColAmount == 0;
+            bool isSectorOnTop = upperRight / SectorMatrixColAmount == SectorMatrixRowAmount - 1;
+            bool isSectorOnBot = bottomLeft - SectorMatrixColAmount < 0;
+            bool isSectorOnRight = (upperRight + 1) % SectorMatrixColAmount == 0;
+            bool isSectorOnLeft = bottomLeft % SectorMatrixColAmount == 0;
 
-        int sectorRowCount = upperRightRow - bottomLeftRow + 1;
-        int sectorColCount = upperRightCol - bottomLeftCol + 1;
+            bool doesIntersectLowerSectors = botLeft.R % SectorColAmount == 0;
+            bool doesIntersectUpperSectors = (topRight.R + 1) % SectorColAmount == 0;
+            bool doesIntersectLeftSectors = botLeft.C % SectorColAmount == 0;
+            bool doesIntersectRightSectors = (topRight.C + 1) % SectorColAmount == 0;
 
-        for (int r = bottomLeft; r < bottomLeft + sectorRowCount * SectorMatrixColAmount; r += SectorMatrixColAmount)
-        {
-            for (int i = r; i < r + sectorColCount; i++)
+            int sectorRowCount = upperRightRow - bottomLeftRow + 1;
+            int sectorColCount = upperRightCol - bottomLeftCol + 1;
+
+            for (int r = bottomLeft; r < bottomLeft + sectorRowCount * SectorMatrixColAmount; r += SectorMatrixColAmount)
             {
-                EditedSectorIndicies.Add(i);
+                for (int i = r; i < r + sectorColCount; i++)
+                {
+                    if (EditedSectorBits.HasBit(i)) { continue; }
+                    EditedSectorBits.SetSector(i);
+                    EditedSectorIndicies.Add(i);
+                    AddToEditedWindowsIfBoundsIntersect(costEdit.BoundaryBotLeft, costEdit.BoundaryTopRight, i);
+                }
             }
-        }
-        if (!isSectorOnTop && doesIntersectUpperSectors)
-        {
-            for (int i = upperRight + SectorMatrixColAmount; i > upperRight + SectorMatrixColAmount - sectorColCount; i--)
-            {
-                EditedSectorIndicies.Add(i);
-            }
-        }
-        if (!isSectorOnBot && doesIntersectLowerSectors)
-        {
-            for (int i = bottomLeft - SectorMatrixColAmount; i < bottomLeft - SectorMatrixColAmount + sectorColCount; i++)
-            {
-                EditedSectorIndicies.Add(i);
-            }
-        }
-        if (!isSectorOnRight && doesIntersectRightSectors)
-        {
-            for (int i = upperRight + 1; i > upperRight + 1 - sectorRowCount * SectorMatrixColAmount; i -= SectorMatrixColAmount)
-            {
-                EditedSectorIndicies.Add(i);
-            }
-        }
-        if (!isSectorOnLeft && doesIntersectLeftSectors)
-        {
-            for (int i = bottomLeft - 1; i < bottomLeft - 1 + sectorRowCount * SectorMatrixColAmount; i += SectorMatrixColAmount)
-            {
-                EditedSectorIndicies.Add(i);
-            }
-        }
-        EditedSectorIndexBorders.Add(EditedSectorIndicies.Length);
-        int GetSectorAmount()
-        {
-            int amount = sectorRowCount * sectorColCount;
             if (!isSectorOnTop && doesIntersectUpperSectors)
             {
-                amount += sectorColCount;
+                for (int i = upperRight + SectorMatrixColAmount; i > upperRight + SectorMatrixColAmount - sectorColCount; i--)
+                {
+                    if (EditedSectorBits.HasBit(i)) { continue; }
+                    EditedSectorBits.SetSector(i);
+                    EditedSectorIndicies.Add(i);
+                    AddToEditedWindowsIfBoundsIntersect(costEdit.BoundaryBotLeft, costEdit.BoundaryTopRight, i);
+                }
             }
             if (!isSectorOnBot && doesIntersectLowerSectors)
             {
-                amount += sectorColCount;
+                for (int i = bottomLeft - SectorMatrixColAmount; i < bottomLeft - SectorMatrixColAmount + sectorColCount; i++)
+                {
+                    if (EditedSectorBits.HasBit(i)) { continue; }
+                    EditedSectorBits.SetSector(i);
+                    EditedSectorIndicies.Add(i);
+                    AddToEditedWindowsIfBoundsIntersect(costEdit.BoundaryBotLeft, costEdit.BoundaryTopRight, i);
+                }
             }
             if (!isSectorOnRight && doesIntersectRightSectors)
             {
-                amount += sectorRowCount;
+                for (int i = upperRight + 1; i > upperRight + 1 - sectorRowCount * SectorMatrixColAmount; i -= SectorMatrixColAmount)
+                {
+                    if (EditedSectorBits.HasBit(i)) { continue; }
+                    EditedSectorBits.SetSector(i);
+                    EditedSectorIndicies.Add(i);
+                    AddToEditedWindowsIfBoundsIntersect(costEdit.BoundaryBotLeft, costEdit.BoundaryTopRight, i);
+                }
             }
             if (!isSectorOnLeft && doesIntersectLeftSectors)
             {
-                amount += sectorRowCount;
+                for (int i = bottomLeft - 1; i < bottomLeft - 1 + sectorRowCount * SectorMatrixColAmount; i += SectorMatrixColAmount)
+                {
+                    if (EditedSectorBits.HasBit(i)) { continue; }
+                    EditedSectorBits.SetSector(i);
+                    EditedSectorIndicies.Add(i);
+                    AddToEditedWindowsIfBoundsIntersect(costEdit.BoundaryBotLeft, costEdit.BoundaryTopRight, i);
+                }
             }
-            return amount;
         }
     }
-    NativeArray<int> GetWindowsBetweenBounds()
+    public void AddToEditedWindowsIfBoundsIntersect(int2 botLeft, int2 topRigth, int sectorIndex)
     {
-        int start = EditedSectorIndexBorders[EditedSectorIndexBorders.Length - 2];
-        int end = EditedSectorIndexBorders[EditedSectorIndexBorders.Length - 1];
-        NativeSlice<int> helperSectorIndicies = new NativeSlice<int>(EditedSectorIndicies, start, end - start);
-        Index2 botLeft = Bounds.BottomLeft;
-        Index2 topRight = Bounds.UpperRight;
-        int boundLeftC = botLeft.C;
-        int boundRightC = topRight.C;
-        int boundBotR = botLeft.R;
-        int boundTopR = topRight.R;
-
-        NativeArray<int> windows = new NativeArray<int>(2 + helperSectorIndicies.Length * 2, Allocator.Temp);
-        int windowIterable = 0;
-        for (int i = 0; i < helperSectorIndicies.Length; i++)
+        SectorNode sectorNode = SectorNodes[sectorIndex];
+        int secToWinPtr = sectorNode.SecToWinPtr;
+        int secToWinCnt = sectorNode.SecToWinCnt;
+        for (int j = secToWinPtr; j < secToWinPtr + secToWinCnt; j++)
         {
-            int secToWinPtr = SectorNodes[helperSectorIndicies[i]].SecToWinPtr;
-            int secToWinCnt = SectorNodes[helperSectorIndicies[i]].SecToWinCnt;
-            for (int j = secToWinPtr; j < secToWinPtr + secToWinCnt; j++)
+            int windowIndex = SecToWinPtrs[j];
+            Window window = WindowNodes[windowIndex].Window;
+            if (BoundsCollideWith(window) && !EditedWindowMarks.IsSet(windowIndex))
             {
-                int windowIndex = SecToWinPtrs[j];
-                Window window = WindowNodes[windowIndex].Window;
-                if (BoundsCollideWith(window))
-                {
-                    if (ArrayContains(windows, windowIterable, windowIndex)) { continue; }
-                    windows[windowIterable++] = windowIndex;
-                }
+                EditedWindowMarks.Set(windowIndex, true);
+                EditedWindowIndicies.Add(windowIndex);
             }
         }
-        return windows.GetSubArray(0, windowIterable);
-
         bool BoundsCollideWith(Window window)
         {
-            int rightDistance = boundLeftC - window.TopRightBoundary.C;
-            int leftDistance = window.BottomLeftBoundary.C - boundRightC;
-            int topDitance = boundBotR - window.TopRightBoundary.R;
-            int botDistance = window.BottomLeftBoundary.R - boundTopR;
-            if (rightDistance > 0) { return false; }
-            if (leftDistance > 0) { return false; }
-            if (topDitance > 0) { return false; }
-            if (botDistance > 0) { return false; }
-            return true;
-        }
-        bool ArrayContains(NativeArray<int> windowPairs, int windowCount,int windowIndex)
-        {
-            for (int i = 0; i < windowCount; i++)
-            {
-                if (windowPairs[i] == windowIndex)
-                {
-                    return true;
-                }
-            }
-            return false;
+            int rightDistance = botLeft.x - window.TopRightBoundary.C;
+            int leftDistance = window.BottomLeftBoundary.C - topRigth.x;
+            int topDitance = botLeft.y - window.TopRightBoundary.R;
+            int botDistance = window.BottomLeftBoundary.R - topRigth.y;
+            return rightDistance <=0 && leftDistance <=0 && topDitance <=0 && botDistance <=0;
         }
     }
     void ResetConnectionsIn()
     {
-        int start = EditedSectorIndexBorders[EditedSectorIndexBorders.Length - 2];
-        int end = EditedSectorIndexBorders[EditedSectorIndexBorders.Length - 1];
-        NativeSlice<int> sectorIndicies = new NativeSlice<int>(EditedSectorIndicies, start, end - start);
-        for (int i = 0; i < sectorIndicies.Length; i++)
+        for (int i = 0; i < EditedSectorIndicies.Length; i++)
         {
-            int pickedSectorIndex = sectorIndicies[i];
+            int pickedSectorIndex = EditedSectorIndicies[i];
             SectorNode pickedSectorNode = SectorNodes[pickedSectorIndex];
             int pickedSecToWinPtr = pickedSectorNode.SecToWinPtr;
             for (int j = 0; j < pickedSectorNode.SecToWinCnt; j++)
@@ -341,8 +313,9 @@ public struct CostFieldEditJob : IJob
             }
         }
     }
-    void RecalcualatePortalsAt(NativeArray<int> windowIndicies)
+    void RecalcualatePortalsAt()
     {
+        NativeArray<int> windowIndicies = EditedWindowIndicies;
         int porToPorCnt = PortalPerWindow * 8 - 2;
         int fieldColAmount = FieldColAmount;
         UnsafeList<byte> costs = CostsG;
@@ -471,9 +444,7 @@ public struct CostFieldEditJob : IJob
     }
     void RecalculatePortalConnectionsAt()
     {
-        int start = EditedSectorIndexBorders[EditedSectorIndexBorders.Length - 2];
-        int end = EditedSectorIndexBorders[EditedSectorIndexBorders.Length - 1];
-        NativeSlice<int> sectorIndicies = new NativeSlice<int>(EditedSectorIndicies, start, end - start);
+        NativeArray<int> sectorIndicies = EditedSectorIndicies;
         //data
         int sectorMatrixColAmount = SectorMatrixColAmount;
         int sectorTileAmount = SectorColAmount;

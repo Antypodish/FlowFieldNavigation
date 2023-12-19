@@ -1,7 +1,8 @@
 ﻿using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
-
+using Unity.Jobs;
+using Unity.Burst;
 public struct SectorBitArray
 {
     public UnsafeList<int4> _bits;
@@ -48,14 +49,15 @@ public struct SectorBitArray
 
         return (bits[componentIndex] & mask) == mask;
     }
-    public bool DoesMatchWith(UnsafeList<int4> arrayWithSameBitLength)
+    public bool DoesMatchWith(SectorBitArray examinedArray)
     {
-        if(arrayWithSameBitLength.Length != BitLength) { return false; }
+        if (examinedArray.BitLength != BitLength) { return false; }
+        UnsafeList<int4> innerExaminedArray = examinedArray._bits;
 
         for(int i = 0; i < _bits.Length; i++)
         {
             int4 lh = _bits[i];
-            int4 rh = arrayWithSameBitLength[i];
+            int4 rh = innerExaminedArray[i];
             bool match = (lh & rh).Equals(rh);
             if (match) { return true; }
         }
@@ -64,5 +66,34 @@ public struct SectorBitArray
     public void Dispose()
     {
         _bits.Dispose();
+    }
+    public void Clear()
+    {
+        for (int i = 0; i < _bits.Length; i++)
+        {
+            _bits[i] = 0;
+        }
+    }
+    public JobHandle GetCleaningHandle()
+    {
+        SectorBitArrayCleanJob cleanJob = new SectorBitArrayCleanJob()
+        {
+            InnerList = _bits,
+        };
+        return cleanJob.Schedule();
+    }
+
+
+    [BurstCompile]
+    struct SectorBitArrayCleanJob : IJob
+    {
+        public UnsafeList<int4> InnerList;
+        public void Execute()
+        {
+            for(int i = 0; i < InnerList.Length; i++)
+            {
+                InnerList[i] = 0;
+            }
+        }
     }
 }

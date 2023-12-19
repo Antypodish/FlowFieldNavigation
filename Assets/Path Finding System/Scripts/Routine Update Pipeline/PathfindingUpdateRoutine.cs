@@ -3,6 +3,7 @@ using System.Diagnostics;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class PathfindingUpdateRoutine
@@ -11,6 +12,7 @@ public class PathfindingUpdateRoutine
     RoutineScheduler _scheduler;
 
     List<CostFieldEditJob[]> _costEditRequests;
+    NativeList<CostEditRequest> _requestedCostEditBoundaries;
     List<PortalTraversalJobPack> _portalTravJobs;
     List<FlowFieldAgent> _agentAddRequest;
 
@@ -24,6 +26,7 @@ public class PathfindingUpdateRoutine
         _agentAddRequest = new List<FlowFieldAgent>();
         PathRequests = new NativeList<PathRequest>(Allocator.Persistent);
         _scheduler = new RoutineScheduler(pathfindingManager);
+        _requestedCostEditBoundaries = new NativeList<CostEditRequest>(Allocator.Persistent);
 
     }
     public void RoutineUpdate(float deltaTime)
@@ -39,8 +42,9 @@ public class PathfindingUpdateRoutine
         _agentAddRequest.Clear();
 
         //SCHEDULE NEW JOBS
-        _scheduler.Schedule(_costEditRequests, PathRequests);
+        _scheduler.Schedule(_requestedCostEditBoundaries.AsArray().AsReadOnly(), PathRequests);
 
+        _requestedCostEditBoundaries.Clear();
         PathRequests.Clear();
         _costEditRequests.Clear();
         _portalTravJobs.Clear();
@@ -56,10 +60,9 @@ public class PathfindingUpdateRoutine
     }
     public void RequestCostEdit(int2 startingPoint, int2 endPoint, byte newCost)
     {
-        Index2 b1 = new Index2(startingPoint.y, startingPoint.x);
-        Index2 b2 = new Index2(endPoint.y, endPoint.x);
-        CostFieldEditJob[] costEditJobs = _pathfindingManager.FieldProducer.GetCostFieldEditJobs(new BoundaryData(b1, b2), newCost);
-        _costEditRequests.Add(costEditJobs);
+        int2 b1 = new int2(startingPoint.x, startingPoint.y);
+        int2 b2 = new int2(endPoint.x, endPoint.y);
+        _requestedCostEditBoundaries.Add(new CostEditRequest(b1, b2, newCost));
     }
     public void RequestAgentAddition(FlowFieldAgent agent)
     {
@@ -79,5 +82,23 @@ public class PathfindingUpdateRoutine
         PathRequest request = new PathRequest(targetAgentIndex);
         PathRequests.Add(request);
         _pathfindingManager.AgentDataContainer.SetRequestedPathIndiciesOf(agents, newPathIndex);
+    }
+}
+public struct CostEditRequest
+{
+    public int2 BoundaryBotLeft;
+    public int2 BoundaryTopRight;
+    public byte NewCost;
+
+    public CostEditRequest(int2 bound1, int2 bound2, byte newCost)
+    {
+        int lowerRow = bound1.y < bound2.y ? bound1.y : bound2.y;
+        int upperRow = bound1.y > bound2.y ? bound1.y : bound2.y;
+        int leftmostCol = bound1.x < bound2.x ? bound1.x : bound2.x;
+        int rightmostCol = bound1.x > bound2.x ? bound1.x : bound2.x;
+
+        BoundaryBotLeft = new int2(leftmostCol, lowerRow);
+        BoundaryTopRight = new int2(rightmostCol, upperRow);
+        NewCost = newCost;
     }
 }

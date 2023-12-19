@@ -39,9 +39,9 @@ public class FieldProducer
     {
         return _costFieldProducer.SectorDirections;
     }
-    public CostFieldEditJob[] GetCostFieldEditJobs(BoundaryData bounds, byte newCost)
+    public CostFieldEditJob[] GetCostFieldEditJobs(NativeArray<CostEditRequest>.ReadOnly costEditRequests)
     {
-        return _fieldGraphProducer.GetEditJobs(bounds, newCost);
+        return _fieldGraphProducer.GetEditJobs(costEditRequests);
     }
     public IslandReconfigurationJob[] GetIslandReconfigJobs()
     {

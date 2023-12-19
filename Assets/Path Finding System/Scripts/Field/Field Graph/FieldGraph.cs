@@ -17,13 +17,16 @@ public struct FieldGraph
     public NativeArray<PortalToPortal> PorToPorPtrs;
     public NativeList<IslandData> IslandDataList;
     public UnsafeList<UnsafeList<int>> IslandFields;
+    public SectorBitArray EditedSectorMarks;
     AStarGrid _aStarGrid;
+    NativeList<CostEditRequest> _costEditRequests;
 
     //helper data
     NativeArray<byte> _costsL;
     UnsafeList<byte> _costsG;
     NativeList<int> EditedSectorList;
-    NativeList<int> EditedSectorIndexBorderList;
+    NativeBitArray EditedWindowMarks;
+    NativeList<int> EditedWinodwList;
     float _tileSize;
     int _fieldRowAmount;
     int _fieldColAmount;
@@ -73,7 +76,10 @@ public struct FieldGraph
             IslandFields[i] = new UnsafeList<int>(0, Allocator.Persistent);
         }
         EditedSectorList = new NativeList<int>(Allocator.Persistent);
-        EditedSectorIndexBorderList = new NativeList<int>(Allocator.Persistent);
+        EditedSectorMarks = new SectorBitArray(FlowFieldUtilities.SectorMatrixTileAmount, Allocator.Persistent);
+        _costEditRequests = new NativeList<CostEditRequest>(Allocator.Persistent);
+        EditedWindowMarks = new NativeBitArray(WindowNodes.Length, Allocator.Persistent, NativeArrayOptions.ClearMemory);
+        EditedWinodwList = new NativeList<int>(Allocator.Persistent);
 
         int GetPortalPerWindow(int offset)
         {
@@ -145,12 +151,18 @@ public struct FieldGraph
             PortalNodes = PortalNodes,
         };
     }
-    public CostFieldEditJob GetEditJob(BoundaryData bounds, byte newCost)
+    public CostFieldEditJob GetEditJob(NativeArray<CostEditRequest>.ReadOnly costEditRequests)
     {
+        _costEditRequests.Length = costEditRequests.Length;
+        for(int i = 0; i < _costEditRequests.Length; i++)
+        {
+            _costEditRequests[i] = costEditRequests[i];
+        }
         return new CostFieldEditJob()
         {
-            NewCost = newCost,
-            Bounds = bounds,
+            EditedWindowIndicies = EditedWinodwList,
+            EditedWindowMarks = EditedWindowMarks,
+            CostEditRequests = _costEditRequests.AsArray().AsReadOnly(),
             SectorNodes = SectorNodes,
             SecToWinPtrs = SecToWinPtrs,
             WindowNodes = WindowNodes,
@@ -168,9 +180,9 @@ public struct FieldGraph
             IntegratedCosts = _aStarGrid._integratedCosts,
             AStarQueue = _aStarGrid._searchQueue,
             EditedSectorIndicies = EditedSectorList,
-            EditedSectorIndexBorders = EditedSectorIndexBorderList,
             Islands = IslandDataList,
             IslandFields = IslandFields,
+            EditedSectorBits = EditedSectorMarks,
         };
     }
     public IslandReconfigurationJob GetIslandReconfigJob()

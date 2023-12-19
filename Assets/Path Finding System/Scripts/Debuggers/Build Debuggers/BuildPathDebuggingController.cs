@@ -35,6 +35,8 @@ public class BuildPathDebuggingController : MonoBehaviour
         _portalSequenceToggle = root.Q<Toggle>("PortalSequenceToggle");
         _losPassToggle = root.Q<Toggle>("LOSPassToggle");
         _agentCountLabel = root.Q<Label>("AgentCountNumber");
+
+        _debugModeToggle.value = true;
     }
     private void Update()
     {

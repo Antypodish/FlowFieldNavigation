@@ -42,7 +42,7 @@ public class PathConstructionPipeline
         AgentPathTaskList = new NativeList<PathTask>(Allocator.Persistent);
     }
 
-    public void ShcedulePathRequestEvalutaion(NativeList<PathRequest> requestedPaths, NativeArray<UnsafeListReadOnly<byte>> costFieldCosts, JobHandle islandFieldHandleAsDependency)
+    public void ShcedulePathRequestEvalutaion(NativeList<PathRequest> requestedPaths, NativeArray<UnsafeListReadOnly<byte>> costFieldCosts, NativeArray<SectorBitArray>.ReadOnly editedSectorBitArray, JobHandle islandFieldHandleAsDependency)
     {
         //RESET CONTAINERS
         SourcePositions.Clear();
@@ -63,6 +63,7 @@ public class PathConstructionPipeline
         NativeArray<PathDestinationData> pathDestinationDataArray = _pathContainer.PathDestinationDataList;
         NativeArray<PathRoutineData> pathRoutineDataArray = _pathContainer.PathRoutineDataList;
         NativeArray<UnsafeList<PathSectorState>> pathSectorStateTables = _pathContainer.PathSectorStateTableList;
+        NativeArray<SectorBitArray> pathSectorBitArrays = _pathContainer.PathSectorBitArrays;
 
 
         AgentPathTaskList.Length = agentDataArray.Length;
@@ -77,6 +78,21 @@ public class PathConstructionPipeline
             PathOrganizationDataArray = pathRoutineDataArray,
         };
         JobHandle routineDataResetHandle = routineDataReset.Schedule(islandFieldHandleAsDependency);
+
+        JobHandle sectorEditCheckHandle = routineDataResetHandle;
+        if(editedSectorBitArray.Length != 0)
+        {
+            PathSectorEditCheckJob sectorEditCheck = new PathSectorEditCheckJob()
+            {
+                PathStateArray = pathStateArray,
+                FieldEditSectorIDArray = editedSectorBitArray,
+                PathSectorIDArray = pathSectorBitArrays,
+                PathDestinationDataArray = pathDestinationDataArray,
+                PathRoutineDataArray = pathRoutineDataArray,
+            };
+            sectorEditCheckHandle = sectorEditCheck.Schedule(pathRoutineDataArray.Length, 64, routineDataResetHandle);
+        }
+
         PathRoutineDataCalculationJob routineDataCalculation = new PathRoutineDataCalculationJob()
         {
             SectorColAmount = FlowFieldUtilities.SectorColAmount,
@@ -97,7 +113,7 @@ public class PathConstructionPipeline
             IslandFieldProcessors = IslandFieldProcessors,
             CostFields = costFieldCosts,
         };
-        JobHandle routineDataCalculationHandle = routineDataCalculation.Schedule(pathRoutineDataArray.Length, 64, routineDataResetHandle);
+        JobHandle routineDataCalculationHandle = routineDataCalculation.Schedule(pathRoutineDataArray.Length, 64, sectorEditCheckHandle);
 
         CurrentPathReconstructionDeterminationJob reconstructionDetermination = new CurrentPathReconstructionDeterminationJob()
         {

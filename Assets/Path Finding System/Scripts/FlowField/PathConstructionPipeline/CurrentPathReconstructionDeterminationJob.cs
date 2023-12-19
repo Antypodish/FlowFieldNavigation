@@ -20,15 +20,26 @@ public struct CurrentPathReconstructionDeterminationJob : IJob
             PathState curPathState = PathStateArray[i];
             PathDestinationData curDestinationData = PathDestinationDataArray[i];
             PathRoutineData curRoutineData = PathRoutineDataArray[i];
-            if (curPathState == PathState.Removed || curDestinationData.DestinationType == DestinationType.StaticDestination || curRoutineData.DestinationState != DynamicDestinationState.OutOfReach) { continue; }
+            bool shouldNotConsider = curPathState == PathState.Removed;
+            bool shouldNotReconstruct = curRoutineData.DestinationState != DynamicDestinationState.OutOfReach && (curRoutineData.Task & PathTask.Reconstruct) != PathTask.Reconstruct;
+            if (shouldNotConsider || shouldNotReconstruct) { continue; }
             curRoutineData.ReconstructionRequestIndex = PathRequests.Length;
             PathRoutineDataArray[i] = curRoutineData;
-            PathRequest reconReq = new PathRequest(curDestinationData.TargetAgentIndex);
 
-            float3 targetAgentPos = AgentDataArray[reconReq.TargetAgentIndex].Position;
-            float2 targetAgentPos2 = new float2(targetAgentPos.x, targetAgentPos.z);
-            reconReq.Destination = targetAgentPos2;
-            PathRequests.Add(reconReq);
+            if(curDestinationData.DestinationType == DestinationType.DynamicDestination)
+            {
+                PathRequest reconReq = new PathRequest(curDestinationData.TargetAgentIndex);
+                float3 targetAgentPos = AgentDataArray[reconReq.TargetAgentIndex].Position;
+                float2 targetAgentPos2 = new float2(targetAgentPos.x, targetAgentPos.z);
+                reconReq.Destination = targetAgentPos2;
+                PathRequests.Add(reconReq);
+            }
+            else
+            {
+                PathRequest reconReq = new PathRequest(curDestinationData.Destination);
+                PathRequests.Add(reconReq);
+
+            }
         }
 
         //SET NEW PATHS OF AGENTS WHOSE PATHS ARE RECONSTRUCTED
