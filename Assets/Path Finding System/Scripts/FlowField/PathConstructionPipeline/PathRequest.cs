@@ -58,6 +58,7 @@ public struct OffsetDerivedPathRequest
 public struct FinalPathRequest
 {
     public float2 Destination;
+    public float2 DesiredDestination;
     public int TargetAgentIndex;
     public int SourcePositionStartIndex;
     public int SourceCount;
@@ -69,6 +70,7 @@ public struct FinalPathRequest
     public FinalPathRequest(OffsetDerivedPathRequest derivedReq, int sourceIsland)
     {
         Destination = derivedReq.Destination;
+        DesiredDestination = derivedReq.Destination;
         Type = derivedReq.Type;
         Offset = derivedReq.Offset;
         TargetAgentIndex = derivedReq.TargetAgentIndex;

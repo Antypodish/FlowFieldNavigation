@@ -36,7 +36,7 @@ public struct PathRoutineDataCalculationJob : IJobParallelFor
         PathDestinationData destinationData = PathDestinationDataArray[index];
         if (destinationData.DestinationType == DestinationType.DynamicDestination)
         {
-            int2 oldTargetIndex = destinationData.TargetIndex;
+            int2 oldTargetIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, TileSize);
             float3 targetAgentPos = AgentDataArray[destinationData.TargetAgentIndex].Position;
             float2 targetAgentPos2 = new float2(targetAgentPos.x, targetAgentPos.z);
             targetAgentPos2 = CheckIfDestinationExtensionNeeded(targetAgentPos2, oldTargetIndex, destinationData.Offset);
@@ -48,8 +48,8 @@ public struct PathRoutineDataCalculationJob : IJobParallelFor
             outOfReach = outOfReach || targetTile.IntegratedCost == float.MaxValue;
             DynamicDestinationState destinationState = oldTargetIndex.Equals(newTargetIndex) ? DynamicDestinationState.None : DynamicDestinationState.Moved;
             destinationState = outOfReach ? DynamicDestinationState.OutOfReach : destinationState;
+            destinationData.DesiredDestination = targetAgentPos2;
             destinationData.Destination = targetAgentPos2;
-            destinationData.TargetIndex = newTargetIndex;
             PathDestinationDataArray[index] = destinationData;
 
             PathRoutineData organizationData = PathOrganizationDataArray[index];

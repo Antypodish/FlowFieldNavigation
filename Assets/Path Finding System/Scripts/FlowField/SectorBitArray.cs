@@ -49,17 +49,17 @@ public struct SectorBitArray
 
         return (bits[componentIndex] & mask) == mask;
     }
-    public bool DoesMatchWith(SectorBitArray examinedArray)
+    public bool DoesMatchWith(SectorBitArray examinedPathArray)
     {
-        if (examinedArray.BitLength != BitLength) { return false; }
-        UnsafeList<int4> innerExaminedArray = examinedArray._bits;
+        if (examinedPathArray.BitLength != BitLength) { return false; }
+        UnsafeList<int4> innerExaminedArray = examinedPathArray._bits;
 
         for(int i = 0; i < _bits.Length; i++)
         {
             int4 lh = _bits[i];
             int4 rh = innerExaminedArray[i];
-            bool match = (lh & rh).Equals(rh);
-            if (match) { return true; }
+            bool match = !(lh & rh).Equals(0);
+            if (match && !lh.Equals(0)) { return true; }
         }
         return false;
     }

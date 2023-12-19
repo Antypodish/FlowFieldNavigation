@@ -35,7 +35,7 @@ internal class AdditionPortalTraversalScheduler
 
         PortalNodeAdditionReductionJob reductionJob = new PortalNodeAdditionReductionJob()
         {
-            TargetIndex = destinationData.TargetIndex,
+            TargetIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize),
             FieldTileSize = FlowFieldUtilities.TileSize,
             SectorColAmount = FlowFieldUtilities.SectorColAmount,
             SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
@@ -63,7 +63,7 @@ internal class AdditionPortalTraversalScheduler
             SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
             SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
             LOSRange = FlowFieldUtilities.LOSRange,
-            Target = destinationData.TargetIndex,
+            Target = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize),
             PickedToSector = path.PickedToSector,
             PortalSequenceBorders = portalTraversalData.PortalSequenceBorders,
             PortalNodes = pickedFieldGraph.PortalNodes,

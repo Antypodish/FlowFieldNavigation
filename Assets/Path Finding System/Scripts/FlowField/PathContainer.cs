@@ -90,11 +90,6 @@ public class PathContainer
     }
     public int CreatePath(FinalPathRequest request)
     {
-        if(request.Type == DestinationType.DynamicDestination)
-        {
-
-        }
-        int2 destinationIndex = new int2(Mathf.FloorToInt(request.Destination.x / FlowFieldUtilities.TileSize), Mathf.FloorToInt(request.Destination.y / FlowFieldUtilities.TileSize));
         PreallocationPack preallocations = _preallocator.GetPreallocations(request.Offset);
 
         int pathIndex;
@@ -121,8 +116,8 @@ public class PathContainer
         {
             DestinationType = request.Type,
             TargetAgentIndex = request.TargetAgentIndex,
-            TargetIndex = destinationIndex,
             Destination = request.Destination,
+            DesiredDestination = request.DesiredDestination,
             Offset = request.Offset,
         };
 
@@ -202,76 +197,7 @@ public class PathContainer
         PathDestinationData destinationData = PathDestinationDataList[pathIndex];
         int sectorColAmount = FlowFieldUtilities.SectorColAmount;
         int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
-        LocalIndex1d local = FlowFieldUtilities.GetLocal1D(destinationData.TargetIndex, sectorColAmount, sectorMatrixColAmount);
+        LocalIndex1d local = FlowFieldUtilities.GetLocal1D(FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize), sectorColAmount, sectorMatrixColAmount);
         return (path.IntegrationField[locationData.SectorToPicked[local.sector] + local.index].Mark & IntegrationMark.LOSPass) == IntegrationMark.LOSPass;
-    }
-    public void GetCurrentPathData(NativeList<PathData> currentPathData, NativeArray<AgentData>.ReadOnly agentData)
-    {
-        float tileSize = FlowFieldUtilities.TileSize;
-        int sectorColAmount = FlowFieldUtilities.SectorColAmount;
-        int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
-        currentPathData.Length = ProducedPaths.Count;
-
-        for(int i = 0; i < ProducedPaths.Count; i++)
-        {
-            PathLocationData locationData = PathLocationDataList[i];
-            PathFlowData flowData = PathFlowDataList[i];
-            UnsafeList<PathSectorState> sectorStateTable = PathSectorStateTableList[i];
-            PathDestinationData destinationData = PathDestinationDataList[i];
-            PathState pathState = PathStateList[i];
-            UnsafeList<DijkstraTile> targetSectorIntegration = TargetSectorIntegrationList[i];
-            if (pathState == PathState.Removed)
-            {
-                currentPathData[i] = new PathData()
-                {
-                    State = PathState.Removed,
-                };
-            }
-            else if(destinationData.DestinationType == DestinationType.StaticDestination)
-            {
-                currentPathData[i] = new PathData()
-                {
-                    State = pathState,
-                    Target = destinationData.Destination,
-                    Task = 0,
-                    SectorStateTable = sectorStateTable,
-                    SectorToPicked = locationData.SectorToPicked,
-                    FlowField = flowData.FlowField,
-                    ReconstructionRequestIndex = -1,
-                    Type = destinationData.DestinationType,
-                    TargetAgentIndex = destinationData.TargetAgentIndex,
-                };
-            }
-            else if(destinationData.DestinationType == DestinationType.DynamicDestination)
-            {
-                float3 targetAgentPos = agentData[destinationData.TargetAgentIndex].Position;
-                float2 targetAgentPos2 = new float2(targetAgentPos.x, targetAgentPos.z);
-                int2 oldTargetIndex = destinationData.TargetIndex;
-                int2 newTargetIndex = (int2)math.floor(targetAgentPos2 / tileSize);
-                int oldSector = FlowFieldUtilities.GetSector1D(oldTargetIndex, sectorColAmount, sectorMatrixColAmount);
-                LocalIndex1d newLocal = FlowFieldUtilities.GetLocal1D(newTargetIndex, sectorColAmount, sectorMatrixColAmount);
-                bool outOfReach = oldSector != newLocal.sector;
-                DijkstraTile targetTile = targetSectorIntegration[newLocal.index];
-                outOfReach = outOfReach || targetTile.IntegratedCost == float.MaxValue;
-                DynamicDestinationState destinationState = oldTargetIndex.Equals(newTargetIndex) ? DynamicDestinationState.None : DynamicDestinationState.Moved;
-                destinationState = outOfReach ? DynamicDestinationState.OutOfReach : destinationState;
-                destinationData.Destination = targetAgentPos2;
-                destinationData.TargetIndex = newTargetIndex;
-                PathDestinationDataList[i] = destinationData;
-                currentPathData[i] = new PathData()
-                {
-                    State = pathState,
-                    Target = destinationData.Destination,
-                    Task = 0,
-                    SectorStateTable = sectorStateTable,
-                    SectorToPicked = locationData.SectorToPicked,
-                    FlowField = flowData.FlowField,
-                    ReconstructionRequestIndex = -1,
-                    Type = destinationData.DestinationType,
-                    TargetAgentIndex = destinationData.TargetAgentIndex,
-                    DestinationState = destinationState,
-                };
-            }
-        }
     }
 }

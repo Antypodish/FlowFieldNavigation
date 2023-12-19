@@ -36,7 +36,7 @@ public struct CurrentPathReconstructionDeterminationJob : IJob
             }
             else
             {
-                PathRequest reconReq = new PathRequest(curDestinationData.Destination);
+                PathRequest reconReq = new PathRequest(curDestinationData.DesiredDestination);
                 PathRequests.Add(reconReq);
 
             }

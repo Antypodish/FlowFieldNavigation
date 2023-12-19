@@ -24,7 +24,6 @@ public class RoutineScheduler
 
     NativeList<UnsafeListReadOnly<byte>> _costFieldCosts;
     NativeList<SectorBitArray> EditedSectorBitArray;
-    int _costFieldEditRequestCount = 0;
     public RoutineScheduler(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
@@ -41,7 +40,6 @@ public class RoutineScheduler
 
     public void Schedule(NativeArray<CostEditRequest>.ReadOnly costEditRequests, NativeList<PathRequest> newPaths)
     {
-        _costFieldEditRequestCount = costEditRequests.Length;
         EditedSectorBitArray.Clear();
 
         //REFRESH COST FIELD COSTS

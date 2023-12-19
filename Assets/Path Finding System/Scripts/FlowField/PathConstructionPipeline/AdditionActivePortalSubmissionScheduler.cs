@@ -35,7 +35,7 @@ internal class AdditionActivePortalSubmissionScheduler
             SectorRowAmount = FlowFieldUtilities.SectorRowAmount,
             SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
             FieldColAmount = FlowFieldUtilities.FieldColAmount,
-            TargetIndex2D = destinationData.TargetIndex,
+            TargetIndex2D = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize),
             SequenceBorderListStartIndex = portalTraversalData.PathAdditionSequenceBorderStartIndex[0],
 
             PortalEdges = pickedFieldGraph.PorToPorPtrs,

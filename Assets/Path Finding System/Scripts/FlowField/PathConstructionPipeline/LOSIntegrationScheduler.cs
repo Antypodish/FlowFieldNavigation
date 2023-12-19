@@ -29,6 +29,7 @@ public class LOSIntegrationScheduler
         Path path = _pathContainer.ProducedPaths[pathInfo.PathIndex];
         PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
         PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
+        int2 targetIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize);
         CostField pickedCostField = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(destinationData.Offset);
 
         JobHandle losHandle = flowHandle;
@@ -45,7 +46,7 @@ public class LOSIntegrationScheduler
                 SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
                 SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
                 LOSRange = FlowFieldUtilities.LOSRange,
-                Target = destinationData.TargetIndex,
+                Target = targetIndex,
 
                 SectorToPickedTable = locationData.SectorToPicked,
                 IntegrationField = path.IntegrationField,
@@ -66,7 +67,7 @@ public class LOSIntegrationScheduler
                 Costs = pickedCostField.CostsL,
                 SectorToPicked = locationData.SectorToPicked,
                 IntegrationField = path.IntegrationField,
-                Target = destinationData.TargetIndex,
+                Target = targetIndex,
             };
             losHandle = losjob.Schedule(loscleanHandle);
             _losCalculatedPaths.Add(pathInfo.PathIndex);
@@ -87,7 +88,7 @@ public class LOSIntegrationScheduler
                 Costs = pickedCostField.CostsL,
                 SectorToPicked = locationData.SectorToPicked,
                 IntegrationField = path.IntegrationField,
-                Target = destinationData.TargetIndex,
+                Target = targetIndex,
             };
             losHandle = losjob.Schedule(flowHandle);
             _losCalculatedPaths.Add(pathInfo.PathIndex);
@@ -142,7 +143,7 @@ public class LOSIntegrationScheduler
                 SectorToPickedTable = locationData.SectorToPicked,
                 LOSBitmap = flowData.LOSMap,
                 IntegrationField = path.IntegrationField,
-                Target = destinationData.TargetIndex,
+                Target = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize),
             };
             _transferHandles.Add(losTransfer.Schedule());
         }

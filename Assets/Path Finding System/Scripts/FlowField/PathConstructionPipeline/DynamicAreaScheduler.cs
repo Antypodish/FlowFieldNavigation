@@ -26,7 +26,8 @@ public class DynamicAreaScheduler
         UnsafeList<SectorFlowStart> pickedSectorFlowStarts = locationData.DynamicAreaPickedSectorFlowStarts;
         UnsafeList<FlowData> flowFieldCalculationBuffer = dynamicArea.FlowFieldCalculationBuffer;
 
-        int2 targetSectorIndex = FlowFieldUtilities.GetSector2D(destinationData.TargetIndex, FlowFieldUtilities.SectorColAmount);
+        int2 targetIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize);
+        int2 targetSectorIndex = FlowFieldUtilities.GetSector2D(targetIndex, FlowFieldUtilities.SectorColAmount);
         int2 nsector2d = targetSectorIndex + new int2(0, 1);
         int2 esector2d = targetSectorIndex + new int2(1, 0);
         int2 ssector2d = targetSectorIndex + new int2(0, -1);
@@ -78,7 +79,7 @@ public class DynamicAreaScheduler
             SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
             SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
             FieldColAmount = FlowFieldUtilities.FieldColAmount,
-            TargetIndex = destinationData.TargetIndex,
+            TargetIndex = targetIndex,
             Costs = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(destinationData.Offset).CostsL,
             PickedSectorFlowStarts = pickedSectorFlowStarts,
             IntegrationField = integrationField,

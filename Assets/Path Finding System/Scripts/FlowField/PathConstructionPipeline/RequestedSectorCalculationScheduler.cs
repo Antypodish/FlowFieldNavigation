@@ -35,7 +35,7 @@ public class RequestedSectorCalculationScheduler
             LOSRange = FlowFieldUtilities.LOSRange,
             SectorSize = FlowFieldUtilities.SectorColAmount * FlowFieldUtilities.TileSize,
             SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
-            TargetIndex = destinationData.TargetIndex,
+            TargetIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize),
             SectorStateTable = sectorStateTable,
             SectorToPickedTable = locationData.SectorToPicked,
             Sources = sources,
