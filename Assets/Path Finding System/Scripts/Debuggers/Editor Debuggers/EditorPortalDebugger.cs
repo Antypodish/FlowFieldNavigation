@@ -42,12 +42,33 @@ public class EditorPortalDebugger
         FieldGraph fieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(offset);
         SetClickedSectorNode(fieldGraph);
 
-        NativeArray<int> portalIndicies = fieldGraph.GetPortalIndicies(_clickedSectorNodes, fieldGraph.WindowNodes);
+        NativeArray<int> secToWin = fieldGraph.SecToWinPtrs;
+        NativeArray<int> winToSec = fieldGraph.WinToSecPtrs;
+        NativeArray<WindowNode> windowNodes = fieldGraph.WindowNodes;
         UnsafeList<PortalNode> portalNodes = fieldGraph.PortalNodes;
-        for(int i = 0; i < portalIndicies.Length; i++)
+
+        int secToWinPtr = _clickedSectorNodes.SecToWinPtr;
+        int secToWinCnt = _clickedSectorNodes.SecToWinCnt;
+
+        Color[] colors = new Color[4];
+        colors[0] = Color.black;
+        colors[1] = Color.blue;
+        colors[2] = Color.yellow;
+        colors[3] = Color.white;
+        for(int i = secToWinPtr; i < secToWinPtr + secToWinCnt; i++)
         {
-            PortalNode pickedPortalNode = portalNodes[portalIndicies[i]];
-            Gizmos.DrawSphere(GetPositionOf(pickedPortalNode)+new Vector3(0,0.5f,0f), 0.5f);
+            Gizmos.color = colors[i - secToWinPtr];
+            int windowIndex = secToWin[i];
+            WindowNode windowNode = windowNodes[windowIndex];
+            int porStart = windowNode.PorPtr;
+            int porCnt = windowNode.PorCnt;
+
+            for(int j = porStart; j <porStart + porCnt; j++)
+            {
+                PortalNode pickedPortalNode = portalNodes[j];
+                if(pickedPortalNode.WinPtr != windowIndex) { UnityEngine.Debug.Log("hooop"); }
+                Gizmos.DrawSphere(GetPositionOf(pickedPortalNode) + new Vector3(0, 0.5f, 0f), 0.5f);
+            }
         }
     }
     public void DebugCostsToClickedPortal(int offset)

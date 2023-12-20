@@ -11,7 +11,8 @@ using UnityEngine;
 [BurstCompile]
 public struct CostFieldEditJob : IJob
 {
-    public NativeArray<CostEditRequest>.ReadOnly CostEditRequests;
+    public int Offset;
+    public NativeArray<CostEditRequest> CostEditRequests;
     public UnsafeList<SectorNode> SectorNodes;
     public NativeArray<int> SecToWinPtrs;
     public NativeArray<WindowNode> WindowNodes;
@@ -42,12 +43,40 @@ public struct CostFieldEditJob : IJob
         EditedWindowMarks.Clear();
         EditedSectorIndicies.Clear();
 
+        //GIVE OFFSET TO COST EDIT REQUESTS
+        for(int i = 0; i < CostEditRequests.Length; i++)
+        {
+            CostEditRequest request = CostEditRequests[i];
+            if(request.NewCost != byte.MaxValue) { continue; }
+            int2 newBotLeft = request.BoundaryBotLeft + new int2(-Offset, -Offset);
+            int2 newTopRight = request.BoundaryTopRight + new int2(Offset, Offset);
+
+            newBotLeft.x = math.select(newBotLeft.x, 0, newBotLeft.x < 0);
+            newBotLeft.y = math.select(newBotLeft.y, 0, newBotLeft.y < 0);
+            newTopRight.x = math.select(newTopRight.x, FieldColAmount - 1, newTopRight.x >= FieldColAmount);
+            newTopRight.y = math.select(newTopRight.y, FieldRowAmount - 1, newTopRight.y >= FieldRowAmount);
+            CostEditRequests[i] = new CostEditRequest()
+            {
+                BoundaryTopRight = newTopRight,
+                BoundaryBotLeft = newBotLeft,
+                NewCost = request.NewCost
+            };
+        }
+
         ApplyCostUpdate();
         SetSectorsBetweenBounds();
         MarkPortalIslansOfEditedSectorsDirty();
         ResetConnectionsIn();
         RecalcualatePortalsAt();
         RecalculatePortalConnectionsAt();
+    }
+    bool IsOutOfField(int2 general2d)
+    {
+        bool topOverflow = general2d.y >= FieldRowAmount;
+        bool botOverflow = general2d.y < 0;
+        bool rightOverflow = general2d.x >= FieldColAmount;
+        bool leftOverflow = general2d.x < 0;
+        return topOverflow || botOverflow || rightOverflow || leftOverflow;
     }
     void MarkPortalIslansOfEditedSectorsDirty()
     {

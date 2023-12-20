@@ -27,6 +27,7 @@ public struct FieldGraph
     NativeList<int> EditedSectorList;
     NativeBitArray EditedWindowMarks;
     NativeList<int> EditedWinodwList;
+    int _offset;
     float _tileSize;
     int _fieldRowAmount;
     int _fieldColAmount;
@@ -49,6 +50,7 @@ public struct FieldGraph
         int porToPorPtrAmount = portalAmount * (portalPerWindow * 8 - 2);
 
         //innitialize fields
+        _offset = costFieldOffset;
         _tileSize = tileSize;
         _sectorMatrixColAmount = sectorMatrixColAmount;
         _sectorMatrixRowAmount = sectorMatrixRowAmount;
@@ -160,9 +162,10 @@ public struct FieldGraph
         }
         return new CostFieldEditJob()
         {
+            Offset = _offset,
             EditedWindowIndicies = EditedWinodwList,
             EditedWindowMarks = EditedWindowMarks,
-            CostEditRequests = _costEditRequests.AsArray().AsReadOnly(),
+            CostEditRequests = _costEditRequests,
             SectorNodes = SectorNodes,
             SecToWinPtrs = SecToWinPtrs,
             WindowNodes = WindowNodes,
@@ -185,10 +188,11 @@ public struct FieldGraph
             EditedSectorBits = EditedSectorMarks,
         };
     }
-    public IslandReconfigurationJob GetIslandReconfigJob()
+    public IslandReconfigurationJob GetIslandReconfigJob(int offset)
     {
         return new IslandReconfigurationJob()
         {
+            Offset = offset,
             SectorColAmount = FlowFieldUtilities.SectorColAmount,
             SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
             SectorTileAmount = FlowFieldUtilities.SectorTileAmount,

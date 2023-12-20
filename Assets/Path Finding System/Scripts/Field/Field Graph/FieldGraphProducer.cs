@@ -43,7 +43,7 @@ public class FieldGraphProducer
         IslandReconfigurationJob[] editJobs = new IslandReconfigurationJob[_fieldGraphs.Length];
         for (int i = 0; i < _fieldGraphs.Length; i++)
         {
-            editJobs[i] = _fieldGraphs[i].GetIslandReconfigJob();
+            editJobs[i] = _fieldGraphs[i].GetIslandReconfigJob(i);
         }
         return editJobs;
     }

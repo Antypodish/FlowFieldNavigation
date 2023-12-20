@@ -7,6 +7,7 @@ using Unity.Mathematics;
 [BurstCompile]
 public struct IslandReconfigurationJob : IJob
 {
+    public int Offset;
     public int SectorTileAmount;
     public int SectorMatrixColAmount;
     public int SectorColAmount;
@@ -78,7 +79,13 @@ public struct IslandReconfigurationJob : IJob
                 for (int k = porStart; k < porStart + porCount; k++)
                 {
                     PortalNode portalNode = PortalNodes[k];
+                    
                     int local1dAtSector = FlowFieldUtilities.GetLocal1dInSector(portalNode, sectorIndex, SectorMatrixColAmount, SectorColAmount);
+                    if (portalNode.WinPtr != windowIndex) { UnityEngine.Debug.Log(k - porStart + " and " + porCount); }
+                    if (local1dAtSector < 0)
+                    {
+                        UnityEngine.Debug.Log("offset: " + Offset);
+                    }
                     if (islandCalculationMatrix[local1dAtSector] != int.MinValue) { continue; }
                     InsertForIslandCalculationMatrixDFS(local1dAtSector, k, islandCalculationMatrix, dfsStack);
                     islandCount++;

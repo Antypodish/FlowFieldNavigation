@@ -2,6 +2,7 @@
 
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEditor;
 using UnityEngine;
 
 public class EditorSectorGraphDebugger
@@ -65,7 +66,6 @@ public class EditorSectorGraphDebugger
             Vector3 winBotLeftPos = new Vector3(winBotLeftIndex.C * tileSize, yOffset, winBotLeftIndex.R * tileSize);
             Vector3 winTopRightPos = new Vector3(winTopRightIndex.C * tileSize, yOffset, winTopRightIndex.R * tileSize);
             Vector3 windowPos = (winBotLeftPos + winTopRightPos) / 2;
-
             Vector3 sqrTopLeft = new Vector3(windowPos.x - 0.125f, windowPos.y, windowPos.z + 0.125f);
             Vector3 sqrTopRight = new Vector3(windowPos.x + 0.125f, windowPos.y, windowPos.z + 0.125f);
             Vector3 sqrBotLeft = new Vector3(windowPos.x - 0.125f, windowPos.y, windowPos.z - 0.125f);

@@ -129,9 +129,9 @@ public static class FlowFieldUtilities
     }
     public static int GetLocal1dInSector(PortalNode portalNode, int sectorIndex, int sectorMatrixColAmount, int sectorColAmount)
     {
-        int2 p12d = new int2(portalNode.Portal1.Index.C, portalNode.Portal1.Index.R);//(149,68)
-        int2 p22d = new int2(portalNode.Portal2.Index.C, portalNode.Portal2.Index.R);//(150,68)
-        int2 sector2d = new int2(sectorIndex % sectorMatrixColAmount, sectorIndex / sectorMatrixColAmount);//(15,7)
+        int2 p12d = new int2(portalNode.Portal1.Index.C, portalNode.Portal1.Index.R);
+        int2 p22d = new int2(portalNode.Portal2.Index.C, portalNode.Portal2.Index.R);
+        int2 sector2d = new int2(sectorIndex % sectorMatrixColAmount, sectorIndex / sectorMatrixColAmount);//(15,17)
 
         int2 p1Secpr2d = p12d / sectorColAmount;//(14,6)
 
@@ -139,6 +139,18 @@ public static class FlowFieldUtilities
         int2 sectorStart = new int2(sector2d.x * sectorColAmount, sector2d.y * sectorColAmount);//(150,70)
         int2 local2d = picked2d - sectorStart;//(0,-2)
 
+        if(local2d.y * sectorColAmount + local2d.x < 0)
+        {
+            string debug = "sector: " + sectorIndex + "\n" +
+                "secor2d: " + sector2d +"\n"+
+                "secorstart: " + sectorStart +"\n"+
+                "p12d: " + p12d + "\n" +
+                "p22d: " + p22d + "\n" +
+                "p1Secpr2d: " + p1Secpr2d + "\n" +
+                "picked2d: " + picked2d + "\n" +
+                "local2d: " + local2d + "\n";
+            UnityEngine.Debug.Log(debug);
+        }
         return local2d.y * sectorColAmount + local2d.x;//-20
     }
     public static int GetCommonSector(PortalNode node1, PortalNode node2, int sectorColAmount, int sectorMatrixColAmount)

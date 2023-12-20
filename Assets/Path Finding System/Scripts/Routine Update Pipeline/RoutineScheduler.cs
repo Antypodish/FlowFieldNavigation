@@ -52,7 +52,9 @@ public class RoutineScheduler
 
         //SCHEDULE COST EDITS
         JobHandle costEditHandle = ScheduleCostEditRequests(costEditRequests);
+        costEditHandle.Complete();
         JobHandle islandFieldReconfigHandle = ScheduleIslandFieldReconfig(costEditHandle, costEditRequests.Length);
+        islandFieldReconfigHandle.Complete();
         _costEditHandle.Add(costEditHandle);
         _islandReconfigHandle.Add(islandFieldReconfigHandle);
 
