@@ -29,24 +29,6 @@ public class FieldGraphProducer
         }
         JobHandle.CompleteAll(combinedHandles);
     }
-    public CostFieldEditJob[] GetEditJobs(NativeArray<CostEditRequest>.ReadOnly costEditRequests)
-    {
-        CostFieldEditJob[] editJobs = new CostFieldEditJob[_fieldGraphs.Length];
-        for (int i = 0; i < editJobs.Length; i++)
-        {
-            editJobs[i] = _fieldGraphs[i].GetEditJob(costEditRequests);
-        }
-        return editJobs;
-    }
-    public IslandReconfigurationJob[] GetIslandReconfigJobs()
-    {
-        IslandReconfigurationJob[] editJobs = new IslandReconfigurationJob[_fieldGraphs.Length];
-        for (int i = 0; i < _fieldGraphs.Length; i++)
-        {
-            editJobs[i] = _fieldGraphs[i].GetIslandReconfigJob(i);
-        }
-        return editJobs;
-    }
     public FieldGraph GetFieldGraphWithOffset(int offset)
     {
         return _fieldGraphs[offset];

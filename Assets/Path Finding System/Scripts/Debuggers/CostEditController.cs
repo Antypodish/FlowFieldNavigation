@@ -1,78 +1,36 @@
 ﻿using System;
 using Unity.Mathematics;
 using UnityEngine;
-
+using System.Collections.Generic;
 public class CostEditController
 {
     PathfindingManager _pathfindingManager;
-    bool _settingUnwalkable = false;
-    bool _settingWalkable = false;
-    int2 index1;
-    int2 index2;
-
+    float2 halfSize = new float2(1.5f, 1.5f);
+    List<GameObject> obstacles;
+    List<int> obstacleKeys;
     public CostEditController(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
+        obstacles = new List<GameObject>();
+        obstacleKeys = new List<int>();
     }
     public void SetUnwalkable()
     {
-        _settingWalkable = false;
-        if (_settingUnwalkable)
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit;
+        if (Physics.Raycast(ray, out hit, int.MaxValue, 8))
         {
-            float tileSize = _pathfindingManager.TileSize;
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit;
-            if (Physics.Raycast(ray, out hit))
+            Vector3 pos = hit.point;
+            float2 editPos = new float2(pos.x, pos.z);
+            if(_pathfindingManager.SetObstacle(editPos, halfSize, out int obstacleKey))
             {
-                Vector3 pos = hit.point;
-                int2 index = new int2(Mathf.FloorToInt(pos.x / tileSize), Mathf.FloorToInt(pos.z / tileSize));
-                index2 = index;
-                _pathfindingManager.EditCost(index1, index2, byte.MaxValue);
-                _settingUnwalkable = false;
-            }
-        }
-        else
-        {
-            float tileSize = _pathfindingManager.TileSize;
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit;
-            if (Physics.Raycast(ray, out hit))
-            {
-                Vector3 pos = hit.point;
-                int2 index = new int2(Mathf.FloorToInt(pos.x / tileSize), Mathf.FloorToInt(pos.z / tileSize));
-                index1 = index;
-                _settingUnwalkable = true;
-            }
-        }
-    }
-    public void SetWalkable()
-    {
-        _settingUnwalkable = false;
-        if (_settingWalkable)
-        {
-            float tileSize = _pathfindingManager.TileSize;
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit;
-            if (Physics.Raycast(ray, out hit))
-            {
-                Vector3 pos = hit.point;
-                int2 index = new int2(Mathf.FloorToInt(pos.x / tileSize), Mathf.FloorToInt(pos.z / tileSize));
-                index2 = index;
-                _pathfindingManager.EditCost(index1, index2, 1);
-                _settingWalkable = false;
-            }
-        }
-        else
-        {
-            float tileSize = _pathfindingManager.TileSize;
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit;
-            if (Physics.Raycast(ray, out hit))
-            {
-                Vector3 pos = hit.point;
-                int2 index = new int2(Mathf.FloorToInt(pos.x / tileSize), Mathf.FloorToInt(pos.z / tileSize));
-                index1 = index;
-                _settingWalkable = true;
+                GameObject obstacleCube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                obstacleCube.transform.localScale = new Vector3(halfSize.x, 0f, halfSize.y) * 2 + new Vector3(0, 1f, 0);
+                obstacleCube.transform.position = pos;
+
+                obstacles.Add(obstacleCube);
+                obstacleKeys.Add(obstacleKey);
+                UnityEngine.Debug.Log(obstacleKey);
             }
         }
     }

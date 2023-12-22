@@ -39,14 +39,6 @@ public class FieldProducer
     {
         return _costFieldProducer.SectorDirections;
     }
-    public CostFieldEditJob[] GetCostFieldEditJobs(NativeArray<CostEditRequest>.ReadOnly costEditRequests)
-    {
-        return _fieldGraphProducer.GetEditJobs(costEditRequests);
-    }
-    public IslandReconfigurationJob[] GetIslandReconfigJobs()
-    {
-        return _fieldGraphProducer.GetIslandReconfigJobs();
-    }
     public NativeArray<int> GetTileToWallObject()
     {
         return _wallProducer.TileToWallObject;

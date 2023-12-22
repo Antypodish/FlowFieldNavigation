@@ -7,6 +7,10 @@ public static class FlowFieldUtilities
 {
     public static bool DebugMode;
     public static float TileSize;
+    public static float FieldMinXIncluding;
+    public static float FieldMinYIncluding;
+    public static float FieldMaxXExcluding;
+    public static float FieldMaxYExcluding;
     public static int SectorColAmount;
     public static int SectorRowAmount;
     public static int SectorTileAmount;
@@ -20,6 +24,7 @@ public static class FlowFieldUtilities
     public static float MinAgentSize;
     public static float MaxAgentSize;
     public static int LOSRange;
+    public static int MaxCostFieldOffset;
     public static int To1D(int2 index2, int colAmount)
     {
         return index2.y * colAmount + index2.x;

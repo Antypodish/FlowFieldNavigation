@@ -11,23 +11,19 @@ public class PathfindingUpdateRoutine
     PathfindingManager _pathfindingManager;
     RoutineScheduler _scheduler;
 
-    List<CostFieldEditJob[]> _costEditRequests;
     NativeList<CostEditRequest> _requestedCostEditBoundaries;
-    List<PortalTraversalJobPack> _portalTravJobs;
     List<FlowFieldAgent> _agentAddRequest;
 
     NativeList<PathRequest> PathRequests;
-    public PathfindingUpdateRoutine(PathfindingManager pathfindingManager, PathContainer pathProducer)
+    NativeList<ObstacleRequest> _obstacleRequests;
+    public PathfindingUpdateRoutine(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
-
-        _costEditRequests = new List<CostFieldEditJob[]>();
-        _portalTravJobs = new List<PortalTraversalJobPack>();
         _agentAddRequest = new List<FlowFieldAgent>();
         PathRequests = new NativeList<PathRequest>(Allocator.Persistent);
         _scheduler = new RoutineScheduler(pathfindingManager);
         _requestedCostEditBoundaries = new NativeList<CostEditRequest>(Allocator.Persistent);
-
+        _obstacleRequests = new NativeList<ObstacleRequest>(Allocator.Persistent);
     }
     public void RoutineUpdate(float deltaTime)
     {
@@ -42,13 +38,11 @@ public class PathfindingUpdateRoutine
         _agentAddRequest.Clear();
 
         //SCHEDULE NEW JOBS
-        _scheduler.Schedule(_requestedCostEditBoundaries.AsArray().AsReadOnly(), PathRequests);
+        _scheduler.Schedule(PathRequests, _obstacleRequests.AsArray().AsReadOnly());
 
         _requestedCostEditBoundaries.Clear();
         PathRequests.Clear();
-        _costEditRequests.Clear();
-        _portalTravJobs.Clear();
-
+        _obstacleRequests.Clear();
     }
     public RoutineScheduler GetRoutineScheduler()
     {
@@ -83,6 +77,24 @@ public class PathfindingUpdateRoutine
         PathRequests.Add(request);
         _pathfindingManager.AgentDataContainer.SetRequestedPathIndiciesOf(agents, newPathIndex);
     }
+
+    public int AddObstacleRequestAndGetIndex(ObstacleRequest obstacleRequest)
+    {
+        _obstacleRequests.Add(obstacleRequest);
+        return _obstacleRequests.Length - 1;
+    }
+}
+public struct ObstacleRequest
+{
+    public float2 Position;
+    public float2 HalfSize;
+
+    public ObstacleRequest(float2 pos, float2 halfSize) { Position = pos; HalfSize = halfSize; }
+}
+public struct Obstacle
+{
+    public int2 BotLeftBound;
+    public int2 TopRightBound;
 }
 public struct CostEditRequest
 {

@@ -137,13 +137,6 @@ public class AgentSelectionController : MonoBehaviour
                 _costEditController.SetUnwalkable();
             }
         }
-        else if (_state == ControllerState.CostEditWalkable)
-        {
-            if (Input.GetMouseButtonDown(0))
-            {
-                _costEditController.SetWalkable();
-            }
-        }
 
 
         if (Input.GetMouseButtonDown(1) && SelectedAgents.Count != 0)

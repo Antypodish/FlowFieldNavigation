@@ -6,7 +6,7 @@ using Unity.Mathematics;
 using System;
 using Unity.Collections.LowLevel.Unsafe;
 
-public struct FieldGraph
+public class FieldGraph
 {
     //main graph elements
     public UnsafeList<SectorNode> SectorNodes;
@@ -18,23 +18,23 @@ public struct FieldGraph
     public NativeList<IslandData> IslandDataList;
     public UnsafeList<UnsafeList<int>> IslandFields;
     public SectorBitArray EditedSectorMarks;
-    AStarGrid _aStarGrid;
-    NativeList<CostEditRequest> _costEditRequests;
+    public AStarGrid _aStarGrid;
 
     //helper data
-    NativeArray<byte> _costsL;
-    UnsafeList<byte> _costsG;
-    NativeList<int> EditedSectorList;
-    NativeBitArray EditedWindowMarks;
-    NativeList<int> EditedWinodwList;
-    int _offset;
+    public NativeArray<byte> _costsL;
+    public UnsafeList<byte> _costsG;
+    public NativeList<int> EditedSectorList;
+    public NativeBitArray EditedWindowMarks;
+    public NativeList<int> EditedWinodwList;
+    public NativeList<Obstacle> NewObstacles;
+
     float _tileSize;
     int _fieldRowAmount;
     int _fieldColAmount;
     int _sectorTileAmount;
     int _sectorMatrixRowAmount;
     int _sectorMatrixColAmount;
-    int _portalPerWindow;
+    public int PortalPerWindow;
     public FieldGraph(UnsafeList<byte> costsG, NativeArray<byte> costsL, int sectorSize, int fieldRowAmount, int fieldColAmount, int costFieldOffset, float tileSize)
     {
         //size calculations
@@ -50,14 +50,13 @@ public struct FieldGraph
         int porToPorPtrAmount = portalAmount * (portalPerWindow * 8 - 2);
 
         //innitialize fields
-        _offset = costFieldOffset;
         _tileSize = tileSize;
         _sectorMatrixColAmount = sectorMatrixColAmount;
         _sectorMatrixRowAmount = sectorMatrixRowAmount;
         _fieldColAmount = fieldColAmount;
         _fieldRowAmount = fieldRowAmount;
         _sectorTileAmount = sectorSize;
-        _portalPerWindow = portalPerWindow;
+        PortalPerWindow = portalPerWindow;
         _costsG = costsG;
         _costsL = costsL;
         _aStarGrid = new AStarGrid(fieldRowAmount, fieldColAmount);
@@ -79,7 +78,7 @@ public struct FieldGraph
         }
         EditedSectorList = new NativeList<int>(Allocator.Persistent);
         EditedSectorMarks = new SectorBitArray(FlowFieldUtilities.SectorMatrixTileAmount, Allocator.Persistent);
-        _costEditRequests = new NativeList<CostEditRequest>(Allocator.Persistent);
+        NewObstacles = new NativeList<Obstacle>(Allocator.Persistent);
         EditedWindowMarks = new NativeBitArray(WindowNodes.Length, Allocator.Persistent, NativeArrayOptions.ClearMemory);
         EditedWinodwList = new NativeList<int>(Allocator.Persistent);
 
@@ -118,7 +117,7 @@ public struct FieldGraph
             SectorTileAmount = _sectorTileAmount,
             SectorMatrixColAmount = _sectorMatrixColAmount,
             SectorMatrixRowAmount = _sectorMatrixRowAmount,
-            PortalPerWindow = _portalPerWindow,
+            PortalPerWindow = PortalPerWindow,
             IntegratedCosts = _aStarGrid._integratedCosts,
             AStarQueue = _aStarGrid._searchQueue,
         };
@@ -153,60 +152,6 @@ public struct FieldGraph
             PortalNodes = PortalNodes,
         };
     }
-    public CostFieldEditJob GetEditJob(NativeArray<CostEditRequest>.ReadOnly costEditRequests)
-    {
-        _costEditRequests.Length = costEditRequests.Length;
-        for(int i = 0; i < _costEditRequests.Length; i++)
-        {
-            _costEditRequests[i] = costEditRequests[i];
-        }
-        return new CostFieldEditJob()
-        {
-            Offset = _offset,
-            EditedWindowIndicies = EditedWinodwList,
-            EditedWindowMarks = EditedWindowMarks,
-            CostEditRequests = _costEditRequests,
-            SectorNodes = SectorNodes,
-            SecToWinPtrs = SecToWinPtrs,
-            WindowNodes = WindowNodes,
-            WinToSecPtrs = WinToSecPtrs,
-            PortalNodes = PortalNodes,
-            PorPtrs = PorToPorPtrs,
-            CostsL = _costsL,
-            CostsG = _costsG,
-            FieldColAmount = _fieldColAmount,
-            FieldRowAmount = _fieldRowAmount,
-            SectorColAmount = _sectorTileAmount,
-            SectorMatrixColAmount = _sectorMatrixColAmount,
-            SectorMatrixRowAmount = _sectorMatrixRowAmount,
-            PortalPerWindow = _portalPerWindow,
-            IntegratedCosts = _aStarGrid._integratedCosts,
-            AStarQueue = _aStarGrid._searchQueue,
-            EditedSectorIndicies = EditedSectorList,
-            Islands = IslandDataList,
-            IslandFields = IslandFields,
-            EditedSectorBits = EditedSectorMarks,
-        };
-    }
-    public IslandReconfigurationJob GetIslandReconfigJob(int offset)
-    {
-        return new IslandReconfigurationJob()
-        {
-            Offset = offset,
-            SectorColAmount = FlowFieldUtilities.SectorColAmount,
-            SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
-            SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
-            SectorNodes = SectorNodes,
-            SecToWinPtrs = SecToWinPtrs,
-            EditedSectorIndicies = EditedSectorList,
-            PortalEdges = PorToPorPtrs,
-            CostsL = _costsL,
-            IslandFields = IslandFields,
-            Islands = IslandDataList,
-            PortalNodes = PortalNodes,
-            WindowNodes = WindowNodes,
-        };
-    }
     public NativeArray<WindowNode> GetWindowNodesOf(SectorNode sectorNode)
     {
         NativeArray <WindowNode> windowNodes = new NativeArray<WindowNode>(sectorNode.SecToWinCnt, Allocator.Temp);
@@ -235,35 +180,6 @@ public struct FieldGraph
             sectorNodes[i - windowNode.WinToSecPtr] = SectorNodes[WinToSecPtrs[i]];
         }
         return sectorNodes;
-    }
-    public NativeArray<int> GetWindowNodeIndiciesOf(SectorNode sectorNode)
-    {
-        NativeArray<int> windowNodeIndicies = new NativeArray<int>(sectorNode.SecToWinCnt, Allocator.Temp);
-        for (int i = sectorNode.SecToWinPtr; i < sectorNode.SecToWinPtr + sectorNode.SecToWinCnt; i++)
-        {
-            windowNodeIndicies[i - sectorNode.SecToWinPtr] = SecToWinPtrs[i];
-        }
-        return windowNodeIndicies;
-    }
-    public NativeArray<int> GetSectorNodeIndiciesOf(WindowNode windowNode)
-    {
-        NativeArray<int> sectorNodeIndicies = new NativeArray<int>(windowNode.WinToSecCnt, Allocator.Temp);
-        for (int i = windowNode.WinToSecPtr; i < windowNode.WinToSecPtr + windowNode.WinToSecCnt; i++)
-        {
-            sectorNodeIndicies[i - windowNode.WinToSecPtr] = WinToSecPtrs[i];
-        }
-        return sectorNodeIndicies;
-    }
-    public NativeArray<int> GetSectorNodeIndiciesOf(PortalNode portal)
-    {
-        WindowNode windowNodeIndex = WindowNodes[portal.WinPtr];
-        NativeArray<int> sectorNodeIndicies = new NativeArray<int>(2, Allocator.Temp);
-
-        for (int i = windowNodeIndex.WinToSecPtr; i < windowNodeIndex.WinToSecPtr + windowNodeIndex.WinToSecCnt; i++)
-        {
-            sectorNodeIndicies[i - windowNodeIndex.WinToSecPtr] = WinToSecPtrs[i];
-        }
-        return sectorNodeIndicies;
     }
     public SectorNode GetSectorNodeAt(Vector3 pos)
     {
