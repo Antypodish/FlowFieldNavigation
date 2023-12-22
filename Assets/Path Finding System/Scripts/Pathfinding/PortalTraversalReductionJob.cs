@@ -15,6 +15,7 @@ public struct PortalTraversalReductionJob : IJob
     public float FieldTileSize;
     public int SectorColAmount;
     public int SectorMatrixColAmount;
+    public int SectorTileAmount;
 
     public NativeArray<PortalTraversalData> PortalTraversalDataArray;
 
@@ -31,7 +32,7 @@ public struct PortalTraversalReductionJob : IJob
     [ReadOnly] public NativeArray<int> WinToSecPtrs;
     [ReadOnly] public UnsafeList<PortalNode> PortalNodes;
     [ReadOnly] public NativeArray<PortalToPortal> PorPtrs;
-    [ReadOnly] public UnsafeList<byte> Costs;
+    [ReadOnly] public NativeArray<byte> Costs;
     [ReadOnly] public NativeArray<SectorDirectionData> LocalDirections;
     [ReadOnly] public UnsafeList<UnsafeList<int>> IslandFields;
 
@@ -419,7 +420,7 @@ public struct PortalTraversalReductionJob : IJob
         int sectorTileAmount = SectorColAmount;
         int fieldColAmount = FieldColAmount;
         int sectorStartIndexFlat = sector.StartIndex.R * fieldColAmount + sector.StartIndex.C;
-        UnsafeList<byte> costs = Costs;
+        NativeSlice<byte> costs = new NativeSlice<byte>(Costs, _targetSectorIndex1d * SectorTileAmount, SectorTileAmount);
 
         //CODE
 
@@ -445,8 +446,7 @@ public struct PortalTraversalReductionJob : IJob
         {
             for (int i = 0; i < integratedCosts.Length; i++)
             {
-                int generalIndex = GetGeneralIndex(i);
-                byte cost = costs[generalIndex];
+                byte cost = costs[i];
                 if (cost == byte.MaxValue)
                 {
                     integratedCosts[i] = new DijkstraTile(cost, float.MaxValue, false);
@@ -510,10 +510,6 @@ public struct PortalTraversalReductionJob : IJob
             if (wCost < costToReturn) { costToReturn = wCost; }
             if (nwCost < costToReturn) { costToReturn = nwCost; }
             return costToReturn;
-        }
-        int GetGeneralIndex(int index)
-        {
-            return sectorStartIndexFlat + (index / sectorTileAmount * fieldColAmount) + (index % sectorTileAmount);
         }
         int GetLocalIndex(int index)
         {

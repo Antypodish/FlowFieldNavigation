@@ -1,4 +1,4 @@
-﻿using Unity.Collections.LowLevel.Unsafe;
+﻿using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -16,12 +16,12 @@ public class AgentFactory
     public void AddAgent(Vector3 position)
     {
         //DO NOT ADD IF UNWALKABLE
-        UnsafeList<byte> costsG = _pathfindingingManager.FieldProducer.GetCostFieldWithOffset(0).CostsG;
+        NativeArray<byte> costsG = _pathfindingingManager.FieldProducer.GetCostFieldWithOffset(0).CostsL;
         float tileSize = _pathfindingingManager.TileSize;
-        int fieldColAmount = _pathfindingingManager.ColumnAmount;
+
         int2 general2d = new int2(Mathf.FloorToInt(position.x / tileSize), Mathf.FloorToInt(position.z / tileSize));
-        int general1d = general2d.y * fieldColAmount + general2d.x;
-        if (costsG[general1d] == byte.MaxValue) { return; }
+        LocalIndex1d local = FlowFieldUtilities.GetLocal1D(general2d, FlowFieldUtilities.SectorColAmount, FlowFieldUtilities.SectorMatrixColAmount);
+        if (costsG[local.sector * FlowFieldUtilities.SectorTileAmount + local.index] == byte.MaxValue) { return; }
 
         //AGENT ADDITION
         GameObject obj = GameObject.Instantiate(AgentPrefab);
