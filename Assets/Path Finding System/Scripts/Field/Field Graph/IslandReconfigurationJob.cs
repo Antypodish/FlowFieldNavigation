@@ -81,11 +81,6 @@ public struct IslandReconfigurationJob : IJob
                     PortalNode portalNode = PortalNodes[k];
                     
                     int local1dAtSector = FlowFieldUtilities.GetLocal1dInSector(portalNode, sectorIndex, SectorMatrixColAmount, SectorColAmount);
-                    if (portalNode.WinPtr != windowIndex) { UnityEngine.Debug.Log(k - porStart + " and " + porCount); }
-                    if (local1dAtSector < 0)
-                    {
-                        UnityEngine.Debug.Log("offset: " + Offset);
-                    }
                     if (islandCalculationMatrix[local1dAtSector] != int.MinValue) { continue; }
                     InsertForIslandCalculationMatrixDFS(local1dAtSector, k, islandCalculationMatrix, dfsStack);
                     islandCount++;

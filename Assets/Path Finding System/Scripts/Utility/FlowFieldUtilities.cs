@@ -144,18 +144,6 @@ public static class FlowFieldUtilities
         int2 sectorStart = new int2(sector2d.x * sectorColAmount, sector2d.y * sectorColAmount);//(150,70)
         int2 local2d = picked2d - sectorStart;//(0,-2)
 
-        if(local2d.y * sectorColAmount + local2d.x < 0)
-        {
-            string debug = "sector: " + sectorIndex + "\n" +
-                "secor2d: " + sector2d +"\n"+
-                "secorstart: " + sectorStart +"\n"+
-                "p12d: " + p12d + "\n" +
-                "p22d: " + p22d + "\n" +
-                "p1Secpr2d: " + p1Secpr2d + "\n" +
-                "picked2d: " + picked2d + "\n" +
-                "local2d: " + local2d + "\n";
-            UnityEngine.Debug.Log(debug);
-        }
         return local2d.y * sectorColAmount + local2d.x;//-20
     }
     public static int GetCommonSector(PortalNode node1, PortalNode node2, int sectorColAmount, int sectorMatrixColAmount)
@@ -206,5 +194,13 @@ public static class FlowFieldUtilities
         int minComponent = math.min(change.x, change.y);
         int maxComponent = math.max(change.x, change.y);
         return minComponent * 1.4f + (maxComponent - minComponent);
+    }
+    public static float2 Local1dToPos(int localIndex, int sectorIndex, int sectorColAmount, int sectorMatrixColAmount, int fieldColAmount, float tileSize)
+    {
+        int2 local2d = new int2(localIndex % sectorColAmount, localIndex / sectorColAmount);
+        int2 sector2d = new int2(sectorIndex % sectorMatrixColAmount, sectorIndex / sectorMatrixColAmount);
+        int2 sectorStart = new int2(sector2d.x * sectorColAmount, sector2d.y * sectorColAmount);
+        int2 general2d = local2d + sectorStart;
+        return new float2(general2d.x * tileSize + tileSize / 2, general2d.y * tileSize + tileSize / 2);
     }
 }

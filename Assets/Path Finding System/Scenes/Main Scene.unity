@@ -515,6 +515,75 @@ MonoBehaviour:
   _pathfindingManager: {fileID: 2058839523}
   _agentSelectionController: {fileID: 86685056}
   _debugUIDoc: {fileID: 670569814}
+--- !u!1001 &1749617526
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 2010554042057534772, guid: 5b8107cfe6c808547b1890d4dca1b9f7,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 11
+      objectReference: {fileID: 0}
+    - target: {fileID: 2010554042057534772, guid: 5b8107cfe6c808547b1890d4dca1b9f7,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2010554042057534772, guid: 5b8107cfe6c808547b1890d4dca1b9f7,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.55
+      objectReference: {fileID: 0}
+    - target: {fileID: 2010554042057534772, guid: 5b8107cfe6c808547b1890d4dca1b9f7,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2010554042057534772, guid: 5b8107cfe6c808547b1890d4dca1b9f7,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2010554042057534772, guid: 5b8107cfe6c808547b1890d4dca1b9f7,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2010554042057534772, guid: 5b8107cfe6c808547b1890d4dca1b9f7,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2010554042057534772, guid: 5b8107cfe6c808547b1890d4dca1b9f7,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2010554042057534772, guid: 5b8107cfe6c808547b1890d4dca1b9f7,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2010554042057534772, guid: 5b8107cfe6c808547b1890d4dca1b9f7,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2010554042057534772, guid: 5b8107cfe6c808547b1890d4dca1b9f7,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2010554042057534779, guid: 5b8107cfe6c808547b1890d4dca1b9f7,
+        type: 3}
+      propertyPath: m_Name
+      value: Agnet(S)
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 5b8107cfe6c808547b1890d4dca1b9f7, type: 3}
 --- !u!114 &2058839523 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8734084087838304231, guid: 5e3867b8afbc0bb49a0027ab49965980,
@@ -537,7 +606,7 @@ PrefabInstance:
     - target: {fileID: 730032217079484805, guid: 020509caef94de64c94b7fd5a119b25d,
         type: 3}
       propertyPath: _debugTiles
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 730032217079484805, guid: 020509caef94de64c94b7fd5a119b25d,
         type: 3}
@@ -796,7 +865,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
       propertyPath: _portals
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
       propertyPath: _sectors
@@ -812,7 +881,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
       propertyPath: _portalIslands
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2070870557, guid: 6171110bace36bb42a195b4ce00d2d41, type: 3}
       propertyPath: _sectorIslands

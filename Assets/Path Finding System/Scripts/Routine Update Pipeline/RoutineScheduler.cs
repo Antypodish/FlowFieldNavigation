@@ -307,26 +307,27 @@ public class RoutineScheduler
         JobHandle tensionHandle = tensionResJob.Schedule(avoidanceHandle);
 
         //SCHEDULE WALL COLLISION JOB
-        CollisionCalculationJob collisionJob = new CollisionCalculationJob()
+
+        AgentWallCollisionJob wallCollision = new AgentWallCollisionJob()
         {
-            DeltaTime = _pathfindingManager.AgentUpdateFrequency,
-            TileSize = _pathfindingManager.TileSize,
-            FieldColAmount = _pathfindingManager.ColumnAmount,
-            FieldRowAmount = _pathfindingManager.RowAmount,
-            VertexSequence = _pathfindingManager.FieldProducer.GetVertexSequence(),
-            EdgeDirections = _pathfindingManager.FieldProducer.GetEdgeDirections(),
-            TileToWallObject = _pathfindingManager.FieldProducer.GetTileToWallObject(),
-            WallObjectList = _pathfindingManager.FieldProducer.GetWallObjectList(),
+            SectorColAmount = FlowFieldUtilities.SectorColAmount,
+            SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+            SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
+            TileSize = FlowFieldUtilities.TileSize,
+            FieldColAmount = FlowFieldUtilities.FieldColAmount,
+            FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
+            SectorRowAmount = FlowFieldUtilities.SectorRowAmount,
+            HalfTileSize = FlowFieldUtilities.TileSize / 2,
             AgentMovementData = _dirCalculator.AgentMovementDataList,
-            RoutineResultArray = _dirCalculator.RoutineResults,
             AgentPositionChangeBuffer = _dirCalculator.AgentPositionChangeBuffer,
+            CostFieldEachOffset = _costFieldCosts,
         };
-        JobHandle collisionHandle = collisionJob.Schedule(collisionJob.AgentMovementData.Length, 64, tensionHandle);
+        JobHandle wallCollisionHandle = wallCollision.Schedule(wallCollision.AgentMovementData.Length, 64, tensionHandle);
 
 
-        if (FlowFieldUtilities.DebugMode) { collisionHandle.Complete(); }
+        if (FlowFieldUtilities.DebugMode) { wallCollisionHandle.Complete(); }
 
-        _agentMovementCalculationHandle.Add(collisionHandle);
+        _agentMovementCalculationHandle.Add(wallCollisionHandle);
     }
 
 
