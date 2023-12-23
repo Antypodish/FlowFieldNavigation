@@ -7,33 +7,35 @@ using Unity.Mathematics;
 [BurstCompile]
 public struct FieldGraphConfigurationJob : IJob
 {
+    public int FieldRowAmount;
+    public int FieldColAmount;
+    public int SectorMatrixColAmount;
+    public int SectorMatrixRowAmount;
+    public int SectorColAmount;
+    public int SectorTileAmount;
+    public int PortalPerWindow;
     public UnsafeList<SectorNode> SectorNodes;
     public NativeArray<int> SecToWinPtrs;
     public NativeArray<WindowNode> WindowNodes;
     public NativeArray<int> WinToSecPtrs;
     public UnsafeList<PortalNode> PortalNodes;
     public NativeArray<PortalToPortal> PorToPorPtrs;
+    public NativeArray<byte> CostsL;
     public UnsafeList<byte> Costs;
-    public int FieldRowAmount;
-    public int FieldColAmount;
-    public int SectorTileAmount;
-    public int SectorMatrixColAmount;
-    public int SectorMatrixRowAmount;
-    public int PortalPerWindow;
     public NativeArray<AStarTile> IntegratedCosts;
     public NativeQueue<int> AStarQueue;
 
 
     public void Execute()
     {
-        ConfigureSectorNodes(SectorTileAmount);
+        ConfigureSectorNodes(SectorColAmount);
         ConfigureWindowNodes(PortalPerWindow);
         ConfigureSectorToWindowPoiners();
         ConfigureWindowToSectorPointers();
         ConfigurePortalNodes(PortalPerWindow * 8 - 2);
         ConfigurePortalToPortalPtrs();
     }
-    void ConfigureSectorNodes(int sectorSize)
+    void ConfigureSectorNodes(int sectorColAmount)
     {
         //int sectorMatrixSize = _sectorMatrixSize;
 
@@ -43,7 +45,7 @@ public struct FieldGraphConfigurationJob : IJob
             for (int c = 0; c < SectorMatrixColAmount; c++)
             {
                 int index = r * SectorMatrixColAmount + c;
-                Sector sect = new Sector(new Index2(r * sectorSize, c * sectorSize), sectorSize);
+                Sector sect = new Sector(new Index2(r * sectorColAmount, c * sectorColAmount), sectorColAmount);
                 int secToWinCnt = 4;
                 if (sect.IsOnCorner(FieldColAmount, FieldRowAmount))
                 {
@@ -320,8 +322,8 @@ public struct FieldGraphConfigurationJob : IJob
     {
         //DATA
 
-        int sectorColAmount = SectorMatrixColAmount;
-        int sectorTileAmount = SectorTileAmount;
+        int sectorMatrixColAmount = SectorMatrixColAmount;
+        int sectorColAmount = SectorColAmount;
         UnsafeList<PortalNode> portalNodes = PortalNodes;
         UnsafeList<SectorNode> sectorNodes = SectorNodes;
         NativeArray<PortalToPortal> porPtrs = PorToPorPtrs;
@@ -342,7 +344,7 @@ public struct FieldGraphConfigurationJob : IJob
                 //for each portal, set it "target" and calculate distances of others
                 PortalNode sourcePortalNode = PortalNodes[portalIndicies[j]];
                 Index2 sourceIndex = portalDeterminationArray[j] == 1 ? sourcePortalNode.Portal1.Index : sourcePortalNode.Portal2.Index;
-                NativeArray<AStarTile> integratedCosts = GetIntegratedCostsFor(pickedSector, sourceIndex);
+                NativeArray<AStarTile> integratedCosts = GetIntegratedCostsFor(i, new int2(sourceIndex.C, sourceIndex.R));
                 CalculatePortalBounds(0, j);
                 CalculatePortalBounds(j + 1, portalIndicies.Length);
 
@@ -353,9 +355,9 @@ public struct FieldGraphConfigurationJob : IJob
                         PortalNode targetPortalNode = portalNodes[portalIndicies[k]];
                         byte pickedTargetPortalNumber = portalDeterminationArray[k];
                         Index2 targetIndex = pickedTargetPortalNumber == 1 ? targetPortalNode.Portal1.Index : targetPortalNode.Portal2.Index;
-                        int targetIndexFlat = targetIndex.R * fieldColAmount + targetIndex.C;
+                        LocalIndex1d targetLocal = FlowFieldUtilities.GetLocal1D(new int2(targetIndex.C, targetIndex.R), sectorColAmount, sectorMatrixColAmount);
 
-                        float cost = integratedCosts[targetIndexFlat].IntegratedCost;
+                        float cost = integratedCosts[targetLocal.index].IntegratedCost;
 
                         if (cost == float.MaxValue) { continue; }
 
@@ -384,8 +386,8 @@ public struct FieldGraphConfigurationJob : IJob
             for(int i = 0; i < determinationArray.Length; i++)
             {
                 Portal portal1 = portalNodes[portalIndicies[i]].Portal1;
-                Index2 sectorSpaceIndex = new Index2(portal1.Index.R / sectorTileAmount, portal1.Index.C / sectorTileAmount);
-                determinationArray[i] = sectorIndex == sectorSpaceIndex.R * sectorColAmount + sectorSpaceIndex.C ? (byte) 1 : (byte) 2;
+                Index2 sectorSpaceIndex = new Index2(portal1.Index.R / sectorColAmount, portal1.Index.C / sectorColAmount);
+                determinationArray[i] = sectorIndex == sectorSpaceIndex.R * sectorMatrixColAmount + sectorSpaceIndex.C ? (byte) 1 : (byte) 2;
             }
             return determinationArray;
         }
@@ -417,35 +419,38 @@ public struct FieldGraphConfigurationJob : IJob
             return portalIndicies;
         }
     }
-    NativeArray<AStarTile> GetIntegratedCostsFor(Sector sector, Index2 target)
+    NativeArray<AStarTile> GetIntegratedCostsFor(int sectorIndex, int2 target)
     {
         //DATA
         int fieldColAmount = FieldColAmount;
         int fieldRowAmount = FieldRowAmount;
-        UnsafeList<byte> costs = Costs;
+        int sectorColAmount = SectorColAmount;
+        int sectorTileAmount = SectorTileAmount;
+        NativeSlice<byte> costs = new NativeSlice<byte>(CostsL, sectorIndex * SectorTileAmount, SectorTileAmount);
         NativeArray<AStarTile> integratedCosts = IntegratedCosts;
         NativeQueue<int> aStarQueue = AStarQueue;
 
         /////////////LOOKUP TABLE/////////////////
         //////////////////////////////////////////
-        int n;
-        int e;
-        int s;
-        int w;
-        int ne;
-        int se;
-        int sw;
-        int nw;
+        int nLocal1d;
+        int eLocal1d;
+        int sLocal1d;
+        int wLocal1d;
+        int neLocal1d;
+        int seLocal1d;
+        int swLocal1d;
+        int nwLocal1d;
         //////////////////////////////////////////
 
         //CODE
-        Reset(sector);
-        int targetIndex = Index2.ToIndex(target, FieldColAmount);
-        AStarTile targetTile = integratedCosts[targetIndex];
+        Reset();
+        LocalIndex1d targetLocal = FlowFieldUtilities.GetLocal1D(target, SectorColAmount, SectorMatrixColAmount);
+        int targetLocal1d = targetLocal.index;
+        AStarTile targetTile = integratedCosts[targetLocal1d];
         targetTile.IntegratedCost = 0f;
         targetTile.Enqueued = true;
-        integratedCosts[targetIndex] = targetTile;
-        SetLookupTable(targetIndex);
+        integratedCosts[targetLocal1d] = targetTile;
+        SetLookupTable(targetLocal1d);
         Enqueue();
         while (!AStarQueue.IsEmpty())
         {
@@ -459,133 +464,85 @@ public struct FieldGraphConfigurationJob : IJob
         return integratedCosts;
 
         //HELPERS
-        void SetLookupTable(int index)
+        void SetLookupTable(int curLocal1d)
         {
-            n = index + fieldColAmount;
-            e = index + 1;
-            s = index - fieldColAmount;
-            w = index - 1;
-            ne = n + 1;
-            se = s + 1;
-            sw = s - 1;
-            nw = n - 1;
+            nLocal1d = curLocal1d + sectorColAmount;
+            eLocal1d = curLocal1d + 1;
+            sLocal1d = curLocal1d - sectorColAmount;
+            wLocal1d = curLocal1d - 1;
+            neLocal1d = nLocal1d + 1;
+            seLocal1d = sLocal1d + 1;
+            swLocal1d = sLocal1d - 1;
+            nwLocal1d = nLocal1d - 1;
+
+            bool nLocalOverflow = nLocal1d >= sectorTileAmount;
+            bool eLocalOverflow = (eLocal1d % sectorColAmount) == 0;
+            bool sLocalOverflow = sLocal1d < 0;
+            bool wLocalOverflow = (curLocal1d % sectorColAmount) == 0;
+
+            nLocal1d = math.select(nLocal1d, curLocal1d, nLocalOverflow);
+            eLocal1d = math.select(eLocal1d, curLocal1d, eLocalOverflow);
+            sLocal1d = math.select(sLocal1d, curLocal1d, sLocalOverflow);
+            wLocal1d = math.select(wLocal1d, curLocal1d, wLocalOverflow);
+            neLocal1d = math.select(neLocal1d, curLocal1d, nLocalOverflow || eLocalOverflow);
+            seLocal1d = math.select(seLocal1d, curLocal1d, sLocalOverflow || eLocalOverflow);
+            swLocal1d = math.select(swLocal1d, curLocal1d, sLocalOverflow || wLocalOverflow);
+            nwLocal1d = math.select(nwLocal1d, curLocal1d, nLocalOverflow || wLocalOverflow);
         }
-        void Reset(Sector sector)
+        void Reset()
         {
-            Index2 lowerBound = sector.StartIndex;
-            Index2 upperBound = new Index2(sector.StartIndex.R + sector.Size - 1, sector.StartIndex.C + sector.Size - 1);
-            int lowerBoundIndex = Index2.ToIndex(lowerBound, fieldColAmount);
-            int upperBoundIndex = Index2.ToIndex(upperBound, fieldColAmount);
-
-            for (int r = lowerBoundIndex; r < lowerBoundIndex + sector.Size * fieldColAmount; r += fieldColAmount)
+            for(int i = 0; i < integratedCosts.Length; i++)
             {
-                for (int i = r; i < r + sector.Size; i++)
+                if (costs[i] == byte.MaxValue)
                 {
-                    if (costs[i] == byte.MaxValue)
-                    {
-                        integratedCosts[i] = new AStarTile(float.MaxValue, true);
-                        continue;
-                    }
-                    integratedCosts[i] = new AStarTile(float.MaxValue, false);
+                    integratedCosts[i] = new AStarTile(float.MaxValue, true);
+                    continue;
                 }
-            }
-            SetEdgesUnwalkable(sector, lowerBoundIndex, upperBoundIndex);
-
-            //HELPERS
-            void SetEdgesUnwalkable(Sector sector, int lowerBoundIndex, int upperBoundIndex)
-            {
-                bool notOnBottom = !sector.IsOnBottom();
-                bool notOnTop = !sector.IsOnTop(fieldRowAmount);
-                bool notOnRight = !sector.IsOnRight(fieldColAmount);
-                bool notOnLeft = !sector.IsOnLeft();
-                if (notOnBottom)
-                {
-                    for (int i = lowerBoundIndex - fieldColAmount; i < (lowerBoundIndex - fieldColAmount) + sector.Size; i++)
-                    {
-                        integratedCosts[i] = new AStarTile(float.MaxValue, true);
-                    }
-                }
-                if (notOnTop)
-                {
-                    for (int i = upperBoundIndex + fieldColAmount; i > upperBoundIndex + fieldColAmount - sector.Size; i--)
-                    {
-                        integratedCosts[i] = new AStarTile(float.MaxValue, true);
-                    }
-                }
-                if (notOnRight)
-                {
-                    for (int i = upperBoundIndex + 1; i >= lowerBoundIndex + sector.Size; i -= fieldColAmount)
-                    {
-                        integratedCosts[i] = new AStarTile(float.MaxValue, true);
-                    }
-                }
-                if (notOnLeft)
-                {
-                    for (int i = lowerBoundIndex - 1; i <= upperBoundIndex - sector.Size; i += fieldColAmount)
-                    {
-                        integratedCosts[i] = new AStarTile(float.MaxValue, true);
-                    }
-                }
-                if (notOnRight && notOnBottom)
-                {
-                    integratedCosts[lowerBoundIndex + sector.Size - fieldColAmount] = new AStarTile(float.MaxValue, true);
-                }
-                if (notOnRight && notOnTop)
-                {
-                    integratedCosts[upperBoundIndex + fieldColAmount + 1] = new AStarTile(float.MaxValue, true);
-                }
-                if (notOnLeft && notOnBottom)
-                {
-                    integratedCosts[lowerBoundIndex - fieldColAmount - 1] = new AStarTile(float.MaxValue, true);
-                }
-                if (notOnLeft && notOnTop)
-                {
-                    integratedCosts[upperBoundIndex + fieldColAmount - sector.Size] = new AStarTile(float.MaxValue, true);
-                }
+                integratedCosts[i] = new AStarTile(float.MaxValue, false);
             }
         }
         void Enqueue()
         {
-            if (!integratedCosts[n].Enqueued)
+            if (!integratedCosts[nLocal1d].Enqueued)
             {
-                aStarQueue.Enqueue(n);
-                AStarTile tile = integratedCosts[n];
+                aStarQueue.Enqueue(nLocal1d);
+                AStarTile tile = integratedCosts[nLocal1d];
                 tile.Enqueued = true;
-                integratedCosts[n] = tile;
+                integratedCosts[nLocal1d] = tile;
             }
-            if (!integratedCosts[e].Enqueued)
+            if (!integratedCosts[eLocal1d].Enqueued)
             {
-                aStarQueue.Enqueue(e);
-                AStarTile tile = integratedCosts[e];
+                aStarQueue.Enqueue(eLocal1d);
+                AStarTile tile = integratedCosts[eLocal1d];
                 tile.Enqueued = true;
-                integratedCosts[e] = tile;
+                integratedCosts[eLocal1d] = tile;
             }
-            if (!integratedCosts[s].Enqueued)
+            if (!integratedCosts[sLocal1d].Enqueued)
             {
-                aStarQueue.Enqueue(s);
-                AStarTile tile = integratedCosts[s];
+                aStarQueue.Enqueue(sLocal1d);
+                AStarTile tile = integratedCosts[sLocal1d];
                 tile.Enqueued = true;
-                integratedCosts[s] = tile;
+                integratedCosts[sLocal1d] = tile;
             }
-            if (!integratedCosts[w].Enqueued)
+            if (!integratedCosts[wLocal1d].Enqueued)
             {
-                aStarQueue.Enqueue(w);
-                AStarTile tile = integratedCosts[w];
+                aStarQueue.Enqueue(wLocal1d);
+                AStarTile tile = integratedCosts[wLocal1d];
                 tile.Enqueued = true;
-                integratedCosts[w] = tile;
+                integratedCosts[wLocal1d] = tile;
             }
         }
         float GetCost()
         {
             float costToReturn = float.MaxValue;
-            float nCost = integratedCosts[n].IntegratedCost + 1f;
-            float neCost = integratedCosts[ne].IntegratedCost + 1.4f;
-            float eCost = integratedCosts[e].IntegratedCost + 1f;
-            float seCost = integratedCosts[se].IntegratedCost + 1.4f;
-            float sCost = integratedCosts[s].IntegratedCost + 1f;
-            float swCost = integratedCosts[sw].IntegratedCost + 1.4f;
-            float wCost = integratedCosts[w].IntegratedCost + 1f;
-            float nwCost = integratedCosts[nw].IntegratedCost + 1.4f;
+            float nCost = integratedCosts[nLocal1d].IntegratedCost + 1f;
+            float neCost = integratedCosts[neLocal1d].IntegratedCost + 1.4f;
+            float eCost = integratedCosts[eLocal1d].IntegratedCost + 1f;
+            float seCost = integratedCosts[seLocal1d].IntegratedCost + 1.4f;
+            float sCost = integratedCosts[sLocal1d].IntegratedCost + 1f;
+            float swCost = integratedCosts[swLocal1d].IntegratedCost + 1.4f;
+            float wCost = integratedCosts[wLocal1d].IntegratedCost + 1f;
+            float nwCost = integratedCosts[nwLocal1d].IntegratedCost + 1.4f;
             if (nCost < costToReturn) { costToReturn = nCost; }
             if (neCost < costToReturn) { costToReturn = neCost; }
             if (eCost < costToReturn) { costToReturn = eCost; }

@@ -18,6 +18,7 @@ public class FieldGraph
     public NativeList<IslandData> IslandDataList;
     public UnsafeList<UnsafeList<int>> IslandFields;
     public SectorBitArray EditedSectorMarks;
+    public NativeArray<AStarTile> SectorIntegrationField;
     public AStarGrid _aStarGrid;
 
     //helper data
@@ -81,7 +82,7 @@ public class FieldGraph
         NewObstacles = new NativeList<Obstacle>(Allocator.Persistent);
         EditedWindowMarks = new NativeBitArray(WindowNodes.Length, Allocator.Persistent, NativeArrayOptions.ClearMemory);
         EditedWinodwList = new NativeList<int>(Allocator.Persistent);
-
+        SectorIntegrationField = new NativeArray<AStarTile>(FlowFieldUtilities.SectorTileAmount, Allocator.Persistent);
         int GetPortalPerWindow(int offset)
         {
             switch (offset)
@@ -105,6 +106,14 @@ public class FieldGraph
     {
         return new FieldGraphConfigurationJob()
         {
+            SectorColAmount = FlowFieldUtilities.SectorColAmount,
+            FieldColAmount = _fieldColAmount,
+            FieldRowAmount = _fieldRowAmount,
+            SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
+            SectorMatrixColAmount = _sectorMatrixColAmount,
+            SectorMatrixRowAmount = _sectorMatrixRowAmount,
+            PortalPerWindow = PortalPerWindow,
+            CostsL = _costsL,
             SectorNodes = SectorNodes,
             SecToWinPtrs = SecToWinPtrs,
             WindowNodes = WindowNodes,
@@ -112,13 +121,7 @@ public class FieldGraph
             PortalNodes = PortalNodes,
             PorToPorPtrs = PorToPorPtrs,
             Costs = _costsG,
-            FieldColAmount = _fieldColAmount,
-            FieldRowAmount = _fieldRowAmount,
-            SectorTileAmount = _sectorTileAmount,
-            SectorMatrixColAmount = _sectorMatrixColAmount,
-            SectorMatrixRowAmount = _sectorMatrixRowAmount,
-            PortalPerWindow = PortalPerWindow,
-            IntegratedCosts = _aStarGrid._integratedCosts,
+            IntegratedCosts = SectorIntegrationField,
             AStarQueue = _aStarGrid._searchQueue,
         };
     }

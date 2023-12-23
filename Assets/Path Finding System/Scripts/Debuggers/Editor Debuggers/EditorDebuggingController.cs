@@ -17,7 +17,6 @@ public class EditorDebuggingController : MonoBehaviour
     [SerializeField] bool _portals;
     [SerializeField] bool _portalsOnSector;
     [SerializeField] bool _costsToPortal;
-    [SerializeField] bool _AStar;
     [SerializeField] bool _portalIslands;
     [SerializeField] bool _sectorIslands;
     [SerializeField] bool _portalErrorDetection;
@@ -48,7 +47,6 @@ public class EditorDebuggingController : MonoBehaviour
     EditorWindowDebugger _windowDebugger;
     EditorSectorGraphDebugger _sectorGraphDebugger;
     EditorPortalDebugger _portalDebugger;
-    EditorAStarDebugger _aStarDebugger;
     EditorPathDebugger _pathDebugger;
     EditorAgentDirectionDebugger _agentDirectionDebugger;
     EditorAgentWaypointDebugger _agentWaypointDebugger;
@@ -65,7 +63,6 @@ public class EditorDebuggingController : MonoBehaviour
         _windowDebugger = new EditorWindowDebugger(_pathfindingManager);
         _sectorGraphDebugger = new EditorSectorGraphDebugger(_pathfindingManager);
         _portalDebugger = new EditorPortalDebugger(_pathfindingManager);
-        _aStarDebugger = new EditorAStarDebugger(_pathfindingManager);
         _agentDirectionDebugger = new EditorAgentDirectionDebugger(_pathfindingManager);
         _agentWaypointDebugger = new EditorAgentWaypointDebugger(_pathfindingManager);
         _costFieldDebugger = new EditorCostFieldDebugger(_pathfindingManager);
@@ -90,7 +87,6 @@ public class EditorDebuggingController : MonoBehaviour
         if(_portals && _portalDebugger != null) { _portalDebugger.DebugPortals((int) _costFieldOffset); }
         if(_portalsOnSector && _portalDebugger != null) { _portalDebugger.DebugPortalsOnClickedSector((int) _costFieldOffset); }
         if(_costsToPortal && _portalDebugger != null) { _portalDebugger.DebugCostsToClickedPortal((int) _costFieldOffset); }
-        if(_AStar && _aStarDebugger != null) { _aStarDebugger.DebugAstarForPortal((int) _costFieldOffset); }
         if(_costField && _costFieldDebugger != null) { _costFieldDebugger.DebugCostFieldWithMesh((int) _costFieldOffset); }
         if(_portalIslands && _islandDebugger != null) { _islandDebugger.DebugPortalIslands((int) _costFieldOffset); }
         if(_sectorIslands && _islandDebugger != null) { _islandDebugger.DebugTileIslands((int) _costFieldOffset); }
