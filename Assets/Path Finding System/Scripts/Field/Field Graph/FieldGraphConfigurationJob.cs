@@ -3,6 +3,7 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
+using static UnityEngine.Rendering.DebugUI.Table;
 
 [BurstCompile]
 public struct FieldGraphConfigurationJob : IJob
@@ -12,6 +13,7 @@ public struct FieldGraphConfigurationJob : IJob
     public int SectorMatrixColAmount;
     public int SectorMatrixRowAmount;
     public int SectorColAmount;
+    public int SectorRowAmount;
     public int SectorTileAmount;
     public int PortalPerWindow;
     public UnsafeList<SectorNode> SectorNodes;
@@ -20,8 +22,7 @@ public struct FieldGraphConfigurationJob : IJob
     public NativeArray<int> WinToSecPtrs;
     public UnsafeList<PortalNode> PortalNodes;
     public NativeArray<PortalToPortal> PorToPorPtrs;
-    public NativeArray<byte> CostsL;
-    public UnsafeList<byte> Costs;
+    public NativeArray<byte> Costs;
     public NativeArray<AStarTile> IntegratedCosts;
     public NativeQueue<int> AStarQueue;
 
@@ -86,9 +87,12 @@ public struct FieldGraphConfigurationJob : IJob
         //DATA
 
         int porPtrJumpFactor = portalPerWindow;
-        UnsafeList<byte> costs = Costs;
+        NativeArray<byte> costField = Costs;
         int fieldColAmount = FieldColAmount;
-
+        int sectorColAmount = SectorColAmount;
+        int sectorRowAmount = SectorRowAmount;
+        int sectorMatrixColAmount = SectorMatrixColAmount;
+        int sectorTileAmount = SectorTileAmount;
         //CODE
 
         int windowNodesIndex = 0;
@@ -138,36 +142,42 @@ public struct FieldGraphConfigurationJob : IJob
         {
             if (window.IsHorizontal())  //if horizontal
             {
+                int2 windowBotLeft = new int2(window.BottomLeftBoundary.C, window.BottomLeftBoundary.R);
+                int2 windowTopRight = new int2(window.TopRightBoundary.C, window.TopRightBoundary.R);
+                int sectorBot = FlowFieldUtilities.GetSector1D(windowBotLeft, sectorColAmount, sectorMatrixColAmount);
+                int sectorTop = FlowFieldUtilities.GetSector1D(windowTopRight, sectorColAmount, sectorMatrixColAmount);
+                int botStartIndex = sectorBot * sectorTileAmount + (sectorColAmount * (sectorRowAmount - 1));
+                int topStartIndex = sectorTop * sectorTileAmount;
+
                 int portalAmount = 0;
                 bool wasUnwalkableFlag = true;
-                int startCol = window.BottomLeftBoundary.C;
-                int lastCol = window.TopRightBoundary.C;
-                int row1 = window.BottomLeftBoundary.R;
-                int row2 = window.TopRightBoundary.R;
-                for (int i = startCol; i <= lastCol; i++)
+                for (int i = 0; i < sectorColAmount; i++)
                 {
-                    int costIndex1 = row1 * fieldColAmount + i;
-                    int costIndex2 = row2 * fieldColAmount + i;
-                    if (costs[costIndex1] == byte.MaxValue) { wasUnwalkableFlag = true; }
-                    else if (costs[costIndex2] == byte.MaxValue) { wasUnwalkableFlag = true; }
+                    int botIndex = botStartIndex + i;
+                    int topIndex = topStartIndex + i;
+                    if (costField[botIndex] == byte.MaxValue) { wasUnwalkableFlag = true; }
+                    else if (costField[topIndex] == byte.MaxValue) { wasUnwalkableFlag = true; }
                     else if (wasUnwalkableFlag) { portalAmount++; wasUnwalkableFlag = false; }
                 }
                 return portalAmount;
             }
             else //if vertical
             {
+                int2 windowBotLeft = new int2(window.BottomLeftBoundary.C, window.BottomLeftBoundary.R);
+                int2 windowTopRight = new int2(window.TopRightBoundary.C, window.TopRightBoundary.R);
+                int sectorLeft = FlowFieldUtilities.GetSector1D(windowBotLeft, sectorColAmount, sectorMatrixColAmount);
+                int sectorRight = FlowFieldUtilities.GetSector1D(windowTopRight, sectorColAmount, sectorMatrixColAmount);
+                int leftStartIndex = sectorLeft * sectorTileAmount + sectorColAmount - 1;
+                int rightStartIndex = sectorRight * sectorTileAmount;
+
                 int portalAmount = 0;
                 bool wasUnwalkableFlag = true;
-                int startRow = window.BottomLeftBoundary.R;
-                int lastRow = window.TopRightBoundary.R;
-                int col1 = window.BottomLeftBoundary.C;
-                int col2 = window.TopRightBoundary.C;
-                for (int i = startRow; i <= lastRow; i++)
+                for (int i = 0; i < sectorRowAmount; i++)
                 {
-                    int costIndex1 = i * fieldColAmount + col1;
-                    int costIndex2 = i * fieldColAmount + col2;
-                    if (costs[costIndex1] == byte.MaxValue) { wasUnwalkableFlag = true; }
-                    else if (costs[costIndex2] == byte.MaxValue) { wasUnwalkableFlag = true; }
+                    int leftIndex = leftStartIndex + i * sectorColAmount;
+                    int rightIndex = rightStartIndex + i * sectorColAmount;
+                    if (costField[leftIndex] == byte.MaxValue) { wasUnwalkableFlag = true; }
+                    else if (costField[rightIndex] == byte.MaxValue) { wasUnwalkableFlag = true; }
                     else if (wasUnwalkableFlag) { portalAmount++; wasUnwalkableFlag = false; }
                 }
                 return portalAmount;
@@ -200,8 +210,12 @@ public struct FieldGraphConfigurationJob : IJob
         NativeArray<int> winToSecPtrs = WinToSecPtrs;
         int fieldColAmount = FieldColAmount;
         int fieldRowAmount = FieldRowAmount;
+        int sectorColAmount = SectorColAmount;
+        int sectorRowAmount = SectorRowAmount;
+        int sectorTileAmount = SectorTileAmount;
+        int sectorMatrixColAmount = SectorMatrixColAmount;
         NativeArray<WindowNode> windowNodes = WindowNodes;
-        UnsafeList<byte> costs = Costs;
+        NativeArray<byte> costs = Costs;
         UnsafeList<PortalNode> portalNodes = PortalNodes;
 
         for (int i = 0; i < windowNodes.Length; i++)
@@ -217,6 +231,17 @@ public struct FieldGraphConfigurationJob : IJob
             }
             void ConfigureForHorizontal()
             {
+                int2 windowBotLeft = new int2(window.BottomLeftBoundary.C, window.BottomLeftBoundary.R);
+                int2 windowTopRight = new int2(window.TopRightBoundary.C, window.TopRightBoundary.R);
+                int2 sectorBot = FlowFieldUtilities.GetSector2D(windowBotLeft, sectorColAmount);
+                int2 sectorTop = FlowFieldUtilities.GetSector2D(windowTopRight, sectorColAmount);
+                int2 sectorBotStart = FlowFieldUtilities.GetSectorStartIndex(sectorBot, sectorColAmount);
+                int2 sectorTopStart = FlowFieldUtilities.GetSectorStartIndex(sectorTop, sectorColAmount);
+                int sectorBot1d = FlowFieldUtilities.To1D(sectorBot, sectorMatrixColAmount);
+                int sectorTop1d = FlowFieldUtilities.To1D(sectorTop, sectorMatrixColAmount);
+                int sectorBotCostStart = sectorBot1d * sectorTileAmount;
+                int sectorTopCostStart = sectorTop1d * sectorTileAmount;
+
                 int porPtr = windowNodes[i].PorPtr;
                 int portalCount = 0;
                 bool wasUnwalkable = true;
@@ -228,9 +253,12 @@ public struct FieldGraphConfigurationJob : IJob
                 int row2 = window.TopRightBoundary.R;
                 for (int j = startCol; j <= lastCol; j++)
                 {
-                    int index1 = row1 * fieldColAmount + j;
-                    int index2 = row2 * fieldColAmount + j;
-                    if (costs[index1] != byte.MaxValue && costs[index2] != byte.MaxValue)
+                    int2 botIndexGeneral2d = new int2(j, row1);
+                    int2 topIndexGeneral2d = new int2(j, row2);
+                    int botLocalIndex = FlowFieldUtilities.GetLocal1D(botIndexGeneral2d, sectorBotStart, sectorColAmount);
+                    int topLocalIndex = FlowFieldUtilities.GetLocal1D(topIndexGeneral2d, sectorTopStart, sectorColAmount);
+
+                    if (costs[sectorBotCostStart + botLocalIndex] != byte.MaxValue && costs[sectorTopCostStart + topLocalIndex] != byte.MaxValue)
                     {
                         if (wasUnwalkable)
                         {
@@ -243,7 +271,7 @@ public struct FieldGraphConfigurationJob : IJob
                             bound2 = new Index2(row2, j);
                         }
                     }
-                    if ((costs[index1] == byte.MaxValue || costs[index2] == byte.MaxValue) && !wasUnwalkable)
+                    if ((costs[sectorBotCostStart + botLocalIndex] == byte.MaxValue || costs[sectorTopCostStart + topLocalIndex] == byte.MaxValue) && !wasUnwalkable)
                     {
                         portalNodes[porPtr + portalCount] = GetPortalNodeBetween(bound1, bound2, porPtr, portalCount, i, true);
                         portalCount++;
@@ -257,20 +285,34 @@ public struct FieldGraphConfigurationJob : IJob
             }
             void ConfigureForVertical()
             {
+                int2 windowBotLeft = new int2(window.BottomLeftBoundary.C, window.BottomLeftBoundary.R);
+                int2 windowTopRight = new int2(window.TopRightBoundary.C, window.TopRightBoundary.R);
+                int2 sectorLeft = FlowFieldUtilities.GetSector2D(windowBotLeft, sectorColAmount);
+                int2 sectorRight = FlowFieldUtilities.GetSector2D(windowTopRight, sectorColAmount);
+                int2 sectorLeftStart = FlowFieldUtilities.GetSectorStartIndex(sectorLeft, sectorColAmount);
+                int2 sectorRightStart = FlowFieldUtilities.GetSectorStartIndex(sectorRight, sectorColAmount);
+                int sectorLeft1d = FlowFieldUtilities.To1D(sectorLeft, sectorMatrixColAmount);
+                int sectorRight1d = FlowFieldUtilities.To1D(sectorRight, sectorMatrixColAmount);
+                int sectorLeftCostStart = sectorLeft1d * sectorTileAmount;
+                int sectorRightCostStart = sectorRight1d * sectorTileAmount;
+
                 int porPtr = windowNodes[i].PorPtr;
                 int portalCount = 0;
                 bool wasUnwalkable = true;
                 Index2 bound1 = new Index2();
                 Index2 bound2 = new Index2();
+                
                 int startRow = window.BottomLeftBoundary.R;
                 int lastRow = window.TopRightBoundary.R;
                 int col1 = window.BottomLeftBoundary.C;
                 int col2 = window.TopRightBoundary.C;
                 for (int j = startRow; j <= lastRow; j++)
                 {
-                    int index1 = j * fieldColAmount + col1;
-                    int index2 = j * fieldColAmount + col2;
-                    if (costs[index1] != byte.MaxValue && costs[index2] != byte.MaxValue)
+                    int2 leftIndexGeneral2d = new int2(col1, j);
+                    int2 rightIndexGeneral2d = new int2(col2, j);
+                    int leftLocalIndex = FlowFieldUtilities.GetLocal1D(leftIndexGeneral2d, sectorLeftStart, sectorColAmount);
+                    int rightLocalIndex = FlowFieldUtilities.GetLocal1D(rightIndexGeneral2d, sectorRightStart, sectorColAmount);
+                    if (costs[sectorLeftCostStart + leftLocalIndex] != byte.MaxValue && costs[sectorRightCostStart + rightLocalIndex] != byte.MaxValue)
                     {
                         if (wasUnwalkable)
                         {
@@ -283,7 +325,7 @@ public struct FieldGraphConfigurationJob : IJob
                             bound2 = new Index2(j, col2);
                         }
                     }
-                    if ((costs[index1] == byte.MaxValue || costs[index2] == byte.MaxValue) && !wasUnwalkable)
+                    if ((costs[sectorLeftCostStart + leftLocalIndex] == byte.MaxValue || costs[sectorRightCostStart + rightLocalIndex] == byte.MaxValue) && !wasUnwalkable)
                     {
                         portalNodes[porPtr + portalCount] = GetPortalNodeBetween(bound1, bound2, porPtr, portalCount, i, false);
                         portalCount++;
@@ -294,7 +336,6 @@ public struct FieldGraphConfigurationJob : IJob
                 {
                     portalNodes[porPtr + portalCount] = GetPortalNodeBetween(bound1, bound2, porPtr, portalCount, i, false);
                 }
-                
             }
         }
         PortalNode GetPortalNodeBetween(Index2 boundary1, Index2 boundary2, int porPtr, int portalCount, int winPtr, bool isHorizontal)
@@ -426,7 +467,7 @@ public struct FieldGraphConfigurationJob : IJob
         int fieldRowAmount = FieldRowAmount;
         int sectorColAmount = SectorColAmount;
         int sectorTileAmount = SectorTileAmount;
-        NativeSlice<byte> costs = new NativeSlice<byte>(CostsL, sectorIndex * SectorTileAmount, SectorTileAmount);
+        NativeSlice<byte> costs = new NativeSlice<byte>(Costs, sectorIndex * SectorTileAmount, SectorTileAmount);
         NativeArray<AStarTile> integratedCosts = IntegratedCosts;
         NativeQueue<int> aStarQueue = AStarQueue;
 
