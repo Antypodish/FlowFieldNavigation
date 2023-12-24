@@ -117,7 +117,7 @@ public class EditorIslandDebugger
         float tileSize = FlowFieldUtilities.TileSize;
         FieldGraph fieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(offset);
         UnsafeList<SectorNode> sectorNodes = fieldGraph.SectorNodes;
-        NativeArray<byte> costsl = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(offset).CostsL;
+        NativeArray<byte> costsl = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(offset).Costs;
         UnsafeList<UnsafeList<int>> islandFields = fieldGraph.IslandFields;
         UnsafeList<PortalNode> portalNodes = fieldGraph.PortalNodes;
         for (int i = 0; i < sectorNodes.Length; i++)

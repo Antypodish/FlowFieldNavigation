@@ -19,7 +19,7 @@ public class EditorCostFieldDebugger
         _pathfindingManager = pathfindingManager;
 
         //configure debug mesh
-        float tileSize = 1;
+        float tileSize = FlowFieldUtilities.TileSize;
         _debugMesh = new Mesh();
         _debugVerticies = new Vector3[4];
         _debugTriangles = new int[6];
@@ -59,7 +59,7 @@ public class EditorCostFieldDebugger
     public void DebugCostFieldWithMesh(int offset)
     {
         Gizmos.color = Color.black;
-        NativeArray<byte> costs = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(offset).CostsL;
+        NativeArray<byte> costs = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(offset).Costs;
         float yOffset = .02f;
         float tileSize = _pathfindingManager.TileSize;
         int sectorColAmount = _pathfindingManager.SectorColAmount;

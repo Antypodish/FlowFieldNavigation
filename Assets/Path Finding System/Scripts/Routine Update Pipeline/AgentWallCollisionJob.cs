@@ -21,6 +21,8 @@ public struct AgentWallCollisionJob : IJobParallelFor
     public void Execute(int index)
     {
         AgentMovementData agentData = AgentMovementData[index];
+        float agentRadiusWithoutHalfTile = agentData.Radius - HalfTileSize;
+        float agentRadius = math.select(agentRadiusWithoutHalfTile % TileSize, agentData.Radius, agentRadiusWithoutHalfTile < 0);
         float2 agentPos = new float2(agentData.Position.x, agentData.Position.z);
         UnsafeListReadOnly<byte> costs = CostFieldEachOffset[agentData.Offset];
         int2 agentGeneral2d = FlowFieldUtilities.PosTo2D(agentPos, TileSize);
@@ -33,7 +35,7 @@ public struct AgentWallCollisionJob : IJobParallelFor
             WallDirection wallDirectionToCollide = GetWallDirectionToCollide(agentPos, agentGeneral2d, cleanGeneral2d, wallDirections);
             if(wallDirectionToCollide == WallDirection.None) { return; }
             float2 clearTilePos = FlowFieldUtilities.IndexToPos(cleanGeneral2d, TileSize);
-            float2 pushForce = GetPushForceOutside(agentPos, agentData.Radius, clearTilePos, wallDirectionToCollide);
+            float2 pushForce = GetPushForceOutside(agentPos, agentRadius, clearTilePos, wallDirectionToCollide);
             AgentPositionChangeBuffer[index] += pushForce;
         }
         else
@@ -43,7 +45,7 @@ public struct AgentWallCollisionJob : IJobParallelFor
             WallDirection wallDirectionToCollide = GetWallDirectionToCollide(agentPos, agentGeneral2d, cleanGeneral2d, wallDirections);
             if (wallDirectionToCollide == WallDirection.None) { return; }
             float2 clearTilePos = FlowFieldUtilities.IndexToPos(cleanGeneral2d, TileSize);
-            float2 pushForce = GetPushForceInside(agentPos, agentData.Radius, clearTilePos, wallDirectionToCollide);
+            float2 pushForce = GetPushForceInside(agentPos, agentRadius, clearTilePos, wallDirectionToCollide);
             AgentPositionChangeBuffer[index] += pushForce;
         }
 

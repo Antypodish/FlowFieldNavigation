@@ -174,7 +174,13 @@ public static class FlowFieldUtilities
         sector1 = n1p1sector2d.y * sectorMatrixColAmount + n1p1sector2d.x;
         sector2 = n1p2sector2d.y * sectorMatrixColAmount + n1p2sector2d.x;
     }
-    public static int RadiusToOffset(float radius, float tileSize) => (int)math.floor(radius + tileSize / 2);
+    public static int RadiusToOffset(float radius, float tileSize)
+    {
+        float offsetZeroSize = tileSize / 2;
+        float radiusWithoutOffsetZeroSize = radius - offsetZeroSize;
+        int offset = (int)math.floor(radiusWithoutOffsetZeroSize / tileSize) + 1;
+        return math.select(offset, 0, radiusWithoutOffsetZeroSize < 0);
+    }
     public static float GetCostBetween(int sector1, int local1, int sector2, int local2, int sectorColAmount, int sectorMatrixColAmount)
     {
         int2x2 sectors2d = new int2x2()

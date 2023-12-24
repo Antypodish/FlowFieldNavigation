@@ -33,8 +33,8 @@ public struct AgentRoutineDataCalculationJob : IJobParallelFor
         int sector1d = sector2d.y * SectorMatrixColAmount + sector2d.x;
 
         data.Local1d = (ushort)local1d;
-
-
+        data.Offset = FlowFieldUtilities.RadiusToOffset(data.Radius, tileSize);
+        
         if ((data.Status & AgentStatus.Moving) != AgentStatus.Moving)
         {
             AgentOutOfFieldStatusList[index] = new OutOfFieldStatus()

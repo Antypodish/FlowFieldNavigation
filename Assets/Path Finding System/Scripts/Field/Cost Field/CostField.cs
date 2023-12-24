@@ -7,9 +7,10 @@ using Unity.Mathematics;
 public class CostField
 {
     public int Offset;
-    public NativeArray<byte> CostsL;
+    public NativeArray<byte> Costs;
+    public NativeArray<byte> BaseCosts;
+    public NativeArray<int> StampCounts;
     public UnsafeListReadOnly<byte> CostsLReadonlyUnsafe;
-
     public CostField(WalkabilityData walkabilityData, int offset, int sectorColAmount, int sectorMatrixColAmount, int sectorMatrixRowAmount)
     {
         int fieldRowAmount = walkabilityData.RowAmount;
@@ -20,10 +21,13 @@ public class CostField
         //configure costs
         UnsafeList<byte> costsG = new UnsafeList<byte>(fieldRowAmount * fieldColAmount, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
         costsG.Length = fieldColAmount * fieldRowAmount;
-        CostsL = new NativeArray<byte>(fieldColAmount * fieldRowAmount, Allocator.Persistent);
-        CostsLReadonlyUnsafe = FlowFieldUtilitiesUnsafe.ToUnsafeListRedonly(CostsL);
+        Costs = new NativeArray<byte>(fieldColAmount * fieldRowAmount, Allocator.Persistent);
+        BaseCosts = new NativeArray<byte>(Costs.Length, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
+        StampCounts = new NativeArray<int>(Costs.Length, Allocator.Persistent, NativeArrayOptions.ClearMemory);
+        CostsLReadonlyUnsafe = FlowFieldUtilitiesUnsafe.ToUnsafeListRedonly(Costs);
         CalculateCosts();
         ConvertToNewCosts();
+        BaseCosts.CopyFrom(Costs);
 
         //HELPERS
         void CalculateCosts()
@@ -79,7 +83,7 @@ public class CostField
                     int sector1d = sector2d.y * sectorMatrixColAmount + sector2d.x;
                     int sectorDownLeft = sectorStart1d;
                     int sectorUpLeft = sectorEnd1d - sectorColAmount;
-                    NativeSlice<byte> curSector = new NativeSlice<byte>(CostsL, sector1d * sectorTileAmount, sectorTileAmount);
+                    NativeSlice<byte> curSector = new NativeSlice<byte>(Costs, sector1d * sectorTileAmount, sectorTileAmount);
                     for (int i = sectorDownLeft; i < sectorUpLeft; i += fieldColAmount)
                     {
                         for(int j = i; j < i + sectorColAmount; j++)

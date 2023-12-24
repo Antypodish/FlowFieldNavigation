@@ -64,7 +64,7 @@ public class LOSIntegrationScheduler
                 TileSize = FlowFieldUtilities.TileSize,
                 FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
 
-                Costs = pickedCostField.CostsL,
+                Costs = pickedCostField.Costs,
                 SectorToPicked = locationData.SectorToPicked,
                 IntegrationField = path.IntegrationField,
                 Target = targetIndex,
@@ -85,7 +85,7 @@ public class LOSIntegrationScheduler
                 TileSize = FlowFieldUtilities.TileSize,
                 FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
 
-                Costs = pickedCostField.CostsL,
+                Costs = pickedCostField.Costs,
                 SectorToPicked = locationData.SectorToPicked,
                 IntegrationField = path.IntegrationField,
                 Target = targetIndex,

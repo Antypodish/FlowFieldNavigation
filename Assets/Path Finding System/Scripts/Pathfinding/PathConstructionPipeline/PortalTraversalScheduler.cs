@@ -51,7 +51,7 @@ internal class PortalTraversalScheduler
             SourcePositions = sources,
             PorPtrs = pickedFieldGraph.PorToPorPtrs,
             SectorNodes = pickedFieldGraph.SectorNodes,
-            Costs = pickedCostField.CostsL,
+            Costs = pickedCostField.Costs,
             LocalDirections = _pathfindingManager.FieldProducer.GetSectorDirections(),
             SectorToPicked = locationData.SectorToPicked,
             FlowFieldLength = path.FlowFieldLength,

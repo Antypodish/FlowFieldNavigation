@@ -31,7 +31,7 @@ public class FlowCalculationScheduler
         PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
         PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
         CostField pickedCostField = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(destinationData.Offset);
-        
+
         //RESET NEW INT FIELD INDICIES
         int lastIntegrationFieldLength = path.IntegrationField.Length;
         int curIntegrationFieldLength = path.FlowFieldLength[0];
@@ -61,7 +61,7 @@ public class FlowCalculationScheduler
             {
                 SectorIndex = sectorIndex,
                 StartIndicies = path.ActivePortalList[(sectorStart - 1) / FlowFieldUtilities.SectorTileAmount],
-                Costs = new NativeSlice<byte>(pickedCostField.CostsL, sectorIndex * FlowFieldUtilities.SectorTileAmount, FlowFieldUtilities.SectorTileAmount),
+                Costs = new NativeSlice<byte>(pickedCostField.Costs, sectorIndex * FlowFieldUtilities.SectorTileAmount, FlowFieldUtilities.SectorTileAmount),
                 IntegrationField = integrationSector,
                 SectorToPicked = locationData.SectorToPicked,
                 SectorColAmount = FlowFieldUtilities.SectorColAmount,
@@ -102,7 +102,7 @@ public class FlowCalculationScheduler
                 PickedToSector = path.PickedToSector,
                 FlowFieldCalculationBuffer = flowFieldCalculationBuffer,
                 IntegrationField = path.IntegrationField,
-                Costs = pickedCostField.CostsL,
+                Costs = pickedCostField.Costs,
             };
             JobHandle flowHandle = ffJob.Schedule(flowFieldCalculationBuffer.Length, 256, intFieldCombinedHandle);
             flowfieldHandles.Add(flowHandle);

@@ -16,7 +16,7 @@ public class AgentFactory
     public void AddAgent(Vector3 position)
     {
         //DO NOT ADD IF UNWALKABLE
-        NativeArray<byte> costsG = _pathfindingingManager.FieldProducer.GetCostFieldWithOffset(0).CostsL;
+        NativeArray<byte> costsG = _pathfindingingManager.FieldProducer.GetCostFieldWithOffset(0).Costs;
         float tileSize = _pathfindingingManager.TileSize;
 
         //int2 general2d = new int2(Mathf.FloorToInt(position.x / tileSize), Mathf.FloorToInt(position.z / tileSize));

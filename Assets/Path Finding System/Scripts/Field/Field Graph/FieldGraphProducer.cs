@@ -15,7 +15,7 @@ public class FieldGraphProducer
         _fieldGraphs = new FieldGraph[costFields.Length];
         for (int i = 0; i < _fieldGraphs.Length; i++)
         {
-            _fieldGraphs[i] = new FieldGraph(costFields[i].CostsL, sectorColAmount, fieldRowAmount, fieldColAmount, i, tileSize);
+            _fieldGraphs[i] = new FieldGraph(costFields[i].Costs, sectorColAmount, fieldRowAmount, fieldColAmount, i, tileSize);
         }
 
         //CONFIGURE FIELD GRAPHS
