@@ -25,7 +25,7 @@ public class FieldGraph
     public NativeList<int> EditedSectorList;
     public NativeBitArray EditedWindowMarks;
     public NativeList<int> EditedWinodwList;
-    public NativeList<Obstacle> NewObstacles;
+    public NativeList<CostEdit> NewCostEdits;
 
     float _tileSize;
     int _fieldRowAmount;
@@ -75,7 +75,7 @@ public class FieldGraph
         }
         EditedSectorList = new NativeList<int>(Allocator.Persistent);
         EditedSectorMarks = new SectorBitArray(FlowFieldUtilities.SectorMatrixTileAmount, Allocator.Persistent);
-        NewObstacles = new NativeList<Obstacle>(Allocator.Persistent);
+        NewCostEdits = new NativeList<CostEdit>(Allocator.Persistent);
         EditedWindowMarks = new NativeBitArray(WindowNodes.Length, Allocator.Persistent, NativeArrayOptions.ClearMemory);
         EditedWinodwList = new NativeList<int>(Allocator.Persistent);
         SectorIntegrationField = new NativeArray<AStarTile>(FlowFieldUtilities.SectorTileAmount, Allocator.Persistent);

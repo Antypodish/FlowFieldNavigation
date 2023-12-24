@@ -12,7 +12,7 @@ using UnityEngine;
 public struct CostFieldEditJob : IJob
 {
     public int Offset;
-    public NativeList<Obstacle> NewObstacles;
+    public NativeList<CostEdit> NewCostEdits;
     public UnsafeList<SectorNode> SectorNodes;
     public NativeArray<int> SecToWinPtrs;
     public NativeArray<WindowNode> WindowNodes;
@@ -21,7 +21,7 @@ public struct CostFieldEditJob : IJob
     public NativeArray<PortalToPortal> PorPtrs;
     public NativeArray<byte> Costs;
     public NativeArray<byte> BaseCosts;
-    public NativeArray<int> CostStamps;
+    public NativeArray<uint> CostStamps;
     public int FieldColAmount;
     public int FieldRowAmount;
     public int SectorColAmount;
@@ -46,20 +46,21 @@ public struct CostFieldEditJob : IJob
         EditedSectorIndicies.Clear();
 
         //GIVE OFFSET TO OBSTACLE REQUESTS
-        for(int i = 0; i < NewObstacles.Length; i++)
+        for(int i = 0; i < NewCostEdits.Length; i++)
         {
-            Obstacle obstacle = NewObstacles[i];
-            int2 newBotLeft = obstacle.BotLeftBound + new int2(-Offset, -Offset);
-            int2 newTopRight = obstacle.TopRightBound + new int2(Offset, Offset);
+            CostEdit edit = NewCostEdits[i];
+            int2 newBotLeft = edit.BotLeftBound + new int2(-Offset, -Offset);
+            int2 newTopRight = edit.TopRightBound + new int2(Offset, Offset);
 
             newBotLeft.x = math.select(newBotLeft.x, 0, newBotLeft.x < 0);
             newBotLeft.y = math.select(newBotLeft.y, 0, newBotLeft.y < 0);
             newTopRight.x = math.select(newTopRight.x, FieldColAmount - 1, newTopRight.x >= FieldColAmount);
             newTopRight.y = math.select(newTopRight.y, FieldRowAmount - 1, newTopRight.y >= FieldRowAmount);
-            NewObstacles[i] = new Obstacle()
+            NewCostEdits[i] = new CostEdit()
             {
                 TopRightBound = newTopRight,
                 BotLeftBound = newBotLeft,
+                EditType = edit.EditType,
             };
         }
 
@@ -128,11 +129,11 @@ public struct CostFieldEditJob : IJob
         int sectorMatrixColAmount = SectorMatrixColAmount;
         int sectorTileAmount = SectorColAmount * SectorColAmount;
 
-        for (int i = 0; i < NewObstacles.Length; i++)
+        for (int i = 0; i < NewCostEdits.Length; i++)
         {
-            Obstacle obstacle = NewObstacles[i];
-            Index2 botLeft = new Index2(obstacle.BotLeftBound.y, obstacle.BotLeftBound.x);
-            Index2 topRight = new Index2(obstacle.TopRightBound.y, obstacle.TopRightBound.x);
+            CostEdit edit = NewCostEdits[i];
+            Index2 botLeft = new Index2(edit.BotLeftBound.y, edit.BotLeftBound.x);
+            Index2 topRight = new Index2(edit.TopRightBound.y, edit.TopRightBound.x);
             if (botLeft.R == 0) { botLeft.R += 1; }
             if (botLeft.C == 0) { botLeft.C += 1; }
             if (topRight.R == FieldRowAmount - 1) { topRight.R -= 1; }
@@ -144,19 +145,46 @@ public struct CostFieldEditJob : IJob
             LocalIndex1d startLocal1d = localBotLeft;
             LocalIndex1d curLocalIndex = localBotLeft;
             NativeSlice<byte> costSector;
-            NativeSlice<int> costStampSector;
-            for (int index = 0; index <= northCount; index++)
+            NativeSlice<uint> costStampSector;
+            NativeSlice<byte> baseCostSector;
+            if(edit.EditType == CostEditType.Set)
             {
-                for (int j = 0; j <= eastCount; j++)
+                for (int index = 0; index <= northCount; index++)
                 {
-                    costSector = new NativeSlice<byte>(Costs, curLocalIndex.sector * sectorTileAmount, sectorTileAmount);
-                    costStampSector = new NativeSlice<int>(CostStamps, curLocalIndex.sector * sectorTileAmount, sectorTileAmount);
-                    costStampSector[curLocalIndex.index] += 1;
-                    costSector[curLocalIndex.index] = byte.MaxValue;
-                    curLocalIndex = GetEast(curLocalIndex);
+                    for (int j = 0; j <= eastCount; j++)
+                    {
+                        costSector = new NativeSlice<byte>(Costs, curLocalIndex.sector * sectorTileAmount, sectorTileAmount);
+                        costStampSector = new NativeSlice<uint>(CostStamps, curLocalIndex.sector * sectorTileAmount, sectorTileAmount);
+                        costStampSector[curLocalIndex.index] += 1;
+                        costSector[curLocalIndex.index] = byte.MaxValue;
+                        curLocalIndex = GetEast(curLocalIndex);
+                    }
+                    startLocal1d = GetNorth(startLocal1d);
+                    curLocalIndex = startLocal1d;
                 }
-                startLocal1d = GetNorth(startLocal1d);
-                curLocalIndex = startLocal1d;
+            }
+            else if(edit.EditType == CostEditType.Clear)
+            {
+
+                for (int index = 0; index <= northCount; index++)
+                {
+                    for (int j = 0; j <= eastCount; j++)
+                    {
+                        costSector = new NativeSlice<byte>(Costs, curLocalIndex.sector * sectorTileAmount, sectorTileAmount);
+                        costStampSector = new NativeSlice<uint>(CostStamps, curLocalIndex.sector * sectorTileAmount, sectorTileAmount);
+                        baseCostSector = new NativeSlice<byte>(BaseCosts, curLocalIndex.sector * sectorTileAmount, sectorTileAmount);
+
+                        uint curStamp = costStampSector[curLocalIndex.index] - 1;
+                        costStampSector[curLocalIndex.index] = curStamp;
+                        if(curStamp == 0)
+                        {
+                            costSector[curLocalIndex.index] = baseCostSector[curLocalIndex.index];
+                        }
+                        curLocalIndex = GetEast(curLocalIndex);
+                    }
+                    startLocal1d = GetNorth(startLocal1d);
+                    curLocalIndex = startLocal1d;
+                }
             }
         }
         
@@ -192,12 +220,12 @@ public struct CostFieldEditJob : IJob
     }
     void SetSectorsBetweenBounds()
     {
-        for(int index = 0; index < NewObstacles.Length; index++)
+        for(int index = 0; index < NewCostEdits.Length; index++)
         {
-            Obstacle costEdit = NewObstacles[index];
+            CostEdit edit = NewCostEdits[index];
 
-            Index2 botLeft = new Index2(costEdit.BotLeftBound.y, costEdit.BotLeftBound.x);
-            Index2 topRight = new Index2(costEdit.TopRightBound.y, costEdit.TopRightBound.x);
+            Index2 botLeft = new Index2(edit.BotLeftBound.y, edit.BotLeftBound.x);
+            Index2 topRight = new Index2(edit.TopRightBound.y, edit.TopRightBound.x);
             int bottomLeftRow = botLeft.R / SectorColAmount;
             int bottomLeftCol = botLeft.C / SectorColAmount;
             int upperRightRow = topRight.R / SectorColAmount;
@@ -226,7 +254,7 @@ public struct CostFieldEditJob : IJob
                     if (EditedSectorBits.HasBit(i)) { continue; }
                     EditedSectorBits.SetSector(i);
                     EditedSectorIndicies.Add(i);
-                    AddToEditedWindowsIfBoundsIntersect(costEdit.BotLeftBound, costEdit.TopRightBound, i);
+                    AddToEditedWindowsIfBoundsIntersect(edit.BotLeftBound, edit.TopRightBound, i);
                 }
             }
             if (!isSectorOnTop && doesIntersectUpperSectors)
@@ -236,7 +264,7 @@ public struct CostFieldEditJob : IJob
                     if (EditedSectorBits.HasBit(i)) { continue; }
                     EditedSectorBits.SetSector(i);
                     EditedSectorIndicies.Add(i);
-                    AddToEditedWindowsIfBoundsIntersect(costEdit.BotLeftBound, costEdit.TopRightBound, i);
+                    AddToEditedWindowsIfBoundsIntersect(edit.BotLeftBound, edit.TopRightBound, i);
                 }
             }
             if (!isSectorOnBot && doesIntersectLowerSectors)
@@ -246,7 +274,7 @@ public struct CostFieldEditJob : IJob
                     if (EditedSectorBits.HasBit(i)) { continue; }
                     EditedSectorBits.SetSector(i);
                     EditedSectorIndicies.Add(i);
-                    AddToEditedWindowsIfBoundsIntersect(costEdit.BotLeftBound, costEdit.TopRightBound, i);
+                    AddToEditedWindowsIfBoundsIntersect(edit.BotLeftBound, edit.TopRightBound, i);
                 }
             }
             if (!isSectorOnRight && doesIntersectRightSectors)
@@ -256,7 +284,7 @@ public struct CostFieldEditJob : IJob
                     if (EditedSectorBits.HasBit(i)) { continue; }
                     EditedSectorBits.SetSector(i);
                     EditedSectorIndicies.Add(i);
-                    AddToEditedWindowsIfBoundsIntersect(costEdit.BotLeftBound, costEdit.TopRightBound, i);
+                    AddToEditedWindowsIfBoundsIntersect(edit.BotLeftBound, edit.TopRightBound, i);
                 }
             }
             if (!isSectorOnLeft && doesIntersectLeftSectors)
@@ -266,7 +294,7 @@ public struct CostFieldEditJob : IJob
                     if (EditedSectorBits.HasBit(i)) { continue; }
                     EditedSectorBits.SetSector(i);
                     EditedSectorIndicies.Add(i);
-                    AddToEditedWindowsIfBoundsIntersect(costEdit.BotLeftBound, costEdit.TopRightBound, i);
+                    AddToEditedWindowsIfBoundsIntersect(edit.BotLeftBound, edit.TopRightBound, i);
                 }
             }
         }

@@ -117,25 +117,13 @@ public class PathfindingManager : MonoBehaviour
     {
         return _pathfindingRoutineUpdater.GetRoutineScheduler().GetRoutineDataProducer().AgentMovementDataList;
     }
-    public void EditCost(int2 startingPoint, int2 endPoint, byte newCost)
+    public void SetObstacle(NativeArray<ObstacleRequest> obstacleRequests, NativeList<int> outputListToAddObstacleIndicies)
     {
-        _pathfindingRoutineUpdater.RequestCostEdit(startingPoint, endPoint, newCost);
+        _pathfindingRoutineUpdater.HandleObstacleRequest(obstacleRequests, outputListToAddObstacleIndicies);
     }
-    public bool SetObstacle(float2 pos2d, float2 halfsize, out int obstacleKey)
+    public void RemoveObstacle(NativeArray<int>.ReadOnly obstaclesToRemove)
     {
-        float xMax = FlowFieldUtilities.FieldMaxXExcluding;
-        float yMax = FlowFieldUtilities.FieldMaxYExcluding;
-        float xMin = FlowFieldUtilities.FieldMinXIncluding;
-        float yMin = FlowFieldUtilities.FieldMinYIncluding;
-        if(pos2d.x < xMin || pos2d.y < yMin || pos2d.x >= xMax || pos2d.y >= yMax)
-        {
-            obstacleKey = 0;
-            return false;
-        }
-        int requestIndex = _pathfindingRoutineUpdater.AddObstacleRequestAndGetIndex(new ObstacleRequest(pos2d, halfsize));
-        int curObstacleCount = ObstacleContainer.ObstacleList.Length;
-        obstacleKey = requestIndex + curObstacleCount;
-        return true;
+        _pathfindingRoutineUpdater.HandleObstacleRemovalRequest(obstaclesToRemove);
     }
     public void RequestSubscription(FlowFieldAgent agent)
     {

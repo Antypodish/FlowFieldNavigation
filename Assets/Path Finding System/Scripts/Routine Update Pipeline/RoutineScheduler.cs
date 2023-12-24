@@ -26,8 +26,7 @@ public class RoutineScheduler
 
     NativeList<UnsafeListReadOnly<byte>> _costFieldCosts;
     NativeList<SectorBitArray> EditedSectorBitArray;
-    NativeList<ObstacleRequest> ObstacleRequests;
-    NativeList<Obstacle> NewObstacles;
+    NativeList<CostEdit> NewCostEditRequests;
     public RoutineScheduler(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
@@ -40,17 +39,16 @@ public class RoutineScheduler
         _pathConstructionPipeline = new PathConstructionPipeline(pathfindingManager);
         _costFieldCosts = new NativeList<UnsafeListReadOnly<byte>>(Allocator.Persistent);
         EditedSectorBitArray = new NativeList<SectorBitArray>(Allocator.Persistent);
-        ObstacleRequests = new NativeList<ObstacleRequest>(Allocator.Persistent);
-        NewObstacles = new NativeList<Obstacle>(Allocator.Persistent);
+        NewCostEditRequests = new NativeList<CostEdit>(Allocator.Persistent);
     }
 
-    public void Schedule(NativeList<PathRequest> newPaths, NativeArray<ObstacleRequest>.ReadOnly obstacleRequests)
+    public void Schedule(NativeList<PathRequest> newPaths, NativeArray<CostEdit>.ReadOnly costEditRequests)
     {
         //COPY OBSTACLE REQUESTS
-        ReadOnlyNativeArrayToNativeListCopyJob<ObstacleRequest> obstacleRequestCopy = new ReadOnlyNativeArrayToNativeListCopyJob<ObstacleRequest>()
+        ReadOnlyNativeArrayToNativeListCopyJob<CostEdit> obstacleRequestCopy = new ReadOnlyNativeArrayToNativeListCopyJob<CostEdit>()
         {
-            Source = obstacleRequests,
-            Destination = ObstacleRequests,
+            Source = costEditRequests,
+            Destination = NewCostEditRequests,
         };
         obstacleRequestCopy.Schedule().Complete();
 
@@ -149,19 +147,10 @@ public class RoutineScheduler
         };
         newPathToCurPathTransferJob.Schedule().Complete();
 
-        //ADD NEW OBSTACLES TO OBSTACLE CONTAINER
-        NativeListToNativeListAddJob<Obstacle> obstacleContainerTransfer = new NativeListToNativeListAddJob<Obstacle>()
-        {
-            Source = NewObstacles,
-            Destination = _pathfindingManager.ObstacleContainer.ObstacleList,
-        };
-        obstacleContainerTransfer.Schedule().Complete();
-
         CurrentRequestedPaths.Clear();
         CurrentSourcePositions.Clear();
         EditedSectorBitArray.Clear();
-        ObstacleRequests.Clear();
-        NewObstacles.Clear();
+        NewCostEditRequests.Clear();
         SendRoutineResultsToAgents();
     }
     public AgentRoutineDataProducer GetRoutineDataProducer()
@@ -170,18 +159,7 @@ public class RoutineScheduler
     }
     JobHandle ScheduleCostEditRequests()
     {
-        if(ObstacleRequests.Length == 0) { return new JobHandle(); }
-
-        NewObstacles.Length = ObstacleRequests.Length;
-        ObstacleRequestToObstacleJob requestToObstacle = new ObstacleRequestToObstacleJob()
-        {
-            TileSize = FlowFieldUtilities.TileSize,
-            FieldColAmount = FlowFieldUtilities.FieldColAmount,
-            FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
-            NewObstacles = NewObstacles,
-            ObstacleRequests = ObstacleRequests,
-        };
-        JobHandle toObstacleHandle = requestToObstacle.Schedule(NewObstacles.Length, 64);
+        if(NewCostEditRequests.Length == 0) { return new JobHandle(); }
 
         NativeList<JobHandle> editHandles = new NativeList<JobHandle>(Allocator.Temp);
         for(int i = 0; i <= FlowFieldUtilities.MaxCostFieldOffset; i++)
@@ -189,12 +167,12 @@ public class RoutineScheduler
             CostField costField = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(i);
             FieldGraph fieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(i);
 
-            NativeListCopyJob<Obstacle> newObstaclesTransfer = new NativeListCopyJob<Obstacle>()
+            NativeListCopyJob<CostEdit> newObstaclesTransfer = new NativeListCopyJob<CostEdit>()
             {
-                Source = NewObstacles,
-                Destination = fieldGraph.NewObstacles,
+                Source = NewCostEditRequests,
+                Destination = fieldGraph.NewCostEdits,
             };
-            JobHandle newObstacleTransferHandle = newObstaclesTransfer.Schedule(toObstacleHandle);
+            JobHandle newObstacleTransferHandle = newObstaclesTransfer.Schedule();
 
             CostFieldEditJob costEditJob = new CostFieldEditJob()
             {
@@ -219,7 +197,7 @@ public class RoutineScheduler
                 IntegratedCosts = fieldGraph.SectorIntegrationField,
                 IslandFields = fieldGraph.IslandFields,
                 Islands = fieldGraph.IslandDataList,
-                NewObstacles = fieldGraph.NewObstacles,
+                NewCostEdits = fieldGraph.NewCostEdits,
                 PorPtrs = fieldGraph.PorToPorPtrs,
                 PortalNodes = fieldGraph.PortalNodes,
                 PortalPerWindow = fieldGraph.PortalPerWindow,
@@ -238,7 +216,7 @@ public class RoutineScheduler
     }
     JobHandle ScheduleIslandFieldReconfig(JobHandle dependency)
     {
-        if(NewObstacles.Length == 0) { return new JobHandle(); }
+        if(NewCostEditRequests.Length == 0) { return new JobHandle(); }
 
         NativeArray<JobHandle> handlesToCombine = new NativeArray<JobHandle>(FlowFieldUtilities.MaxCostFieldOffset + 1, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
         for (int i = 0; i <= FlowFieldUtilities.MaxCostFieldOffset; i++)

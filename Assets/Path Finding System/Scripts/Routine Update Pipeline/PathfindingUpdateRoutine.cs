@@ -11,19 +11,17 @@ public class PathfindingUpdateRoutine
     PathfindingManager _pathfindingManager;
     RoutineScheduler _scheduler;
 
-    NativeList<CostEditRequest> _requestedCostEditBoundaries;
     List<FlowFieldAgent> _agentAddRequest;
 
     NativeList<PathRequest> PathRequests;
-    NativeList<ObstacleRequest> _obstacleRequests;
+    NativeList<CostEdit> _costEditRequests;
     public PathfindingUpdateRoutine(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
         _agentAddRequest = new List<FlowFieldAgent>();
         PathRequests = new NativeList<PathRequest>(Allocator.Persistent);
         _scheduler = new RoutineScheduler(pathfindingManager);
-        _requestedCostEditBoundaries = new NativeList<CostEditRequest>(Allocator.Persistent);
-        _obstacleRequests = new NativeList<ObstacleRequest>(Allocator.Persistent);
+        _costEditRequests = new NativeList<CostEdit>(Allocator.Persistent);
     }
     public void RoutineUpdate(float deltaTime)
     {
@@ -38,11 +36,10 @@ public class PathfindingUpdateRoutine
         _agentAddRequest.Clear();
 
         //SCHEDULE NEW JOBS
-        _scheduler.Schedule(PathRequests, _obstacleRequests.AsArray().AsReadOnly());
+        _scheduler.Schedule(PathRequests, _costEditRequests.AsArray().AsReadOnly());
 
-        _requestedCostEditBoundaries.Clear();
         PathRequests.Clear();
-        _obstacleRequests.Clear();
+        _costEditRequests.Clear();
     }
     public RoutineScheduler GetRoutineScheduler()
     {
@@ -51,12 +48,6 @@ public class PathfindingUpdateRoutine
     public void IntermediateLateUpdate()
     {
         _scheduler.TryCompletePredecessorJobs();
-    }
-    public void RequestCostEdit(int2 startingPoint, int2 endPoint, byte newCost)
-    {
-        int2 b1 = new int2(startingPoint.x, startingPoint.y);
-        int2 b2 = new int2(endPoint.x, endPoint.y);
-        _requestedCostEditBoundaries.Add(new CostEditRequest(b1, b2, newCost));
     }
     public void RequestAgentAddition(FlowFieldAgent agent)
     {
@@ -78,39 +69,34 @@ public class PathfindingUpdateRoutine
         _pathfindingManager.AgentDataContainer.SetRequestedPathIndiciesOf(agents, newPathIndex);
     }
 
-    public int AddObstacleRequestAndGetIndex(ObstacleRequest obstacleRequest)
+    public void HandleObstacleRequest(NativeArray<ObstacleRequest> obstacleRequests, NativeList<int> outputListToAddObstacleIndicies)
     {
-        _obstacleRequests.Add(obstacleRequest);
-        return _obstacleRequests.Length - 1;
+        ObstacleRequestToCostEdit obstacleToEdit = new ObstacleRequestToCostEdit()
+        {
+            TileSize = FlowFieldUtilities.TileSize,
+            FieldColAmount = FlowFieldUtilities.FieldColAmount,
+            FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
+            FieldMaxXExcluding = FlowFieldUtilities.FieldMaxXExcluding,
+            FieldMaxYExcluding = FlowFieldUtilities.FieldMaxYExcluding,
+            FieldMinXIncluding = FlowFieldUtilities.FieldMinXIncluding,
+            FieldMinYIncluding = FlowFieldUtilities.FieldMinYIncluding,
+            CostEditOutput = _costEditRequests,
+            ObstacleRequests = obstacleRequests,
+            NewObstacleKeyListToAdd = outputListToAddObstacleIndicies,
+            ObstacleList = _pathfindingManager.ObstacleContainer.ObstacleList,
+            RemovedObstacleIndexList = _pathfindingManager.ObstacleContainer.RemovedIndexList,
+        };
+        obstacleToEdit.Schedule().Complete();
     }
-}
-public struct ObstacleRequest
-{
-    public float2 Position;
-    public float2 HalfSize;
-
-    public ObstacleRequest(float2 pos, float2 halfSize) { Position = pos; HalfSize = halfSize; }
-}
-public struct Obstacle
-{
-    public int2 BotLeftBound;
-    public int2 TopRightBound;
-}
-public struct CostEditRequest
-{
-    public int2 BoundaryBotLeft;
-    public int2 BoundaryTopRight;
-    public byte NewCost;
-
-    public CostEditRequest(int2 bound1, int2 bound2, byte newCost)
+    public void HandleObstacleRemovalRequest(NativeArray<int>.ReadOnly obstacleIndiciesToRemove)
     {
-        int lowerRow = bound1.y < bound2.y ? bound1.y : bound2.y;
-        int upperRow = bound1.y > bound2.y ? bound1.y : bound2.y;
-        int leftmostCol = bound1.x < bound2.x ? bound1.x : bound2.x;
-        int rightmostCol = bound1.x > bound2.x ? bound1.x : bound2.x;
-
-        BoundaryBotLeft = new int2(leftmostCol, lowerRow);
-        BoundaryTopRight = new int2(rightmostCol, upperRow);
-        NewCost = newCost;
+        ObstacleRemovalRequestToCostEdit obstacleToEdit = new ObstacleRemovalRequestToCostEdit()
+        {
+            CostEditOutput = _costEditRequests,
+            ObstacleRemovalIndicies = obstacleIndiciesToRemove,
+            ObstacleList = _pathfindingManager.ObstacleContainer.ObstacleList,
+            RemovedObstacleIndexList = _pathfindingManager.ObstacleContainer.RemovedIndexList,
+        };
+        obstacleToEdit.Schedule().Complete();
     }
 }

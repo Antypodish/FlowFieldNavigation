@@ -9,7 +9,7 @@ public class CostField
     public int Offset;
     public NativeArray<byte> Costs;
     public NativeArray<byte> BaseCosts;
-    public NativeArray<int> StampCounts;
+    public NativeArray<uint> StampCounts;
     public UnsafeListReadOnly<byte> CostsLReadonlyUnsafe;
     public CostField(WalkabilityData walkabilityData, int offset, int sectorColAmount, int sectorMatrixColAmount, int sectorMatrixRowAmount)
     {
@@ -23,7 +23,7 @@ public class CostField
         costsG.Length = fieldColAmount * fieldRowAmount;
         Costs = new NativeArray<byte>(fieldColAmount * fieldRowAmount, Allocator.Persistent);
         BaseCosts = new NativeArray<byte>(Costs.Length, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
-        StampCounts = new NativeArray<int>(Costs.Length, Allocator.Persistent, NativeArrayOptions.ClearMemory);
+        StampCounts = new NativeArray<uint>(Costs.Length, Allocator.Persistent, NativeArrayOptions.ClearMemory);
         CostsLReadonlyUnsafe = FlowFieldUtilitiesUnsafe.ToUnsafeListRedonly(Costs);
         CalculateCosts();
         ConvertToNewCosts();
