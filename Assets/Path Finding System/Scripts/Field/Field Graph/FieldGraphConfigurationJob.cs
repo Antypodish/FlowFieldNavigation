@@ -24,7 +24,6 @@ public struct FieldGraphConfigurationJob : IJob
     public NativeArray<PortalToPortal> PorToPorPtrs;
     public NativeArray<byte> Costs;
     public NativeArray<AStarTile> IntegratedCosts;
-    public NativeQueue<int> AStarQueue;
 
 
     public void Execute()
@@ -362,7 +361,7 @@ public struct FieldGraphConfigurationJob : IJob
     void ConfigurePortalToPortalPtrs()
     {
         //DATA
-
+        NativeQueue<int> integrationQueue = new NativeQueue<int>(Allocator.Temp);
         int sectorMatrixColAmount = SectorMatrixColAmount;
         int sectorColAmount = SectorColAmount;
         UnsafeList<PortalNode> portalNodes = PortalNodes;
@@ -385,7 +384,7 @@ public struct FieldGraphConfigurationJob : IJob
                 //for each portal, set it "target" and calculate distances of others
                 PortalNode sourcePortalNode = PortalNodes[portalIndicies[j]];
                 Index2 sourceIndex = portalDeterminationArray[j] == 1 ? sourcePortalNode.Portal1.Index : sourcePortalNode.Portal2.Index;
-                NativeArray<AStarTile> integratedCosts = GetIntegratedCostsFor(i, new int2(sourceIndex.C, sourceIndex.R));
+                NativeArray<AStarTile> integratedCosts = GetIntegratedCostsFor(i, new int2(sourceIndex.C, sourceIndex.R), integrationQueue);
                 CalculatePortalBounds(0, j);
                 CalculatePortalBounds(j + 1, portalIndicies.Length);
 
@@ -460,7 +459,7 @@ public struct FieldGraphConfigurationJob : IJob
             return portalIndicies;
         }
     }
-    NativeArray<AStarTile> GetIntegratedCostsFor(int sectorIndex, int2 target)
+    NativeArray<AStarTile> GetIntegratedCostsFor(int sectorIndex, int2 target, NativeQueue<int> integrationQueue)
     {
         //DATA
         int fieldColAmount = FieldColAmount;
@@ -469,7 +468,7 @@ public struct FieldGraphConfigurationJob : IJob
         int sectorTileAmount = SectorTileAmount;
         NativeSlice<byte> costs = new NativeSlice<byte>(Costs, sectorIndex * SectorTileAmount, SectorTileAmount);
         NativeArray<AStarTile> integratedCosts = IntegratedCosts;
-        NativeQueue<int> aStarQueue = AStarQueue;
+        integrationQueue.Clear();
 
         /////////////LOOKUP TABLE/////////////////
         //////////////////////////////////////////
@@ -493,9 +492,9 @@ public struct FieldGraphConfigurationJob : IJob
         integratedCosts[targetLocal1d] = targetTile;
         SetLookupTable(targetLocal1d);
         Enqueue();
-        while (!AStarQueue.IsEmpty())
+        while (!integrationQueue.IsEmpty())
         {
-            int index = AStarQueue.Dequeue();
+            int index = integrationQueue.Dequeue();
             AStarTile tile = integratedCosts[index];
             SetLookupTable(index);
             tile.IntegratedCost = GetCost();
@@ -546,28 +545,28 @@ public struct FieldGraphConfigurationJob : IJob
         {
             if (!integratedCosts[nLocal1d].Enqueued)
             {
-                aStarQueue.Enqueue(nLocal1d);
+                integrationQueue.Enqueue(nLocal1d);
                 AStarTile tile = integratedCosts[nLocal1d];
                 tile.Enqueued = true;
                 integratedCosts[nLocal1d] = tile;
             }
             if (!integratedCosts[eLocal1d].Enqueued)
             {
-                aStarQueue.Enqueue(eLocal1d);
+                integrationQueue.Enqueue(eLocal1d);
                 AStarTile tile = integratedCosts[eLocal1d];
                 tile.Enqueued = true;
                 integratedCosts[eLocal1d] = tile;
             }
             if (!integratedCosts[sLocal1d].Enqueued)
             {
-                aStarQueue.Enqueue(sLocal1d);
+                integrationQueue.Enqueue(sLocal1d);
                 AStarTile tile = integratedCosts[sLocal1d];
                 tile.Enqueued = true;
                 integratedCosts[sLocal1d] = tile;
             }
             if (!integratedCosts[wLocal1d].Enqueued)
             {
-                aStarQueue.Enqueue(wLocal1d);
+                integrationQueue.Enqueue(wLocal1d);
                 AStarTile tile = integratedCosts[wLocal1d];
                 tile.Enqueued = true;
                 integratedCosts[wLocal1d] = tile;

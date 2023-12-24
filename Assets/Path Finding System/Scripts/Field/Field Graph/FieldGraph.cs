@@ -19,7 +19,6 @@ public class FieldGraph
     public UnsafeList<UnsafeList<int>> IslandFields;
     public SectorBitArray EditedSectorMarks;
     public NativeArray<AStarTile> SectorIntegrationField;
-    public AStarGrid _aStarGrid;
 
     //helper data
     public NativeArray<byte> _costsL;
@@ -58,7 +57,6 @@ public class FieldGraph
         _sectorTileAmount = sectorSize;
         PortalPerWindow = portalPerWindow;
         _costsL = costsL;
-        _aStarGrid = new AStarGrid(fieldRowAmount, fieldColAmount);
         SectorNodes = new UnsafeList<SectorNode>(sectorAmount, Allocator.Persistent);
         SectorNodes.Length = sectorAmount;
         SecToWinPtrs = new NativeArray<int>(secToWinPtrAmount, Allocator.Persistent);
@@ -120,7 +118,6 @@ public class FieldGraph
             PortalNodes = PortalNodes,
             PorToPorPtrs = PorToPorPtrs,
             IntegratedCosts = SectorIntegrationField,
-            AStarQueue = _aStarGrid._searchQueue,
         };
     }
     public IslandConfigurationJob GetIslandConfigJob()

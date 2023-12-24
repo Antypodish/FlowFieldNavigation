@@ -30,6 +30,8 @@ public class CostEditController
 
                 obstacles.Add(obstacleCube);
                 obstacleKeys.Add(obstacleKey);
+
+                UnityEngine.Debug.Log(obstacleKey);
             }
         }
     }

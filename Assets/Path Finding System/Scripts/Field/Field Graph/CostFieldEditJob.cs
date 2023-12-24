@@ -19,7 +19,9 @@ public struct CostFieldEditJob : IJob
     public NativeArray<int> WinToSecPtrs;
     public UnsafeList<PortalNode> PortalNodes;
     public NativeArray<PortalToPortal> PorPtrs;
-    public NativeArray<byte> CostsL;
+    public NativeArray<byte> Costs;
+    public NativeArray<byte> BaseCosts;
+    public NativeArray<int> CostStamps;
     public int FieldColAmount;
     public int FieldRowAmount;
     public int SectorColAmount;
@@ -29,7 +31,6 @@ public struct CostFieldEditJob : IJob
     public int SectorMatrixRowAmount;
     public int PortalPerWindow;
     public NativeArray<AStarTile> IntegratedCosts;
-    public NativeQueue<int> AStarQueue;
     public NativeList<int> EditedSectorIndicies;
     public NativeList<int> EditedWindowIndicies;
     public NativeBitArray EditedWindowMarks;
@@ -68,14 +69,6 @@ public struct CostFieldEditJob : IJob
         ResetConnectionsIn();
         RecalcualatePortalsAt();
         RecalculatePortalConnectionsAt();
-    }
-    bool IsOutOfField(int2 general2d)
-    {
-        bool topOverflow = general2d.y >= FieldRowAmount;
-        bool botOverflow = general2d.y < 0;
-        bool rightOverflow = general2d.x >= FieldColAmount;
-        bool leftOverflow = general2d.x < 0;
-        return topOverflow || botOverflow || rightOverflow || leftOverflow;
     }
     void MarkPortalIslansOfEditedSectorsDirty()
     {
@@ -151,11 +144,14 @@ public struct CostFieldEditJob : IJob
             LocalIndex1d startLocal1d = localBotLeft;
             LocalIndex1d curLocalIndex = localBotLeft;
             NativeSlice<byte> costSector;
+            NativeSlice<int> costStampSector;
             for (int index = 0; index <= northCount; index++)
             {
                 for (int j = 0; j <= eastCount; j++)
                 {
-                    costSector = new NativeSlice<byte>(CostsL, curLocalIndex.sector * sectorTileAmount, sectorTileAmount);
+                    costSector = new NativeSlice<byte>(Costs, curLocalIndex.sector * sectorTileAmount, sectorTileAmount);
+                    costStampSector = new NativeSlice<int>(CostStamps, curLocalIndex.sector * sectorTileAmount, sectorTileAmount);
+                    costStampSector[curLocalIndex.index] += 1;
                     costSector[curLocalIndex.index] = byte.MaxValue;
                     curLocalIndex = GetEast(curLocalIndex);
                 }
@@ -337,7 +333,7 @@ public struct CostFieldEditJob : IJob
         int sectorTileAmount = SectorTileAmount;
         int sectorMatrixColAmount = SectorMatrixColAmount;
 
-        NativeArray<byte> costs = CostsL;
+        NativeArray<byte> costs = Costs;
         UnsafeList<PortalNode> portalNodes = PortalNodes;
 
         for (int i = 0; i < windowIndicies.Length; i++)
@@ -491,6 +487,7 @@ public struct CostFieldEditJob : IJob
     {
         NativeArray<int> sectorIndicies = EditedSectorIndicies;
         //data
+        NativeQueue<int> integrationQueue = new NativeQueue<int>(Allocator.Temp);
         int sectorMatrixColAmount = SectorMatrixColAmount;
         int sectorColAmount = SectorColAmount;
         int sectorTileAmount = SectorTileAmount;
@@ -514,7 +511,7 @@ public struct CostFieldEditJob : IJob
                 PortalNode sourcePortalNode = PortalNodes[portalNodeIndicies[j]];
                 byte sourcePortalDetermination = portalDeterminationArray[j];
                 Index2 sourceIndex = sourcePortalDetermination == 1 ? sourcePortalNode.Portal1.Index : sourcePortalNode.Portal2.Index;
-                NativeArray<AStarTile> integratedCosts = GetIntegratedCostsFor(sectorIndex, new int2(sourceIndex.C, sourceIndex.R));
+                NativeArray<AStarTile> integratedCosts = GetIntegratedCostsFor(sectorIndex, new int2(sourceIndex.C, sourceIndex.R), integrationQueue);
                 CalculatePortalConnections(0, j);
                 CalculatePortalConnections(j+1, portalNodeIndicies.Length);
                 PortalNodes[portalNodeIndicies[j]] = sourcePortalNode;
@@ -585,16 +582,16 @@ public struct CostFieldEditJob : IJob
 
 
     //A* Algorithm
-    NativeArray<AStarTile> GetIntegratedCostsFor(int sectorIndex, int2 target)
+    NativeArray<AStarTile> GetIntegratedCostsFor(int sectorIndex, int2 target, NativeQueue<int> integrationQueue)
     {
         //DATA
         int fieldColAmount = FieldColAmount;
         int fieldRowAmount = FieldRowAmount;
         int sectorColAmount = SectorColAmount;
         int sectorTileAmount = SectorTileAmount;
-        NativeSlice<byte> costs = new NativeSlice<byte>(CostsL, sectorIndex * SectorTileAmount, SectorTileAmount);
+        NativeSlice<byte> costs = new NativeSlice<byte>(Costs, sectorIndex * SectorTileAmount, SectorTileAmount);
         NativeArray<AStarTile> integratedCosts = IntegratedCosts;
-        NativeQueue<int> aStarQueue = AStarQueue;
+        integrationQueue.Clear();
 
         /////////////LOOKUP TABLE/////////////////
         //////////////////////////////////////////
@@ -618,9 +615,9 @@ public struct CostFieldEditJob : IJob
         integratedCosts[targetLocal1d] = targetTile;
         SetLookupTable(targetLocal1d);
         Enqueue();
-        while (!AStarQueue.IsEmpty())
+        while (!integrationQueue.IsEmpty())
         {
-            int index = AStarQueue.Dequeue();
+            int index = integrationQueue.Dequeue();
             AStarTile tile = integratedCosts[index];
             SetLookupTable(index);
             tile.IntegratedCost = GetCost();
@@ -671,28 +668,28 @@ public struct CostFieldEditJob : IJob
         {
             if (!integratedCosts[nLocal1d].Enqueued)
             {
-                aStarQueue.Enqueue(nLocal1d);
+                integrationQueue.Enqueue(nLocal1d);
                 AStarTile tile = integratedCosts[nLocal1d];
                 tile.Enqueued = true;
                 integratedCosts[nLocal1d] = tile;
             }
             if (!integratedCosts[eLocal1d].Enqueued)
             {
-                aStarQueue.Enqueue(eLocal1d);
+                integrationQueue.Enqueue(eLocal1d);
                 AStarTile tile = integratedCosts[eLocal1d];
                 tile.Enqueued = true;
                 integratedCosts[eLocal1d] = tile;
             }
             if (!integratedCosts[sLocal1d].Enqueued)
             {
-                aStarQueue.Enqueue(sLocal1d);
+                integrationQueue.Enqueue(sLocal1d);
                 AStarTile tile = integratedCosts[sLocal1d];
                 tile.Enqueued = true;
                 integratedCosts[sLocal1d] = tile;
             }
             if (!integratedCosts[wLocal1d].Enqueued)
             {
-                aStarQueue.Enqueue(wLocal1d);
+                integrationQueue.Enqueue(wLocal1d);
                 AStarTile tile = integratedCosts[wLocal1d];
                 tile.Enqueued = true;
                 integratedCosts[wLocal1d] = tile;

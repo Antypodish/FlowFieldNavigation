@@ -148,6 +148,15 @@ public class RoutineScheduler
             PathSubscribers = _pathfindingManager.PathContainer.ProducedPathSubscribers,
         };
         newPathToCurPathTransferJob.Schedule().Complete();
+
+        //ADD NEW OBSTACLES TO OBSTACLE CONTAINER
+        NativeListToNativeListAddJob<Obstacle> obstacleContainerTransfer = new NativeListToNativeListAddJob<Obstacle>()
+        {
+            Source = NewObstacles,
+            Destination = _pathfindingManager.ObstacleContainer.ObstacleList,
+        };
+        obstacleContainerTransfer.Schedule().Complete();
+
         CurrentRequestedPaths.Clear();
         CurrentSourcePositions.Clear();
         EditedSectorBitArray.Clear();
@@ -199,11 +208,12 @@ public class RoutineScheduler
                 Offset = i,
                 SectorNodes = fieldGraph.SectorNodes,
                 SecToWinPtrs = fieldGraph.SecToWinPtrs,
-                AStarQueue = fieldGraph._aStarGrid._searchQueue,
                 EditedSectorBits = fieldGraph.EditedSectorMarks,
                 EditedSectorIndicies = fieldGraph.EditedSectorList,
                 WinToSecPtrs = fieldGraph.WinToSecPtrs,
-                CostsL = costField.Costs,
+                Costs = costField.Costs,
+                CostStamps = costField.StampCounts,
+                BaseCosts = costField.BaseCosts,
                 EditedWindowIndicies = fieldGraph.EditedWinodwList,
                 EditedWindowMarks = fieldGraph.EditedWindowMarks,
                 IntegratedCosts = fieldGraph.SectorIntegrationField,
