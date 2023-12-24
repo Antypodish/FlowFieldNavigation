@@ -606,7 +606,7 @@ PrefabInstance:
     - target: {fileID: 730032217079484805, guid: 020509caef94de64c94b7fd5a119b25d,
         type: 3}
       propertyPath: _debugTiles
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 730032217079484805, guid: 020509caef94de64c94b7fd5a119b25d,
         type: 3}

@@ -190,6 +190,7 @@ public class RoutineScheduler
             CostFieldEditJob costEditJob = new CostFieldEditJob()
             {
                 SectorColAmount = FlowFieldUtilities.SectorColAmount,
+                SectorRowAmount = FlowFieldUtilities.SectorRowAmount,
                 SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
                 SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
                 FieldColAmount = FlowFieldUtilities.FieldColAmount,
@@ -202,7 +203,6 @@ public class RoutineScheduler
                 EditedSectorBits = fieldGraph.EditedSectorMarks,
                 EditedSectorIndicies = fieldGraph.EditedSectorList,
                 WinToSecPtrs = fieldGraph.WinToSecPtrs,
-                CostsG = costField.CostsG,
                 CostsL = costField.CostsL,
                 EditedWindowIndicies = fieldGraph.EditedWinodwList,
                 EditedWindowMarks = fieldGraph.EditedWindowMarks,

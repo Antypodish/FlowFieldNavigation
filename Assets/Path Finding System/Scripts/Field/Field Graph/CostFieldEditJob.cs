@@ -19,11 +19,11 @@ public struct CostFieldEditJob : IJob
     public NativeArray<int> WinToSecPtrs;
     public UnsafeList<PortalNode> PortalNodes;
     public NativeArray<PortalToPortal> PorPtrs;
-    public UnsafeList<byte> CostsG;
     public NativeArray<byte> CostsL;
     public int FieldColAmount;
     public int FieldRowAmount;
     public int SectorColAmount;
+    public int SectorRowAmount;
     public int SectorTileAmount;
     public int SectorMatrixColAmount;
     public int SectorMatrixRowAmount;
@@ -134,7 +134,6 @@ public struct CostFieldEditJob : IJob
         int sectorColAmount = SectorColAmount;
         int sectorMatrixColAmount = SectorMatrixColAmount;
         int sectorTileAmount = SectorColAmount * SectorColAmount;
-        //APPLY FOR GENERAL COST FIELD
 
         for (int i = 0; i < NewObstacles.Length; i++)
         {
@@ -146,19 +145,6 @@ public struct CostFieldEditJob : IJob
             if (topRight.R == FieldRowAmount - 1) { topRight.R -= 1; }
             if (topRight.C == FieldColAmount - 1) { topRight.C -= 1; }
 
-            int bound1Flat = botLeft.R * FieldColAmount + botLeft.C;
-            int bound2Flat = topRight.R * FieldColAmount + topRight.C;
-            int colDif = topRight.C - botLeft.C;
-
-            for (int r = bound1Flat; r <= bound2Flat - colDif; r += FieldColAmount)
-            {
-                for (int index = r; index <= r + colDif; index++)
-                {
-                    CostsG[index] = byte.MaxValue;
-                }
-            }
-
-            //APPLY FOR LOCAL COST FIELD
             int eastCount = topRight.C - botLeft.C;
             int northCount = topRight.R - botLeft.R;
             LocalIndex1d localBotLeft = GetLocalIndex(botLeft);
@@ -346,7 +332,12 @@ public struct CostFieldEditJob : IJob
         NativeArray<int> windowIndicies = EditedWindowIndicies;
         int porToPorCnt = PortalPerWindow * 8 - 2;
         int fieldColAmount = FieldColAmount;
-        UnsafeList<byte> costs = CostsG;
+        int sectorColAmount = SectorColAmount;
+        int sectorRowAmount = SectorRowAmount;
+        int sectorTileAmount = SectorTileAmount;
+        int sectorMatrixColAmount = SectorMatrixColAmount;
+
+        NativeArray<byte> costs = CostsL;
         UnsafeList<PortalNode> portalNodes = PortalNodes;
 
         for (int i = 0; i < windowIndicies.Length; i++)
@@ -366,6 +357,17 @@ public struct CostFieldEditJob : IJob
             }
             void ConfigureForHorizontal()
             {
+                int2 windowBotLeft = new int2(window.BottomLeftBoundary.C, window.BottomLeftBoundary.R);
+                int2 windowTopRight = new int2(window.TopRightBoundary.C, window.TopRightBoundary.R);
+                int2 sectorBot = FlowFieldUtilities.GetSector2D(windowBotLeft, sectorColAmount);
+                int2 sectorTop = FlowFieldUtilities.GetSector2D(windowTopRight, sectorColAmount);
+                int2 sectorBotStart = FlowFieldUtilities.GetSectorStartIndex(sectorBot, sectorColAmount);
+                int2 sectorTopStart = FlowFieldUtilities.GetSectorStartIndex(sectorTop, sectorColAmount);
+                int sectorBot1d = FlowFieldUtilities.To1D(sectorBot, sectorMatrixColAmount);
+                int sectorTop1d = FlowFieldUtilities.To1D(sectorTop, sectorMatrixColAmount);
+                int sectorBotCostStart = sectorBot1d * sectorTileAmount;
+                int sectorTopCostStart = sectorTop1d * sectorTileAmount;
+
                 int porPtr = windowNode.PorPtr;
                 int portalCount = 0;
                 bool wasUnwalkable = true;
@@ -377,9 +379,11 @@ public struct CostFieldEditJob : IJob
                 int row2 = window.TopRightBoundary.R;
                 for (int j = startCol; j <= lastCol; j++)
                 {
-                    int index1 = row1 * fieldColAmount + j;
-                    int index2 = row2 * fieldColAmount + j;
-                    if (costs[index1] != byte.MaxValue && costs[index2] != byte.MaxValue)
+                    int2 botIndexGeneral2d = new int2(j, row1);
+                    int2 topIndexGeneral2d = new int2(j, row2);
+                    int botLocalIndex = FlowFieldUtilities.GetLocal1D(botIndexGeneral2d, sectorBotStart, sectorColAmount);
+                    int topLocalIndex = FlowFieldUtilities.GetLocal1D(topIndexGeneral2d, sectorTopStart, sectorColAmount);
+                    if (costs[sectorBotCostStart + botLocalIndex] != byte.MaxValue && costs[sectorTopCostStart + topLocalIndex] != byte.MaxValue)
                     {
                         if (wasUnwalkable)
                         {
@@ -392,7 +396,7 @@ public struct CostFieldEditJob : IJob
                             bound2 = new Index2(row2, j);
                         }
                     }
-                    if ((costs[index1] == byte.MaxValue || costs[index2] == byte.MaxValue) && !wasUnwalkable)
+                    if ((costs[sectorBotCostStart + botLocalIndex] == byte.MaxValue || costs[sectorTopCostStart + topLocalIndex] == byte.MaxValue) && !wasUnwalkable)
                     {
                         portalNodes[porPtr + portalCount] = GetPortalNodeBetween(bound1, bound2, porPtr, portalCount, windowIndicies[i], true);
                         portalCount++;
@@ -408,6 +412,17 @@ public struct CostFieldEditJob : IJob
             }
             void ConfigureForVertical()
             {
+                int2 windowBotLeft = new int2(window.BottomLeftBoundary.C, window.BottomLeftBoundary.R);
+                int2 windowTopRight = new int2(window.TopRightBoundary.C, window.TopRightBoundary.R);
+                int2 sectorLeft = FlowFieldUtilities.GetSector2D(windowBotLeft, sectorColAmount);
+                int2 sectorRight = FlowFieldUtilities.GetSector2D(windowTopRight, sectorColAmount);
+                int2 sectorLeftStart = FlowFieldUtilities.GetSectorStartIndex(sectorLeft, sectorColAmount);
+                int2 sectorRightStart = FlowFieldUtilities.GetSectorStartIndex(sectorRight, sectorColAmount);
+                int sectorLeft1d = FlowFieldUtilities.To1D(sectorLeft, sectorMatrixColAmount);
+                int sectorRight1d = FlowFieldUtilities.To1D(sectorRight, sectorMatrixColAmount);
+                int sectorLeftCostStart = sectorLeft1d * sectorTileAmount;
+                int sectorRightCostStart = sectorRight1d * sectorTileAmount;
+
                 int porPtr = windowNode.PorPtr;
                 int portalCount = 0;
                 bool wasUnwalkable = true;
@@ -419,9 +434,11 @@ public struct CostFieldEditJob : IJob
                 int col2 = window.TopRightBoundary.C;
                 for (int j = startRow; j <= lastRow; j++)
                 {
-                    int index1 = j * fieldColAmount + col1;
-                    int index2 = j * fieldColAmount + col2;
-                    if (costs[index1] != byte.MaxValue && costs[index2] != byte.MaxValue)
+                    int2 leftIndexGeneral2d = new int2(col1, j);
+                    int2 rightIndexGeneral2d = new int2(col2, j);
+                    int leftLocalIndex = FlowFieldUtilities.GetLocal1D(leftIndexGeneral2d, sectorLeftStart, sectorColAmount);
+                    int rightLocalIndex = FlowFieldUtilities.GetLocal1D(rightIndexGeneral2d, sectorRightStart, sectorColAmount);
+                    if (costs[sectorLeftCostStart + leftLocalIndex] != byte.MaxValue && costs[sectorRightCostStart + rightLocalIndex] != byte.MaxValue)
                     {
                         if (wasUnwalkable)
                         {
@@ -434,7 +451,7 @@ public struct CostFieldEditJob : IJob
                             bound2 = new Index2(j, col2);
                         }
                     }
-                    if ((costs[index1] == byte.MaxValue || costs[index2] == byte.MaxValue) && !wasUnwalkable)
+                    if ((costs[sectorLeftCostStart + leftLocalIndex] == byte.MaxValue || costs[sectorRightCostStart + rightLocalIndex] == byte.MaxValue) && !wasUnwalkable)
                     {
                         portalNodes[porPtr + portalCount] = GetPortalNodeBetween(bound1, bound2, porPtr, portalCount, windowIndicies[i], false);
                         portalCount++;
