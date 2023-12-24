@@ -17,7 +17,6 @@ public struct AgentRoutineDataCalculationJob : IJobParallelFor
     public int SectorMatrixColAmount;
     public NativeArray<AgentMovementData> AgentMovementData;
     public NativeArray<OutOfFieldStatus> AgentOutOfFieldStatusList;
-    [ReadOnly] public UnsafeList<UnsafeList<byte>> CostFields;
 
     public void Execute(int index)
     {

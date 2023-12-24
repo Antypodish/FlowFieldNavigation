@@ -23,7 +23,6 @@ public class FieldGraph
 
     //helper data
     public NativeArray<byte> _costsL;
-    public UnsafeList<byte> _costsG;
     public NativeList<int> EditedSectorList;
     public NativeBitArray EditedWindowMarks;
     public NativeList<int> EditedWinodwList;
@@ -36,7 +35,7 @@ public class FieldGraph
     int _sectorMatrixRowAmount;
     int _sectorMatrixColAmount;
     public int PortalPerWindow;
-    public FieldGraph(UnsafeList<byte> costsG, NativeArray<byte> costsL, int sectorSize, int fieldRowAmount, int fieldColAmount, int costFieldOffset, float tileSize)
+    public FieldGraph(NativeArray<byte> costsL, int sectorSize, int fieldRowAmount, int fieldColAmount, int costFieldOffset, float tileSize)
     {
         //size calculations
         int sectorMatrixRowAmount = fieldRowAmount / sectorSize;
@@ -58,7 +57,6 @@ public class FieldGraph
         _fieldRowAmount = fieldRowAmount;
         _sectorTileAmount = sectorSize;
         PortalPerWindow = portalPerWindow;
-        _costsG = costsG;
         _costsL = costsL;
         _aStarGrid = new AStarGrid(fieldRowAmount, fieldColAmount);
         SectorNodes = new UnsafeList<SectorNode>(sectorAmount, Allocator.Persistent);

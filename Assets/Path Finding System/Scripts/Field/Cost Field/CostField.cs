@@ -7,7 +7,6 @@ using Unity.Mathematics;
 public class CostField
 {
     public int Offset;
-    public UnsafeList<byte> CostsG;
     public NativeArray<byte> CostsL;
     public UnsafeListReadOnly<byte> CostsLReadonlyUnsafe;
 
@@ -19,8 +18,8 @@ public class CostField
         Offset = offset;
 
         //configure costs
-        CostsG = new UnsafeList<byte>(fieldRowAmount * fieldColAmount, Allocator.Persistent);
-        CostsG.Length = fieldColAmount * fieldRowAmount;
+        UnsafeList<byte> costsG = new UnsafeList<byte>(fieldRowAmount * fieldColAmount, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
+        costsG.Length = fieldColAmount * fieldRowAmount;
         CostsL = new NativeArray<byte>(fieldColAmount * fieldRowAmount, Allocator.Persistent);
         CostsLReadonlyUnsafe = FlowFieldUtilitiesUnsafe.ToUnsafeListRedonly(CostsL);
         CalculateCosts();
@@ -36,7 +35,7 @@ public class CostField
                 {
                     int index = r * fieldColAmount + c;
                     byte cost = walkabilityMatrix[r][c].Walkability == Walkability.Walkable ? (byte)1 : byte.MaxValue;
-                    CostsG[index] = cost;
+                    costsG[index] = cost;
                 }
             }
             //apply offset
@@ -57,7 +56,7 @@ public class CostField
                             for (int col = minX; col <= maxX; col++)
                             {
                                 int i = row * fieldColAmount + col;
-                                CostsG[i] = byte.MaxValue;
+                                costsG[i] = byte.MaxValue;
                             }
                         }
                     }
@@ -89,7 +88,7 @@ public class CostField
                             int2 curGeneral2d = new int2(j % fieldColAmount, j / fieldColAmount);
                             int2 curLocal2d = curGeneral2d - sectorStart2d;
                             int curLocal1d = curLocal2d.y * sectorColAmount + curLocal2d.x;
-                            byte curCost = CostsG[curGeneral1d];
+                            byte curCost = costsG[curGeneral1d];
                             curSector[curLocal1d] = curCost;
                         }
                     }
