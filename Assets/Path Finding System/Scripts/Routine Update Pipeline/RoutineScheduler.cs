@@ -72,6 +72,10 @@ public class RoutineScheduler
         TransformAccessArray agentTransforms = _pathfindingManager.AgentDataContainer.AgentTransforms;
         AgentDataSetPositionJob posSetJob = new AgentDataSetPositionJob()
         {
+            MaxXExcluding = FlowFieldUtilities.FieldMaxXExcluding,
+            MaxYExcluding = FlowFieldUtilities.FieldMaxYExcluding,
+            MinXIncluding = FlowFieldUtilities.FieldMinXIncluding,
+            MinYIncluding = FlowFieldUtilities.FieldMinYIncluding,
             AgentDataArray = agentData,
         };
         JobHandle posSetHandle = posSetJob.Schedule(agentTransforms);
