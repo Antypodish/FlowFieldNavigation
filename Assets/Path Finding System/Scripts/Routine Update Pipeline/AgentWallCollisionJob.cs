@@ -88,7 +88,7 @@ public struct AgentWallCollisionJob : IJobParallelFor
                 wall = clearTilePos + HalfTileSize;
                 change = agentPos - wall;
                 changeLen = math.length(change);
-                change = change / changeLen * (agentRadius - changeLen);
+                change = math.select(change / changeLen * (agentRadius - changeLen), 0, changeLen == 0 || agentRadius == changeLen);
                 distanceSqrd = math.distancesq(wall, agentPos);
                 notCloseEnough = distanceSqrd > agentRadiusSqrd;
                 break;
@@ -96,7 +96,7 @@ public struct AgentWallCollisionJob : IJobParallelFor
                 wall = clearTilePos + new float2(HalfTileSize, -HalfTileSize);
                 change = agentPos - wall;
                 changeLen = math.length(change);
-                change = change / changeLen * (agentRadius - changeLen);
+                change = math.select(change / changeLen * (agentRadius - changeLen), 0, changeLen == 0 || agentRadius == changeLen);
                 distanceSqrd = math.distancesq(wall, agentPos);
                 notCloseEnough = distanceSqrd > agentRadiusSqrd;
                 break;
@@ -104,7 +104,7 @@ public struct AgentWallCollisionJob : IJobParallelFor
                 wall = clearTilePos - HalfTileSize;
                 change = agentPos - wall;
                 changeLen = math.length(change);
-                change = change / changeLen * (agentRadius - changeLen);
+                change = math.select(change / changeLen * (agentRadius - changeLen), 0, changeLen == 0 || agentRadius == changeLen);
                 distanceSqrd = math.distancesq(wall, agentPos);
                 notCloseEnough = distanceSqrd > agentRadiusSqrd;
                 break;
@@ -112,7 +112,7 @@ public struct AgentWallCollisionJob : IJobParallelFor
                 wall = clearTilePos + new float2(-HalfTileSize, HalfTileSize);
                 change = agentPos - wall;
                 changeLen = math.length(change);
-                change = change / changeLen * (agentRadius - changeLen);
+                change = math.select(change / changeLen * (agentRadius - changeLen), 0, changeLen == 0 || agentRadius == changeLen);
                 distanceSqrd = math.distancesq(wall, agentPos);
                 notCloseEnough = distanceSqrd > agentRadiusSqrd;
                 break;
@@ -154,7 +154,7 @@ public struct AgentWallCollisionJob : IJobParallelFor
         float agentRadiusSqrd = agentRadius * agentRadius;
         float2 change = wall - agentPos;
         float changeLen = math.length(change);
-        float2 changeDir = change / changeLen;
+        float2 changeDir = math.select(change / changeLen, 0, changeLen == 0);
         float changeMag = changeLen + agentRadius;
         change = changeDir * changeMag;
         return change;
