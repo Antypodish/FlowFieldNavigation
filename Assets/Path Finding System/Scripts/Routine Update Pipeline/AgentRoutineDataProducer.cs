@@ -22,7 +22,6 @@ public class AgentRoutineDataProducer
     PathfindingManager _pathfindingManager;
 
     public NativeList<AgentMovementData> AgentMovementDataList;
-    public NativeList<OutOfFieldStatus> AgentOutOfFieldStatusList;
     public NativeList<float2> AgentPositionChangeBuffer;
     public NativeList<RoutineResult> RoutineResults;
     public NativeArray<UnsafeList<HashTile>> HashGridArray;
@@ -32,7 +31,6 @@ public class AgentRoutineDataProducer
         _agentDataContainer = agentDataContainer;
         _pathfindingManager = pathfindingManager;
         AgentMovementDataList = new NativeList<AgentMovementData>(_agentDataContainer.Agents.Count, Allocator.Persistent);
-        AgentOutOfFieldStatusList = new NativeList<OutOfFieldStatus>(Allocator.Persistent);
         RoutineResults = new NativeList<RoutineResult>(Allocator.Persistent);
         AgentPositionChangeBuffer = new NativeList<float2>(Allocator.Persistent);
         int gridAmount = (int)math.ceil(FlowFieldUtilities.MaxAgentSize / FlowFieldUtilities.BaseSpatialGridSize);
@@ -65,7 +63,6 @@ public class AgentRoutineDataProducer
         RoutineResults.Clear();
         NormalToHashed.Clear();
         AgentMovementDataList.Length = agentDataList.Length;
-        AgentOutOfFieldStatusList.Length = agentDataList.Length;
         RoutineResults.Length = agentDataList.Length;
         AgentPositionChangeBuffer.Length = agentDataList.Length;
         NormalToHashed.Length = agentDataList.Length;
@@ -112,7 +109,6 @@ public class AgentRoutineDataProducer
     {
         return new AgentRoutineDataCalculationJob()
         {
-            AgentOutOfFieldStatusList = AgentOutOfFieldStatusList,
             FieldColAmount = _pathfindingManager.ColumnAmount,
             TileSize = _pathfindingManager.TileSize,
             SectorColAmount = _pathfindingManager.SectorColAmount,
