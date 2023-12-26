@@ -56,7 +56,6 @@ public class AgentRoutineDataProducer
     {
         NativeList<AgentData> agentDataList = _agentDataContainer.AgentDataList;
         NativeList<int> agentCurPaths = _agentDataContainer.AgentCurPathIndicies;
-        List<Path> producedPaths = _pathfindingManager.PathContainer.ProducedPaths;
         NativeList<PathLocationData> pathLocationDataList = _pathfindingManager.PathContainer.PathLocationDataList;
         NativeList<PathFlowData> pathFlowDataList = _pathfindingManager.PathContainer.PathFlowDataList;
         NativeList<PathDestinationData> pathDestinationDataList = _pathfindingManager.PathContainer.PathDestinationDataList;
@@ -94,11 +93,9 @@ public class AgentRoutineDataProducer
         {
             int agentCurPathIndex = agentCurPaths[i];
             if (agentCurPathIndex == -1) { continue; }
-            Path curPath = producedPaths[agentCurPathIndex];
             PathDestinationData destinationData = pathDestinationDataList[agentCurPathIndex];
             PathLocationData locationData = pathLocationDataList[agentCurPathIndex];
             PathFlowData flowData = pathFlowDataList[agentCurPathIndex];
-            if (curPath == null) { continue; }
             int hashedIndex = NormalToHashed[i];
             AgentMovementData data = AgentMovementDataList[hashedIndex];
             data.FlowField = flowData.FlowField;

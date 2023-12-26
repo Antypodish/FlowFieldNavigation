@@ -23,9 +23,9 @@ public class FlowFieldAgent : MonoBehaviour
         Transform = transform;
         AgentDataIndex = -1;
     }
-    public Path GetPath()
+    public int GetPathIndex()
     {
-        return _pathfindingManager.GetPath(AgentDataIndex);
+        return _pathfindingManager.GetPathIndex(AgentDataIndex);
     }
     public float GetSpeed() => Speed;
     public float GetRadius() => Radius;

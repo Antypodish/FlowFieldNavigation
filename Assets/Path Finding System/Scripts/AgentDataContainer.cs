@@ -162,11 +162,6 @@ public struct AgentData
         Status = ~(~Status | status);
     }
 }
-public struct AgentPath
-{
-    public Path CurPath;
-    public Path NewPath;
-}
 [Flags]
 public enum AgentStatus : byte
 {

@@ -5,6 +5,7 @@ using Unity.Mathematics;
 using UnityEditor.PackageManager.Requests;
 using System.Diagnostics;
 using UnityEngine.EventSystems;
+using System.Runtime.ConstrainedExecution;
 
 internal class AdditionPortalTraversalScheduler
 {
@@ -24,13 +25,13 @@ internal class AdditionPortalTraversalScheduler
     }
     public void SchedulePortalTraversalFor(PathPipelineInfoWithHandle pathInfo, NativeSlice<float2> sources)
     {
-        Path path = _pathContainer.ProducedPaths[pathInfo.PathIndex];
+        PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathInfo.PathIndex];
         PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
         UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathInfo.PathIndex];
         PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathInfo.PathIndex];
         PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
         portalTraversalData.PathAdditionSequenceBorderStartIndex[0] = portalTraversalData.PortalSequenceBorders.Length - 1;
-        portalTraversalData.NewPickedSectorStartIndex[0] = path.PickedToSector.Length;
+        portalTraversalData.NewPickedSectorStartIndex[0] = internalData.PickedSectorList.Length;
 
         FieldGraph pickedFieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
 
@@ -40,8 +41,7 @@ internal class AdditionPortalTraversalScheduler
             FieldTileSize = FlowFieldUtilities.TileSize,
             SectorColAmount = FlowFieldUtilities.SectorColAmount,
             SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
-            PickedToSector = path.PickedToSector,
-            SectorToPickedTable = locationData.SectorToPicked,
+            PickedToSector = internalData.PickedSectorList,
             TargetSectorCosts = _pathContainer.TargetSectorIntegrationList[pathInfo.PathIndex],
             PortalNodes = pickedFieldGraph.PortalNodes,
             SecToWinPtrs = pickedFieldGraph.SecToWinPtrs,
@@ -66,7 +66,7 @@ internal class AdditionPortalTraversalScheduler
             SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
             LOSRange = FlowFieldUtilities.LOSRange,
             Target = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize),
-            PickedToSector = path.PickedToSector,
+            PickedToSector = internalData.PickedSectorList,
             PortalSequenceBorders = portalTraversalData.PortalSequenceBorders,
             PortalNodes = pickedFieldGraph.PortalNodes,
             WindowNodes = pickedFieldGraph.WindowNodes,
@@ -74,14 +74,14 @@ internal class AdditionPortalTraversalScheduler
             PorPtrs = pickedFieldGraph.PorToPorPtrs,
             SectorNodes = pickedFieldGraph.SectorNodes,
             PortalSequence = portalTraversalData.PortalSequence,
-            FlowFieldLength = path.FlowFieldLength,
+            FlowFieldLength = internalData.FlowFieldLength,
             PortalTraversalDataArray = portalTraversalData.PortalTraversalDataArray,
             SourcePortalIndexList = portalTraversalData.SourcePortalIndexList,
             IslandFields = pickedFieldGraph.IslandFields,
             SectorStateTable = sectorStateTable,
             DijkstraStartIndicies = reductionJob.DijkstraStartIndicies,
             AddedPortalSequenceBorderStartIndex = portalTraversalData.PortalSequenceBorders.Length,
-            SectorWithinLOSState = path.SectorWithinLOSState,
+            SectorWithinLOSState = internalData.SectorWithinLOSState,
             NewPickedSectorStartIndex = portalTraversalData.NewPickedSectorStartIndex,
         };
 
@@ -107,7 +107,9 @@ internal class AdditionPortalTraversalScheduler
                 //SCHEDULE ADDITION ACTIVE PORTAL SUBMIT JOB
                 PathPipelineInfoWithHandle _addActivePorSubmitHandle = _additionActivePortalSubmissionScheduler.ScheduleActivePortalSubmission(pathInfo);
                 PathRoutineData existingPath = pathRoutineDataList[pathInfo.PathIndex];
-                NativeSlice<float2> sourcePositions = new NativeSlice<float2>(sources, existingPath.FlowRequestSourceStart, existingPath.FlowRequestSourceCount + existingPath.PathAdditionSourceCount);
+                int flowStart = math.select(existingPath.PathAdditionSourceStart, existingPath.FlowRequestSourceStart, existingPath.FlowRequestSourceCount != 0);
+                int flowCount = existingPath.FlowRequestSourceCount + existingPath.PathAdditionSourceCount;
+                NativeSlice<float2> sourcePositions = new NativeSlice<float2>(sources, flowStart, flowCount);
                 _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pathInfo, _addActivePorSubmitHandle.Handle, sourcePositions);
 
             }

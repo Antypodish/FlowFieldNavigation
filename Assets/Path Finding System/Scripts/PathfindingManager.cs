@@ -133,12 +133,6 @@ public class PathfindingManager : MonoBehaviour
     {
         AgentDataContainer.UnSubscribe(agent);
     }
-    public Path GetPath(int agentIndex)
-    {
-        int curPathIndex = AgentDataContainer.AgentCurPathIndicies[agentIndex];
-        if(curPathIndex == -1) { return null; }
-        return PathContainer.ProducedPaths[curPathIndex];
-    }
     public int GetPathIndex(int agentIndex)
     {
         return AgentDataContainer.AgentCurPathIndicies[agentIndex];

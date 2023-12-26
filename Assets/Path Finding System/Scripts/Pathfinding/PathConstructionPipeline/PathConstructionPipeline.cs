@@ -216,6 +216,7 @@ public class PathConstructionPipeline
         }
         NativeArray<int> newPathIndicies = _pathfindingManager.AgentDataContainer.AgentNewPathIndicies;
 
+
         //SET PATH INDICIES OF REQUESTED PATHS
         for (int i = 0; i < FinalPathRequests.Length; i++)
         {
@@ -228,7 +229,6 @@ public class PathConstructionPipeline
             currentpath.PathIndex = newPathIndex;
             FinalPathRequests[i] = currentpath;
         }
-
         //SET NEW PATH INDICIES OF AGENTS
         OrganizedAgentNewPathIndiciesSetJob newpathindiciesSetJob = new OrganizedAgentNewPathIndiciesSetJob()
         {
@@ -263,9 +263,7 @@ public class PathConstructionPipeline
                 _losIntegrationScheduler.ScheduleLOS(pathInfo);
             }
         }
-
         newPathIndiciesHandle.Complete();
-
         TryComplete();
     }
 

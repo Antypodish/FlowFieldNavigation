@@ -16,15 +16,15 @@ internal class AdditionActivePortalSubmissionScheduler
 
     public PathPipelineInfoWithHandle ScheduleActivePortalSubmission(PathPipelineInfoWithHandle pathInfo)
     {
-        Path path = _pathContainer.ProducedPaths[pathInfo.PathIndex];
+        PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathInfo.PathIndex];
         PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
         PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
         PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathInfo.PathIndex];
         UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathInfo.PathIndex];
         SectorBitArray sectorBitArray = _pathContainer.PathSectorBitArrays[pathInfo.PathIndex];
         FieldGraph pickedFieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
-        int newSecorCount = path.PickedToSector.Length - path.ActivePortalList.Length;
-        _pathContainer.ResizeActiveWaveFrontList(newSecorCount, path.ActivePortalList);
+        int newSecorCount = internalData.PickedSectorList.Length - internalData.ActivePortalList.Length;
+        _pathContainer.ResizeActiveWaveFrontList(newSecorCount, internalData.ActivePortalList);
 
         //ACTIVE WAVE FRONT SUBMISSION
         AdditionalActivePortalSubmitJob submitJob = new AdditionalActivePortalSubmitJob()
@@ -40,14 +40,14 @@ internal class AdditionActivePortalSubmissionScheduler
 
             PortalEdges = pickedFieldGraph.PorToPorPtrs,
             SectorToPicked = locationData.SectorToPicked,
-            PickedToSector = path.PickedToSector,
+            PickedToSector = internalData.PickedSectorList,
             PortalSequence = portalTraversalData.PortalSequence,
             PortalSequenceBorders = portalTraversalData.PortalSequenceBorders,
             WinToSecPtrs = pickedFieldGraph.WinToSecPtrs,
             PortalNodes = pickedFieldGraph.PortalNodes,
             WindowNodes = pickedFieldGraph.WindowNodes,
-            ActiveWaveFrontListArray = path.ActivePortalList,
-            NotActivatedPortals = path.NotActivePortalList,
+            ActiveWaveFrontListArray = internalData.ActivePortalList,
+            NotActivatedPortals = internalData.NotActivePortalList,
             SectorStateTable = sectorStateTable,
             NewSectorStartIndex = portalTraversalData.NewPickedSectorStartIndex,
             SectorBitArray = sectorBitArray,

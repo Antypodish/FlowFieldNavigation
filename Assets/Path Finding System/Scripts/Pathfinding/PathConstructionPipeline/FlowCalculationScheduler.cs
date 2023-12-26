@@ -27,22 +27,22 @@ public class FlowCalculationScheduler
 
     public void ScheduleFlow(PathPipelineInfoWithHandle pathInfo)
     {
-        Path path = _pathContainer.ProducedPaths[pathInfo.PathIndex];
+        PathfindingInternalData pathInternalData = _pathContainer.PathfindingInternalDataList[pathInfo.PathIndex];
         PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
         PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
         CostField pickedCostField = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(destinationData.Offset);
 
         //RESET NEW INT FIELD INDICIES
-        int lastIntegrationFieldLength = path.IntegrationField.Length;
-        int curIntegrationFieldLength = path.FlowFieldLength[0];
+        int lastIntegrationFieldLength = pathInternalData.IntegrationField.Length;
+        int curIntegrationFieldLength = pathInternalData.FlowFieldLength[0];
         if (lastIntegrationFieldLength != curIntegrationFieldLength)
         {
-            path.IntegrationField.Resize(curIntegrationFieldLength, NativeArrayOptions.UninitializedMemory);
+            pathInternalData.IntegrationField.Resize(curIntegrationFieldLength, NativeArrayOptions.UninitializedMemory);
             //RESET NEW INT FIELD INDICIES
             IntegrationFieldResetJob resJob = new IntegrationFieldResetJob()
             {
                 StartIndex = lastIntegrationFieldLength,
-                IntegrationField = path.IntegrationField,
+                IntegrationField = pathInternalData.IntegrationField,
             };
             resJob.Schedule().Complete();
             _flowFieldResizedPaths.Add(pathInfo.PathIndex);
@@ -50,17 +50,17 @@ public class FlowCalculationScheduler
 
         //SCHEDULE INTEGRATION FIELDS
         NativeList<JobHandle> intFieldHandles = new NativeList<JobHandle>(Allocator.Temp);
-        NativeArray<int> sectorFlowStartIndiciesToCalculateIntegration = path.SectorFlowStartIndiciesToCalculateIntegration;
-        NativeArray<int> sectorFlowStartIndiciesToCalculateFlow = path.SectorFlowStartIndiciesToCalculateFlow;
+        NativeArray<int> sectorFlowStartIndiciesToCalculateIntegration = pathInternalData.SectorFlowStartIndiciesToCalculateIntegration;
+        NativeArray<int> sectorFlowStartIndiciesToCalculateFlow = pathInternalData.SectorFlowStartIndiciesToCalculateFlow;
         for (int i = 0; i < sectorFlowStartIndiciesToCalculateIntegration.Length; i++)
         {
             int sectorStart = sectorFlowStartIndiciesToCalculateIntegration[i];
-            int sectorIndex = path.PickedToSector[(sectorStart - 1) / FlowFieldUtilities.SectorTileAmount];
-            NativeSlice<IntegrationTile> integrationSector = new NativeSlice<IntegrationTile>(path.IntegrationField, sectorStart, FlowFieldUtilities.SectorTileAmount);
+            int sectorIndex = pathInternalData.PickedSectorList[(sectorStart - 1) / FlowFieldUtilities.SectorTileAmount];
+            NativeSlice<IntegrationTile> integrationSector = new NativeSlice<IntegrationTile>(pathInternalData.IntegrationField, sectorStart, FlowFieldUtilities.SectorTileAmount);
             IntegrationFieldJob intJob = new IntegrationFieldJob()
             {
                 SectorIndex = sectorIndex,
-                StartIndicies = path.ActivePortalList[(sectorStart - 1) / FlowFieldUtilities.SectorTileAmount],
+                StartIndicies = pathInternalData.ActivePortalList[(sectorStart - 1) / FlowFieldUtilities.SectorTileAmount],
                 Costs = new NativeSlice<byte>(pickedCostField.Costs, sectorIndex * FlowFieldUtilities.SectorTileAmount, FlowFieldUtilities.SectorTileAmount),
                 IntegrationField = integrationSector,
                 SectorToPicked = locationData.SectorToPicked,
@@ -108,9 +108,9 @@ public class FlowCalculationScheduler
                 FieldColAmount = FlowFieldUtilities.FieldColAmount,
                 SectorRowAmount = FlowFieldUtilities.SectorRowAmount,
                 SectorToPicked = locationData.SectorToPicked,
-                PickedToSector = path.PickedToSector,
+                PickedToSector = pathInternalData.PickedSectorList,
                 FlowFieldCalculationBuffer = flowFieldCalculationBuffer,
-                IntegrationField = path.IntegrationField,
+                IntegrationField = pathInternalData.IntegrationField,
                 Costs = pickedCostField.Costs,
             };
             JobHandle flowHandle = ffJob.Schedule(flowFieldCalculationBuffer.Length, 256, intFieldCombinedHandle);
@@ -208,20 +208,20 @@ public class FlowCalculationScheduler
     }
     void RefreshResizedFlowFieldLengths()
     {
-        List<Path> producedPaths = _pathContainer.ProducedPaths;
+        List<PathfindingInternalData> pathfindingInternalDataList = _pathContainer.PathfindingInternalDataList;
         NativeList<PathFlowData> flowDataList = _pathContainer.PathFlowDataList;
         for (int i = 0; i < _flowFieldResizedPaths.Length; i++)
         {
             int pathIndex = _flowFieldResizedPaths[i];
-            Path path = producedPaths[pathIndex];
+            PathfindingInternalData pathInternalData = pathfindingInternalDataList[pathIndex];
             PathFlowData flowData = flowDataList[pathIndex];
 
             UnsafeList<FlowData> flowfield = flowData.FlowField;
-            flowfield.Resize(path.FlowFieldLength[0], NativeArrayOptions.ClearMemory);
+            flowfield.Resize(pathInternalData.FlowFieldLength[0], NativeArrayOptions.ClearMemory);
             flowData.FlowField = flowfield;
 
             UnsafeLOSBitmap losmap = flowData.LOSMap;
-            losmap.Resize(path.FlowFieldLength[0], NativeArrayOptions.ClearMemory);
+            losmap.Resize(pathInternalData.FlowFieldLength[0], NativeArrayOptions.ClearMemory);
             flowData.LOSMap = losmap;
 
             flowDataList[pathIndex] = flowData;

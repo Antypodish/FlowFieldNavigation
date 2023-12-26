@@ -15,9 +15,9 @@ public struct AgentDataSetPositionJob : IJobParallelForTransform
     {
         float3 pos = transform.position;
         pos.x = math.select(pos.x, MinXIncluding, pos.x < MinXIncluding);
-        pos.x = math.select(pos.x, MaxXExcluding - 1, pos.x <= MaxXExcluding);
+        pos.x = math.select(pos.x, MaxXExcluding - 1, pos.x >= MaxXExcluding);
         pos.z = math.select(pos.z, MinYIncluding, pos.z < MinYIncluding);
-        pos.z = math.select(pos.z, MaxYExcluding - 1, pos.z <= MaxYExcluding);
+        pos.z = math.select(pos.z, MaxYExcluding - 1, pos.z >= MaxYExcluding);
         transform.position = pos;
 
         AgentData data = AgentDataArray[index];

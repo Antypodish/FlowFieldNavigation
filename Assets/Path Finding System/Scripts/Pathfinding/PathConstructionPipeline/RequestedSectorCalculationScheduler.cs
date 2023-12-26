@@ -20,7 +20,7 @@ public class RequestedSectorCalculationScheduler
 
     public void ScheduleRequestedSectorCalculation(PathPipelineInfoWithHandle pathInfo, JobHandle activePortalSubmissionHandle, NativeSlice<float2> sources)
     {
-        Path path = _pathContainer.ProducedPaths[pathInfo.PathIndex];
+        PathfindingInternalData pathInternalData = _pathContainer.PathfindingInternalDataList[pathInfo.PathIndex];
         PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
         PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
         PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathInfo.PathIndex];
@@ -40,15 +40,18 @@ public class RequestedSectorCalculationScheduler
             SectorToPickedTable = locationData.SectorToPicked,
             Sources = sources,
             PortalSequence = portalTraversalData.PortalSequence,
-            ActiveWaveFrontListArray = path.ActivePortalList,
+            ActiveWaveFrontListArray = pathInternalData.ActivePortalList,
             PortalNodes = pickedFieldGraph.PortalNodes,
-            SectorFlowStartIndiciesToCalculateIntegration = path.SectorFlowStartIndiciesToCalculateIntegration,
-            SectorFlowStartIndiciesToCalculateFlow = path.SectorFlowStartIndiciesToCalculateFlow,
-            PickedToSectorTable = path.PickedToSector,
-            SectorWithinLOSState = path.SectorWithinLOSState,
+            SectorFlowStartIndiciesToCalculateIntegration = pathInternalData.SectorFlowStartIndiciesToCalculateIntegration,
+            SectorFlowStartIndiciesToCalculateFlow = pathInternalData.SectorFlowStartIndiciesToCalculateFlow,
+            PickedToSectorTable = pathInternalData.PickedSectorList,
+            SectorWithinLOSState = pathInternalData.SectorWithinLOSState,
         };
         JobHandle sourceSectorHandle = sectorCalcJob.Schedule(activePortalSubmissionHandle);
-        if (FlowFieldUtilities.DebugMode) { sourceSectorHandle.Complete(); }
+        if (FlowFieldUtilities.DebugMode)
+        {
+            sourceSectorHandle.Complete();
+        }
 
         ScheduledRequestedSectorCalculations.Add(new PathPipelineInfoWithHandle(sourceSectorHandle, pathInfo.PathIndex));
     }

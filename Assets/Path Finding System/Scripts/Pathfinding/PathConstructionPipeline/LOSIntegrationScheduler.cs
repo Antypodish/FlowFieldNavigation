@@ -26,15 +26,15 @@ public class LOSIntegrationScheduler
 
     public void ScheduleLOS(PathPipelineInfoWithHandle pathInfo, JobHandle flowHandle = new JobHandle())
     {
-        Path path = _pathContainer.ProducedPaths[pathInfo.PathIndex];
+        PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathInfo.PathIndex];
         PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
         PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
         int2 targetIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize);
         CostField pickedCostField = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(destinationData.Offset);
 
         JobHandle losHandle = flowHandle;
-        bool requestedSectorWithinLOS = (path.SectorWithinLOSState[0] & SectorsWihinLOSArgument.RequestedSectorWithinLOS) == SectorsWihinLOSArgument.RequestedSectorWithinLOS;
-        bool addedSectorWithinLOS = (path.SectorWithinLOSState[0] & SectorsWihinLOSArgument.AddedSectorWithinLOS) == SectorsWihinLOSArgument.AddedSectorWithinLOS;
+        bool requestedSectorWithinLOS = (internalData.SectorWithinLOSState[0] & SectorsWihinLOSArgument.RequestedSectorWithinLOS) == SectorsWihinLOSArgument.RequestedSectorWithinLOS;
+        bool addedSectorWithinLOS = (internalData.SectorWithinLOSState[0] & SectorsWihinLOSArgument.AddedSectorWithinLOS) == SectorsWihinLOSArgument.AddedSectorWithinLOS;
         bool losCalculated = _pathContainer.IsLOSCalculated(pathInfo.PathIndex);
         bool destinationMoved = pathInfo.DestinationState == DynamicDestinationState.Moved;
         if (losCalculated && (addedSectorWithinLOS || destinationMoved))
@@ -49,7 +49,7 @@ public class LOSIntegrationScheduler
                 Target = targetIndex,
 
                 SectorToPickedTable = locationData.SectorToPicked,
-                IntegrationField = path.IntegrationField,
+                IntegrationField = internalData.IntegrationField,
             };
             JobHandle loscleanHandle = losClean.Schedule(flowHandle);
 
@@ -66,7 +66,7 @@ public class LOSIntegrationScheduler
 
                 Costs = pickedCostField.Costs,
                 SectorToPicked = locationData.SectorToPicked,
-                IntegrationField = path.IntegrationField,
+                IntegrationField = internalData.IntegrationField,
                 Target = targetIndex,
             };
             losHandle = losjob.Schedule(loscleanHandle);
@@ -87,13 +87,13 @@ public class LOSIntegrationScheduler
 
                 Costs = pickedCostField.Costs,
                 SectorToPicked = locationData.SectorToPicked,
-                IntegrationField = path.IntegrationField,
+                IntegrationField = internalData.IntegrationField,
                 Target = targetIndex,
             };
             losHandle = losjob.Schedule(flowHandle);
             _losCalculatedPaths.Add(pathInfo.PathIndex);
         }
-        path.SectorWithinLOSState[0] = SectorsWihinLOSArgument.None;
+        internalData.SectorWithinLOSState[0] = SectorsWihinLOSArgument.None;
 
         if (FlowFieldUtilities.DebugMode) { losHandle.Complete(); }
         pathInfo.Handle = losHandle;
@@ -122,14 +122,14 @@ public class LOSIntegrationScheduler
     }
     public void ScheduleLOSTransfers()
     {
-        List<Path> producedPaths = _pathContainer.ProducedPaths;
+        List<PathfindingInternalData> internalDataList = _pathContainer.PathfindingInternalDataList;
         NativeList<PathLocationData> pathLocationDataList = _pathContainer.PathLocationDataList;
         NativeList<PathFlowData> pathFlowDataList = _pathContainer.PathFlowDataList;
         NativeList<PathDestinationData> pathDestinationDataList = _pathContainer.PathDestinationDataList;
         for (int i = 0; i < _losCalculatedPaths.Length; i++)
         {
             int pathIndex = _losCalculatedPaths[i];
-            Path path = producedPaths[pathIndex];
+            PathfindingInternalData internalData = internalDataList[pathIndex];
             PathDestinationData destinationData = pathDestinationDataList[pathIndex];
             PathLocationData locationData = pathLocationDataList[pathIndex];
             PathFlowData flowData = pathFlowDataList[pathIndex];
@@ -142,7 +142,7 @@ public class LOSIntegrationScheduler
                 LOSRange = FlowFieldUtilities.LOSRange,
                 SectorToPickedTable = locationData.SectorToPicked,
                 LOSBitmap = flowData.LOSMap,
-                IntegrationField = path.IntegrationField,
+                IntegrationField = internalData.IntegrationField,
                 Target = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize),
             };
             _transferHandles.Add(losTransfer.Schedule());

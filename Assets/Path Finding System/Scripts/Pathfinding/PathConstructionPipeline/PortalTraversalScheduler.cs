@@ -24,7 +24,7 @@ internal class PortalTraversalScheduler
     }
     public void SchedulePortalTraversalFor(RequestPipelineInfoWithHandle reqInfo, NativeSlice<float2> sources)
     {
-        Path path = _pathfindingManager.PathContainer.ProducedPaths[reqInfo.PathIndex];
+        PathfindingInternalData pathInternalData = _pathfindingManager.PathContainer.PathfindingInternalDataList[reqInfo.PathIndex];
         PathDestinationData destinationData = _pathContainer.PathDestinationDataList[reqInfo.PathIndex];
         PathLocationData locationData = _pathContainer.PathLocationDataList[reqInfo.PathIndex];
         PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[reqInfo.PathIndex];
@@ -42,7 +42,7 @@ internal class PortalTraversalScheduler
             SectorColAmount = FlowFieldUtilities.SectorColAmount,
             SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
             SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
-            PickedToSector = path.PickedToSector,
+            PickedToSector = pathInternalData.PickedSectorList,
             TargetSectorCosts = _pathContainer.TargetSectorIntegrationList[reqInfo.PathIndex],
             PortalNodes = pickedFieldGraph.PortalNodes,
             SecToWinPtrs = pickedFieldGraph.SecToWinPtrs,
@@ -54,7 +54,7 @@ internal class PortalTraversalScheduler
             Costs = pickedCostField.Costs,
             LocalDirections = _pathfindingManager.FieldProducer.GetSectorDirections(),
             SectorToPicked = locationData.SectorToPicked,
-            FlowFieldLength = path.FlowFieldLength,
+            FlowFieldLength = pathInternalData.FlowFieldLength,
             PortalTraversalDataArray = portalTraversalData.PortalTraversalDataArray,
             SourcePortalIndexList = portalTraversalData.SourcePortalIndexList,
             TargetNeighbourPortalIndicies = portalTraversalData.TargetSectorPortalIndexList,
@@ -72,7 +72,7 @@ internal class PortalTraversalScheduler
             FieldTileSize = FlowFieldUtilities.TileSize,
             SectorColAmount = FlowFieldUtilities.SectorColAmount,
             SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
-            PickedToSector = path.PickedToSector,
+            PickedToSector = pathInternalData.PickedSectorList,
             PortalSequenceBorders = portalTraversalData.PortalSequenceBorders,
             PortalNodes = pickedFieldGraph.PortalNodes,
             SecToWinPtrs = pickedFieldGraph.SecToWinPtrs,
@@ -83,7 +83,7 @@ internal class PortalTraversalScheduler
             SectorNodes = pickedFieldGraph.SectorNodes,
             PortalSequence = portalTraversalData.PortalSequence,
             SectorToPicked = locationData.SectorToPicked,
-            FlowFieldLength = path.FlowFieldLength,
+            FlowFieldLength = pathInternalData.FlowFieldLength,
             PortalTraversalDataArray = portalTraversalData.PortalTraversalDataArray,
             TargetNeighbourPortalIndicies = portalTraversalData.TargetSectorPortalIndexList,
             SectorStateTable = sectorStateTable,

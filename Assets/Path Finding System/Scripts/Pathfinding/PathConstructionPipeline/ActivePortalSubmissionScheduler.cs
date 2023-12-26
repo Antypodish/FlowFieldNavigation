@@ -13,7 +13,7 @@ internal class ActivePortalSubmissionScheduler
 
     public RequestPipelineInfoWithHandle ScheduleActivePortalSubmission(RequestPipelineInfoWithHandle reqInfo)
     {
-        Path path = _pathContainer.ProducedPaths[reqInfo.PathIndex];
+        PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[reqInfo.PathIndex];
         PathDestinationData destinationData = _pathContainer.PathDestinationDataList[reqInfo.PathIndex];
         PathLocationData locationData = _pathContainer.PathLocationDataList[reqInfo.PathIndex];
         PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[reqInfo.PathIndex];
@@ -33,14 +33,14 @@ internal class ActivePortalSubmissionScheduler
 
             PortalEdges = pickedFieldGraph.PorToPorPtrs,
             SectorToPicked = locationData.SectorToPicked,
-            PickedToSector = path.PickedToSector,
+            PickedToSector = internalData.PickedSectorList,
             PortalSequence = portalTraversalData.PortalSequence,
             PortalSequenceBorders = portalTraversalData.PortalSequenceBorders,
             WinToSecPtrs = pickedFieldGraph.WinToSecPtrs,
             PortalNodes = pickedFieldGraph.PortalNodes,
             WindowNodes = pickedFieldGraph.WindowNodes,
-            ActiveWaveFrontListArray = path.ActivePortalList,
-            NotActivatedPortals = path.NotActivePortalList,
+            ActiveWaveFrontListArray = internalData.ActivePortalList,
+            NotActivatedPortals = internalData.NotActivePortalList,
             SectorBitArray = sectorBitArray,
         };
         JobHandle submitHandle = submitJob.Schedule();

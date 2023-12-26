@@ -29,13 +29,14 @@ public class EditorPathDebugger
     public void DebugDynamicAreaIntegration(FlowFieldAgent agent)
     {
         if (_pathContainer == null) { return; }
-        if (_pathContainer.ProducedPaths.Count == 0) { return; }
-        Path producedPath = agent.GetPath();
-        if (!producedPath.IsCalculated) { return; }
+        if (_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
+        int pathIndex = agent.GetPathIndex();
+        if(pathIndex == -1) { return; }
 
-        PathLocationData locationData = _pathfindingManager.PathContainer.PathLocationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
+        PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathIndex];
+        PathLocationData locationData = _pathfindingManager.PathContainer.PathLocationDataList[pathIndex];
         UnsafeList<SectorFlowStart> pickedSectorFlowStarts = locationData.DynamicAreaPickedSectorFlowStarts;
-        NativeArray<IntegrationTile> integrationField = producedPath.DynamicArea.IntegrationField;
+        NativeArray<IntegrationTile> integrationField = internalData.DynamicArea.IntegrationField;
 
         for (int i = 0; i < pickedSectorFlowStarts.Length; i++)
         {
@@ -58,14 +59,14 @@ public class EditorPathDebugger
     public void DebugDynamicAreaFlow(FlowFieldAgent agent)
     {
         if (_pathContainer == null) { return; }
-        if (_pathContainer.ProducedPaths.Count == 0) { return; }
-        Path producedPath = agent.GetPath();
-        if (!producedPath.IsCalculated) { return; }
+        if (_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
+        int pathIndex = agent.GetPathIndex();
+        if (pathIndex == -1) { return; }
 
         float yOffset = 0.2f;
-        PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
-        PathLocationData locationData = _pathfindingManager.PathContainer.PathLocationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
-        PathFlowData flowData = _pathfindingManager.PathContainer.PathFlowDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
+        PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[pathIndex];
+        PathLocationData locationData = _pathfindingManager.PathContainer.PathLocationDataList[pathIndex];
+        PathFlowData flowData = _pathfindingManager.PathContainer.PathFlowDataList[pathIndex];
         UnsafeList<SectorFlowStart> pickedSectorFlowStarts = locationData.DynamicAreaPickedSectorFlowStarts;
         UnsafeList<FlowData> flowField = flowData.DynamicAreaFlowField;
         Gizmos.color = Color.blue;
@@ -111,18 +112,15 @@ public class EditorPathDebugger
     public void DebugActiveWaveFronts(FlowFieldAgent agent)
     {
         if (_pathContainer == null) { return; }
-        if (_pathContainer.ProducedPaths.Count == 0) { return; }
-        Path producedPath = agent.GetPath();
-        if (!producedPath.IsCalculated) { return; }
-
+        if (_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
+        int pathIndex = agent.GetPathIndex();
+        if (pathIndex == -1) { return; }
+        PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathIndex];
 
         float tileSize = _pathfindingManager.TileSize;
         int sectorColAmount = FlowFieldUtilities.SectorColAmount;
-
-        PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
-        FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
-        NativeArray<UnsafeList<ActiveWaveFront>> waveFronts = producedPath.ActivePortalList;
-        NativeArray<int> pickedToSector = producedPath.PickedToSector;
+        NativeArray<UnsafeList<ActiveWaveFront>> waveFronts = internalData.ActivePortalList;
+        NativeArray<int> pickedToSector = internalData.PickedSectorList;
         Gizmos.color = Color.red;
         for (int i = 0; i < pickedToSector.Length; i++)
         {
@@ -143,12 +141,13 @@ public class EditorPathDebugger
     public void DebugPortalTraversalMarks(FlowFieldAgent agent)
     {
         if (_pathContainer == null) { return; }
-        if(_pathContainer.ProducedPaths.Count == 0) { return; }
-        Path producedPath = agent.GetPath();
-        if (!producedPath.IsCalculated) { return; }
+        if(_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
+        int pathIndex = agent.GetPathIndex();
+        if (pathIndex == -1) { return; }
 
-        PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
-        PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
+
+        PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathIndex];
+        PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[pathIndex];
         float tileSize = _pathfindingManager.TileSize;
         FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
         UnsafeList<PortalNode> portalNodes = fg.PortalNodes;
@@ -177,12 +176,12 @@ public class EditorPathDebugger
     public void DebugTargetNeighbourPortals(FlowFieldAgent agent)
     {
         if (_pathContainer == null) { return; }
-        if(_pathContainer.ProducedPaths.Count == 0) { return; }
-        Path producedPath = agent.GetPath();
-        if (!producedPath.IsCalculated) { return; }
+        if(_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
+        int pathIndex = agent.GetPathIndex();
+        if (pathIndex == -1) { return; }
 
-        PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[agent.AgentDataIndex];
-        PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
+        PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathIndex];
+        PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[pathIndex];
         float tileSize = _pathfindingManager.TileSize;
         FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
         UnsafeList<PortalNode> portalNodes = fg.PortalNodes;
@@ -204,13 +203,12 @@ public class EditorPathDebugger
     public void DebugPortalSequence(FlowFieldAgent agent)
     {
         if (_pathContainer == null) { return; }
-        if (_pathContainer.ProducedPaths.Count == 0) { return; }
-        Path producedPath = agent.GetPath();
-        if (!producedPath.IsCalculated) { return; }
+        if (_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
+        int pathIndex = agent.GetPathIndex();
+        if (pathIndex == -1) { return; }
 
-        PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
-        PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
-        float tileSize = _pathfindingManager.TileSize;
+        PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathIndex];
+        PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[pathIndex];
         FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
         UnsafeList<PortalNode> portalNodes = fg.PortalNodes;
         NativeList<ActivePortal> porSeq = portalTraversalData.PortalSequence;
@@ -258,13 +256,13 @@ public class EditorPathDebugger
     public void DebugPickedSectors(FlowFieldAgent agent)
     {
         if (_pathContainer == null) { return; }
-        if (_pathContainer.ProducedPaths.Count == 0) { return; }
-        Path producedPath = agent.GetPath();
-        if (!producedPath.IsCalculated) { return; }
+        if (_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
+        int pathIndex = agent.GetPathIndex();
+        if (pathIndex == -1) { return; }
 
-        PathLocationData locationData = _pathfindingManager.PathContainer.PathLocationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
-        PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
-        SectorBitArray sectorBitArray = _pathfindingManager.PathContainer.PathSectorBitArrays[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
+        PathLocationData locationData = _pathfindingManager.PathContainer.PathLocationDataList[pathIndex];
+        PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[pathIndex];
+        SectorBitArray sectorBitArray = _pathfindingManager.PathContainer.PathSectorBitArrays[pathIndex];
         float yOffset = 0.3f;
         Gizmos.color = Color.black;
         float tileSize = _pathfindingManager.TileSize;
@@ -296,16 +294,19 @@ public class EditorPathDebugger
     public void DebugIntegrationField(FlowFieldAgent agent)
     {
         if (_pathContainer == null) { return; }
-        if (_pathContainer.ProducedPaths.Count == 0) { return; }
-        Path producedPath = agent.GetPath();
-        if (!producedPath.IsCalculated) { return; }
-        PathLocationData locationData = _pathfindingManager.PathContainer.PathLocationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
-        PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
+        if (_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
+        int pathIndex = agent.GetPathIndex();
+        if (pathIndex == -1) { return; }
+
+        PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathIndex];
+
+        PathLocationData locationData = _pathfindingManager.PathContainer.PathLocationDataList[pathIndex];
+        PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[pathIndex];
         int sectorColAmount = _pathfindingManager.SectorColAmount;
         int sectorTileAmount = sectorColAmount * sectorColAmount;
         UnsafeList<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset).SectorNodes;
         UnsafeList<int> sectorMarks = locationData.SectorToPicked;
-        NativeArray<IntegrationTile> integrationField = producedPath.IntegrationField;
+        NativeArray<IntegrationTile> integrationField = internalData.IntegrationField;
         for (int i = 0; i < sectorMarks.Length; i++)
         {
             if (sectorMarks[i] == 0) { continue; }
@@ -330,15 +331,17 @@ public class EditorPathDebugger
     public void LOSBlockDebug(FlowFieldAgent agent)
     {
         if (_pathContainer == null) { return; }
-        if (_pathContainer.ProducedPaths.Count == 0) { return; }
-        Path producedPath = agent.GetPath();
-        if (!producedPath.IsCalculated) { return; }
+        if (_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
+        int pathIndex = agent.GetPathIndex();
+        if (pathIndex == -1) { return; }
 
-        PathLocationData locationData = _pathfindingManager.PathContainer.PathLocationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
-        PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
+        PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathIndex];
+
+        PathLocationData locationData = _pathfindingManager.PathContainer.PathLocationDataList[pathIndex];
+        PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[pathIndex];
         UnsafeList<int> sectorMarks = locationData.SectorToPicked;
         UnsafeList<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset).SectorNodes;
-        NativeArray<IntegrationTile> integrationField = producedPath.IntegrationField;
+        NativeArray<IntegrationTile> integrationField = internalData.IntegrationField;
         int sectorColAmount = _pathfindingManager.SectorColAmount;
         int sectorTileAmount = sectorColAmount * sectorColAmount;
         for (int i = 0; i < sectorMarks.Length; i++)
@@ -375,20 +378,22 @@ public class EditorPathDebugger
     public void DebugFlowField(FlowFieldAgent agent)
     {
         if (_pathContainer == null) { return; }
-        if (_pathContainer.ProducedPaths.Count == 0) { return; }
-        Path producedPath = agent.GetPath();
-        if (!producedPath.IsCalculated) { return; }
+        if (_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
+        int pathIndex = agent.GetPathIndex();
+        if (pathIndex == -1) { return; }
 
-        PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
-        PathLocationData locationData = _pathfindingManager.PathContainer.PathLocationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
-        PathFlowData pathFlowData = _pathfindingManager.PathContainer.PathFlowDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
+        PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathIndex];
+
+        PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[pathIndex];
+        PathLocationData locationData = _pathfindingManager.PathContainer.PathLocationDataList[pathIndex];
+        PathFlowData pathFlowData = _pathfindingManager.PathContainer.PathFlowDataList[pathIndex];
         float yOffset = 0.2f;
         UnsafeList<int> sectorMarks = locationData.SectorToPicked;
         UnsafeList<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset).SectorNodes;
         UnsafeList<FlowData> flowField = pathFlowData.FlowField;
         UnsafeLOSBitmap losmap = pathFlowData.LOSMap;
         UnsafeList<SectorFlowStart> dynamicAreaFlowStarts = locationData.DynamicAreaPickedSectorFlowStarts;
-        UnsafeList<FlowData> dynamicAreaFlowField = producedPath.DynamicArea.FlowFieldCalculationBuffer;
+        UnsafeList<FlowData> dynamicAreaFlowField = internalData.DynamicArea.FlowFieldCalculationBuffer;
         int sectorColAmount = _pathfindingManager.SectorColAmount;
         int sectorTileAmount = sectorColAmount * sectorColAmount;
         for (int i = 0; i < sectorMarks.Length; i++)
@@ -495,8 +500,8 @@ public class EditorPathDebugger
     public void DebugDestination(FlowFieldAgent agent)
     {
         if (agent == null) { return; }
-        Path path = agent.GetPath();
-        if(path == null) { return; }
+        int pathIndex = agent.GetPathIndex();
+        if (pathIndex == -1) { return; }
 
         PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
         Vector2 destination = destinationData.Destination;

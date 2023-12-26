@@ -11,7 +11,7 @@ using UnityEngine.UIElements;
 
 public class PathContainer
 {
-    public List<Path> ProducedPaths;
+    public List<PathfindingInternalData> PathfindingInternalDataList;
     public NativeList<PathLocationData> PathLocationDataList;
     public NativeList<PathFlowData> PathFlowDataList;
     public NativeList<UnsafeList<PathSectorState>> PathSectorStateTableList;
@@ -29,7 +29,7 @@ public class PathContainer
     public PathContainer(PathfindingManager pathfindingManager)
     {
         _fieldProducer = pathfindingManager.FieldProducer;
-        ProducedPaths = new List<Path>(1);
+        PathfindingInternalDataList = new List<PathfindingInternalData>(1);
         _preallocator = new PathPreallocator(_fieldProducer, FlowFieldUtilities.SectorTileAmount, FlowFieldUtilities.SectorMatrixTileAmount);
         _removedPathIndicies = new Stack<int>();
         ProducedPathSubscribers = new NativeList<int>(Allocator.Persistent);
@@ -45,14 +45,13 @@ public class PathContainer
     }
     public void Update()
     {
-        for (int i = 0; i < ProducedPaths.Count; i++)
+        for (int i = 0; i < PathfindingInternalDataList.Count; i++)
         {
-            Path path = ProducedPaths[i];
+            PathfindingInternalData internalData = PathfindingInternalDataList[i];
             PathState pathState = PathStateList[i];
             if(pathState == PathState.Removed) { continue; }
             int subsciriber = ProducedPathSubscribers[i];
-            if(subsciriber == 0 && path.IsCalculated) { pathState = PathState.ToBeDisposed; }
-            if (pathState == PathState.ToBeDisposed && path.IsCalculated)
+            if (subsciriber == 0)
             {
                 PathLocationData locationData = PathLocationDataList[i];
                 PathFlowData flowData = PathFlowDataList[i];
@@ -62,7 +61,7 @@ public class PathContainer
                 PathDestinationData destinationData = PathDestinationDataList[i];
                 SectorBitArray sectorBitArray = PathSectorBitArrays[i];
                 sectorBitArray.Dispose();
-                path.Dispose();
+                internalData.Dispose();
                 locationData.Dispose();
                 flowData.Dispose();
                 portalTraversalData.Dispose();
@@ -71,19 +70,19 @@ public class PathContainer
                 PreallocationPack preallocations = new PreallocationPack()
                 {
                     SectorToPicked = locationData.SectorToPicked,
-                    PickedToSector = path.PickedToSector,
+                    PickedToSector = internalData.PickedSectorList,
                     PortalSequence = portalTraversalData.PortalSequence,
                     PortalSequenceBorders = portalTraversalData.PortalSequenceBorders,
                     PortalTraversalDataArray = portalTraversalData.PortalTraversalDataArray,
                     TargetSectorCosts = targetSectorIntegration,
-                    FlowFieldLength = path.FlowFieldLength,
+                    FlowFieldLength = internalData.FlowFieldLength,
                     SourcePortalIndexList = portalTraversalData.SourcePortalIndexList,
                     AStartTraverseIndexList = portalTraversalData.AStartTraverseIndexList,
                     TargetSectorPortalIndexList = portalTraversalData.TargetSectorPortalIndexList,
-                    PortalTraversalFastMarchingQueue = path.PortalTraversalFastMarchingQueue,
+                    PortalTraversalFastMarchingQueue = internalData.PortalTraversalQueue,
                     SectorStateTable = sectorStateTable,
                 };
-                _preallocator.SendPreallocationsBack(ref preallocations, path.ActivePortalList, flowData.FlowField, path.IntegrationField, destinationData.Offset);
+                _preallocator.SendPreallocationsBack(ref preallocations, internalData.ActivePortalList, flowData.FlowField, internalData.IntegrationField, destinationData.Offset);
             }
         }
         _preallocator.CheckForDeallocations();
@@ -94,14 +93,13 @@ public class PathContainer
 
         int pathIndex;
         if (_removedPathIndicies.Count != 0) { pathIndex = _removedPathIndicies.Pop(); }
-        else { pathIndex = ProducedPaths.Count; }
+        else { pathIndex = PathfindingInternalDataList.Count; }
 
-        Path producedPath = new Path()
+        PathfindingInternalData internalData = new PathfindingInternalData()
         {
-            IsCalculated = true,
-            PickedToSector = preallocations.PickedToSector,
+            PickedSectorList = preallocations.PickedToSector,
             FlowFieldLength = preallocations.FlowFieldLength,
-            PortalTraversalFastMarchingQueue = preallocations.PortalTraversalFastMarchingQueue,
+            PortalTraversalQueue = preallocations.PortalTraversalFastMarchingQueue,
             NotActivePortalList = new NativeList<int>(Allocator.Persistent),
             SectorFlowStartIndiciesToCalculateIntegration = new NativeList<int>(Allocator.Persistent),
             SectorFlowStartIndiciesToCalculateFlow = new NativeList<int>(Allocator.Persistent),
@@ -143,9 +141,9 @@ public class PathContainer
             NewPickedSectorStartIndex = new NativeArray<int>(1, Allocator.Persistent),
             PathAdditionSequenceBorderStartIndex = new NativeArray<int>(1, Allocator.Persistent),
         };
-        if (ProducedPaths.Count == pathIndex)
+        if (PathfindingInternalDataList.Count == pathIndex)
         {
-            ProducedPaths.Add(producedPath);
+            PathfindingInternalDataList.Add(internalData);
             PathLocationDataList.Add(locationData);
             PathFlowDataList.Add(flowData);
             PathSectorStateTableList.Add(preallocations.SectorStateTable);
@@ -159,7 +157,7 @@ public class PathContainer
         }
         else
         {
-            ProducedPaths[pathIndex] = producedPath;
+            PathfindingInternalDataList[pathIndex] = internalData;
             PathLocationDataList[pathIndex] = locationData;
             PathFlowDataList[pathIndex] = flowData;
             PathSectorStateTableList[pathIndex] = preallocations.SectorStateTable;
@@ -176,14 +174,14 @@ public class PathContainer
     }
     public void FinalizePathBuffers(int pathIndex)
     {
-        Path path = ProducedPaths[pathIndex];
+        PathfindingInternalData internalData = PathfindingInternalDataList[pathIndex];
         PathFlowData pathFlowData = PathFlowDataList[pathIndex];
-        NativeArray<int> flowFieldLength = path.FlowFieldLength;
+        NativeArray<int> flowFieldLength = internalData.FlowFieldLength;
         pathFlowData.FlowField = _preallocator.GetFlowField(flowFieldLength[0]);
         pathFlowData.LOSMap = new UnsafeLOSBitmap(flowFieldLength[0], Allocator.Persistent, NativeArrayOptions.ClearMemory);
-        path.IntegrationField = _preallocator.GetIntegrationField(flowFieldLength[0]);
-        path.ActivePortalList = _preallocator.GetActiveWaveFrontListPersistent(path.PickedToSector.Length);
-
+        internalData.IntegrationField = _preallocator.GetIntegrationField(flowFieldLength[0]);
+        internalData.ActivePortalList = _preallocator.GetActiveWaveFrontListPersistent(internalData.PickedSectorList.Length);
+        PathfindingInternalDataList[pathIndex] = internalData;
         PathFlowDataList[pathIndex] = pathFlowData;
     }
     public void ResizeActiveWaveFrontList(int newLength, NativeList<UnsafeList<ActiveWaveFront>> activeWaveFrontList)
@@ -192,12 +190,12 @@ public class PathContainer
     }
     public bool IsLOSCalculated(int pathIndex)
     {
-        Path path = ProducedPaths[pathIndex];
+        PathfindingInternalData internalData = PathfindingInternalDataList[pathIndex];
         PathLocationData locationData = PathLocationDataList[pathIndex];
         PathDestinationData destinationData = PathDestinationDataList[pathIndex];
         int sectorColAmount = FlowFieldUtilities.SectorColAmount;
         int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
         LocalIndex1d local = FlowFieldUtilities.GetLocal1D(FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize), sectorColAmount, sectorMatrixColAmount);
-        return (path.IntegrationField[locationData.SectorToPicked[local.sector] + local.index].Mark & IntegrationMark.LOSPass) == IntegrationMark.LOSPass;
+        return (internalData.IntegrationField[locationData.SectorToPicked[local.sector] + local.index].Mark & IntegrationMark.LOSPass) == IntegrationMark.LOSPass;
     }
 }

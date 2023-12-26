@@ -3,14 +3,13 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 using UnityEngine;
 
-public class Path
+public struct PathfindingInternalData
 {
-    public bool IsCalculated = false;
     public DynamicArea DynamicArea;
-    public NativeList<int> PickedToSector;
+    public NativeList<int> PickedSectorList;
     public NativeList<IntegrationTile> IntegrationField;
     public NativeArray<int> FlowFieldLength;
-    public NativeQueue<int> PortalTraversalFastMarchingQueue;
+    public NativeQueue<int> PortalTraversalQueue;
     public NativeList<UnsafeList<ActiveWaveFront>> ActivePortalList;
     public NativeList<int> NotActivePortalList;
     public NativeList<int> SectorFlowStartIndiciesToCalculateIntegration;
