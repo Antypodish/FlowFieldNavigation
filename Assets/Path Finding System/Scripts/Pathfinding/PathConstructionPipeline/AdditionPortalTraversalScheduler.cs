@@ -127,7 +127,9 @@ internal class AdditionPortalTraversalScheduler
             //SCHEDULE ADDITION ACTIVE PORTAL SUBMIT JOB
             PathPipelineInfoWithHandle _addActivePorSubmitHandle = _additionActivePortalSubmissionScheduler.ScheduleActivePortalSubmission(pathInfo);
             PathRoutineData existingPath = pathRoutineDataList[pathInfo.PathIndex];
-            NativeSlice<float2> sourcePositions = new NativeSlice<float2>(sources, existingPath.FlowRequestSourceStart, existingPath.FlowRequestSourceCount + existingPath.PathAdditionSourceCount);
+            int flowStart = math.select(existingPath.PathAdditionSourceStart, existingPath.FlowRequestSourceStart, existingPath.FlowRequestSourceCount != 0);
+            int flowCount = existingPath.FlowRequestSourceCount + existingPath.PathAdditionSourceCount;
+            NativeSlice<float2> sourcePositions = new NativeSlice<float2>(sources, flowStart, flowCount);
             _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pathInfo, _addActivePorSubmitHandle.Handle, sourcePositions);
 
         }

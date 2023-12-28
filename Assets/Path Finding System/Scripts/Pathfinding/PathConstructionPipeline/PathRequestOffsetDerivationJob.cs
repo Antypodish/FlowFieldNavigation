@@ -53,6 +53,16 @@ public struct PathRequestOffsetDerivationJob : IJob
         }
         DerivedPathRequests.Length = derivedPathRequestCount;
 
+        //SET DERIVER REQUEST STARTS
+        int counter = 0;
+        for(int i = 0; i < InitialPathRequests.Length; i++)
+        {
+            PathRequest request = InitialPathRequests[i];
+            request.DerivedRequestStartIndex = counter;
+            InitialPathRequests[i] = request;
+            counter += request.DerivedRequestCount;
+        }
+
         //MAKE AGENTS POINT TO DERIVED REQUESTS
         for (int i = 0; i < NewAgentPathIndicies.Length; i++)
         {
@@ -73,6 +83,7 @@ public struct PathRequestOffsetDerivationJob : IJob
     {
         int derivedStart = request.DerivedRequestStartIndex;
         int derivedCount = request.DerivedRequestCount;
+
         for (int i = derivedStart; i < derivedStart + derivedCount; i++)
         {
             OffsetDerivedPathRequest derived = DerivedPathRequests[i];

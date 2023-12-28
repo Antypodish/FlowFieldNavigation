@@ -66,6 +66,17 @@ public class PathConstructionPipeline
         NativeArray<SectorBitArray> pathSectorBitArrays = _pathContainer.PathSectorBitArrays;
 
 
+        for(int i =0; i < AgentNewPathIndicies.Length; i++)
+        {
+            int requestIndex = AgentNewPathIndicies[i];
+            if(requestIndex == -1) { continue; }
+            PathRequest request = requestedPaths[requestIndex];
+            if (request.Type == DestinationType.DynamicDestination && request.TargetAgentIndex == i)
+            {
+                AgentNewPathIndicies[i] = -1;
+            }
+        }
+
         AgentPathTaskList.Length = agentDataArray.Length;
         NativeArrayCleaningJob<PathTask> agentTaskCleaning = new NativeArrayCleaningJob<PathTask>()
         {
@@ -216,7 +227,6 @@ public class PathConstructionPipeline
         }
         NativeArray<int> newPathIndicies = _pathfindingManager.AgentDataContainer.AgentNewPathIndicies;
 
-
         //SET PATH INDICIES OF REQUESTED PATHS
         for (int i = 0; i < FinalPathRequests.Length; i++)
         {
@@ -229,6 +239,7 @@ public class PathConstructionPipeline
             currentpath.PathIndex = newPathIndex;
             FinalPathRequests[i] = currentpath;
         }
+        
         //SET NEW PATH INDICIES OF AGENTS
         OrganizedAgentNewPathIndiciesSetJob newpathindiciesSetJob = new OrganizedAgentNewPathIndiciesSetJob()
         {
