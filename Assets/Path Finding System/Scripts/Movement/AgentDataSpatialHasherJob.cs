@@ -19,6 +19,7 @@ public struct AgentDataSpatialHasherJob : IJob
     public NativeArray<AgentMovementData> AgentMovementDataArray;
     public NativeArray<UnsafeList<HashTile>> AgentHashGridArray;
     [WriteOnly] public NativeArray<int> NormalToHashed;
+    [WriteOnly] public NativeArray<int> HashedToNormal;
 
     public void Execute()
     {
@@ -115,6 +116,7 @@ public struct AgentDataSpatialHasherJob : IJob
             tile.Length++;
             hashGrid[hashTileIndex] = tile;
             NormalToHashed[i] = agentDataIndex;
+            HashedToNormal[agentDataIndex] = i;
         }
     }
 }

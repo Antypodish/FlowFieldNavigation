@@ -14,7 +14,7 @@ using static Unity.VisualScripting.Member;
 public class RoutineScheduler
 {
     PathfindingManager _pathfindingManager;
-    AgentRoutineDataProducer _dirCalculator;
+    MovementIO _movementIO;
     PathConstructionPipeline _pathConstructionPipeline;
 
     List<JobHandle> _costEditHandle;
@@ -30,7 +30,7 @@ public class RoutineScheduler
     public RoutineScheduler(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
-        _dirCalculator = new AgentRoutineDataProducer(pathfindingManager.AgentDataContainer, pathfindingManager);
+        _movementIO = new MovementIO(pathfindingManager.AgentDataContainer, pathfindingManager);
         _agentMovementCalculationHandle = new List<JobHandle>();
         _costEditHandle = new List<JobHandle>();
         CurrentRequestedPaths = new NativeList<PathRequest>(Allocator.Persistent);
@@ -156,9 +156,9 @@ public class RoutineScheduler
         NewCostEditRequests.Clear();
         SendRoutineResultsToAgents();
     }
-    public AgentRoutineDataProducer GetRoutineDataProducer()
+    public MovementIO GetRoutineDataProducer()
     {
-        return _dirCalculator;
+        return _movementIO;
     }
     JobHandle ScheduleCostEditRequests()
     {
@@ -253,16 +253,16 @@ public class RoutineScheduler
     }
     void ScheduleAgentMovementJobs(JobHandle dependency)
     {
-        JobHandle handle = _dirCalculator.PrepareAgentMovementDataCalculationJob(dependency);
+        JobHandle handle = _movementIO.PrepareAgentMovementDataCalculationJob(dependency);
         //SCHEDULE MOV DATA CALC JOB
-        AgentRoutineDataCalculationJob movDataJob = _dirCalculator.GetAgentMovementDataCalcJob();
+        AgentRoutineDataCalculationJob movDataJob = _movementIO.GetAgentMovementDataCalcJob();
         JobHandle movDataHandle = movDataJob.Schedule(movDataJob.AgentMovementData.Length, 64, handle);
         //SCHEDULE AGENT COLLISION JOB
         CollisionResolutionJob colResJob = new CollisionResolutionJob()
         {
-            AgentMovementDataArray = _dirCalculator.AgentMovementDataList,
-            AgentPositionChangeBuffer = _dirCalculator.AgentPositionChangeBuffer,
-            HashGridArray = _dirCalculator.HashGridArray,
+            AgentMovementDataArray = _movementIO.AgentMovementDataList,
+            AgentPositionChangeBuffer = _movementIO.AgentPositionChangeBuffer,
+            HashGridArray = _movementIO.HashGridArray,
             SpatialGridUtils = new AgentSpatialGridUtils(0),
         };
         JobHandle colResHandle = colResJob.Schedule(colResJob.AgentMovementDataArray.Length, 4, movDataHandle);
@@ -279,9 +279,9 @@ public class RoutineScheduler
             BaseSpatialGridSize = FlowFieldUtilities.BaseSpatialGridSize,
             FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
             FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
-            AgentMovementDataArray = _dirCalculator.AgentMovementDataList,
-            RoutineResultArray = _dirCalculator.RoutineResults,
-            HashGridArray = _dirCalculator.HashGridArray,
+            AgentMovementDataArray = _movementIO.AgentMovementDataList,
+            RoutineResultArray = _movementIO.RoutineResults,
+            HashGridArray = _movementIO.HashGridArray,
             SpatialGridUtils = new AgentSpatialGridUtils(0),
         };
         JobHandle avoidanceHandle = avoidanceJob.Schedule(avoidanceJob.AgentMovementDataArray.Length, 64, colResHandle);
@@ -289,10 +289,10 @@ public class RoutineScheduler
         //SCHEDULE TENSON RES JOB
         TensionResolver tensionResJob = new TensionResolver()
         {
-            HashGridArray = _dirCalculator.HashGridArray,
+            HashGridArray = _movementIO.HashGridArray,
             HashGridUtils = new AgentSpatialGridUtils(0),
-            RoutineResultArray = _dirCalculator.RoutineResults,
-            AgentMovementDataArray = _dirCalculator.AgentMovementDataList,
+            RoutineResultArray = _movementIO.RoutineResults,
+            AgentMovementDataArray = _movementIO.AgentMovementDataList,
             SeperationRangeAddition = BoidController.Instance.SeperationRangeAddition,
         };
         JobHandle tensionHandle = tensionResJob.Schedule(avoidanceHandle);
@@ -309,8 +309,8 @@ public class RoutineScheduler
             FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
             SectorRowAmount = FlowFieldUtilities.SectorRowAmount,
             HalfTileSize = FlowFieldUtilities.TileSize / 2,
-            AgentMovementData = _dirCalculator.AgentMovementDataList,
-            AgentPositionChangeBuffer = _dirCalculator.AgentPositionChangeBuffer,
+            AgentMovementData = _movementIO.AgentMovementDataList,
+            AgentPositionChangeBuffer = _movementIO.AgentPositionChangeBuffer,
             CostFieldEachOffset = _costFieldCosts,
         };
         JobHandle wallCollisionHandle = wallCollision.Schedule(wallCollision.AgentMovementData.Length, 64, tensionHandle);
@@ -324,10 +324,10 @@ public class RoutineScheduler
 
     public void SendRoutineResultsToAgents()
     {
-        NativeArray<RoutineResult> routineResults = _dirCalculator.RoutineResults;
-        NativeArray<AgentMovementData> agentMovementDataList = _dirCalculator.AgentMovementDataList;
-        NativeArray<float2> agentPositionChangeBuffer = _dirCalculator.AgentPositionChangeBuffer;
-        NativeArray<int> normalToHashed = _dirCalculator.NormalToHashed;
+        NativeArray<RoutineResult> routineResults = _movementIO.RoutineResults;
+        NativeArray<AgentMovementData> agentMovementDataList = _movementIO.AgentMovementDataList;
+        NativeArray<float2> agentPositionChangeBuffer = _movementIO.AgentPositionChangeBuffer;
+        NativeArray<int> normalToHashed = _movementIO.NormalToHashed;
 
         _pathfindingManager.AgentDataContainer.SendRoutineResults(routineResults, agentMovementDataList, agentPositionChangeBuffer, normalToHashed);
     }
