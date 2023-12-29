@@ -306,6 +306,7 @@ public class PathConstructionPipeline
         _portalTravesalScheduler.ForceComplete(FinalPathRequests, SourcePositions);
         _additionPortalTraversalScheduler.ForceComplete(SourcePositions);
         _requestedSectorCalculationScheduler.ForceComplete();
+        _pathContainer.ExposeBuffers();
     }
 }
 public struct RequestPipelineInfoWithHandle

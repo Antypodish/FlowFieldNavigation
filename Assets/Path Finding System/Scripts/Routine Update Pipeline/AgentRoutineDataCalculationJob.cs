@@ -37,7 +37,7 @@ public struct AgentRoutineDataCalculationJob : IJobParallelFor
             AgentMovementData[index] = data;
             return;
         }
-        if (data.SectorFlowStride == 0)
+        if (data.SectorFlowStride == 0 || data.SectorFlowStride >= data.FlowField.Length)
         {
             data.DesiredDirection = 0;
             AgentMovementData[index] = data;

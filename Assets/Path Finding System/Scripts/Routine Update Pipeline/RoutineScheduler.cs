@@ -98,7 +98,6 @@ public class RoutineScheduler
 
         JobHandle.CombineDependencies(transferHandle, copyHandle, posSetHandle).Complete();
 
-        _dirCalculator.PrepareAgentMovementDataCalculationJob();
 
         _pathConstructionPipeline.ShcedulePathRequestEvalutaion(CurrentRequestedPaths, _costFieldCosts, EditedSectorBitArray.AsArray().AsReadOnly(), islandFieldReconfigHandle);
         ScheduleAgentMovementJobs(costEditHandle);
@@ -254,9 +253,10 @@ public class RoutineScheduler
     }
     void ScheduleAgentMovementJobs(JobHandle dependency)
     {
+        JobHandle handle = _dirCalculator.PrepareAgentMovementDataCalculationJob(dependency);
         //SCHEDULE MOV DATA CALC JOB
         AgentRoutineDataCalculationJob movDataJob = _dirCalculator.GetAgentMovementDataCalcJob();
-        JobHandle movDataHandle = movDataJob.Schedule(movDataJob.AgentMovementData.Length, 64, dependency);
+        JobHandle movDataHandle = movDataJob.Schedule(movDataJob.AgentMovementData.Length, 64, handle);
         //SCHEDULE AGENT COLLISION JOB
         CollisionResolutionJob colResJob = new CollisionResolutionJob()
         {

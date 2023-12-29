@@ -11,6 +11,10 @@ using UnityEngine.UIElements;
 
 public class PathContainer
 {
+    public NativeList<PathFlowData> ExposedPathFlowData;
+    public NativeList<PathLocationData> ExposedPathLocationData;
+    public NativeList<float2> ExposedPathDestinations;
+
     public List<PathfindingInternalData> PathfindingInternalDataList;
     public NativeList<PathLocationData> PathLocationDataList;
     public NativeList<PathFlowData> PathFlowDataList;
@@ -42,6 +46,10 @@ public class PathContainer
         TargetSectorIntegrationList = new NativeList<UnsafeList<DijkstraTile>>(Allocator.Persistent);
         PathRoutineDataList = new NativeList<PathRoutineData>(Allocator.Persistent);
         PathSectorBitArrays = new NativeList<SectorBitArray>(Allocator.Persistent);
+
+        ExposedPathDestinations = new NativeList<float2>(Allocator.Persistent);
+        ExposedPathFlowData = new NativeList<PathFlowData>(Allocator.Persistent);
+        ExposedPathLocationData = new NativeList<PathLocationData>(Allocator.Persistent);
     }
     public void Update()
     {
@@ -89,7 +97,16 @@ public class PathContainer
     }
     public void ExposeBuffers()
     {
+        ExposedPathDestinations.Length = PathDestinationDataList.Length;
+        ExposedPathFlowData.Length = PathFlowDataList.Length;
+        ExposedPathLocationData.Length = PathLocationDataList.Length;
 
+        for(int i = 0; i < ExposedPathDestinations.Length; i++)
+        {
+            ExposedPathDestinations[i] = PathDestinationDataList[i].Destination;
+        }
+        ExposedPathFlowData.CopyFrom(PathFlowDataList);
+        ExposedPathLocationData.CopyFrom(PathLocationDataList);
     }
     public int CreatePath(FinalPathRequest request)
     {

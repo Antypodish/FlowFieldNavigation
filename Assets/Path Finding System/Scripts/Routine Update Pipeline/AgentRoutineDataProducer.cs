@@ -1,20 +1,9 @@
-﻿using JetBrains.Annotations;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.Tracing;
-using System.Linq;
-using TMPro;
+﻿using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
-using Unity.VisualScripting;
-using UnityEditor.Rendering.Universal;
-using UnityEngine;
 using UnityEngine.Jobs;
-using UnityEngine.Networking.Match;
-using UnityEngine.Rendering;
 
 public class AgentRoutineDataProducer
 {
@@ -50,13 +39,13 @@ public class AgentRoutineDataProducer
         }
         NormalToHashed = new NativeList<int>(Allocator.Persistent);
     }
-    public void PrepareAgentMovementDataCalculationJob()
+    public JobHandle PrepareAgentMovementDataCalculationJob(JobHandle dependency)
     {
         NativeList<AgentData> agentDataList = _agentDataContainer.AgentDataList;
         NativeList<int> agentCurPaths = _agentDataContainer.AgentCurPathIndicies;
-        NativeList<PathLocationData> pathLocationDataList = _pathfindingManager.PathContainer.PathLocationDataList;
-        NativeList<PathFlowData> pathFlowDataList = _pathfindingManager.PathContainer.PathFlowDataList;
-        NativeList<PathDestinationData> pathDestinationDataList = _pathfindingManager.PathContainer.PathDestinationDataList;
+        NativeList<PathLocationData> exposedPathLocationDataArray = _pathfindingManager.PathContainer.ExposedPathLocationData;
+        NativeList<PathFlowData> exposedPathFlowDataArray = _pathfindingManager.PathContainer.ExposedPathFlowData;
+        NativeList<float2> exposedPathDestinationArray = _pathfindingManager.PathContainer.ExposedPathDestinations;
         //CLEAR
         AgentMovementDataList.Clear();
         AgentPositionChangeBuffer.Clear();
@@ -81,28 +70,26 @@ public class AgentRoutineDataProducer
             AgentMovementDataArray = AgentMovementDataList,
             NormalToHashed = NormalToHashed,
         };
-        spatialHasher.Schedule().Complete();
+        JobHandle spatialHasherHandle = spatialHasher.Schedule(dependency);
 
         //FILL AGENT MOVEMENT DATA ARRAY
         float sectorSize = FlowFieldUtilities.SectorColAmount * FlowFieldUtilities.TileSize;
         int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
-        for (int i = 0; i < agentDataList.Length; i++)
+        myjob job = new myjob()
         {
-            int agentCurPathIndex = agentCurPaths[i];
-            if (agentCurPathIndex == -1) { continue; }
-            PathDestinationData destinationData = pathDestinationDataList[agentCurPathIndex];
-            PathLocationData locationData = pathLocationDataList[agentCurPathIndex];
-            PathFlowData flowData = pathFlowDataList[agentCurPathIndex];
-            int hashedIndex = NormalToHashed[i];
-            AgentMovementData data = AgentMovementDataList[hashedIndex];
-            data.FlowField = flowData.FlowField;
-            data.LOSMap = flowData.LOSMap;
-            data.Destination = destinationData.Destination;
-            data.SectorFlowStride = locationData.SectorToPicked[FlowFieldUtilities.PosToSector1D(new float2(data.Position.x, data.Position.z), sectorSize, sectorMatrixColAmount)];
-            data.PathId = agentCurPathIndex;
-            
-            AgentMovementDataList[hashedIndex] = data;
-        }
+            sectorMatrixColAmount = sectorMatrixColAmount,
+            sectorSize = sectorSize,
+            agentCurPaths = agentCurPaths,
+            agentDataList = agentDataList,
+            AgentMovementDataList = AgentMovementDataList,
+            exposedPathDestinationArray = exposedPathDestinationArray,
+            exposedPathFlowDataArray = exposedPathFlowDataArray,
+            exposedPathLocationDataArray = exposedPathLocationDataArray,
+            NormalToHashed = NormalToHashed,
+        };
+        JobHandle handle = job.Schedule(spatialHasherHandle);
+
+        return handle;
     }
 
     public AgentRoutineDataCalculationJob GetAgentMovementDataCalcJob()
@@ -115,5 +102,39 @@ public class AgentRoutineDataProducer
             SectorMatrixColAmount = _pathfindingManager.SectorMatrixColAmount,
             AgentMovementData = AgentMovementDataList,
         };
+    }
+}
+
+[BurstCompile]
+public struct myjob : IJob
+{
+    public float sectorSize;
+    public int sectorMatrixColAmount;
+    [ReadOnly] public NativeList<AgentData> agentDataList;
+    [ReadOnly] public NativeList<int> agentCurPaths;
+    [ReadOnly] public NativeList<PathLocationData> exposedPathLocationDataArray;
+    [ReadOnly] public NativeList<PathFlowData> exposedPathFlowDataArray;
+    [ReadOnly] public NativeList<float2> exposedPathDestinationArray;
+    public NativeArray<AgentMovementData> AgentMovementDataList;
+    [ReadOnly] public NativeList<int> NormalToHashed;
+    public void Execute()
+    {
+        for (int i = 0; i < agentDataList.Length; i++)
+        {
+            int agentCurPathIndex = agentCurPaths[i];
+            if (agentCurPathIndex == -1) { continue; }
+            float2 destination = exposedPathDestinationArray[agentCurPathIndex];
+            PathLocationData locationData = exposedPathLocationDataArray[agentCurPathIndex];
+            PathFlowData flowData = exposedPathFlowDataArray[agentCurPathIndex];
+            int hashedIndex = NormalToHashed[i];
+            AgentMovementData data = AgentMovementDataList[hashedIndex];
+            data.FlowField = flowData.FlowField;
+            data.LOSMap = flowData.LOSMap;
+            data.Destination = destination;
+            data.SectorFlowStride = locationData.SectorToPicked[FlowFieldUtilities.PosToSector1D(new float2(data.Position.x, data.Position.z), sectorSize, sectorMatrixColAmount)];
+            data.PathId = agentCurPathIndex;
+
+            AgentMovementDataList[hashedIndex] = data;
+        }
     }
 }
