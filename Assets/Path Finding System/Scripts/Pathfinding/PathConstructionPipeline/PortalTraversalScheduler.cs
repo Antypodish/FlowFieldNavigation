@@ -22,6 +22,7 @@ internal class PortalTraversalScheduler
         _activePortalSubmissionScheduler = new ActivePortalSubmissionScheduler(pathfindingManager);
         _requestedSectorCalculationScheduler = requestedSectorCalculationScheduler;
     }
+
     public void SchedulePortalTraversalFor(RequestPipelineInfoWithHandle reqInfo, NativeSlice<float2> sources)
     {
         PathfindingInternalData pathInternalData = _pathfindingManager.PathContainer.PathfindingInternalDataList[reqInfo.PathIndex];

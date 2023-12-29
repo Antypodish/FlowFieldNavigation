@@ -41,7 +41,6 @@ public struct CurrentPathReconstructionDeterminationJob : IJob
 
             }
         }
-
         //SET NEW PATHS OF AGENTS WHOSE PATHS ARE RECONSTRUCTED
         for (int i = 0; i < AgentCurPathIndicies.Length; i++)
         {

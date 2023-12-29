@@ -52,7 +52,6 @@ public class RequestedSectorCalculationScheduler
         {
             sourceSectorHandle.Complete();
         }
-
         ScheduledRequestedSectorCalculations.Add(new PathPipelineInfoWithHandle(sourceSectorHandle, pathInfo.PathIndex));
     }
     public void TryComplete()

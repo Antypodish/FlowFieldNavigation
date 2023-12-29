@@ -130,9 +130,7 @@ public struct PortalTraversalReductionJob : IJob
         for (int i = 0; i < SourcePositions.Length; i++)
         {
             float2 sourcePos = SourcePositions[i];
-            int2 sourceIndex = new int2((int)math.floor(sourcePos.x / FieldTileSize), (int)math.floor(sourcePos.y / FieldTileSize));
-            int2 sourceSectorIndex = sourceIndex / SectorColAmount;
-            int sourceSectorIndexFlat = sourceSectorIndex.y * SectorMatrixColAmount + sourceSectorIndex.x;
+            int sourceSectorIndexFlat = FlowFieldUtilities.PosToSector1D(sourcePos, SectorColAmount * FieldTileSize, SectorMatrixColAmount);
 
             //ADD SOURCE SECTOR TO THE PICKED SECTORS
             if (SectorToPicked[sourceSectorIndexFlat] != 0) { continue; }

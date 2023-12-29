@@ -23,6 +23,8 @@ public class PathConstructionPipeline
     NativeReference<int> PathRequestSourceCount;
     NativeList<PathTask> AgentPathTaskList;
     NativeArray<IslandFieldProcessor> IslandFieldProcessors;
+    NativeList<int> NewPathIndicies;
+    NativeList<int> DestinationUpdatedPathIndicies;
     List<JobHandle> _pathfindingTaskOrganizationHandle;
     public PathConstructionPipeline(PathfindingManager pathfindingManager)
     {
@@ -40,18 +42,20 @@ public class PathConstructionPipeline
         CurrentPathSourceCount = new NativeReference<int>(Allocator.Persistent);
         PathRequestSourceCount = new NativeReference<int>(Allocator.Persistent);
         AgentPathTaskList = new NativeList<PathTask>(Allocator.Persistent);
+        NewPathIndicies = new NativeList<int>(Allocator.Persistent);
+        DestinationUpdatedPathIndicies = new NativeList<int>(Allocator.Persistent);
     }
-
     public void ShcedulePathRequestEvalutaion(NativeList<PathRequest> requestedPaths, NativeArray<UnsafeListReadOnly<byte>> costFieldCosts, NativeArray<SectorBitArray>.ReadOnly editedSectorBitArray, JobHandle islandFieldHandleAsDependency)
     {
         //RESET CONTAINERS
         SourcePositions.Clear();
         OffsetDerivedPathRequests.Clear();
         FinalPathRequests.Clear();
+        NewPathIndicies.Clear();
+        DestinationUpdatedPathIndicies.Clear();
         PathRequestSourceCount.Value = 0;
         CurrentPathSourceCount.Value = 0;
-        
-        
+
         NativeArray<AgentData> agentDataArray = _pathfindingManager.AgentDataContainer.AgentDataList;
         NativeArray<int> AgentNewPathIndicies = _pathfindingManager.AgentDataContainer.AgentNewPathIndicies;
         NativeArray<int> AgentCurPathIndicies = _pathfindingManager.AgentDataContainer.AgentCurPathIndicies;
@@ -125,7 +129,6 @@ public class PathConstructionPipeline
             CostFields = costFieldCosts,
         };
         JobHandle routineDataCalculationHandle = routineDataCalculation.Schedule(pathRoutineDataArray.Length, 64, sectorEditCheckHandle);
-
         CurrentPathReconstructionDeterminationJob reconstructionDetermination = new CurrentPathReconstructionDeterminationJob()
         {
             AgentCurPathIndicies = AgentCurPathIndicies,
@@ -214,13 +217,16 @@ public class PathConstructionPipeline
             PathRoutineDataArray = pathRoutineDataArray,
         };
         JobHandle sourceSubmitHandle = sourceSubmit.Schedule(JobHandle.CombineDependencies(combinedExpansionHanlde, islandDerivationHandle));
+
         if (FlowFieldUtilities.DebugMode) { sourceSubmitHandle.Complete(); }
+
         _pathfindingTaskOrganizationHandle.Add(sourceSubmitHandle);
     }
     void CompletePathEvaluation()
     {
         _pathfindingTaskOrganizationHandle[0].Complete();
         _pathfindingTaskOrganizationHandle.Clear();
+
         if (IslandFieldProcessors.IsCreated)
         {
             IslandFieldProcessors.Dispose();
@@ -236,10 +242,10 @@ public class PathConstructionPipeline
             int newPathIndex = _pathContainer.CreatePath(currentpath);
             RequestPipelineInfoWithHandle requestInfo = new RequestPipelineInfoWithHandle(new JobHandle(), newPathIndex, i);
             _portalTravesalScheduler.SchedulePortalTraversalFor(requestInfo, pathSources);
+            NewPathIndicies.Add(newPathIndex);
             currentpath.PathIndex = newPathIndex;
             FinalPathRequests[i] = currentpath;
         }
-        
         //SET NEW PATH INDICIES OF AGENTS
         OrganizedAgentNewPathIndiciesSetJob newpathindiciesSetJob = new OrganizedAgentNewPathIndiciesSetJob()
         {
@@ -272,8 +278,10 @@ public class PathConstructionPipeline
             {
                 _dynamicAreaScheduler.ScheduleDynamicArea(pathInfo);
                 _losIntegrationScheduler.ScheduleLOS(pathInfo);
+                DestinationUpdatedPathIndicies.Add(pathInfo.PathIndex);
             }
         }
+
         newPathIndiciesHandle.Complete();
         TryComplete();
     }
@@ -306,7 +314,7 @@ public class PathConstructionPipeline
         _portalTravesalScheduler.ForceComplete(FinalPathRequests, SourcePositions);
         _additionPortalTraversalScheduler.ForceComplete(SourcePositions);
         _requestedSectorCalculationScheduler.ForceComplete();
-        _pathContainer.ExposeBuffers();
+        _pathContainer.ExposeBuffers(DestinationUpdatedPathIndicies, NewPathIndicies);
     }
 }
 public struct RequestPipelineInfoWithHandle

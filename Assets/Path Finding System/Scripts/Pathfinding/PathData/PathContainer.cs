@@ -95,18 +95,20 @@ public class PathContainer
         }
         _preallocator.CheckForDeallocations();
     }
-    public void ExposeBuffers()
+    public void ExposeBuffers(NativeArray<int> destinationUpdatedPathIndicies, NativeArray<int> newPathIndicies)
     {
-        ExposedPathDestinations.Length = PathDestinationDataList.Length;
-        ExposedPathFlowData.Length = PathFlowDataList.Length;
-        ExposedPathLocationData.Length = PathLocationDataList.Length;
-
-        for(int i = 0; i < ExposedPathDestinations.Length; i++)
+        PathDataExposeJob dataExposeJob = new PathDataExposeJob()
         {
-            ExposedPathDestinations[i] = PathDestinationDataList[i].Destination;
-        }
-        ExposedPathFlowData.CopyFrom(PathFlowDataList);
-        ExposedPathLocationData.CopyFrom(PathLocationDataList);
+            DestinationUpdatedPathIndicies = destinationUpdatedPathIndicies,
+            NewPathIndicies = newPathIndicies,
+            ExposedPathDestinationList = ExposedPathDestinations,
+            ExposedPathFlowDataList = ExposedPathFlowData,
+            ExposedPathLocationList = ExposedPathLocationData,
+            PathDestinationDataArray = PathDestinationDataList,
+            PathFlowDataArray = PathFlowDataList,
+            PathLocationDataArray = PathLocationDataList,
+        };
+        dataExposeJob.Schedule().Complete();
     }
     public int CreatePath(FinalPathRequest request)
     {

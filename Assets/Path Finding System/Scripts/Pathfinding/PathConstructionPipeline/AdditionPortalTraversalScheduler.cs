@@ -131,7 +131,6 @@ internal class AdditionPortalTraversalScheduler
             int flowCount = existingPath.FlowRequestSourceCount + existingPath.PathAdditionSourceCount;
             NativeSlice<float2> sourcePositions = new NativeSlice<float2>(sources, flowStart, flowCount);
             _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pathInfo, _addActivePorSubmitHandle.Handle, sourcePositions);
-
         }
         ScheduledAdditionPortalTraversals.Clear();
     }

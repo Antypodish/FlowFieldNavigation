@@ -82,16 +82,6 @@ public class FlowCalculationScheduler
         for (int i = 0; i < sectorFlowStartIndiciesToCalculateFlow.Length; i++)
         {
             int sectorStart = sectorFlowStartIndiciesToCalculateFlow[i];
-            if (sectorStart == 0)
-            {
-                UnityEngine.Debug.Log("hüü");
-                string dbeug = "";
-                for(int j = 0; j < sectorFlowStartIndiciesToCalculateFlow.Length; j++)
-                {
-                    dbeug += sectorFlowStartIndiciesToCalculateFlow[j] + ", ";
-                }
-                UnityEngine.Debug.Log(dbeug);
-            }
 
             UnsafeList<FlowData> flowFieldCalculationBuffer = new UnsafeList<FlowData>(FlowFieldUtilities.SectorTileAmount, Allocator.Persistent, NativeArrayOptions.ClearMemory);
             flowFieldCalculationBuffer.Length = FlowFieldUtilities.SectorTileAmount;

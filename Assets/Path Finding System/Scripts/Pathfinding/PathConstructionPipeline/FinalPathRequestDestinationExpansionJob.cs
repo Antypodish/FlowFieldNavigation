@@ -60,6 +60,7 @@ public struct FinalPathRequestDestinationExpansionJob : IJob
             int partitionSizeOverflow = partitionStart + partitionSize - finalPathRequestCount;
             partitionSizeOverflow = math.select(partitionSizeOverflow, 0, partitionSizeOverflow < 0);
             int partitionSizeClamped = partitionSize - partitionSizeOverflow;
+            partitionSizeClamped = math.select(partitionSizeClamped, finalPathRequestCount - partitionStart, JobIndex + 1 == TotalJobCount);
             sliceToReturn = new NativeSlice<FinalPathRequest>(FinalPathRequests, partitionStart, partitionSizeClamped);
         }
         return sliceToReturn;

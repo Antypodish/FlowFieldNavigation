@@ -57,7 +57,7 @@ public class EditorSectorPortalErrorDetector
                                 "portal2 2d: " + index2 + "\n" +
                                 "portal1 sector" + FlowFieldUtilities.GetSector2D(index1, FlowFieldUtilities.SectorColAmount) + "\n" +
                                 "portal2 sector" + FlowFieldUtilities.GetSector2D(index2, FlowFieldUtilities.SectorColAmount);
-
+                            UnityEngine.Debug.Log(str);
                             float2 portalPos = (FlowFieldUtilities.IndexToPos(index1, FlowFieldUtilities.TileSize) + FlowFieldUtilities.IndexToPos(index1, FlowFieldUtilities.TileSize)) / 2;
                             float3 portalPos3d = new float3(portalPos.x, 0f, portalPos.y);
                             if(offset == i)
