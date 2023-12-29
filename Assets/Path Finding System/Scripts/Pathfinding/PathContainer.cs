@@ -87,6 +87,10 @@ public class PathContainer
         }
         _preallocator.CheckForDeallocations();
     }
+    public void ExposeBuffers()
+    {
+
+    }
     public int CreatePath(FinalPathRequest request)
     {
         PreallocationPack preallocations = _preallocator.GetPreallocations(request.Offset);
@@ -108,6 +112,7 @@ public class PathContainer
             {
                 FlowFieldCalculationBuffer = new UnsafeList<FlowData>(0, Allocator.Persistent),
                 IntegrationField = new NativeList<IntegrationTile>(0, Allocator.Persistent),
+                SectorFlowStartCalculationBuffer = new UnsafeList<SectorFlowStart>(0, Allocator.Persistent),
             }
         };
         PathDestinationData destinationData = new PathDestinationData()

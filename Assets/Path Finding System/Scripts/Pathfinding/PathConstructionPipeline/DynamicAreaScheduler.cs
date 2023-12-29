@@ -20,10 +20,9 @@ public class DynamicAreaScheduler
     {
         PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathInfo.PathIndex];
         PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
-        PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
         DynamicArea dynamicArea = internalData.DynamicArea;
         NativeList<IntegrationTile> integrationField = dynamicArea.IntegrationField;
-        UnsafeList<SectorFlowStart> pickedSectorFlowStarts = locationData.DynamicAreaPickedSectorFlowStarts;
+        UnsafeList<SectorFlowStart> pickedSectorFlowStarts = dynamicArea.SectorFlowStartCalculationBuffer;
         UnsafeList<FlowData> flowFieldCalculationBuffer = dynamicArea.FlowFieldCalculationBuffer;
 
         int2 targetIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize);
@@ -67,12 +66,11 @@ public class DynamicAreaScheduler
         {
             IntegrationField = integrationField,
             FlowFieldCalculationBuffer = flowFieldCalculationBuffer,
+            SectorFlowStartCalculationBuffer = pickedSectorFlowStarts,
         };
         internalData.DynamicArea = dynamicArea;
         _pathContainer.PathfindingInternalDataList[pathInfo.PathIndex] = internalData;
 
-        locationData.DynamicAreaPickedSectorFlowStarts = pickedSectorFlowStarts;
-        _pathContainer.PathLocationDataList[pathInfo.PathIndex] = locationData;
 
         DynamicAreaIntegrationJob integration = new DynamicAreaIntegrationJob()
         {
@@ -125,6 +123,7 @@ public class DynamicAreaScheduler
     public void ForceComplete()
     {
         List<PathfindingInternalData> pathfindingInternalDataList = _pathContainer.PathfindingInternalDataList;
+        NativeList<PathLocationData> pathLocationDataList = _pathContainer.PathLocationDataList;
         NativeList<PathFlowData> pathFlowDataList = _pathContainer.PathFlowDataList;
         NativeList<JobHandle> handles = new NativeList<JobHandle>(Allocator.Temp);
         for(int i = 0; i <_scheduledDynamicAreas.Length; i++)
@@ -133,6 +132,9 @@ public class DynamicAreaScheduler
             pathInfo.Handle.Complete();
             PathfindingInternalData pathInternalData = pathfindingInternalDataList[pathInfo.PathIndex];
             PathFlowData pathFlowData = pathFlowDataList[pathInfo.PathIndex];
+            PathLocationData pathLocationData = pathLocationDataList[pathInfo.PathIndex];
+
+            //COPY FLOW FIELD
             UnsafeList<FlowData> flowField = pathFlowData.DynamicAreaFlowField;
             UnsafeList<FlowData> flowCalculationBuffer = pathInternalData.DynamicArea.FlowFieldCalculationBuffer;
             flowField.Resize(flowCalculationBuffer.Length, NativeArrayOptions.UninitializedMemory);
@@ -143,6 +145,16 @@ public class DynamicAreaScheduler
                 Source = flowCalculationBuffer,
             };
             handles.Add(copyJob.Schedule());
+
+            //COPY SECTOR FLOW STARTS
+            UnsafeList<SectorFlowStart> sectorFlowStarts = pathLocationData.DynamicAreaPickedSectorFlowStarts;
+            UnsafeList<SectorFlowStart> sectorFlowStartCalculationBuffer = pathInternalData.DynamicArea.SectorFlowStartCalculationBuffer;
+            sectorFlowStarts.Length = sectorFlowStartCalculationBuffer.Length;
+            sectorFlowStarts.CopyFrom(sectorFlowStartCalculationBuffer);
+
+            //SEND DATA BACK
+            pathLocationData.DynamicAreaPickedSectorFlowStarts = sectorFlowStarts;
+            pathLocationDataList[pathInfo.PathIndex] = pathLocationData;
             pathFlowData.DynamicAreaFlowField = flowField;
             pathFlowDataList[pathInfo.PathIndex] = pathFlowData;
         }
