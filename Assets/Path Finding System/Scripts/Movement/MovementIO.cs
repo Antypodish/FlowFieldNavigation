@@ -1,4 +1,5 @@
-﻿using Unity.Burst;
+﻿using Assets.Path_Finding_System.Scripts;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
@@ -16,6 +17,8 @@ public class MovementIO
     public NativeArray<UnsafeList<HashTile>> HashGridArray;
     public NativeList<int> NormalToHashed;
     public NativeList<int> HashedToNormal;
+
+    JobHandle _routineHandle;
     public MovementIO(AgentDataContainer agentDataContainer, PathfindingManager pathfindingManager)
     {
         _agentDataContainer = agentDataContainer;
@@ -40,8 +43,9 @@ public class MovementIO
         }
         NormalToHashed = new NativeList<int>(Allocator.Persistent);
         HashedToNormal = new NativeList<int>(Allocator.Persistent);
+        _routineHandle = new JobHandle();
     }
-    public JobHandle PrepareAgentMovementDataCalculationJob(JobHandle dependency)
+    public void ScheduleRoutine(NativeArray<UnsafeListReadOnly<byte>> costFieldCosts, JobHandle dependency)
     {
         NativeList<AgentData> agentDataList = _agentDataContainer.AgentDataList;
         NativeList<int> agentCurPaths = _agentDataContainer.AgentCurPathIndicies;
@@ -93,9 +97,72 @@ public class MovementIO
         };
         JobHandle handle = job.Schedule(agentDataList.Length, 64, spatialHasherHandle);
 
-        return handle;
-    }
+        AgentRoutineDataCalculationJob movDataJob = GetAgentMovementDataCalcJob();
+        JobHandle movDataHandle = movDataJob.Schedule(movDataJob.AgentMovementData.Length, 64, handle);
+        //SCHEDULE AGENT COLLISION JOB
+        CollisionResolutionJob colResJob = new CollisionResolutionJob()
+        {
+            AgentMovementDataArray = AgentMovementDataList,
+            AgentPositionChangeBuffer = AgentPositionChangeBuffer,
+            HashGridArray = HashGridArray,
+            SpatialGridUtils = new AgentSpatialGridUtils(0),
+        };
+        JobHandle colResHandle = colResJob.Schedule(colResJob.AgentMovementDataArray.Length, 4, movDataHandle);
 
+        //SCHEDULE LOCAL AVODANCE JOB
+        LocalAvoidanceJob avoidanceJob = new LocalAvoidanceJob()
+        {
+            SeperationMultiplier = BoidController.Instance.SeperationMultiplier,
+            SeperationRangeAddition = BoidController.Instance.SeperationRangeAddition,
+            SeekMultiplier = BoidController.Instance.SeekMultiplier,
+            AlignmentMultiplier = BoidController.Instance.AlignmentMultiplier,
+            AlignmentRangeAddition = BoidController.Instance.AlignmentRangeAddition,
+            MovingAvoidanceRangeAddition = BoidController.Instance.MovingAvoidanceRangeAddition,
+            BaseSpatialGridSize = FlowFieldUtilities.BaseSpatialGridSize,
+            FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
+            FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
+            AgentMovementDataArray = AgentMovementDataList,
+            RoutineResultArray = RoutineResults,
+            HashGridArray = HashGridArray,
+            SpatialGridUtils = new AgentSpatialGridUtils(0),
+        };
+        JobHandle avoidanceHandle = avoidanceJob.Schedule(avoidanceJob.AgentMovementDataArray.Length, 64, colResHandle);
+
+        //SCHEDULE TENSON RES JOB
+        TensionResolver tensionResJob = new TensionResolver()
+        {
+            HashGridArray = HashGridArray,
+            HashGridUtils = new AgentSpatialGridUtils(0),
+            RoutineResultArray = RoutineResults,
+            AgentMovementDataArray = AgentMovementDataList,
+            SeperationRangeAddition = BoidController.Instance.SeperationRangeAddition,
+        };
+        JobHandle tensionHandle = tensionResJob.Schedule(avoidanceHandle);
+
+        //SCHEDULE WALL COLLISION JOB
+
+        AgentWallCollisionJob wallCollision = new AgentWallCollisionJob()
+        {
+            SectorColAmount = FlowFieldUtilities.SectorColAmount,
+            SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+            SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
+            TileSize = FlowFieldUtilities.TileSize,
+            FieldColAmount = FlowFieldUtilities.FieldColAmount,
+            FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
+            SectorRowAmount = FlowFieldUtilities.SectorRowAmount,
+            HalfTileSize = FlowFieldUtilities.TileSize / 2,
+            AgentMovementData = AgentMovementDataList,
+            AgentPositionChangeBuffer = AgentPositionChangeBuffer,
+            CostFieldEachOffset = costFieldCosts,
+        };
+        JobHandle wallCollisionHandle = wallCollision.Schedule(wallCollision.AgentMovementData.Length, 64, tensionHandle);
+        if (FlowFieldUtilities.DebugMode) { wallCollisionHandle.Complete(); }
+        _routineHandle = wallCollisionHandle;
+    }
+    public void ForceComplete()
+    {
+        _routineHandle.Complete();
+    }
     public AgentRoutineDataCalculationJob GetAgentMovementDataCalcJob()
     {
         return new AgentRoutineDataCalculationJob()

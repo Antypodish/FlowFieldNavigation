@@ -95,12 +95,13 @@ public class PathContainer
         }
         _preallocator.CheckForDeallocations();
     }
-    public void ExposeBuffers(NativeArray<int> destinationUpdatedPathIndicies, NativeArray<int> newPathIndicies)
+    public void ExposeBuffers(NativeArray<int> destinationUpdatedPathIndicies, NativeArray<int> newPathIndicies, NativeArray<int> expandedPathIndicies)
     {
         PathDataExposeJob dataExposeJob = new PathDataExposeJob()
         {
             DestinationUpdatedPathIndicies = destinationUpdatedPathIndicies,
             NewPathIndicies = newPathIndicies,
+            ExpandedPathIndicies = expandedPathIndicies,
             ExposedPathDestinationList = ExposedPathDestinations,
             ExposedPathFlowDataList = ExposedPathFlowData,
             ExposedPathLocationList = ExposedPathLocationData,

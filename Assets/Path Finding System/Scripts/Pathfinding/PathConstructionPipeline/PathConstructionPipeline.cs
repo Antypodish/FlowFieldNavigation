@@ -25,6 +25,7 @@ public class PathConstructionPipeline
     NativeArray<IslandFieldProcessor> _islandFieldProcessors;
     NativeList<int> _newPathIndicies;
     NativeList<int> _destinationUpdatedPathIndicies;
+    NativeList<int> _expandedPathIndicies;
     List<JobHandle> _pathfindingTaskOrganizationHandle;
     public PathConstructionPipeline(PathfindingManager pathfindingManager)
     {
@@ -44,6 +45,7 @@ public class PathConstructionPipeline
         _agentPathTaskList = new NativeList<PathTask>(Allocator.Persistent);
         _newPathIndicies = new NativeList<int>(Allocator.Persistent);
         _destinationUpdatedPathIndicies = new NativeList<int>(Allocator.Persistent);
+        _expandedPathIndicies = new NativeList<int>(Allocator.Persistent);
     }
     public void ShcedulePathRequestEvalutaion(NativeList<PathRequest> requestedPaths, NativeArray<UnsafeListReadOnly<byte>> costFieldCosts, NativeArray<SectorBitArray>.ReadOnly editedSectorBitArray, JobHandle islandFieldHandleAsDependency)
     {
@@ -53,6 +55,7 @@ public class PathConstructionPipeline
         _finalPathRequests.Clear();
         _newPathIndicies.Clear();
         _destinationUpdatedPathIndicies.Clear();
+        _expandedPathIndicies.Clear();
         _pathRequestSourceCount.Value = 0;
         _currentPathSourceCount.Value = 0;
 
@@ -264,6 +267,7 @@ public class PathConstructionPipeline
             if (pathAdditionRequested)
             {
                 _additionPortalTraversalScheduler.SchedulePortalTraversalFor(pathInfo, pathAdditionSources);
+                _expandedPathIndicies.Add(pathInfo.PathIndex);
             }
             else if (flowRequested)
             {
@@ -309,7 +313,7 @@ public class PathConstructionPipeline
         _portalTravesalScheduler.ForceComplete(_finalPathRequests, _sourcePositions);
         _additionPortalTraversalScheduler.ForceComplete(_sourcePositions);
         _requestedSectorCalculationScheduler.ForceComplete();
-        _pathContainer.ExposeBuffers(_destinationUpdatedPathIndicies, _newPathIndicies);
+        _pathContainer.ExposeBuffers(_destinationUpdatedPathIndicies, _newPathIndicies, _expandedPathIndicies);
     }
 }
 public struct RequestPipelineInfoWithHandle

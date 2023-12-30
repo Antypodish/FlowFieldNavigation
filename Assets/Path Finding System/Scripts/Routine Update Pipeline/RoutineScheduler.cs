@@ -19,7 +19,6 @@ public class RoutineScheduler
 
     List<JobHandle> _costEditHandle;
     List<JobHandle> _islandReconfigHandle;
-    List<JobHandle> _agentMovementCalculationHandle;
 
     public NativeList<PathRequest> CurrentRequestedPaths;
     public NativeList<float2> CurrentSourcePositions;
@@ -31,7 +30,6 @@ public class RoutineScheduler
     {
         _pathfindingManager = pathfindingManager;
         _movementIO = new MovementIO(pathfindingManager.AgentDataContainer, pathfindingManager);
-        _agentMovementCalculationHandle = new List<JobHandle>();
         _costEditHandle = new List<JobHandle>();
         CurrentRequestedPaths = new NativeList<PathRequest>(Allocator.Persistent);
         _islandReconfigHandle = new List<JobHandle>();
@@ -100,7 +98,7 @@ public class RoutineScheduler
 
 
         _pathConstructionPipeline.ShcedulePathRequestEvalutaion(CurrentRequestedPaths, _costFieldCosts, EditedSectorBitArray.AsArray().AsReadOnly(), islandFieldReconfigHandle);
-        ScheduleAgentMovementJobs(costEditHandle);
+        _movementIO.ScheduleRoutine(_costFieldCosts, costEditHandle);
     }
     public void TryCompletePredecessorJobs()
     {
@@ -131,13 +129,7 @@ public class RoutineScheduler
             _islandReconfigHandle.RemoveAtSwapBack(0);
         }
 
-        //AGENT MOV
-        if (_agentMovementCalculationHandle.Count != 0)
-        {
-            _agentMovementCalculationHandle[0].Complete();
-            _agentMovementCalculationHandle.Clear();
-        }
-
+        _movementIO.ForceComplete();
         _pathConstructionPipeline.ForceComplete();
 
         //TRANSFER NEW PATH INDICIES TO CUR PATH INDICIES
@@ -251,76 +243,6 @@ public class RoutineScheduler
 
         return combinedHandles;
     }
-    void ScheduleAgentMovementJobs(JobHandle dependency)
-    {
-        JobHandle handle = _movementIO.PrepareAgentMovementDataCalculationJob(dependency);
-        //SCHEDULE MOV DATA CALC JOB
-        AgentRoutineDataCalculationJob movDataJob = _movementIO.GetAgentMovementDataCalcJob();
-        JobHandle movDataHandle = movDataJob.Schedule(movDataJob.AgentMovementData.Length, 64, handle);
-        //SCHEDULE AGENT COLLISION JOB
-        CollisionResolutionJob colResJob = new CollisionResolutionJob()
-        {
-            AgentMovementDataArray = _movementIO.AgentMovementDataList,
-            AgentPositionChangeBuffer = _movementIO.AgentPositionChangeBuffer,
-            HashGridArray = _movementIO.HashGridArray,
-            SpatialGridUtils = new AgentSpatialGridUtils(0),
-        };
-        JobHandle colResHandle = colResJob.Schedule(colResJob.AgentMovementDataArray.Length, 4, movDataHandle);
-
-        //SCHEDULE LOCAL AVODANCE JOB
-        LocalAvoidanceJob avoidanceJob = new LocalAvoidanceJob()
-        {
-            SeperationMultiplier = BoidController.Instance.SeperationMultiplier,
-            SeperationRangeAddition = BoidController.Instance.SeperationRangeAddition,
-            SeekMultiplier = BoidController.Instance.SeekMultiplier,
-            AlignmentMultiplier = BoidController.Instance.AlignmentMultiplier,
-            AlignmentRangeAddition = BoidController.Instance.AlignmentRangeAddition,
-            MovingAvoidanceRangeAddition = BoidController.Instance.MovingAvoidanceRangeAddition,
-            BaseSpatialGridSize = FlowFieldUtilities.BaseSpatialGridSize,
-            FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
-            FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
-            AgentMovementDataArray = _movementIO.AgentMovementDataList,
-            RoutineResultArray = _movementIO.RoutineResults,
-            HashGridArray = _movementIO.HashGridArray,
-            SpatialGridUtils = new AgentSpatialGridUtils(0),
-        };
-        JobHandle avoidanceHandle = avoidanceJob.Schedule(avoidanceJob.AgentMovementDataArray.Length, 64, colResHandle);
-
-        //SCHEDULE TENSON RES JOB
-        TensionResolver tensionResJob = new TensionResolver()
-        {
-            HashGridArray = _movementIO.HashGridArray,
-            HashGridUtils = new AgentSpatialGridUtils(0),
-            RoutineResultArray = _movementIO.RoutineResults,
-            AgentMovementDataArray = _movementIO.AgentMovementDataList,
-            SeperationRangeAddition = BoidController.Instance.SeperationRangeAddition,
-        };
-        JobHandle tensionHandle = tensionResJob.Schedule(avoidanceHandle);
-
-        //SCHEDULE WALL COLLISION JOB
-
-        AgentWallCollisionJob wallCollision = new AgentWallCollisionJob()
-        {
-            SectorColAmount = FlowFieldUtilities.SectorColAmount,
-            SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
-            SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
-            TileSize = FlowFieldUtilities.TileSize,
-            FieldColAmount = FlowFieldUtilities.FieldColAmount,
-            FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
-            SectorRowAmount = FlowFieldUtilities.SectorRowAmount,
-            HalfTileSize = FlowFieldUtilities.TileSize / 2,
-            AgentMovementData = _movementIO.AgentMovementDataList,
-            AgentPositionChangeBuffer = _movementIO.AgentPositionChangeBuffer,
-            CostFieldEachOffset = _costFieldCosts,
-        };
-        JobHandle wallCollisionHandle = wallCollision.Schedule(wallCollision.AgentMovementData.Length, 64, tensionHandle);
-
-
-        if (FlowFieldUtilities.DebugMode) { wallCollisionHandle.Complete(); }
-
-        _agentMovementCalculationHandle.Add(wallCollisionHandle);
-    }
-
 
     public void SendRoutineResultsToAgents()
     {

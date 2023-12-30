@@ -7,6 +7,7 @@ using Unity.Mathematics;
 public struct PathDataExposeJob : IJob
 {
     [ReadOnly] public NativeArray<int> NewPathIndicies;
+    [ReadOnly] public NativeArray<int> ExpandedPathIndicies;
     [ReadOnly] public NativeArray<int> DestinationUpdatedPathIndicies;
 
     public NativeList<float2> ExposedPathDestinationList;
@@ -30,8 +31,15 @@ public struct PathDataExposeJob : IJob
             ExposedPathFlowDataList[pathIndex] = PathFlowDataArray[pathIndex];
             ExposedPathLocationList[pathIndex] = PathLocationDataArray[pathIndex];
         }
+        for (int i = 0; i < ExpandedPathIndicies.Length; i++)
+        {
+            int pathIndex = ExpandedPathIndicies[i];
 
-        for(int i = 0; i < DestinationUpdatedPathIndicies.Length; i++)
+            ExposedPathFlowDataList[pathIndex] = PathFlowDataArray[pathIndex];
+            ExposedPathLocationList[pathIndex] = PathLocationDataArray[pathIndex];
+        }
+
+        for (int i = 0; i < DestinationUpdatedPathIndicies.Length; i++)
         {
             int pathIndex = DestinationUpdatedPathIndicies[i];
 
