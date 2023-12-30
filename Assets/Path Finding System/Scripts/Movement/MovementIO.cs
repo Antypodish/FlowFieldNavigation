@@ -1,11 +1,10 @@
 ﻿using Assets.Path_Finding_System.Scripts;
-using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine.Jobs;
-
+using System.Diagnostics;
 public class MovementIO
 {
     AgentDataContainer _agentDataContainer;
@@ -83,22 +82,25 @@ public class MovementIO
         //FILL AGENT MOVEMENT DATA ARRAY
         float sectorSize = FlowFieldUtilities.SectorColAmount * FlowFieldUtilities.TileSize;
         int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
-        myjob job = new myjob()
+        AgentRoutineDataCalculationJob routineDataCalcJob = new AgentRoutineDataCalculationJob()
         {
-            sectorMatrixColAmount = sectorMatrixColAmount,
-            sectorSize = sectorSize,
-            agentCurPaths = agentCurPaths,
-            agentDataList = agentDataList,
-            AgentMovementDataList = AgentMovementDataList,
-            exposedPathDestinationArray = exposedPathDestinationArray,
-            exposedPathFlowDataArray = exposedPathFlowDataArray,
-            exposedPathLocationDataArray = exposedPathLocationDataArray,
-            HashedToNormal = HashedToNormal,
-        };
-        JobHandle handle = job.Schedule(agentDataList.Length, 64, spatialHasherHandle);
 
-        AgentRoutineDataCalculationJob movDataJob = GetAgentMovementDataCalcJob();
-        JobHandle movDataHandle = movDataJob.Schedule(movDataJob.AgentMovementData.Length, 64, handle);
+            SectorMatrixColAmount = sectorMatrixColAmount,
+            SectorSize = sectorSize,
+            AgentCurPathIndicies = agentCurPaths,
+            AgentDataArray = agentDataList,
+            ExposedPathDestinationArray = exposedPathDestinationArray,
+            ExposedPathFlowDataArray = exposedPathFlowDataArray,
+            ExposedPathLocationDataArray = exposedPathLocationDataArray,
+            HashedToNormal = HashedToNormal,
+            
+            FieldColAmount = _pathfindingManager.ColumnAmount,
+            TileSize = _pathfindingManager.TileSize,
+            SectorColAmount = _pathfindingManager.SectorColAmount,
+            AgentMovementData = AgentMovementDataList,
+        };
+        JobHandle movDataHandle = routineDataCalcJob.Schedule(routineDataCalcJob.AgentMovementData.Length, 64, spatialHasherHandle);
+
         //SCHEDULE AGENT COLLISION JOB
         CollisionResolutionJob colResJob = new CollisionResolutionJob()
         {
@@ -162,48 +164,5 @@ public class MovementIO
     public void ForceComplete()
     {
         _routineHandle.Complete();
-    }
-    public AgentRoutineDataCalculationJob GetAgentMovementDataCalcJob()
-    {
-        return new AgentRoutineDataCalculationJob()
-        {
-            FieldColAmount = _pathfindingManager.ColumnAmount,
-            TileSize = _pathfindingManager.TileSize,
-            SectorColAmount = _pathfindingManager.SectorColAmount,
-            SectorMatrixColAmount = _pathfindingManager.SectorMatrixColAmount,
-            AgentMovementData = AgentMovementDataList,
-        };
-    }
-}
-
-[BurstCompile]
-public struct myjob : IJobParallelFor
-{
-    public float sectorSize;
-    public int sectorMatrixColAmount;
-    [ReadOnly] public NativeList<AgentData> agentDataList;
-    [ReadOnly] public NativeList<int> agentCurPaths;
-    [ReadOnly] public NativeList<PathLocationData> exposedPathLocationDataArray;
-    [ReadOnly] public NativeList<PathFlowData> exposedPathFlowDataArray;
-    [ReadOnly] public NativeList<float2> exposedPathDestinationArray;
-    [ReadOnly] public NativeList<int> HashedToNormal;
-
-    public NativeArray<AgentMovementData> AgentMovementDataList;
-    public void Execute(int index)
-    {
-        int normalIndex = HashedToNormal[index];
-        int agentCurPathIndex = agentCurPaths[normalIndex];
-        if (agentCurPathIndex == -1) { return; }
-        float2 destination = exposedPathDestinationArray[agentCurPathIndex];
-        PathLocationData locationData = exposedPathLocationDataArray[agentCurPathIndex];
-        PathFlowData flowData = exposedPathFlowDataArray[agentCurPathIndex];
-        AgentMovementData data = AgentMovementDataList[index];
-        data.FlowField = flowData.FlowField;
-        data.LOSMap = flowData.LOSMap;
-        data.Destination = destination;
-        data.SectorFlowStride = locationData.SectorToPicked[FlowFieldUtilities.PosToSector1D(new float2(data.Position.x, data.Position.z), sectorSize, sectorMatrixColAmount)];
-        data.PathId = agentCurPathIndex;
-
-        AgentMovementDataList[index] = data;
     }
 }
