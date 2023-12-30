@@ -93,6 +93,7 @@ public struct SourceSectorCalculationJob : IJob
                         continue;
                     }
                     int commonSector = curSec1Common ? curSec1 : curSec2;
+                    if ((SectorStateTable[commonSector] & PathSectorState.IntegrationCalculated) == PathSectorState.IntegrationCalculated) { continue; }
                     SectorStateTable[commonSector] |= PathSectorState.IntegrationCalculated;
                     SectorFlowStartIndiciesToCalculateIntegration.Add(SectorToPickedTable[commonSector]);
                 }
