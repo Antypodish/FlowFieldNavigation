@@ -1,15 +1,8 @@
-﻿using Assets.Path_Finding_System.Scripts;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Threading;
+﻿using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine.Jobs;
-using Unity.Collections.LowLevel.Unsafe;
-using UnityEditor;
-using UnityEngine.UIElements;
-using static Unity.VisualScripting.Member;
 
 public class RoutineScheduler
 {

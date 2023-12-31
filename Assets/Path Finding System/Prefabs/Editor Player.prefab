@@ -47,6 +47,6 @@ MonoBehaviour:
   _cameraPivotTransform: {fileID: 0}
   _cameraTransform: {fileID: 0}
   _borderThickness: 10
-  _movementSensitivity: 5
+  _movementSensitivity: 2
   _maxZoom: -500
   _zoomSensitivity: 5

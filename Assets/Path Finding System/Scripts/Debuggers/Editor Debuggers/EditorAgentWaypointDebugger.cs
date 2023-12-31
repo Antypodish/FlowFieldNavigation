@@ -5,19 +5,17 @@ using UnityEngine;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Assets.Path_Finding_System.Scripts.Debuggers.Editor_Debuggers
+
+internal class EditorAgentWaypointDebugger
 {
-    internal class EditorAgentWaypointDebugger
+    PathfindingManager _pathfindingManager;
+    public EditorAgentWaypointDebugger(PathfindingManager pathfindingManager)
     {
-        PathfindingManager _pathfindingManager;
-        public EditorAgentWaypointDebugger(PathfindingManager pathfindingManager)
-        {
-            _pathfindingManager = pathfindingManager;
-        }
+        _pathfindingManager = pathfindingManager;
+    }
 
-        public void Debug(FlowFieldAgent agent)
-        {
+    public void Debug(FlowFieldAgent agent)
+    {
 
-        }
     }
 }

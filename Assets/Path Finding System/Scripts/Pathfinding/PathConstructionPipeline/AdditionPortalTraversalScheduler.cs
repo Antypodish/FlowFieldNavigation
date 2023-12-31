@@ -2,10 +2,6 @@
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
-using UnityEditor.PackageManager.Requests;
-using System.Diagnostics;
-using UnityEngine.EventSystems;
-using System.Runtime.ConstrainedExecution;
 
 internal class AdditionPortalTraversalScheduler
 {

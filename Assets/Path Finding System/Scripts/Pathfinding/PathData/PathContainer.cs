@@ -3,11 +3,6 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
-using UnityEngine;
-using System.Diagnostics;
-using System.IO;
-using UnityEditor.PackageManager.Requests;
-using UnityEngine.UIElements;
 
 public class PathContainer
 {

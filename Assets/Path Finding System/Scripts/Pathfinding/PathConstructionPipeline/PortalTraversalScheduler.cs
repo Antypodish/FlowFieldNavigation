@@ -1,10 +1,7 @@
-﻿using System;
-using Unity.Collections;
+﻿using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
-using UnityEditor.PackageManager.Requests;
-using UnityEngine.Networking.Match;
 
 internal class PortalTraversalScheduler
 {

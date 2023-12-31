@@ -1,5 +1,4 @@
-﻿using Assets.Path_Finding_System.Scripts;
-using Unity.Collections;
+﻿using Unity.Collections;
 using UnityEngine;
 
 public class EditorAgentRadiusDebugger

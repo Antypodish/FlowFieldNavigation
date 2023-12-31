@@ -46,8 +46,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _terrainGenerator: {fileID: 0}
-  _maxCostfieldOffset: 3
-  _agentUpdateFrequency: 0.016
+  _maxCostfieldOffset: 6
+  AgentUpdateFrequency: 0.016
+  BaseSpatialGridSize: 3
+  LineOfSightRange: 30
   TileSize: 0
   RowAmount: 0
   ColumnAmount: 0
@@ -66,7 +68,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a52bbbebd324b0e47a82462e07f07058, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SeperationRange: 0.5
-  SeperationMultiplier: 0.5
-  AlignmentRange: 14
-  AlignmentMultiplier: 1
+  SeperationMultiplier: 10
+  SeperationRangeAddition: 0.2
+  SeekMultiplier: 0.1
+  AlignmentMultiplier: 0.95
+  AlignmentRangeAddition: 3
+  MovingAvoidanceRangeAddition: 0.05

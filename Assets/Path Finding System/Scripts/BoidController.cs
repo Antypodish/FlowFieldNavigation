@@ -5,21 +5,19 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace Assets.Path_Finding_System.Scripts
-{
-    internal class BoidController : MonoBehaviour
-    {
-        public static BoidController Instance;
 
-        public float SeperationMultiplier;
-        public float SeperationRangeAddition;
-        public float SeekMultiplier;
-        public float AlignmentMultiplier;
-        public float AlignmentRangeAddition;
-        public float MovingAvoidanceRangeAddition;
-        private void Start()
-        {
-            Instance = this;
-        }
+internal class BoidController : MonoBehaviour
+{
+    public static BoidController Instance;
+
+    public float SeperationMultiplier;
+    public float SeperationRangeAddition;
+    public float SeekMultiplier;
+    public float AlignmentMultiplier;
+    public float AlignmentRangeAddition;
+    public float MovingAvoidanceRangeAddition;
+    private void Start()
+    {
+        Instance = this;
     }
 }

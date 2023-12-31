@@ -145,7 +145,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _fieldMeshCollider: {fileID: 194451667}
   _fieldMeshFilter: {fileID: 194451666}
-  _resolution: 5
+  _resolution: 25
   _simulationState: 0
   _obstacleMat: {fileID: 2100000, guid: 7b47e3fc45da63945bb1a2b1d0d15c32, type: 2}
   TileSize: 1

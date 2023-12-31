@@ -1,12 +1,8 @@
-﻿using System.Linq;
-using Unity.Burst;
+﻿using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
-using Unity.VisualScripting;
-using UnityEditor.PackageManager.UI;
-using UnityEngine;
 
 [BurstCompile]
 public struct CostFieldEditJob : IJob

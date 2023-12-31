@@ -1,6 +1,5 @@
 ﻿#if (UNITY_EDITOR) 
 
-using Assets.Path_Finding_System.Scripts.Debuggers.Editor_Debuggers;
 using UnityEngine;
 
 public class EditorDebuggingController : MonoBehaviour
