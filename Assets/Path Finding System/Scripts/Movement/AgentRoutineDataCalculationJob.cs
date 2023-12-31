@@ -89,6 +89,8 @@ public struct AgentRoutineDataCalculationJob : IJobParallelFor
         float2 perfectFlow = math.normalizesafe(destination - agentPos);
         float2 flow = math.select(fieldFlow, perfectFlow, isLos);
         flow = math.select(GetSmoothFlow(data.DesiredDirection, flow, data.Speed), flow, math.dot(data.DesiredDirection, flow) < 0.7f);
+        data.Local1d = (ushort)local1d;
+        data.Offset = FlowFieldUtilities.RadiusToOffset(data.Radius, TileSize);
         data.DesiredDirection = flow;
         data.PathId = agentCurPathIndex;
         data.Destination = pathDestination;

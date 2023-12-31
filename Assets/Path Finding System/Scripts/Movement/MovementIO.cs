@@ -13,9 +13,9 @@ public class MovementIO
     public NativeList<AgentMovementData> AgentMovementDataList;
     public NativeList<float2> AgentPositionChangeBuffer;
     public NativeList<RoutineResult> RoutineResults;
-    public NativeArray<UnsafeList<HashTile>> HashGridArray;
     public NativeList<int> NormalToHashed;
     public NativeList<int> HashedToNormal;
+    public NativeArray<UnsafeList<HashTile>> HashGridArray;
 
     JobHandle _routineHandle;
     public MovementIO(AgentDataContainer agentDataContainer, PathfindingManager pathfindingManager)
@@ -25,6 +25,9 @@ public class MovementIO
         AgentMovementDataList = new NativeList<AgentMovementData>(_agentDataContainer.Agents.Count, Allocator.Persistent);
         RoutineResults = new NativeList<RoutineResult>(Allocator.Persistent);
         AgentPositionChangeBuffer = new NativeList<float2>(Allocator.Persistent);
+        _routineHandle = new JobHandle();
+
+        //SPATIAL HASH GRID INSTANTIATION
         int gridAmount = (int)math.ceil(FlowFieldUtilities.MaxAgentSize / FlowFieldUtilities.BaseSpatialGridSize);
         HashGridArray = new NativeArray<UnsafeList<HashTile>>(gridAmount, Allocator.Persistent);
         for(int i = 0; i < HashGridArray.Length; i++)
@@ -42,25 +45,24 @@ public class MovementIO
         }
         NormalToHashed = new NativeList<int>(Allocator.Persistent);
         HashedToNormal = new NativeList<int>(Allocator.Persistent);
-        _routineHandle = new JobHandle();
     }
     public void ScheduleRoutine(NativeArray<UnsafeListReadOnly<byte>> costFieldCosts, JobHandle dependency)
     {
-        NativeList<AgentData> agentDataList = _agentDataContainer.AgentDataList;
-        NativeList<int> agentCurPaths = _agentDataContainer.AgentCurPathIndicies;
-        NativeList<PathLocationData> exposedPathLocationDataArray = _pathfindingManager.PathContainer.ExposedPathLocationData;
-        NativeList<PathFlowData> exposedPathFlowDataArray = _pathfindingManager.PathContainer.ExposedPathFlowData;
-        NativeList<float2> exposedPathDestinationArray = _pathfindingManager.PathContainer.ExposedPathDestinations;
+        NativeArray<AgentData> agentDataArray = _agentDataContainer.AgentDataList;
+        NativeArray<int> agentCurPathIndexArray = _agentDataContainer.AgentCurPathIndicies;
+        NativeArray<PathLocationData> exposedPathLocationDataArray = _pathfindingManager.PathContainer.ExposedPathLocationData;
+        NativeArray<PathFlowData> exposedPathFlowDataArray = _pathfindingManager.PathContainer.ExposedPathFlowData;
+        NativeArray<float2> exposedPathDestinationArray = _pathfindingManager.PathContainer.ExposedPathDestinations;
         //CLEAR
         AgentMovementDataList.Clear();
         AgentPositionChangeBuffer.Clear();
         RoutineResults.Clear();
         NormalToHashed.Clear();
-        AgentMovementDataList.Length = agentDataList.Length;
-        RoutineResults.Length = agentDataList.Length;
-        AgentPositionChangeBuffer.Length = agentDataList.Length;
-        NormalToHashed.Length = agentDataList.Length;
-        HashedToNormal.Length = agentDataList.Length;
+        AgentMovementDataList.Length = agentDataArray.Length;
+        RoutineResults.Length = agentDataArray.Length;
+        AgentPositionChangeBuffer.Length = agentDataArray.Length;
+        NormalToHashed.Length = agentDataArray.Length;
+        HashedToNormal.Length = agentDataArray.Length;
 
         //SPATIAL HASHING
         AgentDataSpatialHasherJob spatialHasher = new AgentDataSpatialHasherJob()
@@ -71,7 +73,7 @@ public class MovementIO
             FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
             MaxAgentSize = FlowFieldUtilities.MaxAgentSize,
             MinAgentSize = FlowFieldUtilities.MinAgentSize,
-            AgentDataArray = agentDataList,
+            AgentDataArray = agentDataArray,
             AgentHashGridArray = HashGridArray,
             AgentMovementDataArray = AgentMovementDataList,
             NormalToHashed = NormalToHashed,
@@ -87,8 +89,8 @@ public class MovementIO
 
             SectorMatrixColAmount = sectorMatrixColAmount,
             SectorSize = sectorSize,
-            AgentCurPathIndicies = agentCurPaths,
-            AgentDataArray = agentDataList,
+            AgentCurPathIndicies = agentCurPathIndexArray,
+            AgentDataArray = agentDataArray,
             ExposedPathDestinationArray = exposedPathDestinationArray,
             ExposedPathFlowDataArray = exposedPathFlowDataArray,
             ExposedPathLocationDataArray = exposedPathLocationDataArray,
@@ -114,6 +116,14 @@ public class MovementIO
         //SCHEDULE LOCAL AVODANCE JOB
         LocalAvoidanceJob avoidanceJob = new LocalAvoidanceJob()
         {
+            FieldMaxXExcluding = FlowFieldUtilities.FieldMaxXExcluding,
+            FieldMaxYExcluding = FlowFieldUtilities.FieldMaxYExcluding,
+            FieldMinXIncluding = FlowFieldUtilities.FieldMinXIncluding,
+            FieldMinYIncluding = FlowFieldUtilities.FieldMinYIncluding,
+            SectorColAmount = FlowFieldUtilities.SectorColAmount,
+            SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+            SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
+            TileSize = FlowFieldUtilities.TileSize,
             SeperationMultiplier = BoidController.Instance.SeperationMultiplier,
             SeperationRangeAddition = BoidController.Instance.SeperationRangeAddition,
             SeekMultiplier = BoidController.Instance.SeekMultiplier,
@@ -127,6 +137,7 @@ public class MovementIO
             RoutineResultArray = RoutineResults,
             HashGridArray = HashGridArray,
             SpatialGridUtils = new AgentSpatialGridUtils(0),
+            CostFieldEachOffset = costFieldCosts,
         };
         JobHandle avoidanceHandle = avoidanceJob.Schedule(avoidanceJob.AgentMovementDataArray.Length, 64, colResHandle);
 
@@ -142,7 +153,6 @@ public class MovementIO
         JobHandle tensionHandle = tensionResJob.Schedule(avoidanceHandle);
 
         //SCHEDULE WALL COLLISION JOB
-
         AgentWallCollisionJob wallCollision = new AgentWallCollisionJob()
         {
             SectorColAmount = FlowFieldUtilities.SectorColAmount,
@@ -158,6 +168,8 @@ public class MovementIO
             CostFieldEachOffset = costFieldCosts,
         };
         JobHandle wallCollisionHandle = wallCollision.Schedule(wallCollision.AgentMovementData.Length, 64, tensionHandle);
+
+        //UnityEngine.Debug.Log(sw.Elapsed.TotalMilliseconds);
         if (FlowFieldUtilities.DebugMode) { wallCollisionHandle.Complete(); }
         _routineHandle = wallCollisionHandle;
     }
