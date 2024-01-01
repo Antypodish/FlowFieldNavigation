@@ -40,6 +40,9 @@ public class EditorDebuggingController : MonoBehaviour
     [Header("Spatial Hash Grid Debugger")]
     [SerializeField] int _gridIndex;
     [SerializeField] bool _debugSpatialHashGrid;
+    [SerializeField] bool _debugBorders;
+    [SerializeField] bool _debugAroundAgent;
+    [SerializeField] float _checkRange;
 
     //debuggers
     EditorSectorDebugger _sectorDebugger;
@@ -107,6 +110,7 @@ public class EditorDebuggingController : MonoBehaviour
             if(_debugDestination && _pathDebugger != null) { _pathDebugger.DebugDestination(_agentToDebug); }
             if (_debugDynamicAreaIntegration && _pathDebugger != null) { _pathDebugger.DebugDynamicAreaIntegration(_agentToDebug); }
             if (_debugDynamicAreaFlow && _pathDebugger != null) { _pathDebugger.DebugDynamicAreaFlow(_agentToDebug); }
+            if (_debugAroundAgent && _spatialHashGridDebugger != null) { _spatialHashGridDebugger.DebugAgent(_agentToDebug, _gridIndex, _checkRange); }
         }
 
         if (_debugAgentDirections && _agentDirectionDebugger != null) { _agentDirectionDebugger.Debug(); }
@@ -114,6 +118,7 @@ public class EditorDebuggingController : MonoBehaviour
         if(_debugAgentSeperationRadius && _agentRadiusDebugger != null) { _agentRadiusDebugger.DebugSeperationRadius(); }
         if (_debugAvoidanceDirections && _avoidanceDirectionDebugger != null) { _avoidanceDirectionDebugger.Debug(); }
         if(_debugSpatialHashGrid && _spatialHashGridDebugger != null) { _spatialHashGridDebugger.Debug(_gridIndex); }
+        if(_debugBorders && _spatialHashGridDebugger != null) { _spatialHashGridDebugger.DebugBorders(_gridIndex); }
     }
 
     enum CostFieldOffset : byte

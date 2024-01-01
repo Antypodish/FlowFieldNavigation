@@ -8,22 +8,14 @@ public struct AgentSpatialHashGrid
     public float FieldHorizontalSize;
     public float FieldVerticalSize;
     public NativeArray<AgentMovementData> RawAgentMovementDataArray;
-    NativeArray<UnsafeList<HashTile>> _agentHashGridArray;
-    public AgentSpatialHashGrid(NativeArray<AgentMovementData> agentMovementData, NativeArray<UnsafeList<HashTile>> agentHashGridArray)
-    {
-        RawAgentMovementDataArray = agentMovementData;
-        _agentHashGridArray = agentHashGridArray;
-        BaseSpatialGridSize = FlowFieldUtilities.BaseSpatialGridSize;
-        FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount;
-        FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount;
-    }
-    public int GetGridCount() => _agentHashGridArray.Length;
+    public NativeArray<UnsafeList<HashTile>> AgentHashGridArray;
+    public int GetGridCount() => AgentHashGridArray.Length;
     public SpatialHashGridIterator GetIterator(float2 agentPos, float checkRange, int hashGridIndex)
     {
-        if(_agentHashGridArray.Length <= hashGridIndex) { return new SpatialHashGridIterator(); }
+        if(AgentHashGridArray.Length <= hashGridIndex) { return new SpatialHashGridIterator(); }
         float tileSize = hashGridIndex * BaseSpatialGridSize + BaseSpatialGridSize;
         int2 startingTileIndex = GetStartingTileIndex(agentPos, tileSize);
-        int offset = GetOffset(checkRange * 2, tileSize);
+        int offset = GetOffset(checkRange + tileSize / 2, tileSize);
         int2 botleft = startingTileIndex - new int2(offset, offset);
         int2 topright = startingTileIndex + new int2(offset, offset);
         botleft.x = math.select(botleft.x, 0, botleft.x < 0);
@@ -34,8 +26,9 @@ public struct AgentSpatialHashGrid
         topright.y = math.select(topright.y, gridRowAmount - 1, topright.y >= gridRowAmount);
         int botleft1d = botleft.y * gridColAmount + botleft.x;
         int verticalSize = topright.y - botleft.y + 1;
-
-        return new SpatialHashGridIterator(botleft1d, verticalSize, topright.x - botleft.x + 1, gridColAmount, RawAgentMovementDataArray, _agentHashGridArray[hashGridIndex]);
+        
+        UnityEngine.Debug.Log(BaseSpatialGridSize);
+        return new SpatialHashGridIterator(botleft1d, verticalSize, topright.x - botleft.x + 1, gridColAmount, RawAgentMovementDataArray, AgentHashGridArray[hashGridIndex]);
     }
     public int2 GetStartingTileIndex(float2 position, float tileSize) => new int2((int)math.floor(position.x / tileSize), (int)math.floor(position.y / tileSize));
     public int GetOffset(float size, float tileSize) => (int)math.ceil(size / tileSize);
