@@ -168,9 +168,25 @@ public class MovementIO
         };
         JobHandle wallCollisionHandle = wallCollision.Schedule(wallCollision.AgentMovementData.Length, 64, tensionHandle);
 
+        AvoidanceWallDetectionJob wallDetection = new AvoidanceWallDetectionJob()
+        {
+            FieldMaxXExcluding = FlowFieldUtilities.FieldMaxXExcluding,
+            FieldMaxYExcluding = FlowFieldUtilities.FieldMaxYExcluding,
+            FieldMinXIncluding = FlowFieldUtilities.FieldMinXIncluding,
+            FieldMinYIncluding = FlowFieldUtilities.FieldMinYIncluding,
+            SectorColAmount = FlowFieldUtilities.SectorColAmount,
+            SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+            SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
+            TileSize = FlowFieldUtilities.TileSize,
+            AgentMovementDataArray = AgentMovementDataList,
+            CostFieldPerOffset = costFieldCosts,
+            RoutineResultArray = RoutineResults,
+        };
+        JobHandle wallDetectionHandle = wallDetection.Schedule(agentDataArray.Length, 64, wallCollisionHandle);
+
         //UnityEngine.Debug.Log(sw.Elapsed.TotalMilliseconds);
-        if (FlowFieldUtilities.DebugMode) { wallCollisionHandle.Complete(); }
-        _routineHandle = wallCollisionHandle;
+        if (FlowFieldUtilities.DebugMode) { wallDetectionHandle.Complete(); }
+        _routineHandle = wallDetectionHandle;
     }
     public void ForceComplete()
     {

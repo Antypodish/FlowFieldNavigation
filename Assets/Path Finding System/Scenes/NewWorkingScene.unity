@@ -244,7 +244,7 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: _simulationState
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207641, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
@@ -391,6 +391,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 730032217079484805, guid: 020509caef94de64c94b7fd5a119b25d,
+        type: 3}
+      propertyPath: _debugTiles
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 730032217079484805, guid: 020509caef94de64c94b7fd5a119b25d,
         type: 3}
       propertyPath: _terrainGenerator
