@@ -27,7 +27,6 @@ public struct AgentSpatialHashGrid
         int botleft1d = botleft.y * gridColAmount + botleft.x;
         int verticalSize = topright.y - botleft.y + 1;
         
-        UnityEngine.Debug.Log(BaseSpatialGridSize);
         return new SpatialHashGridIterator(botleft1d, verticalSize, topright.x - botleft.x + 1, gridColAmount, RawAgentMovementDataArray, AgentHashGridArray[hashGridIndex]);
     }
     public int2 GetStartingTileIndex(float2 position, float tileSize) => new int2((int)math.floor(position.x / tileSize), (int)math.floor(position.y / tileSize));
@@ -52,9 +51,9 @@ public struct SpatialHashGridIterator
         _hashTileArray = hashtTileArray;
     }
     public bool HasNext() => _curRowIndex <= _endRowIndex;
-    public NativeSlice<AgentMovementData> GetNextRow()
+    public NativeSlice<AgentMovementData> GetNextRow(out int sliceStartIndex)
     {
-        if(_curRowIndex > _endRowIndex) { return new NativeSlice<AgentMovementData>(); }
+        if(_curRowIndex > _endRowIndex) { sliceStartIndex = 0; return new NativeSlice<AgentMovementData>(); }
         HashTile startCellPointer = _hashTileArray[_curRowIndex];
         int agentStart = startCellPointer.Start;
         int agentCount = startCellPointer.Length;
@@ -67,6 +66,7 @@ public struct SpatialHashGridIterator
         _curRowIndex += _gridTotalColAmount;
 
         NativeSlice<AgentMovementData> slice = new NativeSlice<AgentMovementData>(_agentMovementDataArray, agentStart, agentCount);
+        sliceStartIndex = agentStart;
         return slice;
     }
 }

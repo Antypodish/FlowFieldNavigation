@@ -44,13 +44,13 @@ public class EditorSpatialHashGridDebugger
         int hashedIndex = normalToHashed[agentIndex];
         AgentMovementData agentMovData = movData[hashedIndex];
         float2 agentPos = new float2(agentMovData.Position.x, agentMovData.Position.z);
-        SpatialHashGridIterator gridIterator = spatialHashGrid.GetIterator(agentPos, checkRange, gridIndex);
+        SpatialHashGridIterator gridIterator = spatialHashGrid.GetIterator(agentPos, agentMovData.Radius, gridIndex);
         Gizmos.color = Color.black;
-        Gizmos.DrawWireSphere(agentMovData.Position, checkRange);
+        Gizmos.DrawWireSphere(agentMovData.Position, agentMovData.Radius);
         Gizmos.color = Color.red;
         while (gridIterator.HasNext())
         {
-            NativeSlice<AgentMovementData> curChunk = gridIterator.GetNextRow();
+            NativeSlice<AgentMovementData> curChunk = gridIterator.GetNextRow(out int sliceStartIndex);
             for(int i = 0; i < curChunk.Length; i++)
             {
                 Vector3 targetPos = curChunk[i].Position;

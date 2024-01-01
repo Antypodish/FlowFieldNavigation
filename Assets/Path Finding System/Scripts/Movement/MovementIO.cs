@@ -132,13 +132,18 @@ public class MovementIO
             BaseSpatialGridSize = FlowFieldUtilities.BaseSpatialGridSize,
             FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
             FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
-            AgentMovementDataArray = AgentMovementDataList,
             RoutineResultArray = RoutineResults,
-            HashGridArray = HashGridArray,
-            SpatialGridUtils = new AgentSpatialGridUtils(0),
+            AgentSpatialHashGrid = new AgentSpatialHashGrid()
+            {
+                BaseSpatialGridSize = FlowFieldUtilities.BaseSpatialGridSize,
+                FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
+                FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
+                AgentHashGridArray = HashGridArray,
+                RawAgentMovementDataArray = AgentMovementDataList,
+            },
             CostFieldEachOffset = costFieldCosts,
         };
-        JobHandle avoidanceHandle = avoidanceJob.Schedule(avoidanceJob.AgentMovementDataArray.Length, 64, colResHandle);
+        JobHandle avoidanceHandle = avoidanceJob.Schedule(agentDataArray.Length, 64, colResHandle);
 
         //SCHEDULE TENSON RES JOB
         TensionResolver tensionResJob = new TensionResolver()

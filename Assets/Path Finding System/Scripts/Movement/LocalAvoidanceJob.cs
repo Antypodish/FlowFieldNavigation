@@ -26,15 +26,13 @@ public struct LocalAvoidanceJob : IJobParallelFor
     public float BaseSpatialGridSize;
     public float FieldHorizontalSize;
     public float FieldVerticalSize;
-    public AgentSpatialGridUtils SpatialGridUtils;
     [ReadOnly] public NativeArray<UnsafeListReadOnly<byte>> CostFieldEachOffset;
-    [ReadOnly] public NativeArray<AgentMovementData> AgentMovementDataArray;
-    [ReadOnly] public NativeArray<UnsafeList<HashTile>> HashGridArray;
+    [ReadOnly] public AgentSpatialHashGrid AgentSpatialHashGrid;
     [WriteOnly] public NativeArray<RoutineResult> RoutineResultArray;
 
     public void Execute(int index)
     {
-        AgentMovementData agent = AgentMovementDataArray[index];
+        AgentMovementData agent = AgentSpatialHashGrid.RawAgentMovementDataArray[index];
         RoutineResult newRoutineResult = new RoutineResult()
         {
             NewAvoidance = agent.Avoidance,
@@ -75,13 +73,13 @@ public struct LocalAvoidanceJob : IJobParallelFor
         }
 
         //GET MOVING AVOIDANCE
-        float2 movingAvoidance = GetMovingAvoidance(agentPos, agent.CurrentDirection, index, agent.Radius, ref newRoutineResult.NewMovingAvoidance);
+        float2 movingAvoidance = GetMovingAvoidance(agentPos, agent.CurrentDirection, index, agent.Radius, ref newRoutineResult.NewMovingAvoidance, agent.PathId);
         if (!movingAvoidance.Equals(0))
         {
             newDirectionToSteer = movingAvoidance;
         }
         //GET SEPERATION
-        float2 seperation = GetSeperation(agentPos, agent.CurrentDirection, agent.Radius, index, newRoutineResult.NewAvoidance);
+        float2 seperation = GetSeperation(agentPos, agent.CurrentDirection, agent.Radius, index, newRoutineResult.NewAvoidance, agent.PathId);
 
         //GET ALIGNMENT
         if (newRoutineResult.NewAvoidance == 0 && movingAvoidance.Equals(0))
@@ -123,42 +121,34 @@ public struct LocalAvoidanceJob : IJobParallelFor
         bool avoiding = false;
 
         float checkRange = radius + AlignmentRangeAddition;
-
-        for(int i = 0; i < HashGridArray.Length; i++)
+        for(int i = 0; i < AgentSpatialHashGrid.GetGridCount(); i++)
         {
-            UnsafeList<HashTile> hashGrid = HashGridArray[i];
-            GridTravesalData travData = SpatialGridUtils.GetGridTraversalData(agentPos, checkRange, i);
-            for(int j = travData.botLeft; j <= travData.topLeft; j += travData.gridColAmount)
+            SpatialHashGridIterator iterator = AgentSpatialHashGrid.GetIterator(agentPos, checkRange, i);
+            while (iterator.HasNext())
             {
-                for(int k = j; k < j + travData.horizontalSize; k++)
+                NativeSlice<AgentMovementData> agentsToCheck = iterator.GetNextRow(out int sliceStart);
+                for(int j = 0; j < agentsToCheck.Length; j++)
                 {
-                    HashTile tile = hashGrid[k];
+                    AgentMovementData mate = agentsToCheck[j];
+                    float2 matePos = new float2(mate.Position.x, mate.Position.z);
+                    float distance = math.distance(agentPos, matePos);
+                    float desiredDistance = mate.Radius + checkRange;
+                    float overlapping = desiredDistance - distance;
 
-                    for (int m = tile.Start; m < tile.Start + tile.Length; m++)
+                    if (sliceStart + j == agentIndex) { continue; }
+                    if (math.dot(matePos - agentPos, desiredDirection) < 0) { continue; }
+                    if (math.dot(mate.CurrentDirection, currentDirection) <= 0) { continue; }
+                    if (!HasStatusFlag(AgentStatus.Moving, mate.Status)) { continue; }
+                    if (overlapping <= 0) { continue; }
+                    if (IsNotAlignable(agentPos, mate.DesiredDirection, offset)) { continue; }
+                    if (mate.PathId == pahtId)
                     {
-
-                        AgentMovementData mate = AgentMovementDataArray[m];
-                        float2 matePos = new float2(mate.Position.x, mate.Position.z);
-                        float distance = math.distance(agentPos, matePos);
-                        float desiredDistance = mate.Radius + radius + AlignmentRangeAddition;
-                        float overlapping = desiredDistance - distance;
-
-                        if (m == agentIndex) { continue; }
-                        if (math.dot(matePos - agentPos, desiredDirection) < 0) { continue; }
-                        if (math.dot(mate.CurrentDirection, currentDirection) <= 0) { continue; }
-                        if (!HasStatusFlag(AgentStatus.Moving, mate.Status)) { continue; }
-                        if (overlapping <= 0) { continue; }
-                        if(IsNotAlignable(agentPos, mate.DesiredDirection, offset)) { continue; }
-                        if (mate.PathId == pahtId)
-                        {
-                            totalHeading += mate.DesiredDirection;
-                            alignedAgentCount = math.select(alignedAgentCount + 1, alignedAgentCount, mate.DesiredDirection.Equals(0));
-                        }
-                        toalCurrentHeading += math.normalize(mate.CurrentDirection);
-                        curAlignedAgentCount = math.select(curAlignedAgentCount + 1, curAlignedAgentCount, mate.CurrentDirection.Equals(0));
-                        if (mate.Avoidance != 0) { avoiding = true; }
-
+                        totalHeading += mate.DesiredDirection;
+                        alignedAgentCount = math.select(alignedAgentCount + 1, alignedAgentCount, mate.DesiredDirection.Equals(0));
                     }
+                    toalCurrentHeading += math.normalize(mate.CurrentDirection);
+                    curAlignedAgentCount = math.select(curAlignedAgentCount + 1, curAlignedAgentCount, mate.CurrentDirection.Equals(0));
+                    if (mate.Avoidance != 0) { avoiding = true; }
                 }
             }
         }
@@ -168,106 +158,95 @@ public struct LocalAvoidanceJob : IJobParallelFor
         }
         return math.select(totalHeading / alignedAgentCount - desiredDirection, 0, alignedAgentCount == 0);
     }
-    float2 GetSeperation(float2 agentPos, float2 currentDirection, float agentRadius, int agentIndex, AvoidanceStatus agentAvoidance)
+    float2 GetSeperation(float2 agentPos, float2 currentDirection, float agentRadius, int agentIndex, AvoidanceStatus agentAvoidance, int pathId)
     {
         float2 totalSeperation = 0;
         int seperationCount = 0;
 
         bool b = true;
 
-        for(int i = 0; i < HashGridArray.Length; i++)
+        float checkRange = agentRadius + SeperationRangeAddition + 0.1f;
+        for (int i = 0; i < AgentSpatialHashGrid.GetGridCount(); i++)
         {
-            UnsafeList<HashTile> hashGrid = HashGridArray[i];
-            GridTravesalData travData = SpatialGridUtils.GetGridTraversalData(agentPos, agentRadius + SeperationRangeAddition + 0.1f, i);
-            for(int j = travData.botLeft; j <= travData.topLeft; j += travData.gridColAmount)
+            SpatialHashGridIterator iterator = AgentSpatialHashGrid.GetIterator(agentPos, checkRange, i);
+            while (iterator.HasNext())
             {
-                for(int k = j; k < j + travData.horizontalSize; k++)
+                NativeSlice<AgentMovementData> agentsToCheck = iterator.GetNextRow(out int sliceStart);
+                for (int j = 0; j < agentsToCheck.Length; j++)
                 {
-                    HashTile tile = hashGrid[k];
-                    for(int m = tile.Start; m < tile.Start + tile.Length; m++)
-                    {
-                        AgentMovementData mate = AgentMovementDataArray[m];
-                        float2 matePos = new float2(mate.Position.x, mate.Position.z);
-                        float distance = math.distance(matePos, agentPos);
-                        float desiredRange = mate.Radius + agentRadius + SeperationRangeAddition + 0.1f;
-                        if (mate.PathId == AgentMovementDataArray[agentIndex].PathId) { continue; }
-                        float overlapping = desiredRange - distance;
-                        if (overlapping <= 0) { continue; }
-                        if (!HasStatusFlag(AgentStatus.Moving, mate.Status)) { continue; }
-                        if (math.dot(currentDirection, mate.CurrentDirection) > 0) { continue; }
-                        //if(math.dot(desiredDirection, matePos - agentPos) < 0) { continue; }
-                        b = false;
-                        break;
-                    }
-                    if (!b) { break; }
+                    AgentMovementData mate = agentsToCheck[j];
+                    float2 matePos = new float2(mate.Position.x, mate.Position.z);
+                    float distance = math.distance(matePos, agentPos);
+                    float desiredRange = mate.Radius + checkRange;
+                    if (mate.PathId == pathId) { continue; }
+                    float overlapping = desiredRange - distance;
+                    if (overlapping <= 0) { continue; }
+                    if (!HasStatusFlag(AgentStatus.Moving, mate.Status)) { continue; }
+                    if (math.dot(currentDirection, mate.CurrentDirection) > 0) { continue; }
+                    //if(math.dot(desiredDirection, matePos - agentPos) < 0) { continue; }
+                    b = false;
+                    break;
                 }
                 if (!b) { break; }
             }
             if (!b) { break; }
         }
+        checkRange -= 0.1f;
 
         if (agentAvoidance == 0)
         {
-            for (int i = 0; i < HashGridArray.Length; i++)
+            for (int i = 0; i < AgentSpatialHashGrid.GetGridCount(); i++)
             {
-                UnsafeList<HashTile> hashGrid = HashGridArray[i];
-                GridTravesalData travData = SpatialGridUtils.GetGridTraversalData(agentPos, agentRadius + SeperationRangeAddition, i);
-                for (int j = travData.botLeft; j <= travData.topLeft; j += travData.gridColAmount)
+                SpatialHashGridIterator iterator = AgentSpatialHashGrid.GetIterator(agentPos, checkRange, i);
+                while (iterator.HasNext())
                 {
-                    for (int k = j; k < j + travData.horizontalSize; k++)
+                    NativeSlice<AgentMovementData> agentsToCheck = iterator.GetNextRow(out int sliceStart);
+                    for (int j = 0; j < agentsToCheck.Length; j++)
                     {
-                        HashTile tile = hashGrid[k];
-                        for (int m = tile.Start; m < tile.Start + tile.Length; m++)
-                        {
-                            AgentMovementData mate = AgentMovementDataArray[m];
-                            float2 matePos = new float2(mate.Position.x, mate.Position.z);
-                            float distance = math.distance(matePos, agentPos);
-                            float desiredRange = mate.Radius + agentRadius + SeperationRangeAddition;
-                            float overlapping = desiredRange - distance;
-                            if (overlapping <= 0) { continue; }
-                            if (!HasStatusFlag(AgentStatus.Moving, mate.Status)) { continue; }
-                            if (math.dot(currentDirection, matePos - agentPos) < 0 && b) { continue; }
+                        AgentMovementData mate = agentsToCheck[j];
+                        float2 matePos = new float2(mate.Position.x, mate.Position.z);
+                        float distance = math.distance(matePos, agentPos);
+                        float desiredRange = mate.Radius + agentRadius + SeperationRangeAddition;
+                        float overlapping = desiredRange - distance;
+                        if (overlapping <= 0) { continue; }
+                        if (!HasStatusFlag(AgentStatus.Moving, mate.Status)) { continue; }
+                        if (math.dot(currentDirection, matePos - agentPos) < 0 && b) { continue; }
 
-                            float2 seperationForce = math.normalizesafe(agentPos - matePos) * overlapping;
-                            seperationForce = math.select(seperationForce, new float2(m, 1), agentPos.Equals(matePos) && agentIndex < m);
+                        float2 seperationForce = math.normalizesafe(agentPos - matePos) * overlapping;
+                        seperationForce = math.select(seperationForce, new float2(sliceStart + j, 1), agentPos.Equals(matePos) && agentIndex < sliceStart + j);
 
-                            totalSeperation += seperationForce;
-                            seperationCount++;
-                        }
+                        totalSeperation += seperationForce;
+                        seperationCount++;
                     }
                 }
             }
         }
         else
         {
-            for (int i = 0; i < HashGridArray.Length; i++)
+            for (int i = 0; i < AgentSpatialHashGrid.GetGridCount(); i++)
             {
-                UnsafeList<HashTile> hashGrid = HashGridArray[i];
-                GridTravesalData travData = SpatialGridUtils.GetGridTraversalData(agentPos, agentRadius + SeperationRangeAddition, i);
-                for (int j = travData.botLeft; j <= travData.topLeft; j += travData.gridColAmount)
+                SpatialHashGridIterator iterator = AgentSpatialHashGrid.GetIterator(agentPos, checkRange, i);
+                while (iterator.HasNext())
                 {
-                    for (int k = j; k < j + travData.horizontalSize; k++)
+                    NativeSlice<AgentMovementData> agentsToCheck = iterator.GetNextRow(out int sliceStart);
+                    for (int j = 0; j < agentsToCheck.Length; j++)
                     {
-                        HashTile tile = hashGrid[k];
-                        for (int m = tile.Start; m < tile.Start + tile.Length; m++)
-                        {
-                            AgentMovementData mate = AgentMovementDataArray[m];
-                            float2 matePos = new float2(mate.Position.x, mate.Position.z);
-                            float distance = math.distance(matePos, agentPos);
-                            float desiredRange = mate.Radius + agentRadius + SeperationRangeAddition;
-                            float overlapping = desiredRange - distance;
+                        AgentMovementData mate = agentsToCheck[j];
+                        float2 matePos = new float2(mate.Position.x, mate.Position.z);
+                        float distance = math.distance(matePos, agentPos);
+                        float desiredRange = mate.Radius + agentRadius + SeperationRangeAddition;
+                        float overlapping = desiredRange - distance;
 
-                            if (overlapping <= 0) { continue; }
-                            if (!HasStatusFlag(AgentStatus.Moving, mate.Status)) { continue; }
-                            if (mate.Avoidance == 0) { continue; }
-                            if (math.dot(currentDirection, matePos - agentPos) < 0 && b) { continue; }
+                        if (overlapping <= 0) { continue; }
+                        if (!HasStatusFlag(AgentStatus.Moving, mate.Status)) { continue; }
+                        if (mate.Avoidance == 0) { continue; }
+                        if (math.dot(currentDirection, matePos - agentPos) < 0 && b) { continue; }
 
-                            float2 seperationForce = math.normalizesafe(agentPos - matePos) * overlapping;
-                            seperationForce = math.select(seperationForce, new float2(m, 1), agentPos.Equals(matePos) && agentIndex < m);
+                        float2 seperationForce = math.normalizesafe(agentPos - matePos) * overlapping;
+                        seperationForce = math.select(seperationForce, new float2(sliceStart + j, 1), agentPos.Equals(matePos) && agentIndex < sliceStart + j);
 
-                            totalSeperation += seperationForce;
-                            seperationCount++;
-                        }
+                        totalSeperation += seperationForce;
+                        seperationCount++;
                     }
                 }
             }
@@ -281,33 +260,30 @@ public struct LocalAvoidanceJob : IJobParallelFor
     float2 GetStoppedSeperationForce(float2 agentPos, float agentRadius, int agentIndex)
     {
         float2 totalSeperation = 0;
-        for (int i = 0; i < HashGridArray.Length; i++)
+        float checkRange = agentRadius + SeperationRangeAddition;
+        for (int i = 0; i < AgentSpatialHashGrid.GetGridCount(); i++)
         {
-            UnsafeList<HashTile> hashGrid = HashGridArray[i];
-            GridTravesalData travData = SpatialGridUtils.GetGridTraversalData(agentPos, agentRadius + SeperationRangeAddition, i);
-            for (int j = travData.botLeft; j <= travData.topLeft; j += travData.gridColAmount)
+            SpatialHashGridIterator iterator = AgentSpatialHashGrid.GetIterator(agentPos, checkRange, i);
+            while (iterator.HasNext())
             {
-                for (int k = j; k < j + travData.horizontalSize; k++)
+                NativeSlice<AgentMovementData> agentsToCheck = iterator.GetNextRow(out int sliceStart);
+                for (int j = 0; j < agentsToCheck.Length; j++)
                 {
-                    HashTile tile = hashGrid[k];
-                    for (int m = tile.Start; m < tile.Start + tile.Length; m++)
-                    {
-                        AgentMovementData mateData = AgentMovementDataArray[m];
-                        if (m == agentIndex) { continue; }
+                    AgentMovementData mateData = agentsToCheck[j];
+                    if (sliceStart + j == agentIndex) { continue; }
 
-                        float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
-                        float distance = math.distance(matePos, agentPos);
+                    float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
+                    float distance = math.distance(matePos, agentPos);
 
-                        float seperationRadius = (agentRadius + mateData.Radius) + SeperationRangeAddition;
-                        if (distance > seperationRadius) { continue; }
+                    float seperationRadius = checkRange + mateData.Radius;
+                    if (distance > seperationRadius) { continue; }
 
-                        float overlapping = seperationRadius - distance;
-                        float multiplier = overlapping;
-                        float2 seperation = agentPos - matePos;
-                        seperation = math.select(seperation, new float2(m, 1), agentPos.Equals(matePos) && agentIndex < m);
-                        seperation = math.normalizesafe(seperation) * multiplier;
-                        totalSeperation += seperation;
-                    }
+                    float overlapping = seperationRadius - distance;
+                    float multiplier = overlapping;
+                    float2 seperation = agentPos - matePos;
+                    seperation = math.select(seperation, new float2(sliceStart + j, 1), agentPos.Equals(matePos) && agentIndex < sliceStart + j);
+                    seperation = math.normalizesafe(seperation) * multiplier;
+                    totalSeperation += seperation;
                 }
             }
         }
@@ -315,72 +291,63 @@ public struct LocalAvoidanceJob : IJobParallelFor
     }
     AvoidanceStatus GetAvoidanceStatus(float2 agentPos, float2 desiredDirection, float agentRadius, int agentIndex)
     {
-        NativeArray<AgentMovementData> agentMovementDataArray = AgentMovementDataArray;
-        NativeArray<UnsafeList<HashTile>> hashGridArray = HashGridArray;
-        for (int i = 0; i < HashGridArray.Length; i++)
+        float checkRange = agentRadius + SeperationRangeAddition + 0.1f;
+        for (int i = 0; i < AgentSpatialHashGrid.GetGridCount(); i++)
         {
-            UnsafeList<HashTile> hashGrid = HashGridArray[i];
-            GridTravesalData travData = SpatialGridUtils.GetGridTraversalData(agentPos, agentRadius + SeperationRangeAddition + 0.1f, i);
-            for (int j = travData.botLeft; j <= travData.topLeft; j += travData.gridColAmount)
+            SpatialHashGridIterator iterator = AgentSpatialHashGrid.GetIterator(agentPos, checkRange, i);
+            while (iterator.HasNext())
             {
-                for (int k = j; k < j + travData.horizontalSize; k++)
+                NativeSlice<AgentMovementData> agentsToCheck = iterator.GetNextRow(out int sliceStart);
+                for (int j = 0; j < agentsToCheck.Length; j++)
                 {
-                    HashTile tile = hashGrid[k];
-                    for (int m = tile.Start; m < tile.Start + tile.Length; m++)
-                    {
-                        AgentMovementData mateData = AgentMovementDataArray[m];
-                        if (m == agentIndex) { continue; }
-                        if ((mateData.Status & AgentStatus.HoldGround) != AgentStatus.HoldGround) { continue; }
+                    AgentMovementData mateData = agentsToCheck[j];
+                    if (sliceStart + j == agentIndex) { continue; }
+                    if ((mateData.Status & AgentStatus.HoldGround) != AgentStatus.HoldGround) { continue; }
 
-                        float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
-                        float distance = math.distance(matePos, agentPos);
+                    float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
+                    float distance = math.distance(matePos, agentPos);
 
-                        float obstacleDetectionRange = (agentRadius + mateData.Radius) + SeperationRangeAddition + 0.1f;
+                    float obstacleDetectionRange = mateData.Radius + checkRange;
 
-                        if (distance > obstacleDetectionRange) { continue; }
+                    if (distance > obstacleDetectionRange) { continue; }
 
-                        float dot = math.dot(desiredDirection, matePos - agentPos);
-                        if (dot <= 0f) { continue; }
+                    float dot = math.dot(desiredDirection, matePos - agentPos);
+                    if (dot <= 0f) { continue; }
 
-                        return DetermineAvoidance(agentPos, desiredDirection, agentRadius, agentIndex);
-                    }
+                    return DetermineAvoidance(agentPos, desiredDirection, agentRadius, agentIndex);
                 }
             }
         }
-        return 0;
-
-        
+        return 0;        
     }
     AvoidanceStatus DetermineAvoidance(float2 agentPos, float2 desiredDirection, float agentRadius, int agentIndex)
     {
         float2 totalLeftAvoiance = 0;
         float2 totalRightAvoidance = 0;
-        for (int i = 0; i < HashGridArray.Length; i++)
+        float checkRange = agentRadius + 0.5f;
+        for (int i = 0; i < AgentSpatialHashGrid.GetGridCount(); i++)
         {
-            UnsafeList<HashTile> hashGrid = HashGridArray[i];
-            GridTravesalData travData = SpatialGridUtils.GetGridTraversalData(agentPos, agentRadius + 0.2f + 0.3f, i);
-            for (int j = travData.botLeft; j <= travData.topLeft; j += travData.gridColAmount)
+            SpatialHashGridIterator iterator = AgentSpatialHashGrid.GetIterator(agentPos, checkRange, i);
+            while (iterator.HasNext())
             {
-                for (int k = j; k < j + travData.horizontalSize; k++)
+                NativeSlice<AgentMovementData> agentsToCheck = iterator.GetNextRow(out int sliceStart);
+                for (int j = 0; j < agentsToCheck.Length; j++)
                 {
-                    HashTile tile = hashGrid[k];
-                    for (int m = tile.Start; m < tile.Start + tile.Length; m++)
-                    {
-                        AgentMovementData mateData = AgentMovementDataArray[m];
-                        if (m == agentIndex) { continue; }
-                        if ((mateData.Status & AgentStatus.HoldGround) != AgentStatus.HoldGround) { continue; }
-                        float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
-                        float distance = math.distance(matePos, agentPos);
-                        float obstacleDetectionRange = (agentRadius + mateData.Radius) + 0.2f + 3f;
-                        if (distance > obstacleDetectionRange) { continue; }
-                        float2 mateDir = matePos - agentPos;
-                        float dot = math.dot(desiredDirection, math.normalizesafe(mateDir));
-                        if (dot <= 0) { continue; }
-                        float2 leftAvoidance = math.normalizesafe(new float2(-mateDir.y, mateDir.x));
-                        float2 rightAvoidance = math.normalizesafe(new float2(mateDir.y, -mateDir.x));
-                        totalLeftAvoiance += leftAvoidance;
-                        totalRightAvoidance += rightAvoidance;
-                    }
+                    AgentMovementData mateData = agentsToCheck[j];
+                    if (sliceStart + j == agentIndex) { continue; }
+                    if ((mateData.Status & AgentStatus.HoldGround) != AgentStatus.HoldGround) { continue; }
+                    float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
+                    float distance = math.distance(matePos, agentPos);
+                    float obstacleDetectionRange = (agentRadius + mateData.Radius) + 0.2f + 3f;
+                    if (distance > obstacleDetectionRange) { continue; }
+                    float2 mateDir = matePos - agentPos;
+                    float dot = math.dot(desiredDirection, math.normalizesafe(mateDir));
+                    if (dot <= 0) { continue; }
+                    float2 leftAvoidance = math.normalizesafe(new float2(-mateDir.y, mateDir.x));
+                    float2 rightAvoidance = math.normalizesafe(new float2(mateDir.y, -mateDir.x));
+                    totalLeftAvoiance += leftAvoidance;
+                    totalRightAvoidance += rightAvoidance;
+
                 }
             }
         }
@@ -395,35 +362,33 @@ public struct LocalAvoidanceJob : IJobParallelFor
         float2 closestObstaclePos = 0;
         float closestObstacleRadius = 0;
         float closesObstacleDotProduct = float.MinValue;
-        for (int i = 0; i < HashGridArray.Length; i++)
+        float checkRange = agentRadius + SeperationRangeAddition + 1f;
+        for (int i = 0; i < AgentSpatialHashGrid.GetGridCount(); i++)
         {
-            UnsafeList<HashTile> hashGrid = HashGridArray[i];
-            GridTravesalData travData = SpatialGridUtils.GetGridTraversalData(agentPos, agentRadius + SeperationRangeAddition + 1f, i);
-            for (int j = travData.botLeft; j <= travData.topLeft; j += travData.gridColAmount)
+            SpatialHashGridIterator iterator = AgentSpatialHashGrid.GetIterator(agentPos, checkRange, i);
+            while (iterator.HasNext())
             {
-                for (int k = j; k < j + travData.horizontalSize; k++)
+                NativeSlice<AgentMovementData> agentsToCheck = iterator.GetNextRow(out int sliceStart);
+                for (int j = 0; j < agentsToCheck.Length; j++)
                 {
-                    HashTile tile = hashGrid[k];
-                    for (int m = tile.Start; m < tile.Start + tile.Length; m++)
-                    {
-                        AgentMovementData mateData = AgentMovementDataArray[m];
-                        if (m == agentIndex) { continue; }
-                        if ((mateData.Status & AgentStatus.HoldGround) != AgentStatus.HoldGround) { continue; }
-                        float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
-                        float distance = math.distance(matePos, agentPos);
-                        float obstacleDetectionRange = (agentRadius + mateData.Radius) + SeperationRangeAddition + 1f;
-                        if (distance > obstacleDetectionRange) { continue; }
-                        float2 mateDir = matePos - agentPos;
-                        float dot = math.dot(currentDirection, math.normalizesafe(mateDir));
-                        if (dot < -1f) { continue; }
+                    AgentMovementData mateData = agentsToCheck[j];
+                    if (sliceStart + j == agentIndex) { continue; }
+                    if ((mateData.Status & AgentStatus.HoldGround) != AgentStatus.HoldGround) { continue; }
+                    float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
+                    float distance = math.distance(matePos, agentPos);
+                    float obstacleDetectionRange = (agentRadius + mateData.Radius) + SeperationRangeAddition + 1f;
+                    if (distance > obstacleDetectionRange) { continue; }
+                    float2 mateDir = matePos - agentPos;
+                    float dot = math.dot(currentDirection, math.normalizesafe(mateDir));
+                    if (dot < -1f) { continue; }
 
-                        if (dot > closesObstacleDotProduct)
-                        {
-                            closestObstaclePos = matePos;
-                            closestObstacleRadius = mateData.Radius;
-                            closesObstacleDotProduct = dot;
-                        }
+                    if (dot > closesObstacleDotProduct)
+                    {
+                        closestObstaclePos = matePos;
+                        closestObstacleRadius = mateData.Radius;
+                        closesObstacleDotProduct = dot;
                     }
+
                 }
             }
         }
@@ -486,32 +451,29 @@ public struct LocalAvoidanceJob : IJobParallelFor
         float2 rightLinep1 = agentPos + directionPerpRight;
         float2 rightLinep2 = agentPos + directionClampedToRange + directionPerpRight;
 
-        for (int i = 0; i < HashGridArray.Length; i++)
+        for (int i = 0; i < AgentSpatialHashGrid.GetGridCount(); i++)
         {
-            UnsafeList<HashTile> hashGrid = HashGridArray[i];
-            GridTravesalData travData = SpatialGridUtils.GetGridTraversalData(agentPos, checkRange, i);
-            for (int j = travData.botLeft; j <= travData.topLeft; j += travData.gridColAmount)
+            SpatialHashGridIterator iterator = AgentSpatialHashGrid.GetIterator(agentPos, checkRange, i);
+            while (iterator.HasNext())
             {
-                for (int k = j; k < j + travData.horizontalSize; k++)
+                NativeSlice<AgentMovementData> agentsToCheck = iterator.GetNextRow(out int sliceStart);
+                for (int j = 0; j < agentsToCheck.Length; j++)
                 {
-                    HashTile tile = hashGrid[k];
-                    for (int m = tile.Start; m < tile.Start + tile.Length; m++)
+                    AgentMovementData mate = agentsToCheck[j];
+                    if (agentIndex == j + sliceStart) { continue; }
+                    if (!HasStatusFlag(AgentStatus.HoldGround, mate.Status)) { continue; }
+                    float3 matePos3 = mate.Position;
+                    float2 matePos2 = new float2(matePos3.x, matePos3.z);
+                    if (math.distance(agentPos, matePos2) > checkRange + mate.Radius) { continue; }
+                    float2 dirFromLeft = matePos2 - leftLinep1;
+                    float2 dirFromRight = matePos2 - rightLinep1;
+                    bool isRightOfLeft = math.dot(leftLinep2 - leftLinep1, new float2(dirFromLeft.y, -dirFromLeft.x)) < 0;
+                    bool isLeftOfRight = math.dot(rightLinep2 - rightLinep1, new float2(-dirFromRight.y, dirFromRight.x)) < 0;
+                    if (Intersects(leftLinep1, leftLinep2, matePos2, mate.Radius) || Intersects(rightLinep1, rightLinep2, matePos2, mate.Radius) || (isLeftOfRight && isRightOfLeft && math.dot(direction, matePos2 - agentPos) >= 0))
                     {
-                        AgentMovementData mate = AgentMovementDataArray[m];
-                        if (agentIndex == m) { continue; }
-                        if (!HasStatusFlag(AgentStatus.HoldGround, mate.Status)) { continue; }
-                        float3 matePos3 = mate.Position;
-                        float2 matePos2 = new float2(matePos3.x, matePos3.z);
-                        if (math.distance(agentPos, matePos2) > checkRange + mate.Radius) { continue; }
-                        float2 dirFromLeft = matePos2 - leftLinep1;
-                        float2 dirFromRight = matePos2 - rightLinep1;
-                        bool isRightOfLeft = math.dot(leftLinep2 - leftLinep1, new float2(dirFromLeft.y, -dirFromLeft.x)) < 0;
-                        bool isLeftOfRight = math.dot(rightLinep2 - rightLinep1, new float2(-dirFromRight.y, dirFromRight.x)) < 0;
-                        if (Intersects(leftLinep1, leftLinep2, matePos2, mate.Radius) || Intersects(rightLinep1, rightLinep2, matePos2, mate.Radius) || (isLeftOfRight && isRightOfLeft && math.dot(direction, matePos2 - agentPos) >= 0))
-                        {
-                            return false;
-                        }
+                        return false;
                     }
+
                 }
             }
         }
@@ -572,7 +534,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
             return math.distance(matePos, lh) < mateRadius || math.distance(matePos, rh) < mateRadius;
         }
     }
-    float2 GetMovingAvoidance(float2 agentPos, float2 agentCurrentDir, int agentIndex, float agentRadius, ref MovingAvoidanceStatus avoidance)
+    float2 GetMovingAvoidance(float2 agentPos, float2 agentCurrentDir, int agentIndex, float agentRadius, ref MovingAvoidanceStatus avoidance, int pathId)
     {
         float2 center1 = agentPos;
         float2 center2 = agentPos + math.normalizesafe(agentCurrentDir) * (agentRadius + 0.2f);
@@ -589,48 +551,45 @@ public struct LocalAvoidanceJob : IJobParallelFor
 
         float closestAgentDist = float.MaxValue;
         int closestAgentIndex = 0;
-
-        for (int i = 0; i < HashGridArray.Length; i++)
+        float checkRange = agentRadius + 0.2f;
+        for (int i = 0; i < AgentSpatialHashGrid.GetGridCount(); i++)
         {
-            UnsafeList<HashTile> hashGrid = HashGridArray[i];
-            GridTravesalData travData = SpatialGridUtils.GetGridTraversalData(agentPos, agentRadius + 0.2f, i);
-            for (int j = travData.botLeft; j <= travData.topLeft; j += travData.gridColAmount)
+            SpatialHashGridIterator iterator = AgentSpatialHashGrid.GetIterator(agentPos, checkRange, i);
+            while (iterator.HasNext())
             {
-                for (int k = j; k < j + travData.horizontalSize; k++)
+                NativeSlice<AgentMovementData> agentsToCheck = iterator.GetNextRow(out int sliceStart);
+                for (int j = 0; j < agentsToCheck.Length; j++)
                 {
-                    HashTile tile = hashGrid[k];
-                    for (int m = tile.Start; m < tile.Start + tile.Length; m++)
+                    AgentMovementData mate = agentsToCheck[j];
+                    float2 matePos = new float2(mate.Position.x, mate.Position.z);
+                    if (j + sliceStart == agentIndex) { continue; }
+                    if (mate.PathId == pathId) { continue; }
+                    if (!HasStatusFlag(AgentStatus.Moving, mate.Status)) { continue; }
+                    if (math.dot(agentCurrentDir, matePos - agentPos) < 0) { continue; }
+                    if (math.dot(agentCurrentDir, mate.CurrentDirection) > 0) { continue; }
+                    float desiredDistance = mate.Radius + checkRange;
+                    float mateDistance = math.distance(agentPos, matePos);
+                    float overlapping = desiredDistance - mateDistance;
+                    if (overlapping <= 0) { continue; }
+
+                    bool right = Intersects(right1, right2, matePos, mate.Radius + SeperationRangeAddition / 2);
+                    bool left = Intersects(left1, left2, matePos, mate.Radius + SeperationRangeAddition / 2);
+                    bool center = Intersects(center1, center2, matePos, mate.Radius + SeperationRangeAddition / 2);
+
+                    if (right || left || center)
                     {
-                        AgentMovementData mate = AgentMovementDataArray[m];
-                        float2 matePos = new float2(mate.Position.x, mate.Position.z);
-                        if (m == agentIndex) { continue; }
-                        if (mate.PathId == AgentMovementDataArray[agentIndex].PathId) { continue; }
-                        if (!HasStatusFlag(AgentStatus.Moving, mate.Status)) { continue; }
-                        if (math.dot(agentCurrentDir, matePos - agentPos) < 0) { continue; }
-                        if (math.dot(agentCurrentDir, mate.CurrentDirection) > 0) { continue; }
-                        float desiredDistance = agentRadius + mate.Radius + 0.2f;
-                        float mateDistance = math.distance(agentPos, matePos);
-                        float overlapping = desiredDistance - mateDistance;
-                        if (overlapping <= 0) { continue; }
-
-                        bool right = Intersects(right1, right2, matePos, mate.Radius + SeperationRangeAddition / 2);
-                        bool left = Intersects(left1, left2, matePos, mate.Radius + SeperationRangeAddition / 2);
-                        bool center = Intersects(center1, center2, matePos, mate.Radius + SeperationRangeAddition / 2);
-
-                        if (right || left || center)
+                        if (mateDistance < closestAgentDist)
                         {
-                            if (mateDistance < closestAgentDist)
-                            {
-                                closestAgentDist = mateDistance;
-                                closestAgentIndex = m;
-                            }
+                            closestAgentDist = mateDistance;
+                            closestAgentIndex = j + sliceStart;
                         }
                     }
+
                 }
             }
         }
         if(closestAgentDist == float.MaxValue) { avoidance = 0; return 0; }
-        AgentMovementData picked = AgentMovementDataArray[closestAgentIndex];
+        AgentMovementData picked = AgentSpatialHashGrid.RawAgentMovementDataArray[closestAgentIndex];
         float2 pickedPos = new float2(picked.Position.x, picked.Position.z);
         float2 pickeDir = pickedPos - agentPos;
         float2 pickedToAgent = agentPos - pickedPos;
@@ -643,7 +602,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
             float steeringMaxLen = math.length(steering);
             steering = math.select(steering / steeringMaxLen * MovingAvoidanceRangeAddition, steering, MovingAvoidanceRangeAddition > steeringMaxLen);
             agentCurrentDir += steering;
-            avoidance = math.dot(AgentMovementDataArray[agentIndex].DesiredDirection, new float2(-agentCurrentDir.y, agentCurrentDir.x)) < 0 ? MovingAvoidanceStatus.L : MovingAvoidanceStatus.R;
+            avoidance = math.dot(AgentSpatialHashGrid.RawAgentMovementDataArray[agentIndex].DesiredDirection, new float2(-agentCurrentDir.y, agentCurrentDir.x)) < 0 ? MovingAvoidanceStatus.L : MovingAvoidanceStatus.R;
             return agentCurrentDir;
         }
         else
@@ -653,7 +612,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
             float steeringMaxLen = math.length(steering);
             steering = math.select(steering / steeringMaxLen * MovingAvoidanceRangeAddition, steering, MovingAvoidanceRangeAddition > steeringMaxLen);
             agentCurrentDir += steering;
-            avoidance = math.dot(AgentMovementDataArray[agentIndex].DesiredDirection, new float2(-agentCurrentDir.y, agentCurrentDir.x)) < 0 ? MovingAvoidanceStatus.L : MovingAvoidanceStatus.R;
+            avoidance = math.dot(AgentSpatialHashGrid.RawAgentMovementDataArray[agentIndex].DesiredDirection, new float2(-agentCurrentDir.y, agentCurrentDir.x)) < 0 ? MovingAvoidanceStatus.L : MovingAvoidanceStatus.R;
             return agentCurrentDir;
         }
     }
