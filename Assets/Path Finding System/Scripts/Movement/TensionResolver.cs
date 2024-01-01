@@ -108,7 +108,6 @@ public struct TensionResolver : IJob
                 RoutineResultArray[tension.agent1] = result1;
             }
         }
-
         //DECREASE SPLIT INTERVALS AND INFO
         for (int index = 0; index < AgentMovementDataArray.Length; index++)
         {

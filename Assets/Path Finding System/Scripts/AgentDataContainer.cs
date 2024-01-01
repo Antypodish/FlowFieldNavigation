@@ -108,6 +108,7 @@ public class AgentDataContainer
 
         RoutineResultSendJob directionSetJob = new RoutineResultSendJob()
         {
+            AgentCurPathIndicies = AgentCurPathIndicies,
             MovementDataArray = movementDataArray,
             AgentDataArray = AgentDataList,
             RoutineResultArray = routineResults,

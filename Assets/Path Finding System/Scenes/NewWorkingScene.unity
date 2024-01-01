@@ -228,8 +228,23 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
+      propertyPath: RowAmount
+      value: 500
+      objectReference: {fileID: 0}
+    - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
+        type: 3}
       propertyPath: _resolution
       value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
+        type: 3}
+      propertyPath: ColumnAmount
+      value: 500
+      objectReference: {fileID: 0}
+    - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
+        type: 3}
+      propertyPath: _simulationState
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207641, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
@@ -722,14 +737,49 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1430737614659601544, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}
+      propertyPath: _debugFlowField
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1430737614659601544, guid: 6171110bace36bb42a195b4ce00d2d41,
+        type: 3}
+      propertyPath: _debugDestination
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1430737614659601544, guid: 6171110bace36bb42a195b4ce00d2d41,
+        type: 3}
+      propertyPath: _debugPickedSectors
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1430737614659601544, guid: 6171110bace36bb42a195b4ce00d2d41,
+        type: 3}
       propertyPath: _pathfindingManager
       value: 
       objectReference: {fileID: 773146450}
+    - target: {fileID: 1430737614659601544, guid: 6171110bace36bb42a195b4ce00d2d41,
+        type: 3}
+      propertyPath: _debugPortalSequence
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1430737614659601544, guid: 6171110bace36bb42a195b4ce00d2d41,
+        type: 3}
+      propertyPath: _portalErrorDetection
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1430737614659601544, guid: 6171110bace36bb42a195b4ce00d2d41,
+        type: 3}
+      propertyPath: _debugActiveWaveFronts
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6812717299296281272, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}
       propertyPath: _pathfindingManager
       value: 
       objectReference: {fileID: 773146450}
+    - target: {fileID: 6812717299296281272, guid: 6171110bace36bb42a195b4ce00d2d41,
+        type: 3}
+      propertyPath: _startingAgentCount
+      value: 5000
+      objectReference: {fileID: 0}
     - target: {fileID: 6812717299297122856, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}
       propertyPath: _pathfindingManager
