@@ -89,7 +89,22 @@ public struct TensionResolver : IJob
             {
                 agent2Power = tensionPowerList[agent2.TensionPowerIndex];
             }
-            if (agent1Power > agent2Power)
+            if (result1.NewSplitInfo > result2.NewSplitInfo)
+            {
+                result2.NewAvoidance = result1.NewAvoidance;
+                result2.NewDirection = result1.NewDirection;
+                result2.NewSplitInfo = result1.NewSplitInfo;
+                RoutineResultArray[tension.agent2] = result2;
+            }
+            else if (result1.NewSplitInfo < result2.NewSplitInfo)
+            {
+                result1.NewAvoidance = result2.NewAvoidance;
+                result1.NewDirection = result2.NewDirection;
+                result1.NewSplitInfo = result2.NewSplitInfo;
+                RoutineResultArray[tension.agent1] = result1;
+
+            }
+            else if (agent1Power > agent2Power)
             {
                 result2.NewAvoidance = result1.NewAvoidance;
                 result2.NewDirection = result1.NewDirection;

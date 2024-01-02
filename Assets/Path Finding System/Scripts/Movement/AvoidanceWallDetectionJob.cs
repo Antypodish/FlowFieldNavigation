@@ -35,7 +35,7 @@ public struct AvoidanceWallDetectionJob : IJobParallelFor
 
     bool IsGoingTowardsWall(float2 agentPos, float2 checkDir, int offset)
     {
-        float2 linecastPoint2 = agentPos + (checkDir * 0.6f);
+        float2 linecastPoint2 = agentPos + (checkDir * 1f);
         linecastPoint2.x = math.select(linecastPoint2.x, FieldMinXIncluding, linecastPoint2.x < FieldMinXIncluding);
         linecastPoint2.x = math.select(linecastPoint2.x, FieldMaxXExcluding - TileSize, linecastPoint2.x >= FieldMaxXExcluding);
         linecastPoint2.y = math.select(linecastPoint2.y, FieldMinYIncluding, linecastPoint2.y < FieldMinYIncluding);
