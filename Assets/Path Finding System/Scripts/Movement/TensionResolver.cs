@@ -4,56 +4,50 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Burst;
 using Unity.VisualScripting;
+using System;
 
 [BurstCompile]
 public struct TensionResolver : IJob
 {
     public float SeperationRangeAddition;
-    public AgentSpatialGridUtils HashGridUtils;
-    public NativeArray<AgentMovementData> AgentMovementDataArray;
-    [ReadOnly] public NativeArray<UnsafeList<HashTile>> HashGridArray;
+    public AgentSpatialHashGrid AgentSpatialHashGrid;
     public NativeArray<RoutineResult> RoutineResultArray;
 
     public void Execute()
     {
         UnsafeList<Tension> tensionlist = new UnsafeList<Tension>(0, Allocator.Temp);
         UnsafeList<int> tensionPowerList = new UnsafeList<int>(0, Allocator.Temp);
-        for (int i = 0; i < AgentMovementDataArray.Length; i++)
+        for (int i = 0; i < AgentSpatialHashGrid.RawAgentMovementDataArray.Length; i++)
         {
-            AgentMovementData agentData = AgentMovementDataArray[i];
+            AgentMovementData agentData = AgentSpatialHashGrid.RawAgentMovementDataArray[i];
             float2 agentPos = new float2(agentData.Position.x, agentData.Position.z);
             float2 agentDir = RoutineResultArray[i].NewDirection;
             AvoidanceStatus agentAvoidance = RoutineResultArray[i].NewAvoidance;
             if (agentAvoidance == 0) { continue; }
 
-            for(int j = 0; j < HashGridArray.Length; j++)
+            float checkRange = agentData.Radius + SeperationRangeAddition;
+            for (int j = 0; j < AgentSpatialHashGrid.GetGridCount(); j++)
             {
-                UnsafeList<HashTile> pickedGrid = HashGridArray[j];
-                GridTravesalData travData = HashGridUtils.GetGridTraversalData(agentPos, agentData.Radius + SeperationRangeAddition, j);
-                for(int k = travData.botLeft; k <= travData.topLeft; k += travData.gridColAmount)
+                SpatialHashGridIterator iterator = AgentSpatialHashGrid.GetIterator(agentPos, checkRange, j);
+                while (iterator.HasNext())
                 {
-                    for(int l = k; l < k + travData.horizontalSize; l++)
+                    NativeSlice<AgentMovementData> agentsToCheck = iterator.GetNextRow(out int sliceStart);
+                    for (int k = 0; k < agentsToCheck.Length; k++)
                     {
-                        HashTile tile = pickedGrid[l];
-                        for(int m = tile.Start; m < tile.Start + tile.Length; m++)
+                        AgentMovementData mateData = agentsToCheck[k];
+                        RoutineResult mateRoutineResult = RoutineResultArray[sliceStart + k];
+                        float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
+                        if (mateRoutineResult.NewAvoidance == 0) { continue; }
+                        float dot = math.dot(agentDir, matePos - agentPos);
+                        if (dot < 0) { continue; }
+                        if (mateRoutineResult.NewAvoidance == agentAvoidance) { continue; }
+                        if (math.distance(agentPos, matePos) > mateData.Radius + checkRange) { continue; }
+                        Tension tension = new Tension()
                         {
-                            AgentMovementData mateData = AgentMovementDataArray[m];
-                            RoutineResult mateRoutineResult = RoutineResultArray[m];
-                            float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
-                            if (mateRoutineResult.NewAvoidance == 0) { continue; }
-
-                            float dot = math.dot(agentDir, matePos - agentPos);
-                            if (dot < 0) { continue; }
-
-                            if (mateRoutineResult.NewAvoidance == agentAvoidance) { continue; }
-                            if (math.distance(agentPos, matePos) > agentData.Radius + mateData.Radius + SeperationRangeAddition) { continue; }
-                            Tension tension = new Tension()
-                            {
-                                agent1 = i,
-                                agent2 = m,
-                            };
-                            tensionlist.Add(tension);
-                        }
+                            agent1 = i,
+                            agent2 = sliceStart + k,
+                        };
+                        tensionlist.Add(tension);
                     }
                 }
             }
@@ -63,8 +57,8 @@ public struct TensionResolver : IJob
         for (int i = 0; i < tensionlist.Length; i++)
         {
             Tension tension = tensionlist[i];
-            AgentMovementData agent1 = AgentMovementDataArray[tension.agent1];
-            AgentMovementData agent2 = AgentMovementDataArray[tension.agent2];
+            AgentMovementData agent1 = AgentSpatialHashGrid.RawAgentMovementDataArray[tension.agent1];
+            AgentMovementData agent2 = AgentSpatialHashGrid.RawAgentMovementDataArray[tension.agent2];
 
             RoutineResult result1 = RoutineResultArray[tension.agent1];
             RoutineResult result2 = RoutineResultArray[tension.agent2];
@@ -109,7 +103,7 @@ public struct TensionResolver : IJob
             }
         }
         //DECREASE SPLIT INTERVALS AND INFO
-        for (int index = 0; index < AgentMovementDataArray.Length; index++)
+        for (int index = 0; index < AgentSpatialHashGrid.RawAgentMovementDataArray.Length; index++)
         {
             RoutineResult result = RoutineResultArray[index];
             result.NewSplitInterval = (byte)math.select(result.NewSplitInterval - 1, 0, result.NewSplitInterval == 0);
@@ -212,16 +206,16 @@ public struct TensionResolver : IJob
 
         neighbours.Enqueue(agentIndex);
 
-        AgentMovementData agentData = AgentMovementDataArray[agentIndex];
+        AgentMovementData agentData = AgentSpatialHashGrid.RawAgentMovementDataArray[agentIndex];
         agentData.RoutineStatus |= AgentRoutineStatus.Traversed;
         agentData.TensionPowerIndex = index;
-        AgentMovementDataArray[agentIndex] = agentData;
+        AgentSpatialHashGrid.RawAgentMovementDataArray[agentIndex] = agentData;
 
         while (!neighbours.IsEmpty())
         {
             power++;
             int pickedIndex = neighbours.Dequeue();
-            agentData = AgentMovementDataArray[pickedIndex];
+            agentData = AgentSpatialHashGrid.RawAgentMovementDataArray[pickedIndex];
             GetNeighbourAgents(pickedIndex, agentData.Radius, new float2(agentData.Position.x, agentData.Position.z), 0.3f, neighbours, index, avoidance);
         }
         tensionPowerList.Add(power);
@@ -229,32 +223,29 @@ public struct TensionResolver : IJob
     }
     void GetNeighbourAgents(int agentIndex, float agentRadius, float2 agentPos, float maxDistance, NativeQueue<int> neighbours, int tensionPowerIndex, AvoidanceStatus avoidance)
     {
-        for (int i = 0; i < HashGridArray.Length; i++)
+        float checkRange = agentRadius + SeperationRangeAddition + maxDistance;
+        for (int i = 0; i < AgentSpatialHashGrid.GetGridCount(); i++)
         {
-            UnsafeList<HashTile> pickedGrid = HashGridArray[i];
-            GridTravesalData travData = HashGridUtils.GetGridTraversalData(agentPos, agentRadius + SeperationRangeAddition, i);
-            for (int j = travData.botLeft; j <= travData.topLeft; j += travData.gridColAmount)
+            SpatialHashGridIterator iterator = AgentSpatialHashGrid.GetIterator(agentPos, checkRange, i);
+            while (iterator.HasNext())
             {
-                for (int k = j; k < j + travData.horizontalSize; k++)
+                NativeSlice<AgentMovementData> agentsToCheck = iterator.GetNextRow(out int sliceStart);
+                for (int j = 0; j < agentsToCheck.Length; j++)
                 {
-                    HashTile tile = pickedGrid[k];
-                    for (int l = tile.Start; l < tile.Start + tile.Length; l++)
+                    AgentMovementData mateData = agentsToCheck[j];
+                    if (j + sliceStart == agentIndex) { continue; }
+                    if (mateData.Avoidance != avoidance) { continue; }
+
+                    float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
+                    float distance = math.distance(matePos, agentPos);
+
+                    if (distance > mateData.Radius + checkRange) { continue; }
+                    if ((mateData.RoutineStatus & AgentRoutineStatus.Traversed) != AgentRoutineStatus.Traversed)
                     {
-                        AgentMovementData mateData = AgentMovementDataArray[l];
-                        if (l == agentIndex) { continue; }
-                        if (mateData.Avoidance != avoidance) { continue; }
-
-                        float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
-                        float distance = math.distance(matePos, agentPos);
-
-                        if (distance > agentRadius + mateData.Radius + SeperationRangeAddition + maxDistance) { continue; }
-                        if ((mateData.RoutineStatus & AgentRoutineStatus.Traversed) != AgentRoutineStatus.Traversed)
-                        {
-                            mateData.RoutineStatus |= AgentRoutineStatus.Traversed;
-                            mateData.TensionPowerIndex = tensionPowerIndex;
-                            AgentMovementDataArray[l] = mateData;
-                            neighbours.Enqueue(l);
-                        }
+                        mateData.RoutineStatus |= AgentRoutineStatus.Traversed;
+                        mateData.TensionPowerIndex = tensionPowerIndex;
+                        agentsToCheck[j] = mateData;
+                        neighbours.Enqueue(j + sliceStart);
                     }
                 }
             }

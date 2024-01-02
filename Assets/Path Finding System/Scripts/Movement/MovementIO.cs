@@ -105,12 +105,17 @@ public class MovementIO
         //SCHEDULE AGENT COLLISION JOB
         CollisionResolutionJob colResJob = new CollisionResolutionJob()
         {
-            AgentMovementDataArray = AgentMovementDataList,
+            AgentSpatialHashGrid = new AgentSpatialHashGrid()
+            {
+                BaseSpatialGridSize = FlowFieldUtilities.BaseSpatialGridSize,
+                FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
+                FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
+                AgentHashGridArray = HashGridArray,
+                RawAgentMovementDataArray = AgentMovementDataList,
+            },
             AgentPositionChangeBuffer = AgentPositionChangeBuffer,
-            HashGridArray = HashGridArray,
-            SpatialGridUtils = new AgentSpatialGridUtils(0),
         };
-        JobHandle colResHandle = colResJob.Schedule(colResJob.AgentMovementDataArray.Length, 4, movDataHandle);
+        JobHandle colResHandle = colResJob.Schedule(agentDataArray.Length, 4, movDataHandle);
 
         //SCHEDULE LOCAL AVODANCE JOB
         LocalAvoidanceJob avoidanceJob = new LocalAvoidanceJob()
@@ -148,10 +153,15 @@ public class MovementIO
         //SCHEDULE TENSON RES JOB
         TensionResolver tensionResJob = new TensionResolver()
         {
-            HashGridArray = HashGridArray,
-            HashGridUtils = new AgentSpatialGridUtils(0),
+            AgentSpatialHashGrid = new AgentSpatialHashGrid()
+            {
+                BaseSpatialGridSize = FlowFieldUtilities.BaseSpatialGridSize,
+                FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
+                FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
+                AgentHashGridArray = HashGridArray,
+                RawAgentMovementDataArray = AgentMovementDataList,
+            },
             RoutineResultArray = RoutineResults,
-            AgentMovementDataArray = AgentMovementDataList,
             SeperationRangeAddition = BoidController.Instance.SeperationRangeAddition,
         };
         JobHandle tensionHandle = tensionResJob.Schedule(avoidanceHandle);
