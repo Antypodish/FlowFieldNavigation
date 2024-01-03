@@ -231,8 +231,10 @@ public struct LocalAvoidanceJob : IJobParallelFor
 
         float2 totalFrontSeperation = 0;
         float2 totalBackSeperation = 0;
+        float2 totalAvoidanceBackSeperation = 0;
         int frontSeperationCount = 0;
         int backSeperationCount = 0;
+        int totalAvoidanceBackSeperationCount = 0;
         bool hasForeignAgentAround = false;
         float checkRange = agentRadius + SeperationRangeAddition + 0.1f;
         for (int i = 0; i < AgentSpatialHashGrid.GetGridCount(); i++)
@@ -263,14 +265,23 @@ public struct LocalAvoidanceJob : IJobParallelFor
                     if (agentIsAvoiding && mateIsAvoidingNot) { continue; }
                     if(math.dot(currentDirection, matePos - agentPos) < 0)
                     {
-                        float2 seperationForce = math.normalizesafe(agentPos - matePos) * seperationOverlapping;
+                        float2 seperationDirection = math.normalizesafe(agentPos - matePos);
+
+                        float normalMultiplier = math.lerp(0, seperationOverlapping, seperationOverlapping / 1.16f);
+                        float2 seperationForce = seperationDirection * normalMultiplier;
                         seperationForce = math.select(seperationForce, new float2(sliceStart + j, 1), agentPos.Equals(matePos) && agentIndex < sliceStart + j);
                         totalBackSeperation += seperationForce;
                         backSeperationCount++;
+
+                        float avoidingMultiplier = math.lerp(0, seperationOverlapping, seperationOverlapping / 0.48f);
+                        seperationForce = seperationDirection * avoidingMultiplier;
+                        seperationForce = math.select(seperationForce, new float2(sliceStart + j, 1), agentPos.Equals(matePos) && agentIndex < sliceStart + j);
+                        totalAvoidanceBackSeperation += seperationForce;
+                        totalAvoidanceBackSeperationCount++;
                     }
                     else
                     {
-                        float2 seperationForce = math.normalizesafe(agentPos - matePos) * seperationOverlapping;
+                        float2 seperationForce = math.normalizesafe(agentPos - matePos) * math.lerp(0, seperationOverlapping, seperationOverlapping / 0.48f);
                         seperationForce = math.select(seperationForce, new float2(sliceStart + j, 1), agentPos.Equals(matePos) && agentIndex < sliceStart + j);
                         totalFrontSeperation += seperationForce;
                         frontSeperationCount++;
@@ -279,8 +290,8 @@ public struct LocalAvoidanceJob : IJobParallelFor
                 }
             }
         }
-        float2 totalSeperation = math.select(totalFrontSeperation, totalBackSeperation + totalFrontSeperation, hasForeignAgentAround);
-        int seperationCount = math.select(frontSeperationCount, backSeperationCount + frontSeperationCount, hasForeignAgentAround);
+        float2 totalSeperation = math.select(totalFrontSeperation + totalBackSeperation, totalFrontSeperation + totalAvoidanceBackSeperation, hasForeignAgentAround);
+        int seperationCount = math.select(frontSeperationCount + backSeperationCount, frontSeperationCount + totalAvoidanceBackSeperationCount, hasForeignAgentAround);
         if (seperationCount == 0) { return 0; }
         totalSeperation /= seperationCount;
         return totalSeperation * SeperationMultiplier;

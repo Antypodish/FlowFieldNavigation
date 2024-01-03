@@ -21,9 +21,9 @@ public struct AgentMovementUpdateJob : IJobParallelForTransform
         float3 pos = transform.position;
         float3 direction = new float3(data.Direction.x, 0f, data.Direction.y);
         float3 seperation = new float3(data.Seperation.x, 0f, data.Seperation.y);
-        float3 resultingDirection = direction + seperation;
-        if(math.length(direction + seperation) > 1) { resultingDirection = math.normalize(resultingDirection); }
-        float3 newPos = pos + (resultingDirection) * data.Speed * DeltaTime;
+        float3 resultingDirection = direction;
+        //if(math.length(direction + seperation) > 1) { resultingDirection = math.normalize(resultingDirection); }
+        float3 newPos = pos + (resultingDirection) * data.Speed * DeltaTime + seperation * DeltaTime;
         transform.position = newPos;
     }
 }
