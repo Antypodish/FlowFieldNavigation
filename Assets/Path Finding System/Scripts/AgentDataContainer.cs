@@ -1,8 +1,6 @@
-﻿using JetBrains.Annotations;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -16,21 +14,20 @@ public class AgentDataContainer
     public List<FlowFieldAgent> Agents;
     public TransformAccessArray AgentTransforms;
     public NativeList<AgentData> AgentDataList;
-
+    public NativeList<int> AgentFlockIndicies;
     public NativeList<int> AgentRequestedPathIndicies;
     public NativeList<int> AgentNewPathIndicies;
     public NativeList<int> AgentCurPathIndicies;
-    PathfindingManager _pathfindingManager;
 
-    public AgentDataContainer(PathfindingManager manager)
+    public AgentDataContainer()
     {
-        _pathfindingManager = manager;
         Agents = new List<FlowFieldAgent>();
         AgentTransforms = new TransformAccessArray(0);
         AgentDataList = new NativeList<AgentData>(Allocator.Persistent);
         AgentNewPathIndicies = new NativeList<int>(0, Allocator.Persistent);
         AgentCurPathIndicies = new NativeList<int>(0, Allocator.Persistent);
         AgentRequestedPathIndicies = new NativeList<int>(0, Allocator.Persistent);
+        AgentFlockIndicies = new NativeList<int>(Allocator.Persistent);
     }
     public void Subscribe(FlowFieldAgent agent)
     {
@@ -50,6 +47,7 @@ public class AgentDataContainer
         AgentNewPathIndicies.Add(-1);
         AgentCurPathIndicies.Add(-1);
         AgentRequestedPathIndicies.Add(-1);
+        AgentFlockIndicies.Add(0);
     }
     public void UnSubscribe(FlowFieldAgent agent)
     {

@@ -26,6 +26,9 @@ public class PathConstructionPipeline
     NativeList<int> _newPathIndicies;
     NativeList<int> _destinationUpdatedPathIndicies;
     NativeList<int> _expandedPathIndicies;
+    NativeList<Flock> FlockList;
+    NativeList<int> UnusedFlockIndexList;
+    NativeList<int> FlockIndiciesForEachInitialPathRequest;
     List<JobHandle> _pathfindingTaskOrganizationHandle;
     public PathConstructionPipeline(PathfindingManager pathfindingManager)
     {
@@ -46,6 +49,10 @@ public class PathConstructionPipeline
         _newPathIndicies = new NativeList<int>(Allocator.Persistent);
         _destinationUpdatedPathIndicies = new NativeList<int>(Allocator.Persistent);
         _expandedPathIndicies = new NativeList<int>(Allocator.Persistent);
+        FlockList = new NativeList<Flock>(Allocator.Persistent);
+        FlockList.Add(new Flock());
+        UnusedFlockIndexList = new NativeList<int>(Allocator.Persistent);
+        FlockIndiciesForEachInitialPathRequest = new NativeList<int>(Allocator.Persistent);
     }
     public void ShcedulePathRequestEvalutaion(NativeList<PathRequest> requestedPaths, NativeArray<UnsafeListReadOnly<byte>> costFieldCosts, NativeArray<SectorBitArray>.ReadOnly editedSectorBitArray, JobHandle islandFieldHandleAsDependency)
     {
@@ -62,6 +69,7 @@ public class PathConstructionPipeline
         NativeArray<AgentData> agentDataArray = _pathfindingManager.AgentDataContainer.AgentDataList;
         NativeArray<int> AgentNewPathIndicies = _pathfindingManager.AgentDataContainer.AgentNewPathIndicies;
         NativeArray<int> AgentCurPathIndicies = _pathfindingManager.AgentDataContainer.AgentCurPathIndicies;
+        NativeArray<int> AgentFlockIndexArray = _pathfindingManager.AgentDataContainer.AgentFlockIndicies;
         _islandFieldProcessors = _pathfindingManager.FieldProducer.GetAllIslandFieldProcessors();
         NativeArray<UnsafeList<DijkstraTile>> targetSectorIntegrations = _pathContainer.TargetSectorIntegrationList;
         NativeArray<PathLocationData> pathLocationDataArray = _pathContainer.PathLocationDataList;
@@ -71,6 +79,18 @@ public class PathConstructionPipeline
         NativeArray<PathRoutineData> pathRoutineDataArray = _pathContainer.PathRoutineDataList;
         NativeArray<UnsafeList<PathSectorState>> pathSectorStateTables = _pathContainer.PathSectorStateTableList;
         NativeArray<SectorBitArray> pathSectorBitArrays = _pathContainer.PathSectorBitArrays;
+        FlockIndiciesForEachInitialPathRequest.Length = requestedPaths.Length;
+
+        FlockIndexSubmissionJob flockSubmission = new FlockIndexSubmissionJob()
+        {
+            InitialPathRequestCount = requestedPaths.Length,
+            AgentFlockIndexArray = AgentFlockIndexArray,
+            AgentNewPathIndexArray = AgentNewPathIndicies,
+            FlockIndexForEachInitialRequest = FlockIndiciesForEachInitialPathRequest,
+            FlockList = FlockList,
+            UnusedFlockIndexList = UnusedFlockIndexList,
+        };
+        flockSubmission.Schedule().Complete();
 
         DynamicPathRequestSelfTargetingFixJob selfTargetingFix = new DynamicPathRequestSelfTargetingFixJob()
         {

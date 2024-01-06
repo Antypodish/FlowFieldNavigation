@@ -45,7 +45,7 @@ public class PathfindingManager : MonoBehaviour
         FieldProducer = new FieldProducer(_terrainGenerator.WalkabilityData, SectorColAmount);
         FieldProducer.CreateField(_maxCostfieldOffset, SectorColAmount, SectorMatrixColAmount, SectorMatrixRowAmount, RowAmount, ColumnAmount, TileSize);
 
-        AgentDataContainer = new AgentDataContainer(this);
+        AgentDataContainer = new AgentDataContainer();
         PathContainer = new PathContainer(this);
         _pathfindingRoutineUpdater = new PathfindingUpdateRoutine(this);
         _agentUpdater = new AgentUpdater(AgentDataContainer);

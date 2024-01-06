@@ -1,11 +1,7 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Unity.Burst;
+﻿using Unity.Burst;
 using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
-using Unity.VisualScripting;
-using UnityEngine.Jobs;
 
 [BurstCompile]
 public struct CollisionResolutionJob : IJobParallelFor
