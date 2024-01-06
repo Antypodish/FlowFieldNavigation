@@ -45,6 +45,8 @@ public class MovementIO
         NormalToHashed = new NativeList<int>(Allocator.Persistent);
         HashedToNormal = new NativeList<int>(Allocator.Persistent);
     }
+    NativeList<float> pushIncrease = new NativeList<float>(Allocator.Persistent);
+    NativeList<bool> pushing = new NativeList<bool>(Allocator.Persistent);
     public void ScheduleRoutine(NativeArray<UnsafeListReadOnly<byte>> costFieldCosts, JobHandle dependency)
     {
         NativeArray<AgentData> agentDataArray = _agentDataContainer.AgentDataList;
@@ -62,7 +64,8 @@ public class MovementIO
         AgentPositionChangeBuffer.Length = agentDataArray.Length;
         NormalToHashed.Length = agentDataArray.Length;
         HashedToNormal.Length = agentDataArray.Length;
-
+        pushIncrease.Length = agentDataArray.Length;
+        pushing.Length = agentDataArray.Length;
         //SPATIAL HASHING
         AgentDataSpatialHasherJob spatialHasher = new AgentDataSpatialHasherJob()
         {
@@ -202,6 +205,22 @@ public class MovementIO
         //UnityEngine.Debug.Log(sw.Elapsed.TotalMilliseconds);
         if (FlowFieldUtilities.DebugMode) { wallDetectionHandle.Complete(); }
         _routineHandle = wallDetectionHandle;
+        /*
+        for(int i = 0; i < pushing.Length; i++)
+        {
+            if (pushing[i])
+            {
+                pushIncrease[i] += 0.001f;
+            }
+            else
+            {
+                pushIncrease[i] = 0f;
+            }
+        }
+        for(int i = 0; i < pushing.Length; i++)
+        {
+            pushing[i] = false;
+        }*/
     }
     public void ForceComplete()
     {

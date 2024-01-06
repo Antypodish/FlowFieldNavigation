@@ -29,7 +29,7 @@ public struct CollisionResolutionJob : IJobParallelFor
                 NativeSlice<AgentMovementData> agentsToCheck = iterator.GetNextRow(out int sliceStart);
                 for (int j = 0; j < agentsToCheck.Length; j++)
                 {
-                    if (j == index) { continue; }
+                    if (j + sliceStart == index) { continue; }
 
                     AgentStatus mateStatus = agentsToCheck[j].Status;
                     float mateRadius = agentsToCheck[j].Radius;
@@ -37,12 +37,12 @@ public struct CollisionResolutionJob : IJobParallelFor
                     if (mateStatus == 0) { continue; }
                     float2 matePos = new float2(matePosition.x, matePosition.z);
                     float desiredDistance = agentRadius + mateRadius;
-                    desiredDistance *= math.select(1f, 0.85f, (mateStatus & AgentStatus.Moving) == AgentStatus.Moving);
                     float distance = math.distance(matePos, agentPos);
                     float overlapping = desiredDistance - distance;
                     if (overlapping <= 0) { continue; }
                     overlapping = math.select(overlapping / 2, overlapping, (mateStatus & AgentStatus.HoldGround) == AgentStatus.HoldGround);
                     float2 resolutionDirection = (agentPos - matePos) / distance;
+                    if (math.dot(agentData.CurrentDirection, matePos - agentPos) < 0) { continue; }
                     totalResolution += math.select(resolutionDirection * overlapping, 0f, distance == 0);
                     maxOverlapping = math.select(overlapping, maxOverlapping, maxOverlapping >= overlapping);
                 }

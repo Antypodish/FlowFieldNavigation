@@ -26,7 +26,6 @@ public class PathfindingUpdateRoutine
     public void RoutineUpdate(float deltaTime)
     {
         //FORCE COMPLETE JOBS FROM PREVIOUS UPDATE
-        _scheduler.ForceCompleteAll();
         _pathfindingManager.PathContainer.Update();
         //ADD NEW AGENTS
         for (int i = 0; i < _agentAddRequest.Count; i++)
@@ -40,6 +39,7 @@ public class PathfindingUpdateRoutine
 
         PathRequests.Clear();
         _costEditRequests.Clear();
+        _scheduler.ForceCompleteAll();
     }
     public RoutineScheduler GetRoutineScheduler()
     {
