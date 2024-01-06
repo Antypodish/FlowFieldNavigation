@@ -21,7 +21,7 @@ struct RoutineResultSendJob : IJob
             agentData.DesiredDirection = movementData.DesiredDirection;
             agentData.Direction = result.NewDirection;
             agentData.Seperation = result.NewSeperation;
-            agentData.Avoidance = AgentCurPathIndicies[i] == movementData.PathId ? result.NewAvoidance : AvoidanceStatus.None;
+            agentData.Avoidance = result.NewAvoidance;
             agentData.MovingAvoidance = result.NewMovingAvoidance;
             agentData.SplitInfo = result.NewSplitInfo;
             agentData.SplitInterval = result.NewSplitInterval;

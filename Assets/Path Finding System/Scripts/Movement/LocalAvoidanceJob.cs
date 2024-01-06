@@ -5,6 +5,7 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
+using UnityEngine;
 
 [BurstCompile]
 public struct LocalAvoidanceJob : IJobParallelFor
@@ -84,7 +85,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
         //GET ALIGNMENT
         if (newRoutineResult.NewAvoidance == 0 && movingAvoidance.Equals(0))
         {
-            float2 alignment = GetAlignment(agentPos, agent.DesiredDirection, agent.CurrentDirection, index, agent.PathId, agent.Radius, agent.Offset);
+            float2 alignment = GetAlignment(agentPos, agent.DesiredDirection, agent.CurrentDirection, index, agent.FlockIndex, agent.Radius, agent.Offset);
             newDirectionToSteer += alignment;
         }
 
@@ -111,7 +112,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
         float steeringToSeekLen = math.length(steeringToSeek);
         return math.select(steeringToSeek / steeringToSeekLen, 0f, steeringToSeekLen == 0) * math.select(SeekMultiplier, steeringToSeekLen, steeringToSeekLen < SeekMultiplier);
     }
-    float2 GetAlignment(float2 agentPos, float2 desiredDirection, float2 currentDirection, int agentIndex, int pahtId, float radius, int offset)
+    float2 GetAlignment(float2 agentPos, float2 desiredDirection, float2 currentDirection, int agentIndex, int agentFlockIndex, float radius, int offset)
     {
         float2 totalHeading = 0;
         int alignedAgentCount = 0;
@@ -141,7 +142,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
                     if (!HasStatusFlag(AgentStatus.Moving, mate.Status)) { continue; }
                     if (overlapping <= 0) { continue; }
                     if (IsNotAlignable(agentPos, mate.DesiredDirection, offset)) { continue; }
-                    if (mate.PathId == pahtId)
+                    if (mate.FlockIndex == agentFlockIndex && math.dot(mate.DesiredDirection, desiredDirection) > 0.5f)
                     {
                         totalHeading += mate.DesiredDirection;
                         alignedAgentCount = math.select(alignedAgentCount + 1, alignedAgentCount, mate.DesiredDirection.Equals(0));
@@ -163,7 +164,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
         bool agentIsAvoiding = agentAvoidance != 0;
         float2 totalSeperation = 0;
         int seperationCount = 0;
-        bool hasForeignAgentAround = true;
+        /*bool hasForeignAgentAround = true;
 
         float checkRange = agentRadius + SeperationRangeAddition + 0.1f;
         for (int i = 0; i < AgentSpatialHashGrid.GetGridCount(); i++)
@@ -220,7 +221,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
                 }
             }
         }
-
+        */
         if (seperationCount == 0) { return 0; }
         totalSeperation /= seperationCount;
         return totalSeperation * SeperationMultiplier;

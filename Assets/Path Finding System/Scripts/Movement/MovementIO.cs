@@ -52,6 +52,8 @@ public class MovementIO
         NativeArray<PathLocationData> exposedPathLocationDataArray = _pathfindingManager.PathContainer.ExposedPathLocationData;
         NativeArray<PathFlowData> exposedPathFlowDataArray = _pathfindingManager.PathContainer.ExposedPathFlowData;
         NativeArray<float2> exposedPathDestinationArray = _pathfindingManager.PathContainer.ExposedPathDestinations;
+        NativeArray<int> agentFlockIndexArray = _pathfindingManager.AgentDataContainer.AgentFlockIndicies;
+
         //CLEAR
         AgentMovementDataList.Clear();
         AgentPositionChangeBuffer.Clear();
@@ -72,6 +74,7 @@ public class MovementIO
             MaxAgentSize = FlowFieldUtilities.MaxAgentSize,
             MinAgentSize = FlowFieldUtilities.MinAgentSize,
             AgentDataArray = agentDataArray,
+            AgentFlockIndexArray = agentFlockIndexArray,
             AgentHashGridArray = HashGridArray,
             AgentMovementDataArray = AgentMovementDataList,
             NormalToHashed = NormalToHashed,
@@ -84,7 +87,6 @@ public class MovementIO
         int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
         AgentRoutineDataCalculationJob routineDataCalcJob = new AgentRoutineDataCalculationJob()
         {
-
             SectorMatrixColAmount = sectorMatrixColAmount,
             SectorSize = sectorSize,
             AgentCurPathIndicies = agentCurPathIndexArray,

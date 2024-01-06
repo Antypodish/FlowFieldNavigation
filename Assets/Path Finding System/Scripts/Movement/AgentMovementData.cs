@@ -16,6 +16,7 @@ public struct AgentMovementData
     public AvoidanceStatus Avoidance;
     public MovingAvoidanceStatus MovingAvoidance;
     public AgentRoutineStatus RoutineStatus;
+    public int FlockIndex;
     public int PathId;
     public int TensionPowerIndex;
 

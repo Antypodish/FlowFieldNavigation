@@ -14,7 +14,8 @@ public struct AgentDataSpatialHasherJob : IJob
     public float BaseSpatialGridSize;
     public float MinAgentSize;
     public float MaxAgentSize;
-    
+
+    [ReadOnly] public NativeArray<int> AgentFlockIndexArray;
     [ReadOnly] public NativeArray<AgentData> AgentDataArray;
     public NativeArray<AgentMovementData> AgentMovementDataArray;
     public NativeArray<UnsafeList<HashTile>> AgentHashGridArray;
@@ -111,6 +112,7 @@ public struct AgentDataSpatialHasherJob : IJob
                 TensionPowerIndex = -1,
                 SplitInfo = agentData.SplitInfo,
                 SplitInterval = agentData.SplitInterval,
+                FlockIndex = AgentFlockIndexArray[i],
             };
 
             tile.Length++;
