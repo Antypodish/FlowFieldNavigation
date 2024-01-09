@@ -8,4 +8,5 @@ public struct RoutineResult
     public byte NewSplitInfo;
     public AvoidanceStatus NewAvoidance;
     public MovingAvoidanceStatus NewMovingAvoidance;
+    public bool HasForeignInFront;
 }

@@ -27,7 +27,7 @@ public class AgentUpdater
         //MOVE
         AgentMovementUpdateJob movJob = new AgentMovementUpdateJob()
         {
-            DeltaTime = Time.deltaTime,
+            DeltaTime = Time.fixedDeltaTime,
             AgentDataArray = agentDataList,
         };
         movJob.Schedule(agentTransforms).Complete();

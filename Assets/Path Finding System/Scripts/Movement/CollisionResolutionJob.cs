@@ -7,15 +7,16 @@ using Unity.Mathematics;
 public struct CollisionResolutionJob : IJobParallelFor
 {
     [ReadOnly] public AgentSpatialHashGrid AgentSpatialHashGrid;
+    [ReadOnly] public NativeArray<RoutineResult> RoutineResultArray;
     [WriteOnly] public NativeArray<float2> AgentPositionChangeBuffer;
     public void Execute(int index)
     {
         AgentMovementData agentData = AgentSpatialHashGrid.RawAgentMovementDataArray[index];
-        if((agentData.Status & AgentStatus.Moving) != AgentStatus.Moving) { return; }
+        bool hasForeignInFront = RoutineResultArray[index].HasForeignInFront;
         float2 agentPos = new float2(agentData.Position.x, agentData.Position.z);
         float2 totalResolution = 0;
         float agentRadius = agentData.Radius;
-        float maxOverlapping = 0;
+        float maxResolutionLength = 0;
         float checkRange = agentRadius;
         for (int i = 0; i < AgentSpatialHashGrid.GetGridCount(); i++)
         {
@@ -29,25 +30,55 @@ public struct CollisionResolutionJob : IJobParallelFor
 
                     AgentStatus mateStatus = agentsToCheck[j].Status;
                     float mateRadius = agentsToCheck[j].Radius;
-                    float resoltionMultiplier = mateRadius / (agentRadius + mateRadius);
                     float3 matePosition = agentsToCheck[j].Position;
-                    if (mateStatus == 0) { continue; }
                     float2 matePos = new float2(matePosition.x, matePosition.z);
-                    float desiredDistance = agentRadius + mateRadius;
+                    float desiredDistance = checkRange + mateRadius;
                     float distance = math.distance(matePos, agentPos);
                     float overlapping = desiredDistance - distance;
                     if (overlapping <= 0) { continue; }
-                    
-                    overlapping = math.select(overlapping * resoltionMultiplier, overlapping, (mateStatus & AgentStatus.HoldGround) == AgentStatus.HoldGround);
-                    float2 resolutionDirection = (agentPos - matePos) / distance;
-                    if (math.dot(agentData.CurrentDirection, matePos - agentPos) < 0 && mateRadius <= agentRadius) { continue; }
-                    totalResolution += math.select(resolutionDirection * overlapping, 0f, distance == 0);
-                    maxOverlapping = math.select(overlapping, maxOverlapping, maxOverlapping >= overlapping);
+                    bool mateInFront = math.dot(agentData.CurrentDirection, matePos - agentPos) >= 0;
+                    float resoltionMultiplier = GetMultiplier(agentData.Status, mateStatus, agentRadius, mateRadius, hasForeignInFront, mateInFront);
+                    if (resoltionMultiplier == 0f) { continue; }
+                    resoltionMultiplier *= overlapping;
+                    totalResolution += math.normalizesafe(agentPos - matePos) * resoltionMultiplier;
+                    maxResolutionLength = math.select(resoltionMultiplier, maxResolutionLength, maxResolutionLength >= resoltionMultiplier);
                 }
             }
         }
         float totalResolutionLen = math.length(totalResolution);
-        totalResolution = math.select(totalResolution, totalResolution / totalResolutionLen * maxOverlapping, totalResolutionLen > maxOverlapping);
+        totalResolution = math.select(totalResolution, totalResolution / totalResolutionLen * maxResolutionLength, totalResolutionLen > maxResolutionLength);
         AgentPositionChangeBuffer[index] = totalResolution;
+    }
+    float GetMultiplier(AgentStatus agentStatus, AgentStatus mateStatus, float agentRadius, float mateRadius, bool hasForeignInFront, bool agentInFront)
+    {
+        if (agentStatus == mateStatus) 
+        {
+            float multiplier = math.select(1f, 0.2f, !agentInFront);
+            multiplier = math.select(multiplier, 0.55f, hasForeignInFront);
+            return mateRadius / (agentRadius + mateRadius) * multiplier;
+        }
+
+        bool agentMoving = (agentStatus & AgentStatus.Moving) == AgentStatus.Moving;
+        bool agentHoldGround = (agentStatus & AgentStatus.HoldGround) == AgentStatus.HoldGround;
+        bool agentStopped = agentStatus == 0;
+        bool mateMoving = (mateStatus & AgentStatus.Moving) == AgentStatus.Moving;
+        bool mateHoldGround = (mateStatus & AgentStatus.HoldGround) == AgentStatus.HoldGround;
+        bool mateStopped = mateStatus == 0;
+        const float fullMultiplier = 1f;
+        const float noneMultiplier = 0f;
+        const float stoppedMultiplier = 0.4f;
+        if (agentStopped && (mateMoving || mateHoldGround))
+        {
+            return stoppedMultiplier;
+        }
+        if (agentMoving && mateHoldGround)
+        {
+            return fullMultiplier;
+        }
+        if (agentMoving && mateStopped)
+        {
+            return 0.05f;
+        }
+        return noneMultiplier;
     }
 }

@@ -15,14 +15,12 @@ public struct AgentMovementUpdateJob : IJobParallelForTransform
     public void Execute(int index, TransformAccess transform)
     {
         AgentData data = AgentDataArray[index];
-        if(data.Direction.x == 0 && data.Direction.y == 0){ return; }
 
         //STOP IF CLOSE ENOUGH
         float3 pos = transform.position;
         float3 direction = new float3(data.Direction.x, 0f, data.Direction.y);
         float3 seperation = new float3(data.Seperation.x, 0f, data.Seperation.y);
         float3 resultingDirection = direction;
-        //if(math.length(direction + seperation) > 1) { resultingDirection = math.normalize(resultingDirection); }
         float3 newPos = pos + (resultingDirection) * data.Speed * DeltaTime + seperation * DeltaTime;
         transform.position = newPos;
     }

@@ -80,7 +80,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
             newDirectionToSteer = movingAvoidance;
         }
         //GET SEPERATION
-        float2 seperation = NewSeperation(agentPos, agent.CurrentDirection, agent.Radius, index, newRoutineResult.NewAvoidance, agent.PathId);
+        float2 seperation = NewSeperation(agentPos, agent.CurrentDirection, agent.Radius, index, newRoutineResult.NewAvoidance, agent.PathId, out newRoutineResult.HasForeignInFront);
 
         //GET ALIGNMENT
         if (newRoutineResult.NewAvoidance == 0 && movingAvoidance.Equals(0))
@@ -226,7 +226,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
         totalSeperation /= seperationCount;
         return totalSeperation * SeperationMultiplier;
     }
-    float2 NewSeperation(float2 agentPos, float2 currentDirection, float agentRadius, int agentIndex, AvoidanceStatus agentAvoidance, int pathId)
+    float2 NewSeperation(float2 agentPos, float2 currentDirection, float agentRadius, int agentIndex, AvoidanceStatus agentAvoidance, int pathId, out bool hasForeignInFront)
     {
         bool agentIsAvoiding = agentAvoidance != 0;
 
@@ -268,7 +268,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
                     {
                         float2 seperationDirection = math.normalizesafe(agentPos - matePos);
 
-                        float normalMultiplier = math.lerp(0, seperationOverlapping, seperationOverlapping / desiredForeignRange);
+                        float normalMultiplier = math.lerp(0, seperationOverlapping, seperationOverlapping / (desiredForeignRange * 0.3f));
                         float2 seperationForce = seperationDirection * normalMultiplier;
                         seperationForce = math.select(seperationForce, new float2(sliceStart + j, 1), agentPos.Equals(matePos) && agentIndex < sliceStart + j);
                         totalBackSeperation += seperationForce;
@@ -282,7 +282,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
                     }
                     else
                     {
-                        float frontMultiplier = math.lerp(0, seperationOverlapping, seperationOverlapping / (desiredForeignRange * 0.4f));
+                        float frontMultiplier = math.lerp(0, seperationOverlapping, seperationOverlapping / (desiredForeignRange * 0.5f));
                         float2 seperationForce = math.normalizesafe(agentPos - matePos) * frontMultiplier;
                         seperationForce = math.select(seperationForce, new float2(sliceStart + j, 1), agentPos.Equals(matePos) && agentIndex < sliceStart + j);
                         totalFrontSeperation += seperationForce;
@@ -292,6 +292,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
                 }
             }
         }
+        hasForeignInFront = hasForeignAgentAround;
         float2 totalSeperation = math.select(totalFrontSeperation + totalBackSeperation, totalFrontSeperation + totalAvoidanceBackSeperation, hasForeignAgentAround);
         int seperationCount = math.select(frontSeperationCount + backSeperationCount, frontSeperationCount + totalAvoidanceBackSeperationCount, hasForeignAgentAround);
         if (seperationCount == 0) { return 0; }
@@ -301,7 +302,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
     float2 GetStoppedSeperationForce(float2 agentPos, float agentRadius, int agentIndex)
     {
         float2 totalSeperation = 0;
-        float checkRange = agentRadius + SeperationRangeAddition;
+        float checkRange = 0.1f;
         for (int i = 0; i < AgentSpatialHashGrid.GetGridCount(); i++)
         {
             SpatialHashGridIterator iterator = AgentSpatialHashGrid.GetIterator(agentPos, checkRange, i);

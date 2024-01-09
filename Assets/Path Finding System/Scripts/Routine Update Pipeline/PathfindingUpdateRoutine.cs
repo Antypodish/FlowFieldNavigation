@@ -23,8 +23,9 @@ public class PathfindingUpdateRoutine
         _scheduler = new RoutineScheduler(pathfindingManager);
         _costEditRequests = new NativeList<CostEdit>(Allocator.Persistent);
     }
-    public void RoutineUpdate(float deltaTime)
+    public void RoutineUpdate()
     {
+        _scheduler.ForceCompleteAll();
         //FORCE COMPLETE JOBS FROM PREVIOUS UPDATE
         _pathfindingManager.PathContainer.Update();
         //ADD NEW AGENTS
@@ -39,7 +40,6 @@ public class PathfindingUpdateRoutine
 
         PathRequests.Clear();
         _costEditRequests.Clear();
-        _scheduler.ForceCompleteAll();
     }
     public RoutineScheduler GetRoutineScheduler()
     {
