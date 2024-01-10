@@ -10,14 +10,16 @@ struct RoutineResultSendJob : IJob
     [ReadOnly] public NativeArray<RoutineResult> RoutineResultArray;
     [ReadOnly] public NativeArray<int> NormalToHashed;
     [ReadOnly] public NativeArray<int> AgentCurPathIndicies;
+    [ReadOnly] public NativeArray<bool> AgentDestinationReachedArray;
     public NativeArray<AgentData> AgentDataArray;
     public void Execute()
     {
         for (int i = 0; i < RoutineResultArray.Length; i++)
         {
             AgentData agentData = AgentDataArray[i];
-            AgentMovementData movementData = MovementDataArray[NormalToHashed[i]];
-            RoutineResult result = RoutineResultArray[NormalToHashed[i]];
+            int hashedIndex = NormalToHashed[i];
+            AgentMovementData movementData = MovementDataArray[hashedIndex];
+            RoutineResult result = RoutineResultArray[hashedIndex];
             agentData.DesiredDirection = movementData.DesiredDirection;
             agentData.Direction = result.NewDirection;
             agentData.Seperation = result.NewSeperation;
@@ -25,6 +27,7 @@ struct RoutineResultSendJob : IJob
             agentData.MovingAvoidance = result.NewMovingAvoidance;
             agentData.SplitInfo = result.NewSplitInfo;
             agentData.SplitInterval = result.NewSplitInterval;
+            agentData.Status = AgentDestinationReachedArray[i] ? 0 : agentData.Status;
             AgentDataArray[i] = agentData;
         }
     }

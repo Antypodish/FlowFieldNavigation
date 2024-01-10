@@ -124,10 +124,12 @@ public class RoutineScheduler
 
         _movementIO.ForceComplete();
         _pathConstructionPipeline.ForceComplete();
+        SendRoutineResultsToAgents();
 
         //TRANSFER NEW PATH INDICIES TO CUR PATH INDICIES
         NewPathToCurPathTransferJob newPathToCurPathTransferJob = new NewPathToCurPathTransferJob()
         {
+            AgentDestinationReachedArray = _pathfindingManager.AgentDataContainer.AgentDestinationReachedArray,
             AgentDataArray = _pathfindingManager.AgentDataContainer.AgentDataList,
             AgentCurPathIndicies = _pathfindingManager.AgentDataContainer.AgentCurPathIndicies,
             AgentNewPathIndicies = _pathfindingManager.AgentDataContainer.AgentNewPathIndicies,
@@ -139,7 +141,6 @@ public class RoutineScheduler
         CurrentSourcePositions.Clear();
         EditedSectorBitArray.Clear();
         NewCostEditRequests.Clear();
-        SendRoutineResultsToAgents();
     }
     public MovementIO GetRoutineDataProducer()
     {

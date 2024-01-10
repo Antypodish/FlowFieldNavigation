@@ -27,6 +27,7 @@ public class PathfindingManager : MonoBehaviour
     public PathContainer PathContainer;
     public AgentDataContainer AgentDataContainer;
     public ObstacleContainer ObstacleContainer;
+    public FlockDataContainer FlockContainer;
     float _lastAgentUpdateTime = 0;
     PathfindingUpdateRoutine _pathfindingRoutineUpdater;
     AgentUpdater _agentUpdater;
@@ -50,6 +51,7 @@ public class PathfindingManager : MonoBehaviour
         _pathfindingRoutineUpdater = new PathfindingUpdateRoutine(this);
         _agentUpdater = new AgentUpdater(AgentDataContainer);
         ObstacleContainer = new ObstacleContainer();
+        FlockContainer = new FlockDataContainer();
     }
     private void Update()
     {

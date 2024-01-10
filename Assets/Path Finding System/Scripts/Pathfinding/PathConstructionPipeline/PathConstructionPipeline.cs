@@ -26,8 +26,6 @@ public class PathConstructionPipeline
     NativeList<int> _newPathIndicies;
     NativeList<int> _destinationUpdatedPathIndicies;
     NativeList<int> _expandedPathIndicies;
-    NativeList<Flock> FlockList;
-    NativeList<int> UnusedFlockIndexList;
     NativeList<int> FlockIndiciesForEachInitialPathRequest;
     List<JobHandle> _pathfindingTaskOrganizationHandle;
     public PathConstructionPipeline(PathfindingManager pathfindingManager)
@@ -49,9 +47,6 @@ public class PathConstructionPipeline
         _newPathIndicies = new NativeList<int>(Allocator.Persistent);
         _destinationUpdatedPathIndicies = new NativeList<int>(Allocator.Persistent);
         _expandedPathIndicies = new NativeList<int>(Allocator.Persistent);
-        FlockList = new NativeList<Flock>(Allocator.Persistent);
-        FlockList.Add(new Flock());
-        UnusedFlockIndexList = new NativeList<int>(Allocator.Persistent);
         FlockIndiciesForEachInitialPathRequest = new NativeList<int>(Allocator.Persistent);
     }
     public void ShcedulePathRequestEvalutaion(NativeList<PathRequest> requestedPaths, NativeArray<UnsafeListReadOnly<byte>> costFieldCosts, NativeArray<SectorBitArray>.ReadOnly editedSectorBitArray, JobHandle islandFieldHandleAsDependency)
@@ -87,8 +82,8 @@ public class PathConstructionPipeline
             AgentFlockIndexArray = AgentFlockIndexArray,
             AgentNewPathIndexArray = AgentNewPathIndicies,
             FlockIndexForEachInitialRequest = FlockIndiciesForEachInitialPathRequest,
-            FlockList = FlockList,
-            UnusedFlockIndexList = UnusedFlockIndexList,
+            FlockList = _pathfindingManager.FlockContainer.FlockList,
+            UnusedFlockIndexList = _pathfindingManager.FlockContainer.UnusedFlockIndexList,
         };
         flockSubmission.Schedule().Complete();
 

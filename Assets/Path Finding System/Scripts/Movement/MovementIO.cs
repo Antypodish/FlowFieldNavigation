@@ -15,6 +15,7 @@ public class MovementIO
     public NativeList<int> NormalToHashed;
     public NativeList<int> HashedToNormal;
     public NativeArray<UnsafeList<HashTile>> HashGridArray;
+    public NativeList<int> FlockStoppedAgentCountArray;
 
     JobHandle _routineHandle;
     public MovementIO(AgentDataContainer agentDataContainer, PathfindingManager pathfindingManager)
@@ -44,6 +45,7 @@ public class MovementIO
         }
         NormalToHashed = new NativeList<int>(Allocator.Persistent);
         HashedToNormal = new NativeList<int>(Allocator.Persistent);
+        FlockStoppedAgentCountArray = new NativeList<int>(Allocator.Persistent);
     }
     public void ScheduleRoutine(NativeArray<UnsafeListReadOnly<byte>> costFieldCosts, JobHandle dependency)
     {
@@ -202,9 +204,28 @@ public class MovementIO
         };
         JobHandle wallDetectionHandle = wallDetection.Schedule(agentDataArray.Length, 64, wallCollisionHandle);
 
+        FlockStoppedAgentCountArray.Length = _pathfindingManager.FlockContainer.FlockList.Length;
+        DestinationReachedAgentCountJob destinationReachedCounter = new DestinationReachedAgentCountJob()
+        {
+            AgentDestinationReachStatus = _agentDataContainer.AgentDestinationReachedArray,
+            AgentFlockIndexArray = _agentDataContainer.AgentFlockIndicies,
+            FlockStoppedAgentCountArray = FlockStoppedAgentCountArray,
+        };
+        JobHandle destinationReachedCounterHandle = destinationReachedCounter.Schedule(wallDetectionHandle);
+
+        AgentStoppingJob stoppingJob = new AgentStoppingJob()
+        {
+            AgentDestinationReachStatus = _agentDataContainer.AgentDestinationReachedArray,
+            FlockStoppedAgentCountArray = FlockStoppedAgentCountArray,
+            AgentFlockIndexArray = _agentDataContainer.AgentFlockIndicies,
+            AgentMovementDataArray = AgentMovementDataList,
+            NormalToHashed = NormalToHashed,
+        };
+        JobHandle stoppingHandle = stoppingJob.Schedule(agentDataArray.Length, 64, destinationReachedCounterHandle);
+
         //UnityEngine.Debug.Log(sw.Elapsed.TotalMilliseconds);
-        if (FlowFieldUtilities.DebugMode) { wallDetectionHandle.Complete(); }
-        _routineHandle = wallDetectionHandle;
+        if (FlowFieldUtilities.DebugMode) { stoppingHandle.Complete(); }
+        _routineHandle = stoppingHandle;
     }
     public void ForceComplete()
     {

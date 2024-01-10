@@ -9,6 +9,7 @@ public struct NewPathToCurPathTransferJob : IJob
     public NativeArray<int> AgentCurPathIndicies;
     public NativeArray<int> AgentNewPathIndicies;
     public NativeArray<int> PathSubscribers;
+    public NativeArray<bool> AgentDestinationReachedArray;
     public void Execute()
     {
         for (int i = 0; i < AgentCurPathIndicies.Length; i++)
@@ -31,6 +32,7 @@ public struct NewPathToCurPathTransferJob : IJob
             AgentData agent = AgentDataArray[i];
             agent.ClearStatusBit(AgentStatus.HoldGround);
             agent.SetStatusBit(AgentStatus.Moving);
+            AgentDestinationReachedArray[i] = false;
             AgentDataArray[i] = agent;
         }
     }

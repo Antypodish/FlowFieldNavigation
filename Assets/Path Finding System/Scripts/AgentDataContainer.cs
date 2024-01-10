@@ -14,6 +14,7 @@ public class AgentDataContainer
     public List<FlowFieldAgent> Agents;
     public TransformAccessArray AgentTransforms;
     public NativeList<AgentData> AgentDataList;
+    public NativeList<bool> AgentDestinationReachedArray;
     public NativeList<int> AgentFlockIndicies;
     public NativeList<int> AgentRequestedPathIndicies;
     public NativeList<int> AgentNewPathIndicies;
@@ -28,6 +29,7 @@ public class AgentDataContainer
         AgentCurPathIndicies = new NativeList<int>(0, Allocator.Persistent);
         AgentRequestedPathIndicies = new NativeList<int>(0, Allocator.Persistent);
         AgentFlockIndicies = new NativeList<int>(Allocator.Persistent);
+        AgentDestinationReachedArray = new NativeList<bool>(Allocator.Persistent);
     }
     public void Subscribe(FlowFieldAgent agent)
     {
@@ -48,6 +50,7 @@ public class AgentDataContainer
         AgentCurPathIndicies.Add(-1);
         AgentRequestedPathIndicies.Add(-1);
         AgentFlockIndicies.Add(0);
+        AgentDestinationReachedArray.Add(false);
     }
     public void UnSubscribe(FlowFieldAgent agent)
     {
@@ -106,6 +109,7 @@ public class AgentDataContainer
 
         RoutineResultSendJob directionSetJob = new RoutineResultSendJob()
         {
+            AgentDestinationReachedArray = AgentDestinationReachedArray,
             AgentCurPathIndicies = AgentCurPathIndicies,
             MovementDataArray = movementDataArray,
             AgentDataArray = AgentDataList,

@@ -36,7 +36,7 @@ public struct CollisionResolutionJob : IJobParallelFor
                     float distance = math.distance(matePos, agentPos);
                     float overlapping = desiredDistance - distance;
                     if (overlapping <= 0) { continue; }
-                    bool mateInFront = math.dot(agentData.CurrentDirection, matePos - agentPos) >= 0;
+                    bool mateInFront = math.dot(agentData.CurrentDirection, matePos - agentPos) > 0;
                     float resoltionMultiplier = GetMultiplier(agentData.Status, mateStatus, agentRadius, mateRadius, hasForeignInFront, mateInFront);
                     if (resoltionMultiplier == 0f) { continue; }
                     resoltionMultiplier *= overlapping;
@@ -51,13 +51,6 @@ public struct CollisionResolutionJob : IJobParallelFor
     }
     float GetMultiplier(AgentStatus agentStatus, AgentStatus mateStatus, float agentRadius, float mateRadius, bool hasForeignInFront, bool agentInFront)
     {
-        if (agentStatus == mateStatus) 
-        {
-            float multiplier = math.select(1f, 0.2f, !agentInFront);
-            multiplier = math.select(multiplier, 0.55f, hasForeignInFront);
-            return mateRadius / (agentRadius + mateRadius) * multiplier;
-        }
-
         bool agentMoving = (agentStatus & AgentStatus.Moving) == AgentStatus.Moving;
         bool agentHoldGround = (agentStatus & AgentStatus.HoldGround) == AgentStatus.HoldGround;
         bool agentStopped = agentStatus == 0;
@@ -67,6 +60,16 @@ public struct CollisionResolutionJob : IJobParallelFor
         const float fullMultiplier = 1f;
         const float noneMultiplier = 0f;
         const float stoppedMultiplier = 0.4f;
+        if(agentMoving && mateMoving)
+        {
+            float multiplier = math.select(1f, 0.2f, !agentInFront);
+            multiplier = math.select(multiplier, 0.55f, hasForeignInFront);
+            return mateRadius / (agentRadius + mateRadius) * multiplier;
+        }
+        if(agentStopped && mateStopped)
+        {
+            return mateRadius / (agentRadius + mateRadius);
+        }
         if (agentStopped && (mateMoving || mateHoldGround))
         {
             return stoppedMultiplier;
