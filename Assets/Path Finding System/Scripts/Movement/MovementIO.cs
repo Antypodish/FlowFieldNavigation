@@ -15,7 +15,7 @@ public class MovementIO
     public NativeList<int> NormalToHashed;
     public NativeList<int> HashedToNormal;
     public NativeArray<UnsafeList<HashTile>> HashGridArray;
-    public NativeList<int> FlockStoppedAgentCountArray;
+    public NativeList<FlockDestinationReachData> FlockStoppedAgentCountArray;
 
     JobHandle _routineHandle;
     public MovementIO(AgentDataContainer agentDataContainer, PathfindingManager pathfindingManager)
@@ -45,7 +45,7 @@ public class MovementIO
         }
         NormalToHashed = new NativeList<int>(Allocator.Persistent);
         HashedToNormal = new NativeList<int>(Allocator.Persistent);
-        FlockStoppedAgentCountArray = new NativeList<int>(Allocator.Persistent);
+        FlockStoppedAgentCountArray = new NativeList<FlockDestinationReachData>(Allocator.Persistent);
     }
     public void ScheduleRoutine(NativeArray<UnsafeListReadOnly<byte>> costFieldCosts, JobHandle dependency)
     {
@@ -209,14 +209,16 @@ public class MovementIO
         {
             AgentDestinationReachStatus = _agentDataContainer.AgentDestinationReachedArray,
             AgentFlockIndexArray = _agentDataContainer.AgentFlockIndicies,
-            FlockStoppedAgentCountArray = FlockStoppedAgentCountArray,
+            FlockDestinationReachArray = FlockStoppedAgentCountArray,
+            AgentMovementDataArray = AgentMovementDataList,
+            NormalToHashed = NormalToHashed,
         };
         JobHandle destinationReachedCounterHandle = destinationReachedCounter.Schedule(wallDetectionHandle);
 
         AgentStoppingJob stoppingJob = new AgentStoppingJob()
         {
             AgentDestinationReachStatus = _agentDataContainer.AgentDestinationReachedArray,
-            FlockStoppedAgentCountArray = FlockStoppedAgentCountArray,
+            FlockDestinationReachArray = FlockStoppedAgentCountArray,
             AgentFlockIndexArray = _agentDataContainer.AgentFlockIndicies,
             AgentMovementDataArray = AgentMovementDataList,
             NormalToHashed = NormalToHashed,

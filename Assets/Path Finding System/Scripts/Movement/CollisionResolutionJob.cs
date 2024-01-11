@@ -51,6 +51,9 @@ public struct CollisionResolutionJob : IJobParallelFor
             }
         }
         float totalResolutionLen = math.length(totalResolution);
+
+        //Enable if you want speed to be considered while calculating maxResolutionLength. More realistic, but increased overlapping.
+        //maxResolutionLength = math.select(agentData.Speed * 0.016f, maxResolutionLength, maxResolutionLength < agentData.Speed * 0.016f);
         totalResolution = math.select(totalResolution, totalResolution / totalResolutionLen * maxResolutionLength, totalResolutionLen > maxResolutionLength);
         AgentPositionChangeBuffer[index] = totalResolution;
     }
