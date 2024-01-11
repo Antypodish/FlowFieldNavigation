@@ -37,7 +37,7 @@ public struct AgentRoutineDataCalculationJob : IJobParallelFor
         {
             data.Local1d = (ushort)local1d;
             data.Offset = FlowFieldUtilities.RadiusToOffset(data.Radius, TileSize);
-            data.DesiredDirection = 0;
+            data.DesiredDirection = data.CurrentDirection;
             AgentMovementData[index] = data;
             return;
         }
@@ -50,7 +50,7 @@ public struct AgentRoutineDataCalculationJob : IJobParallelFor
         {
             data.Local1d = (ushort)local1d;
             data.Offset = FlowFieldUtilities.RadiusToOffset(data.Radius, TileSize);
-            data.DesiredDirection = 0;
+            data.DesiredDirection = data.CurrentDirection;
             AgentMovementData[index] = data;
             return;
         }

@@ -8,7 +8,7 @@ public struct CollisionResolutionJob : IJobParallelFor
 {
     [ReadOnly] public AgentSpatialHashGrid AgentSpatialHashGrid;
     [ReadOnly] public NativeArray<RoutineResult> RoutineResultArray;
-    [WriteOnly] public NativeArray<float2> AgentPositionChangeBuffer;
+    public NativeArray<float2> AgentPositionChangeBuffer;
     public void Execute(int index)
     {
         AgentMovementData agentData = AgentSpatialHashGrid.RawAgentMovementDataArray[index];
@@ -28,19 +28,24 @@ public struct CollisionResolutionJob : IJobParallelFor
                 {
                     if (j + sliceStart == index) { continue; }
 
-                    AgentStatus mateStatus = agentsToCheck[j].Status;
-                    float mateRadius = agentsToCheck[j].Radius;
-                    float3 matePosition = agentsToCheck[j].Position;
+                    AgentMovementData mateData = agentsToCheck[j];
+                    AgentStatus mateStatus = mateData.Status;
+                    float mateRadius = mateData.Radius;
+                    float3 matePosition = mateData.Position;
                     float2 matePos = new float2(matePosition.x, matePosition.z);
                     float desiredDistance = checkRange + mateRadius;
                     float distance = math.distance(matePos, agentPos);
                     float overlapping = desiredDistance - distance;
                     if (overlapping <= 0) { continue; }
                     bool mateInFront = math.dot(agentData.CurrentDirection, matePos - agentPos) > 0;
-                    float resoltionMultiplier = GetMultiplier(agentData.Status, mateStatus, agentRadius, mateRadius, hasForeignInFront, mateInFront);
+                    bool agentInFront = math.dot(mateData.CurrentDirection, agentPos - matePos) > 0;
+                    float resoltionMultiplier = GetMultiplier(agentData.Status, mateStatus, agentRadius, mateRadius, hasForeignInFront, mateInFront, agentInFront);
                     if (resoltionMultiplier == 0f) { continue; }
                     resoltionMultiplier *= overlapping;
-                    totalResolution += math.normalizesafe(agentPos - matePos) * resoltionMultiplier;
+
+                    float2 resolutionForce = math.normalizesafe(agentPos - matePos) * resoltionMultiplier;
+                    resolutionForce = math.select(resolutionForce, new float2(sliceStart + j, 1), distance == 0 && index < sliceStart + j);
+                    totalResolution += resolutionForce;
                     maxResolutionLength = math.select(resoltionMultiplier, maxResolutionLength, maxResolutionLength >= resoltionMultiplier);
                 }
             }
@@ -49,7 +54,7 @@ public struct CollisionResolutionJob : IJobParallelFor
         totalResolution = math.select(totalResolution, totalResolution / totalResolutionLen * maxResolutionLength, totalResolutionLen > maxResolutionLength);
         AgentPositionChangeBuffer[index] = totalResolution;
     }
-    float GetMultiplier(AgentStatus agentStatus, AgentStatus mateStatus, float agentRadius, float mateRadius, bool hasForeignInFront, bool agentInFront)
+    float GetMultiplier(AgentStatus agentStatus, AgentStatus mateStatus, float agentRadius, float mateRadius, bool hasForeignInFront, bool mateInFront, bool agentInFront)
     {
         bool agentMoving = (agentStatus & AgentStatus.Moving) == AgentStatus.Moving;
         bool agentHoldGround = (agentStatus & AgentStatus.HoldGround) == AgentStatus.HoldGround;
@@ -59,16 +64,18 @@ public struct CollisionResolutionJob : IJobParallelFor
         bool mateStopped = mateStatus == 0;
         const float fullMultiplier = 1f;
         const float noneMultiplier = 0f;
-        const float stoppedMultiplier = 0.4f;
+        const float stoppedMultiplier = 0.9f;
         if(agentMoving && mateMoving)
         {
-            float multiplier = math.select(1f, 0.2f, !agentInFront);
+            float multiplier = math.select(1f, 0.2f, !mateInFront);
             multiplier = math.select(multiplier, 0.55f, hasForeignInFront);
             return mateRadius / (agentRadius + mateRadius) * multiplier;
         }
         if(agentStopped && mateStopped)
         {
-            return mateRadius / (agentRadius + mateRadius);
+            if (!mateInFront) { return 0.7f; }
+            if(mateInFront && agentInFront) { return 0.5f; }
+            return 0.1f;
         }
         if (agentStopped && (mateMoving || mateHoldGround))
         {

@@ -1,4 +1,5 @@
-﻿using Unity.Burst;
+﻿using System;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -62,25 +63,25 @@ public struct AgentWallCollisionJob : IJobParallelFor
         {
             case WallDirection.N:
                 wall.y = clearTilePos.y + HalfTileSize;
-                change.y = wall.y - (agentPos.y + agentRadius);
+                change.y = wall.y - (agentPos.y + agentRadius) - 0.0001f;
                 distanceSqrd = (wall.y - agentPos.y) * (wall.y - agentPos.y);
                 notCloseEnough = distanceSqrd > agentRadiusSqrd;
                 break;
             case WallDirection.E:
                 wall.x = clearTilePos.x + HalfTileSize;
-                change.x = wall.x - (agentPos.x + agentRadius);
+                change.x = wall.x - (agentPos.x + agentRadius) - 0.0001f;
                 distanceSqrd = (wall.x - agentPos.x) * (wall.x - agentPos.x);
                 notCloseEnough = distanceSqrd > agentRadiusSqrd;
                 break;
             case WallDirection.S:
                 wall.y = clearTilePos.y - HalfTileSize;
-                change.y = wall.y - (agentPos.y - agentRadius);
+                change.y = wall.y - (agentPos.y - agentRadius) + 0.0001f;
                 distanceSqrd = (wall.y - agentPos.y) * (wall.y - agentPos.y);
                 notCloseEnough = distanceSqrd > agentRadiusSqrd;
                 break;
             case WallDirection.W:
                 wall.x = clearTilePos.x - HalfTileSize;
-                change.x = wall.x - (agentPos.x - agentRadius);
+                change.x = wall.x - (agentPos.x - agentRadius) + 0.0001f;
                 distanceSqrd = (wall.x - agentPos.x) * (wall.x - agentPos.x);
                 notCloseEnough = distanceSqrd > agentRadiusSqrd;
                 break;

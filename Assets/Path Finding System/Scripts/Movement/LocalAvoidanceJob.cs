@@ -88,10 +88,14 @@ public struct LocalAvoidanceJob : IJobParallelFor
             float2 alignment = GetAlignment(agentPos, agent.DesiredDirection, agent.CurrentDirection, index, agent.FlockIndex, agent.Radius, agent.Offset);
             newDirectionToSteer += alignment;
         }
-
+        if(!HasStatusFlag(AgentStatus.Moving, agent.Status))
+        {
+            float2 stoppedSeperation = GetStoppedSeperationForce(agentPos, agent.CurrentDirection, agent.Radius, index);
+            newDirectionToSteer = math.select(stoppedSeperation, agent.CurrentDirection, stoppedSeperation.Equals(0));
+        }
 
         //GET SEEK
-        float2 seek = GetSeek(agent.CurrentDirection, newDirectionToSteer);
+        float2 seek = GetSeek(agent.CurrentDirection, newDirectionToSteer, agent.Status);
 
         //COMBINE FORCES
         if (HasStatusFlag(AgentStatus.Moving, agent.Status))
@@ -101,16 +105,17 @@ public struct LocalAvoidanceJob : IJobParallelFor
         }
         else
         {
-            newRoutineResult.NewDirection = (agent.Status & AgentStatus.HoldGround) == AgentStatus.HoldGround ? 0f : GetStoppedSeperationForce(agentPos, agent.Radius, index);
+            newRoutineResult.NewDirection = agent.CurrentDirection + seek;
         }
         RoutineResultArray[index] = newRoutineResult;
     }
 
-    float2 GetSeek(float2 currentDirection, float2 desiredDirection)
+    float2 GetSeek(float2 currentDirection, float2 desiredDirection, AgentStatus agentStatus)
     {
         float2 steeringToSeek = desiredDirection - currentDirection;
         float steeringToSeekLen = math.length(steeringToSeek);
-        return math.select(steeringToSeek / steeringToSeekLen, 0f, steeringToSeekLen == 0) * math.select(SeekMultiplier, steeringToSeekLen, steeringToSeekLen < SeekMultiplier);
+        float seekmultiplier = math.select(SeekMultiplier, 0.05f, agentStatus == 0);
+        return math.select(steeringToSeek / steeringToSeekLen, 0f, steeringToSeekLen == 0) * math.select(seekmultiplier, steeringToSeekLen, steeringToSeekLen < seekmultiplier);
     }
     float2 GetAlignment(float2 agentPos, float2 desiredDirection, float2 currentDirection, int agentIndex, int agentFlockIndex, float radius, int offset)
     {
@@ -158,73 +163,6 @@ public struct LocalAvoidanceJob : IJobParallelFor
             return math.select((toalCurrentHeading / curAlignedAgentCount - desiredDirection) * AlignmentMultiplier, 0, curAlignedAgentCount == 0);
         }
         return math.select(totalHeading / alignedAgentCount - desiredDirection, 0, alignedAgentCount == 0);
-    }
-    float2 GetSeperation(float2 agentPos, float2 currentDirection, float agentRadius, int agentIndex, AvoidanceStatus agentAvoidance, int pathId)
-    {
-        bool agentIsAvoiding = agentAvoidance != 0;
-        float2 totalSeperation = 0;
-        int seperationCount = 0;
-        /*bool hasForeignAgentAround = true;
-
-        float checkRange = agentRadius + SeperationRangeAddition + 0.1f;
-        for (int i = 0; i < AgentSpatialHashGrid.GetGridCount(); i++)
-        {
-            SpatialHashGridIterator iterator = AgentSpatialHashGrid.GetIterator(agentPos, checkRange, i);
-            while (iterator.HasNext())
-            {
-                NativeSlice<AgentMovementData> agentsToCheck = iterator.GetNextRow(out int sliceStart);
-                for (int j = 0; j < agentsToCheck.Length; j++)
-                {
-                    AgentMovementData mate = agentsToCheck[j];
-                    float2 matePos = new float2(mate.Position.x, mate.Position.z);
-                    float distance = math.distance(matePos, agentPos);
-                    float desiredRange = mate.Radius + checkRange;
-                    if (mate.PathId == pathId) { continue; }
-                    float overlapping = desiredRange - distance;
-                    if (overlapping <= 0) { continue; }
-                    if (!HasStatusFlag(AgentStatus.Moving, mate.Status)) { continue; }
-                    if (math.dot(currentDirection, mate.CurrentDirection) > 0) { continue; }
-                    //if(math.dot(desiredDirection, matePos - agentPos) < 0) { continue; }
-                    hasForeignAgentAround = false;
-                    break;
-                }
-                if (!hasForeignAgentAround) { break; }
-            }
-            if (!hasForeignAgentAround) { break; }
-        }
-        checkRange -= 0.1f;
-
-        for (int i = 0; i < AgentSpatialHashGrid.GetGridCount(); i++)
-        {
-            SpatialHashGridIterator iterator = AgentSpatialHashGrid.GetIterator(agentPos, checkRange, i);
-            while (iterator.HasNext())
-            {
-                NativeSlice<AgentMovementData> agentsToCheck = iterator.GetNextRow(out int sliceStart);
-                for (int j = 0; j < agentsToCheck.Length; j++)
-                {
-                    AgentMovementData mate = agentsToCheck[j];
-                    float2 matePos = new float2(mate.Position.x, mate.Position.z);
-                    float distance = math.distance(matePos, agentPos);
-                    float desiredRange = mate.Radius + agentRadius + SeperationRangeAddition;
-                    float overlapping = desiredRange - distance;
-                    bool mateIsAvoidingNot = mate.Avoidance == 0;
-                    if (overlapping <= 0) { continue; }
-                    if (!HasStatusFlag(AgentStatus.Moving, mate.Status)) { continue; }
-                    if (agentIsAvoiding && mateIsAvoidingNot) { continue; }
-                    if (math.dot(currentDirection, matePos - agentPos) < 0 && hasForeignAgentAround) { continue; }
-
-                    float2 seperationForce = math.normalizesafe(agentPos - matePos) * overlapping;
-                    seperationForce = math.select(seperationForce, new float2(sliceStart + j, 1), agentPos.Equals(matePos) && agentIndex < sliceStart + j);
-
-                    totalSeperation += seperationForce;
-                    seperationCount++;
-                }
-            }
-        }
-        */
-        if (seperationCount == 0) { return 0; }
-        totalSeperation /= seperationCount;
-        return totalSeperation * SeperationMultiplier;
     }
     float2 NewSeperation(float2 agentPos, float2 currentDirection, float agentRadius, int agentIndex, AvoidanceStatus agentAvoidance, int pathId, out bool hasForeignInFront)
     {
@@ -299,10 +237,12 @@ public struct LocalAvoidanceJob : IJobParallelFor
         totalSeperation /= seperationCount;
         return totalSeperation * math.select(SeperationMultiplier, SeperationMultiplier * 0.4f, hasForeignAgentAround);
     }
-    float2 GetStoppedSeperationForce(float2 agentPos, float agentRadius, int agentIndex)
+
+    //That job is so important for smoothing out collisions for stopped agents
+    float2 GetStoppedSeperationForce(float2 agentPos, float2 agentDir, float agentRadius, int agentIndex)
     {
         float2 totalSeperation = 0;
-        float checkRange = 0.1f;
+        float checkRange = agentRadius - 0.05f;
         for (int i = 0; i < AgentSpatialHashGrid.GetGridCount(); i++)
         {
             SpatialHashGridIterator iterator = AgentSpatialHashGrid.GetIterator(agentPos, checkRange, i);
@@ -319,12 +259,11 @@ public struct LocalAvoidanceJob : IJobParallelFor
 
                     float seperationRadius = checkRange + mateData.Radius;
                     if (distance > seperationRadius) { continue; }
-
                     float overlapping = seperationRadius - distance;
-                    float multiplier = overlapping;
                     float2 seperation = agentPos - matePos;
-                    seperation = math.select(seperation, new float2(sliceStart + j, 1), agentPos.Equals(matePos) && agentIndex < sliceStart + j);
-                    seperation = math.normalizesafe(seperation) * multiplier;
+
+                    if (math.dot(agentDir, matePos - agentPos) >= 0 && !HasStatusFlag(AgentStatus.Moving, mateData.Status)) { overlapping*=0.3f; }
+                    seperation = math.normalizesafe(seperation) * overlapping;
                     totalSeperation += seperation;
                 }
             }
