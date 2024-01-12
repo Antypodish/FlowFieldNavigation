@@ -26,7 +26,6 @@ public class PathConstructionPipeline
     NativeList<int> _newPathIndicies;
     NativeList<int> _destinationUpdatedPathIndicies;
     NativeList<int> _expandedPathIndicies;
-    NativeList<int> FlockIndiciesForEachInitialPathRequest;
     List<JobHandle> _pathfindingTaskOrganizationHandle;
     public PathConstructionPipeline(PathfindingManager pathfindingManager)
     {
@@ -47,7 +46,6 @@ public class PathConstructionPipeline
         _newPathIndicies = new NativeList<int>(Allocator.Persistent);
         _destinationUpdatedPathIndicies = new NativeList<int>(Allocator.Persistent);
         _expandedPathIndicies = new NativeList<int>(Allocator.Persistent);
-        FlockIndiciesForEachInitialPathRequest = new NativeList<int>(Allocator.Persistent);
     }
     public void ShcedulePathRequestEvalutaion(NativeList<PathRequest> requestedPaths, NativeArray<UnsafeListReadOnly<byte>> costFieldCosts, NativeArray<SectorBitArray>.ReadOnly editedSectorBitArray, JobHandle islandFieldHandleAsDependency)
     {
@@ -74,14 +72,14 @@ public class PathConstructionPipeline
         NativeArray<PathRoutineData> pathRoutineDataArray = _pathContainer.PathRoutineDataList;
         NativeArray<UnsafeList<PathSectorState>> pathSectorStateTables = _pathContainer.PathSectorStateTableList;
         NativeArray<SectorBitArray> pathSectorBitArrays = _pathContainer.PathSectorBitArrays;
-        FlockIndiciesForEachInitialPathRequest.Length = requestedPaths.Length;
+        NativeArray<int> pathFlockIndexArray = _pathContainer.PathFlockIndicies;
 
         FlockIndexSubmissionJob flockSubmission = new FlockIndexSubmissionJob()
         {
             InitialPathRequestCount = requestedPaths.Length,
             AgentFlockIndexArray = AgentFlockIndexArray,
             AgentNewPathIndexArray = AgentNewPathIndicies,
-            FlockIndexForEachInitialRequest = FlockIndiciesForEachInitialPathRequest,
+            InitialPathRequests = requestedPaths,
             FlockList = _pathfindingManager.FlockContainer.FlockList,
             UnusedFlockIndexList = _pathfindingManager.FlockContainer.UnusedFlockIndexList,
         };
@@ -142,8 +140,10 @@ public class PathConstructionPipeline
             CostFields = costFieldCosts,
         };
         JobHandle routineDataCalculationHandle = routineDataCalculation.Schedule(pathRoutineDataArray.Length, 64, sectorEditCheckHandle);
+
         CurrentPathReconstructionDeterminationJob reconstructionDetermination = new CurrentPathReconstructionDeterminationJob()
         {
+            PathFlockIndexArray = pathFlockIndexArray,
             AgentCurPathIndicies = AgentCurPathIndicies,
             AgentNewPathIndicies = AgentNewPathIndicies,
             AgentDataArray = agentDataArray,

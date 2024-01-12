@@ -8,6 +8,7 @@ public struct PathRequest
     public int DerivedRequestCount;
     public DestinationType Type;
     public ushort OffsetMask;
+    public int FlockIndex;
 
     public PathRequest(float2 destination)
     {
@@ -17,6 +18,7 @@ public struct PathRequest
         DerivedRequestCount = 0;
         DerivedRequestStartIndex = 0;
         OffsetMask = 0;
+        FlockIndex = 0;
     }
 
     public PathRequest(int targetAgentIndex)
@@ -27,6 +29,7 @@ public struct PathRequest
         DerivedRequestCount = 0;
         DerivedRequestStartIndex = 0;
         OffsetMask = 0;
+        FlockIndex = 0;
     }
 }
 
@@ -38,6 +41,7 @@ public struct OffsetDerivedPathRequest
     public int DerivedFinalRequestCount;
     public int Offset;
     public DestinationType Type;
+    public int FlockIndex;
 
     public OffsetDerivedPathRequest(PathRequest initialPathRequest, int offset)
     {
@@ -47,6 +51,7 @@ public struct OffsetDerivedPathRequest
         Type = initialPathRequest.Type;
         DerivedFialRequestStartIndex = 0;
         DerivedFinalRequestCount = 0;
+        FlockIndex = initialPathRequest.FlockIndex;
     }
 
     public bool IsCreated()
@@ -66,6 +71,7 @@ public struct FinalPathRequest
     public int PathIndex;
     public int SourceIsland;
     public DestinationType Type;
+    public int FlockIndex;
 
     public FinalPathRequest(OffsetDerivedPathRequest derivedReq, int sourceIsland)
     {
@@ -75,23 +81,11 @@ public struct FinalPathRequest
         Offset = derivedReq.Offset;
         TargetAgentIndex = derivedReq.TargetAgentIndex;
         SourceIsland = sourceIsland;
+        FlockIndex = derivedReq.FlockIndex;
 
         SourceCount = 0;
         SourcePositionStartIndex = 0;
         PathIndex = 0;
     }
     public bool IsValid() => SourceCount != 0;
-}
-public struct PostponedPathRequests
-{
-    public float2 Destination;
-    public int TargetAgentIndex;
-    public DestinationType Type;
-
-    public PostponedPathRequests(FinalPathRequest finalRequest)
-    {
-        Destination = finalRequest.Destination;
-        Type = finalRequest.Type;
-        TargetAgentIndex = finalRequest.TargetAgentIndex;
-    }
 }

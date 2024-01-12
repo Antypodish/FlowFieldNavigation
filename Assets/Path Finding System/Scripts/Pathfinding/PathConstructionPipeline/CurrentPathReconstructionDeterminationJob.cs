@@ -8,6 +8,7 @@ public struct CurrentPathReconstructionDeterminationJob : IJob
     [ReadOnly] public NativeArray<AgentData> AgentDataArray;
     [ReadOnly] public NativeArray<PathState> PathStateArray;
     [ReadOnly] public NativeArray<PathDestinationData> PathDestinationDataArray;
+    [ReadOnly] public NativeArray<int> PathFlockIndexArray;
     public NativeArray<PathRoutineData> PathRoutineDataArray;
     public NativeArray<int> AgentNewPathIndicies;
     [ReadOnly] public NativeArray<int> AgentCurPathIndicies;
@@ -32,11 +33,13 @@ public struct CurrentPathReconstructionDeterminationJob : IJob
                 float3 targetAgentPos = AgentDataArray[reconReq.TargetAgentIndex].Position;
                 float2 targetAgentPos2 = new float2(targetAgentPos.x, targetAgentPos.z);
                 reconReq.Destination = targetAgentPos2;
+                reconReq.FlockIndex = PathFlockIndexArray[i];
                 PathRequests.Add(reconReq);
             }
             else
             {
                 PathRequest reconReq = new PathRequest(curDestinationData.DesiredDestination);
+                reconReq.FlockIndex = PathFlockIndexArray[i];
                 PathRequests.Add(reconReq);
 
             }

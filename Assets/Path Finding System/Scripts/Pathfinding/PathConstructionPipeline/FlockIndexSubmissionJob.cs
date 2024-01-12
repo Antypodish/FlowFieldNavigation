@@ -10,24 +10,19 @@ public struct FlockIndexSubmissionJob : IJob
     public NativeArray<int> AgentNewPathIndexArray;
     public NativeArray<int> AgentFlockIndexArray;
 
-    public NativeArray<int> FlockIndexForEachInitialRequest;
+    public NativeArray<PathRequest> InitialPathRequests;
     public NativeList<int> UnusedFlockIndexList;
     public NativeList<Flock> FlockList;
     public void Execute()
     {
-        //Refresh FlockIndexForEachInitialRequest
-        for(int i = 0; i < FlockIndexForEachInitialRequest.Length; i++)
-        {
-            FlockIndexForEachInitialRequest[0] = 0;
-        }
-
         //Rest
         for(int i = 0; i < AgentNewPathIndexArray.Length; i++)
         {
             int newPathIndex = AgentNewPathIndexArray[i];
             if(newPathIndex == -1) { continue; }
 
-            int initialRequestFlockIndex = FlockIndexForEachInitialRequest[newPathIndex];
+            PathRequest initialRequest = InitialPathRequests[newPathIndex];
+            int initialRequestFlockIndex = initialRequest.FlockIndex;
             int agentCurrentFlockIndex = AgentFlockIndexArray[i];
 
             bool agentAlreadyHasFlock = agentCurrentFlockIndex != 0;
@@ -52,7 +47,8 @@ public struct FlockIndexSubmissionJob : IJob
             {
                 int newFlockIndex = UnusedFlockIndexList[0];
                 UnusedFlockIndexList.RemoveAtSwapBack(0);
-                FlockIndexForEachInitialRequest[newPathIndex] = newFlockIndex;
+                initialRequest.FlockIndex = newFlockIndex;
+                InitialPathRequests[newPathIndex] = initialRequest;
 
                 Flock newFlock = new Flock();
                 newFlock.AgentCount++;
@@ -63,7 +59,8 @@ public struct FlockIndexSubmissionJob : IJob
             else
             {
                 int newFlockIndex = FlockList.Length;
-                FlockIndexForEachInitialRequest[newPathIndex] = newFlockIndex;
+                initialRequest.FlockIndex = newFlockIndex;
+                InitialPathRequests[newPathIndex] = initialRequest;
 
                 Flock newFlock = new Flock();
                 newFlock.AgentCount++;

@@ -9,6 +9,7 @@ public class PathContainer
     public NativeList<PathFlowData> ExposedPathFlowData;
     public NativeList<PathLocationData> ExposedPathLocationData;
     public NativeList<float2> ExposedPathDestinations;
+    public NativeList<int> ExposedPathFlockIndicies;
 
     public List<PathfindingInternalData> PathfindingInternalDataList;
     public NativeList<PathLocationData> PathLocationDataList;
@@ -21,6 +22,7 @@ public class PathContainer
     public NativeList<SectorBitArray> PathSectorBitArrays;
     public List<PathPortalTraversalData> PathPortalTraversalDataList;
     public NativeList<int> ProducedPathSubscribers;
+    public NativeList<int> PathFlockIndicies;
     Stack<int> _removedPathIndicies;
 
     FieldProducer _fieldProducer;
@@ -45,6 +47,8 @@ public class PathContainer
         ExposedPathDestinations = new NativeList<float2>(Allocator.Persistent);
         ExposedPathFlowData = new NativeList<PathFlowData>(Allocator.Persistent);
         ExposedPathLocationData = new NativeList<PathLocationData>(Allocator.Persistent);
+        PathFlockIndicies = new NativeList<int>(Allocator.Persistent);
+        ExposedPathFlockIndicies = new NativeList<int>(Allocator.Persistent);
     }
     public void Update()
     {
@@ -100,9 +104,11 @@ public class PathContainer
             ExposedPathDestinationList = ExposedPathDestinations,
             ExposedPathFlowDataList = ExposedPathFlowData,
             ExposedPathLocationList = ExposedPathLocationData,
+            ExposedPathFlockIndicies = ExposedPathFlockIndicies,
             PathDestinationDataArray = PathDestinationDataList,
             PathFlowDataArray = PathFlowDataList,
             PathLocationDataArray = PathLocationDataList,
+            PathFlockIndicies = PathFlockIndicies,
         };
         dataExposeJob.Schedule().Complete();
     }
@@ -130,6 +136,7 @@ public class PathContainer
                 SectorFlowStartCalculationBuffer = new UnsafeList<SectorFlowStart>(0, Allocator.Persistent),
             }
         };
+
         PathDestinationData destinationData = new PathDestinationData()
         {
             DestinationType = request.Type,
@@ -174,6 +181,7 @@ public class PathContainer
             PathRoutineDataList.Add(new PathRoutineData());
             PathSectorBitArrays.Add(new SectorBitArray(FlowFieldUtilities.SectorMatrixTileAmount, Allocator.Persistent));
             ProducedPathSubscribers.Add(request.SourceCount);
+            PathFlockIndicies.Add(request.FlockIndex);
         }
         else
         {
@@ -188,6 +196,7 @@ public class PathContainer
             PathRoutineDataList[pathIndex] = new PathRoutineData();
             PathSectorBitArrays[pathIndex] = new SectorBitArray(FlowFieldUtilities.SectorMatrixTileAmount, Allocator.Persistent);
             ProducedPathSubscribers[pathIndex] = request.SourceCount;
+            PathFlockIndicies[pathIndex] = request.FlockIndex;
         }
 
         return pathIndex;
