@@ -1,18 +1,22 @@
 ﻿using Unity.Collections.LowLevel.Unsafe;
 using Unity.Collections;
 using Unity.Mathematics;
+using System.Drawing;
+
 public struct UnsafeLOSBitmap
 {
     UnsafeList<byte> _bytes;
-
+    public int _size;
     public int Length
     {
         get { return _bytes.Length; }
     }
+    public int BitLength { get { return _size; } }
 
     public UnsafeLOSBitmap(int size, Allocator allocator, NativeArrayOptions option = NativeArrayOptions.UninitializedMemory)
     {
         int byteCount = size / 8 + math.select(0, 1, size % 8 > 0);
+        _size = size;
         _bytes = new UnsafeList<byte>(byteCount, allocator, option);
         _bytes.Length = byteCount;
     }
@@ -21,7 +25,9 @@ public struct UnsafeLOSBitmap
     public int GetBitRank(int bitIndex) => bitIndex % 8;
     public void Resize(int newLength, NativeArrayOptions option)
     {
-        _bytes.Resize(newLength, option);
+        int byteCount = newLength / 8 + math.select(0, 1, newLength % 8 > 0);
+        _size = newLength;
+        _bytes.Resize(byteCount, option);
     }
     public void SetByte(int byteIndex, byte newBits)
     {

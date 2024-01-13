@@ -11,6 +11,7 @@ public struct AgentStoppingJob : IJobParallelFor
     [ReadOnly] public NativeArray<float> PathDestinationReachRanges;
     [ReadOnly] public NativeArray<int> NormalToHashed;
     [ReadOnly] public NativeArray<int> AgentCurPathIndicies;
+    [ReadOnly] public NativeArray<bool> PathAgentStopFlags;
     public void Execute(int index)
     {
 
@@ -18,6 +19,7 @@ public struct AgentStoppingJob : IJobParallelFor
         if (isDestinationReached) { return; }
         int agentPathIndex = AgentCurPathIndicies[index];
         if(agentPathIndex == -1) { return; }
+        if (!PathAgentStopFlags[agentPathIndex]) { return; }
         float pathDestinationReachRange = PathDestinationReachRanges[agentPathIndex];
         int hashedIndex = NormalToHashed[index];
         AgentMovementData agentData = AgentMovementDataArray[hashedIndex];

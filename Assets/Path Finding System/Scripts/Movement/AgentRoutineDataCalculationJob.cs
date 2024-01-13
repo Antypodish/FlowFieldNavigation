@@ -55,7 +55,9 @@ public struct AgentRoutineDataCalculationJob : IJobParallelFor
             return;
         }
 
-        //FLOW CALCULATION DATA
+        //FLOW CALCULATION
+        float2 flow;
+
         float2 pathDestination = ExposedPathDestinationArray[agentCurPathIndex];
         PathLocationData pathLocationData = ExposedPathLocationDataArray[agentCurPathIndex];
         PathFlowData pathFlowData = ExposedPathFlowDataArray[agentCurPathIndex];
@@ -64,14 +66,8 @@ public struct AgentRoutineDataCalculationJob : IJobParallelFor
         UnsafeList<int> sectorFlowStarts = pathLocationData.SectorToPicked;
         int agentSector1d = FlowFieldUtilities.To1D(agentSector2d, SectorMatrixColAmount);
         int agentSectorFlowStart = sectorFlowStarts[agentSector1d];
-        if (GetSectorDynamicFlowStartIfExists(pathLocationData.DynamicAreaPickedSectorFlowStarts, agentSector1d, out int sectorFlowStart))
-        {
-            flowField = pathFlowData.DynamicAreaFlowField;
-            agentSectorFlowStart = sectorFlowStart;
-        }
 
-        //IF CANT HAVE FLOW
-        if (agentSectorFlowStart == 0 || agentSectorFlowStart >= flowField.Length)
+        if (agentSectorFlowStart == 0 || agentSectorFlowStart >= flowField.Length || agentSectorFlowStart >= losMap.BitLength)
         {
             data.PathId = agentCurPathIndex;
             data.Destination = pathDestination;
@@ -80,14 +76,21 @@ public struct AgentRoutineDataCalculationJob : IJobParallelFor
             return;
         }
 
+        if (losMap.IsLOS(agentSectorFlowStart + local1d)) { flow = math.normalizesafe(pathDestination - agentPos); }
+        else if (GetSectorDynamicFlowStartIfExists(pathLocationData.DynamicAreaPickedSectorFlowStarts, agentSector1d, out int dynamicSectorFlowStart))
+        {
+            FlowData flowData = pathFlowData.DynamicAreaFlowField[dynamicSectorFlowStart + local1d];
+            flow = math.select(0f, flowData.GetFlow(TileSize), flowData.IsValid());
+        }
+        else
+        {
+            FlowData flowData = pathFlowData.FlowField[agentSectorFlowStart + local1d];
+            flow = math.select(0f, flowData.GetFlow(TileSize), flowData.IsValid());
+        }
+
+        
+
         //FLOW CALCULATION
-        FlowData flowData = flowField[agentSectorFlowStart + local1d];
-        bool isLos = losMap.IsLOS(agentSectorFlowStart + local1d);
-        float2 destination = pathDestination;
-        float2 fieldFlow = flowData.GetFlow(TileSize);
-        fieldFlow = math.select(0f, fieldFlow, flowData.IsValid());
-        float2 perfectFlow = math.normalizesafe(destination - agentPos);
-        float2 flow = math.select(fieldFlow, perfectFlow, isLos);
         flow = math.select(GetSmoothFlow(data.DesiredDirection, flow, data.Speed), flow, math.dot(data.DesiredDirection, flow) < 0.7f);
         data.Local1d = (ushort)local1d;
         data.Offset = FlowFieldUtilities.RadiusToOffset(data.Radius, TileSize);

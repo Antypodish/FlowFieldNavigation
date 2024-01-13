@@ -238,6 +238,7 @@ public class MovementIO
             PathDestinationReachRanges = PathReachDistances,
             AgentMovementDataArray = AgentMovementDataList,
             NormalToHashed = NormalToHashed,
+            PathAgentStopFlags = exposedPathAgentStopFlagList,
         };
         JobHandle stoppingHandle = stoppingJob.Schedule(agentDataArray.Length, 64, destinationReachedCounterHandle);
 
