@@ -798,7 +798,7 @@ PrefabInstance:
     - target: {fileID: 1430737614659601544, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}
       propertyPath: _debugBorders
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1430737614659601544, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}
@@ -813,7 +813,7 @@ PrefabInstance:
     - target: {fileID: 1430737614659601544, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}
       propertyPath: _debugDestination
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1430737614659601544, guid: 6171110bace36bb42a195b4ce00d2d41,
         type: 3}

@@ -15,6 +15,7 @@ public struct PathDataExposeJob : IJob
     public NativeList<PathFlowData> ExposedPathFlowDataList;
     public NativeList<int> ExposedPathFlockIndicies;
     public NativeList<float> ExposedPathReachDistanceCheckRange;
+    public NativeList<PathState> PathStateList;
 
     [ReadOnly] public NativeArray<PathDestinationData> PathDestinationDataArray;
     [ReadOnly] public NativeArray<PathLocationData> PathLocationDataArray;
@@ -27,7 +28,7 @@ public struct PathDataExposeJob : IJob
         ExposedPathLocationList.Length = PathLocationDataArray.Length;
         ExposedPathFlockIndicies.Length = PathFlockIndicies.Length;
         ExposedPathReachDistanceCheckRange.Length = PathFlowDataArray.Length;
-
+        PathStateList.Length = PathFlowDataArray.Length;
         for(int i = 0; i < NewPathIndicies.Length; i++)
         {
             int pathIndex = NewPathIndicies[i];
@@ -37,6 +38,7 @@ public struct PathDataExposeJob : IJob
             ExposedPathLocationList[pathIndex] = PathLocationDataArray[pathIndex];
             ExposedPathFlockIndicies[pathIndex] = PathFlockIndicies[pathIndex];
             ExposedPathReachDistanceCheckRange[pathIndex] = 0;
+            PathStateList[pathIndex] = PathState.Clean;
         }
 
         for (int i = 0; i < ExpandedPathIndicies.Length; i++)

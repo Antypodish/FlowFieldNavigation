@@ -67,7 +67,7 @@ public class PathConstructionPipeline
         NativeArray<UnsafeList<DijkstraTile>> targetSectorIntegrations = _pathContainer.TargetSectorIntegrationList;
         NativeArray<PathLocationData> pathLocationDataArray = _pathContainer.PathLocationDataList;
         NativeArray<PathFlowData> pathFlowDataArray = _pathContainer.PathFlowDataList;
-        NativeArray<PathState> pathStateArray = _pathContainer.PathStateList;
+        NativeArray<PathState> pathStateArray = _pathContainer.ExposedPathStateList;
         NativeArray<PathDestinationData> pathDestinationDataArray = _pathContainer.PathDestinationDataList;
         NativeArray<PathRoutineData> pathRoutineDataArray = _pathContainer.PathRoutineDataList;
         NativeArray<UnsafeList<PathSectorState>> pathSectorStateTables = _pathContainer.PathSectorStateTableList;

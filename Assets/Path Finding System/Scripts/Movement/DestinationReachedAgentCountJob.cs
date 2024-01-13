@@ -9,7 +9,7 @@ public struct DestinationReachedAgentCountJob : IJobParallelFor
     [ReadOnly] public NativeArray<bool> AgentDestinationReachStatus;
     [ReadOnly] public NativeArray<float2> PathDestinationArray;
     [ReadOnly] public AgentSpatialHashGrid AgentSpatialHashGrid;
-    [ReadOnly] public NativeArray<int> PathSubscriberCounts;
+    [ReadOnly] public NativeArray<PathState> PathStateList;
     [ReadOnly] public NativeArray<int> PathFlockIndexArray;
     [ReadOnly] public NativeArray<int> HashedToNormal;
     [ReadOnly] public NativeArray<int> AgentFlockIndicies;
@@ -19,7 +19,7 @@ public struct DestinationReachedAgentCountJob : IJobParallelFor
     {
         PathReachDistances[index] = 0;
 
-        if (PathSubscriberCounts[index] == 0) { return; }
+        if (PathStateList[index] == PathState.Removed) { return; }
 
         int flockIndex = PathFlockIndexArray[index];
         float2 pathDestination = PathDestinationArray[index];
