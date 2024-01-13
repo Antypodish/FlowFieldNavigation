@@ -12,6 +12,7 @@ public class PathContainer
     public NativeList<int> ExposedPathFlockIndicies;
     public NativeList<float> ExposedPathReachDistanceCheckRanges;
     public NativeList<PathState> ExposedPathStateList;
+    public NativeList<bool> ExposedPathAgentStopFlagList;
 
     public List<PathfindingInternalData> PathfindingInternalDataList;
     public NativeList<PathLocationData> PathLocationDataList;
@@ -51,6 +52,7 @@ public class PathContainer
         PathFlockIndicies = new NativeList<int>(Allocator.Persistent);
         ExposedPathFlockIndicies = new NativeList<int>(Allocator.Persistent);
         ExposedPathReachDistanceCheckRanges = new NativeList<float>(Allocator.Persistent);
+        ExposedPathAgentStopFlagList = new NativeList<bool>(Allocator.Persistent);
     }
     public void Update()
     {
@@ -108,6 +110,7 @@ public class PathContainer
             ExposedPathLocationList = ExposedPathLocationData,
             ExposedPathFlockIndicies = ExposedPathFlockIndicies,
             ExposedPathReachDistanceCheckRange = ExposedPathReachDistanceCheckRanges,
+            PathStopFlagList = ExposedPathAgentStopFlagList,
             PathStateList = ExposedPathStateList,
             PathDestinationDataArray = PathDestinationDataList,
             PathFlowDataArray = PathFlowDataList,

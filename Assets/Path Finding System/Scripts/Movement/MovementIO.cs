@@ -58,6 +58,7 @@ public class MovementIO
         NativeArray<float> exposedPathReachDistanceCheckRanges = _pathfindingManager.PathContainer.ExposedPathReachDistanceCheckRanges;
         NativeArray<int> exposedPathFlockIndicies = _pathfindingManager.PathContainer.ExposedPathFlockIndicies;
         NativeArray<PathState> exposedPathStateList = _pathfindingManager.PathContainer.ExposedPathStateList;
+        NativeArray<bool> exposedPathAgentStopFlagList = _pathfindingManager.PathContainer.ExposedPathAgentStopFlagList;
 
         //CLEAR
         AgentMovementDataList.Clear();
@@ -226,6 +227,7 @@ public class MovementIO
             PathReachDistanceCheckRanges = exposedPathReachDistanceCheckRanges,
             PathFlockIndexArray = exposedPathFlockIndicies,
             PathStateList = exposedPathStateList,
+            PathAgentStopFlagList = exposedPathAgentStopFlagList,
         };
         JobHandle destinationReachedCounterHandle = destinationReachedCounter.Schedule(exposedPathFlockIndicies.Length, 64, wallDetectionHandle);
 
