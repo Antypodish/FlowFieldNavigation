@@ -10,6 +10,8 @@ public class PathContainer
     public NativeList<PathLocationData> ExposedPathLocationData;
     public NativeList<float2> ExposedPathDestinations;
     public NativeList<int> ExposedPathFlockIndicies;
+    public NativeList<float> ExposedPathReachDistanceCheckRanges;
+    public NativeList<int> ExposedPathSubscriberCounts;
 
     public List<PathfindingInternalData> PathfindingInternalDataList;
     public NativeList<PathLocationData> PathLocationDataList;
@@ -21,7 +23,6 @@ public class PathContainer
     public NativeList<PathRoutineData> PathRoutineDataList;
     public NativeList<SectorBitArray> PathSectorBitArrays;
     public List<PathPortalTraversalData> PathPortalTraversalDataList;
-    public NativeList<int> ProducedPathSubscribers;
     public NativeList<int> PathFlockIndicies;
     Stack<int> _removedPathIndicies;
 
@@ -33,7 +34,7 @@ public class PathContainer
         PathfindingInternalDataList = new List<PathfindingInternalData>(1);
         _preallocator = new PathPreallocator(_fieldProducer, FlowFieldUtilities.SectorTileAmount, FlowFieldUtilities.SectorMatrixTileAmount);
         _removedPathIndicies = new Stack<int>();
-        ProducedPathSubscribers = new NativeList<int>(Allocator.Persistent);
+        ExposedPathSubscriberCounts = new NativeList<int>(Allocator.Persistent);
         PathLocationDataList = new NativeList<PathLocationData>(1, Allocator.Persistent);
         PathFlowDataList = new NativeList<PathFlowData>(Allocator.Persistent);
         PathSectorStateTableList = new NativeList<UnsafeList<PathSectorState>>(Allocator.Persistent);
@@ -49,6 +50,7 @@ public class PathContainer
         ExposedPathLocationData = new NativeList<PathLocationData>(Allocator.Persistent);
         PathFlockIndicies = new NativeList<int>(Allocator.Persistent);
         ExposedPathFlockIndicies = new NativeList<int>(Allocator.Persistent);
+        ExposedPathReachDistanceCheckRanges = new NativeList<float>(Allocator.Persistent);
     }
     public void Update()
     {
@@ -57,7 +59,7 @@ public class PathContainer
             PathfindingInternalData internalData = PathfindingInternalDataList[i];
             PathState pathState = PathStateList[i];
             if(pathState == PathState.Removed) { continue; }
-            int subsciriber = ProducedPathSubscribers[i];
+            int subsciriber = ExposedPathSubscriberCounts[i];
             if (subsciriber == 0)
             {
                 PathLocationData locationData = PathLocationDataList[i];
@@ -105,6 +107,7 @@ public class PathContainer
             ExposedPathFlowDataList = ExposedPathFlowData,
             ExposedPathLocationList = ExposedPathLocationData,
             ExposedPathFlockIndicies = ExposedPathFlockIndicies,
+            ExposedPathReachDistanceCheckRange = ExposedPathReachDistanceCheckRanges,
             PathDestinationDataArray = PathDestinationDataList,
             PathFlowDataArray = PathFlowDataList,
             PathLocationDataArray = PathLocationDataList,
@@ -180,7 +183,7 @@ public class PathContainer
             TargetSectorIntegrationList.Add(preallocations.TargetSectorCosts);
             PathRoutineDataList.Add(new PathRoutineData());
             PathSectorBitArrays.Add(new SectorBitArray(FlowFieldUtilities.SectorMatrixTileAmount, Allocator.Persistent));
-            ProducedPathSubscribers.Add(request.SourceCount);
+            ExposedPathSubscriberCounts.Add(request.SourceCount);
             PathFlockIndicies.Add(request.FlockIndex);
         }
         else
@@ -195,7 +198,7 @@ public class PathContainer
             TargetSectorIntegrationList[pathIndex] = preallocations.TargetSectorCosts;
             PathRoutineDataList[pathIndex] = new PathRoutineData();
             PathSectorBitArrays[pathIndex] = new SectorBitArray(FlowFieldUtilities.SectorMatrixTileAmount, Allocator.Persistent);
-            ProducedPathSubscribers[pathIndex] = request.SourceCount;
+            ExposedPathSubscriberCounts[pathIndex] = request.SourceCount;
             PathFlockIndicies[pathIndex] = request.FlockIndex;
         }
 

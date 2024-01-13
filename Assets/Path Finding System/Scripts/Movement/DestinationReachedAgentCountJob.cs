@@ -4,39 +4,49 @@ using Unity.Jobs;
 using Unity.Mathematics;
 
 [BurstCompile]
-public struct DestinationReachedAgentCountJob : IJob
+public struct DestinationReachedAgentCountJob : IJobParallelFor
 {
     [ReadOnly] public NativeArray<bool> AgentDestinationReachStatus;
-    [ReadOnly] public NativeArray<int> AgentFlockIndexArray;
-    [ReadOnly] public NativeArray<AgentMovementData> AgentMovementDataArray;
-    [ReadOnly] public NativeArray<int> NormalToHashed;
-    public NativeArray<FlockDestinationReachData> FlockDestinationReachArray;
-    public void Execute()
+    [ReadOnly] public NativeArray<float2> PathDestinationArray;
+    [ReadOnly] public AgentSpatialHashGrid AgentSpatialHashGrid;
+    [ReadOnly] public NativeArray<int> PathSubscriberCounts;
+    [ReadOnly] public NativeArray<int> PathFlockIndexArray;
+    [ReadOnly] public NativeArray<int> HashedToNormal;
+    [ReadOnly] public NativeArray<int> AgentFlockIndicies;
+    public NativeArray<float> PathReachDistanceCheckRanges;
+    public NativeArray<float> PathReachDistances;
+    public void Execute(int index)
     {
-        //CLEAR STOPPED AGENT COUNT
-        for(int i = 0; i < FlockDestinationReachArray.Length; i++) { FlockDestinationReachArray[i] = new FlockDestinationReachData(); }
+        PathReachDistances[index] = 0;
 
-        //SET STOPPED AGENT COUNT
-        for(int i = 0; i < AgentDestinationReachStatus.Length; i++)
+        if (PathSubscriberCounts[index] == 0) { return; }
+
+        int flockIndex = PathFlockIndexArray[index];
+        float2 pathDestination = PathDestinationArray[index];
+        float checkRange = PathReachDistanceCheckRanges[index];
+        float totalOccupiedArea = 0;
+        for(int i = 0; i < AgentSpatialHashGrid.GetGridCount(); i++)
         {
-            bool isDestinationReached = AgentDestinationReachStatus[i];
-            if (isDestinationReached)
+            SpatialHashGridIterator spatialIterator = AgentSpatialHashGrid.GetIterator(pathDestination, checkRange, i);
+            while (spatialIterator.HasNext())
             {
-                int flockIndex = AgentFlockIndexArray[i];
-                int hashedIndex = NormalToHashed[i];
-                float agentRadius = AgentMovementDataArray[hashedIndex].Radius;
-                FlockDestinationReachData reachData = FlockDestinationReachArray[flockIndex];
-                reachData.ReachedAgentCount++;
-                reachData.TotalOccupiedArea += math.PI * agentRadius * agentRadius;
-                reachData.TotalAgentRadius += agentRadius;
-                FlockDestinationReachArray[flockIndex] = reachData;
+                NativeSlice<AgentMovementData> agentsToCheck = spatialIterator.GetNextRow(out int sliceStartIndex);
+                for(int j = 0; j < agentsToCheck.Length; j++)
+                {
+                    AgentMovementData agentData = agentsToCheck[j];
+                    float2 agentPos = new float2(agentData.Position.x, agentData.Position.z);
+                    float distance = math.distance(agentPos, pathDestination);
+                    if(distance > checkRange + agentData.Radius) { continue; }
+                    int normalIndex = HashedToNormal[sliceStartIndex + j];
+                    if (!AgentDestinationReachStatus[normalIndex]) { continue; }
+                    int agentFlockIndex = AgentFlockIndicies[normalIndex];
+                    if (agentFlockIndex != flockIndex) { continue; }
+                    totalOccupiedArea += math.PI * agentData.Radius * agentData.Radius;
+                }
             }
         }
+        float totalCheckRadius = math.sqrt(totalOccupiedArea / math.PI);
+        if(checkRange < totalCheckRadius) { PathReachDistanceCheckRanges[index] = totalCheckRadius; }
+        PathReachDistances[index] = totalCheckRadius;
     }
-}
-public struct FlockDestinationReachData
-{
-    public int ReachedAgentCount;
-    public float TotalOccupiedArea;
-    public float TotalAgentRadius;
 }

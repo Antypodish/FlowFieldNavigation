@@ -15,7 +15,7 @@ public class MovementIO
     public NativeList<int> NormalToHashed;
     public NativeList<int> HashedToNormal;
     public NativeArray<UnsafeList<HashTile>> HashGridArray;
-    public NativeList<FlockDestinationReachData> FlockStoppedAgentCountArray;
+    public NativeList<float> PathReachDistances;
 
     JobHandle _routineHandle;
     public MovementIO(AgentDataContainer agentDataContainer, PathfindingManager pathfindingManager)
@@ -45,7 +45,7 @@ public class MovementIO
         }
         NormalToHashed = new NativeList<int>(Allocator.Persistent);
         HashedToNormal = new NativeList<int>(Allocator.Persistent);
-        FlockStoppedAgentCountArray = new NativeList<FlockDestinationReachData>(Allocator.Persistent);
+        PathReachDistances = new NativeList<float>(Allocator.Persistent);
     }
     public void ScheduleRoutine(NativeArray<UnsafeListReadOnly<byte>> costFieldCosts, JobHandle dependency)
     {
@@ -55,6 +55,9 @@ public class MovementIO
         NativeArray<PathFlowData> exposedPathFlowDataArray = _pathfindingManager.PathContainer.ExposedPathFlowData;
         NativeArray<float2> exposedPathDestinationArray = _pathfindingManager.PathContainer.ExposedPathDestinations;
         NativeArray<int> agentFlockIndexArray = _pathfindingManager.AgentDataContainer.AgentFlockIndicies;
+        NativeArray<float> exposedPathReachDistanceCheckRanges = _pathfindingManager.PathContainer.ExposedPathReachDistanceCheckRanges;
+        NativeArray<int> exposedPathFlockIndicies = _pathfindingManager.PathContainer.ExposedPathFlockIndicies;
+        NativeArray<int> exposedPathSubscriberCounts = _pathfindingManager.PathContainer.ExposedPathSubscriberCounts;
 
         //CLEAR
         AgentMovementDataList.Clear();
@@ -204,28 +207,38 @@ public class MovementIO
         };
         JobHandle wallDetectionHandle = wallDetection.Schedule(agentDataArray.Length, 64, wallCollisionHandle);
 
-        FlockStoppedAgentCountArray.Length = _pathfindingManager.FlockContainer.FlockList.Length;
+        PathReachDistances.Length = exposedPathReachDistanceCheckRanges.Length;
         DestinationReachedAgentCountJob destinationReachedCounter = new DestinationReachedAgentCountJob()
         {
             AgentDestinationReachStatus = _agentDataContainer.AgentDestinationReachedArray,
-            AgentFlockIndexArray = _agentDataContainer.AgentFlockIndicies,
-            FlockDestinationReachArray = FlockStoppedAgentCountArray,
-            AgentMovementDataArray = AgentMovementDataList,
-            NormalToHashed = NormalToHashed,
+            HashedToNormal = HashedToNormal,
+            AgentSpatialHashGrid = new AgentSpatialHashGrid()
+            {
+                BaseSpatialGridSize = FlowFieldUtilities.BaseSpatialGridSize,
+                FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
+                FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
+                AgentHashGridArray = HashGridArray,
+                RawAgentMovementDataArray = AgentMovementDataList,
+            },
+            AgentFlockIndicies = agentFlockIndexArray,
+            PathDestinationArray = exposedPathDestinationArray,
+            PathReachDistances = PathReachDistances,
+            PathReachDistanceCheckRanges = exposedPathReachDistanceCheckRanges,
+            PathFlockIndexArray = exposedPathFlockIndicies,
+            PathSubscriberCounts = exposedPathSubscriberCounts,
         };
-        JobHandle destinationReachedCounterHandle = destinationReachedCounter.Schedule(wallDetectionHandle);
+        JobHandle destinationReachedCounterHandle = destinationReachedCounter.Schedule(exposedPathFlockIndicies.Length, 64, wallDetectionHandle);
 
         AgentStoppingJob stoppingJob = new AgentStoppingJob()
         {
             AgentDestinationReachStatus = _agentDataContainer.AgentDestinationReachedArray,
-            FlockDestinationReachArray = FlockStoppedAgentCountArray,
-            AgentFlockIndexArray = _agentDataContainer.AgentFlockIndicies,
+            AgentCurPathIndicies = agentCurPathIndexArray,
+            PathDestinationReachRanges = PathReachDistances,
             AgentMovementDataArray = AgentMovementDataList,
             NormalToHashed = NormalToHashed,
         };
         JobHandle stoppingHandle = stoppingJob.Schedule(agentDataArray.Length, 64, destinationReachedCounterHandle);
 
-        //UnityEngine.Debug.Log(sw.Elapsed.TotalMilliseconds);
         if (FlowFieldUtilities.DebugMode) { stoppingHandle.Complete(); }
         _routineHandle = stoppingHandle;
     }
