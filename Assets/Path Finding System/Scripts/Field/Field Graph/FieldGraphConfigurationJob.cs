@@ -16,11 +16,11 @@ public struct FieldGraphConfigurationJob : IJob
     public int SectorRowAmount;
     public int SectorTileAmount;
     public int PortalPerWindow;
-    public UnsafeList<SectorNode> SectorNodes;
+    public NativeArray<SectorNode> SectorNodes;
     public NativeArray<int> SecToWinPtrs;
     public NativeArray<WindowNode> WindowNodes;
     public NativeArray<int> WinToSecPtrs;
-    public UnsafeList<PortalNode> PortalNodes;
+    public NativeArray<PortalNode> PortalNodes;
     public NativeArray<PortalToPortal> PorToPorPtrs;
     public NativeArray<byte> Costs;
     public NativeArray<AStarTile> IntegratedCosts;
@@ -215,7 +215,7 @@ public struct FieldGraphConfigurationJob : IJob
         int sectorMatrixColAmount = SectorMatrixColAmount;
         NativeArray<WindowNode> windowNodes = WindowNodes;
         NativeArray<byte> costs = Costs;
-        UnsafeList<PortalNode> portalNodes = PortalNodes;
+        NativeArray<PortalNode> portalNodes = PortalNodes;
 
         for (int i = 0; i < windowNodes.Length; i++)
         {
@@ -364,8 +364,8 @@ public struct FieldGraphConfigurationJob : IJob
         NativeQueue<int> integrationQueue = new NativeQueue<int>(Allocator.Temp);
         int sectorMatrixColAmount = SectorMatrixColAmount;
         int sectorColAmount = SectorColAmount;
-        UnsafeList<PortalNode> portalNodes = PortalNodes;
-        UnsafeList<SectorNode> sectorNodes = SectorNodes;
+        NativeArray<PortalNode> portalNodes = PortalNodes;
+        NativeArray<SectorNode> sectorNodes = SectorNodes;
         NativeArray<PortalToPortal> porPtrs = PorToPorPtrs;
         NativeArray<WindowNode> windowNodes = WindowNodes;
         NativeArray<int> secToWinPtrs = SecToWinPtrs;

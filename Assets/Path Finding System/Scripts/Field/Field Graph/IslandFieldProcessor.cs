@@ -10,9 +10,9 @@ public struct IslandFieldProcessor
     public int SectorMatrixColAmount;
     public int FieldColAmount;
 
-    [ReadOnly] public UnsafeList<SectorNode> SectorNodes;
-    [ReadOnly] public UnsafeList<PortalNode> PortalNodes;
-    [ReadOnly] public UnsafeList<UnsafeList<int>> IslandFields;
+    [ReadOnly] public UnsafeListReadOnly<SectorNode> SectorNodes;
+    [ReadOnly] public UnsafeListReadOnly<PortalNode> PortalNodes;
+    [ReadOnly] public UnsafeListReadOnly<UnsafeList<int>> IslandFields;
     public int GetIsland(float2 pos)
     {
         int2 index2d = FlowFieldUtilities.PosTo2D(pos, TileSize);

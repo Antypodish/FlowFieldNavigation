@@ -26,15 +26,15 @@ public struct PortalTraversalReductionJob : IJob
     public NativeArray<int> FlowFieldLength;
 
     [ReadOnly] public NativeSlice<float2> SourcePositions;
-    [ReadOnly] public UnsafeList<SectorNode> SectorNodes;
+    [ReadOnly] public NativeArray<SectorNode> SectorNodes;
     [ReadOnly] public NativeArray<int> SecToWinPtrs;
     [ReadOnly] public NativeArray<WindowNode> WindowNodes;
     [ReadOnly] public NativeArray<int> WinToSecPtrs;
-    [ReadOnly] public UnsafeList<PortalNode> PortalNodes;
+    [ReadOnly] public NativeArray<PortalNode> PortalNodes;
     [ReadOnly] public NativeArray<PortalToPortal> PorPtrs;
     [ReadOnly] public NativeArray<byte> Costs;
     [ReadOnly] public NativeArray<SectorDirectionData> LocalDirections;
-    [ReadOnly] public UnsafeList<UnsafeList<int>> IslandFields;
+    [ReadOnly] public NativeArray<UnsafeList<int>> IslandFields;
 
     public NativeList<int> TargetNeighbourPortalIndicies;
     public NativeList<int> AStarTraverseIndexList;
@@ -143,7 +143,7 @@ public struct PortalTraversalReductionJob : IJob
     }
     int RunReductionAStar(int sourcePortalIndex, DoubleUnsafeHeap<int> traversalHeap)
     {
-        UnsafeList<PortalNode> portalNodes = PortalNodes;
+        NativeArray<PortalNode> portalNodes = PortalNodes;
         NativeArray<PortalTraversalData> portalTraversalDataArray = PortalTraversalDataArray;
         PortalTraversalData curData = PortalTraversalDataArray[sourcePortalIndex];
         if (curData.HasMark(PortalTraversalMark.AStarPicked))

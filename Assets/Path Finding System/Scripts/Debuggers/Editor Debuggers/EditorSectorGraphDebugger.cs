@@ -20,7 +20,7 @@ public class EditorSectorGraphDebugger
         float yOffset = 0.02f;
         float tileSize = _pathfindingManager.TileSize;
         FieldGraph fieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(offset);
-        UnsafeList<SectorNode> sectorNodes = fieldGraph.SectorNodes;
+        NativeArray<SectorNode> sectorNodes = fieldGraph.SectorNodes;
         for (int i = 0; i < sectorNodes.Length; i++)
         {
             int sectorSize = sectorNodes[i].Sector.Size;

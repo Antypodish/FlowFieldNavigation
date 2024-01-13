@@ -14,4 +14,15 @@ public static class FlowFieldUtilitiesUnsafe
         }
         return list;
     }
+    public static UnsafeListReadOnly<T> ToUnsafeListRedonly<T>(NativeArray<T> array) where T : unmanaged
+    {
+        UnsafeListReadOnly<T> list;
+        unsafe
+        {
+            T* arrayPtr = (T*)array.GetUnsafePtr();
+            int arrayLength = array.Length;
+            list = new UnsafeListReadOnly<T>(arrayPtr, arrayLength);
+        }
+        return list;
+    }
 }

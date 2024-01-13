@@ -28,11 +28,11 @@ public struct PortalNodeTraversalJob : IJob
     public NativeList<int> SourcePortals;
 
     [ReadOnly] public NativeSlice<float2> SourcePositions;
-    [ReadOnly] public UnsafeList<SectorNode> SectorNodes;
+    [ReadOnly] public NativeArray<SectorNode> SectorNodes;
     [ReadOnly] public NativeArray<int> SecToWinPtrs;
     [ReadOnly] public NativeArray<WindowNode> WindowNodes;
     [ReadOnly] public NativeArray<int> WinToSecPtrs;
-    [ReadOnly] public UnsafeList<PortalNode> PortalNodes;
+    [ReadOnly] public NativeArray<PortalNode> PortalNodes;
     [ReadOnly] public NativeArray<PortalToPortal> PorPtrs;
 
     public NativeList<int> TargetNeighbourPortalIndicies;
@@ -128,7 +128,7 @@ public struct PortalNodeTraversalJob : IJob
     {
         SingleUnsafeHeap<int> travHeap = new SingleUnsafeHeap<int>(0, Allocator.Temp);
         NativeArray<PortalTraversalData> portalTraversalDataArray = PortalTraversalDataArray;
-        UnsafeList<PortalNode> portalNodes = PortalNodes;
+        NativeArray<PortalNode> portalNodes = PortalNodes;
         NativeArray<PortalToPortal> porPtrs = PorPtrs;
 
         //MARK TARGET NEIGHBOURS

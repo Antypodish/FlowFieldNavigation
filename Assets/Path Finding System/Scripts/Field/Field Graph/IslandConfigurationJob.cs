@@ -14,9 +14,9 @@ public struct IslandConfigurationJob : IJob
     [ReadOnly] public NativeArray<PortalToPortal> PortalEdges;
     [ReadOnly] public NativeArray<WindowNode> WindowNodes;
     [ReadOnly] public NativeArray<int> SecToWinPtrs;
-    public UnsafeList<SectorNode> SectorNodes;
-    public UnsafeList<UnsafeList<int>> IslandFields;
-    public UnsafeList<PortalNode> PortalNodes;
+    public NativeArray<SectorNode> SectorNodes;
+    public NativeArray<UnsafeList<int>> IslandFields;
+    public NativeArray<PortalNode> PortalNodes;
     public NativeList<IslandData> Islands;
     public void Execute()
     {

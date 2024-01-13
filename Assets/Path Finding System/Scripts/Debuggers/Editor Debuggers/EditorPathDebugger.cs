@@ -150,7 +150,7 @@ public class EditorPathDebugger
         PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[pathIndex];
         float tileSize = _pathfindingManager.TileSize;
         FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
-        UnsafeList<PortalNode> portalNodes = fg.PortalNodes;
+        NativeArray<PortalNode> portalNodes = fg.PortalNodes;
         NativeArray<PortalTraversalData> portalTraversalDataArray = portalTraversalData.PortalTraversalDataArray;
 
         for (int i = 0; i < portalNodes.Length; i++)
@@ -184,7 +184,7 @@ public class EditorPathDebugger
         PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[pathIndex];
         float tileSize = _pathfindingManager.TileSize;
         FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
-        UnsafeList<PortalNode> portalNodes = fg.PortalNodes;
+        NativeArray<PortalNode> portalNodes = fg.PortalNodes;
         NativeArray<PortalTraversalData> portalTraversalDataArray = portalTraversalData.PortalTraversalDataArray;
 
         for (int i = 0; i < portalNodes.Length; i++)
@@ -210,7 +210,7 @@ public class EditorPathDebugger
         PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathIndex];
         PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[pathIndex];
         FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
-        UnsafeList<PortalNode> portalNodes = fg.PortalNodes;
+        NativeArray<PortalNode> portalNodes = fg.PortalNodes;
         NativeList<ActivePortal> porSeq = portalTraversalData.PortalSequence;
         NativeList<int> portSeqBorders = portalTraversalData.PortalSequenceBorders;
         Gizmos.color = Color.white;
@@ -267,7 +267,7 @@ public class EditorPathDebugger
         Gizmos.color = Color.black;
         float tileSize = _pathfindingManager.TileSize;
         FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
-        UnsafeList<SectorNode> sectorNodes = fg.SectorNodes;
+        NativeArray<SectorNode> sectorNodes = fg.SectorNodes;
         UnsafeList<int> sectorMarks = locationData.SectorToPicked;
 
         for(int i = 0; i < sectorMarks.Length; i++)
@@ -304,7 +304,7 @@ public class EditorPathDebugger
         PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[pathIndex];
         int sectorColAmount = _pathfindingManager.SectorColAmount;
         int sectorTileAmount = sectorColAmount * sectorColAmount;
-        UnsafeList<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset).SectorNodes;
+        NativeArray<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset).SectorNodes;
         UnsafeList<int> sectorMarks = locationData.SectorToPicked;
         NativeArray<IntegrationTile> integrationField = internalData.IntegrationField;
         for (int i = 0; i < sectorMarks.Length; i++)
@@ -340,7 +340,7 @@ public class EditorPathDebugger
         PathLocationData locationData = _pathfindingManager.PathContainer.PathLocationDataList[pathIndex];
         PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[pathIndex];
         UnsafeList<int> sectorMarks = locationData.SectorToPicked;
-        UnsafeList<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset).SectorNodes;
+        NativeArray<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset).SectorNodes;
         NativeArray<IntegrationTile> integrationField = internalData.IntegrationField;
         int sectorColAmount = _pathfindingManager.SectorColAmount;
         int sectorTileAmount = sectorColAmount * sectorColAmount;
@@ -389,7 +389,7 @@ public class EditorPathDebugger
         PathFlowData pathFlowData = _pathfindingManager.PathContainer.PathFlowDataList[pathIndex];
         float yOffset = 0.2f;
         UnsafeList<int> sectorMarks = locationData.SectorToPicked;
-        UnsafeList<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset).SectorNodes;
+        NativeArray<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset).SectorNodes;
         UnsafeList<FlowData> flowField = pathFlowData.FlowField;
         UnsafeLOSBitmap losmap = pathFlowData.LOSMap;
         UnsafeList<SectorFlowStart> dynamicAreaFlowStarts = locationData.DynamicAreaPickedSectorFlowStarts;

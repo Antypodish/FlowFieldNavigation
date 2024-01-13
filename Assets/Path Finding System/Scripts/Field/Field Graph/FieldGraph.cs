@@ -9,14 +9,14 @@ using Unity.Collections.LowLevel.Unsafe;
 public class FieldGraph
 {
     //main graph elements
-    public UnsafeList<SectorNode> SectorNodes;
+    public NativeArray<SectorNode> SectorNodes;
     public NativeArray<int> SecToWinPtrs;
     public NativeArray<WindowNode> WindowNodes;
     public NativeArray<int> WinToSecPtrs;
-    public UnsafeList<PortalNode> PortalNodes;
+    public NativeArray<PortalNode> PortalNodes;
     public NativeArray<PortalToPortal> PorToPorPtrs;
     public NativeList<IslandData> IslandDataList;
-    public UnsafeList<UnsafeList<int>> IslandFields;
+    public NativeArray<UnsafeList<int>> IslandFields;
     public SectorBitArray EditedSectorMarks;
     public NativeArray<AStarTile> SectorIntegrationField;
 
@@ -57,18 +57,15 @@ public class FieldGraph
         _sectorTileAmount = sectorSize;
         PortalPerWindow = portalPerWindow;
         _costsL = costsL;
-        SectorNodes = new UnsafeList<SectorNode>(sectorAmount, Allocator.Persistent);
-        SectorNodes.Length = sectorAmount;
+        SectorNodes = new NativeArray<SectorNode>(sectorAmount, Allocator.Persistent);
         SecToWinPtrs = new NativeArray<int>(secToWinPtrAmount, Allocator.Persistent);
         WindowNodes = new NativeArray<WindowNode>(windowAmount, Allocator.Persistent);
         WinToSecPtrs = new NativeArray<int>(winToSecPtrAmount, Allocator.Persistent);
-        PortalNodes = new UnsafeList<PortalNode>(portalAmount + 1, Allocator.Persistent);
-        PortalNodes.Length = portalAmount;
+        PortalNodes = new NativeArray<PortalNode>(portalAmount + 1, Allocator.Persistent);
         PorToPorPtrs = new NativeArray<PortalToPortal>(porToPorPtrAmount, Allocator.Persistent);
         IslandDataList = new NativeList<IslandData>(Allocator.Persistent);
         IslandDataList.Length = 1;
-        IslandFields = new UnsafeList<UnsafeList<int>>(_sectorMatrixColAmount * _sectorMatrixRowAmount, Allocator.Persistent);
-        IslandFields.Length = _sectorMatrixColAmount * _sectorMatrixRowAmount;
+        IslandFields = new NativeArray<UnsafeList<int>>(_sectorMatrixColAmount * _sectorMatrixRowAmount, Allocator.Persistent);
         for(int i = 0; i < IslandFields.Length; i++)
         {
             IslandFields[i] = new UnsafeList<int>(0, Allocator.Persistent);
@@ -145,9 +142,9 @@ public class FieldGraph
             SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
             TileSize = FlowFieldUtilities.TileSize,
             FieldColAmount = FlowFieldUtilities.FieldColAmount,
-            SectorNodes = SectorNodes,
-            IslandFields = IslandFields,
-            PortalNodes = PortalNodes,
+            SectorNodes = FlowFieldUtilitiesUnsafe.ToUnsafeListRedonly(SectorNodes),
+            IslandFields = FlowFieldUtilitiesUnsafe.ToUnsafeListRedonly(IslandFields),
+            PortalNodes = FlowFieldUtilitiesUnsafe.ToUnsafeListRedonly(PortalNodes),
         };
     }
     public NativeArray<WindowNode> GetWindowNodesOf(SectorNode sectorNode)

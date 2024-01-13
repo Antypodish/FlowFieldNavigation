@@ -16,7 +16,7 @@ public class EditorSectorDebugger
     public void DebugSectors(int offset)
     {
         Gizmos.color = Color.black;
-        UnsafeList<SectorNode> sectorNodes = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(offset).SectorNodes;
+        NativeArray<SectorNode> sectorNodes = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(offset).SectorNodes;
         float tileSize = _pathfindingManager.TileSize;
         float yOffset = .02f;
         for(int i = 0; i < sectorNodes.Length; i++)

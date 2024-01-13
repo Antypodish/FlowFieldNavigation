@@ -35,6 +35,8 @@ public class RoutineScheduler
 
     public void Schedule(NativeList<PathRequest> newPaths, NativeArray<CostEdit>.ReadOnly costEditRequests)
     {
+        NativeArray<IslandFieldProcessor> islandFieldProcessors = _pathfindingManager.FieldProducer.GetAllIslandFieldProcessors();
+
         //COPY OBSTACLE REQUESTS
         ReadOnlyNativeArrayToNativeListCopyJob<CostEdit> obstacleRequestCopy = new ReadOnlyNativeArrayToNativeListCopyJob<CostEdit>()
         {
@@ -90,7 +92,7 @@ public class RoutineScheduler
         JobHandle.CombineDependencies(transferHandle, copyHandle, posSetHandle).Complete();
 
 
-        _pathConstructionPipeline.ShcedulePathRequestEvalutaion(CurrentRequestedPaths, _costFieldCosts, EditedSectorBitArray.AsArray().AsReadOnly(), islandFieldReconfigHandle);
+        _pathConstructionPipeline.ShcedulePathRequestEvalutaion(CurrentRequestedPaths, _costFieldCosts, EditedSectorBitArray.AsArray().AsReadOnly(), islandFieldProcessors, islandFieldReconfigHandle);
         _movementIO.ScheduleRoutine(_costFieldCosts, costEditHandle);
     }
     public void TryCompletePredecessorJobs()

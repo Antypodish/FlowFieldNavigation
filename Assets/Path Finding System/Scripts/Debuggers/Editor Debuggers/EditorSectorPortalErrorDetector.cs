@@ -20,10 +20,10 @@ public class EditorSectorPortalErrorDetector
             Gizmos.color = Color.red;
             FieldGraph field = fieldGraphs[i];
 
-            UnsafeList<SectorNode> sectors = field.SectorNodes;
+            NativeArray<SectorNode> sectors = field.SectorNodes;
             NativeArray<int> sectowinptrs = field.SecToWinPtrs;
             NativeArray<WindowNode> windowNodes = field.WindowNodes;
-            UnsafeList<PortalNode> portalNodes = field.PortalNodes;
+            NativeArray<PortalNode> portalNodes = field.PortalNodes;
             for (int j = 0; j < sectors.Length; j++)
             {
                 int sectorIndex = j;

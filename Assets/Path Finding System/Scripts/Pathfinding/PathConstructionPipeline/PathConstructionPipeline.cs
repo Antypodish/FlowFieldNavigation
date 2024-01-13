@@ -47,7 +47,11 @@ public class PathConstructionPipeline
         _destinationUpdatedPathIndicies = new NativeList<int>(Allocator.Persistent);
         _expandedPathIndicies = new NativeList<int>(Allocator.Persistent);
     }
-    public void ShcedulePathRequestEvalutaion(NativeList<PathRequest> requestedPaths, NativeArray<UnsafeListReadOnly<byte>> costFieldCosts, NativeArray<SectorBitArray>.ReadOnly editedSectorBitArray, JobHandle islandFieldHandleAsDependency)
+    public void ShcedulePathRequestEvalutaion(NativeList<PathRequest> requestedPaths,
+        NativeArray<UnsafeListReadOnly<byte>> costFieldCosts,
+        NativeArray<SectorBitArray>.ReadOnly editedSectorBitArray,
+        NativeArray<IslandFieldProcessor> islandFieldProcessors,
+        JobHandle islandFieldHandleAsDependency)
     {
         //RESET CONTAINERS
         _sourcePositions.Clear();
@@ -63,7 +67,7 @@ public class PathConstructionPipeline
         NativeArray<int> AgentNewPathIndicies = _pathfindingManager.AgentDataContainer.AgentNewPathIndicies;
         NativeArray<int> AgentCurPathIndicies = _pathfindingManager.AgentDataContainer.AgentCurPathIndicies;
         NativeArray<int> AgentFlockIndexArray = _pathfindingManager.AgentDataContainer.AgentFlockIndicies;
-        _islandFieldProcessors = _pathfindingManager.FieldProducer.GetAllIslandFieldProcessors();
+        _islandFieldProcessors = islandFieldProcessors;
         NativeArray<UnsafeList<DijkstraTile>> targetSectorIntegrations = _pathContainer.TargetSectorIntegrationList;
         NativeArray<PathLocationData> pathLocationDataArray = _pathContainer.PathLocationDataList;
         NativeArray<PathFlowData> pathFlowDataArray = _pathContainer.PathFlowDataList;

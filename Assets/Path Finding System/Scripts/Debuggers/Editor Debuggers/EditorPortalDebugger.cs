@@ -22,7 +22,7 @@ public class EditorPortalDebugger
         Gizmos.color = Color.cyan;
         FieldGraph fieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(offset);
         NativeArray<WindowNode> windowNodes = fieldGraph.WindowNodes;
-        UnsafeList<PortalNode> portalNodes = fieldGraph.PortalNodes;
+        NativeArray<PortalNode> portalNodes = fieldGraph.PortalNodes;
         for(int i = 0; i < windowNodes.Length; i++)
         {
             int porPtr = windowNodes[i].PorPtr;
@@ -45,7 +45,7 @@ public class EditorPortalDebugger
         NativeArray<int> secToWin = fieldGraph.SecToWinPtrs;
         NativeArray<int> winToSec = fieldGraph.WinToSecPtrs;
         NativeArray<WindowNode> windowNodes = fieldGraph.WindowNodes;
-        UnsafeList<PortalNode> portalNodes = fieldGraph.PortalNodes;
+        NativeArray<PortalNode> portalNodes = fieldGraph.PortalNodes;
 
         int secToWinPtr = _clickedSectorNodes.SecToWinPtr;
         int secToWinCnt = _clickedSectorNodes.SecToWinCnt;
@@ -85,7 +85,7 @@ public class EditorPortalDebugger
 
         //debug neighbours of clicked portal
         NativeArray<PortalToPortal> porPtrs = fieldGraph.PorToPorPtrs;
-        UnsafeList<PortalNode> portalNodes = fieldGraph.PortalNodes;
+        NativeArray<PortalNode> portalNodes = fieldGraph.PortalNodes;
         Gizmos.color = Color.black;
         DebugNeighboursAt(_clickedPortalNode.Portal1);
         DebugNeighboursAt(_clickedPortalNode.Portal2);
@@ -165,7 +165,7 @@ public class EditorPortalDebugger
             {
                 Vector3 hitPos = hit.point;
                 NativeArray<int> portalIndicies = fieldGraph.GetPortalIndicies(fieldGraph.GetSectorNodeAt(hitPos), fieldGraph.WindowNodes);
-                UnsafeList<PortalNode> portalNodes = fieldGraph.PortalNodes;
+                NativeArray<PortalNode> portalNodes = fieldGraph.PortalNodes;
                 Index2 clickedIndex = new Index2(Mathf.FloorToInt(hitPos.z / tileSize), Mathf.FloorToInt(hitPos.x / tileSize));
                 for (int i = 0; i < portalIndicies.Length; i++)
                 {

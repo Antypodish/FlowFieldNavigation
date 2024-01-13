@@ -21,13 +21,13 @@ public struct PortalNodeAdditionReductionJob : IJob
     public UnsafeList<DijkstraTile> TargetSectorCosts;
 
     [ReadOnly] public NativeSlice<float2> SourcePositions;
-    [ReadOnly] public UnsafeList<SectorNode> SectorNodes;
+    [ReadOnly] public NativeArray<SectorNode> SectorNodes;
     [ReadOnly] public NativeArray<int> SecToWinPtrs;
     [ReadOnly] public NativeArray<WindowNode> WindowNodes;
     [ReadOnly] public NativeArray<int> WinToSecPtrs;
-    [ReadOnly] public UnsafeList<PortalNode> PortalNodes;
+    [ReadOnly] public NativeArray<PortalNode> PortalNodes;
     [ReadOnly] public NativeArray<PortalToPortal> PorPtrs;
-    [ReadOnly] public UnsafeList<UnsafeList<int>> IslandFields;
+    [ReadOnly] public NativeArray<UnsafeList<int>> IslandFields;
 
     public NativeList<int> AStarTraverseIndexList;
     public NativeList<int> SourcePortalIndexList;
@@ -117,7 +117,7 @@ public struct PortalNodeAdditionReductionJob : IJob
     }
     int RunReductionAStar(int sourcePortalIndex, DoubleUnsafeHeap<int> traversalHeap)
     {
-        UnsafeList<PortalNode> portalNodes = PortalNodes;
+        NativeArray<PortalNode> portalNodes = PortalNodes;
         NativeArray<PortalTraversalData> portalTraversalDataArray = PortalTraversalDataArray;
         PortalTraversalData curData = PortalTraversalDataArray[sourcePortalIndex];
         if (curData.HasMark(PortalTraversalMark.AStarPicked) || curData.HasMark(PortalTraversalMark.DijkstraTraversed))

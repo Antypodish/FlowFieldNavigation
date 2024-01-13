@@ -24,12 +24,12 @@ public struct PortalNodeAdditionTraversalJob : IJob
     public NativeList<int> PickedToSector;
     public NativeArray<int> FlowFieldLength;
 
-    [ReadOnly] public UnsafeList<SectorNode> SectorNodes;
+    [ReadOnly] public NativeArray<SectorNode> SectorNodes;
     [ReadOnly] public NativeArray<WindowNode> WindowNodes;
     [ReadOnly] public NativeArray<int> WinToSecPtrs;
-    [ReadOnly] public UnsafeList<PortalNode> PortalNodes;
+    [ReadOnly] public NativeArray<PortalNode> PortalNodes;
     [ReadOnly] public NativeArray<PortalToPortal> PorPtrs;
-    [ReadOnly] public UnsafeList<UnsafeList<int>> IslandFields;
+    [ReadOnly] public NativeArray<UnsafeList<int>> IslandFields;
     [ReadOnly] public NativeArray<int> NewPickedSectorStartIndex;
 
     public NativeList<int> SourcePortalIndexList;
@@ -125,7 +125,7 @@ public struct PortalNodeAdditionTraversalJob : IJob
     {
         SingleUnsafeHeap<int> travHeap = new SingleUnsafeHeap<int>(0, Allocator.Temp);
         NativeArray<PortalTraversalData> portalTraversalDataArray = PortalTraversalDataArray;
-        UnsafeList<PortalNode> portalNodes = PortalNodes;
+        NativeArray<PortalNode> portalNodes = PortalNodes;
         NativeArray<PortalToPortal> porPtrs = PorPtrs;
 
         for (int i = 0; i < DijkstraStartIndicies.Length; i++)

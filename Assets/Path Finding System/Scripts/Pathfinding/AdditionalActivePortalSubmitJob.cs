@@ -17,7 +17,7 @@ public struct AdditionalActivePortalSubmitJob : IJob
     public int SectorMatrixRowAmount;
     public int FieldColAmount;
 
-    [ReadOnly] public UnsafeList<PortalNode> PortalNodes;
+    [ReadOnly] public NativeArray<PortalNode> PortalNodes;
     [ReadOnly] public NativeArray<PortalToPortal> PortalEdges;
     [ReadOnly] public NativeArray<WindowNode> WindowNodes;
     [ReadOnly] public NativeArray<int> WinToSecPtrs;
