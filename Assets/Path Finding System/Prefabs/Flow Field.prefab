@@ -9,8 +9,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8734084087089525697}
-  - component: {fileID: 8734084087838304231}
-  - component: {fileID: 8734084086652011014}
+  - component: {fileID: 7249324459304311081}
+  - component: {fileID: 2062550143246277084}
   - component: {fileID: 1328932017}
   m_Layer: 0
   m_Name: Flow Field
@@ -34,7 +34,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8734084087838304231
+--- !u!114 &7249324459304311081
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -43,12 +43,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 8734084087089525702}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2f4a9a76c0d5a394781edaab628a2f0a, type: 3}
+  m_Script: {fileID: 11500000, guid: 0742960d70d14054dab12a8a161a44fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _terrainGenerator: {fileID: 0}
-  _maxCostfieldOffset: 6
-  BaseSpatialGridSize: 3
   LineOfSightRange: 30
   TileSize: 0
   RowAmount: 0
@@ -56,7 +53,8 @@ MonoBehaviour:
   SectorColAmount: 10
   SectorMatrixColAmount: 0
   SectorMatrixRowAmount: 0
---- !u!114 &8734084086652011014
+  BaseSpatialGridSize: 0
+--- !u!114 &2062550143246277084
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -65,7 +63,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 8734084087089525702}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a52bbbebd324b0e47a82462e07f07058, type: 3}
+  m_Script: {fileID: 11500000, guid: d6d535ca213de0d4db2061cf0a22b48d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   SeperationMultiplier: 15
@@ -86,7 +84,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6b4e7c9023ae5a34e98e5b8c86f8bff4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _pathfindingManager: {fileID: 8734084087838304231}
+  _pathfindingManager: {fileID: 7249324459304311081}
   _debuggingEnabled: 0
   AgentToDebug: {fileID: 0}
   _costFieldOffset: 0

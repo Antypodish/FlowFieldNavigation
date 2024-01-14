@@ -250,7 +250,7 @@ PrefabInstance:
         type: 3}
       propertyPath: _pathfindingManager
       value: 
-      objectReference: {fileID: 773146450}
+      objectReference: {fileID: 1328932016}
     - target: {fileID: 1284591848226207641, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: m_RootOrder
@@ -279,17 +279,17 @@ PrefabInstance:
     - target: {fileID: 1284591848226207641, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207641, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207641, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207641, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
@@ -308,18 +308,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f04ffee1160a8494782072c6bf5424ca, type: 3}
---- !u!114 &773146450 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8734084087838304231, guid: 5e3867b8afbc0bb49a0027ab49965980,
-    type: 3}
-  m_PrefabInstance: {fileID: 1328932015}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2f4a9a76c0d5a394781edaab628a2f0a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1001 &786654712
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -605,6 +593,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1328932017, guid: 5e3867b8afbc0bb49a0027ab49965980, type: 3}
+      propertyPath: _pathfindingManager
+      value: 
+      objectReference: {fileID: 1328932016}
     - target: {fileID: 8734084087089525697, guid: 5e3867b8afbc0bb49a0027ab49965980,
         type: 3}
       propertyPath: m_RootOrder
@@ -672,6 +664,18 @@ PrefabInstance:
       objectReference: {fileID: 214059218}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5e3867b8afbc0bb49a0027ab49965980, type: 3}
+--- !u!114 &1328932016 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7249324459304311081, guid: 5e3867b8afbc0bb49a0027ab49965980,
+    type: 3}
+  m_PrefabInstance: {fileID: 1328932015}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0742960d70d14054dab12a8a161a44fa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &1328932017 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1328932017, guid: 5e3867b8afbc0bb49a0027ab49965980,
@@ -728,7 +732,7 @@ PrefabInstance:
         type: 3}
       propertyPath: _pathfindingManager
       value: 
-      objectReference: {fileID: 773146450}
+      objectReference: {fileID: 1328932016}
     - target: {fileID: 5836007236481813446, guid: f55c253bbe9585643ad7034e78074555,
         type: 3}
       propertyPath: _navigationDebugger
@@ -738,7 +742,7 @@ PrefabInstance:
         type: 3}
       propertyPath: _pathfindingManager
       value: 
-      objectReference: {fileID: 773146450}
+      objectReference: {fileID: 1328932016}
     - target: {fileID: 5836007236481813448, guid: f55c253bbe9585643ad7034e78074555,
         type: 3}
       propertyPath: m_Name
