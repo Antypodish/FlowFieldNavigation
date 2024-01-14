@@ -1,24 +1,19 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
     <ui:VisualElement name="MainElement" style="flex-grow: 1; align-items: auto; justify-content: space-between; flex-direction: row-reverse;">
         <ui:VisualElement name="RightAligner" style="background-color: rgba(0, 0, 0, 0); width: 300px; height: 100%; border-left-color: rgba(0, 0, 0, 0); border-right-color: rgba(0, 0, 0, 0); border-top-color: rgba(0, 0, 0, 0); border-bottom-color: rgba(0, 0, 0, 0); border-left-width: 3px; border-right-width: 3px; border-top-width: 3px; border-bottom-width: 3px;">
-            <ui:VisualElement name="TogglePanel" style="height: 500px; width: 100%; background-color: rgb(72, 60, 60); border-left-width: 3px; border-right-width: 3px; border-top-width: 3px; border-bottom-width: 3px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0);">
+            <ui:VisualElement name="TogglePanel" style="height: 298px; width: 100%; background-color: rgb(72, 60, 60); border-left-width: 3px; border-right-width: 3px; border-top-width: 3px; border-bottom-width: 3px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0);">
                 <ui:VisualElement name="AgentCounter" style="height: 50px; width: 100%; flex-direction: row; align-items: center;">
                     <ui:Label text="Agent Count:" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255);" />
                     <ui:Label text="0" display-tooltip-when-elided="true" name="AgentCountNumber" style="color: rgb(255, 255, 255);" />
                 </ui:VisualElement>
                 <ui:Label text="Press &apos;Q&apos; to select single agent" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255);" />
                 <ui:Label text="Press &apos;W&apos; to select multiple agents" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255);" />
-                <ui:Label text="Press &apos;E&apos; to set unwalkable" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255);" />
-                <ui:Label text="Press &apos;R&apos; to set walkable" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255);" />
+                <ui:Label text="Press &apos;E&apos; to place obstacle" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255);" />
+                <ui:Label text="Press &apos;R&apos; to remove selected obstacles" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255);" />
                 <ui:Label text="Press &apos;A&apos; to add more agents" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255);" />
                 <ui:Label text="Press &apos;S&apos; to stop selected agents" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255);" />
+                <ui:Label text="Press &apos;H&apos; to make agents Hold Ground" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255);" />
                 <ui:Label text="Hold &apos;LShift&apos; to force ground destination" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255);" />
-                <ui:Toggle label="Debug Mode" name="DebugModeToggle" value="false" style="color: rgb(255, 255, 255); width: auto;" />
-                <ui:Toggle label="Debug CostField" name="CostFieldToggle" style="color: rgb(255, 255, 255);" />
-                <ui:Toggle label="Debug FlowField" name="FlowFieldToggle" style="color: rgb(255, 255, 255);" />
-                <ui:Toggle label="Debug IntegrationField" name="IntegrationFieldToggle" style="font-size: 14px; color: rgb(255, 255, 255);" />
-                <ui:Toggle label="Debug Portal Sequence" name="PortalSequenceToggle" style="font-size: 14px; color: rgb(255, 255, 255);" />
-                <ui:Toggle label="Debug Line of Sight Pass" name="LOSPassToggle" style="font-size: 14px; color: rgb(255, 255, 255);" />
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

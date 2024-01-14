@@ -5,7 +5,8 @@ using UnityEngine;
 public class EditorDebuggingController : MonoBehaviour
 {
     [SerializeField] PathfindingManager _pathfindingManager;
-    [SerializeField] AgentSelectionController _agentSelectionController;
+    [SerializeField] bool _debuggingEnabled;
+    [HideInInspector] public FlowFieldAgent AgentToDebug;
     [Header("Field Debugger")]
     [SerializeField] CostFieldOffset _costFieldOffset;
     [SerializeField] bool _costField;
@@ -81,6 +82,8 @@ public class EditorDebuggingController : MonoBehaviour
     }
     private void OnDrawGizmos()
     {
+        FlowFieldUtilities.DebugMode = _debuggingEnabled;
+        if (!_debuggingEnabled) { return; }
 
         if (_sectors && _sectorDebugger != null) { _sectorDebugger.DebugSectors((int) _costFieldOffset); }
         if( _windows && _windowDebugger != null) { _windowDebugger.DebugWindows((int) _costFieldOffset); }
@@ -94,8 +97,8 @@ public class EditorDebuggingController : MonoBehaviour
         if(_sectorIslands && _islandDebugger != null) { _islandDebugger.DebugTileIslands((int) _costFieldOffset); }
         if(_portalErrorDetection && _portalErrorDetector != null) { _portalErrorDetector.Debug((int) _costFieldOffset); }
 
-        if(_agentSelectionController == null) { return; }
-        FlowFieldAgent _agentToDebug = _agentSelectionController.DebuggableAgent;
+        if(AgentToDebug == null) { return; }
+        FlowFieldAgent _agentToDebug = AgentToDebug;
         if(_agentToDebug != null)
         {
             if (_debugPortalTraversalMarks && _pathDebugger != null) { _pathDebugger.DebugPortalTraversalMarks(_agentToDebug); }

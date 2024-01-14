@@ -15,6 +15,7 @@ public class AgentSelectionController : MonoBehaviour
     [SerializeField] int _startingAgentCount;
     [SerializeField] GameObject _agentPrefab;
     [SerializeField] PathfindingManager _pathfindingManager;
+    [SerializeField] EditorDebuggingController _navigationDebugger;
     [SerializeField] Material _normalAgentMaterial;
     [SerializeField] Material _selectedAgentMaterial;
     [SerializeField] Image _selectionBox;
@@ -35,6 +36,7 @@ public class AgentSelectionController : MonoBehaviour
     }
     private void Update()
     {
+        _navigationDebugger.AgentToDebug = DebuggableAgent;
         float lowerLimit = 150;
         float upperLimit = 350;
         for (int i = 0; i < _agentsToCreate; i++)

@@ -12,7 +12,6 @@ public class PathfindingManager : MonoBehaviour
 {
     [SerializeField] TerrainGenerator _terrainGenerator;
     [SerializeField] int _maxCostfieldOffset;
-    [SerializeField] public float AgentUpdateFrequency;
     [SerializeField] public float BaseSpatialGridSize;
     [SerializeField] public int LineOfSightRange;
 
@@ -28,7 +27,6 @@ public class PathfindingManager : MonoBehaviour
     public AgentDataContainer AgentDataContainer;
     public ObstacleContainer ObstacleContainer;
     public FlockDataContainer FlockContainer;
-    float _lastAgentUpdateTime = 0;
     PathfindingUpdateRoutine _pathfindingRoutineUpdater;
     AgentUpdater _agentUpdater;
 
