@@ -6,14 +6,14 @@ using UnityEngine;
 
 public class CostFieldProducer
 {
-    WalkabilityData _walkabilityData;
+    WalkabilityCell[][] _walkabilityMatrix;
     CostField[] _producedCostFields;
 
     //utility
     public NativeArray<SectorDirectionData> SectorDirections;
-    public CostFieldProducer(WalkabilityData walkabilityData, byte sectorTileAmount)
+    public CostFieldProducer(WalkabilityCell[][] walkabilityMatrix, byte sectorTileAmount)
     {
-        _walkabilityData = walkabilityData;
+        _walkabilityMatrix = walkabilityMatrix;
 
         //CALCULATE SECTOR DIRECTIONS
         SectorDirections = new NativeArray<SectorDirectionData>(sectorTileAmount * sectorTileAmount, Allocator.Persistent);
@@ -22,13 +22,13 @@ public class CostFieldProducer
             SectorDirections[i] = new SectorDirectionData(i, sectorTileAmount);
         }
     }
-    public void ProduceCostFields(int maxOffset, int sectorColAmount, int sectorMatrixColAmount, int sectorMatrixRowAmount)
+    public void ProduceCostFields(int maxOffset, int rowAmount, int colAmount, int sectorColAmount, int sectorMatrixColAmount, int sectorMatrixRowAmount)
     {
         int count = maxOffset + 1;
         _producedCostFields = new CostField[count];
         for(int i = 0; i < count; i++)
         {
-            _producedCostFields[i] = new CostField(_walkabilityData, i, sectorColAmount, sectorMatrixColAmount, sectorMatrixRowAmount);
+            _producedCostFields[i] = new CostField(_walkabilityMatrix, rowAmount, colAmount, i, sectorColAmount, sectorMatrixColAmount, sectorMatrixRowAmount);
         }
     }
     public CostField[] GetAllCostFields()

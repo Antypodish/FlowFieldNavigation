@@ -1,9 +1,7 @@
 ﻿using Unity.Burst;
 using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
-using static UnityEngine.Rendering.DebugUI.Table;
 
 [BurstCompile]
 public struct FieldGraphConfigurationJob : IJob

@@ -1,11 +1,6 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
-using TMPro;
-using Unity.Collections;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngineInternal;
 
 public class AgentSelectionController : MonoBehaviour
 {

@@ -83,7 +83,7 @@ public class PathfindingManager : MonoBehaviour
         SectorMatrixColAmount = ColumnAmount / SectorColAmount;
         SectorMatrixRowAmount = RowAmount / SectorColAmount;
         SetFlowFieldUtilities();
-        FieldProducer = new FieldProducer(startParameters.WalkabilityData, SectorColAmount);
+        FieldProducer = new FieldProducer(startParameters.WalkabilityMatrix, SectorColAmount);
         FieldProducer.CreateField(startParameters.MaxCostFieldOffset, SectorColAmount, SectorMatrixColAmount, SectorMatrixRowAmount, RowAmount, ColumnAmount, TileSize);
         AgentDataContainer = new AgentDataContainer();
         PathContainer = new PathContainer(this);
@@ -152,7 +152,17 @@ public struct SimulationStartParameters
     public float TileSize;
     public int RowCount;
     public int ColumCount;
-    public WalkabilityData WalkabilityData;
+    public WalkabilityCell[][] WalkabilityMatrix;
     public int MaxCostFieldOffset;
     public float BaseSpatialGridSize;
+}
+public struct WalkabilityCell
+{
+    public Vector3 CellPosition;
+    public Walkability Walkability;
+}
+public enum Walkability : byte
+{
+    Unwalkable,
+    Walkable
 }

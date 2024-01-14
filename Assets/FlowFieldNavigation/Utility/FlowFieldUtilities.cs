@@ -1,7 +1,4 @@
-﻿using System;
-using System.Reflection;
-using Unity.Mathematics;
-using static UnityEngine.Rendering.VolumeComponent;
+﻿using Unity.Mathematics;
 
 public static class FlowFieldUtilities
 {

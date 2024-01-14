@@ -66,7 +66,7 @@ public class TerrainGenerator : MonoBehaviour
             ColumCount = ColumnAmount,
             RowCount = RowAmount,
             MaxCostFieldOffset = 5,
-            WalkabilityData = WalkabilityData,
+            WalkabilityMatrix = WalkabilityData.WalkabilityMatrix,
         };
         _pathfindingManager.StartSimulation(simParam);
     }

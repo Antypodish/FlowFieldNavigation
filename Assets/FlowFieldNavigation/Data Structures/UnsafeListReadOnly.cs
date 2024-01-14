@@ -1,6 +1,5 @@
 ﻿using Unity.Collections.LowLevel.Unsafe;
 using Unity.Collections;
-using System.Runtime.CompilerServices;
 
 public struct UnsafeListReadOnly<T> where T : unmanaged
 {

@@ -86,13 +86,3 @@ public class WalkabilityData
         }
     }
 }
-public struct WalkabilityCell
-{
-    public Vector3 CellPosition;
-    public Walkability Walkability;
-}
-public enum Walkability : byte
-{
-    Unwalkable,
-    Walkable
-}
