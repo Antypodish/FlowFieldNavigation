@@ -82,7 +82,9 @@ public class EditorDebuggingController : MonoBehaviour
     }
     private void OnDrawGizmos()
     {
+        if (!_pathfindingManager.SimulationStarted) { return; }
         FlowFieldUtilities.DebugMode = _debuggingEnabled;
+        UnityEngine.Debug.Log(FlowFieldUtilities.DebugMode);
         if (!_debuggingEnabled) { return; }
 
         if (_sectors && _sectorDebugger != null) { _sectorDebugger.DebugSectors((int) _costFieldOffset); }

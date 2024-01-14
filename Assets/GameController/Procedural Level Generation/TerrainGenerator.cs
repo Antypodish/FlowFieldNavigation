@@ -6,6 +6,7 @@ public class TerrainGenerator : MonoBehaviour
 {
     [SerializeField] MeshCollider _fieldMeshCollider;
     [SerializeField] MeshFilter _fieldMeshFilter;
+    [SerializeField] PathfindingManager _pathfindingManager;
     [Header("Random Generator")]
     [SerializeField][Range(1,100)] float _resolution;    //5 good
     [SerializeField] SimulationState _simulationState;
@@ -55,6 +56,19 @@ public class TerrainGenerator : MonoBehaviour
 
         obsGenerator = new ObstacleGenerator(this, WalkabilityData, _obstacleMat);
         obsGenerator.CreateMesh();
+
+
+        //Start Simulation
+        SimulationStartParameters simParam = new SimulationStartParameters()
+        {
+            TileSize = TileSize,
+            BaseSpatialGridSize = 3,
+            ColumCount = ColumnAmount,
+            RowCount = RowAmount,
+            MaxCostFieldOffset = 5,
+            WalkabilityData = WalkabilityData,
+        };
+        _pathfindingManager.StartSimulation(simParam);
     }
 }
 public enum SimulationState : byte
