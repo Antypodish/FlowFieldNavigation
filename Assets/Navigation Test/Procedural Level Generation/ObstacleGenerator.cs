@@ -39,7 +39,7 @@ public class ObstacleGenerator
                 {
                     //DETERMINE OBSTACLE OBJECT
                     obsCount++;
-                    if ((obsCount % 12000) == 0)
+                    if ((obsCount % 6000) == 0)
                     {
                         curMesh.Clear();
                         curMesh.vertices = _obstacleVerticies.ToArray();
@@ -56,22 +56,70 @@ public class ObstacleGenerator
 
                     int vertexStartIndex = _obstacleVerticies.Count;
                     //ADD VERTICIES
-                    Vector3 botLeft = cell.CellPosition;
-                    Vector3 topLeft = cell.CellPosition + new Vector3(0, 0, tileSize);
-                    Vector3 topRight = cell.CellPosition + new Vector3(tileSize, 0, tileSize);
-                    Vector3 botRight = cell.CellPosition + new Vector3(tileSize, 0, 0);
-                    _obstacleVerticies.Add(botLeft);
-                    _obstacleVerticies.Add(topLeft);
-                    _obstacleVerticies.Add(topRight);
-                    _obstacleVerticies.Add(botRight);
+                    Vector3 lowerBotLeft = cell.CellPosition;
+                    Vector3 lowerTopLeft = cell.CellPosition + new Vector3(0, 0, tileSize);
+                    Vector3 lowerTopRight = cell.CellPosition + new Vector3(tileSize, 0, tileSize);
+                    Vector3 lowerBotRight = cell.CellPosition + new Vector3(tileSize, 0, 0);
 
-                    _obstacleTriangles.Add(vertexStartIndex);
-                    _obstacleTriangles.Add(vertexStartIndex + 1);
-                    _obstacleTriangles.Add(vertexStartIndex + 3);
-                    _obstacleTriangles.Add(vertexStartIndex + 1);
-                    _obstacleTriangles.Add(vertexStartIndex + 2);
-                    _obstacleTriangles.Add(vertexStartIndex + 3);
+                    Vector3 upperBotLeft = cell.CellPosition + new Vector3(0, 2f, 0);
+                    Vector3 upperTopLeft = cell.CellPosition + new Vector3(0, 2f, tileSize);
+                    Vector3 upperTopRight = cell.CellPosition + new Vector3(tileSize, 2f, tileSize);
+                    Vector3 upperBotRight = cell.CellPosition + new Vector3(tileSize, 2f, 0);
 
+                    int lbl = vertexStartIndex;
+                    int ltl = vertexStartIndex + 1;
+                    int ltr = vertexStartIndex + 2;
+                    int lbr = vertexStartIndex + 3;
+                    int ubl = vertexStartIndex + 4;
+                    int utl = vertexStartIndex + 5;
+                    int utr = vertexStartIndex + 6;
+                    int ubr = vertexStartIndex + 7;
+
+                    //Verts
+                    _obstacleVerticies.Add(lowerBotLeft);
+                    _obstacleVerticies.Add(lowerTopLeft);
+                    _obstacleVerticies.Add(lowerTopRight);
+                    _obstacleVerticies.Add(lowerBotRight);
+                    _obstacleVerticies.Add(upperBotLeft);
+                    _obstacleVerticies.Add(upperTopLeft);
+                    _obstacleVerticies.Add(upperTopRight);
+                    _obstacleVerticies.Add(upperBotRight);
+
+                    //Trigs
+                    _obstacleTriangles.Add(ubl);
+                    _obstacleTriangles.Add(utl);
+                    _obstacleTriangles.Add(ubr);
+                    _obstacleTriangles.Add(utl);
+                    _obstacleTriangles.Add(utr);
+                    _obstacleTriangles.Add(ubr);
+
+                    _obstacleTriangles.Add(lbl);
+                    _obstacleTriangles.Add(ubl);
+                    _obstacleTriangles.Add(lbr);
+                    _obstacleTriangles.Add(ubl);
+                    _obstacleTriangles.Add(ubr);
+                    _obstacleTriangles.Add(lbr);
+
+                    _obstacleTriangles.Add(lbr);
+                    _obstacleTriangles.Add(ubr);
+                    _obstacleTriangles.Add(ltr);
+                    _obstacleTriangles.Add(ubr);
+                    _obstacleTriangles.Add(utr);
+                    _obstacleTriangles.Add(ltr);
+
+                    _obstacleTriangles.Add(ltl);
+                    _obstacleTriangles.Add(utl);
+                    _obstacleTriangles.Add(lbl);
+                    _obstacleTriangles.Add(utl);
+                    _obstacleTriangles.Add(ubl);
+                    _obstacleTriangles.Add(lbl);
+
+                    _obstacleTriangles.Add(ltr);
+                    _obstacleTriangles.Add(utr);
+                    _obstacleTriangles.Add(ltl);
+                    _obstacleTriangles.Add(utr);
+                    _obstacleTriangles.Add(utl);
+                    _obstacleTriangles.Add(ltl);
                 }
             }
         }
@@ -90,8 +138,6 @@ public class ObstacleGenerator
         obj.AddComponent<MeshRenderer>();
         MeshRenderer renderer = obj.GetComponent<MeshRenderer>();
         renderer.material = _obstacleMat;
-        renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-        renderer.receiveShadows = false;
         obj.GetComponent<MeshFilter>().mesh = mesh;
         return obj;
     }

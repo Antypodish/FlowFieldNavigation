@@ -18,11 +18,7 @@ public class TerrainGenerator : MonoBehaviour
     public float TileSize;
     public int RowAmount;
     public int ColumnAmount;
-
-    //FIELD
-    Vector3[] _fieldVerticies = new Vector3[4];
-    int[] _fieldTriangles = new int[6];
-    Mesh _fieldMesh;
+    public bool RandomHeights;
 
     ObstacleGenerator obsGenerator;
 
@@ -58,7 +54,7 @@ public class TerrainGenerator : MonoBehaviour
         {
             for(int j = 0; j < vertColAmount; j++)
             {
-                float height = Random.Range(0f, 1f);
+                float height = RandomHeights ? Random.Range(0f, 1f) : 0;
                 vertexHeights[vertexHeightIndex] = height;
                 vertexHeightIndex++;
             }
@@ -101,7 +97,6 @@ public class TerrainGenerator : MonoBehaviour
         MeshRenderer meshRenderer = partitionObject.GetComponent<MeshRenderer>();
         boxCollider.size = new Vector3((vertColAmount - 1) * TileSize, 0f, (vertRowAmount - 1) * TileSize);
         meshRenderer.material = _fieldMat;
-        meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 
 
         //CONFIGURE FIELD MESH
