@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using Unity.Collections;
 using UnityEngine;
 
 public class TerrainGenerator : MonoBehaviour
@@ -11,6 +12,7 @@ public class TerrainGenerator : MonoBehaviour
     [SerializeField][Range(1,100)] float _resolution;    //5 good
     [SerializeField] SimulationState _simulationState;
     [SerializeField] Material _obstacleMat;
+    [SerializeField] Material _fieldMat;
     [HideInInspector] public WalkabilityData WalkabilityData;
 
     public float TileSize;
@@ -28,31 +30,7 @@ public class TerrainGenerator : MonoBehaviour
     {
         WalkabilityData = new WalkabilityData(TileSize, RowAmount, ColumnAmount, _resolution, _simulationState);
 
-        //CONFIGURE FIELD MESH
-        _fieldMesh = new Mesh();
-        _fieldMesh.name = "Field Mesh";
-        _fieldMeshFilter.mesh = _fieldMesh;
-
-        //SET VERTICIES OF FIELD MESH
-        _fieldVerticies[0] = Vector3.zero;
-        _fieldVerticies[1] = new Vector3(TileSize * ColumnAmount, 0, 0);
-        _fieldVerticies[2] = new Vector3(0, 0, TileSize * RowAmount);
-        _fieldVerticies[3] = _fieldVerticies[1] + _fieldVerticies[2];
-
-        //SET TRIANGLES OF FIELD MESH
-        _fieldTriangles[0] = 2;
-        _fieldTriangles[1] = 1;
-        _fieldTriangles[2] = 0;
-        _fieldTriangles[3] = 2;
-        _fieldTriangles[4] = 3;
-        _fieldTriangles[5] = 1;
-
-        //UPDATE FIELD MESH
-        _fieldMesh.Clear();
-        _fieldMesh.vertices = _fieldVerticies;
-        _fieldMesh.triangles = _fieldTriangles;
-        _fieldMesh.RecalculateNormals();
-        _fieldMeshCollider.sharedMesh = _fieldMesh;
+        GenerateMesh();
 
         obsGenerator = new ObstacleGenerator(this, WalkabilityData, _obstacleMat);
         obsGenerator.CreateMesh();
@@ -70,9 +48,116 @@ public class TerrainGenerator : MonoBehaviour
         };
         _pathfindingManager.StartSimulation(simParam);
     }
-    private void Update()
+    public void GenerateMesh()
     {
-        if (_pathfindingManager.SimulationStarted) { return; }
+        int vertColAmount = ColumnAmount + 1;
+        int vertRowAmount = RowAmount + 1;
+        NativeArray<float> vertexHeights = new NativeArray<float>(vertColAmount * vertRowAmount, Allocator.Temp);
+        int vertexHeightIndex = 0;
+        for(int i = 0; i < vertRowAmount; i++)
+        {
+            for(int j = 0; j < vertColAmount; j++)
+            {
+                float height = Random.Range(0f, 1f);
+                vertexHeights[vertexHeightIndex] = height;
+                vertexHeightIndex++;
+            }
+        }
+
+        int basePartitionSize = 128;
+        int partitionColAmount = vertColAmount / 128;
+        partitionColAmount = vertColAmount % 128 != 0 ? partitionColAmount + 1 : partitionColAmount;
+        int partitionRowAmount = vertRowAmount / 128;
+        partitionRowAmount = vertRowAmount % 128 != 0 ? partitionRowAmount + 1 : partitionRowAmount;
+
+        for(int i = 0; i < partitionRowAmount; i++)
+        {
+            int partitionVertRowAmount = basePartitionSize;
+            int startVertexRow = i * (basePartitionSize - 1);
+            if (i + 1 == partitionRowAmount) { partitionVertRowAmount = vertRowAmount - startVertexRow; }
+            for(int j = 0; j < partitionColAmount; j++)
+            {
+                int partitionVertColAmount = basePartitionSize;
+                int startVertexCol = j * (basePartitionSize - 1);
+                if (j + 1 == partitionColAmount) { partitionVertColAmount = vertColAmount - startVertexCol; }
+                Vector3 partitionStartPos = new Vector3(startVertexCol * TileSize, 0f, startVertexRow * TileSize);
+                GeneratePartition(partitionStartPos, partitionVertColAmount, partitionVertRowAmount, vertexHeights, startVertexRow * vertColAmount + startVertexCol);
+            }
+        }
+    }
+
+    void GeneratePartition(Vector3 startPos, int vertColAmount, int vertRowAmount, NativeArray<float> heights, int vertStartIndex)
+    {
+        GameObject partitionObject = new GameObject("Partition");
+        partitionObject.layer = 3;
+        partitionObject.transform.position = startPos + new Vector3((vertColAmount -1)* TileSize / 2, 0f, (vertRowAmount -1) * TileSize / 2);
+        partitionObject.transform.parent = gameObject.transform;
+        partitionObject.AddComponent<MeshFilter>();
+        partitionObject.AddComponent<BoxCollider>();
+        partitionObject.AddComponent<MeshRenderer>();
+
+        MeshFilter meshFilter = partitionObject.GetComponent<MeshFilter>();
+        BoxCollider boxCollider = partitionObject.GetComponent<BoxCollider>();
+        MeshRenderer meshRenderer = partitionObject.GetComponent<MeshRenderer>();
+        boxCollider.size = new Vector3((vertColAmount - 1) * TileSize, 0f, (vertRowAmount - 1) * TileSize);
+        meshRenderer.material = _fieldMat;
+        meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+
+        //CONFIGURE FIELD MESH
+        Mesh partitionMesh = new Mesh();
+        partitionMesh.name = "Field Mesh";
+        meshFilter.mesh = partitionMesh;
+
+
+        Vector3 vertexBaseTranslation = new Vector3(-(vertColAmount - 1) * TileSize / 2, 0f, -(vertRowAmount - 1) * TileSize / 2);
+        //Set verts and trigs
+        Vector3[] verticies = new Vector3[vertColAmount * vertRowAmount];
+        int vertexIndex = 0;
+        for (int i = 0; i < vertRowAmount; i++)
+        {
+            for (int j = 0; j < vertColAmount; j++)
+            {
+                int heightIndex = vertStartIndex + j + i * (ColumnAmount + 1);
+                verticies[vertexIndex] = new Vector3(j * TileSize, heights[heightIndex], i * TileSize) + vertexBaseTranslation;
+                vertexIndex++;
+            }
+        }
+
+        int[] triangles = new int[(vertColAmount -1) * (vertRowAmount - 1) * 3 * 2];
+        int trigIndex = 0;
+        for (int i = 0; i < vertRowAmount - 1; i++)
+        {
+            for (int j = 0; j < vertColAmount - 1; j++)
+            {
+                int index1 = j + i * vertColAmount;
+                int index2 = index1 + vertColAmount;
+                int index3 = index1 + 1;
+                triangles[trigIndex] = index1;
+                triangles[trigIndex + 1] = index2;
+                triangles[trigIndex + 2] = index3;
+                trigIndex += 3;
+            }
+        }
+        for (int i = 0; i < vertRowAmount - 1; i++)
+        {
+            for (int j = 1; j < vertColAmount; j++)
+            {
+                int index1 = j + i * vertColAmount;
+                int index2 = index1 + vertColAmount - 1;
+                int index3 = index2 + 1;
+                triangles[trigIndex] = index1;
+                triangles[trigIndex + 1] = index2;
+                triangles[trigIndex + 2] = index3;
+                trigIndex += 3;
+            }
+        }
+
+        //UPDATE FIELD MESH
+        partitionMesh.Clear();
+        partitionMesh.vertices = verticies;
+        partitionMesh.triangles = triangles;
+        partitionMesh.RecalculateNormals();
     }
 }
 public enum SimulationState : byte
