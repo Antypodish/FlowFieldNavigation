@@ -21,7 +21,6 @@ public class FieldGraph
     public NativeArray<AStarTile> SectorIntegrationField;
 
     //helper data
-    public NativeArray<byte> _costsL;
     public NativeList<int> EditedSectorList;
     public NativeBitArray EditedWindowMarks;
     public NativeList<int> EditedWinodwList;
@@ -34,7 +33,7 @@ public class FieldGraph
     int _sectorMatrixRowAmount;
     int _sectorMatrixColAmount;
     public int PortalPerWindow;
-    public FieldGraph(NativeArray<byte> costsL, int sectorSize, int fieldRowAmount, int fieldColAmount, int costFieldOffset, float tileSize)
+    public FieldGraph(int sectorSize, int fieldRowAmount, int fieldColAmount, int costFieldOffset, float tileSize)
     {
         //size calculations
         int sectorMatrixRowAmount = fieldRowAmount / sectorSize;
@@ -56,7 +55,6 @@ public class FieldGraph
         _fieldRowAmount = fieldRowAmount;
         _sectorTileAmount = sectorSize;
         PortalPerWindow = portalPerWindow;
-        _costsL = costsL;
         SectorNodes = new NativeArray<SectorNode>(sectorAmount, Allocator.Persistent);
         SecToWinPtrs = new NativeArray<int>(secToWinPtrAmount, Allocator.Persistent);
         WindowNodes = new NativeArray<WindowNode>(windowAmount, Allocator.Persistent);
@@ -95,7 +93,7 @@ public class FieldGraph
         }
     }
 
-    public FieldGraphConfigurationJob GetConfigJob()
+    public FieldGraphConfigurationJob GetConfigJob(NativeArray<byte> costs)
     {
         return new FieldGraphConfigurationJob()
         {
@@ -107,7 +105,7 @@ public class FieldGraph
             SectorMatrixRowAmount = _sectorMatrixRowAmount,
             PortalPerWindow = PortalPerWindow,
             SectorRowAmount = FlowFieldUtilities.SectorRowAmount,
-            Costs = _costsL,
+            Costs = costs,
             SectorNodes = SectorNodes,
             SecToWinPtrs = SecToWinPtrs,
             WindowNodes = WindowNodes,
@@ -117,7 +115,7 @@ public class FieldGraph
             IntegratedCosts = SectorIntegrationField,
         };
     }
-    public IslandConfigurationJob GetIslandConfigJob()
+    public IslandConfigurationJob GetIslandConfigJob(NativeArray<byte> costs)
     {
         return new IslandConfigurationJob()
         {
@@ -125,7 +123,7 @@ public class FieldGraph
             SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
             SectorTileAmount = FlowFieldUtilities.SectorColAmount * FlowFieldUtilities.SectorRowAmount,
             IslandFields = IslandFields,
-            CostsL = _costsL,
+            CostsL = costs,
             SectorNodes = SectorNodes,
             SecToWinPtrs = SecToWinPtrs,
             Islands = IslandDataList,

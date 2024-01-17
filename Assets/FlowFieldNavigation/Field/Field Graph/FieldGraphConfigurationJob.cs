@@ -20,7 +20,7 @@ public struct FieldGraphConfigurationJob : IJob
     public NativeArray<int> WinToSecPtrs;
     public NativeArray<PortalNode> PortalNodes;
     public NativeArray<PortalToPortal> PorToPorPtrs;
-    public NativeArray<byte> Costs;
+    [ReadOnly] public NativeArray<byte> Costs;
     public NativeArray<AStarTile> IntegratedCosts;
 
 

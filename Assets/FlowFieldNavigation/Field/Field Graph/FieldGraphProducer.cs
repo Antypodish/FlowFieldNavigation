@@ -15,19 +15,23 @@ public class FieldGraphProducer
         _fieldGraphs = new FieldGraph[costFields.Length];
         for (int i = 0; i < _fieldGraphs.Length; i++)
         {
-            _fieldGraphs[i] = new FieldGraph(costFields[i].Costs, sectorColAmount, fieldRowAmount, fieldColAmount, i, tileSize);
+            _fieldGraphs[i] = new FieldGraph(sectorColAmount, fieldRowAmount, fieldColAmount, i, tileSize);
         }
 
         //CONFIGURE FIELD GRAPHS
-        NativeArray<JobHandle> combinedHandles = new NativeArray<JobHandle>(_fieldGraphs.Length, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
+        //field graph config job is weird. It breaks when you want to schedule
+        //field graph config job of multiple fields. No unsafe stuff used. Weird.
+        NativeArray<JobHandle> combinedHandles = new NativeArray<JobHandle>(_fieldGraphs.Length, Allocator.Temp, NativeArrayOptions.ClearMemory);
         for (int i = 0; i < _fieldGraphs.Length; i++)
         {
-            FieldGraphConfigurationJob _fieldGraphConfigJob = _fieldGraphs[i].GetConfigJob();
-            IslandConfigurationJob islandConfigJob = _fieldGraphs[i].GetIslandConfigJob();
+            FieldGraphConfigurationJob _fieldGraphConfigJob = _fieldGraphs[i].GetConfigJob(costFields[i].Costs);
+            IslandConfigurationJob islandConfigJob = _fieldGraphs[i].GetIslandConfigJob(costFields[i].Costs);
             JobHandle fieldHandle = _fieldGraphConfigJob.Schedule();
-            combinedHandles[i] = islandConfigJob.Schedule(fieldHandle);
+            JobHandle islandHandle = islandConfigJob.Schedule(fieldHandle);
+            islandHandle.Complete();
+            combinedHandles[i] = islandHandle;
         }
-        JobHandle.CompleteAll(combinedHandles);
+        //JobHandle.CompleteAll(combinedHandles);
     }
     public FieldGraph GetFieldGraphWithOffset(int offset)
     {
