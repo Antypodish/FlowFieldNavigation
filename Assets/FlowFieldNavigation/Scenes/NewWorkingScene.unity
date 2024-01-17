@@ -408,12 +408,12 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: ColumnAmount
-      value: 100
+      value: 50
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: RandomHeights
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
@@ -878,8 +878,12 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 1328932017, guid: 5e3867b8afbc0bb49a0027ab49965980, type: 3}
-      propertyPath: _debugHeightMap
+      propertyPath: _debugBorders
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1328932017, guid: 5e3867b8afbc0bb49a0027ab49965980, type: 3}
+      propertyPath: _debugHeightMap
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1328932017, guid: 5e3867b8afbc0bb49a0027ab49965980, type: 3}
       propertyPath: _debuggingEnabled
@@ -889,6 +893,10 @@ PrefabInstance:
       propertyPath: _pathfindingManager
       value: 
       objectReference: {fileID: 1328932016}
+    - target: {fileID: 1328932017, guid: 5e3867b8afbc0bb49a0027ab49965980, type: 3}
+      propertyPath: _debugSpatialHashGrid
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8734084087089525697, guid: 5e3867b8afbc0bb49a0027ab49965980,
         type: 3}
       propertyPath: m_RootOrder

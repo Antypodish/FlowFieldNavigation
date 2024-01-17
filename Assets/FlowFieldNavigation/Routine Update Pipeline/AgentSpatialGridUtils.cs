@@ -50,7 +50,7 @@ public struct AgentSpatialGridUtils
     }
     public int GetRowAmount(int hashGridIndex)
     {
-        return (int)math.ceil(FieldHorizontalSize / GetTileSize(hashGridIndex));
+        return (int)math.ceil(FieldVerticalSize / GetTileSize(hashGridIndex));
     }
 }
 public struct GridTravesalData

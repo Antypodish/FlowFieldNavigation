@@ -66,7 +66,6 @@ public class EditorSpatialHashGridDebugger
         AgentSpatialGridUtils gridUtils = new AgentSpatialGridUtils(0);
 
         DrawTileBorders();
-
         void DrawTileBorders()
         {
             Gizmos.color = Color.black;

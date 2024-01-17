@@ -103,7 +103,6 @@ public class EditorDebuggingController : MonoBehaviour
         if(_portalErrorDetection && _portalErrorDetector != null) { _portalErrorDetector.Debug((int) _costFieldOffset); }
         if(_debugHeightMap && _heightMapDebugger != null) { _heightMapDebugger.DebugHeightMapMesh(); }
 
-        if(AgentToDebug == null) { return; }
         FlowFieldAgent _agentToDebug = AgentToDebug;
         if(_agentToDebug != null)
         {
