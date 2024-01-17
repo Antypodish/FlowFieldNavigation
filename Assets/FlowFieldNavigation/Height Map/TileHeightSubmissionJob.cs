@@ -11,6 +11,7 @@ public struct TileHeightSubmissionJob : IJob
     public int FieldRowAmount;
     [ReadOnly] public NativeArray<float3> Verticies;
     [ReadOnly] public NativeArray<int> Triangles;
+    [ReadOnly] public TriangleSpatialHashGrid TriangleSpatialHashGrid;
     public NativeList<int> TileTrianglePointers;
     public NativeArray<TileTriangleSpan> TileTrianglePointerSpans;
 
@@ -20,15 +21,33 @@ public struct TileHeightSubmissionJob : IJob
         {
             for(int c = 0; c < FieldColAmount; c++)
             {
-                float2 tileMins = new float2(c * TileSize, r * TileSize);
-                float2 tileMaxes = new float2(tileMins.x + TileSize, tileMins.y + TileSize);
-                int tileTrianglePointerStartIndex = TileTrianglePointers.Length;
-                int tileTrianglePointerLength = 0;
-                for (int i = 0; i < Triangles.Length; i += 3)
+                SubmitTrianglesFor(new int2(c, r));
+            }
+        }
+    }
+    void SubmitTrianglesFor(int2 tile2d)
+    {
+        float2 tileMins = new float2(tile2d.x * TileSize, tile2d.y * TileSize);
+        float2 tileMaxes = new float2(tileMins.x + TileSize, tileMins.y + TileSize);
+        float2 tilePos = (tileMaxes + tileMins) / 2;
+        float tileHalfSize = TileSize / 2;
+        int tileTrianglePointerStartIndex = TileTrianglePointers.Length;
+        int tileTrianglePointerLength = 0;
+        for (int i = 0; i < TriangleSpatialHashGrid.GetGridCount(); i++)
+        {
+            TriangleSpatialHashGridIterator triangleGridIterator = TriangleSpatialHashGrid.GetIterator(tilePos, tileHalfSize, i);
+            while (triangleGridIterator.HasNext())
+            {
+                NativeSlice<int> triangleStartIndicies = triangleGridIterator.GetNextRow(out int sliceStartIndex);
+                for (int j = 0; j < triangleStartIndicies.Length; j++)
                 {
-                    int v1Index = Triangles[i];
-                    int v2Index = Triangles[i + 1];
-                    int v3Index = Triangles[i + 2];
+                    int triangleStartIndex = triangleStartIndicies[j];
+                    int t1 = triangleStartIndex;
+                    int t2 = t1 + 1;
+                    int t3 = t1 + 2;
+                    int v1Index = Triangles[t1];
+                    int v2Index = Triangles[t2];
+                    int v3Index = Triangles[t3];
 
                     float3 v13d = Verticies[v1Index];
                     float3 v23d = Verticies[v2Index];
@@ -50,7 +69,7 @@ public struct TileHeightSubmissionJob : IJob
                     bool hasPointWithinTile = (v1result.x && v1result.y) || (v2result.x && v2result.y) || (v3result.x && v3result.y);
                     if (hasPointWithinTile)
                     {
-                        TileTrianglePointers.Add(i);
+                        TileTrianglePointers.Add(t1);
                         tileTrianglePointerLength++;
                         continue;
                     }
@@ -77,25 +96,25 @@ public struct TileHeightSubmissionJob : IJob
                     bool intersectsY = yMinIntersectsLine1 || yMaxIntersectsLine1 || yMinIntersectsLine2 || yMaxIntersectsLine2 || yMinIntersectsLine3 || yMaxIntersectsLine3;
                     if (intersectsX || intersectsY)
                     {
-                        TileTrianglePointers.Add(i);
+                        TileTrianglePointers.Add(t1);
                         tileTrianglePointerLength++;
                         continue;
                     }
                     if (IsPointInsideTriangle(tileMins, v1, v2, v3))
                     {
-                        TileTrianglePointers.Add(i);
+                        TileTrianglePointers.Add(t1);
                         tileTrianglePointerLength++;
                         continue;
                     }
                 }
-                TileTriangleSpan newSpan = new TileTriangleSpan()
-                {
-                    TrianglePointerStartIndex = tileTrianglePointerStartIndex,
-                    TrianglePointerCount = tileTrianglePointerLength,
-                };
-                TileTrianglePointerSpans[r * FieldColAmount + c] = newSpan;
             }
         }
+        TileTriangleSpan newSpan = new TileTriangleSpan()
+        {
+            TrianglePointerStartIndex = tileTrianglePointerStartIndex,
+            TrianglePointerCount = tileTrianglePointerLength,
+        };
+        TileTrianglePointerSpans[tile2d.y * FieldColAmount + tile2d.x] = newSpan;
     }
     bool DoesIntersectAtX(float xToCheck, float yMin, float yMax, float2 v1, float2 v2)
     {

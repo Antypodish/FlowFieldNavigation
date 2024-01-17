@@ -5,16 +5,18 @@ using Unity.Mathematics;
 using Unity.Collections.LowLevel.Unsafe;
 
 [BurstCompile]
-internal struct HeightMapGenerationJob : IJob
+internal struct TriangleNormalTestJob : IJob
 {
     public float3 UpDirection;
     [ReadOnly] public NativeArray<float3> InputVertecies;
     [ReadOnly] public NativeArray<int> InputTriangles;
 
     public NativeList<int> OutputTriangles;
+    public NativeList<float3> OutputVerticies;
 
     public void Execute()
     {
+        OutputVerticies.CopyFrom(InputVertecies);
         for (int i = 0; i < InputTriangles.Length; i += 3)
         {
             int vertIndex1 = InputTriangles[i];

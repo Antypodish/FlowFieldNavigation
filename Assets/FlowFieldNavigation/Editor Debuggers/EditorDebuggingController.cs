@@ -22,6 +22,7 @@ public class EditorDebuggingController : MonoBehaviour
     [SerializeField] bool _portalErrorDetection;
     [Header("Height Map Debugger")]
     [SerializeField] bool _debugHeightMap;
+    [SerializeField] bool _debugTrianglesAtClickedTile;
     [Header("PathDebugger")]
     [SerializeField] bool _debugDestination;
     [SerializeField] bool _debugPortalTraversalMarks;
@@ -79,6 +80,10 @@ public class EditorDebuggingController : MonoBehaviour
         _islandDebugger = new EditorIslandDebugger(_pathfindingManager);
         _portalErrorDetector = new EditorSectorPortalErrorDetector(_pathfindingManager);
         _heightMapDebugger = new EditorHeightMapDebugger(_pathfindingManager);
+
+#if UNITY_STANDALONE && !UNITY_EDITOR
+_debuggingEnabled = false;
+#endif
     }
     private void Update()
     {
@@ -102,6 +107,7 @@ public class EditorDebuggingController : MonoBehaviour
         if(_sectorIslands && _islandDebugger != null) { _islandDebugger.DebugTileIslands((int) _costFieldOffset); }
         if(_portalErrorDetection && _portalErrorDetector != null) { _portalErrorDetector.Debug((int) _costFieldOffset); }
         if(_debugHeightMap && _heightMapDebugger != null) { _heightMapDebugger.DebugHeightMapMesh(); }
+        if(_debugTrianglesAtClickedTile && _heightMapDebugger != null) { _heightMapDebugger.DebugTrianglesAtTile(); }
 
         FlowFieldAgent _agentToDebug = AgentToDebug;
         if(_agentToDebug != null)
@@ -136,7 +142,7 @@ public class EditorDebuggingController : MonoBehaviour
         Two = 2,
         Three = 3,
         Four = 4,
-        Five = 5
+        Five = 5,
     }
 
 }

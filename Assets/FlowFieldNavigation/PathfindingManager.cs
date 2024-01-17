@@ -86,8 +86,8 @@ public class PathfindingManager : MonoBehaviour
         SectorMatrixColAmount = ColumnAmount / SectorColAmount;
         SectorMatrixRowAmount = RowAmount / SectorColAmount;
         SetFlowFieldUtilities();
-        //HeightMapGenerator = new HeightMapProducer();
-        //HeightMapGenerator.GenerateHeightMap(startParameters.Meshes, startParameters.Transforms);
+        HeightMapGenerator = new HeightMapProducer();
+        HeightMapGenerator.GenerateHeightMap(startParameters.Meshes, startParameters.Transforms);
         FieldProducer = new FieldProducer(startParameters.WalkabilityMatrix, SectorColAmount);
         FieldProducer.CreateField(startParameters.MaxCostFieldOffset, SectorColAmount, SectorMatrixColAmount, SectorMatrixRowAmount, RowAmount, ColumnAmount, TileSize);
         AgentDataContainer = new AgentDataContainer();
