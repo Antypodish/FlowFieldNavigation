@@ -8,7 +8,7 @@ public struct CollisionResolutionJob : IJobParallelFor
 {
     [ReadOnly] public AgentSpatialHashGrid AgentSpatialHashGrid;
     [ReadOnly] public NativeArray<RoutineResult> RoutineResultArray;
-    public NativeArray<float2> AgentPositionChangeBuffer;
+    public NativeArray<float3> AgentPositionChangeBuffer;
     public void Execute(int index)
     {
         AgentMovementData agentData = AgentSpatialHashGrid.RawAgentMovementDataArray[index];
@@ -55,7 +55,7 @@ public struct CollisionResolutionJob : IJobParallelFor
         //Enable if you want speed to be considered while calculating maxResolutionLength. More realistic, but increased overlapping.
         //maxResolutionLength = math.select(agentData.Speed * 0.016f, maxResolutionLength, maxResolutionLength < agentData.Speed * 0.016f);
         totalResolution = math.select(totalResolution, totalResolution / totalResolutionLen * maxResolutionLength, totalResolutionLen > maxResolutionLength);
-        AgentPositionChangeBuffer[index] = totalResolution;
+        AgentPositionChangeBuffer[index] = new float3(totalResolution.x, 0f, totalResolution.y);
     }
     float GetMultiplier(AgentStatus agentStatus, AgentStatus mateStatus, float agentRadius, float mateRadius, bool hasForeignInFront, bool mateInFront, bool agentInFront)
     {

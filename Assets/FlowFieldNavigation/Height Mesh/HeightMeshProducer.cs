@@ -9,9 +9,9 @@ public class HeightMeshProducer
 {
     public NativeList<float3> Verticies;
     public NativeList<int> Triangles;
-    public NativeList<UnsafeList<HashTile>> SpatialHashGrids;
-    public NativeHashMap<float, int> TileSizeToGridIndex;
-    public NativeHashMap<int, float> GridIndexToTileSize;
+    NativeList<UnsafeList<HashTile>> SpatialHashGrids;
+    NativeHashMap<float, int> TileSizeToGridIndex;
+    NativeHashMap<int, float> GridIndexToTileSize;
     public HeightMeshProducer()
     {
         Verticies = new NativeList<float3>(Allocator.Persistent);

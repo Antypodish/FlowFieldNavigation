@@ -70,9 +70,9 @@ public struct TriangleSpatialHashGridIterator
         _hashTileArray = hashtTileArray;
     }
     public bool HasNext() => _curRowIndex <= _endRowIndex;
-    public NativeSlice<int> GetNextRow(out int sliceStartIndex)
+    public NativeSlice<int> GetNextRow()
     {
-        if (_curRowIndex > _endRowIndex) { sliceStartIndex = 0; return new NativeSlice<int>(); }
+        if (_curRowIndex > _endRowIndex) { return new NativeSlice<int>(); }
         HashTile startCellPointer = _hashTileArray[_curRowIndex];
         int trigPointerStart = startCellPointer.Start;
         int trigPointerCount = startCellPointer.Length;
@@ -85,7 +85,6 @@ public struct TriangleSpatialHashGridIterator
         _curRowIndex += _gridTotalColAmount;
 
         NativeSlice<int> slice = new NativeSlice<int>(_hashedTriangleStartIndicies, trigPointerStart, trigPointerCount);
-        sliceStartIndex = trigPointerStart;
         return slice;
     }
 }

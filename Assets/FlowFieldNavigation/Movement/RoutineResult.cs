@@ -4,6 +4,7 @@ public struct RoutineResult
 {
     public float2 NewDirection;
     public float2 NewSeperation;
+    public float HeightChange;
     public byte NewSplitInterval;
     public byte NewSplitInfo;
     public AvoidanceStatus NewAvoidance;

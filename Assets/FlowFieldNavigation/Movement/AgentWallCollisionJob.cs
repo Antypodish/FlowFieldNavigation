@@ -17,7 +17,7 @@ public struct AgentWallCollisionJob : IJobParallelFor
     public float HalfTileSize;
     [ReadOnly] public NativeArray<AgentMovementData> AgentMovementData;
     [ReadOnly] public NativeArray<UnsafeListReadOnly<byte>> CostFieldEachOffset;
-    public NativeArray<float2> AgentPositionChangeBuffer;
+    public NativeArray<float3> AgentPositionChangeBuffer;
 
     public void Execute(int index)
     {
@@ -37,7 +37,7 @@ public struct AgentWallCollisionJob : IJobParallelFor
             if(wallDirectionToCollide == WallDirection.None) { return; }
             float2 clearTilePos = FlowFieldUtilities.IndexToPos(cleanGeneral2d, TileSize);
             float2 pushForce = GetPushForceOutside(agentPos, agentRadius, clearTilePos, wallDirectionToCollide);
-            AgentPositionChangeBuffer[index] += pushForce;
+            AgentPositionChangeBuffer[index] += new float3(pushForce.x, 0f, pushForce.y);
         }
         else
         {
@@ -47,7 +47,7 @@ public struct AgentWallCollisionJob : IJobParallelFor
             if (wallDirectionToCollide == WallDirection.None) { return; }
             float2 clearTilePos = FlowFieldUtilities.IndexToPos(cleanGeneral2d, TileSize);
             float2 pushForce = GetPushForceInside(agentPos, agentRadius, clearTilePos, wallDirectionToCollide);
-            AgentPositionChangeBuffer[index] += pushForce;
+            AgentPositionChangeBuffer[index] += new float3(pushForce.x, 0f, pushForce.y);
         }
 
     }

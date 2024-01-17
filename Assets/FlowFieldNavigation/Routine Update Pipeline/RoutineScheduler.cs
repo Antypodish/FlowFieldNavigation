@@ -244,7 +244,7 @@ public class RoutineScheduler
     {
         NativeArray<RoutineResult> routineResults = _movementIO.RoutineResults;
         NativeArray<AgentMovementData> agentMovementDataList = _movementIO.AgentMovementDataList;
-        NativeArray<float2> agentPositionChangeBuffer = _movementIO.AgentPositionChangeBuffer;
+        NativeArray<float3> agentPositionChangeBuffer = _movementIO.AgentPositionChangeBuffer;
         NativeArray<int> normalToHashed = _movementIO.NormalToHashed;
 
         _pathfindingManager.AgentDataContainer.SendRoutineResults(routineResults, agentMovementDataList, agentPositionChangeBuffer, normalToHashed);

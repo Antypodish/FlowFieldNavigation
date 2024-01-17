@@ -86,7 +86,7 @@ public class EditorHeightMeshDebugger
             TriangleSpatialHashGridIterator gridIterator = triangleHashGrid.GetIterator(_hitPos, i);
             while (gridIterator.HasNext())
             {
-                NativeSlice<int> triangles = gridIterator.GetNextRow(out int sliceStart);
+                NativeSlice<int> triangles = gridIterator.GetNextRow();
                 for(int j = 0; j < triangles.Length; j+=3)
                 {
                     int t1 = triangles[j];

@@ -10,7 +10,7 @@ public class MovementIO
     PathfindingManager _pathfindingManager;
 
     public NativeList<AgentMovementData> AgentMovementDataList;
-    public NativeList<float2> AgentPositionChangeBuffer;
+    public NativeList<float3> AgentPositionChangeBuffer;
     public NativeList<RoutineResult> RoutineResults;
     public NativeList<int> NormalToHashed;
     public NativeList<int> HashedToNormal;
@@ -18,13 +18,14 @@ public class MovementIO
     public NativeList<float> PathReachDistances;
 
     JobHandle _routineHandle;
+    public NativeList<int> trigs = new NativeList<int>(Allocator.Persistent);
     public MovementIO(AgentDataContainer agentDataContainer, PathfindingManager pathfindingManager)
     {
         _agentDataContainer = agentDataContainer;
         _pathfindingManager = pathfindingManager;
         AgentMovementDataList = new NativeList<AgentMovementData>(_agentDataContainer.Agents.Count, Allocator.Persistent);
         RoutineResults = new NativeList<RoutineResult>(Allocator.Persistent);
-        AgentPositionChangeBuffer = new NativeList<float2>(Allocator.Persistent);
+        AgentPositionChangeBuffer = new NativeList<float3>(Allocator.Persistent);
         _routineHandle = new JobHandle();
 
         //SPATIAL HASH GRID INSTANTIATION
@@ -208,6 +209,15 @@ public class MovementIO
         };
         JobHandle wallDetectionHandle = wallDetection.Schedule(agentDataArray.Length, 64, wallCollisionHandle);
 
+        AgentHeightCalculationJob heightCalculation = new AgentHeightCalculationJob()
+        {
+            TriangleSpatialHashGrid = _pathfindingManager.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
+            AgentMovementDataArray = AgentMovementDataList,
+            AgentPositionChangeArray = AgentPositionChangeBuffer,
+            Verticies = _pathfindingManager.HeightMeshGenerator.Verticies,
+        };
+        JobHandle heightCalculationHandle = heightCalculation.Schedule(agentDataArray.Length, 32, wallDetectionHandle);
+
         PathReachDistances.Length = exposedPathReachDistanceCheckRanges.Length;
         DestinationReachedAgentCountJob destinationReachedCounter = new DestinationReachedAgentCountJob()
         {
@@ -229,7 +239,7 @@ public class MovementIO
             PathStateList = exposedPathStateList,
             PathAgentStopFlagList = exposedPathAgentStopFlagList,
         };
-        JobHandle destinationReachedCounterHandle = destinationReachedCounter.Schedule(exposedPathFlockIndicies.Length, 64, wallDetectionHandle);
+        JobHandle destinationReachedCounterHandle = destinationReachedCounter.Schedule(exposedPathFlockIndicies.Length, 64, heightCalculationHandle);
 
         AgentStoppingJob stoppingJob = new AgentStoppingJob()
         {

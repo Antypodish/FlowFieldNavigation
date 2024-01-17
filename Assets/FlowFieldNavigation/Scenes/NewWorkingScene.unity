@@ -392,8 +392,13 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
+      propertyPath: TileSize
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
+        type: 3}
       propertyPath: RowAmount
-      value: 1000
+      value: 250
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
@@ -408,12 +413,12 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: ColumnAmount
-      value: 1000
+      value: 250
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: RandomHeights
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
@@ -570,7 +575,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!65 &799166821
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -641,14 +646,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 799166820}
-  m_LocalRotation: {x: 0.2981094, y: 0.45831627, z: 0.01222688, w: 0.8372141}
-  m_LocalPosition: {x: 8.18, y: -6.51, z: 15.01}
-  m_LocalScale: {x: 3.2833798, y: 4.8012, z: 2.9771}
+  m_LocalRotation: {x: 0.17733765, y: 0.3755674, z: -0.07345564, w: 0.9066999}
+  m_LocalPosition: {x: 0.823, y: -0.061, z: 0.823}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 8
-  m_LocalEulerAnglesHint: {x: 150.794, y: -117.43399, z: -160.336}
+  m_LocalEulerAnglesHint: {x: 22.133, y: 45, z: 0}
 --- !u!114 &799166825
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -886,8 +891,12 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1328932017, guid: 5e3867b8afbc0bb49a0027ab49965980, type: 3}
-      propertyPath: _debugGridBorders
+      propertyPath: _debugHeightMesh
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1328932017, guid: 5e3867b8afbc0bb49a0027ab49965980, type: 3}
+      propertyPath: _debugGridBorders
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1328932017, guid: 5e3867b8afbc0bb49a0027ab49965980, type: 3}
       propertyPath: _debuggingEnabled
@@ -1032,7 +1041,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _terrainGenerator: {fileID: 214059218}
-  _debugTiles: 0
+  _debugTiles: 1
   _debugUnwalkableTiles: 0
 --- !u!1001 &5836007237000737966
 PrefabInstance:
