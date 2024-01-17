@@ -20,6 +20,8 @@ public class EditorDebuggingController : MonoBehaviour
     [SerializeField] bool _portalIslands;
     [SerializeField] bool _sectorIslands;
     [SerializeField] bool _portalErrorDetection;
+    [Header("Height Map Debugger")]
+    [SerializeField] bool _debugHeightMap;
     [Header("PathDebugger")]
     [SerializeField] bool _debugDestination;
     [SerializeField] bool _debugPortalTraversalMarks;
@@ -60,6 +62,7 @@ public class EditorDebuggingController : MonoBehaviour
     EditorSpatialHashGridDebugger _spatialHashGridDebugger;
     EditorIslandDebugger _islandDebugger;
     EditorSectorPortalErrorDetector _portalErrorDetector;
+    EditorHeightMapDebugger _heightMapDebugger;
     private void Start()
     {
         _sectorDebugger = new EditorSectorDebugger(_pathfindingManager);
@@ -75,6 +78,7 @@ public class EditorDebuggingController : MonoBehaviour
         _spatialHashGridDebugger = new EditorSpatialHashGridDebugger(_pathfindingManager);
         _islandDebugger = new EditorIslandDebugger(_pathfindingManager);
         _portalErrorDetector = new EditorSectorPortalErrorDetector(_pathfindingManager);
+        _heightMapDebugger = new EditorHeightMapDebugger(_pathfindingManager);
     }
     private void Update()
     {
@@ -97,6 +101,7 @@ public class EditorDebuggingController : MonoBehaviour
         if(_portalIslands && _islandDebugger != null) { _islandDebugger.DebugPortalIslands((int) _costFieldOffset); }
         if(_sectorIslands && _islandDebugger != null) { _islandDebugger.DebugTileIslands((int) _costFieldOffset); }
         if(_portalErrorDetection && _portalErrorDetector != null) { _portalErrorDetector.Debug((int) _costFieldOffset); }
+        if(_debugHeightMap && _heightMapDebugger != null) { _heightMapDebugger.DebugHeightMapMesh(); }
 
         if(AgentToDebug == null) { return; }
         FlowFieldAgent _agentToDebug = AgentToDebug;

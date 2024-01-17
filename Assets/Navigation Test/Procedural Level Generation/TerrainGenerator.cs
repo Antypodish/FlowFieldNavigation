@@ -22,8 +22,12 @@ public class TerrainGenerator : MonoBehaviour
 
     ObstacleGenerator obsGenerator;
 
+    List<Mesh> _generatedMeshes;
+    List<Transform> _generatedMeshTransforms;
     private void Start()
     {
+        _generatedMeshes = new List<Mesh>();
+        _generatedMeshTransforms = new List<Transform>();
         WalkabilityData = new WalkabilityData(TileSize, RowAmount, ColumnAmount, _resolution, _simulationState);
 
         GenerateMesh();
@@ -41,6 +45,8 @@ public class TerrainGenerator : MonoBehaviour
             RowCount = RowAmount,
             MaxCostFieldOffset = 5,
             WalkabilityMatrix = WalkabilityData.WalkabilityMatrix,
+            Meshes = _generatedMeshes.ToArray(),
+            Transforms = _generatedMeshTransforms.ToArray(),
         };
         _pathfindingManager.StartSimulation(simParam);
     }
@@ -153,6 +159,9 @@ public class TerrainGenerator : MonoBehaviour
         partitionMesh.vertices = verticies;
         partitionMesh.triangles = triangles;
         partitionMesh.RecalculateNormals();
+
+        _generatedMeshes.Add(partitionMesh);
+        _generatedMeshTransforms.Add(partitionObject.transform);
     }
 }
 public enum SimulationState : byte
