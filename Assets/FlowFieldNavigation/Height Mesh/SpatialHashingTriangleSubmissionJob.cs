@@ -13,7 +13,7 @@ public struct SpatialHashingTriangleSubmissionJob : IJob
     [ReadOnly] public NativeArray<float3> Verticies;
     [ReadOnly] public NativeArray<int> Triangles;
 
-    public NativeList<int> HashedTriangleStartIndicies;
+    public NativeList<int> NewTriangles;
     public NativeList<UnsafeList<HashTile>> SpatialHashGrids;
     public NativeHashMap<float, int> TileSizeToGridIndex;
 
@@ -49,7 +49,7 @@ public struct SpatialHashingTriangleSubmissionJob : IJob
                 int gridColAmount = (int)math.ceil(FieldHorizontalSize / tileSize);
                 int cellIndex1d = cellIndex.y * gridColAmount + cellIndex.x;
                 HashTile cell = hashGrid[cellIndex1d];
-                cell.Length++;
+                cell.Length+=3;
                 hashGrid[cellIndex1d] = cell;
             }
         }
@@ -66,7 +66,7 @@ public struct SpatialHashingTriangleSubmissionJob : IJob
                 grid[j] = tile;
             }
         }
-        HashedTriangleStartIndicies.Length = currentStartIndex;
+        NewTriangles.Length = currentStartIndex;
     }
     void SubmitTriangles()
     {
@@ -95,11 +95,13 @@ public struct SpatialHashingTriangleSubmissionJob : IJob
                 int gridColAmount = (int)math.ceil(FieldHorizontalSize / tileSize);
                 int cellIndex1d = cellIndex.y * gridColAmount + cellIndex.x;
                 HashTile cell = hashGrid[cellIndex1d];
-                int indexToSubmit = cell.Start + cell.Length;
-                cell.Length++;
+                int firstTriangleVertexIndex = cell.Start + cell.Length;
+                cell.Length+=3;
                 hashGrid[cellIndex1d] = cell;
 
-                HashedTriangleStartIndicies[indexToSubmit] = i;
+                NewTriangles[firstTriangleVertexIndex] = v1Index;
+                NewTriangles[firstTriangleVertexIndex + 1] = v2Index;
+                NewTriangles[firstTriangleVertexIndex + 2] = v3Index;
             }
         }
 

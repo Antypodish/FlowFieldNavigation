@@ -20,9 +20,11 @@ public class EditorDebuggingController : MonoBehaviour
     [SerializeField] bool _portalIslands;
     [SerializeField] bool _sectorIslands;
     [SerializeField] bool _portalErrorDetection;
-    [Header("Height Map Debugger")]
-    [SerializeField] bool _debugHeightMap;
+    [Header("Height Mesh Debugger")]
+    [SerializeField] int _meshGridIndex;
+    [SerializeField] bool _debugHeightMesh;
     [SerializeField] bool _debugTrianglesAtClickedTile;
+    [SerializeField] bool _debugGridBorders;
     [Header("PathDebugger")]
     [SerializeField] bool _debugDestination;
     [SerializeField] bool _debugPortalTraversalMarks;
@@ -63,7 +65,7 @@ public class EditorDebuggingController : MonoBehaviour
     EditorSpatialHashGridDebugger _spatialHashGridDebugger;
     EditorIslandDebugger _islandDebugger;
     EditorSectorPortalErrorDetector _portalErrorDetector;
-    EditorHeightMapDebugger _heightMapDebugger;
+    EditorHeightMeshDebugger _heightMeshDebugger;
     private void Start()
     {
         _sectorDebugger = new EditorSectorDebugger(_pathfindingManager);
@@ -79,7 +81,7 @@ public class EditorDebuggingController : MonoBehaviour
         _spatialHashGridDebugger = new EditorSpatialHashGridDebugger(_pathfindingManager);
         _islandDebugger = new EditorIslandDebugger(_pathfindingManager);
         _portalErrorDetector = new EditorSectorPortalErrorDetector(_pathfindingManager);
-        _heightMapDebugger = new EditorHeightMapDebugger(_pathfindingManager);
+        _heightMeshDebugger = new EditorHeightMeshDebugger(_pathfindingManager);
 
 #if UNITY_STANDALONE && !UNITY_EDITOR
 _debuggingEnabled = false;
@@ -106,8 +108,9 @@ _debuggingEnabled = false;
         if(_portalIslands && _islandDebugger != null) { _islandDebugger.DebugPortalIslands((int) _costFieldOffset); }
         if(_sectorIslands && _islandDebugger != null) { _islandDebugger.DebugTileIslands((int) _costFieldOffset); }
         if(_portalErrorDetection && _portalErrorDetector != null) { _portalErrorDetector.Debug((int) _costFieldOffset); }
-        if(_debugHeightMap && _heightMapDebugger != null) { _heightMapDebugger.DebugHeightMapMesh(); }
-        if(_debugTrianglesAtClickedTile && _heightMapDebugger != null) { _heightMapDebugger.DebugTrianglesAtTile(); }
+        if(_debugHeightMesh && _heightMeshDebugger != null) { _heightMeshDebugger.DebugHeightMapMesh(); }
+        if(_debugTrianglesAtClickedTile && _heightMeshDebugger != null) { _heightMeshDebugger.DebugTrianglesAtTile(); }
+        if(_debugGridBorders && _heightMeshDebugger != null) { _heightMeshDebugger.DebugBorders(_meshGridIndex); }
 
         FlowFieldAgent _agentToDebug = AgentToDebug;
         if(_agentToDebug != null)

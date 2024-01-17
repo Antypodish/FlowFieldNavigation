@@ -5,27 +5,20 @@ using Unity.Mathematics;
 using Unity.Collections.LowLevel.Unsafe;
 using System.Diagnostics;
 
-public class HeightMapProducer
+public class HeightMeshProducer
 {
     public NativeList<float3> Verticies;
     public NativeList<int> Triangles;
-    public NativeArray<TileTriangleSpan> TileTrianglePointerSpans;
-    public NativeList<int> TileTrianglePointers;
-    NativeList<UnsafeList<HashTile>> SpatialHashGrids;
-    NativeHashMap<float, int> TileSizeToGridIndex;
-    NativeHashMap<int, float> GridIndexToTileSize;
-    NativeList<int> HashedTriangleStartIndicies;
-    const float _spatialHashBaseTileSize = 3f;
-    public HeightMapProducer()
+    public NativeList<UnsafeList<HashTile>> SpatialHashGrids;
+    public NativeHashMap<float, int> TileSizeToGridIndex;
+    public NativeHashMap<int, float> GridIndexToTileSize;
+    public HeightMeshProducer()
     {
         Verticies = new NativeList<float3>(Allocator.Persistent);
         Triangles = new NativeList<int>(Allocator.Persistent);
-        TileTrianglePointerSpans = new NativeArray<TileTriangleSpan>(FlowFieldUtilities.FieldTileAmount, Allocator.Persistent);
-        TileTrianglePointers = new NativeList<int>(Allocator.Persistent);
         SpatialHashGrids = new NativeList<UnsafeList<HashTile>>(Allocator.Persistent);
         TileSizeToGridIndex = new NativeHashMap<float, int>(0, Allocator.Persistent);
         GridIndexToTileSize = new NativeHashMap<int, float>(0, Allocator.Persistent);
-        HashedTriangleStartIndicies = new NativeList<int>(Allocator.Persistent);
     }
     public void GenerateHeightMap(Mesh[] meshes, Transform[] meshParentTransforms)
     {
@@ -72,7 +65,7 @@ public class HeightMapProducer
         NativeList<float> gridTileSizes = new NativeList<float>(Allocator.TempJob);
         TriangleSpatialHashingTileSizeCalculationJob spatialHashingTileSizeCalculation = new TriangleSpatialHashingTileSizeCalculationJob()
         {
-            BaseSpatialGridSize = _spatialHashBaseTileSize,
+            BaseSpatialGridSize = FlowFieldUtilities.BaseTriangleSpatialGridSize,
             Triangles = Triangles,
             Verticies = Verticies,
             GridTileSizes = gridTileSizes,
@@ -81,47 +74,36 @@ public class HeightMapProducer
 
         //Create grid according to grid tile sizes
         CreateHashGrids(gridTileSizes.AsArray().AsReadOnly());
+        gridTileSizes.Dispose();
 
         //Submit triangles to spatial hashing
+        NativeList<int> newTriangles = new NativeList<int>(Allocator.Persistent);
         SpatialHashingTriangleSubmissionJob spatialHashingTriangleSubmission = new SpatialHashingTriangleSubmissionJob()
         {
-            BaseSpatialGridSize = _spatialHashBaseTileSize,
+            BaseSpatialGridSize = FlowFieldUtilities.BaseTriangleSpatialGridSize,
             FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
             FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
             SpatialHashGrids = SpatialHashGrids,
             TileSizeToGridIndex = TileSizeToGridIndex,
             Triangles = Triangles,
             Verticies = Verticies,
-            HashedTriangleStartIndicies = HashedTriangleStartIndicies,
+            NewTriangles = newTriangles,
         };
         spatialHashingTriangleSubmission.Schedule().Complete();
-
-        //submit triangles to tiles
-        TileHeightSubmissionJob tileHeightSubmission = new TileHeightSubmissionJob()
+        Triangles.Dispose();
+        Triangles = newTriangles;
+    }
+    public TriangleSpatialHashGrid GetTriangleSpatialHashGrid()
+    {
+        return new TriangleSpatialHashGrid()
         {
-            TileSize = FlowFieldUtilities.TileSize,
-            FieldColAmount = FlowFieldUtilities.FieldColAmount,
-            FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
-            TileTrianglePointerSpans = TileTrianglePointerSpans,
-            TileTrianglePointers = TileTrianglePointers,
-            Triangles = Triangles,
-            Verticies = Verticies,
-            TriangleSpatialHashGrid = new TriangleSpatialHashGrid()
-            {
-                BaseSpatialGridSize = _spatialHashBaseTileSize,
-                FieldHorizontalSize = FlowFieldUtilities.FieldColAmount * FlowFieldUtilities.TileSize,
-                FieldVerticalSize = FlowFieldUtilities.FieldRowAmount * FlowFieldUtilities.TileSize,
-                HashedTriangleStartIndicies = HashedTriangleStartIndicies,
-                TriangleHashGrids = SpatialHashGrids,
-                GridIndexToTileSize = GridIndexToTileSize,
-            },
+            BaseSpatialGridSize = FlowFieldUtilities.BaseTriangleSpatialGridSize,
+            FieldHorizontalSize = FlowFieldUtilities.FieldColAmount * FlowFieldUtilities.TileSize,
+            FieldVerticalSize = FlowFieldUtilities.FieldRowAmount * FlowFieldUtilities.TileSize,
+            GridIndexToTileSize = GridIndexToTileSize,
+            HashedTriangles = Triangles,
+            TriangleHashGrids = SpatialHashGrids,
         };
-        tileHeightSubmission.Schedule().Complete();
-
-        SpatialHashGrids.Dispose();
-        TileSizeToGridIndex.Dispose();
-        GridIndexToTileSize.Dispose();
-        HashedTriangleStartIndicies.Dispose();
     }
     void CreateHashGrids(NativeArray<float>.ReadOnly gridTileSizes)
     {
@@ -142,7 +124,6 @@ public class HeightMapProducer
             TileSizeToGridIndex.Add(tileSize, SpatialHashGrids.Length - 1);
             GridIndexToTileSize.Add(SpatialHashGrids.Length - 1, tileSize);
         }
-
     }
 
 }

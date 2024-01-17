@@ -33,7 +33,7 @@ public class EditorSpatialHashGridDebugger
         NativeArray<AgentMovementData> movData = _pathfindingManager.GetAgentMovementData();
         AgentSpatialHashGrid spatialHashGrid = new AgentSpatialHashGrid()
         {
-            BaseSpatialGridSize = FlowFieldUtilities.BaseSpatialGridSize,
+            BaseSpatialGridSize = FlowFieldUtilities.BaseAgentSpatialGridSize,
             FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
             FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
             RawAgentMovementDataArray = movData,

@@ -10,7 +10,7 @@ public struct AgentSpatialGridUtils
 
     public AgentSpatialGridUtils(byte placeholderParameter)
     {
-        BaseSpatialGridSize = FlowFieldUtilities.BaseSpatialGridSize;
+        BaseSpatialGridSize = FlowFieldUtilities.BaseAgentSpatialGridSize;
         FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount;
         FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount;
     }

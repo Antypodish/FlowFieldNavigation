@@ -28,14 +28,14 @@ public class MovementIO
         _routineHandle = new JobHandle();
 
         //SPATIAL HASH GRID INSTANTIATION
-        int gridAmount = (int)math.ceil(FlowFieldUtilities.MaxAgentSize / FlowFieldUtilities.BaseSpatialGridSize);
+        int gridAmount = (int)math.ceil(FlowFieldUtilities.MaxAgentSize / FlowFieldUtilities.BaseAgentSpatialGridSize);
         HashGridArray = new NativeArray<UnsafeList<HashTile>>(gridAmount, Allocator.Persistent);
         for(int i = 0; i < HashGridArray.Length; i++)
         {
             float fieldHorizontalSize = FlowFieldUtilities.FieldColAmount * FlowFieldUtilities.TileSize;
             float fieldVerticalSize = FlowFieldUtilities.FieldRowAmount * FlowFieldUtilities.TileSize;
 
-            float gridTileSize = i * FlowFieldUtilities.BaseSpatialGridSize + FlowFieldUtilities.BaseSpatialGridSize;
+            float gridTileSize = i * FlowFieldUtilities.BaseAgentSpatialGridSize + FlowFieldUtilities.BaseAgentSpatialGridSize;
             int gridColAmount = (int)math.ceil(fieldHorizontalSize / gridTileSize);
             int gridRowAmount = (int)math.ceil(fieldVerticalSize / gridTileSize);
             int gridSize = gridColAmount * gridRowAmount;
@@ -73,7 +73,7 @@ public class MovementIO
         //SPATIAL HASHING
         AgentDataSpatialHasherJob spatialHasher = new AgentDataSpatialHasherJob()
         {
-            BaseSpatialGridSize = FlowFieldUtilities.BaseSpatialGridSize,
+            BaseSpatialGridSize = FlowFieldUtilities.BaseAgentSpatialGridSize,
             TileSize = FlowFieldUtilities.TileSize,
             FieldColAmount = FlowFieldUtilities.FieldColAmount,
             FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
@@ -127,13 +127,13 @@ public class MovementIO
             AlignmentMultiplier = BoidController.Instance.AlignmentMultiplier,
             AlignmentRangeAddition = BoidController.Instance.AlignmentRangeAddition,
             MovingAvoidanceRangeAddition = BoidController.Instance.MovingAvoidanceRangeAddition,
-            BaseSpatialGridSize = FlowFieldUtilities.BaseSpatialGridSize,
+            BaseSpatialGridSize = FlowFieldUtilities.BaseAgentSpatialGridSize,
             FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
             FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
             RoutineResultArray = RoutineResults,
             AgentSpatialHashGrid = new AgentSpatialHashGrid()
             {
-                BaseSpatialGridSize = FlowFieldUtilities.BaseSpatialGridSize,
+                BaseSpatialGridSize = FlowFieldUtilities.BaseAgentSpatialGridSize,
                 FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
                 FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
                 AgentHashGridArray = HashGridArray,
@@ -148,7 +148,7 @@ public class MovementIO
         {
             AgentSpatialHashGrid = new AgentSpatialHashGrid()
             {
-                BaseSpatialGridSize = FlowFieldUtilities.BaseSpatialGridSize,
+                BaseSpatialGridSize = FlowFieldUtilities.BaseAgentSpatialGridSize,
                 FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
                 FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
                 AgentHashGridArray = HashGridArray,
@@ -164,7 +164,7 @@ public class MovementIO
         {
             AgentSpatialHashGrid = new AgentSpatialHashGrid()
             {
-                BaseSpatialGridSize = FlowFieldUtilities.BaseSpatialGridSize,
+                BaseSpatialGridSize = FlowFieldUtilities.BaseAgentSpatialGridSize,
                 FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
                 FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
                 AgentHashGridArray = HashGridArray,
@@ -215,7 +215,7 @@ public class MovementIO
             HashedToNormal = HashedToNormal,
             AgentSpatialHashGrid = new AgentSpatialHashGrid()
             {
-                BaseSpatialGridSize = FlowFieldUtilities.BaseSpatialGridSize,
+                BaseSpatialGridSize = FlowFieldUtilities.BaseAgentSpatialGridSize,
                 FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
                 FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
                 AgentHashGridArray = HashGridArray,

@@ -40,7 +40,7 @@ public class TerrainGenerator : MonoBehaviour
         SimulationStartParameters simParam = new SimulationStartParameters()
         {
             TileSize = TileSize,
-            BaseSpatialGridSize = 3,
+            BaseAgentSpatialGridSize = 3,
             ColumCount = ColumnAmount,
             RowCount = RowAmount,
             MaxCostFieldOffset = 5,
