@@ -85,7 +85,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
         //GET ALIGNMENT
         if (newRoutineResult.NewAvoidance == 0 && movingAvoidance.Equals(0))
         {
-            float2 alignment = GetAlignment(agentPos, agent.DesiredDirection, agent.CurrentDirection, index, agent.FlockIndex, agent.Radius, agent.Offset);
+            float2 alignment = GetAlignment(agentPos, agent.DesiredDirection, agent.CurrentDirection, index, agent.FlockIndex, agent.Radius, agent.Offset, agent.AlignmentMultiplierPercentage);
             newDirectionToSteer += alignment;
         }
         if(!HasStatusFlag(AgentStatus.Moving, agent.Status))
@@ -117,7 +117,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
         float seekmultiplier = math.select(SeekMultiplier, 0.05f, agentStatus == 0);
         return math.select(steeringToSeek / steeringToSeekLen, 0f, steeringToSeekLen == 0) * math.select(seekmultiplier, steeringToSeekLen, steeringToSeekLen < seekmultiplier);
     }
-    float2 GetAlignment(float2 agentPos, float2 desiredDirection, float2 currentDirection, int agentIndex, int agentFlockIndex, float radius, int offset)
+    float2 GetAlignment(float2 agentPos, float2 desiredDirection, float2 currentDirection, int agentIndex, int agentFlockIndex, float radius, int offset, float alignmentMultiplierPercentage)
     {
         float2 totalHeading = 0;
         int alignedAgentCount = 0;
@@ -160,9 +160,9 @@ public struct LocalAvoidanceJob : IJobParallelFor
         }
         if (avoiding)
         {
-            return math.select((toalCurrentHeading / curAlignedAgentCount - desiredDirection) * AlignmentMultiplier, 0, curAlignedAgentCount == 0);
+            return math.select((toalCurrentHeading / curAlignedAgentCount - desiredDirection) * AlignmentMultiplier * alignmentMultiplierPercentage, 0, curAlignedAgentCount == 0);
         }
-        return math.select(totalHeading / alignedAgentCount - desiredDirection, 0, alignedAgentCount == 0);
+        return math.select((totalHeading / alignedAgentCount - desiredDirection) * alignmentMultiplierPercentage, 0, alignedAgentCount == 0);
     }
     float2 NewSeperation(float2 agentPos, float2 currentDirection, float agentRadius, int agentIndex, AvoidanceStatus agentAvoidance, int pathId, out bool hasForeignInFront)
     {

@@ -35,7 +35,6 @@ public struct AgentRoutineDataCalculationJob : IJobParallelFor
         //IF NOT MOVING
         if ((data.Status & AgentStatus.Moving) != AgentStatus.Moving)
         {
-            data.Local1d = (ushort)local1d;
             data.Offset = FlowFieldUtilities.RadiusToOffset(data.Radius, TileSize);
             data.DesiredDirection = data.CurrentDirection;
             AgentMovementData[index] = data;
@@ -48,7 +47,6 @@ public struct AgentRoutineDataCalculationJob : IJobParallelFor
         //IF NOT HAVE PATH
         if (agentCurPathIndex == -1)
         {
-            data.Local1d = (ushort)local1d;
             data.Offset = FlowFieldUtilities.RadiusToOffset(data.Radius, TileSize);
             data.DesiredDirection = data.CurrentDirection;
             AgentMovementData[index] = data;
@@ -56,8 +54,6 @@ public struct AgentRoutineDataCalculationJob : IJobParallelFor
         }
 
         //FLOW CALCULATION
-        float2 flow;
-
         float2 pathDestination = ExposedPathDestinationArray[agentCurPathIndex];
         PathLocationData pathLocationData = ExposedPathLocationDataArray[agentCurPathIndex];
         PathFlowData pathFlowData = ExposedPathFlowDataArray[agentCurPathIndex];
@@ -76,7 +72,18 @@ public struct AgentRoutineDataCalculationJob : IJobParallelFor
             return;
         }
 
-        if (losMap.IsLOS(agentSectorFlowStart + local1d)) { flow = math.normalizesafe(pathDestination - agentPos); }
+        float2 flow;
+        data.AlignmentMultiplierPercentage = 1f;
+        if (losMap.IsLOS(agentSectorFlowStart + local1d))
+        {
+            float2 posToDestination = pathDestination - agentPos;
+            float distanceBetweenDestination = math.length(posToDestination);
+            flow = math.select(posToDestination / distanceBetweenDestination, 0, distanceBetweenDestination == 0);
+            float alignmentMultiplierPercentage = math.lerp(1f, 0f, (20f - distanceBetweenDestination) / 20f);
+            alignmentMultiplierPercentage = math.select(alignmentMultiplierPercentage, 0, alignmentMultiplierPercentage < 0);
+            alignmentMultiplierPercentage = math.select(alignmentMultiplierPercentage, 1f, alignmentMultiplierPercentage > 1f);
+            data.AlignmentMultiplierPercentage = alignmentMultiplierPercentage;
+        }
         else if (GetSectorDynamicFlowStartIfExists(pathLocationData.DynamicAreaPickedSectorFlowStarts, agentSector1d, out int dynamicSectorFlowStart))
         {
             FlowData flowData = pathFlowData.DynamicAreaFlowField[dynamicSectorFlowStart + local1d];
@@ -92,7 +99,6 @@ public struct AgentRoutineDataCalculationJob : IJobParallelFor
 
         //FLOW CALCULATION
         flow = math.select(GetSmoothFlow(data.DesiredDirection, flow, data.Speed), flow, math.dot(data.DesiredDirection, flow) < 0.7f);
-        data.Local1d = (ushort)local1d;
         data.Offset = FlowFieldUtilities.RadiusToOffset(data.Radius, TileSize);
         data.DesiredDirection = flow;
         data.PathId = agentCurPathIndex;

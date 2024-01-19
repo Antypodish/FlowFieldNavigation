@@ -8,18 +8,18 @@ public struct AgentMovementData
     public float2 DesiredDirection;
     public float2 CurrentDirection;
     public float2 SeperationForce;
+    public float AlignmentMultiplierPercentage;
     public float Speed;
     public int Offset;
     public float Radius;
-    public ushort Local1d;
     public AgentStatus Status;
     public AvoidanceStatus Avoidance;
     public MovingAvoidanceStatus MovingAvoidance;
     public AgentRoutineStatus RoutineStatus;
     public int FlockIndex;
     public int PathId;
-    public int TensionPowerIndex;
 
+    public int TensionPowerIndex;
     public byte SplitInterval;
     public byte SplitInfo;
 }

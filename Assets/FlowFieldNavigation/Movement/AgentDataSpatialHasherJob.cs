@@ -99,8 +99,8 @@ public struct AgentDataSpatialHasherJob : IJob
             {
                 Position = agentData.Position,
                 Radius = agentData.Radius,
-                Local1d = 0,
                 DesiredDirection = agentData.DesiredDirection,
+                AlignmentMultiplierPercentage = 1f,
                 SeperationForce = 0,
                 CurrentDirection = agentData.Direction,
                 Speed = agentData.Speed,
