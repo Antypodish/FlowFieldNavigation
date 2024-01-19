@@ -13,14 +13,15 @@ public struct CollisionResolutionJob : IJobParallelFor
     {
         AgentMovementData agentData = AgentSpatialHashGrid.RawAgentMovementDataArray[index];
         bool hasForeignInFront = RoutineResultArray[index].HasForeignInFront;
-        float2 agentPos = new float2(agentData.Position.x, agentData.Position.z);
-        float2 totalResolution = 0;
+        float3 agentPos3 = agentData.Position;
+        float2 agentPos2 = new float2(agentData.Position.x, agentData.Position.z);
+        float3 totalResolution = 0;
         float agentRadius = agentData.Radius;
         float maxResolutionLength = 0;
         float checkRange = agentRadius;
         for (int i = 0; i < AgentSpatialHashGrid.GetGridCount(); i++)
         {
-            SpatialHashGridIterator iterator = AgentSpatialHashGrid.GetIterator(agentPos, checkRange, i);
+            SpatialHashGridIterator iterator = AgentSpatialHashGrid.GetIterator(agentPos2, checkRange, i);
             while (iterator.HasNext())
             {
                 NativeSlice<AgentMovementData> agentsToCheck = iterator.GetNextRow(out int sliceStart);
@@ -31,20 +32,20 @@ public struct CollisionResolutionJob : IJobParallelFor
                     AgentMovementData mateData = agentsToCheck[j];
                     AgentStatus mateStatus = mateData.Status;
                     float mateRadius = mateData.Radius;
-                    float3 matePosition = mateData.Position;
-                    float2 matePos = new float2(matePosition.x, matePosition.z);
+                    float3 mastePos3 = mateData.Position;
+                    float2 matePos2 = new float2(mastePos3.x, mastePos3.z);
                     float desiredDistance = checkRange + mateRadius;
-                    float distance = math.distance(matePos, agentPos);
+                    float distance = math.distance(agentPos3, mastePos3);
                     float overlapping = desiredDistance - distance;
                     if (overlapping <= 0) { continue; }
-                    bool mateInFront = math.dot(agentData.CurrentDirection, matePos - agentPos) > 0;
-                    bool agentInFront = math.dot(mateData.CurrentDirection, agentPos - matePos) > 0;
+                    bool mateInFront = math.dot(agentData.CurrentDirection, matePos2 - agentPos2) > 0;
+                    bool agentInFront = math.dot(mateData.CurrentDirection, agentPos2 - matePos2) > 0;
                     float resoltionMultiplier = GetMultiplier(agentData.Status, mateStatus, agentRadius, mateRadius, hasForeignInFront, mateInFront, agentInFront);
                     if (resoltionMultiplier == 0f) { continue; }
                     resoltionMultiplier *= overlapping;
 
-                    float2 resolutionForce = math.normalizesafe(agentPos - matePos) * resoltionMultiplier;
-                    resolutionForce = math.select(resolutionForce, new float2(sliceStart + j, 1), distance == 0 && index < sliceStart + j);
+                    float3 resolutionForce = math.normalizesafe(agentPos3 - mastePos3) * resoltionMultiplier;
+                    resolutionForce = math.select(resolutionForce, new float3(sliceStart + j, 0, 1), distance == 0 && index < sliceStart + j);
                     totalResolution += resolutionForce;
                     maxResolutionLength = math.select(resoltionMultiplier, maxResolutionLength, maxResolutionLength >= resoltionMultiplier);
                 }
@@ -53,9 +54,9 @@ public struct CollisionResolutionJob : IJobParallelFor
         float totalResolutionLen = math.length(totalResolution);
 
         //Enable if you want speed to be considered while calculating maxResolutionLength. More realistic, but increased overlapping.
-        //maxResolutionLength = math.select(agentData.Speed * 0.016f, maxResolutionLength, maxResolutionLength < agentData.Speed * 0.016f);
+        //maxResolutionLength = math.select(agentData.Speed * 0.02f, maxResolutionLength, maxResolutionLength < agentData.Speed * 0.016f);
         totalResolution = math.select(totalResolution, totalResolution / totalResolutionLen * maxResolutionLength, totalResolutionLen > maxResolutionLength);
-        AgentPositionChangeBuffer[index] = new float3(totalResolution.x, 0f, totalResolution.y);
+        AgentPositionChangeBuffer[index] += totalResolution;
     }
     float GetMultiplier(AgentStatus agentStatus, AgentStatus mateStatus, float agentRadius, float mateRadius, bool hasForeignInFront, bool mateInFront, bool agentInFront)
     {

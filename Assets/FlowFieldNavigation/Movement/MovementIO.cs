@@ -71,6 +71,7 @@ public class MovementIO
         AgentPositionChangeBuffer.Length = agentDataArray.Length;
         NormalToHashed.Length = agentDataArray.Length;
         HashedToNormal.Length = agentDataArray.Length;
+
         //SPATIAL HASHING
         AgentDataSpatialHasherJob spatialHasher = new AgentDataSpatialHasherJob()
         {
@@ -110,7 +111,6 @@ public class MovementIO
         };
         JobHandle movDataHandle = routineDataCalcJob.Schedule(routineDataCalcJob.AgentMovementData.Length, 64, spatialHasherHandle);
 
-
         //SCHEDULE LOCAL AVODANCE JOB
         LocalAvoidanceJob avoidanceJob = new LocalAvoidanceJob()
         {
@@ -144,6 +144,16 @@ public class MovementIO
         };
         JobHandle avoidanceHandle = avoidanceJob.Schedule(agentDataArray.Length, 64, movDataHandle);
 
+        //Height Calculation
+        AgentHeightCalculationJob heightCalculation = new AgentHeightCalculationJob()
+        {
+            TriangleSpatialHashGrid = _pathfindingManager.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
+            AgentMovementDataArray = AgentMovementDataList,
+            AgentPositionChangeArray = AgentPositionChangeBuffer,
+            Verticies = _pathfindingManager.HeightMeshGenerator.Verticies,
+        };
+        JobHandle heightCalculationHandle = heightCalculation.Schedule(agentDataArray.Length, 32, avoidanceHandle);
+
         //SCHEDULE AGENT COLLISION JOB
         CollisionResolutionJob colResJob = new CollisionResolutionJob()
         {
@@ -158,7 +168,7 @@ public class MovementIO
             RoutineResultArray = RoutineResults,
             AgentPositionChangeBuffer = AgentPositionChangeBuffer,
         };
-        JobHandle colResHandle = colResJob.Schedule(agentDataArray.Length, 4, avoidanceHandle);
+        JobHandle colResHandle = colResJob.Schedule(agentDataArray.Length, 4, heightCalculationHandle);
 
         //SCHEDULE TENSON RES JOB
         TensionResolver tensionResJob = new TensionResolver()
@@ -193,6 +203,7 @@ public class MovementIO
         };
         JobHandle wallCollisionHandle = wallCollision.Schedule(wallCollision.AgentMovementData.Length, 64, tensionHandle);
 
+        //Avoidance wall detection
         AvoidanceWallDetectionJob wallDetection = new AvoidanceWallDetectionJob()
         {
             FieldMaxXExcluding = FlowFieldUtilities.FieldMaxXExcluding,
@@ -209,14 +220,6 @@ public class MovementIO
         };
         JobHandle wallDetectionHandle = wallDetection.Schedule(agentDataArray.Length, 64, wallCollisionHandle);
 
-        AgentHeightCalculationJob heightCalculation = new AgentHeightCalculationJob()
-        {
-            TriangleSpatialHashGrid = _pathfindingManager.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
-            AgentMovementDataArray = AgentMovementDataList,
-            AgentPositionChangeArray = AgentPositionChangeBuffer,
-            Verticies = _pathfindingManager.HeightMeshGenerator.Verticies,
-        };
-        JobHandle heightCalculationHandle = heightCalculation.Schedule(agentDataArray.Length, 32, wallDetectionHandle);
 
         PathReachDistances.Length = exposedPathReachDistanceCheckRanges.Length;
         DestinationReachedAgentCountJob destinationReachedCounter = new DestinationReachedAgentCountJob()
@@ -239,7 +242,7 @@ public class MovementIO
             PathStateList = exposedPathStateList,
             PathAgentStopFlagList = exposedPathAgentStopFlagList,
         };
-        JobHandle destinationReachedCounterHandle = destinationReachedCounter.Schedule(exposedPathFlockIndicies.Length, 64, heightCalculationHandle);
+        JobHandle destinationReachedCounterHandle = destinationReachedCounter.Schedule(exposedPathFlockIndicies.Length, 64, wallDetectionHandle);
 
         AgentStoppingJob stoppingJob = new AgentStoppingJob()
         {

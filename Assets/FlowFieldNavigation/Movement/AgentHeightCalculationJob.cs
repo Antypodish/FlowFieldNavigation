@@ -8,12 +8,13 @@ using System.Numerics;
 public struct AgentHeightCalculationJob : IJobParallelFor
 {
     [ReadOnly] public TriangleSpatialHashGrid TriangleSpatialHashGrid;
-    [ReadOnly] public NativeArray<AgentMovementData> AgentMovementDataArray;
     [ReadOnly] public NativeArray<float3> Verticies;
     public NativeArray<float3> AgentPositionChangeArray;
+    public NativeArray<AgentMovementData> AgentMovementDataArray;
     public void Execute(int index)
     {
-        float3 agentPos3 = AgentMovementDataArray[index].Position;
+        AgentMovementData agentData = AgentMovementDataArray[index];
+        float3 agentPos3 = agentData.Position;
         float currentHeight = agentPos3.y;
         float2 agentPos2 = new float2(agentPos3.x, agentPos3.z);
         float desiredHeight = float.MinValue;
@@ -47,6 +48,10 @@ public struct AgentHeightCalculationJob : IJobParallelFor
         float3 agentPositionChange = AgentPositionChangeArray[index];
         agentPositionChange.y = desiredHeight - currentHeight;
         AgentPositionChangeArray[index] = agentPositionChange;
+
+        agentPos3.y = desiredHeight;
+        agentData.Position = agentPos3;
+        AgentMovementDataArray[index] = agentData;
     }
     float GetNewHeight(float3 a3, float3 b3, float3 c3, float3 p3)
     {

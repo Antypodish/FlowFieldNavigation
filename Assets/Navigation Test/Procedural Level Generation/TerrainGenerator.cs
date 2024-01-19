@@ -19,6 +19,7 @@ public class TerrainGenerator : MonoBehaviour
     public int RowAmount;
     public int ColumnAmount;
     public bool RandomHeights;
+    public float MaxHeight;
 
     ObstacleGenerator obsGenerator;
 
@@ -60,7 +61,7 @@ public class TerrainGenerator : MonoBehaviour
         {
             for(int j = 0; j < vertColAmount; j++)
             {
-                float height = RandomHeights ? Random.Range(0f, 1f) : 0;
+                float height = RandomHeights ? Random.Range(0f, MaxHeight) : 0;
                 vertexHeights[vertexHeightIndex] = height;
                 vertexHeightIndex++;
             }
