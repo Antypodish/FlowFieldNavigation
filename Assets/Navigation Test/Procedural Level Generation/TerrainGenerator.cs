@@ -82,7 +82,7 @@ public class TerrainGenerator : MonoBehaviour
                 int partitionVertColAmount = basePartitionSize;
                 int startVertexCol = j * (basePartitionSize - 1);
                 if (j + 1 == partitionColAmount) { partitionVertColAmount = vertColAmount - startVertexCol; }
-                Vector3 partitionStartPos = new Vector3(startVertexCol * TileSize, 0f, startVertexRow * TileSize);
+                Vector3 partitionStartPos = gameObject.transform.position + new Vector3(startVertexCol * TileSize, 0f, startVertexRow * TileSize);
                 GeneratePartition(partitionStartPos, partitionVertColAmount, partitionVertRowAmount, vertexHeights, startVertexRow * vertColAmount + startVertexCol);
             }
         }

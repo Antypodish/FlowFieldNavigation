@@ -39,7 +39,6 @@ public class EditorDebuggingController : MonoBehaviour
     [SerializeField] bool _debugDynamicAreaFlow;
     [Header("Agent Debugger")]
     [SerializeField] bool _debugAgentDirections;
-    [SerializeField] bool _debugAgentWaypoint;
     [SerializeField] bool _debugAgentsHoldingGround;
     [SerializeField] bool _debugAgentSeperationRadius;
     [SerializeField] bool _debugAvoidanceDirections;
@@ -57,7 +56,6 @@ public class EditorDebuggingController : MonoBehaviour
     EditorPortalDebugger _portalDebugger;
     EditorPathDebugger _pathDebugger;
     EditorAgentDirectionDebugger _agentDirectionDebugger;
-    EditorAgentWaypointDebugger _agentWaypointDebugger;
     EditorCostFieldDebugger _costFieldDebugger;
     EditorHoldGroundDebugger _holdGroundDebugger;
     EditorAgentRadiusDebugger _agentRadiusDebugger;
@@ -73,7 +71,6 @@ public class EditorDebuggingController : MonoBehaviour
         _sectorGraphDebugger = new EditorSectorGraphDebugger(_pathfindingManager);
         _portalDebugger = new EditorPortalDebugger(_pathfindingManager);
         _agentDirectionDebugger = new EditorAgentDirectionDebugger(_pathfindingManager);
-        _agentWaypointDebugger = new EditorAgentWaypointDebugger(_pathfindingManager);
         _costFieldDebugger = new EditorCostFieldDebugger(_pathfindingManager);
         _holdGroundDebugger = new EditorHoldGroundDebugger(_pathfindingManager);
         _agentRadiusDebugger = new EditorAgentRadiusDebugger(_pathfindingManager);
@@ -121,7 +118,6 @@ _debuggingEnabled = false;
             if (_debugIntegrationField && _pathDebugger != null) { _pathDebugger.DebugIntegrationField(_agentToDebug); }
             if (_debugFlowField && _pathDebugger != null) { _pathDebugger.DebugFlowField(_agentToDebug); }
             if (_debugLOSBlocks && _pathDebugger != null) { _pathDebugger.LOSBlockDebug(_agentToDebug); }
-            if(_debugAgentWaypoint && _agentWaypointDebugger!= null) { _agentWaypointDebugger.Debug(_agentToDebug); }
             if(_debugActiveWaveFronts && _pathDebugger != null) { _pathDebugger.DebugActiveWaveFronts(_agentToDebug); }
             if(_debugPortalTargetNeighbours && _pathDebugger != null) { _pathDebugger.DebugTargetNeighbourPortals(_agentToDebug); }
             if(_debugDestination && _pathDebugger != null) { _pathDebugger.DebugDestination(_agentToDebug); }
