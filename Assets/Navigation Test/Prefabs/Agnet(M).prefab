@@ -62,7 +62,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Radius: 0.75
   Speed: 5
-  LandOffset: 0.55
+  LandOffset: 0
   AgentDataIndex: 0
   Transform: {fileID: 0}
 --- !u!1001 &7519861112183131251
@@ -85,7 +85,7 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: ba2fbfdc2d994674ab4d41e0e625fe37,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 0.55
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: ba2fbfdc2d994674ab4d41e0e625fe37,
         type: 3}

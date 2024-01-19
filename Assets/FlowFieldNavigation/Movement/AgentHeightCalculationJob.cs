@@ -69,7 +69,7 @@ public struct AgentHeightCalculationJob : IJobParallelFor
         float v = (d11 * d20 - d01 * d21) / denom;
         float w = (d00 * d21 - d01 * d20) / denom;
         float u = 1.0f - v - w;
-        return a3.y * u + b3.y * v + c3.y * w + 0.55f;
+        return a3.y * u + b3.y * v + c3.y * w;
     }
     bool IsPOintInsideTriangle(float2 agentPos2, float2 v1, float2 v2, float2 v3)
     {
