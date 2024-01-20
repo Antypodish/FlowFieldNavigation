@@ -25,7 +25,8 @@ public struct AgentWallCollisionJob : IJobParallelFor
         float agentRadiusWithoutHalfTile = agentData.Radius - HalfTileSize;
         float agentRadius = math.select(agentRadiusWithoutHalfTile % TileSize, agentData.Radius, agentRadiusWithoutHalfTile < 0);
         float2 agentPos = new float2(agentData.Position.x, agentData.Position.z);
-        UnsafeListReadOnly<byte> costs = CostFieldEachOffset[agentData.Offset];
+        int agentOffset = FlowFieldUtilities.RadiusToOffset(agentData.Radius, TileSize);
+        UnsafeListReadOnly<byte> costs = CostFieldEachOffset[agentOffset];
         int2 agentGeneral2d = FlowFieldUtilities.PosTo2D(agentPos, TileSize);
         LocalIndex1d agentLocal = FlowFieldUtilities.GetLocal1D(agentGeneral2d, SectorColAmount, SectorMatrixColAmount);
         int2 cleanGeneral2d;
@@ -41,7 +42,7 @@ public struct AgentWallCollisionJob : IJobParallelFor
         }
         else
         {
-            cleanGeneral2d = GetClosestCleanIndex(agentPos, CostFieldEachOffset[agentData.Offset]);
+            cleanGeneral2d = GetClosestCleanIndex(agentPos, CostFieldEachOffset[agentOffset]);
             WallDirection wallDirections = GetWallData(cleanGeneral2d, costs);
             WallDirection wallDirectionToCollide = GetWallDirectionToCollide(agentPos, agentGeneral2d, cleanGeneral2d, wallDirections);
             if (wallDirectionToCollide == WallDirection.None) { return; }

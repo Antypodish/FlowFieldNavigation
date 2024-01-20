@@ -23,7 +23,8 @@ public struct AvoidanceWallDetectionJob : IJobParallelFor
         if (agentRoutineResult.NewAvoidance == 0) { return; }
         AgentMovementData agentMovementData = AgentMovementDataArray[index];
         float2 agentPos = new float2(agentMovementData.Position.x, agentMovementData.Position.z);
-        bool goingTowardsWall = IsGoingTowardsWall(agentPos, agentRoutineResult.NewDirection, agentMovementData.Offset);
+        int agentOffset = FlowFieldUtilities.RadiusToOffset(agentMovementData.Radius, TileSize);
+        bool goingTowardsWall = IsGoingTowardsWall(agentPos, agentRoutineResult.NewDirection, agentOffset);
         if (goingTowardsWall)
         {
             agentRoutineResult.NewAvoidance = agentRoutineResult.NewAvoidance == AvoidanceStatus.L ? AvoidanceStatus.R : AvoidanceStatus.L;

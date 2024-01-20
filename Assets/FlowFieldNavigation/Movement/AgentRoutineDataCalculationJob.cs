@@ -35,7 +35,6 @@ public struct AgentRoutineDataCalculationJob : IJobParallelFor
         //IF NOT MOVING
         if ((data.Status & AgentStatus.Moving) != AgentStatus.Moving)
         {
-            data.Offset = FlowFieldUtilities.RadiusToOffset(data.Radius, TileSize);
             data.DesiredDirection = data.CurrentDirection;
             AgentMovementData[index] = data;
             return;
@@ -47,7 +46,6 @@ public struct AgentRoutineDataCalculationJob : IJobParallelFor
         //IF NOT HAVE PATH
         if (agentCurPathIndex == -1)
         {
-            data.Offset = FlowFieldUtilities.RadiusToOffset(data.Radius, TileSize);
             data.DesiredDirection = data.CurrentDirection;
             AgentMovementData[index] = data;
             return;
@@ -99,7 +97,6 @@ public struct AgentRoutineDataCalculationJob : IJobParallelFor
 
         //FLOW CALCULATION
         flow = math.select(GetSmoothFlow(data.DesiredDirection, flow, data.Speed), flow, math.dot(data.DesiredDirection, flow) < 0.7f);
-        data.Offset = FlowFieldUtilities.RadiusToOffset(data.Radius, TileSize);
         data.DesiredDirection = flow;
         data.PathId = agentCurPathIndex;
         data.Destination = pathDestination;

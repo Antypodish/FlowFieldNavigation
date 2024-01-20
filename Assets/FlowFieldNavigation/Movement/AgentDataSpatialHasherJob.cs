@@ -101,7 +101,6 @@ public struct AgentDataSpatialHasherJob : IJob
                 Radius = agentData.Radius,
                 DesiredDirection = agentData.DesiredDirection,
                 AlignmentMultiplierPercentage = 1f,
-                SeperationForce = 0,
                 CurrentDirection = agentData.Direction,
                 Speed = agentData.Speed,
                 Status = agentData.Status,

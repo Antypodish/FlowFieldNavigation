@@ -42,6 +42,7 @@ public class AgentDataContainer
             Direction = Vector2.zero,
             Radius = agent.GetRadius(),
             Position = agent.transform.position,
+            LandOffset = agent.GetLandOffset(),
         };
         Agents.Add(agent);
         AgentTransforms.Add(agent.transform);
@@ -92,12 +93,6 @@ public class AgentDataContainer
         data.Status = ~(~data.Status | AgentStatus.HoldGround);
         AgentDataList[agentIndex] = data;
     }
-    public void SetDirection(int agentIndex, Vector2 direction)
-    {
-        AgentData data = AgentDataList[agentIndex];
-        data.Direction = direction * math.length(data.Direction);
-        AgentDataList[agentIndex] = data;
-    }
     public void SendRoutineResults(NativeArray<RoutineResult> routineResults, NativeArray<AgentMovementData> movementDataArray, NativeArray<float3> agentPositionChangeBuffer, NativeArray<int> normalToHashed)
     {
         AgentPositionChangeSendJob posSendJob = new AgentPositionChangeSendJob()
@@ -117,16 +112,6 @@ public class AgentDataContainer
             NormalToHashed = normalToHashed
         };
         directionSetJob.Schedule().Complete();
-    }
-    public NativeArray<float2> GetPositionsOf(List<FlowFieldAgent> agents)
-    {
-        NativeArray<float2> positions = new NativeArray<float2>(agents.Count, Allocator.Persistent);
-        for(int i = 0; i < agents.Count; i++)
-        {
-            Vector3 pos3d = AgentDataList[agents[i].AgentDataIndex].Position;
-            positions[i] = new float2(pos3d.x, pos3d.z);
-        }
-        return positions;
     }
     public void SetRequestedPathIndiciesOf(List<FlowFieldAgent> agents, int newPathIndex)
     {
@@ -149,6 +134,7 @@ public struct AgentData
     public float2 DesiredDirection;
     public float3 Seperation;
     public float3 Position;
+    public float LandOffset;
     public float Radius;
 
     public byte SplitInterval;

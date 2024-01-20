@@ -86,7 +86,8 @@ public struct LocalAvoidanceJob : IJobParallelFor
         //GET ALIGNMENT
         if (newRoutineResult.NewAvoidance == 0 && movingAvoidance.Equals(0))
         {
-            float2 alignment = GetAlignment(agentPos2, agent.DesiredDirection, agent.CurrentDirection, index, agent.FlockIndex, agent.Radius, agent.Offset, agent.AlignmentMultiplierPercentage);
+            int agentOffset = FlowFieldUtilities.RadiusToOffset(agent.Radius, TileSize);
+            float2 alignment = GetAlignment(agentPos2, agent.DesiredDirection, agent.CurrentDirection, index, agent.FlockIndex, agent.Radius, agentOffset, agent.AlignmentMultiplierPercentage);
             newDirectionToSteer += alignment;
         }
         if(!HasStatusFlag(AgentStatus.Moving, agent.Status))
