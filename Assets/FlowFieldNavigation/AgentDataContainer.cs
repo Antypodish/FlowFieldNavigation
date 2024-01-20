@@ -147,7 +147,7 @@ public struct AgentData
     public float2 Destination;
     public float2 Direction;
     public float2 DesiredDirection;
-    public float2 Seperation;
+    public float3 Seperation;
     public float3 Position;
     public float Radius;
 
