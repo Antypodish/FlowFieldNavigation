@@ -111,6 +111,16 @@ public class MovementIO
         };
         JobHandle movDataHandle = routineDataCalcJob.Schedule(routineDataCalcJob.AgentMovementData.Length, 64, spatialHasherHandle);
 
+        //Height Calculation
+        AgentHeightCalculationJob heightCalculation = new AgentHeightCalculationJob()
+        {
+            TriangleSpatialHashGrid = _pathfindingManager.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
+            AgentMovementDataArray = AgentMovementDataList,
+            AgentPositionChangeArray = AgentPositionChangeBuffer,
+            Verticies = _pathfindingManager.HeightMeshGenerator.Verticies,
+        };
+        JobHandle heightCalculationHandle = heightCalculation.Schedule(agentDataArray.Length, 32, movDataHandle);
+
         //SCHEDULE LOCAL AVODANCE JOB
         LocalAvoidanceJob avoidanceJob = new LocalAvoidanceJob()
         {
@@ -142,17 +152,8 @@ public class MovementIO
             },
             CostFieldEachOffset = costFieldCosts,
         };
-        JobHandle avoidanceHandle = avoidanceJob.Schedule(agentDataArray.Length, 64, movDataHandle);
+        JobHandle avoidanceHandle = avoidanceJob.Schedule(agentDataArray.Length, 64, heightCalculationHandle);
 
-        //Height Calculation
-        AgentHeightCalculationJob heightCalculation = new AgentHeightCalculationJob()
-        {
-            TriangleSpatialHashGrid = _pathfindingManager.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
-            AgentMovementDataArray = AgentMovementDataList,
-            AgentPositionChangeArray = AgentPositionChangeBuffer,
-            Verticies = _pathfindingManager.HeightMeshGenerator.Verticies,
-        };
-        JobHandle heightCalculationHandle = heightCalculation.Schedule(agentDataArray.Length, 32, avoidanceHandle);
 
         //SCHEDULE AGENT COLLISION JOB
         CollisionResolutionJob colResJob = new CollisionResolutionJob()
@@ -168,7 +169,7 @@ public class MovementIO
             RoutineResultArray = RoutineResults,
             AgentPositionChangeBuffer = AgentPositionChangeBuffer,
         };
-        JobHandle colResHandle = colResJob.Schedule(agentDataArray.Length, 4, heightCalculationHandle);
+        JobHandle colResHandle = colResJob.Schedule(agentDataArray.Length, 4, avoidanceHandle);
 
         //SCHEDULE TENSON RES JOB
         TensionResolver tensionResJob = new TensionResolver()

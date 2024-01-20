@@ -42,14 +42,15 @@ public struct LocalAvoidanceJob : IJobParallelFor
             NewMovingAvoidance = agent.MovingAvoidance,
         };
 
-        float2 agentPos = new float2(agent.Position.x, agent.Position.z);
+        float3 agentPos3 = agent.Position;
+        float2 agentPos2 = new float2(agent.Position.x, agent.Position.z);
         float2 newDirectionToSteer = agent.DesiredDirection;
 
         if (HasStatusFlag(AgentStatus.HoldGround, agent.Status)) { return; }
         //GET AVOIDANCE STATUS
         if (newRoutineResult.NewAvoidance == 0)
         {
-            newRoutineResult.NewAvoidance = GetAvoidanceStatus(agentPos, agent.DesiredDirection, agent.Radius, index);
+            newRoutineResult.NewAvoidance = GetAvoidanceStatus(agentPos2, agent.DesiredDirection, agent.Radius, index);
             if (newRoutineResult.NewAvoidance != 0)
             {
                 newRoutineResult.NewSplitInterval = 50;
@@ -59,13 +60,13 @@ public struct LocalAvoidanceJob : IJobParallelFor
         //CHECK IF DESIRED DIRECTION IS FREE
         if (newRoutineResult.NewAvoidance != 0 && math.dot(agent.DesiredDirection, agent.CurrentDirection) > 0)
         {
-            newRoutineResult.NewAvoidance = IsDirectionFree(agentPos, agent.DesiredDirection, index, agent.Radius, agent.Radius + 1f) ? 0 : newRoutineResult.NewAvoidance;
+            newRoutineResult.NewAvoidance = IsDirectionFree(agentPos2, agent.DesiredDirection, index, agent.Radius, agent.Radius + 1f) ? 0 : newRoutineResult.NewAvoidance;
         }
 
         //GET AVIODANCE DIRECTION
         if (newRoutineResult.NewAvoidance != 0)
         {
-            float2 avoidanceDirection = GetAvoidanceDirection(agentPos, agent.CurrentDirection, agent.Radius, index, agent.Radius + 1f, newRoutineResult.NewAvoidance);
+            float2 avoidanceDirection = GetAvoidanceDirection(agentPos2, agent.CurrentDirection, agent.Radius, index, agent.Radius + 1f, newRoutineResult.NewAvoidance);
             newDirectionToSteer = avoidanceDirection;
             if (avoidanceDirection.Equals(0))
             {
@@ -74,23 +75,23 @@ public struct LocalAvoidanceJob : IJobParallelFor
         }
 
         //GET MOVING AVOIDANCE
-        float2 movingAvoidance = GetMovingAvoidance(agentPos, agent.CurrentDirection, index, agent.Radius, ref newRoutineResult.NewMovingAvoidance, agent.PathId);
+        float2 movingAvoidance = GetMovingAvoidance(agentPos2, agent.CurrentDirection, index, agent.Radius, ref newRoutineResult.NewMovingAvoidance, agent.PathId);
         if (!movingAvoidance.Equals(0))
         {
             newDirectionToSteer = movingAvoidance;
         }
         //GET SEPERATION
-        float2 seperation = NewSeperation(agentPos, agent.CurrentDirection, agent.Radius, index, newRoutineResult.NewAvoidance, agent.PathId, out newRoutineResult.HasForeignInFront);
+        float2 seperation = NewSeperation(agentPos2, agent.CurrentDirection, agent.Radius, index, newRoutineResult.NewAvoidance, agent.PathId, out newRoutineResult.HasForeignInFront);
 
         //GET ALIGNMENT
         if (newRoutineResult.NewAvoidance == 0 && movingAvoidance.Equals(0))
         {
-            float2 alignment = GetAlignment(agentPos, agent.DesiredDirection, agent.CurrentDirection, index, agent.FlockIndex, agent.Radius, agent.Offset, agent.AlignmentMultiplierPercentage);
+            float2 alignment = GetAlignment(agentPos2, agent.DesiredDirection, agent.CurrentDirection, index, agent.FlockIndex, agent.Radius, agent.Offset, agent.AlignmentMultiplierPercentage);
             newDirectionToSteer += alignment;
         }
         if(!HasStatusFlag(AgentStatus.Moving, agent.Status))
         {
-            float2 stoppedSeperation = GetStoppedSeperationForce(agentPos, agent.CurrentDirection, agent.Radius, index);
+            float2 stoppedSeperation = GetStoppedSeperationForce(agentPos3, agent.CurrentDirection, agent.Radius, index);
             newDirectionToSteer = math.select(stoppedSeperation, agent.CurrentDirection, stoppedSeperation.Equals(0));
         }
 
@@ -239,13 +240,14 @@ public struct LocalAvoidanceJob : IJobParallelFor
     }
 
     //That job is so important for smoothing out collisions for stopped agents
-    float2 GetStoppedSeperationForce(float2 agentPos, float2 agentDir, float agentRadius, int agentIndex)
+    float2 GetStoppedSeperationForce(float3 agentPos3, float2 agentDir, float agentRadius, int agentIndex)
     {
+        float2 agentPos2 = new float2(agentPos3.x, agentPos3.z);
         float2 totalSeperation = 0;
         float checkRange = agentRadius - 0.05f;
         for (int i = 0; i < AgentSpatialHashGrid.GetGridCount(); i++)
         {
-            SpatialHashGridIterator iterator = AgentSpatialHashGrid.GetIterator(agentPos, checkRange, i);
+            SpatialHashGridIterator iterator = AgentSpatialHashGrid.GetIterator(agentPos2, checkRange, i);
             while (iterator.HasNext())
             {
                 NativeSlice<AgentMovementData> agentsToCheck = iterator.GetNextRow(out int sliceStart);
@@ -254,15 +256,16 @@ public struct LocalAvoidanceJob : IJobParallelFor
                     AgentMovementData mateData = agentsToCheck[j];
                     if (sliceStart + j == agentIndex) { continue; }
 
-                    float2 matePos = new float2(mateData.Position.x, mateData.Position.z);
-                    float distance = math.distance(matePos, agentPos);
+                    float3 matePos3 = mateData.Position;
+                    float2 matePos2 = new float2(mateData.Position.x, mateData.Position.z);
+                    float distance = math.distance(matePos3, agentPos3);
 
                     float seperationRadius = checkRange + mateData.Radius;
                     if (distance > seperationRadius) { continue; }
                     float overlapping = seperationRadius - distance;
-                    float2 seperation = agentPos - matePos;
+                    float2 seperation = agentPos2 - matePos2;
 
-                    if (math.dot(agentDir, matePos - agentPos) >= 0 && !HasStatusFlag(AgentStatus.Moving, mateData.Status)) { overlapping*=0.3f; }
+                    if (math.dot(agentDir, matePos2 - agentPos2) >= 0 && !HasStatusFlag(AgentStatus.Moving, mateData.Status)) { overlapping*=0.3f; }
                     seperation = math.normalizesafe(seperation) * overlapping;
                     totalSeperation += seperation;
                 }
