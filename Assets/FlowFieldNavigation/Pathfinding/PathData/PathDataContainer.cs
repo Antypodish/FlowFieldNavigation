@@ -4,7 +4,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
 
-public class PathContainer
+public class PathDataContainer
 {
     public NativeList<PathFlowData> ExposedPathFlowData;
     public NativeList<PathLocationData> ExposedPathLocationData;
@@ -27,9 +27,9 @@ public class PathContainer
     public NativeList<int> PathSubscriberCounts;
     Stack<int> _removedPathIndicies;
 
-    FieldManager _fieldProducer;
+    FieldDataContainer _fieldProducer;
     PathPreallocator _preallocator;
-    public PathContainer(PathfindingManager pathfindingManager)
+    public PathDataContainer(PathfindingManager pathfindingManager)
     {
         _fieldProducer = pathfindingManager.FieldManager;
         PathfindingInternalDataList = new List<PathfindingInternalData>(1);

@@ -6,7 +6,7 @@ using Unity.Mathematics;
 internal class AdditionActivePortalSubmissionScheduler
 {
     PathfindingManager _pathfindingManager;
-    PathContainer _pathContainer;
+    PathDataContainer _pathContainer;
 
     public AdditionActivePortalSubmissionScheduler(PathfindingManager pathfindingManager)
     {

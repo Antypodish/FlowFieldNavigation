@@ -19,13 +19,13 @@ public class FlowFieldAgent : MonoBehaviour
     private void Start()
     {
         _pathfindingManager = FindObjectOfType<PathfindingManager>();
-        _pathfindingManager.RequestSubscription(this);
+        _pathfindingManager.Interface.RequestSubscription(this);
         Transform = transform;
         AgentDataIndex = -1;
     }
     public int GetPathIndex()
     {
-        return _pathfindingManager.GetPathIndex(AgentDataIndex);
+        return _pathfindingManager.Interface.GetPathIndex(AgentDataIndex);
     }
     public float GetSpeed() => Speed;
     public float GetRadius() => Radius;

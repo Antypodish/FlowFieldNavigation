@@ -3,7 +3,7 @@
 internal class ActivePortalSubmissionScheduler
 {
     PathfindingManager _pathfindingManager;
-    PathContainer _pathContainer;
+    PathDataContainer _pathContainer;
 
     public ActivePortalSubmissionScheduler(PathfindingManager pathfindingManager)
     {

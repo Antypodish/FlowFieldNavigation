@@ -9,7 +9,7 @@ using UnityEngine.Networking.Match;
 public class LOSIntegrationScheduler
 {
     PathfindingManager _pathfindingManager;
-    PathContainer _pathContainer;
+    PathDataContainer _pathContainer;
 
     NativeList<PathPipelineInfoWithHandle> ScheduledLOS;
     NativeList<int> _losCalculatedPaths;

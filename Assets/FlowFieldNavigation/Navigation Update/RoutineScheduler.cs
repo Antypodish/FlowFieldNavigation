@@ -144,7 +144,7 @@ public class RoutineScheduler
         EditedSectorBitArray.Clear();
         NewCostEditRequests.Clear();
     }
-    public MovementManager GetRoutineDataProducer()
+    public MovementManager GetMovementManager()
     {
         return _movementManager;
     }

@@ -49,7 +49,7 @@ public class TerrainGenerator : MonoBehaviour
             Meshes = _generatedMeshes.ToArray(),
             Transforms = _generatedMeshTransforms.ToArray(),
         };
-        _pathfindingManager.StartSimulation(simParam);
+        _pathfindingManager.Interface.StartSimulation(simParam);
     }
     public void GenerateMesh()
     {

@@ -14,9 +14,9 @@ using static UnityEditor.PlayerSettings;
 
 public class EditorPathDebugger
 {
-    PathContainer _pathContainer;
+    PathDataContainer _pathContainer;
     PathfindingManager _pathfindingManager;
-    FieldManager _fieldProducer;
+    FieldDataContainer _fieldProducer;
     float _tileSize;
 
     public EditorPathDebugger(PathfindingManager pathfindingManager)
@@ -503,7 +503,7 @@ public class EditorPathDebugger
         int pathIndex = agent.GetPathIndex();
         if (pathIndex == -1) { return; }
 
-        PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[_pathfindingManager.GetPathIndex(agent.AgentDataIndex)];
+        PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[_pathfindingManager.Interface.GetPathIndex(agent.AgentDataIndex)];
         Vector2 destination = destinationData.Destination;
         Vector3 destination3 = new Vector3(destination.x, 0.1f, destination.y);
         Gizmos.color = Color.blue;

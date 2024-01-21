@@ -5,7 +5,6 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
-using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Jobs;
 
@@ -75,38 +74,4 @@ public class AgentDataContainer
             reqPathIndicies[agentIndex] = newPathIndex;
         }
     }
-}
-public struct AgentData
-{
-    public float Speed;
-    public AgentStatus Status;
-    public AvoidanceStatus Avoidance;
-    public MovingAvoidanceStatus MovingAvoidance;
-    public float2 Destination;
-    public float2 Direction;
-    public float2 DesiredDirection;
-    public float3 Seperation;
-    public float3 Position;
-    public float LandOffset;
-    public float Radius;
-
-    public byte SplitInterval;
-    public byte SplitInfo;
-
-    public int StopDistanceIndex;
-
-    public void SetStatusBit(AgentStatus status)
-    {
-        Status |= status;
-    }
-    public void ClearStatusBit(AgentStatus status)
-    {
-        Status = ~(~Status | status);
-    }
-}
-[Flags]
-public enum AgentStatus : byte
-{
-    Moving = 1,
-    HoldGround = 2,
 }

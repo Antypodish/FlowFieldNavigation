@@ -6,7 +6,7 @@ using Unity.Mathematics;
 public class RequestedSectorCalculationScheduler
 {
     PathfindingManager _pathfindingManager;
-    PathContainer _pathContainer;
+    PathDataContainer _pathContainer;
     FlowCalculationScheduler _flowCalculationScheduler;
     NativeList<PathPipelineInfoWithHandle> ScheduledRequestedSectorCalculations;
 

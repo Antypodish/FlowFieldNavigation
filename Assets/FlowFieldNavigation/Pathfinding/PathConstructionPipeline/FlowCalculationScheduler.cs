@@ -8,7 +8,7 @@ using Unity.Mathematics;
 public class FlowCalculationScheduler
 {
     PathfindingManager _pathfindingManager;
-    PathContainer _pathContainer;
+    PathDataContainer _pathContainer;
     LOSIntegrationScheduler _losIntegrationScheduler;
     NativeList<PathPipelineInfoWithHandle> ScheduledFlow;
     NativeList<FlowFieldCalculationBufferParent> _flowFieldCalculationBuffers;

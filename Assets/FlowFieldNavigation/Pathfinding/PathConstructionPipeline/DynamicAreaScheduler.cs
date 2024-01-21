@@ -7,7 +7,7 @@ using System.Collections.Generic;
 public class DynamicAreaScheduler
 {
     PathfindingManager _pathfindingManager;
-    PathContainer _pathContainer;
+    PathDataContainer _pathContainer;
 
     NativeList<PathPipelineInfoWithHandle> _scheduledDynamicAreas; 
     public DynamicAreaScheduler(PathfindingManager pathfindingManager)

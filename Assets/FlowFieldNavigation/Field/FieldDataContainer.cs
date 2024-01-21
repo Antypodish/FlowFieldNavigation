@@ -1,13 +1,13 @@
 ﻿using UnityEngine;
 using Unity.Collections;
 
-public class FieldManager
+public class FieldDataContainer
 {
     public ObstacleContainer ObstacleContainer { get; private set; }
     public HeightMeshProducer HeightMeshGenerator { get; private set; }
     CostFieldProducer _costFieldProducer;
     FieldGraphProducer _fieldGraphProducer;
-    public FieldManager(WalkabilityCell[][] walkabilityMatrix, Mesh[] meshes, Transform[] transforms)
+    public FieldDataContainer(WalkabilityCell[][] walkabilityMatrix, Mesh[] meshes, Transform[] transforms)
     {
         _costFieldProducer = new CostFieldProducer(walkabilityMatrix);
         _fieldGraphProducer = new FieldGraphProducer();

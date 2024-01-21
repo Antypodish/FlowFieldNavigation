@@ -33,7 +33,7 @@ public class CostEditController
                     HalfSize = halfSize,
                 };
             }
-            _pathfindingManager.SetObstacle(obstacleRequestsTemp, _obstacleKeys);
+            _pathfindingManager.Interface.SetObstacle(obstacleRequestsTemp, _obstacleKeys);
             obstacleRequestsTemp.Dispose();
             GameObject obstacleCube = GameObject.CreatePrimitive(PrimitiveType.Cube);
             obstacleCube.transform.localScale = new Vector3(halfSize.x, 0f, halfSize.y) * 2 + new Vector3(0, 1f, 0);

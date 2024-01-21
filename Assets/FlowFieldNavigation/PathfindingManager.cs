@@ -5,29 +5,33 @@ using UnityEngine;
 
 public class PathfindingManager : MonoBehaviour
 {
-    [SerializeField] public int LineOfSightRange;
+    [SerializeField] internal int LineOfSightRange;
     [SerializeField] float _baseTriangleSpatialGridSize;
     public bool SimulationStarted { get; private set; }
+    public FlowFieldNavigationInterface Interface { get; private set; }
 
-    public FieldManager FieldManager;
-    public PathContainer PathContainer;
-    public AgentDataContainer AgentDataContainer;
-    public FlockDataContainer FlockContainer;
+    internal FieldDataContainer FieldManager;
+    internal PathDataContainer PathContainer;
+    internal AgentDataContainer AgentDataContainer;
+    internal FlockDataContainer FlockContainer;
+    internal RequestAccumulator RequestAccumulator;
 
     NavigationUpdater _navigationUpdater;
-    RequestAccumulator _requestAccumulator;
-
-    private void Update()
+    void Awake()
+    {
+        Interface = new FlowFieldNavigationInterface(this);
+    }
+    void Update()
     {
         if (!SimulationStarted) { return; }
         _navigationUpdater.IntermediateUpdate();
     }
-    private void FixedUpdate()
+    void FixedUpdate()
     {
         if (!SimulationStarted) { return; }
         _navigationUpdater.RoutineFixedUpdate();
     }
-    private void LateUpdate()
+    void LateUpdate()
     {
         if (!SimulationStarted) { return; }
         _navigationUpdater.IntermediateUpdate();
@@ -63,92 +67,32 @@ public class PathfindingManager : MonoBehaviour
         FlowFieldUtilities.FieldMaxYExcluding = FlowFieldUtilities.FieldRowAmount * FlowFieldUtilities.TileSize;
         FlowFieldUtilities.MaxCostFieldOffset = startParameters.MaxCostFieldOffset;
     }
-    public void StartSimulation(SimulationStartParameters startParameters)
+    internal void StartSimulation(SimulationStartParameters startParameters)
     {
-        if (SimulationStarted)
-        {
-            UnityEngine.Debug.Log("Request declined. Simulation is already started.");
-            return;
-        }
         SimulationStarted = true;
         SetFlowFieldUtilities(startParameters);
-        FieldManager = new FieldManager(startParameters.WalkabilityMatrix, startParameters.Meshes, startParameters.Transforms);
+        FieldManager = new FieldDataContainer(startParameters.WalkabilityMatrix, startParameters.Meshes, startParameters.Transforms);
         FieldManager.CreateField(startParameters.MaxCostFieldOffset);
         AgentDataContainer = new AgentDataContainer();
-        PathContainer = new PathContainer(this);
-        _requestAccumulator = new RequestAccumulator(this);
-        _navigationUpdater = new NavigationUpdater(this, _requestAccumulator);
+        PathContainer = new PathDataContainer(this);
+        RequestAccumulator = new RequestAccumulator(this);
+        _navigationUpdater = new NavigationUpdater(this, RequestAccumulator);
         FlockContainer = new FlockDataContainer();
     }
-    public void SetDestination(List<FlowFieldAgent> agents, Vector3 target)
+    internal NativeArray<UnsafeList<HashTile>> GetSpatialHashGridArray()
     {
-        if (agents.Count == 0) { UnityEngine.Debug.Log("Agent list passed is empty"); return; }
-        _requestAccumulator.RequestPath(agents, target);
+        return _navigationUpdater.GetRoutineScheduler().GetMovementManager().HashGridArray;
     }
-    public void SetDestination(List<FlowFieldAgent> agents, FlowFieldAgent targetAgent)
+    internal NativeArray<int> GetNormalToHashed()
     {
-        if (agents.Count == 0) { UnityEngine.Debug.Log("Agent list passed is empty"); return; }
-        _requestAccumulator.RequestPath(agents, targetAgent);
+        return _navigationUpdater.GetRoutineScheduler().GetMovementManager().NormalToHashed;
     }
-    public NativeArray<UnsafeList<HashTile>> GetSpatialHashGridArray()
+    internal NativeArray<AgentMovementData> GetAgentMovementData()
     {
-        return _navigationUpdater.GetRoutineScheduler().GetRoutineDataProducer().HashGridArray;
+        return _navigationUpdater.GetRoutineScheduler().GetMovementManager().AgentMovementDataList;
     }
-    public NativeArray<int> GetNormalToHashed()
-    {
-        return _navigationUpdater.GetRoutineScheduler().GetRoutineDataProducer().NormalToHashed;
-    }
-    public NativeArray<AgentMovementData> GetAgentMovementData()
-    {
-        return _navigationUpdater.GetRoutineScheduler().GetRoutineDataProducer().AgentMovementDataList;
-    }
-    public void SetObstacle(NativeArray<ObstacleRequest> obstacleRequests, NativeList<int> outputListToAddObstacleIndicies)
-    {
-        _requestAccumulator.HandleObstacleRequest(obstacleRequests, outputListToAddObstacleIndicies);
-    }
-    public void RemoveObstacle(NativeArray<int>.ReadOnly obstaclesToRemove)
-    {
-        _requestAccumulator.HandleObstacleRemovalRequest(obstaclesToRemove);
-    }
-    public void RequestSubscription(FlowFieldAgent agent)
-    {
-        _requestAccumulator.RequestAgentAddition(agent);
-    }
-    public int GetPathIndex(int agentIndex)
-    {
-        return AgentDataContainer.AgentCurPathIndicies[agentIndex];
-    }
-    public List<FlowFieldAgent> GetAllAgents()
-    {
-        return AgentDataContainer.Agents;
-    }
-    public int GetAgentCount()
-    {
-        return AgentDataContainer.Agents.Count;
-    }
-    public UnsafeListReadOnly<byte>[] GetAllCostFieldCostsAsUnsafeListReadonly()
+    internal UnsafeListReadOnly<byte>[] GetAllCostFieldCostsAsUnsafeListReadonly()
     {
         return FieldManager.GetAllCostFieldCostsAsUnsafeListReadonly();
     }
-}
-public struct SimulationStartParameters
-{
-    public float TileSize;
-    public int RowCount;
-    public int ColumCount;
-    public WalkabilityCell[][] WalkabilityMatrix;
-    public int MaxCostFieldOffset;
-    public float BaseAgentSpatialGridSize;
-    public Mesh[] Meshes;
-    public Transform[] Transforms;
-}
-public struct WalkabilityCell
-{
-    public Vector3 CellPosition;
-    public Walkability Walkability;
-}
-public enum Walkability : byte
-{
-    Unwalkable,
-    Walkable
 }

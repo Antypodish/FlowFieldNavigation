@@ -107,7 +107,7 @@ public class AgentSelectionController : MonoBehaviour
             else if (Input.GetMouseButtonUp(0))
             {
                 DeselectAllAgents();
-                _agentSelector.GetAgentsInBox(Input.mousePosition, Camera.main, _pathfindingManager.GetAllAgents(), SelectedAgents);
+                _agentSelector.GetAgentsInBox(Input.mousePosition, Camera.main, _pathfindingManager.Interface.GetAllAgents(), SelectedAgents);
                 SetMaterialOfAgents(SelectedAgents, _selectedAgentMaterial);
                 if(SelectedAgents.Count > 0)
                 {
@@ -166,7 +166,7 @@ public class AgentSelectionController : MonoBehaviour
             if (Physics.Raycast(ray, out hit, float.PositiveInfinity, 8))
             {
                 Vector3 destination = hit.point;
-                _pathfindingManager.SetDestination(agents, destination);
+                _pathfindingManager.Interface.SetDestination(agents, destination);
             }
             return;
         }
@@ -176,10 +176,10 @@ public class AgentSelectionController : MonoBehaviour
             if (agent == null)
             {
                 Vector3 destination = hit.point;
-                _pathfindingManager.SetDestination(agents, destination);
+                _pathfindingManager.Interface.SetDestination(agents, destination);
                 return;
             }
-            _pathfindingManager.SetDestination(agents, agent);
+            _pathfindingManager.Interface.SetDestination(agents, agent);
         }
 
     }

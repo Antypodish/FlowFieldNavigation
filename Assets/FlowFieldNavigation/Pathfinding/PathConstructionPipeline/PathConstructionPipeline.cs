@@ -9,7 +9,7 @@ public class PathConstructionPipeline
     const int _FinalPathRequestExpansionJobCount = 12;
 
     PathfindingManager _pathfindingManager;
-    PathContainer _pathContainer;
+    PathDataContainer _pathContainer;
     PortalTraversalScheduler _portalTravesalScheduler;
     RequestedSectorCalculationScheduler _requestedSectorCalculationScheduler;
     AdditionPortalTraversalScheduler _additionPortalTraversalScheduler;

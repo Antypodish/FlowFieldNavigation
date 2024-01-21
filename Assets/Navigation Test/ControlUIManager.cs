@@ -18,7 +18,7 @@ public class ControlUIManager : MonoBehaviour
     }
     private void Update()
     {
-        int newAgentCount = _pathfindingManager.GetAgentCount();
+        int newAgentCount = _pathfindingManager.Interface.GetAgentCount();
         if(newAgentCount != _agentCount)
         {
             _agentCount = newAgentCount;

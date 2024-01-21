@@ -6,7 +6,7 @@ using Unity.Mathematics;
 internal class PortalTraversalScheduler
 {
     PathfindingManager _pathfindingManager;
-    PathContainer _pathContainer;
+    PathDataContainer _pathContainer;
     ActivePortalSubmissionScheduler _activePortalSubmissionScheduler;
     RequestedSectorCalculationScheduler _requestedSectorCalculationScheduler;
 
