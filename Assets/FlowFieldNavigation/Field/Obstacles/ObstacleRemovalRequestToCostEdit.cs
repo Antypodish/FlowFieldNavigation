@@ -4,12 +4,12 @@ using Unity.Collections;
 using Unity.Mathematics;
 
 [BurstCompile]
-public struct ObstacleRemovalRequestToCostEdit : IJob
+internal struct ObstacleRemovalRequestToCostEdit : IJob
 {
-    public NativeArray<int>.ReadOnly ObstacleRemovalIndicies;
-    public NativeList<CostEdit> CostEditOutput;
-    public NativeList<Obstacle> ObstacleList;
-    public NativeList<int> RemovedObstacleIndexList;
+    internal NativeArray<int>.ReadOnly ObstacleRemovalIndicies;
+    internal NativeList<CostEdit> CostEditOutput;
+    internal NativeList<Obstacle> ObstacleList;
+    internal NativeList<int> RemovedObstacleIndexList;
 
     public void Execute()
     {

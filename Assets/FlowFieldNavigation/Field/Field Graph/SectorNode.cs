@@ -1,13 +1,13 @@
 ﻿using Unity.Collections;
 
-public struct SectorNode
+internal struct SectorNode
 {
-    public Sector Sector;
-    public int SecToWinPtr;
-    public int SecToWinCnt;
-    public int SectorIslandPortalIndex;
-    public bool IsIslandField;
-    public SectorNode(Sector sector, int secToWinCnt, int secToWinPtr)
+    internal Sector Sector;
+    internal int SecToWinPtr;
+    internal int SecToWinCnt;
+    internal int SectorIslandPortalIndex;
+    internal bool IsIslandField;
+    internal SectorNode(Sector sector, int secToWinCnt, int secToWinPtr)
     {
         Sector = sector;
         SecToWinCnt = secToWinCnt;
@@ -15,11 +15,11 @@ public struct SectorNode
         IsIslandField = false;
         SectorIslandPortalIndex = -1;
     }
-    public bool IsIslandValid()
+    internal bool IsIslandValid()
     {
         return SectorIslandPortalIndex != -1;
     }
-    public bool HasIsland()
+    internal bool HasIsland()
     {
         return IsIslandField || SectorIslandPortalIndex != -1;
     }

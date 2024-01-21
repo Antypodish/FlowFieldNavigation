@@ -6,18 +6,18 @@ using UnityEditor;
 using Unity.Collections.LowLevel.Unsafe;
 
 
-public class EditorPortalDebugger
+internal class EditorPortalDebugger
 {
     PathfindingManager _pathfindingManager;
 
     SectorNode _clickedSectorNodes;
     PortalNode _clickedPortalNode;
-    public EditorPortalDebugger(PathfindingManager pathfindingManager)
+    internal EditorPortalDebugger(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
     }
     
-    public void DebugPortals(int offset)
+    internal void DebugPortals(int offset)
     {
         Gizmos.color = Color.cyan;
         FieldGraph fieldGraph = _pathfindingManager.FieldManager.GetFieldGraphWithOffset(offset);
@@ -35,7 +35,7 @@ public class EditorPortalDebugger
             }
         }
     }
-    public void DebugPortalsOnClickedSector(int offset)
+    internal void DebugPortalsOnClickedSector(int offset)
     {
         Gizmos.color = Color.white;
         float tileSize = FlowFieldUtilities.TileSize;
@@ -71,7 +71,7 @@ public class EditorPortalDebugger
             }
         }
     }
-    public void DebugCostsToClickedPortal(int offset)
+    internal void DebugCostsToClickedPortal(int offset)
     {
         float yOffset = 0.02f;
         Gizmos.color = Color.black;

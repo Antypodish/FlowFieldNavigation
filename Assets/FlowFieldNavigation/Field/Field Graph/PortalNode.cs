@@ -1,28 +1,28 @@
 ﻿using UnityEngine;
 using Unity.Burst;
 
-public struct PortalNode
+internal struct PortalNode
 {
-    public Portal Portal1;
-    public Portal Portal2;
-    public int WinPtr;
-    public int IslandIndex;
+    internal Portal Portal1;
+    internal Portal Portal2;
+    internal int WinPtr;
+    internal int IslandIndex;
 
-    public PortalNode(Portal portal1, Portal portal2, int winPtr)
+    internal PortalNode(Portal portal1, Portal portal2, int winPtr)
     {
         Portal1 = portal1;
         Portal2 = portal2;
         WinPtr = winPtr;
         IslandIndex = 0;
     }
-    public PortalNode(Portal portal1, int winPtr)
+    internal PortalNode(Portal portal1, int winPtr)
     {
         Portal1 = portal1;
         Portal2 = new Portal();
         WinPtr = winPtr;
         IslandIndex = 0;
     }
-    public Vector3 GetPosition(float tileSize)
+    internal Vector3 GetPosition(float tileSize)
     {
         Index2 index1 = Portal1.Index;
         Index2 index2 = Portal2.Index;
@@ -32,7 +32,7 @@ public struct PortalNode
 
         return (pos1 + pos2) / 2;
     }
-    public bool IsIslandValid()
+    internal bool IsIslandValid()
     {
         return IslandIndex != 0;
     }

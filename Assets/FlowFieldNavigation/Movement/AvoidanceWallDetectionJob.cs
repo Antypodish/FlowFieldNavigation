@@ -15,7 +15,7 @@ public struct AvoidanceWallDetectionJob : IJobParallelFor
     public int SectorMatrixColAmount;
     public int SectorTileAmount;
     [ReadOnly] public NativeArray<AgentMovementData> AgentMovementDataArray;
-    [ReadOnly] public NativeArray<UnsafeListReadOnly<byte>> CostFieldPerOffset;
+    [ReadOnly] internal NativeArray<UnsafeListReadOnly<byte>> CostFieldPerOffset;
     public NativeArray<RoutineResult> RoutineResultArray;
     public void Execute(int index)
     {

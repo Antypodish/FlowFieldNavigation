@@ -2,16 +2,16 @@
 using Unity.Collections;
 using Unity.Mathematics;
 
-public struct TriangleSpatialHashGrid
+internal struct TriangleSpatialHashGrid
 {
-    public float BaseSpatialGridSize;
-    public float FieldHorizontalSize;
-    public float FieldVerticalSize;
-    public NativeArray<int> HashedTriangles;
-    public NativeArray<UnsafeList<HashTile>> TriangleHashGrids;
-    public NativeHashMap<int, float> GridIndexToTileSize;
-    public int GetGridCount() => TriangleHashGrids.Length;
-    public TriangleSpatialHashGridIterator GetIterator(float2 checkPosition, int hashGridIndex)
+    internal float BaseSpatialGridSize;
+    internal float FieldHorizontalSize;
+    internal float FieldVerticalSize;
+    internal NativeArray<int> HashedTriangles;
+    internal NativeArray<UnsafeList<HashTile>> TriangleHashGrids;
+    internal NativeHashMap<int, float> GridIndexToTileSize;
+    internal int GetGridCount() => TriangleHashGrids.Length;
+    internal TriangleSpatialHashGridIterator GetIterator(float2 checkPosition, int hashGridIndex)
     {
         if (TriangleHashGrids.Length <= hashGridIndex) { return new TriangleSpatialHashGridIterator(); }
         bool succesfull = GridIndexToTileSize.TryGetValue(hashGridIndex, out float tileSize);
@@ -30,20 +30,20 @@ public struct TriangleSpatialHashGrid
         int verticalSize = topright.y - botleft.y + 1;
         return new TriangleSpatialHashGridIterator(botleft1d, verticalSize, topright.x - botleft.x + 1, gridColAmount, HashedTriangles, TriangleHashGrids[hashGridIndex]);
     }
-    public float GetGridTileSize(int gridIndex)
+    internal float GetGridTileSize(int gridIndex)
     {
         bool succesfull = GridIndexToTileSize.TryGetValue(gridIndex, out float tileSize);
         if (!succesfull) { return 0; }
         return tileSize;
     }
-    public int GetGridColAmount(int gridIndex)
+    internal int GetGridColAmount(int gridIndex)
     {
         bool succesfull = GridIndexToTileSize.TryGetValue(gridIndex, out float tileSize);
         if (!succesfull) { return 0; }
         return (int)math.ceil(FieldHorizontalSize / tileSize);
 
     }
-    public int GetGridRowAmount(int gridIndex)
+    internal int GetGridRowAmount(int gridIndex)
     {
         bool succesfull = GridIndexToTileSize.TryGetValue(gridIndex, out float tileSize);
         if (!succesfull) { return 0; }
@@ -51,7 +51,7 @@ public struct TriangleSpatialHashGrid
     }
     int2 GetStartingTileIndex(float2 position, float tileSize) => new int2((int)math.floor(position.x / tileSize), (int)math.floor(position.y / tileSize));
 }
-public struct TriangleSpatialHashGridIterator
+internal struct TriangleSpatialHashGridIterator
 {
     int _endRowIndex;
     int _colCount;
@@ -60,7 +60,7 @@ public struct TriangleSpatialHashGridIterator
     NativeArray<int> _hashedTriangleStartIndicies;
     UnsafeList<HashTile> _hashTileArray;
 
-    public TriangleSpatialHashGridIterator(int startRowIndex, int rowCount, int colCount, int gridTotalColCount, NativeArray<int> hashedTriangles, UnsafeList<HashTile> hashtTileArray)
+    internal TriangleSpatialHashGridIterator(int startRowIndex, int rowCount, int colCount, int gridTotalColCount, NativeArray<int> hashedTriangles, UnsafeList<HashTile> hashtTileArray)
     {
         _curRowIndex = startRowIndex;
         _gridTotalColAmount = gridTotalColCount;
@@ -69,8 +69,8 @@ public struct TriangleSpatialHashGridIterator
         _hashedTriangleStartIndicies = hashedTriangles;
         _hashTileArray = hashtTileArray;
     }
-    public bool HasNext() => _curRowIndex <= _endRowIndex;
-    public NativeSlice<int> GetNextRow()
+    internal bool HasNext() => _curRowIndex <= _endRowIndex;
+    internal NativeSlice<int> GetNextRow()
     {
         if (_curRowIndex > _endRowIndex) { return new NativeSlice<int>(); }
         HashTile startCellPointer = _hashTileArray[_curRowIndex];

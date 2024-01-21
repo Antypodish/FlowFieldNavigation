@@ -10,7 +10,7 @@ public class RequestAccumulator
 
     public List<FlowFieldAgent> AgentAddRequest;
     public NativeList<PathRequest> PathRequests;
-    public NativeList<CostEdit> CostEditRequests;
+    internal NativeList<CostEdit> CostEditRequests;
     public RequestAccumulator(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;

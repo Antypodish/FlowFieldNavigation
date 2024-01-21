@@ -10,7 +10,7 @@ public struct ObstacleRequestToObstacleJob : IJobParallelFor
     public int FieldColAmount;
     public int FieldRowAmount;
     [ReadOnly] public NativeArray<ObstacleRequest> ObstacleRequests;
-    [WriteOnly] public NativeArray<Obstacle> NewObstacles;
+    [WriteOnly] internal NativeArray<Obstacle> NewObstacles;
     public void Execute(int index)
     {
         ObstacleRequest obstacleRequest = ObstacleRequests[index];

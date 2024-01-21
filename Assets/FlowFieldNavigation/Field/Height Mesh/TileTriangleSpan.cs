@@ -1,5 +1,5 @@
-﻿public struct TileTriangleSpan
+﻿internal struct TileTriangleSpan
 {
-    public int TrianglePointerStartIndex;
-    public int TrianglePointerCount;
+    internal int TrianglePointerStartIndex;
+    internal int TrianglePointerCount;
 }

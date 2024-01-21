@@ -1,9 +1,9 @@
-﻿public struct Index2
+﻿internal struct Index2
 {
-    public int R;
-    public int C;
+    internal int R;
+    internal int C;
 
-    public Index2(int row, int column)
+    internal Index2(int row, int column)
     {
         R = row;
         C = column;
@@ -16,11 +16,11 @@
     {
         return index1.R != index2.R || index1.C != index2.C;
     }
-    public static int ToIndex(Index2 index2, int colAmount)
+    internal static int ToIndex(Index2 index2, int colAmount)
     {
         return index2.R * colAmount + index2.C;
     }
-    public static Index2 ToIndex2(int index, int colAmount)
+    internal static Index2 ToIndex2(int index, int colAmount)
     {
         return new Index2(index / colAmount, index % colAmount);
     }

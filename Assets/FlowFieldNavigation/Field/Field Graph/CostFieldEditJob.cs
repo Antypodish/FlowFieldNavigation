@@ -5,34 +5,34 @@ using Unity.Jobs;
 using Unity.Mathematics;
 
 [BurstCompile]
-public struct CostFieldEditJob : IJob
+internal struct CostFieldEditJob : IJob
 {
-    public int Offset;
-    public NativeList<CostEdit> NewCostEdits;
-    public NativeArray<SectorNode> SectorNodes;
-    public NativeArray<int> SecToWinPtrs;
-    public NativeArray<WindowNode> WindowNodes;
-    public NativeArray<int> WinToSecPtrs;
-    public NativeArray<PortalNode> PortalNodes;
-    public NativeArray<PortalToPortal> PorPtrs;
-    public NativeArray<byte> Costs;
-    public NativeArray<byte> BaseCosts;
-    public NativeArray<uint> CostStamps;
-    public int FieldColAmount;
-    public int FieldRowAmount;
-    public int SectorColAmount;
-    public int SectorRowAmount;
-    public int SectorTileAmount;
-    public int SectorMatrixColAmount;
-    public int SectorMatrixRowAmount;
-    public int PortalPerWindow;
-    public NativeArray<AStarTile> IntegratedCosts;
-    public NativeList<int> EditedSectorIndicies;
-    public NativeList<int> EditedWindowIndicies;
-    public NativeBitArray EditedWindowMarks;
-    public NativeArray<IslandData> Islands;
-    public NativeArray<UnsafeList<int>> IslandFields;
-    public SectorBitArray EditedSectorBits;
+    internal int Offset;
+    internal NativeList<CostEdit> NewCostEdits;
+    internal NativeArray<SectorNode> SectorNodes;
+    internal NativeArray<int> SecToWinPtrs;
+    internal NativeArray<WindowNode> WindowNodes;
+    internal NativeArray<int> WinToSecPtrs;
+    internal NativeArray<PortalNode> PortalNodes;
+    internal NativeArray<PortalToPortal> PorPtrs;
+    internal NativeArray<byte> Costs;
+    internal NativeArray<byte> BaseCosts;
+    internal NativeArray<uint> CostStamps;
+    internal int FieldColAmount;
+    internal int FieldRowAmount;
+    internal int SectorColAmount;
+    internal int SectorRowAmount;
+    internal int SectorTileAmount;
+    internal int SectorMatrixColAmount;
+    internal int SectorMatrixRowAmount;
+    internal int PortalPerWindow;
+    internal NativeArray<AStarTile> IntegratedCosts;
+    internal NativeList<int> EditedSectorIndicies;
+    internal NativeList<int> EditedWindowIndicies;
+    internal NativeBitArray EditedWindowMarks;
+    internal NativeArray<IslandData> Islands;
+    internal NativeArray<UnsafeList<int>> IslandFields;
+    internal SectorBitArray EditedSectorBits;
 
     public void Execute()
     {
@@ -295,7 +295,7 @@ public struct CostFieldEditJob : IJob
             }
         }
     }
-    public void AddToEditedWindowsIfBoundsIntersect(int2 botLeft, int2 topRigth, int sectorIndex)
+    internal void AddToEditedWindowsIfBoundsIntersect(int2 botLeft, int2 topRigth, int sectorIndex)
     {
         SectorNode sectorNode = SectorNodes[sectorIndex];
         int secToWinPtr = sectorNode.SecToWinPtr;

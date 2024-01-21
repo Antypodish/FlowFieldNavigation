@@ -33,7 +33,7 @@ public class RoutineScheduler
         NewCostEditRequests = new NativeList<CostEdit>(Allocator.Persistent);
     }
 
-    public void Schedule(NativeList<PathRequest> newPaths, NativeArray<CostEdit>.ReadOnly costEditRequests)
+    internal void Schedule(NativeList<PathRequest> newPaths, NativeArray<CostEdit>.ReadOnly costEditRequests)
     {
         NativeArray<IslandFieldProcessor> islandFieldProcessors = _pathfindingManager.FieldManager.GetAllIslandFieldProcessors();
 

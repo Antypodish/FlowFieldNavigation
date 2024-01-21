@@ -24,11 +24,11 @@ public struct PortalNodeAdditionTraversalJob : IJob
     public NativeList<int> PickedToSector;
     public NativeArray<int> FlowFieldLength;
 
-    [ReadOnly] public NativeArray<SectorNode> SectorNodes;
-    [ReadOnly] public NativeArray<WindowNode> WindowNodes;
+    [ReadOnly] internal NativeArray<SectorNode> SectorNodes;
+    [ReadOnly] internal NativeArray<WindowNode> WindowNodes;
     [ReadOnly] public NativeArray<int> WinToSecPtrs;
-    [ReadOnly] public NativeArray<PortalNode> PortalNodes;
-    [ReadOnly] public NativeArray<PortalToPortal> PorPtrs;
+    [ReadOnly] internal NativeArray<PortalNode> PortalNodes;
+    [ReadOnly] internal NativeArray<PortalToPortal> PorPtrs;
     [ReadOnly] public NativeArray<UnsafeList<int>> IslandFields;
     [ReadOnly] public NativeArray<int> NewPickedSectorStartIndex;
 

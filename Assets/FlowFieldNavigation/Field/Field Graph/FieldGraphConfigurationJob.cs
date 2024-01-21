@@ -4,24 +4,24 @@ using Unity.Jobs;
 using Unity.Mathematics;
 
 [BurstCompile]
-public struct FieldGraphConfigurationJob : IJob
+internal struct FieldGraphConfigurationJob : IJob
 {
-    public int FieldRowAmount;
-    public int FieldColAmount;
-    public int SectorMatrixColAmount;
-    public int SectorMatrixRowAmount;
-    public int SectorColAmount;
-    public int SectorRowAmount;
-    public int SectorTileAmount;
-    public int PortalPerWindow;
-    public NativeArray<SectorNode> SectorNodes;
-    public NativeArray<int> SecToWinPtrs;
-    public NativeArray<WindowNode> WindowNodes;
-    public NativeArray<int> WinToSecPtrs;
-    public NativeArray<PortalNode> PortalNodes;
-    public NativeArray<PortalToPortal> PorToPorPtrs;
-    [ReadOnly] public NativeArray<byte> Costs;
-    public NativeArray<AStarTile> IntegratedCosts;
+    internal int FieldRowAmount;
+    internal int FieldColAmount;
+    internal int SectorMatrixColAmount;
+    internal int SectorMatrixRowAmount;
+    internal int SectorColAmount;
+    internal int SectorRowAmount;
+    internal int SectorTileAmount;
+    internal int PortalPerWindow;
+    internal NativeArray<SectorNode> SectorNodes;
+    internal NativeArray<int> SecToWinPtrs;
+    internal NativeArray<WindowNode> WindowNodes;
+    internal NativeArray<int> WinToSecPtrs;
+    internal NativeArray<PortalNode> PortalNodes;
+    internal NativeArray<PortalToPortal> PorToPorPtrs;
+    [ReadOnly] internal NativeArray<byte> Costs;
+    internal NativeArray<AStarTile> IntegratedCosts;
 
 
     public void Execute()

@@ -19,8 +19,8 @@ public struct PathRoutineDataCalculationJob : IJobParallelFor
     [ReadOnly] public NativeArray<PathFlowData> PathFlowDataArray;
     [ReadOnly] public NativeArray<PathState> PathStateArray;
     [ReadOnly] public NativeArray<AgentData> AgentDataArray;
-    [ReadOnly] public NativeArray<IslandFieldProcessor> IslandFieldProcessors;
-    [ReadOnly] public NativeArray<UnsafeListReadOnly<byte>> CostFields;
+    [ReadOnly] internal NativeArray<IslandFieldProcessor> IslandFieldProcessors;
+    [ReadOnly] internal NativeArray<UnsafeListReadOnly<byte>> CostFields;
     public NativeArray<PathDestinationData> PathDestinationDataArray;
     public NativeArray<PathRoutineData> PathOrganizationDataArray;
     public NativeArray<UnsafeList<PathSectorState>> PathSectorStateTables;

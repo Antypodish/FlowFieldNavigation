@@ -3,16 +3,16 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 using UnityEngine;
 
-public class EditorSectorPortalErrorDetector
+internal class EditorSectorPortalErrorDetector
 {
     PathfindingManager _pathfindingManager;
 
-    public EditorSectorPortalErrorDetector(PathfindingManager pathfindingManager)
+    internal EditorSectorPortalErrorDetector(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
     }
 
-    public void Debug(int offset)
+    internal void Debug(int offset)
     {
         FieldGraph[] fieldGraphs = _pathfindingManager.FieldManager.GetAllFieldGraphs();
         for(int i = 0; i < fieldGraphs.Length; i++)

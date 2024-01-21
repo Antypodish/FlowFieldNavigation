@@ -1,10 +1,10 @@
-﻿public struct Portal
+﻿internal struct Portal
 {
-    public Index2 Index;
-    public int PorToPorPtr;
-    public byte PorToPorCnt;
+    internal Index2 Index;
+    internal int PorToPorPtr;
+    internal byte PorToPorCnt;
 
-    public Portal(Index2 index, int porToPorPtr)
+    internal Portal(Index2 index, int porToPorPtr)
     {
         Index = index;
         PorToPorPtr = porToPorPtr;

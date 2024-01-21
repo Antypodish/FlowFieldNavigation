@@ -1,9 +1,9 @@
-﻿public struct PortalToPortal
+﻿internal struct PortalToPortal
 {
-    public float Distance;
-    public int Index;
+    internal float Distance;
+    internal int Index;
 
-    public PortalToPortal(float distance, int index)
+    internal PortalToPortal(float distance, int index)
     {
         Distance = distance;
         Index = index;

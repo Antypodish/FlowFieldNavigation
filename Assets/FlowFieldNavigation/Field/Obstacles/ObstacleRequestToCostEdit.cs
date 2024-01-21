@@ -6,22 +6,22 @@ using Unity.Mathematics;
 using System;
 
 [BurstCompile]
-public struct ObstacleRequestToCostEdit : IJob
+internal struct ObstacleRequestToCostEdit : IJob
 {
-    public float TileSize;
-    public int FieldColAmount;
-    public int FieldRowAmount;
-    public float FieldMaxXExcluding;
-    public float FieldMaxYExcluding;
-    public float FieldMinXIncluding;
-    public float FieldMinYIncluding;
+    internal float TileSize;
+    internal int FieldColAmount;
+    internal int FieldRowAmount;
+    internal float FieldMaxXExcluding;
+    internal float FieldMaxYExcluding;
+    internal float FieldMinXIncluding;
+    internal float FieldMinYIncluding;
 
-    public NativeArray<ObstacleRequest> ObstacleRequests;
-    public NativeList<CostEdit> CostEditOutput;
-    public NativeList<int> NewObstacleKeyListToAdd;
+    internal NativeArray<ObstacleRequest> ObstacleRequests;
+    internal NativeList<CostEdit> CostEditOutput;
+    internal NativeList<int> NewObstacleKeyListToAdd;
 
-    public NativeList<Obstacle> ObstacleList;
-    public NativeList<int> RemovedObstacleIndexList;
+    internal NativeList<Obstacle> ObstacleList;
+    internal NativeList<int> RemovedObstacleIndexList;
 
     public void Execute()
     {

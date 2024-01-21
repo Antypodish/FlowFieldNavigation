@@ -6,7 +6,7 @@ internal class EditorAgentGroupDebugger
 {
     PathfindingManager _pathfindingManager;
     Color[] _colors;
-    public EditorAgentGroupDebugger(PathfindingManager pathfindingManager)
+    internal EditorAgentGroupDebugger(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
 
@@ -21,7 +21,7 @@ internal class EditorAgentGroupDebugger
             new Color(1,1,1),
         };
     }
-    public void OnEnable()
+    internal void OnEnable()
     {
         Gizmos.color = Color.white;
         List<FlowFieldAgent> agents = _pathfindingManager.AgentDataContainer.Agents;

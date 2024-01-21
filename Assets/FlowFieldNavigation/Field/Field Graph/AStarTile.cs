@@ -1,9 +1,9 @@
-﻿public struct AStarTile
+﻿internal struct AStarTile
 {
-    public bool Enqueued;
-    public float IntegratedCost;
+    internal bool Enqueued;
+    internal float IntegratedCost;
 
-    public AStarTile(float integratedCost, bool enqueued)
+    internal AStarTile(float integratedCost, bool enqueued)
     {
         Enqueued = enqueued;
         IntegratedCost = integratedCost;

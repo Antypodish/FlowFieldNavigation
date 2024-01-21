@@ -1,9 +1,9 @@
 ﻿using Unity.Collections.LowLevel.Unsafe;
 using Unity.Collections;
 
-public static class FlowFieldUtilitiesUnsafe
+internal static class FlowFieldUtilitiesUnsafe
 {
-    public static UnsafeListReadOnly<byte> ToUnsafeListRedonly(NativeArray<byte> array)
+    internal static UnsafeListReadOnly<byte> ToUnsafeListRedonly(NativeArray<byte> array)
     {
         UnsafeListReadOnly<byte> list;
         unsafe
@@ -14,7 +14,7 @@ public static class FlowFieldUtilitiesUnsafe
         }
         return list;
     }
-    public static UnsafeListReadOnly<T> ToUnsafeListRedonly<T>(NativeArray<T> array) where T : unmanaged
+    internal static UnsafeListReadOnly<T> ToUnsafeListRedonly<T>(NativeArray<T> array) where T : unmanaged
     {
         UnsafeListReadOnly<T> list;
         unsafe

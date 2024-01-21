@@ -1,14 +1,14 @@
 ﻿using Unity.Collections;
 using UnityEngine;
 
-public class EditorAgentRadiusDebugger
+internal class EditorAgentRadiusDebugger
 {
     PathfindingManager _pathfindingManager;
-    public EditorAgentRadiusDebugger(PathfindingManager pathfindingManager)
+    internal EditorAgentRadiusDebugger(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
     }
-    public void DebugSeperationRadius()
+    internal void DebugSeperationRadius()
     {
         Gizmos.color = Color.white;
         NativeArray<AgentData> agents = _pathfindingManager.AgentDataContainer.AgentDataList;

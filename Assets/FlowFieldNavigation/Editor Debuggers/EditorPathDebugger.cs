@@ -12,21 +12,21 @@ using System.Diagnostics;
 using Unity.Jobs;
 using static UnityEditor.PlayerSettings;
 
-public class EditorPathDebugger
+internal class EditorPathDebugger
 {
     PathDataContainer _pathContainer;
     PathfindingManager _pathfindingManager;
     FieldDataContainer _fieldProducer;
     float _tileSize;
 
-    public EditorPathDebugger(PathfindingManager pathfindingManager)
+    internal EditorPathDebugger(PathfindingManager pathfindingManager)
     {
         _pathContainer = pathfindingManager.PathContainer;
         _pathfindingManager = pathfindingManager;
         _fieldProducer = pathfindingManager.FieldManager;
         _tileSize = FlowFieldUtilities.TileSize;
     }
-    public void DebugDynamicAreaIntegration(FlowFieldAgent agent)
+    internal void DebugDynamicAreaIntegration(FlowFieldAgent agent)
     {
         if (_pathContainer == null) { return; }
         if (_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
@@ -56,7 +56,7 @@ public class EditorPathDebugger
             }
         }
     }
-    public void DebugDynamicAreaFlow(FlowFieldAgent agent)
+    internal void DebugDynamicAreaFlow(FlowFieldAgent agent)
     {
         if (_pathContainer == null) { return; }
         if (_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
@@ -109,7 +109,7 @@ public class EditorPathDebugger
             Gizmos.DrawLine(pos, targetPos);
         }
     }
-    public void DebugActiveWaveFronts(FlowFieldAgent agent)
+    internal void DebugActiveWaveFronts(FlowFieldAgent agent)
     {
         if (_pathContainer == null) { return; }
         if (_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
@@ -138,7 +138,7 @@ public class EditorPathDebugger
             }            
         }
     }
-    public void DebugPortalTraversalMarks(FlowFieldAgent agent)
+    internal void DebugPortalTraversalMarks(FlowFieldAgent agent)
     {
         if (_pathContainer == null) { return; }
         if(_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
@@ -173,7 +173,7 @@ public class EditorPathDebugger
             }
         }
     }
-    public void DebugTargetNeighbourPortals(FlowFieldAgent agent)
+    internal void DebugTargetNeighbourPortals(FlowFieldAgent agent)
     {
         if (_pathContainer == null) { return; }
         if(_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
@@ -200,7 +200,7 @@ public class EditorPathDebugger
             }
         }
     }
-    public void DebugPortalSequence(FlowFieldAgent agent)
+    internal void DebugPortalSequence(FlowFieldAgent agent)
     {
         if (_pathContainer == null) { return; }
         if (_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
@@ -253,7 +253,7 @@ public class EditorPathDebugger
             }
         }
     }
-    public void DebugPickedSectors(FlowFieldAgent agent)
+    internal void DebugPickedSectors(FlowFieldAgent agent)
     {
         if (_pathContainer == null) { return; }
         if (_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
@@ -291,7 +291,7 @@ public class EditorPathDebugger
             Gizmos.DrawLine(botRight, botLeft);
         }
     }
-    public void DebugIntegrationField(FlowFieldAgent agent)
+    internal void DebugIntegrationField(FlowFieldAgent agent)
     {
         if (_pathContainer == null) { return; }
         if (_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
@@ -328,7 +328,7 @@ public class EditorPathDebugger
             
         }
     }
-    public void LOSBlockDebug(FlowFieldAgent agent)
+    internal void LOSBlockDebug(FlowFieldAgent agent)
     {
         if (_pathContainer == null) { return; }
         if (_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
@@ -375,7 +375,7 @@ public class EditorPathDebugger
             } 
         }
     }
-    public void DebugFlowField(FlowFieldAgent agent)
+    internal void DebugFlowField(FlowFieldAgent agent)
     {
         if (_pathContainer == null) { return; }
         if (_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
@@ -497,7 +497,7 @@ public class EditorPathDebugger
         }
     }
 
-    public void DebugDestination(FlowFieldAgent agent)
+    internal void DebugDestination(FlowFieldAgent agent)
     {
         if (agent == null) { return; }
         int pathIndex = agent.GetPathIndex();

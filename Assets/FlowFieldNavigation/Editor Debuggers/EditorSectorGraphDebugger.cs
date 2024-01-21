@@ -5,16 +5,16 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEditor;
 using UnityEngine;
 
-public class EditorSectorGraphDebugger
+internal class EditorSectorGraphDebugger
 {
     PathfindingManager _pathfindingManager;
 
-    public EditorSectorGraphDebugger(PathfindingManager pathfindingManager)
+    internal EditorSectorGraphDebugger(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
     }
 
-    public void DebugSectorToWindow(int offset)
+    internal void DebugSectorToWindow(int offset)
     {
         Gizmos.color = Color.black;
         float yOffset = 0.02f;
@@ -52,7 +52,7 @@ public class EditorSectorGraphDebugger
             }
         }
     }
-    public void DebugWindowToSector(int offset)
+    internal void DebugWindowToSector(int offset)
     {
         Gizmos.color = Color.black;
         float yOffset = 0.02f;

@@ -47,7 +47,7 @@ public class PathConstructionPipeline
         _destinationUpdatedPathIndicies = new NativeList<int>(Allocator.Persistent);
         _expandedPathIndicies = new NativeList<int>(Allocator.Persistent);
     }
-    public void ShcedulePathRequestEvalutaion(NativeList<PathRequest> requestedPaths,
+    internal void ShcedulePathRequestEvalutaion(NativeList<PathRequest> requestedPaths,
         NativeArray<UnsafeListReadOnly<byte>> costFieldCosts,
         NativeArray<SectorBitArray>.ReadOnly editedSectorBitArray,
         NativeArray<IslandFieldProcessor> islandFieldProcessors,

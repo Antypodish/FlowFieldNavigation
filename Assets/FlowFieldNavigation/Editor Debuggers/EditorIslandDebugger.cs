@@ -9,7 +9,7 @@ using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
 
-public class EditorIslandDebugger
+internal class EditorIslandDebugger
 {
     PathfindingManager _pathfindingManager;
     Color[] _colors;
@@ -17,7 +17,7 @@ public class EditorIslandDebugger
     Vector3[] _debugVerticies;
     int[] _debugTriangles;
 
-    public EditorIslandDebugger(PathfindingManager pathfindingManager)
+    internal EditorIslandDebugger(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
         _colors = new Color[]{
@@ -78,7 +78,7 @@ public class EditorIslandDebugger
         }
     }
 
-    public void DebugPortalIslands(int offset)
+    internal void DebugPortalIslands(int offset)
     {
         FieldGraph fieldGraph = _pathfindingManager.FieldManager.GetFieldGraphWithOffset(offset);
         NativeArray<PortalNode> portalNodes = fieldGraph.PortalNodes;
@@ -111,7 +111,7 @@ public class EditorIslandDebugger
             }
         }
     }
-    public void DebugTileIslands(int offset)
+    internal void DebugTileIslands(int offset)
     {
         float yOffset = 0.2f;
         float tileSize = FlowFieldUtilities.TileSize;

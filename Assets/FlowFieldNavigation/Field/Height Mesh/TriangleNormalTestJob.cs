@@ -7,12 +7,12 @@ using Unity.Collections.LowLevel.Unsafe;
 [BurstCompile]
 internal struct TriangleNormalTestJob : IJob
 {
-    public float3 UpDirection;
-    [ReadOnly] public NativeArray<float3> InputVertecies;
-    [ReadOnly] public NativeArray<int> InputTriangles;
+    internal float3 UpDirection;
+    [ReadOnly] internal NativeArray<float3> InputVertecies;
+    [ReadOnly] internal NativeArray<int> InputTriangles;
 
-    public NativeList<int> OutputTriangles;
-    public NativeList<float3> OutputVerticies;
+    internal NativeList<int> OutputTriangles;
+    internal NativeList<float3> OutputVerticies;
 
     public void Execute()
     {

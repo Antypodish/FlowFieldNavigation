@@ -6,7 +6,7 @@ using UnityEditor;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 
-public class EditorCostFieldDebugger
+internal class EditorCostFieldDebugger
 {
     PathfindingManager _pathfindingManager;
 
@@ -14,7 +14,7 @@ public class EditorCostFieldDebugger
     Vector3[] _debugVerticies;
     int[] _debugTriangles;
 
-    public EditorCostFieldDebugger(PathfindingManager pathfindingManager)
+    internal EditorCostFieldDebugger(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
 
@@ -56,7 +56,7 @@ public class EditorCostFieldDebugger
             _debugMesh.RecalculateNormals();
         }
     }
-    public void DebugCostFieldWithMesh(int offset)
+    internal void DebugCostFieldWithMesh(int offset)
     {
         Gizmos.color = Color.black;
         NativeArray<byte> costs = _pathfindingManager.FieldManager.GetCostFieldWithOffset(offset).Costs;

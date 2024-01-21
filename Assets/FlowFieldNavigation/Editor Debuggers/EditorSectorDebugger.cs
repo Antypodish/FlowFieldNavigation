@@ -4,16 +4,16 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 
-public class EditorSectorDebugger
+internal class EditorSectorDebugger
 {
     PathfindingManager _pathfindingManager;
 
-    public EditorSectorDebugger(PathfindingManager pathfindingManager)
+    internal EditorSectorDebugger(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
     }
 
-    public void DebugSectors(int offset)
+    internal void DebugSectors(int offset)
     {
         Gizmos.color = Color.black;
         NativeArray<SectorNode> sectorNodes = _pathfindingManager.FieldManager.GetFieldGraphWithOffset(offset).SectorNodes;

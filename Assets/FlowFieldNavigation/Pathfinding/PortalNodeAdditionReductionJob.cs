@@ -21,12 +21,12 @@ public struct PortalNodeAdditionReductionJob : IJob
     public UnsafeList<DijkstraTile> TargetSectorCosts;
 
     [ReadOnly] public NativeSlice<float2> SourcePositions;
-    [ReadOnly] public NativeArray<SectorNode> SectorNodes;
+    [ReadOnly] internal NativeArray<SectorNode> SectorNodes;
     [ReadOnly] public NativeArray<int> SecToWinPtrs;
-    [ReadOnly] public NativeArray<WindowNode> WindowNodes;
+    [ReadOnly] internal NativeArray<WindowNode> WindowNodes;
     [ReadOnly] public NativeArray<int> WinToSecPtrs;
-    [ReadOnly] public NativeArray<PortalNode> PortalNodes;
-    [ReadOnly] public NativeArray<PortalToPortal> PorPtrs;
+    [ReadOnly] internal NativeArray<PortalNode> PortalNodes;
+    [ReadOnly] internal NativeArray<PortalToPortal> PorPtrs;
     [ReadOnly] public NativeArray<UnsafeList<int>> IslandFields;
 
     public NativeList<int> AStarTraverseIndexList;

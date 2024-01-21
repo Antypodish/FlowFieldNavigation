@@ -27,7 +27,7 @@ public struct LocalAvoidanceJob : IJobParallelFor
     public float BaseSpatialGridSize;
     public float FieldHorizontalSize;
     public float FieldVerticalSize;
-    [ReadOnly] public NativeArray<UnsafeListReadOnly<byte>> CostFieldEachOffset;
+    [ReadOnly] internal NativeArray<UnsafeListReadOnly<byte>> CostFieldEachOffset;
     [ReadOnly] public AgentSpatialHashGrid AgentSpatialHashGrid;
     [WriteOnly] public NativeArray<RoutineResult> RoutineResultArray;
 

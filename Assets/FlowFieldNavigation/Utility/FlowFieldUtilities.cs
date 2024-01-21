@@ -1,89 +1,89 @@
 ﻿using Unity.Mathematics;
 
-public static class FlowFieldUtilities
+internal static class FlowFieldUtilities
 {
-    public static bool DebugMode;
-    public static float TileSize;
-    public static float FieldMinXIncluding;
-    public static float FieldMinYIncluding;
-    public static float FieldMaxXExcluding;
-    public static float FieldMaxYExcluding;
-    public static int SectorColAmount;
-    public static int SectorRowAmount;
-    public static int SectorTileAmount;
-    public static int FieldColAmount;
-    public static int FieldRowAmount;
-    public static int FieldTileAmount;
-    public static int SectorMatrixColAmount;
-    public static int SectorMatrixRowAmount;
-    public static int SectorMatrixTileAmount;
-    public static float BaseAgentSpatialGridSize;
-    public static float BaseTriangleSpatialGridSize;
-    public static float MinAgentSize;
-    public static float MaxAgentSize;
-    public static int LOSRange;
-    public static int MaxCostFieldOffset;
-    public static int To1D(int2 index2, int colAmount)
+    internal static bool DebugMode;
+    internal static float TileSize;
+    internal static float FieldMinXIncluding;
+    internal static float FieldMinYIncluding;
+    internal static float FieldMaxXExcluding;
+    internal static float FieldMaxYExcluding;
+    internal static int SectorColAmount;
+    internal static int SectorRowAmount;
+    internal static int SectorTileAmount;
+    internal static int FieldColAmount;
+    internal static int FieldRowAmount;
+    internal static int FieldTileAmount;
+    internal static int SectorMatrixColAmount;
+    internal static int SectorMatrixRowAmount;
+    internal static int SectorMatrixTileAmount;
+    internal static float BaseAgentSpatialGridSize;
+    internal static float BaseTriangleSpatialGridSize;
+    internal static float MinAgentSize;
+    internal static float MaxAgentSize;
+    internal static int LOSRange;
+    internal static int MaxCostFieldOffset;
+    internal static int To1D(int2 index2, int colAmount)
     {
         return index2.y * colAmount + index2.x;
     }
-    public static int2 To2D(int index, int colAmount)
+    internal static int2 To2D(int index, int colAmount)
     {
         return new int2(index % colAmount, index / colAmount);
     }
-    public static int2 PosTo2D(float2 pos, float tileSize)
+    internal static int2 PosTo2D(float2 pos, float tileSize)
     {
         return new int2((int)math.floor(pos.x / tileSize), (int)math.floor(pos.y / tileSize));
     }
-    public static int PosTo1D(float2 pos, float tileSize, int colAmount)
+    internal static int PosTo1D(float2 pos, float tileSize, int colAmount)
     {
         int2 index2d = new int2((int)math.floor(pos.x / tileSize), (int)math.floor(pos.y / tileSize));
         return index2d.y * colAmount + index2d.x;
     }
-    public static float2 IndexToPos(int general1d, float tileSize, int fieldColAmount)
+    internal static float2 IndexToPos(int general1d, float tileSize, int fieldColAmount)
     {
         int2 general2d = To2D(general1d, fieldColAmount);
         return new float2(general2d.x * tileSize + tileSize / 2, general2d.y * tileSize + tileSize / 2);
     }
-    public static float2 LocalIndexToPos(int local1d, int sector1d, int sectorMatrixColAmount, int sectorColAmount, float tileSize, float sectorSize)
+    internal static float2 LocalIndexToPos(int local1d, int sector1d, int sectorMatrixColAmount, int sectorColAmount, float tileSize, float sectorSize)
     {
         float2 sectorStartPos = new float2((sector1d % sectorMatrixColAmount) * sectorSize, (sector1d / sectorMatrixColAmount) * sectorSize);
         float2 indexOffset = new float2((local1d % sectorColAmount) * tileSize, (local1d / sectorColAmount) * tileSize);
         float2 tileCenter = new float2(tileSize / 2, tileSize / 2);
         return sectorStartPos + indexOffset + tileCenter;
     }
-    public static int2 PosToSector2D(float2 pos, float sectorSize)
+    internal static int2 PosToSector2D(float2 pos, float sectorSize)
     {
         return new int2((int)math.floor(pos.x / sectorSize), (int)math.floor(pos.y / sectorSize));
     }
-    public static int PosToSector1D(float2 pos, float sectorSize, int sectorMatrixColAmount)
+    internal static int PosToSector1D(float2 pos, float sectorSize, int sectorMatrixColAmount)
     {
         int2 sector2d = new int2((int)math.floor(pos.x / sectorSize), (int)math.floor(pos.y / sectorSize));
         return sector2d.y * sectorMatrixColAmount + sector2d.x;
     }
-    public static float2 IndexToPos(int2 general2d, float tileSize)
+    internal static float2 IndexToPos(int2 general2d, float tileSize)
     {
         return new float2(general2d.x * tileSize + tileSize / 2, general2d.y * tileSize + tileSize / 2);
     }
-    public static int2 GetSector2D(int2 index, int sectorColAmount)
+    internal static int2 GetSector2D(int2 index, int sectorColAmount)
     {
         return new int2(index.x / sectorColAmount, index.y / sectorColAmount);
     }
-    public static int GetSector1D(int2 index, int sectorColAmount, int sectorMatrixColAmount)
+    internal static int GetSector1D(int2 index, int sectorColAmount, int sectorMatrixColAmount)
     {
         int2 sector2d = index / sectorColAmount;
         return sector2d.y * sectorMatrixColAmount + sector2d.x;
     }
-    public static int2 GetLocal2D(int2 index, int2 sectorStartIndex)
+    internal static int2 GetLocal2D(int2 index, int2 sectorStartIndex)
     {
         return index - sectorStartIndex;
     }
-    public static int GetLocal1D(int2 index, int2 sectorStartIndex, int sectorColAmount)
+    internal static int GetLocal1D(int2 index, int2 sectorStartIndex, int sectorColAmount)
     {
         int2 local2d = index - sectorStartIndex;
         return local2d.y * sectorColAmount + local2d.x;
     }
-    public static LocalIndex1d GetLocal1D(int2 general2d, int sectorColAmount, int sectorMatrixColAmount)
+    internal static LocalIndex1d GetLocal1D(int2 general2d, int sectorColAmount, int sectorMatrixColAmount)
     {
         int2 sector2d = general2d / sectorColAmount;
         int2 local2d = general2d - (sector2d * sectorColAmount);
@@ -94,29 +94,29 @@ public static class FlowFieldUtilities
             index = local2d.y * sectorColAmount + local2d.x,
         };
     }
-    public static int2 GetSectorStartIndex(int2 sectorIndex, int sectorColAmount)
+    internal static int2 GetSectorStartIndex(int2 sectorIndex, int sectorColAmount)
     {
         return new int2(sectorIndex.x * sectorColAmount, sectorIndex.y * sectorColAmount);
     }
-    public static int GetGeneral1d(int2 local2d, int2 sector2d, int sectorColAmount, int fieldColAmount)
+    internal static int GetGeneral1d(int2 local2d, int2 sector2d, int sectorColAmount, int fieldColAmount)
     {
         int2 sectorStart = GetSectorStartIndex(sector2d, sectorColAmount);
         int2 general2d = local2d + sectorStart;
         int general1d = To1D(general2d, fieldColAmount);
         return general1d;
     }
-    public static int2 GetGeneral2d(int2 local2d, int2 sector2d, int sectorColAmount, int fieldColAmount)
+    internal static int2 GetGeneral2d(int2 local2d, int2 sector2d, int sectorColAmount, int fieldColAmount)
     {
         int2 sectorStart = GetSectorStartIndex(sector2d, sectorColAmount);
         int2 general2d = local2d + sectorStart;
         return general2d;
     }
-    public static int2 GetGeneral2d(int local1d, int sector1d, int sectorMatrixColAmount, int sectorColAmount)
+    internal static int2 GetGeneral2d(int local1d, int sector1d, int sectorMatrixColAmount, int sectorColAmount)
     {
         int2 sectorStart2d = new int2(sector1d % sectorMatrixColAmount * sectorColAmount, sector1d / sectorMatrixColAmount * sectorColAmount);
         return sectorStart2d + new int2(local1d % sectorColAmount, local1d / sectorColAmount);
     }
-    public static int2 GetLocal2dInSector(PortalNode portalNode, int sectorIndex, int sectorMatrixColAmount, int sectorColAmount)
+    internal static int2 GetLocal2dInSector(PortalNode portalNode, int sectorIndex, int sectorMatrixColAmount, int sectorColAmount)
     {
         int2 p12d = new int2(portalNode.Portal1.Index.C, portalNode.Portal1.Index.R);
         int2 p22d = new int2(portalNode.Portal2.Index.C, portalNode.Portal2.Index.R);
@@ -130,7 +130,7 @@ public static class FlowFieldUtilities
 
         return picked2d - sectorStart;
     }
-    public static int GetLocal1dInSector(PortalNode portalNode, int sectorIndex, int sectorMatrixColAmount, int sectorColAmount)
+    internal static int GetLocal1dInSector(PortalNode portalNode, int sectorIndex, int sectorMatrixColAmount, int sectorColAmount)
     {
         int2 p12d = new int2(portalNode.Portal1.Index.C, portalNode.Portal1.Index.R);
         int2 p22d = new int2(portalNode.Portal2.Index.C, portalNode.Portal2.Index.R);
@@ -144,7 +144,7 @@ public static class FlowFieldUtilities
 
         return local2d.y * sectorColAmount + local2d.x;//-20
     }
-    public static int GetCommonSector(PortalNode node1, PortalNode node2, int sectorColAmount, int sectorMatrixColAmount)
+    internal static int GetCommonSector(PortalNode node1, PortalNode node2, int sectorColAmount, int sectorMatrixColAmount)
     {
         int2 n1p1index2d = new int2(node1.Portal1.Index.C, node1.Portal1.Index.R);
         int2 n1p2index2d = new int2(node1.Portal2.Index.C, node1.Portal2.Index.R);
@@ -161,7 +161,7 @@ public static class FlowFieldUtilities
         int n1p2sector1d = n1p2sector2d.y * sectorMatrixColAmount + n1p2sector2d.x;
         return math.select(n1p2sector1d, n1p1sector1d, isn1p1sectorCommon);
     }
-    public static void GetSectors(PortalNode node1, int sectorColAmount, int sectorMatrixColAmount, out int sector1, out int sector2)
+    internal static void GetSectors(PortalNode node1, int sectorColAmount, int sectorMatrixColAmount, out int sector1, out int sector2)
     {
         int2 n1p1index2d = new int2(node1.Portal1.Index.C, node1.Portal1.Index.R);
         int2 n1p2index2d = new int2(node1.Portal2.Index.C, node1.Portal2.Index.R);
@@ -172,14 +172,14 @@ public static class FlowFieldUtilities
         sector1 = n1p1sector2d.y * sectorMatrixColAmount + n1p1sector2d.x;
         sector2 = n1p2sector2d.y * sectorMatrixColAmount + n1p2sector2d.x;
     }
-    public static int RadiusToOffset(float radius, float tileSize)
+    internal static int RadiusToOffset(float radius, float tileSize)
     {
         float offsetZeroSize = tileSize / 2;
         float radiusWithoutOffsetZeroSize = radius - offsetZeroSize;
         int offset = (int)math.floor(radiusWithoutOffsetZeroSize / tileSize) + 1;
         return math.select(offset, 0, radiusWithoutOffsetZeroSize < 0);
     }
-    public static float GetCostBetween(int sector1, int local1, int sector2, int local2, int sectorColAmount, int sectorMatrixColAmount)
+    internal static float GetCostBetween(int sector1, int local1, int sector2, int local2, int sectorColAmount, int sectorMatrixColAmount)
     {
         int2x2 sectors2d = new int2x2()
         {
@@ -199,7 +199,7 @@ public static class FlowFieldUtilities
         int maxComponent = math.max(change.x, change.y);
         return minComponent * 1.4f + (maxComponent - minComponent);
     }
-    public static float2 Local1dToPos(int localIndex, int sectorIndex, int sectorColAmount, int sectorMatrixColAmount, int fieldColAmount, float tileSize)
+    internal static float2 Local1dToPos(int localIndex, int sectorIndex, int sectorColAmount, int sectorMatrixColAmount, int fieldColAmount, float tileSize)
     {
         int2 local2d = new int2(localIndex % sectorColAmount, localIndex / sectorColAmount);
         int2 sector2d = new int2(sectorIndex % sectorMatrixColAmount, sectorIndex / sectorMatrixColAmount);

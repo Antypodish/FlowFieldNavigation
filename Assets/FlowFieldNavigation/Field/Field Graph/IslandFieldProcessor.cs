@@ -3,17 +3,17 @@ using Unity.Collections;
 using Unity.Mathematics;
 using Unity.Collections.LowLevel.Unsafe;
 
-public struct IslandFieldProcessor
+internal struct IslandFieldProcessor
 {
-    public float TileSize;
-    public int SectorColAmount;
-    public int SectorMatrixColAmount;
-    public int FieldColAmount;
+    internal float TileSize;
+    internal int SectorColAmount;
+    internal int SectorMatrixColAmount;
+    internal int FieldColAmount;
 
-    [ReadOnly] public UnsafeListReadOnly<SectorNode> SectorNodes;
-    [ReadOnly] public UnsafeListReadOnly<PortalNode> PortalNodes;
-    [ReadOnly] public UnsafeListReadOnly<UnsafeList<int>> IslandFields;
-    public int GetIsland(float2 pos)
+    [ReadOnly] internal UnsafeListReadOnly<SectorNode> SectorNodes;
+    [ReadOnly] internal UnsafeListReadOnly<PortalNode> PortalNodes;
+    [ReadOnly] internal UnsafeListReadOnly<UnsafeList<int>> IslandFields;
+    internal int GetIsland(float2 pos)
     {
         int2 index2d = FlowFieldUtilities.PosTo2D(pos, TileSize);
         int2 sector2d = FlowFieldUtilities.GetSector2D(index2d, SectorColAmount);
@@ -42,7 +42,7 @@ public struct IslandFieldProcessor
         }
         return int.MaxValue;
     }
-    public int GetIsland(int2 generalIndex2d)
+    internal int GetIsland(int2 generalIndex2d)
     {
         int2 sector2d = FlowFieldUtilities.GetSector2D(generalIndex2d, SectorColAmount);
         int sector1d = FlowFieldUtilities.To1D(sector2d, SectorMatrixColAmount);
@@ -70,7 +70,7 @@ public struct IslandFieldProcessor
         }
         return int.MaxValue;
     }
-    public int GetIsland(int sectorIndex, int localIndex)
+    internal int GetIsland(int sectorIndex, int localIndex)
     {
         SectorNode sector = SectorNodes[sectorIndex];
 
@@ -93,7 +93,7 @@ public struct IslandFieldProcessor
         }
         return int.MaxValue;
     }
-    public bool GetIslandIfNotField(int sector1d, out int islandOut)
+    internal bool GetIslandIfNotField(int sector1d, out int islandOut)
     {
         SectorNode sector = SectorNodes[sector1d];
 

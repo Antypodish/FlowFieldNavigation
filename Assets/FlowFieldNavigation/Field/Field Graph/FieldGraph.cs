@@ -6,28 +6,28 @@ using Unity.Mathematics;
 using System;
 using Unity.Collections.LowLevel.Unsafe;
 
-public class FieldGraph
+internal class FieldGraph
 {
     //main graph elements
-    public NativeArray<SectorNode> SectorNodes;
-    public NativeArray<int> SecToWinPtrs;
-    public NativeArray<WindowNode> WindowNodes;
-    public NativeArray<int> WinToSecPtrs;
-    public NativeArray<PortalNode> PortalNodes;
-    public NativeArray<PortalToPortal> PorToPorPtrs;
-    public NativeList<IslandData> IslandDataList;
-    public NativeArray<UnsafeList<int>> IslandFields;
-    public SectorBitArray EditedSectorMarks;
-    public NativeArray<AStarTile> SectorIntegrationField;
+    internal NativeArray<SectorNode> SectorNodes;
+    internal NativeArray<int> SecToWinPtrs;
+    internal NativeArray<WindowNode> WindowNodes;
+    internal NativeArray<int> WinToSecPtrs;
+    internal NativeArray<PortalNode> PortalNodes;
+    internal NativeArray<PortalToPortal> PorToPorPtrs;
+    internal NativeList<IslandData> IslandDataList;
+    internal NativeArray<UnsafeList<int>> IslandFields;
+    internal SectorBitArray EditedSectorMarks;
+    internal NativeArray<AStarTile> SectorIntegrationField;
 
     //helper data
-    public NativeList<int> EditedSectorList;
-    public NativeBitArray EditedWindowMarks;
-    public NativeList<int> EditedWinodwList;
-    public NativeList<CostEdit> NewCostEdits;
+    internal NativeList<int> EditedSectorList;
+    internal NativeBitArray EditedWindowMarks;
+    internal NativeList<int> EditedWinodwList;
+    internal NativeList<CostEdit> NewCostEdits;
 
-    public int PortalPerWindow;
-    public FieldGraph(int costFieldOffset)
+    internal int PortalPerWindow;
+    internal FieldGraph(int costFieldOffset)
     {
         //size calculations
         int sectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount;
@@ -81,7 +81,7 @@ public class FieldGraph
         }
     }
 
-    public FieldGraphConfigurationJob GetConfigJob(NativeArray<byte> costs)
+    internal FieldGraphConfigurationJob GetConfigJob(NativeArray<byte> costs)
     {
         return new FieldGraphConfigurationJob()
         {
@@ -103,7 +103,7 @@ public class FieldGraph
             IntegratedCosts = SectorIntegrationField,
         };
     }
-    public IslandConfigurationJob GetIslandConfigJob(NativeArray<byte> costs)
+    internal IslandConfigurationJob GetIslandConfigJob(NativeArray<byte> costs)
     {
         return new IslandConfigurationJob()
         {
@@ -120,7 +120,7 @@ public class FieldGraph
             WindowNodes = WindowNodes
         };
     }
-    public IslandFieldProcessor GetIslandFieldProcessor()
+    internal IslandFieldProcessor GetIslandFieldProcessor()
     {
         return new IslandFieldProcessor()
         {
@@ -133,7 +133,7 @@ public class FieldGraph
             PortalNodes = FlowFieldUtilitiesUnsafe.ToUnsafeListRedonly(PortalNodes),
         };
     }
-    public NativeArray<WindowNode> GetWindowNodesOf(SectorNode sectorNode)
+    internal NativeArray<WindowNode> GetWindowNodesOf(SectorNode sectorNode)
     {
         NativeArray <WindowNode> windowNodes = new NativeArray<WindowNode>(sectorNode.SecToWinCnt, Allocator.Temp);
         for(int i = sectorNode.SecToWinPtr; i < sectorNode.SecToWinPtr + sectorNode.SecToWinCnt; i++)
@@ -142,7 +142,7 @@ public class FieldGraph
         }
         return windowNodes;
     }
-    public NativeArray<SectorNode> GetSectorNodesOf(WindowNode windowNode)
+    internal NativeArray<SectorNode> GetSectorNodesOf(WindowNode windowNode)
     {
         NativeArray<SectorNode> sectorNodes = new NativeArray<SectorNode>(windowNode.WinToSecCnt, Allocator.Temp);
         for (int i = windowNode.WinToSecPtr; i < windowNode.WinToSecPtr + windowNode.WinToSecCnt; i++)
@@ -151,7 +151,7 @@ public class FieldGraph
         }
         return sectorNodes;
     }
-    public NativeArray<SectorNode> GetSectorNodesOf(PortalNode portal)
+    internal NativeArray<SectorNode> GetSectorNodesOf(PortalNode portal)
     {
         WindowNode windowNode = WindowNodes[portal.WinPtr];
         NativeArray<SectorNode> sectorNodes = new NativeArray<SectorNode>(2, Allocator.Temp);
@@ -162,14 +162,14 @@ public class FieldGraph
         }
         return sectorNodes;
     }
-    public SectorNode GetSectorNodeAt(Vector3 pos)
+    internal SectorNode GetSectorNodeAt(Vector3 pos)
     {
         float sectorSize = FlowFieldUtilities.SectorColAmount * FlowFieldUtilities.TileSize;
         Index2 index2 = new Index2(Mathf.FloorToInt(pos.z / sectorSize), Mathf.FloorToInt(pos.x / sectorSize));
         int index = Index2.ToIndex(index2, FlowFieldUtilities.SectorMatrixColAmount);
         return SectorNodes[index];
     }
-    public NativeArray<int> GetPortalIndicies(SectorNode sectorNode, NativeArray<WindowNode> windowNodes)
+    internal NativeArray<int> GetPortalIndicies(SectorNode sectorNode, NativeArray<WindowNode> windowNodes)
     {
         NativeArray<int> portalIndicies;
         int secToWinCnt = sectorNode.SecToWinCnt;
@@ -197,7 +197,7 @@ public class FieldGraph
     }
 }
 
-public enum IslandData : byte
+internal enum IslandData : byte
 {
     Removed,
     Dirty,

@@ -5,17 +5,17 @@ using Unity.Mathematics;
 using Unity.Collections.LowLevel.Unsafe;
 
 [BurstCompile]
-public struct SpatialHashingTriangleSubmissionJob : IJob
+internal struct SpatialHashingTriangleSubmissionJob : IJob
 {
-    public float FieldVerticalSize;
-    public float FieldHorizontalSize;
-    public float BaseSpatialGridSize;
-    [ReadOnly] public NativeArray<float3> Verticies;
-    [ReadOnly] public NativeArray<int> Triangles;
+    internal float FieldVerticalSize;
+    internal float FieldHorizontalSize;
+    internal float BaseSpatialGridSize;
+    [ReadOnly] internal NativeArray<float3> Verticies;
+    [ReadOnly] internal NativeArray<int> Triangles;
 
-    public NativeList<int> NewTriangles;
-    public NativeList<UnsafeList<HashTile>> SpatialHashGrids;
-    public NativeHashMap<float, int> TileSizeToGridIndex;
+    internal NativeList<int> NewTriangles;
+    internal NativeList<UnsafeList<HashTile>> SpatialHashGrids;
+    internal NativeHashMap<float, int> TileSizeToGridIndex;
 
     public void Execute()
     {

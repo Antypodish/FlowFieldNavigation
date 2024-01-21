@@ -21,7 +21,7 @@ public struct SourceSectorCalculationJob : IJob
     [ReadOnly] public UnsafeList<int> SectorToPickedTable;
     [ReadOnly] public NativeArray<int> PickedToSectorTable;
     [ReadOnly] public NativeArray<UnsafeList<ActiveWaveFront>> ActiveWaveFrontListArray;
-    [ReadOnly] public NativeArray<PortalNode> PortalNodes;
+    [ReadOnly] internal NativeArray<PortalNode> PortalNodes;
 
     public NativeList<int> SectorFlowStartIndiciesToCalculateIntegration;
     public NativeList<int> SectorFlowStartIndiciesToCalculateFlow;

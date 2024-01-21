@@ -1,15 +1,15 @@
 ﻿using Unity.Collections;
 using UnityEngine;
 
-public class EditorAgentDirectionDebugger
+internal class EditorAgentDirectionDebugger
 {
     PathfindingManager _pathfindingManager;
-    public EditorAgentDirectionDebugger(PathfindingManager pathfindingManager)
+    internal EditorAgentDirectionDebugger(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
     }
 
-    public void Debug()
+    internal void Debug()
     {
         Gizmos.color = Color.white;
         NativeArray<AgentData> agentData = _pathfindingManager.AgentDataContainer.AgentDataList;

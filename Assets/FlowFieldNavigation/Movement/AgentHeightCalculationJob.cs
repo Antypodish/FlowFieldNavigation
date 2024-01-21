@@ -7,10 +7,10 @@ using System.Numerics;
 [BurstCompile]
 public struct AgentHeightCalculationJob : IJobParallelFor
 {
-    [ReadOnly] public TriangleSpatialHashGrid TriangleSpatialHashGrid;
-    [ReadOnly] public NativeArray<float3> Verticies;
-    public NativeArray<float3> AgentPositionChangeArray;
-    public NativeArray<AgentMovementData> AgentMovementDataArray;
+    [ReadOnly] internal TriangleSpatialHashGrid TriangleSpatialHashGrid;
+    [ReadOnly] internal NativeArray<float3> Verticies;
+    internal NativeArray<float3> AgentPositionChangeArray;
+    internal NativeArray<AgentMovementData> AgentMovementDataArray;
     public void Execute(int index)
     {
         AgentMovementData agentData = AgentMovementDataArray[index];

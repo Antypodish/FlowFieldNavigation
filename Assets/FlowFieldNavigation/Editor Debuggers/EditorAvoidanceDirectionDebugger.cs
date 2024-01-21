@@ -4,12 +4,12 @@ using UnityEngine;
 internal class EditorAvoidanceDirectionDebugger
 {
     PathfindingManager _pathfindingManager;
-    public EditorAvoidanceDirectionDebugger(PathfindingManager pathfindingManager)
+    internal EditorAvoidanceDirectionDebugger(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
     }
 
-    public void Debug()
+    internal void Debug()
     {
         NativeArray<AgentData> agents = _pathfindingManager.AgentDataContainer.AgentDataList;
 

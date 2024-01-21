@@ -9,7 +9,7 @@ public class PortalTraversalDataArrayFactory
     List<NativeArray<PortalTraversalData>>[] _preallocationMatrix;
     List<CleaningHandle> _cleaningHandles;
     int[] _portalNodeAmounts;
-    public PortalTraversalDataArrayFactory(FieldGraph[] producedFieldGraphs)
+    internal PortalTraversalDataArrayFactory(FieldGraph[] producedFieldGraphs)
     {
         _preallocationMatrix = new List<NativeArray<PortalTraversalData>>[producedFieldGraphs.Length];
         _portalNodeAmounts = new int[producedFieldGraphs.Length];

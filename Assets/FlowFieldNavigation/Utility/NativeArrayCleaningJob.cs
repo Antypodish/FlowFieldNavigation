@@ -3,9 +3,9 @@ using Unity.Collections;
 using Unity.Jobs;
 
 [BurstCompile]
-public struct NativeArrayCleaningJob<T> : IJob where T : unmanaged
+internal struct NativeArrayCleaningJob<T> : IJob where T : unmanaged
 {
-    public NativeArray<T> Array;
+    internal NativeArray<T> Array;
     public void Execute()
     {
         T defaultValue = default(T);

@@ -13,7 +13,7 @@ public struct PathRequestIslandDerivationJob : IJob
     public NativeArray<int> NewAgentPathIndicies;
     public NativeList<OffsetDerivedPathRequest> DerivedPathRequests;
     public NativeList<FinalPathRequest> FinalPathRequests;
-    public NativeArray<IslandFieldProcessor> IslandFieldProcesorsPerOffset;
+    internal NativeArray<IslandFieldProcessor> IslandFieldProcesorsPerOffset;
     [WriteOnly] public NativeReference<int> PathRequestSourceCount;
     public void Execute()
     {

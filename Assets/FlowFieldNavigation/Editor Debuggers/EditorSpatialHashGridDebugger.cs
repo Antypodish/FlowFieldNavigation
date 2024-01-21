@@ -2,12 +2,12 @@
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
-public class EditorSpatialHashGridDebugger
+internal class EditorSpatialHashGridDebugger
 {
     PathfindingManager _pathfindingManager;
 
     Color[] _colors;
-    public EditorSpatialHashGridDebugger(PathfindingManager pathfindingManager)
+    internal EditorSpatialHashGridDebugger(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
         _colors = new Color[]
@@ -24,7 +24,7 @@ public class EditorSpatialHashGridDebugger
         };
     }
 
-    public void DebugAgent(FlowFieldAgent agent, int gridIndex, float checkRange)
+    internal void DebugAgent(FlowFieldAgent agent, int gridIndex, float checkRange)
     {
         NativeArray<UnsafeList<HashTile>> hashGridArray = _pathfindingManager.GetSpatialHashGridArray();
         if (gridIndex >= hashGridArray.Length || gridIndex < 0) { return; }
@@ -59,7 +59,7 @@ public class EditorSpatialHashGridDebugger
             }
         }
     }
-    public void DebugBorders(int gridIndex)
+    internal void DebugBorders(int gridIndex)
     {
         NativeArray<UnsafeList<HashTile>> hashGridArray = _pathfindingManager.GetSpatialHashGridArray();
         if (gridIndex >= hashGridArray.Length || gridIndex < 0) { return; }
@@ -91,7 +91,7 @@ public class EditorSpatialHashGridDebugger
         }
 
     }
-    public void Debug(int gridIndex)
+    internal void Debug(int gridIndex)
     {
         NativeArray<UnsafeList<HashTile>> hashGridArray = _pathfindingManager.GetSpatialHashGridArray();
         if(gridIndex >= hashGridArray.Length || gridIndex < 0) { return; }

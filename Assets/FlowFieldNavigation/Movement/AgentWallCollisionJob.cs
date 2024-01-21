@@ -16,7 +16,7 @@ public struct AgentWallCollisionJob : IJobParallelFor
     public float TileSize;
     public float HalfTileSize;
     [ReadOnly] public NativeArray<AgentMovementData> AgentMovementData;
-    [ReadOnly] public NativeArray<UnsafeListReadOnly<byte>> CostFieldEachOffset;
+    [ReadOnly] internal NativeArray<UnsafeListReadOnly<byte>> CostFieldEachOffset;
     public NativeArray<float3> AgentPositionChangeBuffer;
 
     public void Execute(int index)

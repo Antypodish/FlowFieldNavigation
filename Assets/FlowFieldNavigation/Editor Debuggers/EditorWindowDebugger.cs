@@ -2,7 +2,7 @@
 
 using Unity.Collections;
 using UnityEngine;
-public class EditorWindowDebugger
+internal class EditorWindowDebugger
 {
     PathfindingManager _pathfindingManager;
 
@@ -10,7 +10,7 @@ public class EditorWindowDebugger
     Vector3[] _debugVerticies;
     int[] _debugTriangles;
 
-    public EditorWindowDebugger(PathfindingManager pathfindingManager)
+    internal EditorWindowDebugger(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
 
@@ -53,7 +53,7 @@ public class EditorWindowDebugger
         }
     }
 
-    public void DebugWindows(int offset)
+    internal void DebugWindows(int offset)
     {
         Gizmos.color = new Color(1f, 0f, 0f, 0.3f);
         float yOffset = .02f;

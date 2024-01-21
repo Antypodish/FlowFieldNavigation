@@ -1,44 +1,36 @@
 ﻿using Unity.Collections;
 using Unity.Mathematics;
 
-public class ObstacleContainer
+internal class ObstacleContainer
 {
-    public NativeList<Obstacle> ObstacleList;
-    public NativeList<int> RemovedIndexList;
+    internal NativeList<Obstacle> ObstacleList;
+    internal NativeList<int> RemovedIndexList;
 
-    public ObstacleContainer()
+    internal ObstacleContainer()
     {
         ObstacleList = new NativeList<Obstacle>(Allocator.Persistent);
         RemovedIndexList = new NativeList<int>(Allocator.Persistent);
     }
 }
-
-public struct ObstacleRequest
+internal struct CostEdit
 {
-    public float2 Position;
-    public float2 HalfSize;
-
-    public ObstacleRequest(float2 pos, float2 halfSize) { Position = pos; HalfSize = halfSize; }
+    internal int2 BotLeftBound;
+    internal int2 TopRightBound;
+    internal CostEditType EditType;
 }
-public struct CostEdit
-{
-    public int2 BotLeftBound;
-    public int2 TopRightBound;
-    public CostEditType EditType;
-}
-public enum CostEditType : byte
+internal enum CostEditType : byte
 {
     Set,
     Clear,
 }
-public enum ObstacleState : byte
+internal enum ObstacleState : byte
 {
     Live,
     Removed,
 }
-public struct Obstacle
+internal struct Obstacle
 {
-    public int2 BotLeftBound;
-    public int2 TopRightBound;
-    public ObstacleState State;
+    internal int2 BotLeftBound;
+    internal int2 TopRightBound;
+    internal ObstacleState State;
 }

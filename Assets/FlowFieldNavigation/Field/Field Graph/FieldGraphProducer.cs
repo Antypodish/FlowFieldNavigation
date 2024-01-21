@@ -4,12 +4,12 @@ using Unity.Jobs;
 using System.Diagnostics;
 using UnityEngine;
 
-public class FieldGraphProducer
+internal class FieldGraphProducer
 {
     FieldGraph[] _fieldGraphs;
     
-    public FieldGraphProducer() { }
-    public void ProduceFieldGraphs(CostField[] costFields)
+    internal FieldGraphProducer() { }
+    internal void ProduceFieldGraphs(CostField[] costFields)
     {
         //ALLOCATE FIELD GRAPHS
         _fieldGraphs = new FieldGraph[costFields.Length];
@@ -33,11 +33,11 @@ public class FieldGraphProducer
         }
         //JobHandle.CompleteAll(combinedHandles);
     }
-    public FieldGraph GetFieldGraphWithOffset(int offset)
+    internal FieldGraph GetFieldGraphWithOffset(int offset)
     {
         return _fieldGraphs[offset];
     }
-    public FieldGraph[] GetAllFieldGraphs()
+    internal FieldGraph[] GetAllFieldGraphs()
     {
         FieldGraph[] newarray = new FieldGraph[_fieldGraphs.Length];
         for(int i = 0; i <newarray.Length; i++)
@@ -46,7 +46,7 @@ public class FieldGraphProducer
         }
         return newarray;
     }
-    public NativeArray<IslandFieldProcessor> GetAllIslandFieldProcessors()
+    internal NativeArray<IslandFieldProcessor> GetAllIslandFieldProcessors()
     {
         NativeArray<IslandFieldProcessor> islandFieldProcessors = new NativeArray<IslandFieldProcessor>(_fieldGraphs.Length, Allocator.Persistent);
         for(int i = 0; i < _fieldGraphs.Length; i++)

@@ -5,14 +5,14 @@ using Unity.Mathematics;
 using Unity.Collections.LowLevel.Unsafe;
 using System.Diagnostics;
 
-public class HeightMeshProducer
+internal class HeightMeshProducer
 {
-    public NativeList<float3> Verticies;
-    public NativeList<int> Triangles;
+    internal NativeList<float3> Verticies;
+    internal NativeList<int> Triangles;
     NativeList<UnsafeList<HashTile>> SpatialHashGrids;
     NativeHashMap<float, int> TileSizeToGridIndex;
     NativeHashMap<int, float> GridIndexToTileSize;
-    public HeightMeshProducer()
+    internal HeightMeshProducer()
     {
         Verticies = new NativeList<float3>(Allocator.Persistent);
         Triangles = new NativeList<int>(Allocator.Persistent);
@@ -20,7 +20,7 @@ public class HeightMeshProducer
         TileSizeToGridIndex = new NativeHashMap<float, int>(0, Allocator.Persistent);
         GridIndexToTileSize = new NativeHashMap<int, float>(0, Allocator.Persistent);
     }
-    public void GenerateHeightMesh(Mesh[] meshes, Transform[] meshParentTransforms)
+    internal void GenerateHeightMesh(Mesh[] meshes, Transform[] meshParentTransforms)
     {
         //Merge and copy data to native containers
         NativeList<float3> tempVericies = new NativeList<float3>(Allocator.TempJob);
@@ -93,7 +93,7 @@ public class HeightMeshProducer
         Triangles.Dispose();
         Triangles = newTriangles;
     }
-    public TriangleSpatialHashGrid GetTriangleSpatialHashGrid()
+    internal TriangleSpatialHashGrid GetTriangleSpatialHashGrid()
     {
         return new TriangleSpatialHashGrid()
         {

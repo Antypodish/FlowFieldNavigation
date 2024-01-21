@@ -1,16 +1,16 @@
 ﻿using Unity.Mathematics;
-public struct SectorDirectionData
+internal struct SectorDirectionData
 {
-    public byte N;
-    public byte E;
-    public byte S;
-    public byte W;
-    public byte NE;
-    public byte SE;
-    public byte SW;
-    public byte NW;
+    internal byte N;
+    internal byte E;
+    internal byte S;
+    internal byte W;
+    internal byte NE;
+    internal byte SE;
+    internal byte SW;
+    internal byte NW;
 
-    public SectorDirectionData(byte index, int sectorTileAmount)
+    internal SectorDirectionData(byte index, int sectorTileAmount)
     {
         Index2 form2D = new Index2(index / sectorTileAmount, index % sectorTileAmount);
         Index2 n = new Index2(form2D.R + 1, form2D.C);
@@ -52,7 +52,7 @@ public struct SectorDirectionData
             return false;
         }
     }
-    public string ToString()
+    internal string ToString()
     {
         return "{"+N+", " + NE + ", " + E + ", " + SE + ", " + S + ", " + SW + ", " + W + ", " + NW + "}";
     }

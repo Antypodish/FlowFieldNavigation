@@ -5,19 +5,19 @@ using Unity.Mathematics;
 using Unity.Collections.LowLevel.Unsafe;
 
 [BurstCompile]
-public struct IslandConfigurationJob : IJob
+internal struct IslandConfigurationJob : IJob
 {
-    public int SectorTileAmount;
-    public int SectorMatrixColAmount;
-    public int SectorColAmount;
-    [ReadOnly] public NativeArray<byte> CostsL;
-    [ReadOnly] public NativeArray<PortalToPortal> PortalEdges;
-    [ReadOnly] public NativeArray<WindowNode> WindowNodes;
-    [ReadOnly] public NativeArray<int> SecToWinPtrs;
-    public NativeArray<SectorNode> SectorNodes;
-    public NativeArray<UnsafeList<int>> IslandFields;
-    public NativeArray<PortalNode> PortalNodes;
-    public NativeList<IslandData> Islands;
+    internal int SectorTileAmount;
+    internal int SectorMatrixColAmount;
+    internal int SectorColAmount;
+    [ReadOnly] internal NativeArray<byte> CostsL;
+    [ReadOnly] internal NativeArray<PortalToPortal> PortalEdges;
+    [ReadOnly] internal NativeArray<WindowNode> WindowNodes;
+    [ReadOnly] internal NativeArray<int> SecToWinPtrs;
+    internal NativeArray<SectorNode> SectorNodes;
+    internal NativeArray<UnsafeList<int>> IslandFields;
+    internal NativeArray<PortalNode> PortalNodes;
+    internal NativeList<IslandData> Islands;
     public void Execute()
     {
         //PREALLOCATIONS
@@ -253,26 +253,26 @@ public struct IslandConfigurationJob : IJob
     private struct UnsafeStack<T> where T : unmanaged
     {
         UnsafeList<T> _data;
-        public UnsafeStack(int placeHolderDataDoingNothing)
+        internal UnsafeStack(int placeHolderDataDoingNothing)
         {
             _data = new UnsafeList<T>(0, Allocator.Temp);
         }
-        public void Push(T item)
+        internal void Push(T item)
         {
             _data.Add(item);
         }
-        public T Pop()
+        internal T Pop()
         {
             if(_data.Length == 0) { return default(T); }
             T item = _data[_data.Length - 1];
             _data.Length = _data.Length - 1;
             return item;
         }
-        public bool IsEmpty()
+        internal bool IsEmpty()
         {
             return _data.IsEmpty;
         }
-        public void Clear()
+        internal void Clear()
         {
             _data.Clear();
         }

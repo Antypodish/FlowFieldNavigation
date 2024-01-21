@@ -3,10 +3,10 @@ using Unity.Jobs;
 using Unity.Collections;
 
 [BurstCompile]
-public struct NativeListToNativeListAddJob<T> : IJob where T : unmanaged
+internal struct NativeListToNativeListAddJob<T> : IJob where T : unmanaged
 {
-    public NativeList<T> Source;
-    public NativeList<T> Destination;
+    internal NativeList<T> Source;
+    internal NativeList<T> Destination;
     public void Execute()
     {
         int initialSize = Destination.Length;

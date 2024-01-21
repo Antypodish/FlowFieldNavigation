@@ -22,8 +22,8 @@ public struct FinalPathRequestDestinationExpansionJob : IJob
     public int FieldRowAmount;
     public int FieldColAmount;
     [NativeDisableContainerSafetyRestriction] public NativeList<FinalPathRequest> FinalPathRequests;
-    [ReadOnly] public NativeArray<IslandFieldProcessor> IslandFieldProcessors;
-    [ReadOnly] public NativeArray<UnsafeListReadOnly<byte>> CostFields;
+    [ReadOnly] internal NativeArray<IslandFieldProcessor> IslandFieldProcessors;
+    [ReadOnly] internal NativeArray<UnsafeListReadOnly<byte>> CostFields;
     public void Execute()
     {
         NativeSlice<FinalPathRequest> pickedFinalRequests = GetFinalPathRequestSlice();

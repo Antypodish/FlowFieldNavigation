@@ -2,15 +2,15 @@
 using Unity.Collections;
 using System.Collections.Generic;
 
-public class EditorHoldGroundDebugger
+internal class EditorHoldGroundDebugger
 {
     PathfindingManager _pathfindingManager;
-    public EditorHoldGroundDebugger(PathfindingManager pathfindingManager)
+    internal EditorHoldGroundDebugger(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
     }
 
-    public void Debug()
+    internal void Debug()
     {
         Gizmos.color = Color.yellow;
 

@@ -4,17 +4,17 @@ using Unity.Mathematics;
 using Unity.Collections.LowLevel.Unsafe;
 using System.Diagnostics;
 
-public class EditorHeightMeshDebugger
+internal class EditorHeightMeshDebugger
 {
     PathfindingManager _pathfindingManager;
     Mesh _debugMesh;
     float2 _hitPos;
-    public EditorHeightMeshDebugger(PathfindingManager pathfindingManager)
+    internal EditorHeightMeshDebugger(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
     }
 
-    public void DebugHeightMapMesh()
+    internal void DebugHeightMapMesh()
     {
         if(_debugMesh == null)
         {
@@ -41,7 +41,7 @@ public class EditorHeightMeshDebugger
         //Gizmos.color = new Color(0, 1, 1, 0.25f);
         //Gizmos.DrawMesh(_debugMesh);
     }
-    public void DebugBorders(int gridIndex)
+    internal void DebugBorders(int gridIndex)
     {
         Gizmos.color = Color.black;
         TriangleSpatialHashGrid triangleHashGrid = _pathfindingManager.FieldManager.HeightMeshGenerator.GetTriangleSpatialHashGrid();
@@ -65,7 +65,7 @@ public class EditorHeightMeshDebugger
             Gizmos.DrawLine(start, end);
         }
     }
-    public void DebugTrianglesAtTile()
+    internal void DebugTrianglesAtTile()
     {
         Gizmos.color = Color.red;
         if (Input.GetMouseButton(0))

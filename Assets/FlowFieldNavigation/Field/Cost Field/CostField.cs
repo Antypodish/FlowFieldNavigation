@@ -4,14 +4,14 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
 
-public class CostField
+internal class CostField
 {
-    public int Offset;
-    public NativeArray<byte> Costs;
-    public NativeArray<byte> BaseCosts;
-    public NativeArray<uint> StampCounts;
-    public UnsafeListReadOnly<byte> CostsLReadonlyUnsafe;
-    public CostField(WalkabilityCell[][] walkabilityMatrix, int offset)
+    internal int Offset;
+    internal NativeArray<byte> Costs;
+    internal NativeArray<byte> BaseCosts;
+    internal NativeArray<uint> StampCounts;
+    internal UnsafeListReadOnly<byte> CostsLReadonlyUnsafe;
+    internal CostField(WalkabilityCell[][] walkabilityMatrix, int offset)
     {
         int fieldRowAmount = FlowFieldUtilities.FieldRowAmount;
         int fieldColAmount = FlowFieldUtilities.FieldColAmount;

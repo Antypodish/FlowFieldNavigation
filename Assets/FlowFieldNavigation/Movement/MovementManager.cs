@@ -49,7 +49,7 @@ public class MovementManager
         HashedToNormal = new NativeList<int>(Allocator.Persistent);
         PathReachDistances = new NativeList<float>(Allocator.Persistent);
     }
-    public void ScheduleRoutine(NativeArray<UnsafeListReadOnly<byte>> costFieldCosts, JobHandle dependency)
+    internal void ScheduleRoutine(NativeArray<UnsafeListReadOnly<byte>> costFieldCosts, JobHandle dependency)
     {
         NativeArray<AgentData> agentDataArray = _agentDataContainer.AgentDataList;
         NativeArray<int> agentCurPathIndexArray = _agentDataContainer.AgentCurPathIndicies;

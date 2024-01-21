@@ -1,14 +1,14 @@
 ﻿using Unity.Collections;
 
-public struct WindowNode
+internal struct WindowNode
 {
-    public Window Window;
-    public int WinToSecPtr;
-    public int WinToSecCnt;
-    public int PorPtr;
-    public int PorCnt;
+    internal Window Window;
+    internal int WinToSecPtr;
+    internal int WinToSecCnt;
+    internal int PorPtr;
+    internal int PorCnt;
 
-    public WindowNode(Window window, int winToSecCnt, int winToSecPtr, int porPtr, int porCnt)
+    internal WindowNode(Window window, int winToSecCnt, int winToSecPtr, int porPtr, int porCnt)
     {
         Window = window;
         WinToSecCnt = winToSecCnt;

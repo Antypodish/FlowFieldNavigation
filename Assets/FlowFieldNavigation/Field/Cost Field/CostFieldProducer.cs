@@ -4,14 +4,14 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using UnityEngine;
 
-public class CostFieldProducer
+internal class CostFieldProducer
 {
     WalkabilityCell[][] _walkabilityMatrix;
     CostField[] _producedCostFields;
 
     //utility
-    public NativeArray<SectorDirectionData> SectorDirections;
-    public CostFieldProducer(WalkabilityCell[][] walkabilityMatrix)
+    internal NativeArray<SectorDirectionData> SectorDirections;
+    internal CostFieldProducer(WalkabilityCell[][] walkabilityMatrix)
     {
         _walkabilityMatrix = walkabilityMatrix;
 
@@ -22,7 +22,7 @@ public class CostFieldProducer
             SectorDirections[i] = new SectorDirectionData(i, FlowFieldUtilities.SectorColAmount);
         }
     }
-    public void ProduceCostFields(int maxOffset)
+    internal void ProduceCostFields(int maxOffset)
     {
         int count = maxOffset + 1;
         _producedCostFields = new CostField[count];
@@ -31,11 +31,11 @@ public class CostFieldProducer
             _producedCostFields[i] = new CostField(_walkabilityMatrix, i);
         }
     }
-    public CostField[] GetAllCostFields()
+    internal CostField[] GetAllCostFields()
     {
         return _producedCostFields;
     }
-    public UnsafeListReadOnly<byte>[] GetAllCostsAsUnsafeListReadonly()
+    internal UnsafeListReadOnly<byte>[] GetAllCostsAsUnsafeListReadonly()
     {
         UnsafeListReadOnly<byte>[] arrayToReturn = new UnsafeListReadOnly<byte>[_producedCostFields.Length];
         for(int i = 0; i < _producedCostFields.Length; i++)
@@ -44,7 +44,7 @@ public class CostFieldProducer
         }
         return arrayToReturn;
     }
-    public CostField GetCostFieldWithOffset(int offset)
+    internal CostField GetCostFieldWithOffset(int offset)
     {
         return _producedCostFields[offset];
     }

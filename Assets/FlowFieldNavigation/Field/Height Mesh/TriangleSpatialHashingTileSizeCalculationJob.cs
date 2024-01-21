@@ -4,12 +4,12 @@ using Unity.Collections;
 using Unity.Mathematics;
 using Unity.Collections.LowLevel.Unsafe;
 
-public struct TriangleSpatialHashingTileSizeCalculationJob : IJob
+internal struct TriangleSpatialHashingTileSizeCalculationJob : IJob
 {
-    public float BaseSpatialGridSize;
-    [ReadOnly] public NativeArray<float3> Verticies;
-    [ReadOnly] public NativeArray<int> Triangles;
-    public NativeList<float> GridTileSizes;
+    internal float BaseSpatialGridSize;
+    [ReadOnly] internal NativeArray<float3> Verticies;
+    [ReadOnly] internal NativeArray<int> Triangles;
+    internal NativeList<float> GridTileSizes;
     public void Execute()
     {
         NativeHashSet<float> tileSizeSet = new NativeHashSet<float>(0, Allocator.Temp);
