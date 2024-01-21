@@ -62,7 +62,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Radius: 0.48
   Speed: 5
-  LandOffset: 0
+  LandOffset: 10
   AgentDataIndex: 0
   Transform: {fileID: 0}
 --- !u!1001 &5850989375783227942

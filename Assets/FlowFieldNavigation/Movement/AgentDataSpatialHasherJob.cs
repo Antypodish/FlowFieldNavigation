@@ -104,6 +104,7 @@ public struct AgentDataSpatialHasherJob : IJob
                 CurrentDirection = agentData.Direction,
                 Speed = agentData.Speed,
                 Status = agentData.Status,
+                LandOffset = agentData.LandOffset,
                 Avoidance = agentData.Avoidance,
                 MovingAvoidance = agentData.MovingAvoidance,
                 RoutineStatus = 0,

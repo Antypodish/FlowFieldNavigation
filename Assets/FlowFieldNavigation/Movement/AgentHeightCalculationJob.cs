@@ -38,7 +38,7 @@ public struct AgentHeightCalculationJob : IJobParallelFor
 
                     BarycentricCoordinates barCords = GetBarycentricCoordinatesForEachVectorInTheOrderUVW(v1, v2, v3, agentPos2);
                     if(barCords.u < 0 || barCords.w < 0 || barCords.v < 0) { continue; }
-                    float newHeight = v13d.y * barCords.u + v23d.y * barCords.v + v33d.y * barCords.w;
+                    float newHeight = v13d.y * barCords.u + v23d.y * barCords.v + v33d.y * barCords.w + agentData.LandOffset;
                     desiredHeight = math.select(desiredHeight, newHeight, newHeight > desiredHeight);
                 }
             }

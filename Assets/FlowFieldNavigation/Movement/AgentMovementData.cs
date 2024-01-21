@@ -9,6 +9,7 @@ public struct AgentMovementData
     public float AlignmentMultiplierPercentage;
     public float Speed;
     public float Radius;
+    public float LandOffset;
     public int FlockIndex;
     public int PathId;
     public int TensionPowerIndex;
