@@ -1,12 +1,12 @@
 ﻿using Unity.Collections.LowLevel.Unsafe;
 
-public struct FlowFieldCalculationBuffer
+internal struct FlowFieldCalculationBuffer
 {
-    public int FlowFieldStartIndex;
-    public UnsafeList<FlowData> Buffer;
+    internal int FlowFieldStartIndex;
+    internal UnsafeList<FlowData> Buffer;
 }
-public struct FlowFieldCalculationBufferParent
+internal struct FlowFieldCalculationBufferParent
 {
-    public int PathIndex;
-    public UnsafeList<FlowFieldCalculationBuffer> BufferParent;
+    internal int PathIndex;
+    internal UnsafeList<FlowFieldCalculationBuffer> BufferParent;
 }

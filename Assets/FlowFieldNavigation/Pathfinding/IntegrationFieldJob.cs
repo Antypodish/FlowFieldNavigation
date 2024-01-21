@@ -5,17 +5,17 @@ using Unity.Jobs;
 using Unity.Mathematics;
 
 [BurstCompile]
-public struct IntegrationFieldJob : IJob
+internal struct IntegrationFieldJob : IJob
 {
-    public int SectorIndex;
-    public int FieldColAmount;
-    public int FieldRowAmount;
-    public int SectorColAmount;
-    public int SectorMatrixColAmount;
-    [NativeDisableContainerSafetyRestriction] public NativeSlice<IntegrationTile> IntegrationField;
-    [ReadOnly] public UnsafeList<ActiveWaveFront> StartIndicies;
-    [ReadOnly] public UnsafeList<int> SectorToPicked;
-    [ReadOnly] public NativeSlice<byte> Costs;
+    internal int SectorIndex;
+    internal int FieldColAmount;
+    internal int FieldRowAmount;
+    internal int SectorColAmount;
+    internal int SectorMatrixColAmount;
+    [NativeDisableContainerSafetyRestriction] internal NativeSlice<IntegrationTile> IntegrationField;
+    [ReadOnly] internal UnsafeList<ActiveWaveFront> StartIndicies;
+    [ReadOnly] internal UnsafeList<int> SectorToPicked;
+    [ReadOnly] internal NativeSlice<byte> Costs;
     public void Execute()
     {
         Integrate();

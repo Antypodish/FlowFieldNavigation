@@ -7,26 +7,26 @@ using Unity.Mathematics;
 using UnityEngine.XR;
 
 [BurstCompile]
-public struct SourceSectorCalculationJob : IJob
+internal struct SourceSectorCalculationJob : IJob
 {
-    public float SectorSize;
-    public int SectorColAmount;
-    public int SectorTileAmount;
-    public int SectorMatrixColAmount;
-    public int SectorMatrixRowAmount;
-    public int LOSRange;
-    public int2 TargetIndex;
-    [ReadOnly] public NativeSlice<float2> Sources;
-    [ReadOnly] public NativeArray<ActivePortal> PortalSequence;
-    [ReadOnly] public UnsafeList<int> SectorToPickedTable;
-    [ReadOnly] public NativeArray<int> PickedToSectorTable;
-    [ReadOnly] public NativeArray<UnsafeList<ActiveWaveFront>> ActiveWaveFrontListArray;
+    internal float SectorSize;
+    internal int SectorColAmount;
+    internal int SectorTileAmount;
+    internal int SectorMatrixColAmount;
+    internal int SectorMatrixRowAmount;
+    internal int LOSRange;
+    internal int2 TargetIndex;
+    [ReadOnly] internal NativeSlice<float2> Sources;
+    [ReadOnly] internal NativeArray<ActivePortal> PortalSequence;
+    [ReadOnly] internal UnsafeList<int> SectorToPickedTable;
+    [ReadOnly] internal NativeArray<int> PickedToSectorTable;
+    [ReadOnly] internal NativeArray<UnsafeList<ActiveWaveFront>> ActiveWaveFrontListArray;
     [ReadOnly] internal NativeArray<PortalNode> PortalNodes;
 
-    public NativeList<int> SectorFlowStartIndiciesToCalculateIntegration;
-    public NativeList<int> SectorFlowStartIndiciesToCalculateFlow;
+    internal NativeList<int> SectorFlowStartIndiciesToCalculateIntegration;
+    internal NativeList<int> SectorFlowStartIndiciesToCalculateFlow;
 
-    public UnsafeList<PathSectorState> SectorStateTable;
+    internal UnsafeList<PathSectorState> SectorStateTable;
     internal NativeArray<SectorsWihinLOSArgument> SectorWithinLOSState;
     public void Execute()
     {

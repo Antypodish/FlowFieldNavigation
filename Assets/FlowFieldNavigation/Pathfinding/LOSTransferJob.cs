@@ -5,18 +5,18 @@ using Unity.Jobs;
 using Unity.Mathematics;
 
 [BurstCompile]
-public struct LOSTransferJob : IJob
+internal struct LOSTransferJob : IJob
 {
-    public int2 Target;
-    public int LOSRange;
-    public int SectorColAmount;
-    public int SectorMatrixColAmount;
-    public int SectorMatrixRowAmount;
-    public int SectorTileAmount;
+    internal int2 Target;
+    internal int LOSRange;
+    internal int SectorColAmount;
+    internal int SectorMatrixColAmount;
+    internal int SectorMatrixRowAmount;
+    internal int SectorTileAmount;
 
-    [ReadOnly] public NativeArray<IntegrationTile> IntegrationField;
-    [ReadOnly] public UnsafeList<int> SectorToPickedTable;
-    public UnsafeLOSBitmap LOSBitmap;
+    [ReadOnly] internal NativeArray<IntegrationTile> IntegrationField;
+    [ReadOnly] internal UnsafeList<int> SectorToPickedTable;
+    internal UnsafeLOSBitmap LOSBitmap;
     public void Execute()
     {
         int2 targetSector2d = FlowFieldUtilities.GetSector2D(Target, SectorColAmount);
@@ -46,7 +46,7 @@ public struct LOSTransferJob : IJob
         }
     }
 
-    public void Transfer(int integrationStartIndex)
+    internal void Transfer(int integrationStartIndex)
     {
         int lastIndexOfSector = integrationStartIndex + SectorTileAmount - 1;
 

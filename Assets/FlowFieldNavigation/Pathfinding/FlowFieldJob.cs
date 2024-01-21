@@ -7,23 +7,23 @@ using UnityEngine;
 using System;
 
 [BurstCompile]
-public struct FlowFieldJob : IJobParallelFor
+internal struct FlowFieldJob : IJobParallelFor
 {
-    public int SectorMatrixColAmount;
-    public int SectorMatrixRowAmount;
-    public int SectorMatrixTileAmount;
-    public int SectorColAmount;
-    public int SectorRowAmount;
-    public int SectorTileAmount;
-    public int FieldColAmount;
-    public int FieldTileAmount;
-    public int SectorStartIndex;
-    public float TileSize;
-    [ReadOnly] public UnsafeList<int> SectorToPicked;
-    [ReadOnly] public NativeArray<int> PickedToSector;
-    [ReadOnly] public NativeArray<IntegrationTile> IntegrationField;
-    [WriteOnly] public UnsafeList<FlowData> FlowFieldCalculationBuffer;
-    [ReadOnly] public NativeArray<byte> Costs;
+    internal int SectorMatrixColAmount;
+    internal int SectorMatrixRowAmount;
+    internal int SectorMatrixTileAmount;
+    internal int SectorColAmount;
+    internal int SectorRowAmount;
+    internal int SectorTileAmount;
+    internal int FieldColAmount;
+    internal int FieldTileAmount;
+    internal int SectorStartIndex;
+    internal float TileSize;
+    [ReadOnly] internal UnsafeList<int> SectorToPicked;
+    [ReadOnly] internal NativeArray<int> PickedToSector;
+    [ReadOnly] internal NativeArray<IntegrationTile> IntegrationField;
+    [WriteOnly] internal UnsafeList<FlowData> FlowFieldCalculationBuffer;
+    [ReadOnly] internal NativeArray<byte> Costs;
 
     public void Execute(int index)
     {
@@ -415,9 +415,9 @@ public struct FlowFieldJob : IJobParallelFor
     };
     private struct NewIndexData
     {
-        public int Index;
-        public int NewVerDif;
-        public int NewHorDif;
-        public CornerBlockDirection CornerBlockDirection;
+        internal int Index;
+        internal int NewVerDif;
+        internal int NewHorDif;
+        internal CornerBlockDirection CornerBlockDirection;
     }
 }

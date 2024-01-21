@@ -6,31 +6,31 @@ using Unity.Mathematics;
 using Unity.VisualScripting;
 
 [BurstCompile]
-public struct AdditionalActivePortalSubmitJob : IJob
+internal struct AdditionalActivePortalSubmitJob : IJob
 {
-    public int SequenceBorderListStartIndex;
-    public int2 TargetIndex2D;
-    public int SectorTileAmount;
-    public int SectorColAmount;
-    public int SectorRowAmount;
-    public int SectorMatrixColAmount;
-    public int SectorMatrixRowAmount;
-    public int FieldColAmount;
+    internal int SequenceBorderListStartIndex;
+    internal int2 TargetIndex2D;
+    internal int SectorTileAmount;
+    internal int SectorColAmount;
+    internal int SectorRowAmount;
+    internal int SectorMatrixColAmount;
+    internal int SectorMatrixRowAmount;
+    internal int FieldColAmount;
 
     [ReadOnly] internal NativeArray<PortalNode> PortalNodes;
     [ReadOnly] internal NativeArray<PortalToPortal> PortalEdges;
     [ReadOnly] internal NativeArray<WindowNode> WindowNodes;
-    [ReadOnly] public NativeArray<int> WinToSecPtrs;
-    [ReadOnly] public NativeArray<int> PickedToSector;
-    [ReadOnly] public UnsafeList<int> SectorToPicked;
-    [ReadOnly] public NativeArray<ActivePortal> PortalSequence;
-    [ReadOnly] public NativeArray<int> PortalSequenceBorders;
-    [ReadOnly] public NativeArray<int> NewSectorStartIndex;
+    [ReadOnly] internal NativeArray<int> WinToSecPtrs;
+    [ReadOnly] internal NativeArray<int> PickedToSector;
+    [ReadOnly] internal UnsafeList<int> SectorToPicked;
+    [ReadOnly] internal NativeArray<ActivePortal> PortalSequence;
+    [ReadOnly] internal NativeArray<int> PortalSequenceBorders;
+    [ReadOnly] internal NativeArray<int> NewSectorStartIndex;
 
-    public SectorBitArray SectorBitArray;
-    public NativeArray<UnsafeList<ActiveWaveFront>> ActiveWaveFrontListArray;
-    public NativeList<int> NotActivatedPortals;
-    public UnsafeList<PathSectorState> SectorStateTable;
+    internal SectorBitArray SectorBitArray;
+    internal NativeArray<UnsafeList<ActiveWaveFront>> ActiveWaveFrontListArray;
+    internal NativeList<int> NotActivatedPortals;
+    internal UnsafeList<PathSectorState> SectorStateTable;
     public void Execute()
     {
         //CALCULATE SECTOR TO PICKED

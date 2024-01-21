@@ -4,10 +4,10 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Burst;
 
 [BurstCompile]
-public struct FlowFieldCalculationTransferJob : IJob
+internal struct FlowFieldCalculationTransferJob : IJob
 {
-    [WriteOnly] public UnsafeList<FlowData> FlowField;
-    public FlowFieldCalculationBufferParent CalculationBufferParent;
+    [WriteOnly] internal UnsafeList<FlowData> FlowField;
+    internal FlowFieldCalculationBufferParent CalculationBufferParent;
     public void Execute()
     {
         UnsafeList<FlowFieldCalculationBuffer> calculationBuffers = CalculationBufferParent.BufferParent;

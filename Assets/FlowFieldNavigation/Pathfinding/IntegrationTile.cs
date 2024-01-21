@@ -1,9 +1,9 @@
-﻿public struct IntegrationTile
+﻿internal struct IntegrationTile
 {
-    public float Cost;
-    public IntegrationMark Mark;
+    internal float Cost;
+    internal IntegrationMark Mark;
 
-    public IntegrationTile(float cost, IntegrationMark mark)
+    internal IntegrationTile(float cost, IntegrationMark mark)
     {
         Cost = cost;
         Mark = mark;

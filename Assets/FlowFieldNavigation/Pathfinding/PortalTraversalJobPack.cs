@@ -1,12 +1,12 @@
 ﻿using Unity.Collections;
 using Unity.Jobs;
 
-public struct PortalTraversalJobPack
+internal struct PortalTraversalJobPack
 {
-    public PortalNodeTraversalJob PortalTravJob;
-    public int PathIndex;
+    internal PortalNodeTraversalJob PortalTravJob;
+    internal int PathIndex;
 
-    public NewPathHandle Schedule()
+    internal NewPathHandle Schedule()
     {
         return new NewPathHandle()
         {

@@ -1,6 +1,6 @@
 ﻿using System;
 [Flags]
-public enum IntegrationMark : byte
+internal enum IntegrationMark : byte
 {
     None = 0,
     LOSPass = 1,

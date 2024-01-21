@@ -7,17 +7,17 @@ using static UnityEngine.GraphicsBuffer;
 using Unity.VisualScripting;
 
 [BurstCompile]
-public partial struct DynamicAreaIntegrationJob : IJob
+internal partial struct DynamicAreaIntegrationJob : IJob
 {
-    public int2 TargetIndex;
-    public int SectorColAmount;
-    public int SectorMatrixColAmount;
-    public int SectorTileAmount;
-    public int FieldColAmount;
+    internal int2 TargetIndex;
+    internal int SectorColAmount;
+    internal int SectorMatrixColAmount;
+    internal int SectorTileAmount;
+    internal int FieldColAmount;
 
-    [ReadOnly] public NativeArray<byte> Costs;
-    [ReadOnly] public UnsafeList<SectorFlowStart> PickedSectorFlowStarts;
-    public NativeArray<IntegrationTile> IntegrationField;
+    [ReadOnly] internal NativeArray<byte> Costs;
+    [ReadOnly] internal UnsafeList<SectorFlowStart> PickedSectorFlowStarts;
+    internal NativeArray<IntegrationTile> IntegrationField;
     public void Execute()
     {
         //RESET
@@ -312,10 +312,10 @@ public partial struct DynamicAreaIntegrationJob : IJob
     }
 }
 
-public struct SectorFlowStart
+internal struct SectorFlowStart
 {
-    public int SectorIndex;
-    public int FlowStartIndex;
+    internal int SectorIndex;
+    internal int FlowStartIndex;
 
-    public SectorFlowStart(int sectorIndex, int flowStartIndex) { SectorIndex = sectorIndex; FlowStartIndex = flowStartIndex; }
+    internal SectorFlowStart(int sectorIndex, int flowStartIndex) { SectorIndex = sectorIndex; FlowStartIndex = flowStartIndex; }
 }

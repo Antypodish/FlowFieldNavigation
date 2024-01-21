@@ -9,21 +9,21 @@ using Unity.VisualScripting;
 using static Unity.Burst.Intrinsics.X86;
 
 [BurstCompile]
-public struct LOSIntegrationJob : IJob
+internal struct LOSIntegrationJob : IJob
 {
-    public int2 Target;
-    public float TileSize;
-    public float MaxLOSRange;
-    public int FieldColAmount;
-    public int FieldRowAmount;
-    public int SectorColAmount;
-    public int SectorMatrixColAmount;
-    public int SectorMatrixRowAmount;
-    public int SectorTileAmount;
+    internal int2 Target;
+    internal float TileSize;
+    internal float MaxLOSRange;
+    internal int FieldColAmount;
+    internal int FieldRowAmount;
+    internal int SectorColAmount;
+    internal int SectorMatrixColAmount;
+    internal int SectorMatrixRowAmount;
+    internal int SectorTileAmount;
 
-    [ReadOnly] public NativeArray<byte> Costs;
-    public UnsafeList<int> SectorToPicked;
-    public NativeArray<IntegrationTile> IntegrationField;
+    [ReadOnly] internal NativeArray<byte> Costs;
+    internal UnsafeList<int> SectorToPicked;
+    internal NativeArray<IntegrationTile> IntegrationField;
     public void Execute()
     {
         int sectorColAmount = SectorColAmount;

@@ -1,11 +1,11 @@
 ﻿using Unity.Burst;
 using Unity.Mathematics;
 
-public struct FlowData
+internal struct FlowData
 {
     byte _flow;
 
-    public float2 GetFlow(float tileSize)
+    internal float2 GetFlow(float tileSize)
     {
         int verticalMag = (_flow >> 4) & 0b0000_0111;
         int horizontalMag = _flow & 0b0000_0111;
@@ -18,7 +18,7 @@ public struct FlowData
 
         return math.normalizesafe(new float2(horizontalMag * tileSize, verticalMag * tileSize));
     }
-    public void SetFlow(int curGeneralIndex, int targetGeneralIndex, int fieldColAmount)
+    internal void SetFlow(int curGeneralIndex, int targetGeneralIndex, int fieldColAmount)
     {
         int verticalDif = (targetGeneralIndex / fieldColAmount - curGeneralIndex / fieldColAmount);//-1
         int horizontalDif = targetGeneralIndex - (curGeneralIndex + verticalDif * fieldColAmount);//+1
@@ -31,7 +31,7 @@ public struct FlowData
         byte horizontalBits = (byte)math.select(horizontalDif, (math.abs(horizontalDif) - 1) | 0b0000_1000, isHorizontalNegative);
         _flow = (byte)(0 | verticalBits | horizontalBits);
     }
-    public bool IsValid()
+    internal bool IsValid()
     {
         return _flow != 0b0000_00000;
     }

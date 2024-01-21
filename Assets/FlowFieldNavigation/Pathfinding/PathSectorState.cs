@@ -1,6 +1,6 @@
 ﻿using System;
 [Flags]
-public enum PathSectorState : byte
+internal enum PathSectorState : byte
 {
     Included = 1,
     Source = 2,

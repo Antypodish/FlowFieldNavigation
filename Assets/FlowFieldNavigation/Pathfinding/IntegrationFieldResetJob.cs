@@ -9,10 +9,10 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 
 [BurstCompile]
-public struct IntegrationFieldResetJob : IJob
+internal struct IntegrationFieldResetJob : IJob
 {
-    public int StartIndex;
-    public NativeArray<IntegrationTile> IntegrationField;
+    internal int StartIndex;
+    internal NativeArray<IntegrationTile> IntegrationField;
 
     public void Execute()
     {

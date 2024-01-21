@@ -2,32 +2,32 @@
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 
-public struct CombinedDynamicAreaFieldReader
+internal struct CombinedDynamicAreaFieldReader
 {
-    [ReadOnly] public UnsafeList<SectorFlowStart> SectorFlowStartIndicies;
-    [WriteOnly] public UnsafeList<FlowData> FlowField;
-    [ReadOnly] public NativeArray<IntegrationTile> IntegrationField;
+    [ReadOnly] internal UnsafeList<SectorFlowStart> SectorFlowStartIndicies;
+    [WriteOnly] internal UnsafeList<FlowData> FlowField;
+    [ReadOnly] internal NativeArray<IntegrationTile> IntegrationField;
 
-    public CombinedDynamicAreaFieldReader(UnsafeList<SectorFlowStart> sectorFlowStartIndicies, UnsafeList<FlowData> flowField, NativeArray<IntegrationTile> ıntegrationField)
+    internal CombinedDynamicAreaFieldReader(UnsafeList<SectorFlowStart> sectorFlowStartIndicies, UnsafeList<FlowData> flowField, NativeArray<IntegrationTile> ıntegrationField)
     {
         SectorFlowStartIndicies = sectorFlowStartIndicies;
         FlowField = flowField;
         IntegrationField = ıntegrationField;
     }
 
-    public IntegrationTile GetIntegrationTileUnsafe(int sectorFlowStart, int local1d)
+    internal IntegrationTile GetIntegrationTileUnsafe(int sectorFlowStart, int local1d)
     {
         return IntegrationField[sectorFlowStart + local1d];
     }
-    public IntegrationTile GetIntegrationTile(int integrationFieldIndex)
+    internal IntegrationTile GetIntegrationTile(int integrationFieldIndex)
     {
         return IntegrationField[integrationFieldIndex];
     }
-    public void SetFlow(int flowFieldIndex, FlowData flow)
+    internal void SetFlow(int flowFieldIndex, FlowData flow)
     {
         FlowField[flowFieldIndex] = flow;
     }
-    public int FieldIndexToSectorIndex(int flowFieldOrIntegrationFieldIndex, int sectorTileAmount)
+    internal int FieldIndexToSectorIndex(int flowFieldOrIntegrationFieldIndex, int sectorTileAmount)
     {
         int flowStartIndex = (flowFieldOrIntegrationFieldIndex - 1) / sectorTileAmount * sectorTileAmount + 1;
         int sector1d = 0;
@@ -39,7 +39,7 @@ public struct CombinedDynamicAreaFieldReader
         return sector1d;
     }
 
-    public int9 GetSectorFlowStartInThePassedOrder(int sec1, int sec2 = 0, int sec3 = 0, int sec4 = 0, int sec5 = 0, int sec6 = 0, int sec7 = 0, int sec8 = 0, int sec9 = 0)
+    internal int9 GetSectorFlowStartInThePassedOrder(int sec1, int sec2 = 0, int sec3 = 0, int sec4 = 0, int sec5 = 0, int sec6 = 0, int sec7 = 0, int sec8 = 0, int sec9 = 0)
     {
         int sector1FlowStart = 0;
         int sector2FlowStart = 0;

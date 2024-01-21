@@ -8,34 +8,34 @@ using UnityEngine.XR;
 
 
 [BurstCompile]
-public struct PortalNodeTraversalJob : IJob
+internal struct PortalNodeTraversalJob : IJob
 {
-    public int2 TargetIndex;
-    public int FieldColAmount;
-    public int FieldRowAmount;
-    public float FieldTileSize;
-    public int SectorColAmount;
-    public int SectorMatrixColAmount;
+    internal int2 TargetIndex;
+    internal int FieldColAmount;
+    internal int FieldRowAmount;
+    internal float FieldTileSize;
+    internal int SectorColAmount;
+    internal int SectorMatrixColAmount;
 
-    public NativeArray<PortalTraversalData> PortalTraversalDataArray;
-    public NativeList<ActivePortal> PortalSequence;
+    internal NativeArray<PortalTraversalData> PortalTraversalDataArray;
+    internal NativeList<ActivePortal> PortalSequence;
 
-    public NativeList<int> PortalSequenceBorders;
-    public UnsafeList<int> SectorToPicked;
-    public UnsafeList<PathSectorState> SectorStateTable;
-    public NativeList<int> PickedToSector;
-    public NativeArray<int> FlowFieldLength;
-    public NativeList<int> SourcePortals;
+    internal NativeList<int> PortalSequenceBorders;
+    internal UnsafeList<int> SectorToPicked;
+    internal UnsafeList<PathSectorState> SectorStateTable;
+    internal NativeList<int> PickedToSector;
+    internal NativeArray<int> FlowFieldLength;
+    internal NativeList<int> SourcePortals;
 
-    [ReadOnly] public NativeSlice<float2> SourcePositions;
+    [ReadOnly] internal NativeSlice<float2> SourcePositions;
     [ReadOnly] internal NativeArray<SectorNode> SectorNodes;
-    [ReadOnly] public NativeArray<int> SecToWinPtrs;
+    [ReadOnly] internal NativeArray<int> SecToWinPtrs;
     [ReadOnly] internal NativeArray<WindowNode> WindowNodes;
-    [ReadOnly] public NativeArray<int> WinToSecPtrs;
+    [ReadOnly] internal NativeArray<int> WinToSecPtrs;
     [ReadOnly] internal NativeArray<PortalNode> PortalNodes;
     [ReadOnly] internal NativeArray<PortalToPortal> PorPtrs;
 
-    public NativeList<int> TargetNeighbourPortalIndicies;
+    internal NativeList<int> TargetNeighbourPortalIndicies;
 
     int _targetSectorIndex1d;
     public void Execute()
@@ -374,30 +374,30 @@ public struct PortalNodeTraversalJob : IJob
     }
     private struct SingleUnsafeHeap<T> where T : unmanaged
     {
-        public UnsafeList<HeapElement<T>> _array;
-        public T this[int index]
+        internal UnsafeList<HeapElement<T>> _array;
+        internal T this[int index]
         {
             get
             {
                 return _array[index].data;
             }
         }
-        public bool IsEmpty
+        internal bool IsEmpty
         {
             get
             {
                 return _array.IsEmpty;
             }
         }
-        public SingleUnsafeHeap(int size, Allocator allocator)
+        internal SingleUnsafeHeap(int size, Allocator allocator)
         {
             _array = new UnsafeList<HeapElement<T>>(size, allocator);
         }
-        public void Clear()
+        internal void Clear()
         {
             _array.Clear();
         }
-        public void Add(T element, float pri)
+        internal void Add(T element, float pri)
         {
             int elementIndex = _array.Length;
             _array.Add(new HeapElement<T>(element, pri));
@@ -406,8 +406,8 @@ public struct PortalNodeTraversalJob : IJob
                 HeapifyUp(elementIndex);
             }
         }
-        public T GetMin() => _array[0].data;
-        public T ExtractMin()
+        internal T GetMin() => _array[0].data;
+        internal T ExtractMin()
         {
             T min = _array[0].data;
             HeapElement<T> last = _array[_array.Length - 1];
@@ -419,7 +419,7 @@ public struct PortalNodeTraversalJob : IJob
             }
             return min;
         }
-        public void SetPriority(int index, float pri)
+        internal void SetPriority(int index, float pri)
         {
             int length = _array.Length;
             HeapElement<T> cur = _array[index];
@@ -441,7 +441,7 @@ public struct PortalNodeTraversalJob : IJob
                 HeapifyDown(index);
             }
         }
-        public void Dispose()
+        internal void Dispose()
         {
             _array.Dispose();
         }
@@ -509,12 +509,12 @@ public struct PortalNodeTraversalJob : IJob
                 }
             }
         }
-        public struct HeapElement<T> where T : unmanaged
+        internal struct HeapElement<T> where T : unmanaged
         {
-            public T data;
-            public float pri;
+            internal T data;
+            internal float pri;
 
-            public HeapElement(T data, float pri)
+            internal HeapElement(T data, float pri)
             {
                 this.data = data;
                 this.pri = pri;
@@ -523,15 +523,15 @@ public struct PortalNodeTraversalJob : IJob
     }
 }
 [BurstCompile]
-public struct ActivePortal
+internal struct ActivePortal
 {
-    public int Index;
-    public int NextIndex;
-    public float Distance;
+    internal int Index;
+    internal int NextIndex;
+    internal float Distance;
 
-    public bool IsTargetNode() => Index == -1 && Distance == 0 && NextIndex == -1;
-    public bool IsTargetNeighbour() => NextIndex == -1;
-    public static ActivePortal GetTargetNode()
+    internal bool IsTargetNode() => Index == -1 && Distance == 0 && NextIndex == -1;
+    internal bool IsTargetNeighbour() => NextIndex == -1;
+    internal static ActivePortal GetTargetNode()
     {
         return new ActivePortal()
         {
@@ -542,27 +542,27 @@ public struct ActivePortal
     }
 }
 [BurstCompile]
-public struct PortalTraversalData
+internal struct PortalTraversalData
 {
-    public int OriginIndex;
-    public int NextIndex;
-    public float GCost;
-    public float HCost;
-    public float FCost;
-    public float DistanceFromTarget;
-    public PortalTraversalMark Mark;
-    public bool HasMark(PortalTraversalMark mark)
+    internal int OriginIndex;
+    internal int NextIndex;
+    internal float GCost;
+    internal float HCost;
+    internal float FCost;
+    internal float DistanceFromTarget;
+    internal PortalTraversalMark Mark;
+    internal bool HasMark(PortalTraversalMark mark)
     {
         return (Mark & mark) == mark;
     }
 }
-public struct DijkstraTile
+internal struct DijkstraTile
 {
-    public byte Cost;
-    public float IntegratedCost;
-    public bool IsAvailable;
+    internal byte Cost;
+    internal float IntegratedCost;
+    internal bool IsAvailable;
 
-    public DijkstraTile(byte cost, float integratedCost, bool isAvailable)
+    internal DijkstraTile(byte cost, float integratedCost, bool isAvailable)
     {
         Cost = cost;
         IntegratedCost = integratedCost;
@@ -570,7 +570,7 @@ public struct DijkstraTile
     }
 }
 [Flags]
-public enum PortalTraversalMark : byte
+internal enum PortalTraversalMark : byte
 {
     AStarTraversed = 1,
     AStarExtracted = 2,

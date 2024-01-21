@@ -7,19 +7,19 @@ using UnityEngine;
 using System;
 
 [BurstCompile]
-public struct DynamicAreaFlowFieldJob : IJobParallelFor
+internal struct DynamicAreaFlowFieldJob : IJobParallelFor
 {
-    public int SectorMatrixColAmount;
-    public int SectorMatrixRowAmount;
-    public int SectorMatrixTileAmount;
-    public int SectorColAmount;
-    public int SectorRowAmount;
-    public int SectorTileAmount;
-    public int FieldColAmount;
-    public int FieldTileAmount;
-    public float TileSize;
-    public CombinedDynamicAreaFieldReader CombinedDynamicAreaFieldReader;
-    [ReadOnly] public NativeArray<byte> Costs;
+    internal int SectorMatrixColAmount;
+    internal int SectorMatrixRowAmount;
+    internal int SectorMatrixTileAmount;
+    internal int SectorColAmount;
+    internal int SectorRowAmount;
+    internal int SectorTileAmount;
+    internal int FieldColAmount;
+    internal int FieldTileAmount;
+    internal float TileSize;
+    internal CombinedDynamicAreaFieldReader CombinedDynamicAreaFieldReader;
+    [ReadOnly] internal NativeArray<byte> Costs;
 
     public void Execute(int index)
     {
@@ -415,9 +415,9 @@ public struct DynamicAreaFlowFieldJob : IJobParallelFor
     };
     private struct NewIndexData
     {
-        public int Index;
-        public int NewVerDif;
-        public int NewHorDif;
-        public CornerBlockDirection CornerBlockDirection;
+        internal int Index;
+        internal int NewVerDif;
+        internal int NewHorDif;
+        internal CornerBlockDirection CornerBlockDirection;
     }
 }

@@ -1,9 +1,9 @@
-﻿public struct LocalIndex1d
+﻿internal struct LocalIndex1d
 {
-    public int index;
-    public int sector;
+    internal int index;
+    internal int sector;
 
-    public LocalIndex1d(int localIndex, int sectorIndex)
+    internal LocalIndex1d(int localIndex, int sectorIndex)
     {
         index = localIndex;
         sector = sectorIndex;

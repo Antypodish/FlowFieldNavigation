@@ -6,28 +6,28 @@ using Unity.Mathematics;
 using Unity.VisualScripting;
 
 [BurstCompile]
-public struct ActivePortalSubmitJob : IJob
+internal struct ActivePortalSubmitJob : IJob
 {
-    public int2 TargetIndex2D;
-    public int SectorTileAmount;
-    public int SectorColAmount;
-    public int SectorRowAmount;
-    public int SectorMatrixColAmount;
-    public int SectorMatrixRowAmount;
-    public int FieldColAmount;
+    internal int2 TargetIndex2D;
+    internal int SectorTileAmount;
+    internal int SectorColAmount;
+    internal int SectorRowAmount;
+    internal int SectorMatrixColAmount;
+    internal int SectorMatrixRowAmount;
+    internal int FieldColAmount;
 
     [ReadOnly] internal NativeArray<PortalNode> PortalNodes;
     [ReadOnly] internal NativeArray<PortalToPortal> PortalEdges;
     [ReadOnly] internal NativeArray<WindowNode> WindowNodes;
-    [ReadOnly] public NativeArray<int> WinToSecPtrs;
-    [ReadOnly] public NativeArray<int> PickedToSector;
-    [ReadOnly] public UnsafeList<int> SectorToPicked;
-    [ReadOnly] public NativeArray<ActivePortal> PortalSequence;
-    [ReadOnly] public NativeArray<int> PortalSequenceBorders;
+    [ReadOnly] internal NativeArray<int> WinToSecPtrs;
+    [ReadOnly] internal NativeArray<int> PickedToSector;
+    [ReadOnly] internal UnsafeList<int> SectorToPicked;
+    [ReadOnly] internal NativeArray<ActivePortal> PortalSequence;
+    [ReadOnly] internal NativeArray<int> PortalSequenceBorders;
 
-    public SectorBitArray SectorBitArray;
-    public NativeArray<UnsafeList<ActiveWaveFront>> ActiveWaveFrontListArray;
-    public NativeList<int> NotActivatedPortals;
+    internal SectorBitArray SectorBitArray;
+    internal NativeArray<UnsafeList<ActiveWaveFront>> ActiveWaveFrontListArray;
+    internal NativeList<int> NotActivatedPortals;
     
 
     public void Execute()
@@ -244,23 +244,23 @@ public struct ActivePortalSubmitJob : IJob
     }
 }
 [BurstCompile]
-public struct ActiveWaveFront
+internal struct ActiveWaveFront
 {
-    public int LocalIndex;
-    public float Distance;
-    public int PortalSequenceIndex;
+    internal int LocalIndex;
+    internal float Distance;
+    internal int PortalSequenceIndex;
 
-    public ActiveWaveFront(int localIndes, float distance, int portalSequenceIndex)
+    internal ActiveWaveFront(int localIndes, float distance, int portalSequenceIndex)
     {
         LocalIndex = localIndes;
         Distance = distance;
         PortalSequenceIndex = portalSequenceIndex;
     }
-    public void SetTarget()
+    internal void SetTarget()
     {
         PortalSequenceIndex = -1;
     }
-    public bool IsTarget()
+    internal bool IsTarget()
     {
         return PortalSequenceIndex == -1;
     }

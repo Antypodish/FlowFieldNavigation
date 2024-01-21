@@ -6,17 +6,17 @@ using Unity.Mathematics;
 using Unity.Collections.LowLevel.Unsafe;
 
 [BurstCompile]
-public struct LOSCleanJob : IJob
+internal struct LOSCleanJob : IJob
 {
-    public int2 Target;
-    public int LOSRange;
-    public int SectorColAmount;
-    public int SectorMatrixColAmount;
-    public int SectorMatrixRowAmount;
-    public int SectorTileAmount;
+    internal int2 Target;
+    internal int LOSRange;
+    internal int SectorColAmount;
+    internal int SectorMatrixColAmount;
+    internal int SectorMatrixRowAmount;
+    internal int SectorTileAmount;
 
-    public NativeArray<IntegrationTile> IntegrationField;
-    [ReadOnly] public UnsafeList<int> SectorToPickedTable;
+    internal NativeArray<IntegrationTile> IntegrationField;
+    [ReadOnly] internal UnsafeList<int> SectorToPickedTable;
     public void Execute()
     {
         int2 targetSector2d = FlowFieldUtilities.GetSector2D(Target, SectorColAmount);

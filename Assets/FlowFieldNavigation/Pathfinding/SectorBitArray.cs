@@ -3,21 +3,21 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 using Unity.Jobs;
 using Unity.Burst;
-public struct SectorBitArray
+internal struct SectorBitArray
 {
-    public UnsafeList<int4> _bits;
+    internal UnsafeList<int4> _bits;
     const int arrayVectorSize = 128;
     const int arrayComponentSize = 32;
 
-    public int BitLength
+    internal int BitLength
     {
         get { return _bits.Length * arrayVectorSize; }
     }
-    public int ArrayLength
+    internal int ArrayLength
     {
         get { return _bits.Length; }
     }
-    public SectorBitArray(int totalSectorCount, Allocator allocator, NativeArrayOptions option = NativeArrayOptions.ClearMemory)
+    internal SectorBitArray(int totalSectorCount, Allocator allocator, NativeArrayOptions option = NativeArrayOptions.ClearMemory)
     {
         int length = totalSectorCount / arrayVectorSize;
         length = math.select(length + 1, length, totalSectorCount % arrayVectorSize == 0);
@@ -25,7 +25,7 @@ public struct SectorBitArray
         _bits.Length = length;
     }
 
-    public void SetSector(int sectorIndex)
+    internal void SetSector(int sectorIndex)
     {
         int vectorIndex = sectorIndex / arrayVectorSize;
         int vectorOverflow = sectorIndex % arrayVectorSize;
@@ -37,7 +37,7 @@ public struct SectorBitArray
         bits[componentIndex] |= mask;
         _bits[vectorIndex] = bits;
     }
-    public bool HasBit(int sectorIndex)
+    internal bool HasBit(int sectorIndex)
     {
         int vectorIndex = sectorIndex / arrayVectorSize;
         int vectorOverflow = sectorIndex % arrayVectorSize;
@@ -49,7 +49,7 @@ public struct SectorBitArray
 
         return (bits[componentIndex] & mask) == mask;
     }
-    public bool DoesMatchWith(SectorBitArray examinedPathArray)
+    internal bool DoesMatchWith(SectorBitArray examinedPathArray)
     {
         if (examinedPathArray.BitLength != BitLength) { return false; }
         UnsafeList<int4> innerExaminedArray = examinedPathArray._bits;
@@ -63,18 +63,18 @@ public struct SectorBitArray
         }
         return false;
     }
-    public void Dispose()
+    internal void Dispose()
     {
         _bits.Dispose();
     }
-    public void Clear()
+    internal void Clear()
     {
         for (int i = 0; i < _bits.Length; i++)
         {
             _bits[i] = 0;
         }
     }
-    public JobHandle GetCleaningHandle()
+    internal JobHandle GetCleaningHandle()
     {
         SectorBitArrayCleanJob cleanJob = new SectorBitArrayCleanJob()
         {
@@ -87,7 +87,7 @@ public struct SectorBitArray
     [BurstCompile]
     struct SectorBitArrayCleanJob : IJob
     {
-        public UnsafeList<int4> InnerList;
+        internal UnsafeList<int4> InnerList;
         public void Execute()
         {
             for(int i = 0; i < InnerList.Length; i++)

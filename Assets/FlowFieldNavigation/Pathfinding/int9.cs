@@ -1,12 +1,12 @@
-﻿public struct int9
+﻿internal struct int9
 {
-    public int a;
-    public int b;
-    public int c;
-    public int d;
-    public int e;
-    public int f;
-    public int g;
-    public int h;
-    public int i;
+    internal int a;
+    internal int b;
+    internal int c;
+    internal int d;
+    internal int e;
+    internal int f;
+    internal int g;
+    internal int h;
+    internal int i;
 }

@@ -8,32 +8,32 @@ using Unity.Mathematics;
 
 
 [BurstCompile]
-public struct PortalNodeAdditionTraversalJob : IJob
+internal struct PortalNodeAdditionTraversalJob : IJob
 {
-    public int2 Target;
-    public int SectorColAmount;
-    public int AddedPortalSequenceBorderStartIndex;
-    public int SectorMatrixColAmount;
-    public int SectorMatrixRowAmount;
-    public int SectorTileAmount;
-    public int LOSRange;
-    public NativeArray<PortalTraversalData> PortalTraversalDataArray;
-    public NativeList<ActivePortal> PortalSequence;
-    public NativeList<int> PortalSequenceBorders;
-    public UnsafeList<PathSectorState> SectorStateTable;
-    public NativeList<int> PickedToSector;
-    public NativeArray<int> FlowFieldLength;
+    internal int2 Target;
+    internal int SectorColAmount;
+    internal int AddedPortalSequenceBorderStartIndex;
+    internal int SectorMatrixColAmount;
+    internal int SectorMatrixRowAmount;
+    internal int SectorTileAmount;
+    internal int LOSRange;
+    internal NativeArray<PortalTraversalData> PortalTraversalDataArray;
+    internal NativeList<ActivePortal> PortalSequence;
+    internal NativeList<int> PortalSequenceBorders;
+    internal UnsafeList<PathSectorState> SectorStateTable;
+    internal NativeList<int> PickedToSector;
+    internal NativeArray<int> FlowFieldLength;
 
     [ReadOnly] internal NativeArray<SectorNode> SectorNodes;
     [ReadOnly] internal NativeArray<WindowNode> WindowNodes;
-    [ReadOnly] public NativeArray<int> WinToSecPtrs;
+    [ReadOnly] internal NativeArray<int> WinToSecPtrs;
     [ReadOnly] internal NativeArray<PortalNode> PortalNodes;
     [ReadOnly] internal NativeArray<PortalToPortal> PorPtrs;
-    [ReadOnly] public NativeArray<UnsafeList<int>> IslandFields;
-    [ReadOnly] public NativeArray<int> NewPickedSectorStartIndex;
+    [ReadOnly] internal NativeArray<UnsafeList<int>> IslandFields;
+    [ReadOnly] internal NativeArray<int> NewPickedSectorStartIndex;
 
-    public NativeList<int> SourcePortalIndexList;
-    public NativeList<int> DijkstraStartIndicies;
+    internal NativeList<int> SourcePortalIndexList;
+    internal NativeList<int> DijkstraStartIndicies;
     internal NativeArray<SectorsWihinLOSArgument> SectorWithinLOSState;
 
     public void Execute()
@@ -295,32 +295,32 @@ public struct PortalNodeAdditionTraversalJob : IJob
         }
         return false;
     }
-    public struct SingleUnsafeHeap<T> where T : unmanaged
+    internal struct SingleUnsafeHeap<T> where T : unmanaged
     {
-        public UnsafeList<HeapElement<T>> _array;
-        public T this[int index]
+        internal UnsafeList<HeapElement<T>> _array;
+        internal T this[int index]
         {
             get
             {
                 return _array[index].data;
             }
         }
-        public bool IsEmpty
+        internal bool IsEmpty
         {
             get
             {
                 return _array.IsEmpty;
             }
         }
-        public SingleUnsafeHeap(int size, Allocator allocator)
+        internal SingleUnsafeHeap(int size, Allocator allocator)
         {
             _array = new UnsafeList<HeapElement<T>>(size, allocator);
         }
-        public void Clear()
+        internal void Clear()
         {
             _array.Clear();
         }
-        public void Add(T element, float pri)
+        internal void Add(T element, float pri)
         {
             int elementIndex = _array.Length;
             _array.Add(new HeapElement<T>(element, pri));
@@ -329,8 +329,8 @@ public struct PortalNodeAdditionTraversalJob : IJob
                 HeapifyUp(elementIndex);
             }
         }
-        public T GetMin() => _array[0].data;
-        public T ExtractMin()
+        internal T GetMin() => _array[0].data;
+        internal T ExtractMin()
         {
             T min = _array[0].data;
             HeapElement<T> last = _array[_array.Length - 1];
@@ -342,7 +342,7 @@ public struct PortalNodeAdditionTraversalJob : IJob
             }
             return min;
         }
-        public void SetPriority(int index, float pri)
+        internal void SetPriority(int index, float pri)
         {
             int length = _array.Length;
             HeapElement<T> cur = _array[index];
@@ -364,7 +364,7 @@ public struct PortalNodeAdditionTraversalJob : IJob
                 HeapifyDown(index);
             }
         }
-        public void Dispose()
+        internal void Dispose()
         {
             _array.Dispose();
         }
@@ -432,12 +432,12 @@ public struct PortalNodeAdditionTraversalJob : IJob
                 }
             }
         }
-        public struct HeapElement<T> where T : unmanaged
+        internal struct HeapElement<T> where T : unmanaged
         {
-            public T data;
-            public float pri;
+            internal T data;
+            internal float pri;
 
-            public HeapElement(T data, float pri)
+            internal HeapElement(T data, float pri)
             {
                 this.data = data;
                 this.pri = pri;
