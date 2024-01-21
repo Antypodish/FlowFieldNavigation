@@ -18,7 +18,7 @@ internal class ActivePortalSubmissionScheduler
         PathLocationData locationData = _pathContainer.PathLocationDataList[reqInfo.PathIndex];
         PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[reqInfo.PathIndex];
         SectorBitArray sectorBitArray = _pathContainer.PathSectorBitArrays[reqInfo.PathIndex];
-        FieldGraph pickedFieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
+        FieldGraph pickedFieldGraph = _pathfindingManager.FieldManager.GetFieldGraphWithOffset(destinationData.Offset);
 
         //ACTIVE WAVE FRONT SUBMISSION
         ActivePortalSubmitJob submitJob = new ActivePortalSubmitJob()

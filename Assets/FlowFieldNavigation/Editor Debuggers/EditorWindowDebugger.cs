@@ -59,7 +59,7 @@ public class EditorWindowDebugger
         float yOffset = .02f;
         float tileSize = _pathfindingManager.TileSize;
 
-        NativeArray<WindowNode> windowNodes = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(offset).WindowNodes;
+        NativeArray<WindowNode> windowNodes = _pathfindingManager.FieldManager.GetFieldGraphWithOffset(offset).WindowNodes;
         for (int i = 0; i < windowNodes.Length; i++)
         {
             Index2 botLeftBound = windowNodes[i].Window.BottomLeftBoundary;

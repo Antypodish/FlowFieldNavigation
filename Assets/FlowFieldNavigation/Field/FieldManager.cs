@@ -1,18 +1,19 @@
-﻿using System.Diagnostics;
-using System.Runtime.InteropServices.WindowsRuntime;
+﻿using UnityEngine;
 using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
-using Unity.Jobs;
-using Unity.Mathematics;
 
-public class FieldProducer
+public class FieldManager
 {
+    public ObstacleContainer ObstacleContainer { get; private set; }
+    public HeightMeshProducer HeightMeshGenerator { get; private set; }
     CostFieldProducer _costFieldProducer;
     FieldGraphProducer _fieldGraphProducer;
-    public FieldProducer(WalkabilityCell[][] walkabilityMatrix, byte sectorTileAmount)
+    public FieldManager(WalkabilityCell[][] walkabilityMatrix, byte sectorTileAmount, Mesh[] meshes, Transform[] transforms)
     {
         _costFieldProducer = new CostFieldProducer(walkabilityMatrix, sectorTileAmount);
         _fieldGraphProducer = new FieldGraphProducer();
+        ObstacleContainer = new ObstacleContainer();
+        HeightMeshGenerator = new HeightMeshProducer();
+        HeightMeshGenerator.GenerateHeightMesh(meshes, transforms);
     }
     public void CreateField(int maxOffset, int sectorColAmount, int sectorMatrixColAmount, int sectorMatrixRowAmount, int fieldRowAmount, int fieldColAmount, float tileSize)
     {
@@ -34,10 +35,6 @@ public class FieldProducer
     public NativeArray<SectorDirectionData> GetSectorDirections()
     {
         return _costFieldProducer.SectorDirections;
-    }
-    public CostField[] GetAllCostFields()
-    {
-        return _costFieldProducer.GetAllCostFields();
     }
     public NativeArray<IslandFieldProcessor> GetAllIslandFieldProcessors()
     {

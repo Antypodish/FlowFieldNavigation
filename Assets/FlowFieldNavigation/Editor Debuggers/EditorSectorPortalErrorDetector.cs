@@ -14,7 +14,7 @@ public class EditorSectorPortalErrorDetector
 
     public void Debug(int offset)
     {
-        FieldGraph[] fieldGraphs = _pathfindingManager.FieldProducer.GetAllFieldGraphs();
+        FieldGraph[] fieldGraphs = _pathfindingManager.FieldManager.GetAllFieldGraphs();
         for(int i = 0; i < fieldGraphs.Length; i++)
         {
             Gizmos.color = Color.red;

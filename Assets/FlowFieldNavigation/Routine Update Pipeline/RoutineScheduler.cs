@@ -35,7 +35,7 @@ public class RoutineScheduler
 
     public void Schedule(NativeList<PathRequest> newPaths, NativeArray<CostEdit>.ReadOnly costEditRequests)
     {
-        NativeArray<IslandFieldProcessor> islandFieldProcessors = _pathfindingManager.FieldProducer.GetAllIslandFieldProcessors();
+        NativeArray<IslandFieldProcessor> islandFieldProcessors = _pathfindingManager.FieldManager.GetAllIslandFieldProcessors();
 
         //COPY OBSTACLE REQUESTS
         ReadOnlyNativeArrayToNativeListCopyJob<CostEdit> obstacleRequestCopy = new ReadOnlyNativeArrayToNativeListCopyJob<CostEdit>()
@@ -155,8 +155,8 @@ public class RoutineScheduler
         NativeList<JobHandle> editHandles = new NativeList<JobHandle>(Allocator.Temp);
         for(int i = 0; i <= FlowFieldUtilities.MaxCostFieldOffset; i++)
         {
-            CostField costField = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(i);
-            FieldGraph fieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(i);
+            CostField costField = _pathfindingManager.FieldManager.GetCostFieldWithOffset(i);
+            FieldGraph fieldGraph = _pathfindingManager.FieldManager.GetFieldGraphWithOffset(i);
 
             NativeListCopyJob<CostEdit> newObstaclesTransfer = new NativeListCopyJob<CostEdit>()
             {
@@ -212,8 +212,8 @@ public class RoutineScheduler
         NativeArray<JobHandle> handlesToCombine = new NativeArray<JobHandle>(FlowFieldUtilities.MaxCostFieldOffset + 1, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
         for (int i = 0; i <= FlowFieldUtilities.MaxCostFieldOffset; i++)
         {
-            FieldGraph fieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(i);
-            CostField costField = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(i);
+            FieldGraph fieldGraph = _pathfindingManager.FieldManager.GetFieldGraphWithOffset(i);
+            CostField costField = _pathfindingManager.FieldManager.GetCostFieldWithOffset(i);
 
             IslandReconfigurationJob islandReconfig = new IslandReconfigurationJob()
             {

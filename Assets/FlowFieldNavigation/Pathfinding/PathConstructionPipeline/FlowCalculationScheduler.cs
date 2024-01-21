@@ -30,7 +30,7 @@ public class FlowCalculationScheduler
         PathfindingInternalData pathInternalData = _pathContainer.PathfindingInternalDataList[pathInfo.PathIndex];
         PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
         PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
-        CostField pickedCostField = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(destinationData.Offset);
+        CostField pickedCostField = _pathfindingManager.FieldManager.GetCostFieldWithOffset(destinationData.Offset);
 
         //RESET NEW INT FIELD INDICIES
         int lastIntegrationFieldLength = pathInternalData.IntegrationField.Length;

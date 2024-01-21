@@ -25,7 +25,7 @@ public class RequestedSectorCalculationScheduler
         PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
         PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathInfo.PathIndex];
         UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathInfo.PathIndex];
-        FieldGraph pickedFieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
+        FieldGraph pickedFieldGraph = _pathfindingManager.FieldManager.GetFieldGraphWithOffset(destinationData.Offset);
         //SOURCE SECTOR CALCULATION
         SourceSectorCalculationJob sectorCalcJob = new SourceSectorCalculationJob()
         {

@@ -79,7 +79,7 @@ public class DynamicAreaScheduler
             SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
             FieldColAmount = FlowFieldUtilities.FieldColAmount,
             TargetIndex = targetIndex,
-            Costs = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(destinationData.Offset).Costs,
+            Costs = _pathfindingManager.FieldManager.GetCostFieldWithOffset(destinationData.Offset).Costs,
             PickedSectorFlowStarts = pickedSectorFlowStarts,
             IntegrationField = integrationField,
         };
@@ -102,7 +102,7 @@ public class DynamicAreaScheduler
                 FlowField = flowFieldCalculationBuffer,
                 IntegrationField = integrationField,
             },
-            Costs = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(destinationData.Offset).Costs,
+            Costs = _pathfindingManager.FieldManager.GetCostFieldWithOffset(destinationData.Offset).Costs,
         };
 
         JobHandle flowHandle = flowJob.Schedule(flowFieldCalculationBuffer.Length, 64, integrationHandle);

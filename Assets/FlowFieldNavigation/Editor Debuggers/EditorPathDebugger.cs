@@ -16,14 +16,14 @@ public class EditorPathDebugger
 {
     PathContainer _pathContainer;
     PathfindingManager _pathfindingManager;
-    FieldProducer _fieldProducer;
+    FieldManager _fieldProducer;
     float _tileSize;
 
     public EditorPathDebugger(PathfindingManager pathfindingManager)
     {
         _pathContainer = pathfindingManager.PathContainer;
         _pathfindingManager = pathfindingManager;
-        _fieldProducer = pathfindingManager.FieldProducer;
+        _fieldProducer = pathfindingManager.FieldManager;
         _tileSize = pathfindingManager.TileSize;
     }
     public void DebugDynamicAreaIntegration(FlowFieldAgent agent)

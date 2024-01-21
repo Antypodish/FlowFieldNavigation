@@ -20,12 +20,10 @@ public class PathfindingManager : MonoBehaviour
     [HideInInspector] public int SectorMatrixRowAmount;
     [HideInInspector] public float BaseAgentSpatialGridSize;
 
-    public FieldProducer FieldProducer;
+    public FieldManager FieldManager;
     public PathContainer PathContainer;
     public AgentDataContainer AgentDataContainer;
-    public ObstacleContainer ObstacleContainer;
     public FlockDataContainer FlockContainer;
-    public HeightMeshProducer HeightMeshGenerator;
 
     int _maxCostfieldOffset;
     PathfindingUpdateRoutine _pathfindingRoutineUpdater;
@@ -87,15 +85,12 @@ public class PathfindingManager : MonoBehaviour
         SectorMatrixColAmount = ColumnAmount / SectorColAmount;
         SectorMatrixRowAmount = RowAmount / SectorColAmount;
         SetFlowFieldUtilities();
-        HeightMeshGenerator = new HeightMeshProducer();
-        HeightMeshGenerator.GenerateHeightMap(startParameters.Meshes, startParameters.Transforms);
-        FieldProducer = new FieldProducer(startParameters.WalkabilityMatrix, SectorColAmount);
-        FieldProducer.CreateField(startParameters.MaxCostFieldOffset, SectorColAmount, SectorMatrixColAmount, SectorMatrixRowAmount, RowAmount, ColumnAmount, TileSize);
+        FieldManager = new FieldManager(startParameters.WalkabilityMatrix, SectorColAmount, startParameters.Meshes, startParameters.Transforms);
+        FieldManager.CreateField(startParameters.MaxCostFieldOffset, SectorColAmount, SectorMatrixColAmount, SectorMatrixRowAmount, RowAmount, ColumnAmount, TileSize);
         AgentDataContainer = new AgentDataContainer();
         PathContainer = new PathContainer(this);
         _pathfindingRoutineUpdater = new PathfindingUpdateRoutine(this);
         _agentUpdater = new AgentUpdater(AgentDataContainer);
-        ObstacleContainer = new ObstacleContainer();
         FlockContainer = new FlockDataContainer();
     }
     public void SetDestination(List<FlowFieldAgent> agents, Vector3 target)
@@ -150,7 +145,7 @@ public class PathfindingManager : MonoBehaviour
     }
     public UnsafeListReadOnly<byte>[] GetAllCostFieldCostsAsUnsafeListReadonly()
     {
-        return FieldProducer.GetAllCostFieldCostsAsUnsafeListReadonly();
+        return FieldManager.GetAllCostFieldCostsAsUnsafeListReadonly();
     }
 }
 public struct SimulationStartParameters

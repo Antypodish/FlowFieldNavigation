@@ -29,7 +29,7 @@ internal class AdditionPortalTraversalScheduler
         portalTraversalData.PathAdditionSequenceBorderStartIndex[0] = portalTraversalData.PortalSequenceBorders.Length - 1;
         portalTraversalData.NewPickedSectorStartIndex[0] = internalData.PickedSectorList.Length;
 
-        FieldGraph pickedFieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
+        FieldGraph pickedFieldGraph = _pathfindingManager.FieldManager.GetFieldGraphWithOffset(destinationData.Offset);
 
         PortalNodeAdditionReductionJob reductionJob = new PortalNodeAdditionReductionJob()
         {

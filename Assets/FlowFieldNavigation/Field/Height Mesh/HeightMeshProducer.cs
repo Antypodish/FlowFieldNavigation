@@ -20,7 +20,7 @@ public class HeightMeshProducer
         TileSizeToGridIndex = new NativeHashMap<float, int>(0, Allocator.Persistent);
         GridIndexToTileSize = new NativeHashMap<int, float>(0, Allocator.Persistent);
     }
-    public void GenerateHeightMap(Mesh[] meshes, Transform[] meshParentTransforms)
+    public void GenerateHeightMesh(Mesh[] meshes, Transform[] meshParentTransforms)
     {
         //Merge and copy data to native containers
         NativeList<float3> tempVericies = new NativeList<float3>(Allocator.TempJob);

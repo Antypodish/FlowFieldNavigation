@@ -83,8 +83,8 @@ public class PathfindingUpdateRoutine
             CostEditOutput = _costEditRequests,
             ObstacleRequests = obstacleRequests,
             NewObstacleKeyListToAdd = outputListToAddObstacleIndicies,
-            ObstacleList = _pathfindingManager.ObstacleContainer.ObstacleList,
-            RemovedObstacleIndexList = _pathfindingManager.ObstacleContainer.RemovedIndexList,
+            ObstacleList = _pathfindingManager.FieldManager.ObstacleContainer.ObstacleList,
+            RemovedObstacleIndexList = _pathfindingManager.FieldManager.ObstacleContainer.RemovedIndexList,
         };
         obstacleToEdit.Schedule().Complete();
     }
@@ -94,8 +94,8 @@ public class PathfindingUpdateRoutine
         {
             CostEditOutput = _costEditRequests,
             ObstacleRemovalIndicies = obstacleIndiciesToRemove,
-            ObstacleList = _pathfindingManager.ObstacleContainer.ObstacleList,
-            RemovedObstacleIndexList = _pathfindingManager.ObstacleContainer.RemovedIndexList,
+            ObstacleList = _pathfindingManager.FieldManager.ObstacleContainer.ObstacleList,
+            RemovedObstacleIndexList = _pathfindingManager.FieldManager.ObstacleContainer.RemovedIndexList,
         };
         obstacleToEdit.Schedule().Complete();
     }

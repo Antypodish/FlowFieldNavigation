@@ -20,7 +20,7 @@ public class EditorPortalDebugger
     public void DebugPortals(int offset)
     {
         Gizmos.color = Color.cyan;
-        FieldGraph fieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(offset);
+        FieldGraph fieldGraph = _pathfindingManager.FieldManager.GetFieldGraphWithOffset(offset);
         NativeArray<WindowNode> windowNodes = fieldGraph.WindowNodes;
         NativeArray<PortalNode> portalNodes = fieldGraph.PortalNodes;
         for(int i = 0; i < windowNodes.Length; i++)
@@ -39,7 +39,7 @@ public class EditorPortalDebugger
     {
         Gizmos.color = Color.white;
         float tileSize = _pathfindingManager.TileSize;
-        FieldGraph fieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(offset);
+        FieldGraph fieldGraph = _pathfindingManager.FieldManager.GetFieldGraphWithOffset(offset);
         SetClickedSectorNode(fieldGraph);
 
         NativeArray<int> secToWin = fieldGraph.SecToWinPtrs;
@@ -76,7 +76,7 @@ public class EditorPortalDebugger
         float yOffset = 0.02f;
         Gizmos.color = Color.black;
         float tileSize = _pathfindingManager.TileSize;
-        FieldGraph fieldGraph = _pathfindingManager.FieldProducer.GetFieldGraphWithOffset(offset);
+        FieldGraph fieldGraph = _pathfindingManager.FieldManager.GetFieldGraphWithOffset(offset);
         SetClickedPortalNode(fieldGraph);
 
         //debug clicked portal

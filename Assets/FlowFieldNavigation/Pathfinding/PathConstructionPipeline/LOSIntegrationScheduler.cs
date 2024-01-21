@@ -30,7 +30,7 @@ public class LOSIntegrationScheduler
         PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
         PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
         int2 targetIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize);
-        CostField pickedCostField = _pathfindingManager.FieldProducer.GetCostFieldWithOffset(destinationData.Offset);
+        CostField pickedCostField = _pathfindingManager.FieldManager.GetCostFieldWithOffset(destinationData.Offset);
 
         JobHandle losHandle = flowHandle;
         bool requestedSectorWithinLOS = (internalData.SectorWithinLOSState[0] & SectorsWihinLOSArgument.RequestedSectorWithinLOS) == SectorsWihinLOSArgument.RequestedSectorWithinLOS;

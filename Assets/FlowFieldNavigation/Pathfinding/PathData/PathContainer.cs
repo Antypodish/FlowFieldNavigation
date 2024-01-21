@@ -27,11 +27,11 @@ public class PathContainer
     public NativeList<int> PathSubscriberCounts;
     Stack<int> _removedPathIndicies;
 
-    FieldProducer _fieldProducer;
+    FieldManager _fieldProducer;
     PathPreallocator _preallocator;
     public PathContainer(PathfindingManager pathfindingManager)
     {
-        _fieldProducer = pathfindingManager.FieldProducer;
+        _fieldProducer = pathfindingManager.FieldManager;
         PathfindingInternalDataList = new List<PathfindingInternalData>(1);
         _preallocator = new PathPreallocator(_fieldProducer, FlowFieldUtilities.SectorTileAmount, FlowFieldUtilities.SectorMatrixTileAmount);
         _removedPathIndicies = new Stack<int>();

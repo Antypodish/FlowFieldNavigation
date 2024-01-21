@@ -14,7 +14,7 @@ internal class PathPreallocator
     SectorStateTableFactory _sectorStateTableFactory;
     FlowFieldFactory _flowFieldFactory;
     IntegrationFieldFactory _integrationFieldFactory;
-    public PathPreallocator(FieldProducer fieldProducer, int sectorTileAmount, int sectorMatrixSectorAmount)
+    public PathPreallocator(FieldManager fieldProducer, int sectorTileAmount, int sectorMatrixSectorAmount)
     {
         _porTravDataArrayFactory = new PortalTraversalDataArrayFactory(fieldProducer.GetAllFieldGraphs());
         _portalSequenceFactory = new PortalSequenceFactory();

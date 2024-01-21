@@ -114,10 +114,10 @@ public class MovementIO
         //Height Calculation
         AgentHeightCalculationJob heightCalculation = new AgentHeightCalculationJob()
         {
-            TriangleSpatialHashGrid = _pathfindingManager.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
+            TriangleSpatialHashGrid = _pathfindingManager.FieldManager.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
             AgentMovementDataArray = AgentMovementDataList,
             AgentPositionChangeArray = AgentPositionChangeBuffer,
-            Verticies = _pathfindingManager.HeightMeshGenerator.Verticies,
+            Verticies = _pathfindingManager.FieldManager.HeightMeshGenerator.Verticies,
         };
         JobHandle heightCalculationHandle = heightCalculation.Schedule(agentDataArray.Length, 32, movDataHandle);
 
