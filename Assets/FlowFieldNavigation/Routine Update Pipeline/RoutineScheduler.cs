@@ -7,7 +7,7 @@ using UnityEngine.Jobs;
 public class RoutineScheduler
 {
     PathfindingManager _pathfindingManager;
-    MovementIO _movementIO;
+    MovementManager _movementManager;
     PathConstructionPipeline _pathConstructionPipeline;
 
     List<JobHandle> _costEditHandle;
@@ -22,7 +22,7 @@ public class RoutineScheduler
     public RoutineScheduler(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
-        _movementIO = new MovementIO(pathfindingManager.AgentDataContainer, pathfindingManager);
+        _movementManager = new MovementManager(pathfindingManager.AgentDataContainer, pathfindingManager);
         _costEditHandle = new List<JobHandle>();
         CurrentRequestedPaths = new NativeList<PathRequest>(Allocator.Persistent);
         _islandReconfigHandle = new List<JobHandle>();
@@ -93,7 +93,7 @@ public class RoutineScheduler
 
 
         _pathConstructionPipeline.ShcedulePathRequestEvalutaion(CurrentRequestedPaths, _costFieldCosts, EditedSectorBitArray.AsArray().AsReadOnly(), islandFieldProcessors, islandFieldReconfigHandle);
-        _movementIO.ScheduleRoutine(_costFieldCosts, costEditHandle);
+        _movementManager.ScheduleRoutine(_costFieldCosts, costEditHandle);
     }
     public void TryCompletePredecessorJobs()
     {
@@ -124,9 +124,9 @@ public class RoutineScheduler
             _islandReconfigHandle.RemoveAtSwapBack(0);
         }
 
-        _movementIO.ForceComplete();
+        _movementManager.ForceCompleteRoutine();
         _pathConstructionPipeline.ForceComplete();
-        SendRoutineResultsToAgents();
+        _movementManager.SendRoutineResults();
 
         //TRANSFER NEW PATH INDICIES TO CUR PATH INDICIES
         NewPathToCurPathTransferJob newPathToCurPathTransferJob = new NewPathToCurPathTransferJob()
@@ -144,9 +144,9 @@ public class RoutineScheduler
         EditedSectorBitArray.Clear();
         NewCostEditRequests.Clear();
     }
-    public MovementIO GetRoutineDataProducer()
+    public MovementManager GetRoutineDataProducer()
     {
-        return _movementIO;
+        return _movementManager;
     }
     JobHandle ScheduleCostEditRequests()
     {
@@ -238,15 +238,5 @@ public class RoutineScheduler
         if (FlowFieldUtilities.DebugMode) { combinedHandles.Complete(); }
 
         return combinedHandles;
-    }
-
-    public void SendRoutineResultsToAgents()
-    {
-        NativeArray<RoutineResult> routineResults = _movementIO.RoutineResults;
-        NativeArray<AgentMovementData> agentMovementDataList = _movementIO.AgentMovementDataList;
-        NativeArray<float3> agentPositionChangeBuffer = _movementIO.AgentPositionChangeBuffer;
-        NativeArray<int> normalToHashed = _movementIO.NormalToHashed;
-
-        _pathfindingManager.AgentDataContainer.SendRoutineResults(routineResults, agentMovementDataList, agentPositionChangeBuffer, normalToHashed);
     }
 }

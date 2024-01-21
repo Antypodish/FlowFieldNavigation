@@ -30,25 +30,13 @@ public class FlowFieldAgent : MonoBehaviour
     public float GetSpeed() => Speed;
     public float GetRadius() => Radius;
     public float GetLandOffset() => LandOffset;
-    public Vector2 GetDirection() => _pathfindingManager.AgentDataContainer.AgentDataList[AgentDataIndex].Direction;
-    public AgentStatus GetAgentStatus() => _pathfindingManager.AgentDataContainer.AgentDataList[AgentDataIndex].Status;
     public void Stop()
     {
         _pathfindingManager.AgentDataContainer.Stop(AgentDataIndex);
-    }
-    public void Mobilize()
-    {
-        ClearHoldGround();
-        _pathfindingManager.AgentDataContainer.Mobilize(AgentDataIndex);
     }
     public void SetHoldGround()
     {
         Stop();
         _pathfindingManager.AgentDataContainer.SetHoldGround(AgentDataIndex);
     }
-    public void ClearHoldGround()
-    {
-        _pathfindingManager.AgentDataContainer.ClearHoldGround(AgentDataIndex);
-    }
-    public void SetSpeed(float newSpeed) { Speed = newSpeed; _pathfindingManager.AgentDataContainer.SetSpeed(AgentDataIndex, newSpeed); }
 }

@@ -53,31 +53,10 @@ public class AgentDataContainer
         AgentFlockIndicies.Add(0);
         AgentDestinationReachedArray.Add(false);
     }
-    public void UnSubscribe(FlowFieldAgent agent)
-    {
-        int agentIndex = agent.AgentDataIndex;
-        agent.AgentDataIndex = -1;
-        Agents.RemoveAtSwapBack(agentIndex);
-        AgentTransforms.RemoveAtSwapBack(agentIndex);
-        AgentDataList.RemoveAtSwapBack(agentIndex);
-        Agents[agentIndex].AgentDataIndex = agentIndex;
-    }
-    public void SetSpeed(int agentIndex, float newSpeed)
-    {
-        AgentData data = AgentDataList[agentIndex];
-        data.Speed = newSpeed;
-        AgentDataList[agentIndex] = data;
-    }
     public void Stop(int agentIndex)
     {
         AgentData data = AgentDataList[agentIndex]; 
         data.Status = ~(~data.Status | AgentStatus.Moving);
-        AgentDataList[agentIndex] = data;
-    }
-    public void Mobilize(int agentIndex)
-    {
-        AgentData data = AgentDataList[agentIndex];
-        data.Status |= AgentStatus.Moving;
         AgentDataList[agentIndex] = data;
     }
     public void SetHoldGround(int agentIndex)
@@ -86,32 +65,6 @@ public class AgentDataContainer
         data.Status |= AgentStatus.HoldGround;
         data.Avoidance = 0;
         AgentDataList[agentIndex] = data;
-    }
-    public void ClearHoldGround(int agentIndex)
-    {
-        AgentData data = AgentDataList[agentIndex];
-        data.Status = ~(~data.Status | AgentStatus.HoldGround);
-        AgentDataList[agentIndex] = data;
-    }
-    public void SendRoutineResults(NativeArray<RoutineResult> routineResults, NativeArray<AgentMovementData> movementDataArray, NativeArray<float3> agentPositionChangeBuffer, NativeArray<int> normalToHashed)
-    {
-        AgentPositionChangeSendJob posSendJob = new AgentPositionChangeSendJob()
-        {
-            AgentPositionChangeBuffer = agentPositionChangeBuffer,
-            NormalToHashed = normalToHashed,
-        };
-        posSendJob.Schedule(AgentTransforms).Complete();
-
-        RoutineResultSendJob directionSetJob = new RoutineResultSendJob()
-        {
-            AgentDestinationReachedArray = AgentDestinationReachedArray,
-            AgentCurPathIndicies = AgentCurPathIndicies,
-            MovementDataArray = movementDataArray,
-            AgentDataArray = AgentDataList,
-            RoutineResultArray = routineResults,
-            NormalToHashed = normalToHashed
-        };
-        directionSetJob.Schedule().Complete();
     }
     public void SetRequestedPathIndiciesOf(List<FlowFieldAgent> agents, int newPathIndex)
     {

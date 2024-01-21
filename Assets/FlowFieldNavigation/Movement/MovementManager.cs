@@ -4,7 +4,9 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine.Jobs;
 using System.Diagnostics;
-public class MovementIO
+using System.Collections.Generic;
+using UnityEngine;
+public class MovementManager
 {
     AgentDataContainer _agentDataContainer;
     PathfindingManager _pathfindingManager;
@@ -18,8 +20,7 @@ public class MovementIO
     public NativeList<float> PathReachDistances;
 
     JobHandle _routineHandle;
-    public NativeList<int> trigs = new NativeList<int>(Allocator.Persistent);
-    public MovementIO(AgentDataContainer agentDataContainer, PathfindingManager pathfindingManager)
+    public MovementManager(AgentDataContainer agentDataContainer, PathfindingManager pathfindingManager)
     {
         _agentDataContainer = agentDataContainer;
         _pathfindingManager = pathfindingManager;
@@ -259,8 +260,48 @@ public class MovementIO
         if (FlowFieldUtilities.DebugMode) { stoppingHandle.Complete(); }
         _routineHandle = stoppingHandle;
     }
-    public void ForceComplete()
+    public void ForceCompleteRoutine()
     {
         _routineHandle.Complete();
+    }
+    public void SendRoutineResults()
+    {
+        TransformAccessArray agentTransforms = _pathfindingManager.AgentDataContainer.AgentTransforms;
+        NativeList<bool> agentDestinationReachArray = _pathfindingManager.AgentDataContainer.AgentDestinationReachedArray;
+        NativeList<int> agentCurPathIndicies = _pathfindingManager.AgentDataContainer.AgentCurPathIndicies;
+        NativeList<AgentData> agentDataArray = _pathfindingManager.AgentDataContainer.AgentDataList;
+
+        AgentPositionChangeSendJob posSendJob = new AgentPositionChangeSendJob()
+        {
+            AgentPositionChangeBuffer = AgentPositionChangeBuffer,
+            NormalToHashed = NormalToHashed,
+        };
+        posSendJob.Schedule(agentTransforms).Complete();
+
+        RoutineResultSendJob directionSetJob = new RoutineResultSendJob()
+        {
+            AgentDestinationReachedArray = agentDestinationReachArray,
+            AgentCurPathIndicies = agentCurPathIndicies,
+            MovementDataArray = AgentMovementDataList,
+            AgentDataArray = agentDataArray,
+            RoutineResultArray = RoutineResults,
+            NormalToHashed = NormalToHashed,
+        };
+        directionSetJob.Schedule().Complete();
+
+        //MOVE
+        AgentMovementUpdateJob movJob = new AgentMovementUpdateJob()
+        {
+            DeltaTime = Time.fixedDeltaTime,
+            AgentDataArray = agentDataArray,
+        };
+        movJob.Schedule(agentTransforms).Complete();
+
+        //ROTATE
+        AgentRotationUpdateJob rotateJob = new AgentRotationUpdateJob()
+        {
+            agentData = agentDataArray,
+        };
+        rotateJob.Schedule(agentTransforms).Complete();
     }
 }

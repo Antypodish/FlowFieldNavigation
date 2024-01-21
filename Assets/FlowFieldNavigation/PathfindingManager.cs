@@ -27,7 +27,6 @@ public class PathfindingManager : MonoBehaviour
 
     int _maxCostfieldOffset;
     PathfindingUpdateRoutine _pathfindingRoutineUpdater;
-    AgentUpdater _agentUpdater;
 
     private void Update()
     {
@@ -37,7 +36,6 @@ public class PathfindingManager : MonoBehaviour
     private void FixedUpdate()
     {
         if (!SimulationStarted) { return; }
-        _agentUpdater.OnUpdate();
         _pathfindingRoutineUpdater.RoutineUpdate();
     }
     private void LateUpdate()
@@ -90,7 +88,6 @@ public class PathfindingManager : MonoBehaviour
         AgentDataContainer = new AgentDataContainer();
         PathContainer = new PathContainer(this);
         _pathfindingRoutineUpdater = new PathfindingUpdateRoutine(this);
-        _agentUpdater = new AgentUpdater(AgentDataContainer);
         FlockContainer = new FlockDataContainer();
     }
     public void SetDestination(List<FlowFieldAgent> agents, Vector3 target)
@@ -126,10 +123,6 @@ public class PathfindingManager : MonoBehaviour
     public void RequestSubscription(FlowFieldAgent agent)
     {
         _pathfindingRoutineUpdater.RequestAgentAddition(agent);
-    }
-    public void UnSubscribe(FlowFieldAgent agent)
-    {
-        AgentDataContainer.UnSubscribe(agent);
     }
     public int GetPathIndex(int agentIndex)
     {
