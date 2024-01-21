@@ -31,7 +31,7 @@ internal class PathDataContainer
     PathPreallocator _preallocator;
     internal PathDataContainer(PathfindingManager pathfindingManager)
     {
-        _fieldProducer = pathfindingManager.FieldManager;
+        _fieldProducer = pathfindingManager.FieldDataContainer;
         PathfindingInternalDataList = new List<PathfindingInternalData>(1);
         _preallocator = new PathPreallocator(_fieldProducer, FlowFieldUtilities.SectorTileAmount, FlowFieldUtilities.SectorMatrixTileAmount);
         _removedPathIndicies = new Stack<int>();
@@ -53,6 +53,25 @@ internal class PathDataContainer
         ExposedPathFlockIndicies = new NativeList<int>(Allocator.Persistent);
         ExposedPathReachDistanceCheckRanges = new NativeList<float>(Allocator.Persistent);
         ExposedPathAgentStopFlagList = new NativeList<bool>(Allocator.Persistent);
+    }
+    internal void DisposeAll()
+    {
+        if (ExposedPathFlowData.IsCreated) { ExposedPathFlowData.Dispose(); }
+        if (ExposedPathLocationData.IsCreated) { ExposedPathLocationData.Dispose(); }
+        if (ExposedPathDestinations.IsCreated) { ExposedPathDestinations.Dispose(); }
+        if (ExposedPathFlockIndicies.IsCreated) { ExposedPathFlockIndicies.Dispose(); }
+        if (ExposedPathReachDistanceCheckRanges.IsCreated) { ExposedPathReachDistanceCheckRanges.Dispose(); }
+        if (ExposedPathStateList.IsCreated) { ExposedPathStateList.Dispose(); }
+        if (ExposedPathAgentStopFlagList.IsCreated) { ExposedPathAgentStopFlagList.Dispose(); }
+        if (PathLocationDataList.IsCreated) { PathLocationDataList.Dispose(); }
+        if (PathFlowDataList.IsCreated) { PathFlowDataList.Dispose(); }
+        if (PathSectorStateTableList.IsCreated) { PathSectorStateTableList.Dispose(); }
+        if (PathDestinationDataList.IsCreated) { PathDestinationDataList.Dispose(); }
+        if (TargetSectorIntegrationList.IsCreated) { TargetSectorIntegrationList.Dispose(); }
+        if (PathRoutineDataList.IsCreated) { PathRoutineDataList.Dispose(); }
+        if (PathSectorBitArrays.IsCreated) { PathSectorBitArrays.Dispose(); }
+        if (PathFlockIndicies.IsCreated) { PathFlockIndicies.Dispose(); }
+        if (PathSubscriberCounts.IsCreated) { PathSubscriberCounts.Dispose(); }
     }
     internal void Update()
     {

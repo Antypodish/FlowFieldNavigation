@@ -27,6 +27,28 @@ internal class FieldGraph
     internal NativeList<CostEdit> NewCostEdits;
 
     internal int PortalPerWindow;
+    internal void DisposeAll()
+    {
+        SectorNodes.Dispose();
+        SecToWinPtrs.Dispose();
+        WindowNodes.Dispose();
+        WinToSecPtrs.Dispose();
+        PortalNodes.Dispose();
+        PorToPorPtrs.Dispose();
+        IslandDataList.Dispose();
+        for(int i = 0; i < IslandFields.Length; i++)
+        {
+            UnsafeList<int> islandField = IslandFields[i];
+            islandField.Dispose();
+        }
+        IslandFields.Dispose();
+        EditedSectorMarks.Dispose();
+        SectorIntegrationField.Dispose();
+        EditedSectorList.Dispose();
+        EditedWindowMarks.Dispose();
+        EditedWinodwList.Dispose();
+        NewCostEdits.Dispose();
+    }
     internal FieldGraph(int costFieldOffset)
     {
         //size calculations

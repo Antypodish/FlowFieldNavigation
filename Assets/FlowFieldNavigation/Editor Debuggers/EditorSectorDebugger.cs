@@ -16,7 +16,7 @@ internal class EditorSectorDebugger
     internal void DebugSectors(int offset)
     {
         Gizmos.color = Color.black;
-        NativeArray<SectorNode> sectorNodes = _pathfindingManager.FieldManager.GetFieldGraphWithOffset(offset).SectorNodes;
+        NativeArray<SectorNode> sectorNodes = _pathfindingManager.FieldDataContainer.GetFieldGraphWithOffset(offset).SectorNodes;
         float tileSize = FlowFieldUtilities.TileSize;
         float yOffset = .02f;
         for(int i = 0; i < sectorNodes.Length; i++)

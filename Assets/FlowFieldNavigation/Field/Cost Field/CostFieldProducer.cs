@@ -48,4 +48,13 @@ internal class CostFieldProducer
     {
         return _producedCostFields[offset];
     }
+    internal void DisposeAll()
+    {
+        SectorDirections.Dispose();
+        for(int i = 0; i < _producedCostFields.Length; i++)
+        {
+            _producedCostFields[i].DisposeAll();
+        }
+        _producedCostFields = null;
+    }
 }

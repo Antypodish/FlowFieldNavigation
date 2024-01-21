@@ -8,7 +8,7 @@ internal class ActivePortalSubmissionScheduler
     internal ActivePortalSubmissionScheduler(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
-        _pathContainer = pathfindingManager.PathContainer;
+        _pathContainer = pathfindingManager.PathDataContainer;
     }
 
     internal RequestPipelineInfoWithHandle ScheduleActivePortalSubmission(RequestPipelineInfoWithHandle reqInfo)
@@ -18,7 +18,7 @@ internal class ActivePortalSubmissionScheduler
         PathLocationData locationData = _pathContainer.PathLocationDataList[reqInfo.PathIndex];
         PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[reqInfo.PathIndex];
         SectorBitArray sectorBitArray = _pathContainer.PathSectorBitArrays[reqInfo.PathIndex];
-        FieldGraph pickedFieldGraph = _pathfindingManager.FieldManager.GetFieldGraphWithOffset(destinationData.Offset);
+        FieldGraph pickedFieldGraph = _pathfindingManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
 
         //ACTIVE WAVE FRONT SUBMISSION
         ActivePortalSubmitJob submitJob = new ActivePortalSubmitJob()

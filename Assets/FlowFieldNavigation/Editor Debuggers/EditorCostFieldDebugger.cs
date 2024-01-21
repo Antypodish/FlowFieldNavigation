@@ -59,7 +59,7 @@ internal class EditorCostFieldDebugger
     internal void DebugCostFieldWithMesh(int offset)
     {
         Gizmos.color = Color.black;
-        NativeArray<byte> costs = _pathfindingManager.FieldManager.GetCostFieldWithOffset(offset).Costs;
+        NativeArray<byte> costs = _pathfindingManager.FieldDataContainer.GetCostFieldWithOffset(offset).Costs;
         float yOffset = .02f;
         float tileSize = FlowFieldUtilities.TileSize;
         int sectorColAmount = FlowFieldUtilities.SectorColAmount;

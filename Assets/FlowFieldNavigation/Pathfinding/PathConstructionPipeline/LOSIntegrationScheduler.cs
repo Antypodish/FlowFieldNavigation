@@ -18,10 +18,16 @@ internal class LOSIntegrationScheduler
     internal LOSIntegrationScheduler(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
-        _pathContainer = pathfindingManager.PathContainer;
+        _pathContainer = pathfindingManager.PathDataContainer;
         ScheduledLOS = new NativeList<PathPipelineInfoWithHandle>(Allocator.Persistent);
         _losCalculatedPaths = new NativeList<int>(Allocator.Persistent);
         _transferHandles = new NativeList<JobHandle>(Allocator.Persistent);
+    }
+    internal void DisposeAll()
+    {
+        if (ScheduledLOS.IsCreated) { ScheduledLOS.Dispose(); }
+        if (_losCalculatedPaths.IsCreated) { _losCalculatedPaths.Dispose(); }
+        if (_transferHandles.IsCreated) { _transferHandles.Dispose(); }
     }
 
     internal void ScheduleLOS(PathPipelineInfoWithHandle pathInfo, JobHandle flowHandle = new JobHandle())
@@ -30,7 +36,7 @@ internal class LOSIntegrationScheduler
         PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
         PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
         int2 targetIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize);
-        CostField pickedCostField = _pathfindingManager.FieldManager.GetCostFieldWithOffset(destinationData.Offset);
+        CostField pickedCostField = _pathfindingManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset);
 
         JobHandle losHandle = flowHandle;
         bool requestedSectorWithinLOS = (internalData.SectorWithinLOSState[0] & SectorsWihinLOSArgument.RequestedSectorWithinLOS) == SectorsWihinLOSArgument.RequestedSectorWithinLOS;

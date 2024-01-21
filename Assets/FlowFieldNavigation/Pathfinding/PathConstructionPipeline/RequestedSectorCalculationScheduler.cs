@@ -13,11 +13,16 @@ internal class RequestedSectorCalculationScheduler
     internal RequestedSectorCalculationScheduler(PathfindingManager pathfindingManager, LOSIntegrationScheduler losScheduler)
     {
         _pathfindingManager = pathfindingManager;
-        _pathContainer = pathfindingManager.PathContainer;
+        _pathContainer = pathfindingManager.PathDataContainer;
         ScheduledRequestedSectorCalculations = new NativeList<PathPipelineInfoWithHandle>(Allocator.Persistent);
         _flowCalculationScheduler = new FlowCalculationScheduler(pathfindingManager, losScheduler);
     }
-
+    internal void DisposeAll()
+    {
+        if (ScheduledRequestedSectorCalculations.IsCreated) { ScheduledRequestedSectorCalculations.Dispose(); }
+        if(_flowCalculationScheduler != null) { _flowCalculationScheduler.DisposeAll(); }       
+        _flowCalculationScheduler = null;
+    }
     internal void ScheduleRequestedSectorCalculation(PathPipelineInfoWithHandle pathInfo, JobHandle activePortalSubmissionHandle, NativeSlice<float2> sources)
     {
         PathfindingInternalData pathInternalData = _pathContainer.PathfindingInternalDataList[pathInfo.PathIndex];
@@ -25,7 +30,7 @@ internal class RequestedSectorCalculationScheduler
         PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
         PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathInfo.PathIndex];
         UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathInfo.PathIndex];
-        FieldGraph pickedFieldGraph = _pathfindingManager.FieldManager.GetFieldGraphWithOffset(destinationData.Offset);
+        FieldGraph pickedFieldGraph = _pathfindingManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
         //SOURCE SECTOR CALCULATION
         SourceSectorCalculationJob sectorCalcJob = new SourceSectorCalculationJob()
         {

@@ -49,18 +49,33 @@ internal class MovementManager
         HashedToNormal = new NativeList<int>(Allocator.Persistent);
         PathReachDistances = new NativeList<float>(Allocator.Persistent);
     }
+    public void DisposeAll()
+    {
+        AgentMovementDataList.Dispose();
+        AgentPositionChangeBuffer.Dispose();
+        RoutineResults.Dispose();
+        NormalToHashed.Dispose();
+        HashedToNormal.Dispose();
+        for(int i = 0; i < HashGridArray.Length; i++)
+        {
+            UnsafeList<HashTile> hashGrid = HashGridArray[i];
+            hashGrid.Dispose();
+        }
+        HashGridArray.Dispose();
+        PathReachDistances.Dispose();
+    }
     internal void ScheduleRoutine(NativeArray<UnsafeListReadOnly<byte>> costFieldCosts, JobHandle dependency)
     {
         NativeArray<AgentData> agentDataArray = _agentDataContainer.AgentDataList;
         NativeArray<int> agentCurPathIndexArray = _agentDataContainer.AgentCurPathIndicies;
-        NativeArray<PathLocationData> exposedPathLocationDataArray = _pathfindingManager.PathContainer.ExposedPathLocationData;
-        NativeArray<PathFlowData> exposedPathFlowDataArray = _pathfindingManager.PathContainer.ExposedPathFlowData;
-        NativeArray<float2> exposedPathDestinationArray = _pathfindingManager.PathContainer.ExposedPathDestinations;
+        NativeArray<PathLocationData> exposedPathLocationDataArray = _pathfindingManager.PathDataContainer.ExposedPathLocationData;
+        NativeArray<PathFlowData> exposedPathFlowDataArray = _pathfindingManager.PathDataContainer.ExposedPathFlowData;
+        NativeArray<float2> exposedPathDestinationArray = _pathfindingManager.PathDataContainer.ExposedPathDestinations;
         NativeArray<int> agentFlockIndexArray = _pathfindingManager.AgentDataContainer.AgentFlockIndicies;
-        NativeArray<float> exposedPathReachDistanceCheckRanges = _pathfindingManager.PathContainer.ExposedPathReachDistanceCheckRanges;
-        NativeArray<int> exposedPathFlockIndicies = _pathfindingManager.PathContainer.ExposedPathFlockIndicies;
-        NativeArray<PathState> exposedPathStateList = _pathfindingManager.PathContainer.ExposedPathStateList;
-        NativeArray<bool> exposedPathAgentStopFlagList = _pathfindingManager.PathContainer.ExposedPathAgentStopFlagList;
+        NativeArray<float> exposedPathReachDistanceCheckRanges = _pathfindingManager.PathDataContainer.ExposedPathReachDistanceCheckRanges;
+        NativeArray<int> exposedPathFlockIndicies = _pathfindingManager.PathDataContainer.ExposedPathFlockIndicies;
+        NativeArray<PathState> exposedPathStateList = _pathfindingManager.PathDataContainer.ExposedPathStateList;
+        NativeArray<bool> exposedPathAgentStopFlagList = _pathfindingManager.PathDataContainer.ExposedPathAgentStopFlagList;
 
         //CLEAR
         AgentMovementDataList.Clear();
@@ -115,10 +130,10 @@ internal class MovementManager
         //Height Calculation
         AgentHeightCalculationJob heightCalculation = new AgentHeightCalculationJob()
         {
-            TriangleSpatialHashGrid = _pathfindingManager.FieldManager.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
+            TriangleSpatialHashGrid = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
             AgentMovementDataArray = AgentMovementDataList,
             AgentPositionChangeArray = AgentPositionChangeBuffer,
-            Verticies = _pathfindingManager.FieldManager.HeightMeshGenerator.Verticies,
+            Verticies = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.Verticies,
         };
         JobHandle heightCalculationHandle = heightCalculation.Schedule(agentDataArray.Length, 32, movDataHandle);
 

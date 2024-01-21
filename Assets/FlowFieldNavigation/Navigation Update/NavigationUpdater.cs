@@ -20,7 +20,7 @@ internal class NavigationUpdater
     internal void RoutineFixedUpdate()
     {
         _scheduler.ForceCompleteAll();
-        _pathfindingManager.PathContainer.Update();
+        _pathfindingManager.PathDataContainer.Update();
         List<FlowFieldAgent> agentAddRequest = _requestAccumulator.AgentAddRequest;
         NativeList<PathRequest> pathRequests = _requestAccumulator.PathRequests;
         NativeList<CostEdit> costEditRequests = _requestAccumulator.CostEditRequests;
@@ -43,5 +43,9 @@ internal class NavigationUpdater
     internal void IntermediateUpdate()
     {
         _scheduler.TryCompletePredecessorJobs();
+    }
+    internal void DisposeAll()
+    {
+        _scheduler.DisposeAll();
     }
 }

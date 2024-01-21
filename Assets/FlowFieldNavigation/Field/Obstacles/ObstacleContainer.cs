@@ -11,6 +11,11 @@ internal class ObstacleContainer
         ObstacleList = new NativeList<Obstacle>(Allocator.Persistent);
         RemovedIndexList = new NativeList<int>(Allocator.Persistent);
     }
+    internal void DisposeAll()
+    {
+        ObstacleList.Dispose();
+        RemovedIndexList.Dispose();
+    }
 }
 internal struct CostEdit
 {

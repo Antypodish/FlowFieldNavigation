@@ -105,6 +105,20 @@ internal class HeightMeshProducer
             TriangleHashGrids = SpatialHashGrids,
         };
     }
+    internal void DisposeAll()
+    {
+        Verticies.Dispose();
+        Triangles.Dispose();
+        for(int i = 0; i < SpatialHashGrids.Length; i++)
+        {
+            UnsafeList<HashTile> hashTiles = SpatialHashGrids[i];
+            hashTiles.Dispose();
+            SpatialHashGrids[i] = hashTiles;
+        }
+        SpatialHashGrids.Dispose();
+        TileSizeToGridIndex.Dispose();
+        GridIndexToTileSize.Dispose();
+    }
     void CreateHashGrids(NativeArray<float>.ReadOnly gridTileSizes)
     {
         float fieldMinXIncluding = FlowFieldUtilities.FieldMinXIncluding;

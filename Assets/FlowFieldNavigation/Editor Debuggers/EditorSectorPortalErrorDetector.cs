@@ -14,7 +14,7 @@ internal class EditorSectorPortalErrorDetector
 
     internal void Debug(int offset)
     {
-        FieldGraph[] fieldGraphs = _pathfindingManager.FieldManager.GetAllFieldGraphs();
+        FieldGraph[] fieldGraphs = _pathfindingManager.FieldDataContainer.GetAllFieldGraphs();
         for(int i = 0; i < fieldGraphs.Length; i++)
         {
             Gizmos.color = Color.red;

@@ -17,20 +17,36 @@ internal class FlowCalculationScheduler
     internal FlowCalculationScheduler(PathfindingManager pathfindingManager, LOSIntegrationScheduler losIntegrationScheduler)
     {
         _pathfindingManager = pathfindingManager;
-        _pathContainer = pathfindingManager.PathContainer;
+        _pathContainer = pathfindingManager.PathDataContainer;
         ScheduledFlow = new NativeList<PathPipelineInfoWithHandle>(Allocator.Persistent);
         _flowFieldCalculationBuffers = new NativeList<FlowFieldCalculationBufferParent>(Allocator.Persistent);
         _flowTransferHandles = new NativeList<JobHandle>(Allocator.Persistent);
         _losIntegrationScheduler = losIntegrationScheduler;
         _flowFieldResizedPaths = new NativeList<int>(Allocator.Persistent);
     }
-
+    internal void DisposeAll()
+    {
+        if (ScheduledFlow.IsCreated) { ScheduledFlow.Dispose(); }
+        if (_flowFieldCalculationBuffers.IsCreated)
+        {
+            for(int i = 0; i < _flowFieldCalculationBuffers.Length; i++)
+            {
+                FlowFieldCalculationBufferParent bufferParent = _flowFieldCalculationBuffers[i];
+                bufferParent.BufferParent.Dispose();
+            }
+            _flowFieldCalculationBuffers.Dispose();
+        }
+        if (_flowTransferHandles.IsCreated) { _flowTransferHandles.Dispose(); }
+        if (_flowFieldResizedPaths.IsCreated) { _flowFieldResizedPaths.Dispose(); }
+        _losIntegrationScheduler.DisposeAll();
+        _losIntegrationScheduler = null;
+    }
     internal void ScheduleFlow(PathPipelineInfoWithHandle pathInfo)
     {
         PathfindingInternalData pathInternalData = _pathContainer.PathfindingInternalDataList[pathInfo.PathIndex];
         PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
         PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
-        CostField pickedCostField = _pathfindingManager.FieldManager.GetCostFieldWithOffset(destinationData.Offset);
+        CostField pickedCostField = _pathfindingManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset);
 
         //RESET NEW INT FIELD INDICIES
         int lastIntegrationFieldLength = pathInternalData.IntegrationField.Length;

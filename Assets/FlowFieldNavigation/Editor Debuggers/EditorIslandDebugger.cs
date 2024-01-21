@@ -80,7 +80,7 @@ internal class EditorIslandDebugger
 
     internal void DebugPortalIslands(int offset)
     {
-        FieldGraph fieldGraph = _pathfindingManager.FieldManager.GetFieldGraphWithOffset(offset);
+        FieldGraph fieldGraph = _pathfindingManager.FieldDataContainer.GetFieldGraphWithOffset(offset);
         NativeArray<PortalNode> portalNodes = fieldGraph.PortalNodes;
         NativeArray<PortalToPortal> portalToPortals = fieldGraph.PorToPorPtrs;
         NativeArray<WindowNode> windowNodes = fieldGraph.WindowNodes;
@@ -115,9 +115,9 @@ internal class EditorIslandDebugger
     {
         float yOffset = 0.2f;
         float tileSize = FlowFieldUtilities.TileSize;
-        FieldGraph fieldGraph = _pathfindingManager.FieldManager.GetFieldGraphWithOffset(offset);
+        FieldGraph fieldGraph = _pathfindingManager.FieldDataContainer.GetFieldGraphWithOffset(offset);
         NativeArray<SectorNode> sectorNodes = fieldGraph.SectorNodes;
-        NativeArray<byte> costsl = _pathfindingManager.FieldManager.GetCostFieldWithOffset(offset).Costs;
+        NativeArray<byte> costsl = _pathfindingManager.FieldDataContainer.GetCostFieldWithOffset(offset).Costs;
         NativeArray<UnsafeList<int>> islandFields = fieldGraph.IslandFields;
         NativeArray<PortalNode> portalNodes = fieldGraph.PortalNodes;
         for (int i = 0; i < sectorNodes.Length; i++)

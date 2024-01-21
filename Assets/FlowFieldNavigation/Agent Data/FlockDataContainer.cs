@@ -11,4 +11,9 @@ public class FlockDataContainer
         FlockList.Add(new Flock());
         UnusedFlockIndexList = new NativeList<int>(Allocator.Persistent);
     }
+    internal void DisposeAll()
+    {
+        FlockList.Dispose();
+        UnusedFlockIndexList.Dispose();
+    }
 }

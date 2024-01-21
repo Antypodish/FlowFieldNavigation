@@ -12,7 +12,7 @@ internal struct UnsafeLOSBitmap
         get { return _bytes.Length; }
     }
     internal int BitLength { get { return _size; } }
-
+    internal bool IsCreated { get { return _bytes.IsCreated; } }
     internal UnsafeLOSBitmap(int size, Allocator allocator, NativeArrayOptions option = NativeArrayOptions.UninitializedMemory)
     {
         int byteCount = size / 8 + math.select(0, 1, size % 8 > 0);
@@ -20,7 +20,6 @@ internal struct UnsafeLOSBitmap
         _bytes = new UnsafeList<byte>(byteCount, allocator, option);
         _bytes.Length = byteCount;
     }
-
     internal int GetByteIndex(int bitIndex) => bitIndex / 8;
     internal int GetBitRank(int bitIndex) => bitIndex % 8;
     internal void Resize(int newLength, NativeArrayOptions option)

@@ -15,9 +15,16 @@ internal class AdditionPortalTraversalScheduler
     {
         ScheduledAdditionPortalTraversals = new NativeList<PathPipelineInfoWithHandle>(Allocator.Persistent);
         _pathfindingManager = pathfindingManager;
-        _pathContainer = _pathfindingManager.PathContainer;
+        _pathContainer = _pathfindingManager.PathDataContainer;
         _additionActivePortalSubmissionScheduler = new AdditionActivePortalSubmissionScheduler(pathfindingManager);
         _requestedSectorCalculationScheduler = requestedSectorCalculationScheduler;
+    }
+    internal void DisposeAll()
+    {
+        if (ScheduledAdditionPortalTraversals.IsCreated) { ScheduledAdditionPortalTraversals.Dispose(); }
+        _requestedSectorCalculationScheduler.DisposeAll();
+        _additionActivePortalSubmissionScheduler = null;
+        _requestedSectorCalculationScheduler = null;
     }
     internal void SchedulePortalTraversalFor(PathPipelineInfoWithHandle pathInfo, NativeSlice<float2> sources)
     {
@@ -29,7 +36,7 @@ internal class AdditionPortalTraversalScheduler
         portalTraversalData.PathAdditionSequenceBorderStartIndex[0] = portalTraversalData.PortalSequenceBorders.Length - 1;
         portalTraversalData.NewPickedSectorStartIndex[0] = internalData.PickedSectorList.Length;
 
-        FieldGraph pickedFieldGraph = _pathfindingManager.FieldManager.GetFieldGraphWithOffset(destinationData.Offset);
+        FieldGraph pickedFieldGraph = _pathfindingManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
 
         PortalNodeAdditionReductionJob reductionJob = new PortalNodeAdditionReductionJob()
         {

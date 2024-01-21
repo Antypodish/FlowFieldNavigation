@@ -8,7 +8,7 @@ using Unity.Jobs;
 using UnityEngine;
 using UnityEngine.Jobs;
 
-public class AgentDataContainer
+internal class AgentDataContainer
 {
     public List<FlowFieldAgent> Agents;
     public TransformAccessArray AgentTransforms;
@@ -29,6 +29,23 @@ public class AgentDataContainer
         AgentRequestedPathIndicies = new NativeList<int>(0, Allocator.Persistent);
         AgentFlockIndicies = new NativeList<int>(Allocator.Persistent);
         AgentDestinationReachedArray = new NativeList<bool>(Allocator.Persistent);
+    }
+    public void DisposeAll()
+    {
+        for(int i = 0; i < Agents.Count; i++)
+        {
+            Agents[i].AgentDataIndex = -1;
+        }
+        Agents.Clear();
+        Agents.TrimExcess();
+        Agents = null;
+        AgentTransforms.Dispose();
+        AgentDataList.Dispose();
+        AgentDestinationReachedArray.Dispose();
+        AgentFlockIndicies.Dispose();
+        AgentRequestedPathIndicies.Dispose();
+        AgentNewPathIndicies.Dispose();
+        AgentCurPathIndicies.Dispose();
     }
     public void Subscribe(FlowFieldAgent agent)
     {
@@ -70,8 +87,9 @@ public class AgentDataContainer
         NativeArray<int> reqPathIndicies = AgentRequestedPathIndicies;
         for(int i = 0; i < agents.Count; i++)
         {
-            int agentIndex = agents[i].AgentDataIndex;
-            reqPathIndicies[agentIndex] = newPathIndex;
+            FlowFieldAgent agent = agents[i];
+            if(agent.AgentDataIndex == -1) { continue; }
+            reqPathIndicies[agent.AgentDataIndex] = newPathIndex;
         }
     }
 }

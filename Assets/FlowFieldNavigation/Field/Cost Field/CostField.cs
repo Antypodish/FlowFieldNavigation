@@ -101,5 +101,11 @@ internal class CostField
             }
         }
     }
+    internal void DisposeAll()
+    {
+        Costs.Dispose();
+        BaseCosts.Dispose();
+        StampCounts.Dispose();
+    }
     
 }

@@ -53,6 +53,7 @@ public class FlowFieldNavigationInterface
     }
     public int GetAgentCount()
     {
+        if (!_pathfindingManager.SimulationStarted) { return 0; }
         return _pathfindingManager.AgentDataContainer.Agents.Count;
     }
 

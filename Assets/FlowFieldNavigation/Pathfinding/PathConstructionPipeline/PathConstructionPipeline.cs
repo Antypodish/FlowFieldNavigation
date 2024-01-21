@@ -30,7 +30,7 @@ internal class PathConstructionPipeline
     internal PathConstructionPipeline(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
-        _pathContainer = pathfindingManager.PathContainer;
+        _pathContainer = pathfindingManager.PathDataContainer;
         _losIntegrationScheduler = new LOSIntegrationScheduler(pathfindingManager);
         _requestedSectorCalculationScheduler = new RequestedSectorCalculationScheduler(pathfindingManager, _losIntegrationScheduler);
         _portalTravesalScheduler = new PortalTraversalScheduler(pathfindingManager, _requestedSectorCalculationScheduler);
@@ -46,6 +46,29 @@ internal class PathConstructionPipeline
         _newPathIndicies = new NativeList<int>(Allocator.Persistent);
         _destinationUpdatedPathIndicies = new NativeList<int>(Allocator.Persistent);
         _expandedPathIndicies = new NativeList<int>(Allocator.Persistent);
+    }
+    internal void DisposeAll()
+    {
+        _sourcePositions.Dispose();
+        _pathfindingTaskOrganizationHandle = null;
+        _offsetDerivedPathRequests.Dispose();
+        _finalPathRequests.Dispose();
+        _currentPathSourceCount.Dispose();
+        _pathRequestSourceCount.Dispose();
+        _agentPathTaskList.Dispose();
+        _newPathIndicies.Dispose();
+        _destinationUpdatedPathIndicies.Dispose();
+        _expandedPathIndicies.Dispose();
+        _portalTravesalScheduler.DisposeAll();
+        _requestedSectorCalculationScheduler.DisposeAll();
+        _additionPortalTraversalScheduler.DisposeAll();
+        _losIntegrationScheduler.DisposeAll();
+        _dynamicAreaScheduler.DisposeAll();
+        _portalTravesalScheduler = null;
+        _requestedSectorCalculationScheduler = null;
+        _additionPortalTraversalScheduler = null;
+        _losIntegrationScheduler = null;
+        _dynamicAreaScheduler = null;
     }
     internal void ShcedulePathRequestEvalutaion(NativeList<PathRequest> requestedPaths,
         NativeArray<UnsafeListReadOnly<byte>> costFieldCosts,
@@ -84,8 +107,8 @@ internal class PathConstructionPipeline
             AgentFlockIndexArray = AgentFlockIndexArray,
             AgentNewPathIndexArray = AgentNewPathIndicies,
             InitialPathRequests = requestedPaths,
-            FlockList = _pathfindingManager.FlockContainer.FlockList,
-            UnusedFlockIndexList = _pathfindingManager.FlockContainer.UnusedFlockIndexList,
+            FlockList = _pathfindingManager.FlockDataContainer.FlockList,
+            UnusedFlockIndexList = _pathfindingManager.FlockDataContainer.UnusedFlockIndexList,
         };
         flockSubmission.Schedule().Complete();
 

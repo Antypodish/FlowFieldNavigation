@@ -55,4 +55,12 @@ internal class FieldGraphProducer
         }
         return islandFieldProcessors;
     }
+    internal void DisposeAll()
+    {
+        for(int i = 0; i < _fieldGraphs.Length; i++)
+        {
+            _fieldGraphs[i].DisposeAll();
+        }
+        _fieldGraphs = null;
+    }
 }

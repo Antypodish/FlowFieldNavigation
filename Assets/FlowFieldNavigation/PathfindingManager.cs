@@ -10,10 +10,10 @@ public class PathfindingManager : MonoBehaviour
     public bool SimulationStarted { get; private set; }
     public FlowFieldNavigationInterface Interface { get; private set; }
 
-    internal FieldDataContainer FieldManager;
-    internal PathDataContainer PathContainer;
+    internal FieldDataContainer FieldDataContainer;
+    internal PathDataContainer PathDataContainer;
     internal AgentDataContainer AgentDataContainer;
-    internal FlockDataContainer FlockContainer;
+    internal FlockDataContainer FlockDataContainer;
     internal RequestAccumulator RequestAccumulator;
 
     NavigationUpdater _navigationUpdater;
@@ -71,13 +71,28 @@ public class PathfindingManager : MonoBehaviour
     {
         SimulationStarted = true;
         SetFlowFieldUtilities(startParameters);
-        FieldManager = new FieldDataContainer(startParameters.WalkabilityMatrix, startParameters.Meshes, startParameters.Transforms);
-        FieldManager.CreateField(startParameters.MaxCostFieldOffset);
+        FieldDataContainer = new FieldDataContainer(startParameters.WalkabilityMatrix, startParameters.Meshes, startParameters.Transforms);
+        FieldDataContainer.CreateField(startParameters.MaxCostFieldOffset);
         AgentDataContainer = new AgentDataContainer();
-        PathContainer = new PathDataContainer(this);
+        PathDataContainer = new PathDataContainer(this);
         RequestAccumulator = new RequestAccumulator(this);
         _navigationUpdater = new NavigationUpdater(this, RequestAccumulator);
-        FlockContainer = new FlockDataContainer();
+        FlockDataContainer = new FlockDataContainer();
+    }
+    public void StopSimulation()
+    {
+        if (!SimulationStarted)
+        {
+            UnityEngine.Debug.Log("Request Denied. Simulation is already not started");
+            return;
+        }
+        SimulationStarted = false;
+        FieldDataContainer.DisposeAll();
+        PathDataContainer.DisposeAll();
+        AgentDataContainer.DisposeAll();
+        FlockDataContainer.DisposeAll();
+        RequestAccumulator.DisposeAll();
+        _navigationUpdater.DisposeAll();
     }
     internal NativeArray<UnsafeList<HashTile>> GetSpatialHashGridArray()
     {
@@ -93,6 +108,6 @@ public class PathfindingManager : MonoBehaviour
     }
     internal UnsafeListReadOnly<byte>[] GetAllCostFieldCostsAsUnsafeListReadonly()
     {
-        return FieldManager.GetAllCostFieldCostsAsUnsafeListReadonly();
+        return FieldDataContainer.GetAllCostFieldCostsAsUnsafeListReadonly();
     }
 }

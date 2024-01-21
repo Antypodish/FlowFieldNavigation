@@ -13,8 +13,12 @@ internal class DynamicAreaScheduler
     internal DynamicAreaScheduler(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
-        _pathContainer = pathfindingManager.PathContainer;
+        _pathContainer = pathfindingManager.PathDataContainer;
         _scheduledDynamicAreas = new NativeList<PathPipelineInfoWithHandle>(Allocator.Persistent);
+    }
+    internal void DisposeAll()
+    {
+        if (_scheduledDynamicAreas.IsCreated) { _scheduledDynamicAreas.Dispose(); }
     }
     internal void ScheduleDynamicArea(PathPipelineInfoWithHandle pathInfo)
     {
@@ -79,7 +83,7 @@ internal class DynamicAreaScheduler
             SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
             FieldColAmount = FlowFieldUtilities.FieldColAmount,
             TargetIndex = targetIndex,
-            Costs = _pathfindingManager.FieldManager.GetCostFieldWithOffset(destinationData.Offset).Costs,
+            Costs = _pathfindingManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset).Costs,
             PickedSectorFlowStarts = pickedSectorFlowStarts,
             IntegrationField = integrationField,
         };
@@ -102,7 +106,7 @@ internal class DynamicAreaScheduler
                 FlowField = flowFieldCalculationBuffer,
                 IntegrationField = integrationField,
             },
-            Costs = _pathfindingManager.FieldManager.GetCostFieldWithOffset(destinationData.Offset).Costs,
+            Costs = _pathfindingManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset).Costs,
         };
 
         JobHandle flowHandle = flowJob.Schedule(flowFieldCalculationBuffer.Length, 64, integrationHandle);

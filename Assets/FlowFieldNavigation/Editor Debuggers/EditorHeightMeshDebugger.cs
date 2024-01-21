@@ -18,7 +18,7 @@ internal class EditorHeightMeshDebugger
     {
         if(_debugMesh == null)
         {
-            HeightMeshProducer heightMapGenerator = _pathfindingManager.FieldManager.HeightMeshGenerator;
+            HeightMeshProducer heightMapGenerator = _pathfindingManager.FieldDataContainer.HeightMeshGenerator;
             NativeArray<float3> verticies = heightMapGenerator.Verticies;
             NativeArray<int> triangles = heightMapGenerator.Triangles;
 
@@ -44,7 +44,7 @@ internal class EditorHeightMeshDebugger
     internal void DebugBorders(int gridIndex)
     {
         Gizmos.color = Color.black;
-        TriangleSpatialHashGrid triangleHashGrid = _pathfindingManager.FieldManager.HeightMeshGenerator.GetTriangleSpatialHashGrid();
+        TriangleSpatialHashGrid triangleHashGrid = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid();
         if (gridIndex < 0 || gridIndex > triangleHashGrid.GetGridCount()) { return; }
         float tileSize = triangleHashGrid.GetGridTileSize(gridIndex);
         int colAmount = triangleHashGrid.GetGridColAmount(gridIndex);
@@ -78,9 +78,9 @@ internal class EditorHeightMeshDebugger
             }
         }
 
-        NativeArray<float3> verticies = _pathfindingManager.FieldManager.HeightMeshGenerator.Verticies;
+        NativeArray<float3> verticies = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.Verticies;
 
-        TriangleSpatialHashGrid triangleHashGrid = _pathfindingManager.FieldManager.HeightMeshGenerator.GetTriangleSpatialHashGrid();
+        TriangleSpatialHashGrid triangleHashGrid = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid();
         for(int i = 0; i < triangleHashGrid.GetGridCount(); i++)
         {
             TriangleSpatialHashGridIterator gridIterator = triangleHashGrid.GetIterator(_hitPos, i);

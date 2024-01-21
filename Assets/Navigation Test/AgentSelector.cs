@@ -63,6 +63,8 @@ public class AgentBoundSelector
             selectedAgents.Add(agent);
         }
         _selectionBox.rectTransform.sizeDelta = Vector3.zero;
+        sceenPositions.Dispose();
+        boundAgentIndicies.Dispose();
     }
     public void ForceStopSelection()
     {

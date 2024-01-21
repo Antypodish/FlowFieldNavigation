@@ -52,8 +52,8 @@ internal class RequestAccumulator
             CostEditOutput = CostEditRequests,
             ObstacleRequests = obstacleRequests,
             NewObstacleKeyListToAdd = outputListToAddObstacleIndicies,
-            ObstacleList = _pathfindingManager.FieldManager.ObstacleContainer.ObstacleList,
-            RemovedObstacleIndexList = _pathfindingManager.FieldManager.ObstacleContainer.RemovedIndexList,
+            ObstacleList = _pathfindingManager.FieldDataContainer.ObstacleContainer.ObstacleList,
+            RemovedObstacleIndexList = _pathfindingManager.FieldDataContainer.ObstacleContainer.RemovedIndexList,
         };
         obstacleToEdit.Schedule().Complete();
     }
@@ -63,9 +63,17 @@ internal class RequestAccumulator
         {
             CostEditOutput = CostEditRequests,
             ObstacleRemovalIndicies = obstacleIndiciesToRemove,
-            ObstacleList = _pathfindingManager.FieldManager.ObstacleContainer.ObstacleList,
-            RemovedObstacleIndexList = _pathfindingManager.FieldManager.ObstacleContainer.RemovedIndexList,
+            ObstacleList = _pathfindingManager.FieldDataContainer.ObstacleContainer.ObstacleList,
+            RemovedObstacleIndexList = _pathfindingManager.FieldDataContainer.ObstacleContainer.RemovedIndexList,
         };
         obstacleToEdit.Schedule().Complete();
+    }
+    internal void DisposeAll()
+    {
+        AgentAddRequest.Clear();
+        AgentAddRequest.TrimExcess();
+        AgentAddRequest = null;
+        PathRequests.Dispose();
+        CostEditRequests.Dispose();
     }
 }

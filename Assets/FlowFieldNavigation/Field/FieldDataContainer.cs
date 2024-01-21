@@ -44,4 +44,11 @@ internal class FieldDataContainer
     {
         return _costFieldProducer.GetAllCostsAsUnsafeListReadonly();
     }
+    internal void DisposeAll()
+    {
+        ObstacleContainer.DisposeAll();
+        HeightMeshGenerator.DisposeAll();
+        _costFieldProducer.DisposeAll();
+        _fieldGraphProducer.DisposeAll();
+    }
 }
