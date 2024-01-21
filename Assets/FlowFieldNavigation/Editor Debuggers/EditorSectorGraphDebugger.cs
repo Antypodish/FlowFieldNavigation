@@ -18,7 +18,7 @@ public class EditorSectorGraphDebugger
     {
         Gizmos.color = Color.black;
         float yOffset = 0.02f;
-        float tileSize = _pathfindingManager.TileSize;
+        float tileSize = FlowFieldUtilities.TileSize;
         FieldGraph fieldGraph = _pathfindingManager.FieldManager.GetFieldGraphWithOffset(offset);
         NativeArray<SectorNode> sectorNodes = fieldGraph.SectorNodes;
         for (int i = 0; i < sectorNodes.Length; i++)
@@ -56,7 +56,7 @@ public class EditorSectorGraphDebugger
     {
         Gizmos.color = Color.black;
         float yOffset = 0.02f;
-        float tileSize = _pathfindingManager.TileSize;
+        float tileSize = FlowFieldUtilities.TileSize;
         FieldGraph fieldGraph = _pathfindingManager.FieldManager.GetFieldGraphWithOffset(offset);
         NativeArray<WindowNode> windowNodes = fieldGraph.WindowNodes;
         for(int i = 0; i < windowNodes.Length; i++)

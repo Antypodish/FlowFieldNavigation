@@ -7,18 +7,18 @@ public class FieldManager
     public HeightMeshProducer HeightMeshGenerator { get; private set; }
     CostFieldProducer _costFieldProducer;
     FieldGraphProducer _fieldGraphProducer;
-    public FieldManager(WalkabilityCell[][] walkabilityMatrix, byte sectorTileAmount, Mesh[] meshes, Transform[] transforms)
+    public FieldManager(WalkabilityCell[][] walkabilityMatrix, Mesh[] meshes, Transform[] transforms)
     {
-        _costFieldProducer = new CostFieldProducer(walkabilityMatrix, sectorTileAmount);
+        _costFieldProducer = new CostFieldProducer(walkabilityMatrix);
         _fieldGraphProducer = new FieldGraphProducer();
         ObstacleContainer = new ObstacleContainer();
         HeightMeshGenerator = new HeightMeshProducer();
         HeightMeshGenerator.GenerateHeightMesh(meshes, transforms);
     }
-    public void CreateField(int maxOffset, int sectorColAmount, int sectorMatrixColAmount, int sectorMatrixRowAmount, int fieldRowAmount, int fieldColAmount, float tileSize)
+    public void CreateField(int maxOffset)
     {
-        _costFieldProducer.ProduceCostFields(maxOffset, fieldRowAmount, fieldColAmount, sectorColAmount, sectorMatrixColAmount, sectorMatrixRowAmount);
-        _fieldGraphProducer.ProduceFieldGraphs(_costFieldProducer.GetAllCostFields(), sectorColAmount, fieldRowAmount, fieldColAmount, tileSize);
+        _costFieldProducer.ProduceCostFields(maxOffset);
+        _fieldGraphProducer.ProduceFieldGraphs(_costFieldProducer.GetAllCostFields());
     }
     public FieldGraph GetFieldGraphWithOffset(int offset)
     {

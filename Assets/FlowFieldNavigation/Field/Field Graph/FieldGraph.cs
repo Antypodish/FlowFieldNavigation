@@ -26,18 +26,12 @@ public class FieldGraph
     public NativeList<int> EditedWinodwList;
     public NativeList<CostEdit> NewCostEdits;
 
-    float _tileSize;
-    int _fieldRowAmount;
-    int _fieldColAmount;
-    int _sectorTileAmount;
-    int _sectorMatrixRowAmount;
-    int _sectorMatrixColAmount;
     public int PortalPerWindow;
-    public FieldGraph(int sectorSize, int fieldRowAmount, int fieldColAmount, int costFieldOffset, float tileSize)
+    public FieldGraph(int costFieldOffset)
     {
         //size calculations
-        int sectorMatrixRowAmount = fieldRowAmount / sectorSize;
-        int sectorMatrixColAmount = fieldColAmount / sectorSize;
+        int sectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount;
+        int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
 
         int sectorAmount = sectorMatrixRowAmount * sectorMatrixColAmount;
         int windowAmount = 2 * sectorMatrixColAmount * sectorMatrixRowAmount - sectorMatrixRowAmount - sectorMatrixColAmount;
@@ -48,12 +42,6 @@ public class FieldGraph
         int porToPorPtrAmount = portalAmount * (portalPerWindow * 8 - 2);
 
         //innitialize fields
-        _tileSize = tileSize;
-        _sectorMatrixColAmount = sectorMatrixColAmount;
-        _sectorMatrixRowAmount = sectorMatrixRowAmount;
-        _fieldColAmount = fieldColAmount;
-        _fieldRowAmount = fieldRowAmount;
-        _sectorTileAmount = sectorSize;
         PortalPerWindow = portalPerWindow;
         SectorNodes = new NativeArray<SectorNode>(sectorAmount, Allocator.Persistent);
         SecToWinPtrs = new NativeArray<int>(secToWinPtrAmount, Allocator.Persistent);
@@ -63,7 +51,7 @@ public class FieldGraph
         PorToPorPtrs = new NativeArray<PortalToPortal>(porToPorPtrAmount, Allocator.Persistent);
         IslandDataList = new NativeList<IslandData>(Allocator.Persistent);
         IslandDataList.Length = 1;
-        IslandFields = new NativeArray<UnsafeList<int>>(_sectorMatrixColAmount * _sectorMatrixRowAmount, Allocator.Persistent);
+        IslandFields = new NativeArray<UnsafeList<int>>(FlowFieldUtilities.SectorMatrixTileAmount, Allocator.Persistent);
         for(int i = 0; i < IslandFields.Length; i++)
         {
             IslandFields[i] = new UnsafeList<int>(0, Allocator.Persistent);
@@ -98,11 +86,11 @@ public class FieldGraph
         return new FieldGraphConfigurationJob()
         {
             SectorColAmount = FlowFieldUtilities.SectorColAmount,
-            FieldColAmount = _fieldColAmount,
-            FieldRowAmount = _fieldRowAmount,
+            FieldColAmount = FlowFieldUtilities.FieldColAmount,
+            FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
             SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
-            SectorMatrixColAmount = _sectorMatrixColAmount,
-            SectorMatrixRowAmount = _sectorMatrixRowAmount,
+            SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+            SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
             PortalPerWindow = PortalPerWindow,
             SectorRowAmount = FlowFieldUtilities.SectorRowAmount,
             Costs = costs,
@@ -176,9 +164,9 @@ public class FieldGraph
     }
     public SectorNode GetSectorNodeAt(Vector3 pos)
     {
-        float sectorSize = _sectorTileAmount * _tileSize;
+        float sectorSize = FlowFieldUtilities.SectorColAmount * FlowFieldUtilities.TileSize;
         Index2 index2 = new Index2(Mathf.FloorToInt(pos.z / sectorSize), Mathf.FloorToInt(pos.x / sectorSize));
-        int index = Index2.ToIndex(index2, _sectorMatrixColAmount);
+        int index = Index2.ToIndex(index2, FlowFieldUtilities.SectorMatrixColAmount);
         return SectorNodes[index];
     }
     public NativeArray<int> GetPortalIndicies(SectorNode sectorNode, NativeArray<WindowNode> windowNodes)

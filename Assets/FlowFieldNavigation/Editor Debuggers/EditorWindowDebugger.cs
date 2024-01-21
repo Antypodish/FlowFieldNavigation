@@ -15,7 +15,7 @@ public class EditorWindowDebugger
         _pathfindingManager = pathfindingManager;
 
         //configure debug mesh
-        float tileSize = pathfindingManager.TileSize;
+        float tileSize = FlowFieldUtilities.TileSize;
         _debugMesh = new Mesh();
         _debugVerticies = new Vector3[4];
         _debugTriangles = new int[6];
@@ -57,7 +57,7 @@ public class EditorWindowDebugger
     {
         Gizmos.color = new Color(1f, 0f, 0f, 0.3f);
         float yOffset = .02f;
-        float tileSize = _pathfindingManager.TileSize;
+        float tileSize = FlowFieldUtilities.TileSize;
 
         NativeArray<WindowNode> windowNodes = _pathfindingManager.FieldManager.GetFieldGraphWithOffset(offset).WindowNodes;
         for (int i = 0; i < windowNodes.Length; i++)

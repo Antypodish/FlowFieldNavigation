@@ -61,9 +61,9 @@ public class EditorCostFieldDebugger
         Gizmos.color = Color.black;
         NativeArray<byte> costs = _pathfindingManager.FieldManager.GetCostFieldWithOffset(offset).Costs;
         float yOffset = .02f;
-        float tileSize = _pathfindingManager.TileSize;
-        int sectorColAmount = _pathfindingManager.SectorColAmount;
-        int sectorMatrixColAmount = _pathfindingManager.SectorMatrixColAmount;
+        float tileSize = FlowFieldUtilities.TileSize;
+        int sectorColAmount = FlowFieldUtilities.SectorColAmount;
+        int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
 
         for (int s = 0; s < FlowFieldUtilities.SectorMatrixTileAmount; s++)
         {

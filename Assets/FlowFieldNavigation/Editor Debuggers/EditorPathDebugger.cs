@@ -24,7 +24,7 @@ public class EditorPathDebugger
         _pathContainer = pathfindingManager.PathContainer;
         _pathfindingManager = pathfindingManager;
         _fieldProducer = pathfindingManager.FieldManager;
-        _tileSize = pathfindingManager.TileSize;
+        _tileSize = FlowFieldUtilities.TileSize;
     }
     public void DebugDynamicAreaIntegration(FlowFieldAgent agent)
     {
@@ -117,7 +117,7 @@ public class EditorPathDebugger
         if (pathIndex == -1) { return; }
         PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathIndex];
 
-        float tileSize = _pathfindingManager.TileSize;
+        float tileSize = FlowFieldUtilities.TileSize;
         int sectorColAmount = FlowFieldUtilities.SectorColAmount;
         NativeArray<UnsafeList<ActiveWaveFront>> waveFronts = internalData.ActivePortalList;
         NativeArray<int> pickedToSector = internalData.PickedSectorList;
@@ -148,7 +148,7 @@ public class EditorPathDebugger
 
         PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathIndex];
         PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[pathIndex];
-        float tileSize = _pathfindingManager.TileSize;
+        float tileSize = FlowFieldUtilities.TileSize;
         FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
         NativeArray<PortalNode> portalNodes = fg.PortalNodes;
         NativeArray<PortalTraversalData> portalTraversalDataArray = portalTraversalData.PortalTraversalDataArray;
@@ -182,7 +182,7 @@ public class EditorPathDebugger
 
         PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathIndex];
         PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[pathIndex];
-        float tileSize = _pathfindingManager.TileSize;
+        float tileSize = FlowFieldUtilities.TileSize;
         FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
         NativeArray<PortalNode> portalNodes = fg.PortalNodes;
         NativeArray<PortalTraversalData> portalTraversalDataArray = portalTraversalData.PortalTraversalDataArray;
@@ -265,7 +265,7 @@ public class EditorPathDebugger
         SectorBitArray sectorBitArray = _pathfindingManager.PathContainer.PathSectorBitArrays[pathIndex];
         float yOffset = 0.3f;
         Gizmos.color = Color.black;
-        float tileSize = _pathfindingManager.TileSize;
+        float tileSize = FlowFieldUtilities.TileSize;
         FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
         NativeArray<SectorNode> sectorNodes = fg.SectorNodes;
         UnsafeList<int> sectorMarks = locationData.SectorToPicked;
@@ -302,7 +302,7 @@ public class EditorPathDebugger
 
         PathLocationData locationData = _pathfindingManager.PathContainer.PathLocationDataList[pathIndex];
         PathDestinationData destinationData = _pathfindingManager.PathContainer.PathDestinationDataList[pathIndex];
-        int sectorColAmount = _pathfindingManager.SectorColAmount;
+        int sectorColAmount = FlowFieldUtilities.SectorColAmount;
         int sectorTileAmount = sectorColAmount * sectorColAmount;
         NativeArray<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset).SectorNodes;
         UnsafeList<int> sectorMarks = locationData.SectorToPicked;
@@ -342,7 +342,7 @@ public class EditorPathDebugger
         UnsafeList<int> sectorMarks = locationData.SectorToPicked;
         NativeArray<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset).SectorNodes;
         NativeArray<IntegrationTile> integrationField = internalData.IntegrationField;
-        int sectorColAmount = _pathfindingManager.SectorColAmount;
+        int sectorColAmount = FlowFieldUtilities.SectorColAmount;
         int sectorTileAmount = sectorColAmount * sectorColAmount;
         for (int i = 0; i < sectorMarks.Length; i++)
         {
@@ -394,7 +394,7 @@ public class EditorPathDebugger
         UnsafeLOSBitmap losmap = pathFlowData.LOSMap;
         UnsafeList<SectorFlowStart> dynamicAreaFlowStarts = locationData.DynamicAreaPickedSectorFlowStarts;
         UnsafeList<FlowData> dynamicAreaFlowField = internalData.DynamicArea.FlowFieldCalculationBuffer;
-        int sectorColAmount = _pathfindingManager.SectorColAmount;
+        int sectorColAmount = FlowFieldUtilities.SectorColAmount;
         int sectorTileAmount = sectorColAmount * sectorColAmount;
         for (int i = 0; i < sectorMarks.Length; i++)
         {

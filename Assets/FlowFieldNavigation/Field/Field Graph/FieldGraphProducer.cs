@@ -9,13 +9,13 @@ public class FieldGraphProducer
     FieldGraph[] _fieldGraphs;
     
     public FieldGraphProducer() { }
-    public void ProduceFieldGraphs(CostField[] costFields, int sectorColAmount, int fieldRowAmount, int fieldColAmount, float tileSize)
+    public void ProduceFieldGraphs(CostField[] costFields)
     {
         //ALLOCATE FIELD GRAPHS
         _fieldGraphs = new FieldGraph[costFields.Length];
         for (int i = 0; i < _fieldGraphs.Length; i++)
         {
-            _fieldGraphs[i] = new FieldGraph(sectorColAmount, fieldRowAmount, fieldColAmount, i, tileSize);
+            _fieldGraphs[i] = new FieldGraph(i);
         }
 
         //CONFIGURE FIELD GRAPHS

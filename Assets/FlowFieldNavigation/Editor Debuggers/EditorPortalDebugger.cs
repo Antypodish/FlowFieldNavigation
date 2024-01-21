@@ -38,7 +38,7 @@ public class EditorPortalDebugger
     public void DebugPortalsOnClickedSector(int offset)
     {
         Gizmos.color = Color.white;
-        float tileSize = _pathfindingManager.TileSize;
+        float tileSize = FlowFieldUtilities.TileSize;
         FieldGraph fieldGraph = _pathfindingManager.FieldManager.GetFieldGraphWithOffset(offset);
         SetClickedSectorNode(fieldGraph);
 
@@ -75,7 +75,7 @@ public class EditorPortalDebugger
     {
         float yOffset = 0.02f;
         Gizmos.color = Color.black;
-        float tileSize = _pathfindingManager.TileSize;
+        float tileSize = FlowFieldUtilities.TileSize;
         FieldGraph fieldGraph = _pathfindingManager.FieldManager.GetFieldGraphWithOffset(offset);
         SetClickedPortalNode(fieldGraph);
 
@@ -156,7 +156,7 @@ public class EditorPortalDebugger
     }
     void SetClickedPortalNode(FieldGraph fieldGraph)
     {
-        float tileSize = _pathfindingManager.TileSize;
+        float tileSize = FlowFieldUtilities.TileSize;
         if (Input.GetMouseButton(0))
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -180,7 +180,7 @@ public class EditorPortalDebugger
     }
     Vector3 GetPositionOf(PortalNode portalNode)
     {
-        float tileSize = _pathfindingManager.TileSize;
+        float tileSize = FlowFieldUtilities.TileSize;
 
         Index2 index1 = portalNode.Portal1.Index;
         Index2 index2 = portalNode.Portal2.Index;

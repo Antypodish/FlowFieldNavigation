@@ -105,9 +105,9 @@ public class MovementManager
             ExposedPathLocationDataArray = exposedPathLocationDataArray,
             HashedToNormal = HashedToNormal,
             
-            FieldColAmount = _pathfindingManager.ColumnAmount,
-            TileSize = _pathfindingManager.TileSize,
-            SectorColAmount = _pathfindingManager.SectorColAmount,
+            FieldColAmount = FlowFieldUtilities.FieldColAmount,
+            TileSize = FlowFieldUtilities.TileSize,
+            SectorColAmount = FlowFieldUtilities.SectorColAmount,
             AgentMovementData = AgentMovementDataList,
         };
         JobHandle movDataHandle = routineDataCalcJob.Schedule(routineDataCalcJob.AgentMovementData.Length, 64, spatialHasherHandle);

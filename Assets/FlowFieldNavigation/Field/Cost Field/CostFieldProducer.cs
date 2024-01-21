@@ -11,24 +11,24 @@ public class CostFieldProducer
 
     //utility
     public NativeArray<SectorDirectionData> SectorDirections;
-    public CostFieldProducer(WalkabilityCell[][] walkabilityMatrix, byte sectorTileAmount)
+    public CostFieldProducer(WalkabilityCell[][] walkabilityMatrix)
     {
         _walkabilityMatrix = walkabilityMatrix;
 
         //CALCULATE SECTOR DIRECTIONS
-        SectorDirections = new NativeArray<SectorDirectionData>(sectorTileAmount * sectorTileAmount, Allocator.Persistent);
+        SectorDirections = new NativeArray<SectorDirectionData>(FlowFieldUtilities.SectorTileAmount, Allocator.Persistent);
         for (byte i = 0; i < SectorDirections.Length; i++)
         {
-            SectorDirections[i] = new SectorDirectionData(i, sectorTileAmount);
+            SectorDirections[i] = new SectorDirectionData(i, FlowFieldUtilities.SectorColAmount);
         }
     }
-    public void ProduceCostFields(int maxOffset, int rowAmount, int colAmount, int sectorColAmount, int sectorMatrixColAmount, int sectorMatrixRowAmount)
+    public void ProduceCostFields(int maxOffset)
     {
         int count = maxOffset + 1;
         _producedCostFields = new CostField[count];
         for(int i = 0; i < count; i++)
         {
-            _producedCostFields[i] = new CostField(_walkabilityMatrix, rowAmount, colAmount, i, sectorColAmount, sectorMatrixColAmount, sectorMatrixRowAmount);
+            _producedCostFields[i] = new CostField(_walkabilityMatrix, i);
         }
     }
     public CostField[] GetAllCostFields()

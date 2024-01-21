@@ -1,57 +1,26 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
-using Unity.VisualScripting;
 using UnityEngine;
 
-public class PathfindingUpdateRoutine
+public class RequestAccumulator
 {
     PathfindingManager _pathfindingManager;
-    RoutineScheduler _scheduler;
 
-    List<FlowFieldAgent> _agentAddRequest;
-
-    NativeList<PathRequest> PathRequests;
-    NativeList<CostEdit> _costEditRequests;
-    public PathfindingUpdateRoutine(PathfindingManager pathfindingManager)
+    public List<FlowFieldAgent> AgentAddRequest;
+    public NativeList<PathRequest> PathRequests;
+    public NativeList<CostEdit> CostEditRequests;
+    public RequestAccumulator(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
-        _agentAddRequest = new List<FlowFieldAgent>();
+        AgentAddRequest = new List<FlowFieldAgent>();
         PathRequests = new NativeList<PathRequest>(Allocator.Persistent);
-        _scheduler = new RoutineScheduler(pathfindingManager);
-        _costEditRequests = new NativeList<CostEdit>(Allocator.Persistent);
-    }
-    public void RoutineUpdate()
-    {
-        _scheduler.ForceCompleteAll();
-        //FORCE COMPLETE JOBS FROM PREVIOUS UPDATE
-        _pathfindingManager.PathContainer.Update();
-        //ADD NEW AGENTS
-        for (int i = 0; i < _agentAddRequest.Count; i++)
-        {
-            _pathfindingManager.AgentDataContainer.Subscribe(_agentAddRequest[i]);
-        }
-        _agentAddRequest.Clear();
-
-        //SCHEDULE NEW JOBS
-        _scheduler.Schedule(PathRequests, _costEditRequests.AsArray().AsReadOnly());
-
-        PathRequests.Clear();
-        _costEditRequests.Clear();
-    }
-    public RoutineScheduler GetRoutineScheduler()
-    {
-        return _scheduler;
-    }
-    public void IntermediateLateUpdate()
-    {
-        _scheduler.TryCompletePredecessorJobs();
+        CostEditRequests = new NativeList<CostEdit>(Allocator.Persistent);
     }
     public void RequestAgentAddition(FlowFieldAgent agent)
     {
-        _agentAddRequest.Add(agent);
+        AgentAddRequest.Add(agent);
     }
     public void RequestPath(List<FlowFieldAgent> agents, Vector3 target)
     {
@@ -80,7 +49,7 @@ public class PathfindingUpdateRoutine
             FieldMaxYExcluding = FlowFieldUtilities.FieldMaxYExcluding,
             FieldMinXIncluding = FlowFieldUtilities.FieldMinXIncluding,
             FieldMinYIncluding = FlowFieldUtilities.FieldMinYIncluding,
-            CostEditOutput = _costEditRequests,
+            CostEditOutput = CostEditRequests,
             ObstacleRequests = obstacleRequests,
             NewObstacleKeyListToAdd = outputListToAddObstacleIndicies,
             ObstacleList = _pathfindingManager.FieldManager.ObstacleContainer.ObstacleList,
@@ -92,7 +61,7 @@ public class PathfindingUpdateRoutine
     {
         ObstacleRemovalRequestToCostEdit obstacleToEdit = new ObstacleRemovalRequestToCostEdit()
         {
-            CostEditOutput = _costEditRequests,
+            CostEditOutput = CostEditRequests,
             ObstacleRemovalIndicies = obstacleIndiciesToRemove,
             ObstacleList = _pathfindingManager.FieldManager.ObstacleContainer.ObstacleList,
             RemovedObstacleIndexList = _pathfindingManager.FieldManager.ObstacleContainer.RemovedIndexList,

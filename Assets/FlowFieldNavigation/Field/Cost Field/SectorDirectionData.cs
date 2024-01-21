@@ -10,7 +10,7 @@ public struct SectorDirectionData
     public byte SW;
     public byte NW;
 
-    public SectorDirectionData(byte index, byte sectorTileAmount)
+    public SectorDirectionData(byte index, int sectorTileAmount)
     {
         Index2 form2D = new Index2(index / sectorTileAmount, index % sectorTileAmount);
         Index2 n = new Index2(form2D.R + 1, form2D.C);

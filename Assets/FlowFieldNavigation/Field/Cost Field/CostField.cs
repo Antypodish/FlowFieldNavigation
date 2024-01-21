@@ -11,10 +11,10 @@ public class CostField
     public NativeArray<byte> BaseCosts;
     public NativeArray<uint> StampCounts;
     public UnsafeListReadOnly<byte> CostsLReadonlyUnsafe;
-    public CostField(WalkabilityCell[][] walkabilityMatrix, int rowAmount, int colAmount, int offset, int sectorColAmount, int sectorMatrixColAmount, int sectorMatrixRowAmount)
+    public CostField(WalkabilityCell[][] walkabilityMatrix, int offset)
     {
-        int fieldRowAmount = rowAmount;
-        int fieldColAmount = colAmount;
+        int fieldRowAmount = FlowFieldUtilities.FieldRowAmount;
+        int fieldColAmount = FlowFieldUtilities.FieldColAmount;
         Offset = offset;
 
         //configure costs
@@ -69,6 +69,8 @@ public class CostField
         void ConvertToNewCosts()
         {
             int sectorTileAmount = FlowFieldUtilities.SectorTileAmount;
+            int sectorColAmount = FlowFieldUtilities.SectorColAmount;
+            int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
             //SET COSTS
             for (int y = 0; y < fieldRowAmount; y += sectorColAmount)
             {
