@@ -4,18 +4,18 @@ using Unity.Jobs;
 using Unity.Mathematics;
 
 [BurstCompile]
-public struct DestinationReachedAgentCountJob : IJobParallelFor
+internal struct DestinationReachedAgentCountJob : IJobParallelFor
 {
-    [ReadOnly] public NativeArray<bool> AgentDestinationReachStatus;
-    [ReadOnly] public NativeArray<float2> PathDestinationArray;
-    [ReadOnly] public AgentSpatialHashGrid AgentSpatialHashGrid;
-    [ReadOnly] public NativeArray<PathState> PathStateList;
-    [ReadOnly] public NativeArray<int> PathFlockIndexArray;
-    [ReadOnly] public NativeArray<int> HashedToNormal;
-    [ReadOnly] public NativeArray<int> AgentFlockIndicies;
-    [ReadOnly] public NativeArray<bool> PathAgentStopFlagList;
-    public NativeArray<float> PathReachDistanceCheckRanges;
-    public NativeArray<float> PathReachDistances;
+    [ReadOnly] internal NativeArray<bool> AgentDestinationReachStatus;
+    [ReadOnly] internal NativeArray<float2> PathDestinationArray;
+    [ReadOnly] internal AgentSpatialHashGrid AgentSpatialHashGrid;
+    [ReadOnly] internal NativeArray<PathState> PathStateList;
+    [ReadOnly] internal NativeArray<int> PathFlockIndexArray;
+    [ReadOnly] internal NativeArray<int> HashedToNormal;
+    [ReadOnly] internal NativeArray<int> AgentFlockIndicies;
+    [ReadOnly] internal NativeArray<bool> PathAgentStopFlagList;
+    internal NativeArray<float> PathReachDistanceCheckRanges;
+    internal NativeArray<float> PathReachDistances;
     public void Execute(int index)
     {
         PathReachDistances[index] = 0;

@@ -1,37 +1,37 @@
 ﻿using Unity.Mathematics;
 
-public struct AgentMovementData
+internal struct AgentMovementData
 {
-    public float3 Position;
-    public float2 Destination;
-    public float2 DesiredDirection;
-    public float2 CurrentDirection;
-    public float AlignmentMultiplierPercentage;
-    public float Speed;
-    public float Radius;
-    public float LandOffset;
-    public int FlockIndex;
-    public int PathId;
-    public int TensionPowerIndex;
-    public byte SplitInterval;
-    public byte SplitInfo;
-    public AgentStatus Status;
-    public AvoidanceStatus Avoidance;
-    public MovingAvoidanceStatus MovingAvoidance;
-    public AgentRoutineStatus RoutineStatus;
+    internal float3 Position;
+    internal float2 Destination;
+    internal float2 DesiredDirection;
+    internal float2 CurrentDirection;
+    internal float AlignmentMultiplierPercentage;
+    internal float Speed;
+    internal float Radius;
+    internal float LandOffset;
+    internal int FlockIndex;
+    internal int PathId;
+    internal int TensionPowerIndex;
+    internal byte SplitInterval;
+    internal byte SplitInfo;
+    internal AgentStatus Status;
+    internal AvoidanceStatus Avoidance;
+    internal MovingAvoidanceStatus MovingAvoidance;
+    internal AgentRoutineStatus RoutineStatus;
 }
-public enum AgentRoutineStatus : byte
+internal enum AgentRoutineStatus : byte
 {
     None = 0,
     Traversed = 1,
 }
-public enum AvoidanceStatus : byte
+internal enum AvoidanceStatus : byte
 {
     None = 0,
     R = 1,
     L = 2,
 }
-public enum MovingAvoidanceStatus: byte
+internal enum MovingAvoidanceStatus: byte
 {
     None = 0,
     R = 1,

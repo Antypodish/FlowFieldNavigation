@@ -3,16 +3,16 @@ using Unity.Burst;
 using Unity.Jobs;
 
 [BurstCompile]
-public struct FlockIndexSubmissionJob : IJob
+internal struct FlockIndexSubmissionJob : IJob
 {
-    public int InitialPathRequestCount;
+    internal int InitialPathRequestCount;
 
-    public NativeArray<int> AgentNewPathIndexArray;
-    public NativeArray<int> AgentFlockIndexArray;
+    internal NativeArray<int> AgentNewPathIndexArray;
+    internal NativeArray<int> AgentFlockIndexArray;
 
-    public NativeArray<PathRequest> InitialPathRequests;
-    public NativeList<int> UnusedFlockIndexList;
-    public NativeList<Flock> FlockList;
+    internal NativeArray<PathRequest> InitialPathRequests;
+    internal NativeList<int> UnusedFlockIndexList;
+    internal NativeList<Flock> FlockList;
     public void Execute()
     {
         //Rest
@@ -71,7 +71,7 @@ public struct FlockIndexSubmissionJob : IJob
         }
     }
 }
-public struct Flock
+internal struct Flock
 {
-    public int AgentCount;
+    internal int AgentCount;
 }

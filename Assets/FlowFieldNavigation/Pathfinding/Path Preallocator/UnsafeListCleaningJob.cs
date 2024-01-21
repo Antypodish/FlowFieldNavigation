@@ -4,9 +4,9 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 
 [BurstCompile]
-public struct UnsafeListCleaningJob<T> : IJob where T : unmanaged
+internal struct UnsafeListCleaningJob<T> : IJob where T : unmanaged
 {
-    public UnsafeList<T> List;
+    internal UnsafeList<T> List;
     public void Execute()
     {
         T defaultValue = default(T);

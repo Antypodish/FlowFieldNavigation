@@ -7,10 +7,10 @@ using Unity.Burst;
 using Unity.Collections.LowLevel.Unsafe;
 
 [BurstCompile]
-public struct AgentMovementUpdateJob : IJobParallelForTransform
+internal struct AgentMovementUpdateJob : IJobParallelForTransform
 {
-    public float DeltaTime;
-    [ReadOnly] public NativeArray<AgentData> AgentDataArray;
+    internal float DeltaTime;
+    [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
     
     public void Execute(int index, TransformAccess transform)
     {

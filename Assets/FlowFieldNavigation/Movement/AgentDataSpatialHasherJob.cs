@@ -6,21 +6,21 @@ using Unity.Mathematics;
 using Unity.VisualScripting;
 
 [BurstCompile]
-public struct AgentDataSpatialHasherJob : IJob
+internal struct AgentDataSpatialHasherJob : IJob
 {
-    public float TileSize;
-    public int FieldRowAmount;
-    public int FieldColAmount;
-    public float BaseSpatialGridSize;
-    public float MinAgentSize;
-    public float MaxAgentSize;
+    internal float TileSize;
+    internal int FieldRowAmount;
+    internal int FieldColAmount;
+    internal float BaseSpatialGridSize;
+    internal float MinAgentSize;
+    internal float MaxAgentSize;
 
-    [ReadOnly] public NativeArray<int> AgentFlockIndexArray;
-    [ReadOnly] public NativeArray<AgentData> AgentDataArray;
-    public NativeArray<AgentMovementData> AgentMovementDataArray;
-    public NativeArray<UnsafeList<HashTile>> AgentHashGridArray;
-    [WriteOnly] public NativeArray<int> NormalToHashed;
-    [WriteOnly] public NativeArray<int> HashedToNormal;
+    [ReadOnly] internal NativeArray<int> AgentFlockIndexArray;
+    [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
+    internal NativeArray<AgentMovementData> AgentMovementDataArray;
+    internal NativeArray<UnsafeList<HashTile>> AgentHashGridArray;
+    [WriteOnly] internal NativeArray<int> NormalToHashed;
+    [WriteOnly] internal NativeArray<int> HashedToNormal;
 
     public void Execute()
     {
@@ -122,8 +122,8 @@ public struct AgentDataSpatialHasherJob : IJob
         }
     }
 }
-public struct HashTile
+internal struct HashTile
 {
-    public int Start;
-    public int Length;
+    internal int Start;
+    internal int Length;
 }

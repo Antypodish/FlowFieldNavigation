@@ -4,13 +4,13 @@ using UnityEngine.Jobs;
 using Unity.Mathematics;
 
 [BurstCompile]
-public struct AgentDataSetPositionJob : IJobParallelForTransform
+internal struct AgentDataSetPositionJob : IJobParallelForTransform
 {
-    public float MinXIncluding;
-    public float MinYIncluding;
-    public float MaxXExcluding;
-    public float MaxYExcluding;
-    public NativeArray<AgentData> AgentDataArray;
+    internal float MinXIncluding;
+    internal float MinYIncluding;
+    internal float MaxXExcluding;
+    internal float MaxYExcluding;
+    internal NativeArray<AgentData> AgentDataArray;
     public void Execute(int index, TransformAccess transform)
     {
         float3 pos = transform.position;

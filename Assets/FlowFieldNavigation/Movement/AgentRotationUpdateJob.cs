@@ -4,9 +4,9 @@ using Unity.Mathematics;
 using UnityEngine.Jobs;
 
 [BurstCompile]
-public struct AgentRotationUpdateJob : IJobParallelForTransform
+internal struct AgentRotationUpdateJob : IJobParallelForTransform
 {
-    [ReadOnly] public NativeArray<AgentData> agentData;
+    [ReadOnly] internal NativeArray<AgentData> agentData;
     public void Execute(int index, TransformAccess transform)
     {
         float2 direction = agentData[index].Direction;

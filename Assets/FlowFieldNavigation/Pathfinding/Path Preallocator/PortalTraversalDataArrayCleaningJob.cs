@@ -3,9 +3,9 @@ using Unity.Collections;
 using Unity.Jobs;
 
 [BurstCompile]
-public struct PortalTraversalDataArrayCleaningJob : IJob
+internal struct PortalTraversalDataArrayCleaningJob : IJob
 {
-    public NativeArray<PortalTraversalData> Array;
+    internal NativeArray<PortalTraversalData> Array;
     public void Execute()
     {
         for(int i = 0; i < Array.Length; i++)

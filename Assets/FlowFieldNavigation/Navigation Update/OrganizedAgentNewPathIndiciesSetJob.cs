@@ -3,10 +3,10 @@ using Unity.Collections;
 using Unity.Burst;
 
 [BurstCompile]
-public struct OrganizedAgentNewPathIndiciesSetJob : IJob
+internal struct OrganizedAgentNewPathIndiciesSetJob : IJob
 {
-    public NativeArray<int> AgentNewPathIndicies;
-    [ReadOnly] public NativeArray<FinalPathRequest> RequestedPaths;
+    internal NativeArray<int> AgentNewPathIndicies;
+    [ReadOnly] internal NativeArray<FinalPathRequest> RequestedPaths;
     public void Execute()
     {
         for (int i = 0; i < AgentNewPathIndicies.Length; i++)

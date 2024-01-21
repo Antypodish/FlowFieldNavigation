@@ -6,12 +6,12 @@ using Unity.Mathematics;
 [BurstCompile]
 struct RoutineResultSendJob : IJob
 {
-    [ReadOnly] public NativeArray<AgentMovementData> MovementDataArray;
-    [ReadOnly] public NativeArray<RoutineResult> RoutineResultArray;
-    [ReadOnly] public NativeArray<int> NormalToHashed;
-    [ReadOnly] public NativeArray<int> AgentCurPathIndicies;
-    [ReadOnly] public NativeArray<bool> AgentDestinationReachedArray;
-    public NativeArray<AgentData> AgentDataArray;
+    [ReadOnly] internal NativeArray<AgentMovementData> MovementDataArray;
+    [ReadOnly] internal NativeArray<RoutineResult> RoutineResultArray;
+    [ReadOnly] internal NativeArray<int> NormalToHashed;
+    [ReadOnly] internal NativeArray<int> AgentCurPathIndicies;
+    [ReadOnly] internal NativeArray<bool> AgentDestinationReachedArray;
+    internal NativeArray<AgentData> AgentDataArray;
     public void Execute()
     {
         for (int i = 0; i < RoutineResultArray.Length; i++)

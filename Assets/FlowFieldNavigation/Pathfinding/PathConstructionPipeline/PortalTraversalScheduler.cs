@@ -11,7 +11,7 @@ internal class PortalTraversalScheduler
     RequestedSectorCalculationScheduler _requestedSectorCalculationScheduler;
 
     NativeList<RequestPipelineInfoWithHandle> ScheduledPortalTraversals;
-    public PortalTraversalScheduler(PathfindingManager pathfindingManager, RequestedSectorCalculationScheduler requestedSectorCalculationScheduler)
+    internal PortalTraversalScheduler(PathfindingManager pathfindingManager, RequestedSectorCalculationScheduler requestedSectorCalculationScheduler)
     {
         ScheduledPortalTraversals = new NativeList<RequestPipelineInfoWithHandle>(Allocator.Persistent);
         _pathfindingManager = pathfindingManager;
@@ -20,7 +20,7 @@ internal class PortalTraversalScheduler
         _requestedSectorCalculationScheduler = requestedSectorCalculationScheduler;
     }
 
-    public void SchedulePortalTraversalFor(RequestPipelineInfoWithHandle reqInfo, NativeSlice<float2> sources)
+    internal void SchedulePortalTraversalFor(RequestPipelineInfoWithHandle reqInfo, NativeSlice<float2> sources)
     {
         PathfindingInternalData pathInternalData = _pathfindingManager.PathContainer.PathfindingInternalDataList[reqInfo.PathIndex];
         PathDestinationData destinationData = _pathContainer.PathDestinationDataList[reqInfo.PathIndex];
@@ -96,7 +96,7 @@ internal class PortalTraversalScheduler
         ScheduledPortalTraversals.Add(reqInfo);
     }
 
-    public void TryComplete(NativeList<FinalPathRequest> requestedPaths, NativeArray<float2> sources)
+    internal void TryComplete(NativeList<FinalPathRequest> requestedPaths, NativeArray<float2> sources)
     {
         for(int i = ScheduledPortalTraversals.Length - 1; i >= 0; i--)
         {
@@ -118,7 +118,7 @@ internal class PortalTraversalScheduler
             }
         }
     }
-    public void ForceComplete(NativeList<FinalPathRequest> requestedPaths, NativeArray<float2> sources)
+    internal void ForceComplete(NativeList<FinalPathRequest> requestedPaths, NativeArray<float2> sources)
     {
         for (int i = ScheduledPortalTraversals.Length - 1; i >= 0; i--)
         {

@@ -5,9 +5,9 @@ using Unity.Burst;
 using Unity.Mathematics;
 
 [BurstCompile]
-public struct PathRoutineDataResetJob : IJob
+internal struct PathRoutineDataResetJob : IJob
 {
-    public NativeArray<PathRoutineData> PathOrganizationDataArray;
+    internal NativeArray<PathRoutineData> PathOrganizationDataArray;
 
     public void Execute()
     {

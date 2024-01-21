@@ -34,7 +34,7 @@ public struct PortalNodeAdditionTraversalJob : IJob
 
     public NativeList<int> SourcePortalIndexList;
     public NativeList<int> DijkstraStartIndicies;
-    public NativeArray<SectorsWihinLOSArgument> SectorWithinLOSState;
+    internal NativeArray<SectorsWihinLOSArgument> SectorWithinLOSState;
 
     public void Execute()
     {

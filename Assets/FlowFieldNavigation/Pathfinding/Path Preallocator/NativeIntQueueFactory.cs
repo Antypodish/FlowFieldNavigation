@@ -5,7 +5,7 @@ internal class NativeIntQueueFactory
 {
     List<NativeQueue<int>> _nativeQueueContainer;
 
-    public NativeIntQueueFactory(int startingQueueCount)
+    internal NativeIntQueueFactory(int startingQueueCount)
     {
         _nativeQueueContainer = new List<NativeQueue<int>>(startingQueueCount);
         for (int i = 0; i < _nativeQueueContainer.Count; i++)
@@ -14,7 +14,7 @@ internal class NativeIntQueueFactory
         }
     }
 
-    public NativeQueue<int> GetNativeIntQueue()
+    internal NativeQueue<int> GetNativeIntQueue()
     {
         if (_nativeQueueContainer.Count == 0)
         {
@@ -24,12 +24,12 @@ internal class NativeIntQueueFactory
         _nativeQueueContainer.RemoveAtSwapBack(_nativeQueueContainer.Count - 1);
         return list;
     }
-    public void SendNativeIntQueue(NativeQueue<int> list)
+    internal void SendNativeIntQueue(NativeQueue<int> list)
     {
         list.Clear();
         _nativeQueueContainer.Add(list);
     }
-    public void DestroyAll()
+    internal void DestroyAll()
     {
         for(int i = 0; i < _nativeQueueContainer.Count; i++)
         {

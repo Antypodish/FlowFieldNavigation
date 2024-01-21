@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Jobs;
-public class IntegrationFieldFactory
+internal class IntegrationFieldFactory
 {
     List<NativeList<IntegrationTile>> _integrationFieldContainer;
 
-    public IntegrationFieldFactory(int initialSize)
+    internal IntegrationFieldFactory(int initialSize)
     {
         _integrationFieldContainer = new List<NativeList<IntegrationTile>>(initialSize);
         for (int i = 0; i < initialSize; i++)
@@ -14,7 +14,7 @@ public class IntegrationFieldFactory
             _integrationFieldContainer.Add(new NativeList<IntegrationTile>(Allocator.Persistent));
         }
     }
-    public NativeList<IntegrationTile> GetIntegrationField(int length)
+    internal NativeList<IntegrationTile> GetIntegrationField(int length)
     {
         if (_integrationFieldContainer.Count == 0)
         {
@@ -42,7 +42,7 @@ public class IntegrationFieldFactory
             return field;
         }
     }
-    public void SendIntegrationField(NativeList<IntegrationTile> integrationField)
+    internal void SendIntegrationField(NativeList<IntegrationTile> integrationField)
     {
         _integrationFieldContainer.Add(integrationField);
     }

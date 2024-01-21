@@ -1,18 +1,18 @@
 ﻿using Unity.Collections;
 
-public struct PathPortalTraversalData
+internal struct PathPortalTraversalData
 {
-    public NativeArray<PortalTraversalData> PortalTraversalDataArray;
-    public NativeList<ActivePortal> PortalSequence;
-    public NativeList<int> PortalSequenceBorders;
-    public NativeList<int> AStartTraverseIndexList;
-    public NativeList<int> TargetSectorPortalIndexList;
-    public NativeList<int> SourcePortalIndexList;
-    public NativeArray<int> PathAdditionSequenceBorderStartIndex;
-    public NativeArray<int> NewPickedSectorStartIndex;
-    public NativeArray<DijkstraTile> TargetSectorCosts;
+    internal NativeArray<PortalTraversalData> PortalTraversalDataArray;
+    internal NativeList<ActivePortal> PortalSequence;
+    internal NativeList<int> PortalSequenceBorders;
+    internal NativeList<int> AStartTraverseIndexList;
+    internal NativeList<int> TargetSectorPortalIndexList;
+    internal NativeList<int> SourcePortalIndexList;
+    internal NativeArray<int> PathAdditionSequenceBorderStartIndex;
+    internal NativeArray<int> NewPickedSectorStartIndex;
+    internal NativeArray<DijkstraTile> TargetSectorCosts;
 
-    public void Dispose()
+    internal void Dispose()
     {
         PathAdditionSequenceBorderStartIndex.Dispose();
         NewPickedSectorStartIndex.Dispose();

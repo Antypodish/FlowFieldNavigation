@@ -5,19 +5,19 @@ using Unity.Jobs;
 using Unity.Mathematics;
 
 [BurstCompile]
-public struct AgentWallCollisionJob : IJobParallelFor
+internal struct AgentWallCollisionJob : IJobParallelFor
 {
-    public int FieldColAmount;
-    public int FieldRowAmount;
-    public int SectorColAmount;
-    public int SectorRowAmount;
-    public int SectorMatrixColAmount;
-    public int SectorTileAmount;
-    public float TileSize;
-    public float HalfTileSize;
-    [ReadOnly] public NativeArray<AgentMovementData> AgentMovementData;
+    internal int FieldColAmount;
+    internal int FieldRowAmount;
+    internal int SectorColAmount;
+    internal int SectorRowAmount;
+    internal int SectorMatrixColAmount;
+    internal int SectorTileAmount;
+    internal float TileSize;
+    internal float HalfTileSize;
+    [ReadOnly] internal NativeArray<AgentMovementData> AgentMovementData;
     [ReadOnly] internal NativeArray<UnsafeListReadOnly<byte>> CostFieldEachOffset;
-    public NativeArray<float3> AgentPositionChangeBuffer;
+    internal NativeArray<float3> AgentPositionChangeBuffer;
 
     public void Execute(int index)
     {
@@ -352,11 +352,11 @@ public struct AgentWallCollisionJob : IJobParallelFor
     }
     private struct ExtensionIndex
     {
-        public int LocalIndex;
-        public int SectorIndex;
-        public float Cost;
+        internal int LocalIndex;
+        internal int SectorIndex;
+        internal float Cost;
 
-        public bool IsValid()
+        internal bool IsValid()
         {
             return Cost != float.MaxValue;
         }

@@ -4,7 +4,7 @@ internal class NativeIntListFactory
 {
     List<NativeList<int>> _nativeListContainer;
 
-    public NativeIntListFactory(int startingListCount)
+    internal NativeIntListFactory(int startingListCount)
     {
         _nativeListContainer = new List<NativeList<int>>(startingListCount);
         for(int i = 0; i < _nativeListContainer.Count; i++)
@@ -13,7 +13,7 @@ internal class NativeIntListFactory
         }
     }
 
-    public NativeList<int> GetNativeIntList()
+    internal NativeList<int> GetNativeIntList()
     {
         if(_nativeListContainer.Count == 0)
         {
@@ -23,12 +23,12 @@ internal class NativeIntListFactory
         _nativeListContainer.RemoveAtSwapBack(_nativeListContainer.Count - 1);
         return list;
     }
-    public void SendNativeIntList(NativeList<int> list)
+    internal void SendNativeIntList(NativeList<int> list)
     {
         list.Clear();
         _nativeListContainer.Add(list);
     }
-    public void DestroyAll()
+    internal void DestroyAll()
     {
         for (int i = 0; i < _nativeListContainer.Count; i++)
         {

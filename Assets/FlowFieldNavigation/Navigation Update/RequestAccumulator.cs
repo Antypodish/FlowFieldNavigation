@@ -4,32 +4,32 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 
-public class RequestAccumulator
+internal class RequestAccumulator
 {
     PathfindingManager _pathfindingManager;
 
-    public List<FlowFieldAgent> AgentAddRequest;
-    public NativeList<PathRequest> PathRequests;
+    internal List<FlowFieldAgent> AgentAddRequest;
+    internal NativeList<PathRequest> PathRequests;
     internal NativeList<CostEdit> CostEditRequests;
-    public RequestAccumulator(PathfindingManager pathfindingManager)
+    internal RequestAccumulator(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
         AgentAddRequest = new List<FlowFieldAgent>();
         PathRequests = new NativeList<PathRequest>(Allocator.Persistent);
         CostEditRequests = new NativeList<CostEdit>(Allocator.Persistent);
     }
-    public void RequestAgentAddition(FlowFieldAgent agent)
+    internal void RequestAgentAddition(FlowFieldAgent agent)
     {
         AgentAddRequest.Add(agent);
     }
-    public void RequestPath(List<FlowFieldAgent> agents, Vector3 target)
+    internal void RequestPath(List<FlowFieldAgent> agents, Vector3 target)
     {
         int newPathIndex = PathRequests.Length;
         float2 target2d = new float2(target.x, target.z);
         PathRequests.Add(new PathRequest(target2d));
         _pathfindingManager.AgentDataContainer.SetRequestedPathIndiciesOf(agents, newPathIndex);
     }
-    public void RequestPath(List<FlowFieldAgent> agents, FlowFieldAgent targetAgent)
+    internal void RequestPath(List<FlowFieldAgent> agents, FlowFieldAgent targetAgent)
     {
         int newPathIndex = PathRequests.Length;
         int targetAgentIndex = targetAgent.AgentDataIndex;
@@ -38,7 +38,7 @@ public class RequestAccumulator
         _pathfindingManager.AgentDataContainer.SetRequestedPathIndiciesOf(agents, newPathIndex);
     }
 
-    public void HandleObstacleRequest(NativeArray<ObstacleRequest> obstacleRequests, NativeList<int> outputListToAddObstacleIndicies)
+    internal void HandleObstacleRequest(NativeArray<ObstacleRequest> obstacleRequests, NativeList<int> outputListToAddObstacleIndicies)
     {
         ObstacleRequestToCostEdit obstacleToEdit = new ObstacleRequestToCostEdit()
         {
@@ -57,7 +57,7 @@ public class RequestAccumulator
         };
         obstacleToEdit.Schedule().Complete();
     }
-    public void HandleObstacleRemovalRequest(NativeArray<int>.ReadOnly obstacleIndiciesToRemove)
+    internal void HandleObstacleRemovalRequest(NativeArray<int>.ReadOnly obstacleIndiciesToRemove)
     {
         ObstacleRemovalRequestToCostEdit obstacleToEdit = new ObstacleRemovalRequestToCostEdit()
         {

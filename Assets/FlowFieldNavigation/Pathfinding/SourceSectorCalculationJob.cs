@@ -27,7 +27,7 @@ public struct SourceSectorCalculationJob : IJob
     public NativeList<int> SectorFlowStartIndiciesToCalculateFlow;
 
     public UnsafeList<PathSectorState> SectorStateTable;
-    public NativeArray<SectorsWihinLOSArgument> SectorWithinLOSState;
+    internal NativeArray<SectorsWihinLOSArgument> SectorWithinLOSState;
     public void Execute()
     {
         SectorFlowStartIndiciesToCalculateFlow.Clear();

@@ -3,16 +3,16 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 
-public class TargetSectorCostArrayFactory
+internal class TargetSectorCostArrayFactory
 {
     List<UnsafeList<DijkstraTile>> _targetSectorCostAllocations;
     int _sectorTileAmount;
-    public TargetSectorCostArrayFactory(int sectorTileAmount)
+    internal TargetSectorCostArrayFactory(int sectorTileAmount)
     {
         _targetSectorCostAllocations = new List<UnsafeList<DijkstraTile>>();
         _sectorTileAmount = sectorTileAmount;
     }
-    public UnsafeList<DijkstraTile> GetTargetSecorCosts()
+    internal UnsafeList<DijkstraTile> GetTargetSecorCosts()
     {
         if (_targetSectorCostAllocations.Count == 0)
         {
@@ -25,7 +25,7 @@ public class TargetSectorCostArrayFactory
         _targetSectorCostAllocations.RemoveAtSwapBack(index);
         return targetSectorCosts;
     }
-    public void SendTargetSectorCosts(UnsafeList<DijkstraTile> targetSectorCosts)
+    internal void SendTargetSectorCosts(UnsafeList<DijkstraTile> targetSectorCosts)
     {
         UnsafeListCleaningJob<DijkstraTile> cleaning = new UnsafeListCleaningJob<DijkstraTile>()
         {

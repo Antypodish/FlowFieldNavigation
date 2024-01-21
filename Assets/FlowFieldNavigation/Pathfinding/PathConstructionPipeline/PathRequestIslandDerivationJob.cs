@@ -5,16 +5,16 @@ using Unity.Burst;
 using Unity.Mathematics;
 
 [BurstCompile]
-public struct PathRequestIslandDerivationJob : IJob
+internal struct PathRequestIslandDerivationJob : IJob
 {
-    public float TileSize;
+    internal float TileSize;
 
-    [ReadOnly] public NativeArray<AgentData> AgentDataArray;
-    public NativeArray<int> NewAgentPathIndicies;
-    public NativeList<OffsetDerivedPathRequest> DerivedPathRequests;
-    public NativeList<FinalPathRequest> FinalPathRequests;
+    [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
+    internal NativeArray<int> NewAgentPathIndicies;
+    internal NativeList<OffsetDerivedPathRequest> DerivedPathRequests;
+    internal NativeList<FinalPathRequest> FinalPathRequests;
     internal NativeArray<IslandFieldProcessor> IslandFieldProcesorsPerOffset;
-    [WriteOnly] public NativeReference<int> PathRequestSourceCount;
+    [WriteOnly] internal NativeReference<int> PathRequestSourceCount;
     public void Execute()
     {
         //INITIALIZE ISLAND FIELDS OF DERIVED PATH REQUESTS

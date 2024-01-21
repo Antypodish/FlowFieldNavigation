@@ -10,18 +10,18 @@ using Unity.VisualScripting;
 //And i dont want it to run on main thread (time waste + bad scaling)
 //Luckily, possible race conditions are easy to find, but no exceptions thrown :(
 [BurstCompile]
-public struct FinalPathRequestDestinationExpansionJob : IJob
+internal struct FinalPathRequestDestinationExpansionJob : IJob
 {
-    public int TotalJobCount;
-    public int JobIndex;
-    public float TileSize;
-    public int SectorColAmount;
-    public int SectorRowAmount;
-    public int SectorMatrixColAmount;
-    public int SectorTileAmount;
-    public int FieldRowAmount;
-    public int FieldColAmount;
-    [NativeDisableContainerSafetyRestriction] public NativeList<FinalPathRequest> FinalPathRequests;
+    internal int TotalJobCount;
+    internal int JobIndex;
+    internal float TileSize;
+    internal int SectorColAmount;
+    internal int SectorRowAmount;
+    internal int SectorMatrixColAmount;
+    internal int SectorTileAmount;
+    internal int FieldRowAmount;
+    internal int FieldColAmount;
+    [NativeDisableContainerSafetyRestriction] internal NativeList<FinalPathRequest> FinalPathRequests;
     [ReadOnly] internal NativeArray<IslandFieldProcessor> IslandFieldProcessors;
     [ReadOnly] internal NativeArray<UnsafeListReadOnly<byte>> CostFields;
     public void Execute()
@@ -270,11 +270,11 @@ public struct FinalPathRequestDestinationExpansionJob : IJob
 
     private struct ExtensionIndex
     {
-        public int LocalIndex;
-        public int SectorIndex;
-        public float Cost;
+        internal int LocalIndex;
+        internal int SectorIndex;
+        internal float Cost;
 
-        public bool IsValid()
+        internal bool IsValid()
         {
             return Cost != float.MaxValue;
         }

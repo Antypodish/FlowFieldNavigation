@@ -4,32 +4,32 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
 
-public class PathDataContainer
+internal class PathDataContainer
 {
-    public NativeList<PathFlowData> ExposedPathFlowData;
-    public NativeList<PathLocationData> ExposedPathLocationData;
-    public NativeList<float2> ExposedPathDestinations;
-    public NativeList<int> ExposedPathFlockIndicies;
-    public NativeList<float> ExposedPathReachDistanceCheckRanges;
-    public NativeList<PathState> ExposedPathStateList;
-    public NativeList<bool> ExposedPathAgentStopFlagList;
+    internal NativeList<PathFlowData> ExposedPathFlowData;
+    internal NativeList<PathLocationData> ExposedPathLocationData;
+    internal NativeList<float2> ExposedPathDestinations;
+    internal NativeList<int> ExposedPathFlockIndicies;
+    internal NativeList<float> ExposedPathReachDistanceCheckRanges;
+    internal NativeList<PathState> ExposedPathStateList;
+    internal NativeList<bool> ExposedPathAgentStopFlagList;
 
-    public List<PathfindingInternalData> PathfindingInternalDataList;
-    public NativeList<PathLocationData> PathLocationDataList;
-    public NativeList<PathFlowData> PathFlowDataList;
-    public NativeList<UnsafeList<PathSectorState>> PathSectorStateTableList;
-    public NativeList<PathDestinationData> PathDestinationDataList;
-    public NativeList<UnsafeList<DijkstraTile>> TargetSectorIntegrationList;
-    public NativeList<PathRoutineData> PathRoutineDataList;
-    public NativeList<SectorBitArray> PathSectorBitArrays;
-    public List<PathPortalTraversalData> PathPortalTraversalDataList;
-    public NativeList<int> PathFlockIndicies;
-    public NativeList<int> PathSubscriberCounts;
+    internal List<PathfindingInternalData> PathfindingInternalDataList;
+    internal NativeList<PathLocationData> PathLocationDataList;
+    internal NativeList<PathFlowData> PathFlowDataList;
+    internal NativeList<UnsafeList<PathSectorState>> PathSectorStateTableList;
+    internal NativeList<PathDestinationData> PathDestinationDataList;
+    internal NativeList<UnsafeList<DijkstraTile>> TargetSectorIntegrationList;
+    internal NativeList<PathRoutineData> PathRoutineDataList;
+    internal NativeList<SectorBitArray> PathSectorBitArrays;
+    internal List<PathPortalTraversalData> PathPortalTraversalDataList;
+    internal NativeList<int> PathFlockIndicies;
+    internal NativeList<int> PathSubscriberCounts;
     Stack<int> _removedPathIndicies;
 
     FieldDataContainer _fieldProducer;
     PathPreallocator _preallocator;
-    public PathDataContainer(PathfindingManager pathfindingManager)
+    internal PathDataContainer(PathfindingManager pathfindingManager)
     {
         _fieldProducer = pathfindingManager.FieldManager;
         PathfindingInternalDataList = new List<PathfindingInternalData>(1);
@@ -54,7 +54,7 @@ public class PathDataContainer
         ExposedPathReachDistanceCheckRanges = new NativeList<float>(Allocator.Persistent);
         ExposedPathAgentStopFlagList = new NativeList<bool>(Allocator.Persistent);
     }
-    public void Update()
+    internal void Update()
     {
         for (int i = 0; i < PathfindingInternalDataList.Count; i++)
         {
@@ -98,7 +98,7 @@ public class PathDataContainer
         }
         _preallocator.CheckForDeallocations();
     }
-    public void ExposeBuffers(NativeArray<int> destinationUpdatedPathIndicies, NativeArray<int> newPathIndicies, NativeArray<int> expandedPathIndicies)
+    internal void ExposeBuffers(NativeArray<int> destinationUpdatedPathIndicies, NativeArray<int> newPathIndicies, NativeArray<int> expandedPathIndicies)
     {
         PathDataExposeJob dataExposeJob = new PathDataExposeJob()
         {
@@ -119,7 +119,7 @@ public class PathDataContainer
         };
         dataExposeJob.Schedule().Complete();
     }
-    public int CreatePath(FinalPathRequest request)
+    internal int CreatePath(FinalPathRequest request)
     {
         PreallocationPack preallocations = _preallocator.GetPreallocations(request.Offset);
 
@@ -206,7 +206,7 @@ public class PathDataContainer
 
         return pathIndex;
     }
-    public void FinalizePathBuffers(int pathIndex)
+    internal void FinalizePathBuffers(int pathIndex)
     {
         PathfindingInternalData internalData = PathfindingInternalDataList[pathIndex];
         PathFlowData pathFlowData = PathFlowDataList[pathIndex];
@@ -218,11 +218,11 @@ public class PathDataContainer
         PathfindingInternalDataList[pathIndex] = internalData;
         PathFlowDataList[pathIndex] = pathFlowData;
     }
-    public void ResizeActiveWaveFrontList(int newLength, NativeList<UnsafeList<ActiveWaveFront>> activeWaveFrontList)
+    internal void ResizeActiveWaveFrontList(int newLength, NativeList<UnsafeList<ActiveWaveFront>> activeWaveFrontList)
     {
         _preallocator.AddToActiveWaveFrontList(newLength, activeWaveFrontList);
     }
-    public bool IsLOSCalculated(int pathIndex)
+    internal bool IsLOSCalculated(int pathIndex)
     {
         PathfindingInternalData internalData = PathfindingInternalDataList[pathIndex];
         PathLocationData locationData = PathLocationDataList[pathIndex];

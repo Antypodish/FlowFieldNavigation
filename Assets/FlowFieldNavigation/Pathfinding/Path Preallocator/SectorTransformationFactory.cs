@@ -3,21 +3,21 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 
-public class SectorTransformationFactory
+internal class SectorTransformationFactory
 {
     List<UnsafeList<int>> _sectorToPickedArrays;
     List<NativeList<int>> _pickedToSectorLists;
     List<CleaningHandle> _cleaningHandles;
     int _sectorMatrixSectorAmount;
 
-    public SectorTransformationFactory(int sectorMatrixSectorAmount)
+    internal SectorTransformationFactory(int sectorMatrixSectorAmount)
     {
         _sectorMatrixSectorAmount = sectorMatrixSectorAmount;
         _sectorToPickedArrays = new List<UnsafeList<int>>();
         _pickedToSectorLists = new List<NativeList<int>>();
         _cleaningHandles = new List<CleaningHandle>();
     }
-    public void CheckForCleaningHandles()
+    internal void CheckForCleaningHandles()
     {
         for (int i = _cleaningHandles.Count - 1; i >= 0; i--)
         {
@@ -30,7 +30,7 @@ public class SectorTransformationFactory
             }
         }
     }
-    public UnsafeList<int> GetSectorToPickedArray()
+    internal UnsafeList<int> GetSectorToPickedArray()
     {
         UnsafeList<int> array;
         if (_sectorToPickedArrays.Count == 0)
@@ -44,7 +44,7 @@ public class SectorTransformationFactory
         _sectorToPickedArrays.RemoveAtSwapBack(index);
         return array;
     }
-    public NativeList<int> GetPickedToSectorList()
+    internal NativeList<int> GetPickedToSectorList()
     {
         if (_pickedToSectorLists.Count == 0) { return new NativeList<int>(Allocator.Persistent); }
         int index = _pickedToSectorLists.Count - 1;
@@ -52,7 +52,7 @@ public class SectorTransformationFactory
         _pickedToSectorLists.RemoveAtSwapBack(index);
         return list;
     }
-    public void SendSectorTransformationsBack(UnsafeList<int> sectorToPicked, NativeList<int> pickedToSector)
+    internal void SendSectorTransformationsBack(UnsafeList<int> sectorToPicked, NativeList<int> pickedToSector)
     {
         UnsafeListCleaningJob<int> cleaning = new UnsafeListCleaningJob<int>()
         {
@@ -70,7 +70,7 @@ public class SectorTransformationFactory
 
     struct CleaningHandle
     {
-        public UnsafeList<int> List;
-        public JobHandle Handle;
+        internal UnsafeList<int> List;
+        internal JobHandle Handle;
     }
 }

@@ -3,13 +3,13 @@ using Unity.Collections;
 using Unity.Burst;
 
 [BurstCompile]
-public struct NewPathToCurPathTransferJob : IJob
+internal struct NewPathToCurPathTransferJob : IJob
 {
-    public NativeArray<AgentData> AgentDataArray;
-    public NativeArray<int> AgentCurPathIndicies;
-    public NativeArray<int> AgentNewPathIndicies;
-    public NativeArray<int> PathSubscribers;
-    public NativeArray<bool> AgentDestinationReachedArray;
+    internal NativeArray<AgentData> AgentDataArray;
+    internal NativeArray<int> AgentCurPathIndicies;
+    internal NativeArray<int> AgentNewPathIndicies;
+    internal NativeArray<int> PathSubscribers;
+    internal NativeArray<bool> AgentDestinationReachedArray;
     public void Execute()
     {
         for (int i = 0; i < AgentCurPathIndicies.Length; i++)

@@ -4,19 +4,19 @@ using Unity.Collections;
 using Unity.Mathematics;
 
 [BurstCompile]
-public struct AvoidanceWallDetectionJob : IJobParallelFor
+internal struct AvoidanceWallDetectionJob : IJobParallelFor
 {
-    public float FieldMinXIncluding;
-    public float FieldMinYIncluding;
-    public float FieldMaxXExcluding;
-    public float FieldMaxYExcluding;
-    public float TileSize;
-    public int SectorColAmount;
-    public int SectorMatrixColAmount;
-    public int SectorTileAmount;
-    [ReadOnly] public NativeArray<AgentMovementData> AgentMovementDataArray;
+    internal float FieldMinXIncluding;
+    internal float FieldMinYIncluding;
+    internal float FieldMaxXExcluding;
+    internal float FieldMaxYExcluding;
+    internal float TileSize;
+    internal int SectorColAmount;
+    internal int SectorMatrixColAmount;
+    internal int SectorTileAmount;
+    [ReadOnly] internal NativeArray<AgentMovementData> AgentMovementDataArray;
     [ReadOnly] internal NativeArray<UnsafeListReadOnly<byte>> CostFieldPerOffset;
-    public NativeArray<RoutineResult> RoutineResultArray;
+    internal NativeArray<RoutineResult> RoutineResultArray;
     public void Execute(int index)
     {
         RoutineResult agentRoutineResult = RoutineResultArray[index];

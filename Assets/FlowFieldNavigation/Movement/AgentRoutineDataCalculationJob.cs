@@ -5,21 +5,21 @@ using Unity.Jobs;
 using Unity.Mathematics;
 
 [BurstCompile]
-public struct AgentRoutineDataCalculationJob : IJobParallelFor
+internal struct AgentRoutineDataCalculationJob : IJobParallelFor
 {
-    public float TileSize;
-    public int FieldColAmount;
-    public int SectorColAmount;
-    public int SectorMatrixColAmount;
-    public float SectorSize;
-    [ReadOnly] public NativeArray<AgentData> AgentDataArray;
-    [ReadOnly] public NativeArray<int> AgentCurPathIndicies;
-    [ReadOnly] public NativeArray<PathLocationData> ExposedPathLocationDataArray;
-    [ReadOnly] public NativeArray<PathFlowData> ExposedPathFlowDataArray;
-    [ReadOnly] public NativeArray<float2> ExposedPathDestinationArray;
-    [ReadOnly] public NativeArray<int> HashedToNormal;
+    internal float TileSize;
+    internal int FieldColAmount;
+    internal int SectorColAmount;
+    internal int SectorMatrixColAmount;
+    internal float SectorSize;
+    [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
+    [ReadOnly] internal NativeArray<int> AgentCurPathIndicies;
+    [ReadOnly] internal NativeArray<PathLocationData> ExposedPathLocationDataArray;
+    [ReadOnly] internal NativeArray<PathFlowData> ExposedPathFlowDataArray;
+    [ReadOnly] internal NativeArray<float2> ExposedPathDestinationArray;
+    [ReadOnly] internal NativeArray<int> HashedToNormal;
 
-    public NativeArray<AgentMovementData> AgentMovementData;
+    internal NativeArray<AgentMovementData> AgentMovementData;
     public void Execute(int index)
     {
         //FIRST

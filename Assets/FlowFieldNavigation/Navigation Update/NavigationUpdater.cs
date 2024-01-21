@@ -6,18 +6,18 @@ using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public class NavigationUpdater
+internal class NavigationUpdater
 {
     PathfindingManager _pathfindingManager;
     RoutineScheduler _scheduler;
     RequestAccumulator _requestAccumulator;
-    public NavigationUpdater(PathfindingManager pathfindingManager, RequestAccumulator requestAccumulator)
+    internal NavigationUpdater(PathfindingManager pathfindingManager, RequestAccumulator requestAccumulator)
     {
         _pathfindingManager = pathfindingManager;
         _requestAccumulator = requestAccumulator;
         _scheduler = new RoutineScheduler(pathfindingManager);
     }
-    public void RoutineFixedUpdate()
+    internal void RoutineFixedUpdate()
     {
         _scheduler.ForceCompleteAll();
         _pathfindingManager.PathContainer.Update();
@@ -36,11 +36,11 @@ public class NavigationUpdater
         costEditRequests.Clear();
         agentAddRequest.Clear();
     }
-    public RoutineScheduler GetRoutineScheduler()
+    internal RoutineScheduler GetRoutineScheduler()
     {
         return _scheduler;
     }
-    public void IntermediateUpdate()
+    internal void IntermediateUpdate()
     {
         _scheduler.TryCompletePredecessorJobs();
     }

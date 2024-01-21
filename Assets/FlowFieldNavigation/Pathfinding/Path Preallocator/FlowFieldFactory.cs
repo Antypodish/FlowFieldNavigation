@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Jobs;
-public class FlowFieldFactory
+internal class FlowFieldFactory
 {
     List<UnsafeList<FlowData>> _flowFieldContainer;
 
-    public FlowFieldFactory(int initialSize)
+    internal FlowFieldFactory(int initialSize)
     {
         _flowFieldContainer = new List<UnsafeList<FlowData>>(initialSize);
         for (int i = 0; i < initialSize; i++)
@@ -14,7 +14,7 @@ public class FlowFieldFactory
             _flowFieldContainer.Add(new UnsafeList<FlowData>(0, Allocator.Persistent, NativeArrayOptions.ClearMemory));
         }
     }
-    public UnsafeList<FlowData> GetFlowfield(int length)
+    internal UnsafeList<FlowData> GetFlowfield(int length)
     {
         if(_flowFieldContainer.Count == 0)
         {
@@ -30,7 +30,7 @@ public class FlowFieldFactory
             return field;
         }
     }
-    public void SendFlowField(UnsafeList<FlowData> flowfield)
+    internal void SendFlowField(UnsafeList<FlowData> flowfield)
     {
         UnsafeListCleaningJob<FlowData> flowData = new UnsafeListCleaningJob<FlowData>()
         {

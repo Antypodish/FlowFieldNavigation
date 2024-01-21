@@ -2,19 +2,19 @@
 using Unity.Mathematics;
 
 [BurstCompile]
-public struct AgentSpatialGridUtils
+internal struct AgentSpatialGridUtils
 {
-    public float BaseSpatialGridSize;
-    public float FieldHorizontalSize;
-    public float FieldVerticalSize;
+    internal float BaseSpatialGridSize;
+    internal float FieldHorizontalSize;
+    internal float FieldVerticalSize;
 
-    public AgentSpatialGridUtils(byte placeholderParameter)
+    internal AgentSpatialGridUtils(byte placeholderParameter)
     {
         BaseSpatialGridSize = FlowFieldUtilities.BaseAgentSpatialGridSize;
         FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount;
         FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount;
     }
-    public GridTravesalData GetGridTraversalData(float2 agentPos, float checkRange, int hashGridIndex)
+    internal GridTravesalData GetGridTraversalData(float2 agentPos, float checkRange, int hashGridIndex)
     {
         float tileSize = hashGridIndex * BaseSpatialGridSize + BaseSpatialGridSize;
         int2 startingTileIndex = GetStartingTileIndex(agentPos, tileSize);
@@ -38,25 +38,25 @@ public struct AgentSpatialGridUtils
             topLeft = botleft1d + (verticalSize * gridColAmount) - 1,
         };
     }
-    public int2 GetStartingTileIndex(float2 position, float tileSize) => new int2((int)math.floor(position.x / tileSize), (int)math.floor(position.y / tileSize));
-    public int GetOffset(float size, float tileSize) => (int)math.ceil(size / tileSize);
-    public float GetTileSize(int hashGridIndex)
+    internal int2 GetStartingTileIndex(float2 position, float tileSize) => new int2((int)math.floor(position.x / tileSize), (int)math.floor(position.y / tileSize));
+    internal int GetOffset(float size, float tileSize) => (int)math.ceil(size / tileSize);
+    internal float GetTileSize(int hashGridIndex)
     {
         return hashGridIndex * BaseSpatialGridSize + BaseSpatialGridSize;
     }
-    public int GetColAmount(int hashGridIndex)
+    internal int GetColAmount(int hashGridIndex)
     {
         return (int)math.ceil(FieldHorizontalSize / GetTileSize(hashGridIndex));
     }
-    public int GetRowAmount(int hashGridIndex)
+    internal int GetRowAmount(int hashGridIndex)
     {
         return (int)math.ceil(FieldVerticalSize / GetTileSize(hashGridIndex));
     }
 }
-public struct GridTravesalData
+internal struct GridTravesalData
 {
-    public int botLeft;
-    public int topLeft;
-    public int horizontalSize;
-    public int gridColAmount;
+    internal int botLeft;
+    internal int topLeft;
+    internal int horizontalSize;
+    internal int gridColAmount;
 }

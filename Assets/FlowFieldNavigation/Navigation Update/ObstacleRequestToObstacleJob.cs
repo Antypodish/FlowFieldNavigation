@@ -4,12 +4,12 @@ using Unity.Mathematics;
 using Unity.Jobs;
 
 [BurstCompile]
-public struct ObstacleRequestToObstacleJob : IJobParallelFor
+internal struct ObstacleRequestToObstacleJob : IJobParallelFor
 {
-    public float TileSize;
-    public int FieldColAmount;
-    public int FieldRowAmount;
-    [ReadOnly] public NativeArray<ObstacleRequest> ObstacleRequests;
+    internal float TileSize;
+    internal int FieldColAmount;
+    internal int FieldRowAmount;
+    [ReadOnly] internal NativeArray<ObstacleRequest> ObstacleRequests;
     [WriteOnly] internal NativeArray<Obstacle> NewObstacles;
     public void Execute(int index)
     {

@@ -6,7 +6,7 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine.Networking.Match;
 
-public class LOSIntegrationScheduler
+internal class LOSIntegrationScheduler
 {
     PathfindingManager _pathfindingManager;
     PathDataContainer _pathContainer;
@@ -15,7 +15,7 @@ public class LOSIntegrationScheduler
     NativeList<int> _losCalculatedPaths;
     NativeList<JobHandle> _transferHandles;
 
-    public LOSIntegrationScheduler(PathfindingManager pathfindingManager)
+    internal LOSIntegrationScheduler(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
         _pathContainer = pathfindingManager.PathContainer;
@@ -24,7 +24,7 @@ public class LOSIntegrationScheduler
         _transferHandles = new NativeList<JobHandle>(Allocator.Persistent);
     }
 
-    public void ScheduleLOS(PathPipelineInfoWithHandle pathInfo, JobHandle flowHandle = new JobHandle())
+    internal void ScheduleLOS(PathPipelineInfoWithHandle pathInfo, JobHandle flowHandle = new JobHandle())
     {
         PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathInfo.PathIndex];
         PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
@@ -99,7 +99,7 @@ public class LOSIntegrationScheduler
         pathInfo.Handle = losHandle;
         ScheduledLOS.Add(pathInfo);
     }
-    public void TryComplete()
+    internal void TryComplete()
     {
         for (int i = ScheduledLOS.Length - 1; i >= 0; i--)
         {
@@ -111,7 +111,7 @@ public class LOSIntegrationScheduler
             }
         }
     }
-    public void ForceComplete()
+    internal void ForceComplete()
     {
         for (int i = ScheduledLOS.Length - 1; i >= 0; i--)
         {
@@ -120,7 +120,7 @@ public class LOSIntegrationScheduler
         }
         ScheduledLOS.Clear();
     }
-    public void ScheduleLOSTransfers()
+    internal void ScheduleLOSTransfers()
     {
         List<PathfindingInternalData> internalDataList = _pathContainer.PathfindingInternalDataList;
         NativeList<PathLocationData> pathLocationDataList = _pathContainer.PathLocationDataList;
@@ -149,7 +149,7 @@ public class LOSIntegrationScheduler
         }
         _losCalculatedPaths.Clear();
     }
-    public void CompleteLOSTransfers()
+    internal void CompleteLOSTransfers()
     {
         for(int i = 0; i < _transferHandles.Length; i++)
         {

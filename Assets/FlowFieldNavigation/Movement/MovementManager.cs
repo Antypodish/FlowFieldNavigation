@@ -6,21 +6,21 @@ using UnityEngine.Jobs;
 using System.Diagnostics;
 using System.Collections.Generic;
 using UnityEngine;
-public class MovementManager
+internal class MovementManager
 {
     AgentDataContainer _agentDataContainer;
     PathfindingManager _pathfindingManager;
 
-    public NativeList<AgentMovementData> AgentMovementDataList;
-    public NativeList<float3> AgentPositionChangeBuffer;
-    public NativeList<RoutineResult> RoutineResults;
-    public NativeList<int> NormalToHashed;
-    public NativeList<int> HashedToNormal;
-    public NativeArray<UnsafeList<HashTile>> HashGridArray;
-    public NativeList<float> PathReachDistances;
+    internal NativeList<AgentMovementData> AgentMovementDataList;
+    internal NativeList<float3> AgentPositionChangeBuffer;
+    internal NativeList<RoutineResult> RoutineResults;
+    internal NativeList<int> NormalToHashed;
+    internal NativeList<int> HashedToNormal;
+    internal NativeArray<UnsafeList<HashTile>> HashGridArray;
+    internal NativeList<float> PathReachDistances;
 
     JobHandle _routineHandle;
-    public MovementManager(AgentDataContainer agentDataContainer, PathfindingManager pathfindingManager)
+    internal MovementManager(AgentDataContainer agentDataContainer, PathfindingManager pathfindingManager)
     {
         _agentDataContainer = agentDataContainer;
         _pathfindingManager = pathfindingManager;
@@ -260,11 +260,11 @@ public class MovementManager
         if (FlowFieldUtilities.DebugMode) { stoppingHandle.Complete(); }
         _routineHandle = stoppingHandle;
     }
-    public void ForceCompleteRoutine()
+    internal void ForceCompleteRoutine()
     {
         _routineHandle.Complete();
     }
-    public void SendRoutineResults()
+    internal void SendRoutineResults()
     {
         TransformAccessArray agentTransforms = _pathfindingManager.AgentDataContainer.AgentTransforms;
         NativeList<bool> agentDestinationReachArray = _pathfindingManager.AgentDataContainer.AgentDestinationReachedArray;

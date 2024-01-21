@@ -2,12 +2,12 @@
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Collections;
 
-public class ActiveWaveFrontListFactory
+internal class ActiveWaveFrontListFactory
 {
     List<UnsafeList<ActiveWaveFront>> _activeWaveFrontListContainer;
     List<NativeList<UnsafeList<ActiveWaveFront>>> _activeWaveFrontListListContainer;
 
-    public ActiveWaveFrontListFactory(int initialListCount, int initialListListCount)
+    internal ActiveWaveFrontListFactory(int initialListCount, int initialListListCount)
     {
         _activeWaveFrontListContainer = new List<UnsafeList<ActiveWaveFront>>(initialListCount);
         _activeWaveFrontListListContainer = new List<NativeList<UnsafeList<ActiveWaveFront>>>(initialListListCount);
@@ -21,7 +21,7 @@ public class ActiveWaveFrontListFactory
         }
     }
 
-    public NativeList<UnsafeList<ActiveWaveFront>> GetActiveWaveFrontListPersistent(int count)
+    internal NativeList<UnsafeList<ActiveWaveFront>> GetActiveWaveFrontListPersistent(int count)
     {
         NativeList<UnsafeList<ActiveWaveFront>> list;
         if (_activeWaveFrontListListContainer.Count == 0)
@@ -49,7 +49,7 @@ public class ActiveWaveFrontListFactory
          }
         return list;
     }
-    public void AddActiveWaveFrontList(int count, NativeList<UnsafeList<ActiveWaveFront>> list)
+    internal void AddActiveWaveFrontList(int count, NativeList<UnsafeList<ActiveWaveFront>> list)
     {
         for(int i = 0; i < count; i++)
         {
@@ -64,7 +64,7 @@ public class ActiveWaveFrontListFactory
             }
         }
     }
-    public void SendActiveWaveFrontList(NativeList<UnsafeList<ActiveWaveFront>> list)
+    internal void SendActiveWaveFrontList(NativeList<UnsafeList<ActiveWaveFront>> list)
     {
         for(int i = 0; i < list.Length; i++)
         {
@@ -76,7 +76,7 @@ public class ActiveWaveFrontListFactory
         _activeWaveFrontListListContainer.Add(list);
     }
 
-    public void DisposeAll()
+    internal void DisposeAll()
     {
         for(int i = 0; i < _activeWaveFrontListContainer.Count; i++)
         {

@@ -4,18 +4,18 @@ using Unity.Jobs;
 using Unity.Burst;
 
 [BurstCompile]
-public struct FinalPathRequestSourceSubmitJob : IJob
+internal struct FinalPathRequestSourceSubmitJob : IJob
 {
-    [ReadOnly] public NativeArray<int> AgentNewPathIndicies;
-    [ReadOnly] public NativeArray<int> AgentCurPathIndicies;
-    [ReadOnly] public NativeArray<AgentData> AgentDataArray;
-    [ReadOnly] public NativeReference<int> PathRequestSourceCount;
-    [ReadOnly] public NativeReference<int> CurrentPathSourceCount;
-    [ReadOnly] public NativeArray<PathTask> AgentTasks;
-    [ReadOnly] public NativeArray<PathState> PathStateArray;
-    public NativeArray<PathRoutineData> PathRoutineDataArray;
-    public NativeList<FinalPathRequest> FinalPathRequests;
-    public NativeList<float2> Sources;
+    [ReadOnly] internal NativeArray<int> AgentNewPathIndicies;
+    [ReadOnly] internal NativeArray<int> AgentCurPathIndicies;
+    [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
+    [ReadOnly] internal NativeReference<int> PathRequestSourceCount;
+    [ReadOnly] internal NativeReference<int> CurrentPathSourceCount;
+    [ReadOnly] internal NativeArray<PathTask> AgentTasks;
+    [ReadOnly] internal NativeArray<PathState> PathStateArray;
+    internal NativeArray<PathRoutineData> PathRoutineDataArray;
+    internal NativeList<FinalPathRequest> FinalPathRequests;
+    internal NativeList<float2> Sources;
 
     public void Execute()
     {

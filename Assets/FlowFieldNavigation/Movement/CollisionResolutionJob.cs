@@ -4,11 +4,11 @@ using Unity.Jobs;
 using Unity.Mathematics;
 
 [BurstCompile]
-public struct CollisionResolutionJob : IJobParallelFor
+internal struct CollisionResolutionJob : IJobParallelFor
 {
-    [ReadOnly] public AgentSpatialHashGrid AgentSpatialHashGrid;
-    [ReadOnly] public NativeArray<RoutineResult> RoutineResultArray;
-    public NativeArray<float3> AgentPositionChangeBuffer;
+    [ReadOnly] internal AgentSpatialHashGrid AgentSpatialHashGrid;
+    [ReadOnly] internal NativeArray<RoutineResult> RoutineResultArray;
+    internal NativeArray<float3> AgentPositionChangeBuffer;
     public void Execute(int index)
     {
         AgentMovementData agentData = AgentSpatialHashGrid.RawAgentMovementDataArray[index];

@@ -1,11 +1,11 @@
 ﻿using Unity.Collections.LowLevel.Unsafe;
 
-public struct PathLocationData
+internal struct PathLocationData
 {
-    public UnsafeList<int> SectorToPicked;
-    public UnsafeList<SectorFlowStart> DynamicAreaPickedSectorFlowStarts;
+    internal UnsafeList<int> SectorToPicked;
+    internal UnsafeList<SectorFlowStart> DynamicAreaPickedSectorFlowStarts;
 
-    public void Dispose()
+    internal void Dispose()
     {
         DynamicAreaPickedSectorFlowStarts.Dispose();
     }

@@ -5,25 +5,25 @@ using Unity.Burst;
 using Unity.Mathematics;
 
 [BurstCompile]
-public struct PathRoutineDataCalculationJob : IJobParallelFor
+internal struct PathRoutineDataCalculationJob : IJobParallelFor
 {
-    public float TileSize;
-    public int SectorColAmount;
-    public int SectorMatrixColAmount;
-    public int SectorRowAmount;
-    public int SectorTileAmount;
-    public int FieldRowAmount;
-    public int FieldColAmount;
-    [ReadOnly] public NativeArray<UnsafeList<DijkstraTile>> TargetSectorIntegrations;
-    [ReadOnly] public NativeArray<PathLocationData> PathLocationDataArray;
-    [ReadOnly] public NativeArray<PathFlowData> PathFlowDataArray;
-    [ReadOnly] public NativeArray<PathState> PathStateArray;
-    [ReadOnly] public NativeArray<AgentData> AgentDataArray;
+    internal float TileSize;
+    internal int SectorColAmount;
+    internal int SectorMatrixColAmount;
+    internal int SectorRowAmount;
+    internal int SectorTileAmount;
+    internal int FieldRowAmount;
+    internal int FieldColAmount;
+    [ReadOnly] internal NativeArray<UnsafeList<DijkstraTile>> TargetSectorIntegrations;
+    [ReadOnly] internal NativeArray<PathLocationData> PathLocationDataArray;
+    [ReadOnly] internal NativeArray<PathFlowData> PathFlowDataArray;
+    [ReadOnly] internal NativeArray<PathState> PathStateArray;
+    [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
     [ReadOnly] internal NativeArray<IslandFieldProcessor> IslandFieldProcessors;
     [ReadOnly] internal NativeArray<UnsafeListReadOnly<byte>> CostFields;
-    public NativeArray<PathDestinationData> PathDestinationDataArray;
-    public NativeArray<PathRoutineData> PathOrganizationDataArray;
-    public NativeArray<UnsafeList<PathSectorState>> PathSectorStateTables;
+    internal NativeArray<PathDestinationData> PathDestinationDataArray;
+    internal NativeArray<PathRoutineData> PathOrganizationDataArray;
+    internal NativeArray<UnsafeList<PathSectorState>> PathSectorStateTables;
 
     public void Execute(int index)
     {
@@ -276,11 +276,11 @@ public struct PathRoutineDataCalculationJob : IJobParallelFor
 
     private struct ExtensionIndex
     {
-        public int LocalIndex;
-        public int SectorIndex;
-        public float Cost;
+        internal int LocalIndex;
+        internal int SectorIndex;
+        internal float Cost;
 
-        public bool IsValid()
+        internal bool IsValid()
         {
             return Cost != float.MaxValue;
         }

@@ -4,20 +4,20 @@ using Unity.Burst;
 using Unity.Mathematics;
 using Unity.Collections.LowLevel.Unsafe;
 [BurstCompile]
-public struct CurrentPathUpdateDeterminationJob : IJob
+internal struct CurrentPathUpdateDeterminationJob : IJob
 {
-    public float TileSize;
-    public int SectorColAmount;
-    public int SectorMatrixColAmount;
-    [ReadOnly] public NativeArray<UnsafeList<PathSectorState>> PathSectorStateTableArray;
-    [ReadOnly] public NativeArray<PathLocationData> PathLocationDataArray;
-    [ReadOnly] public NativeArray<PathFlowData> PathFlowDataArray;
-    [ReadOnly] public NativeArray<int> AgentNewPathIndicies;
-    [ReadOnly] public NativeArray<int> AgentCurrentPathIndicies;
-    [ReadOnly] public NativeArray<AgentData> AgentDataArray;
-    [WriteOnly] public NativeReference<int> CurrentPathSourceCount;
-    public NativeArray<PathRoutineData> PathRoutineDataArray;
-    public NativeArray<PathTask> AgentPathTasks;
+    internal float TileSize;
+    internal int SectorColAmount;
+    internal int SectorMatrixColAmount;
+    [ReadOnly] internal NativeArray<UnsafeList<PathSectorState>> PathSectorStateTableArray;
+    [ReadOnly] internal NativeArray<PathLocationData> PathLocationDataArray;
+    [ReadOnly] internal NativeArray<PathFlowData> PathFlowDataArray;
+    [ReadOnly] internal NativeArray<int> AgentNewPathIndicies;
+    [ReadOnly] internal NativeArray<int> AgentCurrentPathIndicies;
+    [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
+    [WriteOnly] internal NativeReference<int> CurrentPathSourceCount;
+    internal NativeArray<PathRoutineData> PathRoutineDataArray;
+    internal NativeArray<PathTask> AgentPathTasks;
     public void Execute()
     {
         int curPathSourceCount = 0;

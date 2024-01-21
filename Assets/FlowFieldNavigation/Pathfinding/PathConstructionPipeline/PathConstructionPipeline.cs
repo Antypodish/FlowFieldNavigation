@@ -4,7 +4,7 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using System.Collections.Generic;
 using System.Diagnostics;
-public class PathConstructionPipeline
+internal class PathConstructionPipeline
 {
     const int _FinalPathRequestExpansionJobCount = 12;
 
@@ -27,7 +27,7 @@ public class PathConstructionPipeline
     NativeList<int> _destinationUpdatedPathIndicies;
     NativeList<int> _expandedPathIndicies;
     List<JobHandle> _pathfindingTaskOrganizationHandle;
-    public PathConstructionPipeline(PathfindingManager pathfindingManager)
+    internal PathConstructionPipeline(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
         _pathContainer = pathfindingManager.PathContainer;
@@ -304,7 +304,7 @@ public class PathConstructionPipeline
         TryComplete();
     }
 
-    public void TryComplete()
+    internal void TryComplete()
     {
         if (_pathfindingTaskOrganizationHandle.Count != 0)
         {
@@ -321,7 +321,7 @@ public class PathConstructionPipeline
             _requestedSectorCalculationScheduler.TryComplete();
         }
     }
-    public void ForceComplete()
+    internal void ForceComplete()
     {
         if (_pathfindingTaskOrganizationHandle.Count != 0)
         {
@@ -335,21 +335,21 @@ public class PathConstructionPipeline
         _pathContainer.ExposeBuffers(_destinationUpdatedPathIndicies, _newPathIndicies, _expandedPathIndicies);
     }
 }
-public struct RequestPipelineInfoWithHandle
+internal struct RequestPipelineInfoWithHandle
 {
-    public JobHandle Handle;
-    public int PathIndex;
-    public int RequestIndex;
-    public DynamicDestinationState DestinationState;
+    internal JobHandle Handle;
+    internal int PathIndex;
+    internal int RequestIndex;
+    internal DynamicDestinationState DestinationState;
 
-    public RequestPipelineInfoWithHandle(JobHandle handle, int pathIndex, int requestIndex, DynamicDestinationState destinationState = DynamicDestinationState.None)
+    internal RequestPipelineInfoWithHandle(JobHandle handle, int pathIndex, int requestIndex, DynamicDestinationState destinationState = DynamicDestinationState.None)
     {
         Handle = handle;
         PathIndex = pathIndex;
         RequestIndex = requestIndex;
         DestinationState = destinationState;
     }
-    public PathPipelineInfoWithHandle ToPathPipelineInfoWithHandle()
+    internal PathPipelineInfoWithHandle ToPathPipelineInfoWithHandle()
     {
         return new PathPipelineInfoWithHandle()
         {
@@ -359,12 +359,12 @@ public struct RequestPipelineInfoWithHandle
         };
     }
 }
-public struct PathPipelineInfoWithHandle
+internal struct PathPipelineInfoWithHandle
 {
-    public JobHandle Handle;
-    public int PathIndex;
-    public DynamicDestinationState DestinationState;
-    public PathPipelineInfoWithHandle(JobHandle handle, int pathIndex, DynamicDestinationState destinationState = DynamicDestinationState.None)
+    internal JobHandle Handle;
+    internal int PathIndex;
+    internal DynamicDestinationState DestinationState;
+    internal PathPipelineInfoWithHandle(JobHandle handle, int pathIndex, DynamicDestinationState destinationState = DynamicDestinationState.None)
     {
         Handle = handle;
         PathIndex = pathIndex;

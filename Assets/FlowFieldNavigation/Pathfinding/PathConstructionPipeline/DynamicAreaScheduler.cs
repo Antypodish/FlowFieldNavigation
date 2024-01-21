@@ -4,19 +4,19 @@ using Unity.Mathematics;
 using Unity.Jobs;
 using System.Collections.Generic;
 
-public class DynamicAreaScheduler
+internal class DynamicAreaScheduler
 {
     PathfindingManager _pathfindingManager;
     PathDataContainer _pathContainer;
 
     NativeList<PathPipelineInfoWithHandle> _scheduledDynamicAreas; 
-    public DynamicAreaScheduler(PathfindingManager pathfindingManager)
+    internal DynamicAreaScheduler(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
         _pathContainer = pathfindingManager.PathContainer;
         _scheduledDynamicAreas = new NativeList<PathPipelineInfoWithHandle>(Allocator.Persistent);
     }
-    public void ScheduleDynamicArea(PathPipelineInfoWithHandle pathInfo)
+    internal void ScheduleDynamicArea(PathPipelineInfoWithHandle pathInfo)
     {
         PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathInfo.PathIndex];
         PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
@@ -120,7 +120,7 @@ public class DynamicAreaScheduler
         }
     }
 
-    public void ForceComplete()
+    internal void ForceComplete()
     {
         List<PathfindingInternalData> pathfindingInternalDataList = _pathContainer.PathfindingInternalDataList;
         NativeList<PathLocationData> pathLocationDataList = _pathContainer.PathLocationDataList;

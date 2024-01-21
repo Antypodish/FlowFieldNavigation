@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Jobs;
 
-public class SectorStateTableFactory
+internal class SectorStateTableFactory
 {
     List<UnsafeList<PathSectorState>> _pathSectorStateTableContainer;
 
-    public SectorStateTableFactory(int preallocationAmount)
+    internal SectorStateTableFactory(int preallocationAmount)
     {
         _pathSectorStateTableContainer = new List<UnsafeList<PathSectorState>>();
         for(int i = 0; i < preallocationAmount; i++)
@@ -17,7 +17,7 @@ public class SectorStateTableFactory
             _pathSectorStateTableContainer.Add(table);
         }
     }
-    public UnsafeList<PathSectorState> GetSectorStateTable()
+    internal UnsafeList<PathSectorState> GetSectorStateTable()
     {
         if(_pathSectorStateTableContainer.Count == 0)
         {
@@ -29,7 +29,7 @@ public class SectorStateTableFactory
         _pathSectorStateTableContainer.RemoveAtSwapBack(0);
         return table;
     }
-    public void SendSectorStateTable(UnsafeList<PathSectorState> table)
+    internal void SendSectorStateTable(UnsafeList<PathSectorState> table)
     {
         UnsafeListCleaningJob<PathSectorState> cleaner = new UnsafeListCleaningJob<PathSectorState>()
         {

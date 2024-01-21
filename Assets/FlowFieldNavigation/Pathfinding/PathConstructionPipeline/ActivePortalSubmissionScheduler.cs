@@ -5,13 +5,13 @@ internal class ActivePortalSubmissionScheduler
     PathfindingManager _pathfindingManager;
     PathDataContainer _pathContainer;
 
-    public ActivePortalSubmissionScheduler(PathfindingManager pathfindingManager)
+    internal ActivePortalSubmissionScheduler(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
         _pathContainer = pathfindingManager.PathContainer;
     }
 
-    public RequestPipelineInfoWithHandle ScheduleActivePortalSubmission(RequestPipelineInfoWithHandle reqInfo)
+    internal RequestPipelineInfoWithHandle ScheduleActivePortalSubmission(RequestPipelineInfoWithHandle reqInfo)
     {
         PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[reqInfo.PathIndex];
         PathDestinationData destinationData = _pathContainer.PathDestinationDataList[reqInfo.PathIndex];

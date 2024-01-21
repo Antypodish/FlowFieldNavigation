@@ -3,14 +3,14 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
 
-public class RequestedSectorCalculationScheduler
+internal class RequestedSectorCalculationScheduler
 {
     PathfindingManager _pathfindingManager;
     PathDataContainer _pathContainer;
     FlowCalculationScheduler _flowCalculationScheduler;
     NativeList<PathPipelineInfoWithHandle> ScheduledRequestedSectorCalculations;
 
-    public RequestedSectorCalculationScheduler(PathfindingManager pathfindingManager, LOSIntegrationScheduler losScheduler)
+    internal RequestedSectorCalculationScheduler(PathfindingManager pathfindingManager, LOSIntegrationScheduler losScheduler)
     {
         _pathfindingManager = pathfindingManager;
         _pathContainer = pathfindingManager.PathContainer;
@@ -18,7 +18,7 @@ public class RequestedSectorCalculationScheduler
         _flowCalculationScheduler = new FlowCalculationScheduler(pathfindingManager, losScheduler);
     }
 
-    public void ScheduleRequestedSectorCalculation(PathPipelineInfoWithHandle pathInfo, JobHandle activePortalSubmissionHandle, NativeSlice<float2> sources)
+    internal void ScheduleRequestedSectorCalculation(PathPipelineInfoWithHandle pathInfo, JobHandle activePortalSubmissionHandle, NativeSlice<float2> sources)
     {
         PathfindingInternalData pathInternalData = _pathContainer.PathfindingInternalDataList[pathInfo.PathIndex];
         PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
@@ -54,7 +54,7 @@ public class RequestedSectorCalculationScheduler
         }
         ScheduledRequestedSectorCalculations.Add(new PathPipelineInfoWithHandle(sourceSectorHandle, pathInfo.PathIndex));
     }
-    public void TryComplete()
+    internal void TryComplete()
     {
         for (int i = ScheduledRequestedSectorCalculations.Length - 1; i >= 0; i--)
         {
@@ -66,7 +66,7 @@ public class RequestedSectorCalculationScheduler
         _flowCalculationScheduler.TryComplete();
     }
 
-    public void ForceComplete()
+    internal void ForceComplete()
     {
         for (int i = ScheduledRequestedSectorCalculations.Length - 1; i >= 0; i--)
         {

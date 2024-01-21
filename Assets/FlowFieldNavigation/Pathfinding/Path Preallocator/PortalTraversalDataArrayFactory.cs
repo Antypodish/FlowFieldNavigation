@@ -4,7 +4,7 @@ using System.Linq;
 using Unity.Collections;
 using Unity.Jobs;
 
-public class PortalTraversalDataArrayFactory
+internal class PortalTraversalDataArrayFactory
 {
     List<NativeArray<PortalTraversalData>>[] _preallocationMatrix;
     List<CleaningHandle> _cleaningHandles;
@@ -23,7 +23,7 @@ public class PortalTraversalDataArrayFactory
         }
         _cleaningHandles = new List<CleaningHandle>();
     }
-    public void CheckForCleaningHandles()
+    internal void CheckForCleaningHandles()
     {
         for(int i = _cleaningHandles.Count - 1; i >= 0; i--)
         {
@@ -36,7 +36,7 @@ public class PortalTraversalDataArrayFactory
             }
         }
     }
-    public NativeArray<PortalTraversalData> GetPortalTraversalDataArray(int offset)
+    internal NativeArray<PortalTraversalData> GetPortalTraversalDataArray(int offset)
     {
         List<NativeArray<PortalTraversalData>> _preallocations = _preallocationMatrix[offset];
         if( _preallocations.Count == 0)
@@ -53,7 +53,7 @@ public class PortalTraversalDataArrayFactory
         _preallocations.RemoveAtSwapBack(_preallocations.Count - 1);
         return array;
     }
-    public void SendPortalTraversalDataArray(NativeArray<PortalTraversalData> array, int offset)
+    internal void SendPortalTraversalDataArray(NativeArray<PortalTraversalData> array, int offset)
     {
         PortalTraversalDataArrayCleaningJob cleaninJob = new PortalTraversalDataArrayCleaningJob()
         {
@@ -70,8 +70,8 @@ public class PortalTraversalDataArrayFactory
 
     struct CleaningHandle
     {
-        public NativeArray<PortalTraversalData> Array;
-        public int Offset;
-        public JobHandle handle;
+        internal NativeArray<PortalTraversalData> Array;
+        internal int Offset;
+        internal JobHandle handle;
     }
 }

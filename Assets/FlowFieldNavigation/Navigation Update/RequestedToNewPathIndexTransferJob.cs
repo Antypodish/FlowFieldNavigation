@@ -3,10 +3,10 @@ using Unity.Jobs;
 using Unity.Burst;
 
 [BurstCompile]
-public struct RequestedToNewPathIndexTransferJob : IJob
+internal struct RequestedToNewPathIndexTransferJob : IJob
 {
-    public NativeArray<int> AgentRequestedPathIndicies;
-    public NativeArray<int> AgentNewPathIndicies;
+    internal NativeArray<int> AgentRequestedPathIndicies;
+    internal NativeArray<int> AgentNewPathIndicies;
     public void Execute()
     {
         int length = AgentRequestedPathIndicies.Length;

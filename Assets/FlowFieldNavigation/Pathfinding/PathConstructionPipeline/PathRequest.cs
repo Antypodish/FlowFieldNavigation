@@ -1,16 +1,16 @@
 ﻿using Unity.Mathematics;
 
-public struct PathRequest
+internal struct PathRequest
 {
-    public float2 Destination;
-    public int TargetAgentIndex;
-    public int DerivedRequestStartIndex;
-    public int DerivedRequestCount;
-    public DestinationType Type;
-    public ushort OffsetMask;
-    public int FlockIndex;
+    internal float2 Destination;
+    internal int TargetAgentIndex;
+    internal int DerivedRequestStartIndex;
+    internal int DerivedRequestCount;
+    internal DestinationType Type;
+    internal ushort OffsetMask;
+    internal int FlockIndex;
 
-    public PathRequest(float2 destination)
+    internal PathRequest(float2 destination)
     {
         Destination = destination;
         Type = DestinationType.StaticDestination;
@@ -21,7 +21,7 @@ public struct PathRequest
         FlockIndex = 0;
     }
 
-    public PathRequest(int targetAgentIndex)
+    internal PathRequest(int targetAgentIndex)
     {
         TargetAgentIndex = targetAgentIndex;
         Type = DestinationType.DynamicDestination;
@@ -33,17 +33,17 @@ public struct PathRequest
     }
 }
 
-public struct OffsetDerivedPathRequest
+internal struct OffsetDerivedPathRequest
 {
-    public float2 Destination;
-    public int TargetAgentIndex;
-    public int DerivedFialRequestStartIndex;
-    public int DerivedFinalRequestCount;
-    public int Offset;
-    public DestinationType Type;
-    public int FlockIndex;
+    internal float2 Destination;
+    internal int TargetAgentIndex;
+    internal int DerivedFialRequestStartIndex;
+    internal int DerivedFinalRequestCount;
+    internal int Offset;
+    internal DestinationType Type;
+    internal int FlockIndex;
 
-    public OffsetDerivedPathRequest(PathRequest initialPathRequest, int offset)
+    internal OffsetDerivedPathRequest(PathRequest initialPathRequest, int offset)
     {
         Destination = initialPathRequest.Destination;
         TargetAgentIndex = initialPathRequest.TargetAgentIndex;
@@ -54,26 +54,26 @@ public struct OffsetDerivedPathRequest
         FlockIndex = initialPathRequest.FlockIndex;
     }
 
-    public bool IsCreated()
+    internal bool IsCreated()
     {
         return Type != DestinationType.None;
     }
 }
 
-public struct FinalPathRequest
+internal struct FinalPathRequest
 {
-    public float2 Destination;
-    public float2 DesiredDestination;
-    public int TargetAgentIndex;
-    public int SourcePositionStartIndex;
-    public int SourceCount;
-    public int Offset;
-    public int PathIndex;
-    public int SourceIsland;
-    public DestinationType Type;
-    public int FlockIndex;
+    internal float2 Destination;
+    internal float2 DesiredDestination;
+    internal int TargetAgentIndex;
+    internal int SourcePositionStartIndex;
+    internal int SourceCount;
+    internal int Offset;
+    internal int PathIndex;
+    internal int SourceIsland;
+    internal DestinationType Type;
+    internal int FlockIndex;
 
-    public FinalPathRequest(OffsetDerivedPathRequest derivedReq, int sourceIsland)
+    internal FinalPathRequest(OffsetDerivedPathRequest derivedReq, int sourceIsland)
     {
         Destination = derivedReq.Destination;
         DesiredDestination = derivedReq.Destination;
@@ -87,5 +87,5 @@ public struct FinalPathRequest
         SourcePositionStartIndex = 0;
         PathIndex = 0;
     }
-    public bool IsValid() => SourceCount != 0;
+    internal bool IsValid() => SourceCount != 0;
 }

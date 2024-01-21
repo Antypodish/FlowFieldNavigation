@@ -3,13 +3,13 @@ using Unity.Jobs;
 using Unity.Burst;
 
 [BurstCompile]
-public struct PathSectorEditCheckJob : IJobParallelFor
+internal struct PathSectorEditCheckJob : IJobParallelFor
 {
-    [ReadOnly] public NativeArray<SectorBitArray> PathSectorIDArray;
-    [ReadOnly] public NativeArray<PathDestinationData> PathDestinationDataArray;
-    [ReadOnly] public NativeArray<PathState> PathStateArray;
-    public NativeArray<SectorBitArray>.ReadOnly FieldEditSectorIDArray;
-    public NativeArray<PathRoutineData> PathRoutineDataArray;
+    [ReadOnly] internal NativeArray<SectorBitArray> PathSectorIDArray;
+    [ReadOnly] internal NativeArray<PathDestinationData> PathDestinationDataArray;
+    [ReadOnly] internal NativeArray<PathState> PathStateArray;
+    internal NativeArray<SectorBitArray>.ReadOnly FieldEditSectorIDArray;
+    internal NativeArray<PathRoutineData> PathRoutineDataArray;
     public void Execute(int index)
     {
         if (PathStateArray[index] == PathState.Removed) { return; }

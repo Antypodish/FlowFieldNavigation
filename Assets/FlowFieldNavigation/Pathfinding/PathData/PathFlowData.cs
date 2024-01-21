@@ -1,12 +1,12 @@
 ﻿using Unity.Collections.LowLevel.Unsafe;
 
-public struct PathFlowData
+internal struct PathFlowData
 {
-    public UnsafeList<FlowData> FlowField;
-    public UnsafeLOSBitmap LOSMap;
-    public UnsafeList<FlowData> DynamicAreaFlowField;
+    internal UnsafeList<FlowData> FlowField;
+    internal UnsafeLOSBitmap LOSMap;
+    internal UnsafeList<FlowData> DynamicAreaFlowField;
 
-    public void Dispose()
+    internal void Dispose()
     {
         LOSMap.Dispose();
         DynamicAreaFlowField.Dispose();

@@ -14,7 +14,7 @@ internal class PathPreallocator
     SectorStateTableFactory _sectorStateTableFactory;
     FlowFieldFactory _flowFieldFactory;
     IntegrationFieldFactory _integrationFieldFactory;
-    public PathPreallocator(FieldDataContainer fieldProducer, int sectorTileAmount, int sectorMatrixSectorAmount)
+    internal PathPreallocator(FieldDataContainer fieldProducer, int sectorTileAmount, int sectorMatrixSectorAmount)
     {
         _porTravDataArrayFactory = new PortalTraversalDataArrayFactory(fieldProducer.GetAllFieldGraphs());
         _portalSequenceFactory = new PortalSequenceFactory();
@@ -28,12 +28,12 @@ internal class PathPreallocator
         _flowFieldFactory = new FlowFieldFactory(0);
         _integrationFieldFactory = new IntegrationFieldFactory(0);
     }
-    public void CheckForDeallocations()
+    internal void CheckForDeallocations()
     {
         _porTravDataArrayFactory.CheckForCleaningHandles();
         _sectorTransformationFactory.CheckForCleaningHandles();
     }
-    public PreallocationPack GetPreallocations(int offset)
+    internal PreallocationPack GetPreallocations(int offset)
     {
         return new PreallocationPack()
         {
@@ -51,7 +51,7 @@ internal class PathPreallocator
             SectorStateTable = _sectorStateTableFactory.GetSectorStateTable(),
         };
     }
-    public void SendPreallocationsBack(ref PreallocationPack preallocations, NativeList<UnsafeList<ActiveWaveFront>> activeWaveFrontList, UnsafeList<FlowData> flowField, NativeList<IntegrationTile> integrationField, int offset)
+    internal void SendPreallocationsBack(ref PreallocationPack preallocations, NativeList<UnsafeList<ActiveWaveFront>> activeWaveFrontList, UnsafeList<FlowData> flowField, NativeList<IntegrationTile> integrationField, int offset)
     {
         _porTravDataArrayFactory.SendPortalTraversalDataArray(preallocations.PortalTraversalDataArray, offset);
         _portalSequenceFactory.SendPortalSequences(preallocations.PortalSequence, preallocations.PortalSequenceBorders); 
@@ -67,23 +67,23 @@ internal class PathPreallocator
         _flowFieldFactory.SendFlowField(flowField);
         _integrationFieldFactory.SendIntegrationField(integrationField);
     }
-    public NativeList<UnsafeList<ActiveWaveFront>> GetActiveWaveFrontListPersistent(int count)
+    internal NativeList<UnsafeList<ActiveWaveFront>> GetActiveWaveFrontListPersistent(int count)
     {
         return _activeWaveFrontListFactory.GetActiveWaveFrontListPersistent(count);
     }
-    public UnsafeList<FlowData> GetFlowField(int length)
+    internal UnsafeList<FlowData> GetFlowField(int length)
     {
         return _flowFieldFactory.GetFlowfield(length);
     }
-    public NativeList<IntegrationTile> GetIntegrationField(int length)
+    internal NativeList<IntegrationTile> GetIntegrationField(int length)
     {
         return _integrationFieldFactory.GetIntegrationField(length);
     }
-    public void AddToActiveWaveFrontList(int count, NativeList<UnsafeList<ActiveWaveFront>> destinationList)
+    internal void AddToActiveWaveFrontList(int count, NativeList<UnsafeList<ActiveWaveFront>> destinationList)
     {
         _activeWaveFrontListFactory.AddActiveWaveFrontList(count, destinationList);
     }
-    public void DisposeAllPreallocations()
+    internal void DisposeAllPreallocations()
     {
 
     }

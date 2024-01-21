@@ -1,13 +1,13 @@
 ﻿using Unity.Mathematics;
 
-public struct RoutineResult
+internal struct RoutineResult
 {
-    public float2 NewDirection;
-    public float3 NewSeperation;
-    public float HeightChange;
-    public byte NewSplitInterval;
-    public byte NewSplitInfo;
-    public AvoidanceStatus NewAvoidance;
-    public MovingAvoidanceStatus NewMovingAvoidance;
-    public bool HasForeignInFront;
+    internal float2 NewDirection;
+    internal float3 NewSeperation;
+    internal float HeightChange;
+    internal byte NewSplitInterval;
+    internal byte NewSplitInfo;
+    internal AvoidanceStatus NewAvoidance;
+    internal MovingAvoidanceStatus NewMovingAvoidance;
+    internal bool HasForeignInFront;
 }

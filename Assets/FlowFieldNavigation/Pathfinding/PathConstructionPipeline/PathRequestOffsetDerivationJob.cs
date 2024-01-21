@@ -5,14 +5,14 @@ using Unity.Burst;
 using Unity.Mathematics;
 
 [BurstCompile]
-public struct PathRequestOffsetDerivationJob : IJob
+internal struct PathRequestOffsetDerivationJob : IJob
 {
-    public float TileSize;
+    internal float TileSize;
 
-    [ReadOnly] public NativeArray<AgentData> AgentDataArray;
-    public NativeArray<int> NewAgentPathIndicies;
-    public NativeList<PathRequest> InitialPathRequests;
-    public NativeList<OffsetDerivedPathRequest> DerivedPathRequests;
+    [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
+    internal NativeArray<int> NewAgentPathIndicies;
+    internal NativeList<PathRequest> InitialPathRequests;
+    internal NativeList<OffsetDerivedPathRequest> DerivedPathRequests;
 
     
     public void Execute()

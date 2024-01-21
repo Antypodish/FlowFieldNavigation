@@ -3,16 +3,16 @@ using Unity.Jobs;
 using Unity.Burst;
 using Unity.Mathematics;
 [BurstCompile]
-public struct CurrentPathReconstructionDeterminationJob : IJob
+internal struct CurrentPathReconstructionDeterminationJob : IJob
 {
-    [ReadOnly] public NativeArray<AgentData> AgentDataArray;
-    [ReadOnly] public NativeArray<PathState> PathStateArray;
-    [ReadOnly] public NativeArray<PathDestinationData> PathDestinationDataArray;
-    [ReadOnly] public NativeArray<int> PathFlockIndexArray;
-    public NativeArray<PathRoutineData> PathRoutineDataArray;
-    public NativeArray<int> AgentNewPathIndicies;
-    [ReadOnly] public NativeArray<int> AgentCurPathIndicies;
-    public NativeList<PathRequest> PathRequests;
+    [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
+    [ReadOnly] internal NativeArray<PathState> PathStateArray;
+    [ReadOnly] internal NativeArray<PathDestinationData> PathDestinationDataArray;
+    [ReadOnly] internal NativeArray<int> PathFlockIndexArray;
+    internal NativeArray<PathRoutineData> PathRoutineDataArray;
+    internal NativeArray<int> AgentNewPathIndicies;
+    [ReadOnly] internal NativeArray<int> AgentCurPathIndicies;
+    internal NativeList<PathRequest> PathRequests;
     public void Execute()
     {
         //CHECK IF DYNAMIC PATH TARGETS ARE MOVED

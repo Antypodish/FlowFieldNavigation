@@ -4,7 +4,7 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine.Jobs;
 
-public class RoutineScheduler
+internal class RoutineScheduler
 {
     PathfindingManager _pathfindingManager;
     MovementManager _movementManager;
@@ -13,13 +13,13 @@ public class RoutineScheduler
     List<JobHandle> _costEditHandle;
     List<JobHandle> _islandReconfigHandle;
 
-    public NativeList<PathRequest> CurrentRequestedPaths;
-    public NativeList<float2> CurrentSourcePositions;
+    internal NativeList<PathRequest> CurrentRequestedPaths;
+    internal NativeList<float2> CurrentSourcePositions;
 
     NativeList<UnsafeListReadOnly<byte>> _costFieldCosts;
     NativeList<SectorBitArray> EditedSectorBitArray;
     NativeList<CostEdit> NewCostEditRequests;
-    public RoutineScheduler(PathfindingManager pathfindingManager)
+    internal RoutineScheduler(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
         _movementManager = new MovementManager(pathfindingManager.AgentDataContainer, pathfindingManager);
@@ -95,7 +95,7 @@ public class RoutineScheduler
         _pathConstructionPipeline.ShcedulePathRequestEvalutaion(CurrentRequestedPaths, _costFieldCosts, EditedSectorBitArray.AsArray().AsReadOnly(), islandFieldProcessors, islandFieldReconfigHandle);
         _movementManager.ScheduleRoutine(_costFieldCosts, costEditHandle);
     }
-    public void TryCompletePredecessorJobs()
+    internal void TryCompletePredecessorJobs()
     {
         //ISLAND REC
         if (_islandReconfigHandle.Count != 0)
@@ -109,7 +109,7 @@ public class RoutineScheduler
 
         _pathConstructionPipeline.TryComplete();
     }
-    public void ForceCompleteAll()
+    internal void ForceCompleteAll()
     {
         //COST EDIT
         if (_costEditHandle.Count != 0)
@@ -144,7 +144,7 @@ public class RoutineScheduler
         EditedSectorBitArray.Clear();
         NewCostEditRequests.Clear();
     }
-    public MovementManager GetMovementManager()
+    internal MovementManager GetMovementManager()
     {
         return _movementManager;
     }

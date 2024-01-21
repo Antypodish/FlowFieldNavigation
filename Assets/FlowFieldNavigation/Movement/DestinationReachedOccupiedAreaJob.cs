@@ -4,11 +4,11 @@ using Unity.Jobs;
 using Unity.Mathematics;
 
 [BurstCompile]
-public struct DestinationReachedOccupiedAreaJob : IJob
+internal struct DestinationReachedOccupiedAreaJob : IJob
 {
-    [ReadOnly] public NativeArray<bool> AgentDestinationReachStatus;
-    [ReadOnly] public NativeArray<int> AgentFlockIndexArray;
-    public NativeArray<int> FlockStoppedAgentCountArray;
+    [ReadOnly] internal NativeArray<bool> AgentDestinationReachStatus;
+    [ReadOnly] internal NativeArray<int> AgentFlockIndexArray;
+    internal NativeArray<int> FlockStoppedAgentCountArray;
     public void Execute()
     {
         //CLEAR STOPPED AGENT COUNT

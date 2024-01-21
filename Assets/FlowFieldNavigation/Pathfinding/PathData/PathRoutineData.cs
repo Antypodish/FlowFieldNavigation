@@ -2,24 +2,24 @@
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 
-public struct PathRoutineData
+internal struct PathRoutineData
 {
-    public PathTask Task;
-    public DynamicDestinationState DestinationState;
-    public int FlowRequestSourceStart;
-    public int FlowRequestSourceCount;
-    public int PathAdditionSourceStart;
-    public int PathAdditionSourceCount;
-    public int ReconstructionRequestIndex;
+    internal PathTask Task;
+    internal DynamicDestinationState DestinationState;
+    internal int FlowRequestSourceStart;
+    internal int FlowRequestSourceCount;
+    internal int PathAdditionSourceStart;
+    internal int PathAdditionSourceCount;
+    internal int ReconstructionRequestIndex;
 }
 [Flags]
-public enum PathTask : byte
+internal enum PathTask : byte
 {
     FlowRequest = 1,
     PathAdditionRequest = 2,
     Reconstruct = 4,
 };
-public enum DynamicDestinationState : byte
+internal enum DynamicDestinationState : byte
 {
     None,
     Moved,

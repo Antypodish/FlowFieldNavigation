@@ -7,11 +7,11 @@ using Unity.VisualScripting;
 using System;
 
 [BurstCompile]
-public struct TensionResolver : IJob
+internal struct TensionResolver : IJob
 {
-    public float SeperationRangeAddition;
-    public AgentSpatialHashGrid AgentSpatialHashGrid;
-    public NativeArray<RoutineResult> RoutineResultArray;
+    internal float SeperationRangeAddition;
+    internal AgentSpatialHashGrid AgentSpatialHashGrid;
+    internal NativeArray<RoutineResult> RoutineResultArray;
 
     public void Execute()
     {
@@ -267,8 +267,8 @@ public struct TensionResolver : IJob
         }
     }
 }
-public struct Tension
+internal struct Tension
 {
-    public int agent1;
-    public int agent2;
+    internal int agent1;
+    internal int agent2;
 }

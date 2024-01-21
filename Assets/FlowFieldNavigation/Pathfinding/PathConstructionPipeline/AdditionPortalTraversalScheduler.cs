@@ -11,7 +11,7 @@ internal class AdditionPortalTraversalScheduler
     RequestedSectorCalculationScheduler _requestedSectorCalculationScheduler;
     NativeList<PathPipelineInfoWithHandle> ScheduledAdditionPortalTraversals;
 
-    public AdditionPortalTraversalScheduler(PathfindingManager pathfindingManager, RequestedSectorCalculationScheduler requestedSectorCalculationScheduler)
+    internal AdditionPortalTraversalScheduler(PathfindingManager pathfindingManager, RequestedSectorCalculationScheduler requestedSectorCalculationScheduler)
     {
         ScheduledAdditionPortalTraversals = new NativeList<PathPipelineInfoWithHandle>(Allocator.Persistent);
         _pathfindingManager = pathfindingManager;
@@ -19,7 +19,7 @@ internal class AdditionPortalTraversalScheduler
         _additionActivePortalSubmissionScheduler = new AdditionActivePortalSubmissionScheduler(pathfindingManager);
         _requestedSectorCalculationScheduler = requestedSectorCalculationScheduler;
     }
-    public void SchedulePortalTraversalFor(PathPipelineInfoWithHandle pathInfo, NativeSlice<float2> sources)
+    internal void SchedulePortalTraversalFor(PathPipelineInfoWithHandle pathInfo, NativeSlice<float2> sources)
     {
         PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathInfo.PathIndex];
         PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
@@ -89,7 +89,7 @@ internal class AdditionPortalTraversalScheduler
         ScheduledAdditionPortalTraversals.Add(pathInfo);
     }
 
-    public void TryComplete(NativeArray<float2> sources)
+    internal void TryComplete(NativeArray<float2> sources)
     {
         NativeList<PathRoutineData> pathRoutineDataList = _pathContainer.PathRoutineDataList;
         for(int i = ScheduledAdditionPortalTraversals.Length - 1; i >= 0; i--)
@@ -111,7 +111,7 @@ internal class AdditionPortalTraversalScheduler
             }
         }
     }
-    public void ForceComplete(NativeArray<float2> sources)
+    internal void ForceComplete(NativeArray<float2> sources)
     {
         NativeList<PathRoutineData> pathRoutineDataList = _pathContainer.PathRoutineDataList;
         for (int i = ScheduledAdditionPortalTraversals.Length - 1; i >= 0; i--)

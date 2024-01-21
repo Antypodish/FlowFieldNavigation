@@ -5,7 +5,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
 
-public class FlowCalculationScheduler
+internal class FlowCalculationScheduler
 {
     PathfindingManager _pathfindingManager;
     PathDataContainer _pathContainer;
@@ -14,7 +14,7 @@ public class FlowCalculationScheduler
     NativeList<FlowFieldCalculationBufferParent> _flowFieldCalculationBuffers;
     NativeList<JobHandle> _flowTransferHandles;
     NativeList<int> _flowFieldResizedPaths;
-    public FlowCalculationScheduler(PathfindingManager pathfindingManager, LOSIntegrationScheduler losIntegrationScheduler)
+    internal FlowCalculationScheduler(PathfindingManager pathfindingManager, LOSIntegrationScheduler losIntegrationScheduler)
     {
         _pathfindingManager = pathfindingManager;
         _pathContainer = pathfindingManager.PathContainer;
@@ -25,7 +25,7 @@ public class FlowCalculationScheduler
         _flowFieldResizedPaths = new NativeList<int>(Allocator.Persistent);
     }
 
-    public void ScheduleFlow(PathPipelineInfoWithHandle pathInfo)
+    internal void ScheduleFlow(PathPipelineInfoWithHandle pathInfo)
     {
         PathfindingInternalData pathInternalData = _pathContainer.PathfindingInternalDataList[pathInfo.PathIndex];
         PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
@@ -129,7 +129,7 @@ public class FlowCalculationScheduler
         pathInfo.Handle = flowFieldCombinedHandle;
         ScheduledFlow.Add(pathInfo);
     }
-    public void TryComplete()
+    internal void TryComplete()
     {
         for (int i = ScheduledFlow.Length - 1; i >= 0; i--)
         {
@@ -142,7 +142,7 @@ public class FlowCalculationScheduler
         }
         _losIntegrationScheduler.TryComplete();
     }
-    public void ForceComplete()
+    internal void ForceComplete()
     {
         for (int i = ScheduledFlow.Length - 1; i >= 0; i--)
         {

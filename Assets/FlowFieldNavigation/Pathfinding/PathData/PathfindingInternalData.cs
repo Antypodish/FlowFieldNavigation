@@ -3,19 +3,19 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 using UnityEngine;
 
-public struct PathfindingInternalData
+internal struct PathfindingInternalData
 {
-    public DynamicArea DynamicArea;
-    public NativeList<int> PickedSectorList;
-    public NativeList<IntegrationTile> IntegrationField;
-    public NativeArray<int> FlowFieldLength;
-    public NativeQueue<int> PortalTraversalQueue;
-    public NativeList<UnsafeList<ActiveWaveFront>> ActivePortalList;
-    public NativeList<int> NotActivePortalList;
-    public NativeList<int> SectorFlowStartIndiciesToCalculateIntegration;
-    public NativeList<int> SectorFlowStartIndiciesToCalculateFlow;
-    public NativeArray<SectorsWihinLOSArgument> SectorWithinLOSState;
-    public void Dispose()
+    internal DynamicArea DynamicArea;
+    internal NativeList<int> PickedSectorList;
+    internal NativeList<IntegrationTile> IntegrationField;
+    internal NativeArray<int> FlowFieldLength;
+    internal NativeQueue<int> PortalTraversalQueue;
+    internal NativeList<UnsafeList<ActiveWaveFront>> ActivePortalList;
+    internal NativeList<int> NotActivePortalList;
+    internal NativeList<int> SectorFlowStartIndiciesToCalculateIntegration;
+    internal NativeList<int> SectorFlowStartIndiciesToCalculateFlow;
+    internal NativeArray<SectorsWihinLOSArgument> SectorWithinLOSState;
+    internal void Dispose()
     {
         NotActivePortalList.Dispose();
         SectorFlowStartIndiciesToCalculateFlow.Dispose();
@@ -25,14 +25,14 @@ public struct PathfindingInternalData
     }
 }
 
-public enum PathState : byte
+internal enum PathState : byte
 {
     Clean = 0,
     ToBeUpdated = 1,
     ToBeDisposed = 2,
     Removed,
 }
-public enum SectorsWihinLOSArgument : byte
+internal enum SectorsWihinLOSArgument : byte
 {
     None = 0,
     RequestedSectorWithinLOS = 1,

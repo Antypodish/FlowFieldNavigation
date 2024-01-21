@@ -5,7 +5,7 @@ using Unity.Mathematics;
 using System.Numerics;
 
 [BurstCompile]
-public struct AgentHeightCalculationJob : IJobParallelFor
+internal struct AgentHeightCalculationJob : IJobParallelFor
 {
     [ReadOnly] internal TriangleSpatialHashGrid TriangleSpatialHashGrid;
     [ReadOnly] internal NativeArray<float3> Verticies;
@@ -132,8 +132,8 @@ public struct AgentHeightCalculationJob : IJobParallelFor
 
     private struct BarycentricCoordinates
     {
-        public float u;
-        public float v;
-        public float w;
+        internal float u;
+        internal float v;
+        internal float w;
     }
 }

@@ -2,15 +2,15 @@
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 
-public struct AgentSpatialHashGrid
+internal struct AgentSpatialHashGrid
 {
-    public float BaseSpatialGridSize;
-    public float FieldHorizontalSize;
-    public float FieldVerticalSize;
-    public NativeArray<AgentMovementData> RawAgentMovementDataArray;
-    public NativeArray<UnsafeList<HashTile>> AgentHashGridArray;
-    public int GetGridCount() => AgentHashGridArray.Length;
-    public SpatialHashGridIterator GetIterator(float2 agentPos, float checkRange, int hashGridIndex)
+    internal float BaseSpatialGridSize;
+    internal float FieldHorizontalSize;
+    internal float FieldVerticalSize;
+    internal NativeArray<AgentMovementData> RawAgentMovementDataArray;
+    internal NativeArray<UnsafeList<HashTile>> AgentHashGridArray;
+    internal int GetGridCount() => AgentHashGridArray.Length;
+    internal SpatialHashGridIterator GetIterator(float2 agentPos, float checkRange, int hashGridIndex)
     {
         if(AgentHashGridArray.Length <= hashGridIndex) { return new SpatialHashGridIterator(); }
         float tileSize = hashGridIndex * BaseSpatialGridSize + BaseSpatialGridSize;
@@ -29,10 +29,10 @@ public struct AgentSpatialHashGrid
         
         return new SpatialHashGridIterator(botleft1d, verticalSize, topright.x - botleft.x + 1, gridColAmount, RawAgentMovementDataArray, AgentHashGridArray[hashGridIndex]);
     }
-    public int2 GetStartingTileIndex(float2 position, float tileSize) => new int2((int)math.floor(position.x / tileSize), (int)math.floor(position.y / tileSize));
-    public int GetOffset(float size, float tileSize) => (int)math.ceil(size / tileSize);
+    internal int2 GetStartingTileIndex(float2 position, float tileSize) => new int2((int)math.floor(position.x / tileSize), (int)math.floor(position.y / tileSize));
+    internal int GetOffset(float size, float tileSize) => (int)math.ceil(size / tileSize);
 }
-public struct SpatialHashGridIterator
+internal struct SpatialHashGridIterator
 {
     int _endRowIndex;
     int _colCount;
@@ -41,7 +41,7 @@ public struct SpatialHashGridIterator
     NativeArray<AgentMovementData> _agentMovementDataArray;
     UnsafeList<HashTile> _hashTileArray;
 
-    public SpatialHashGridIterator(int startRowIndex, int rowCount, int colCount, int gridTotalColCount, NativeArray<AgentMovementData> agnetMovementDataArray, UnsafeList<HashTile> hashtTileArray)
+    internal SpatialHashGridIterator(int startRowIndex, int rowCount, int colCount, int gridTotalColCount, NativeArray<AgentMovementData> agnetMovementDataArray, UnsafeList<HashTile> hashtTileArray)
     {
         _curRowIndex = startRowIndex;
         _gridTotalColAmount = gridTotalColCount;
@@ -50,8 +50,8 @@ public struct SpatialHashGridIterator
         _agentMovementDataArray = agnetMovementDataArray;
         _hashTileArray = hashtTileArray;
     }
-    public bool HasNext() => _curRowIndex <= _endRowIndex;
-    public NativeSlice<AgentMovementData> GetNextRow(out int sliceStartIndex)
+    internal bool HasNext() => _curRowIndex <= _endRowIndex;
+    internal NativeSlice<AgentMovementData> GetNextRow(out int sliceStartIndex)
     {
         if(_curRowIndex > _endRowIndex) { sliceStartIndex = 0; return new NativeSlice<AgentMovementData>(); }
         HashTile startCellPointer = _hashTileArray[_curRowIndex];

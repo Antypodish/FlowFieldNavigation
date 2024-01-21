@@ -4,14 +4,14 @@ using Unity.Jobs;
 using Unity.Mathematics;
 
 [BurstCompile]
-public struct AgentStoppingJob : IJobParallelFor
+internal struct AgentStoppingJob : IJobParallelFor
 {
-    public NativeArray<bool> AgentDestinationReachStatus;
-    [ReadOnly] public NativeArray<AgentMovementData> AgentMovementDataArray;
-    [ReadOnly] public NativeArray<float> PathDestinationReachRanges;
-    [ReadOnly] public NativeArray<int> NormalToHashed;
-    [ReadOnly] public NativeArray<int> AgentCurPathIndicies;
-    [ReadOnly] public NativeArray<bool> PathAgentStopFlags;
+    internal NativeArray<bool> AgentDestinationReachStatus;
+    [ReadOnly] internal NativeArray<AgentMovementData> AgentMovementDataArray;
+    [ReadOnly] internal NativeArray<float> PathDestinationReachRanges;
+    [ReadOnly] internal NativeArray<int> NormalToHashed;
+    [ReadOnly] internal NativeArray<int> AgentCurPathIndicies;
+    [ReadOnly] internal NativeArray<bool> PathAgentStopFlags;
     public void Execute(int index)
     {
 

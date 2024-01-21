@@ -4,24 +4,24 @@ using Unity.Collections;
 using Unity.Mathematics;
 
 [BurstCompile]
-public struct PathDataExposeJob : IJob
+internal struct PathDataExposeJob : IJob
 {
-    [ReadOnly] public NativeArray<int> NewPathIndicies;
-    [ReadOnly] public NativeArray<int> ExpandedPathIndicies;
-    [ReadOnly] public NativeArray<int> DestinationUpdatedPathIndicies;
+    [ReadOnly] internal NativeArray<int> NewPathIndicies;
+    [ReadOnly] internal NativeArray<int> ExpandedPathIndicies;
+    [ReadOnly] internal NativeArray<int> DestinationUpdatedPathIndicies;
 
-    public NativeList<float2> ExposedPathDestinationList;
-    public NativeList<PathLocationData> ExposedPathLocationList;
-    public NativeList<PathFlowData> ExposedPathFlowDataList;
-    public NativeList<int> ExposedPathFlockIndicies;
-    public NativeList<float> ExposedPathReachDistanceCheckRange;
-    public NativeList<PathState> PathStateList;
-    public NativeList<bool> PathStopFlagList;
+    internal NativeList<float2> ExposedPathDestinationList;
+    internal NativeList<PathLocationData> ExposedPathLocationList;
+    internal NativeList<PathFlowData> ExposedPathFlowDataList;
+    internal NativeList<int> ExposedPathFlockIndicies;
+    internal NativeList<float> ExposedPathReachDistanceCheckRange;
+    internal NativeList<PathState> PathStateList;
+    internal NativeList<bool> PathStopFlagList;
 
-    [ReadOnly] public NativeArray<PathDestinationData> PathDestinationDataArray;
-    [ReadOnly] public NativeArray<PathLocationData> PathLocationDataArray;
-    [ReadOnly] public NativeArray<PathFlowData> PathFlowDataArray;
-    [ReadOnly] public NativeArray<int> PathFlockIndicies;
+    [ReadOnly] internal NativeArray<PathDestinationData> PathDestinationDataArray;
+    [ReadOnly] internal NativeArray<PathLocationData> PathLocationDataArray;
+    [ReadOnly] internal NativeArray<PathFlowData> PathFlowDataArray;
+    [ReadOnly] internal NativeArray<int> PathFlockIndicies;
     public void Execute()
     {
         ExposedPathDestinationList.Length = PathDestinationDataArray.Length;

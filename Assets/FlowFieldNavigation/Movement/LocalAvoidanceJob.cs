@@ -8,28 +8,28 @@ using Unity.Mathematics;
 using UnityEngine;
 
 [BurstCompile]
-public struct LocalAvoidanceJob : IJobParallelFor
+internal struct LocalAvoidanceJob : IJobParallelFor
 {
-    public float FieldMinXIncluding;
-    public float FieldMinYIncluding;
-    public float FieldMaxXExcluding;
-    public float FieldMaxYExcluding;
-    public float TileSize;
-    public int SectorColAmount;
-    public int SectorMatrixColAmount;
-    public int SectorTileAmount;
-    public float SeekMultiplier;
-    public float AlignmentMultiplier;
-    public float SeperationMultiplier;
-    public float SeperationRangeAddition;
-    public float AlignmentRangeAddition;
-    public float MovingAvoidanceRangeAddition;
-    public float BaseSpatialGridSize;
-    public float FieldHorizontalSize;
-    public float FieldVerticalSize;
+    internal float FieldMinXIncluding;
+    internal float FieldMinYIncluding;
+    internal float FieldMaxXExcluding;
+    internal float FieldMaxYExcluding;
+    internal float TileSize;
+    internal int SectorColAmount;
+    internal int SectorMatrixColAmount;
+    internal int SectorTileAmount;
+    internal float SeekMultiplier;
+    internal float AlignmentMultiplier;
+    internal float SeperationMultiplier;
+    internal float SeperationRangeAddition;
+    internal float AlignmentRangeAddition;
+    internal float MovingAvoidanceRangeAddition;
+    internal float BaseSpatialGridSize;
+    internal float FieldHorizontalSize;
+    internal float FieldVerticalSize;
     [ReadOnly] internal NativeArray<UnsafeListReadOnly<byte>> CostFieldEachOffset;
-    [ReadOnly] public AgentSpatialHashGrid AgentSpatialHashGrid;
-    [WriteOnly] public NativeArray<RoutineResult> RoutineResultArray;
+    [ReadOnly] internal AgentSpatialHashGrid AgentSpatialHashGrid;
+    [WriteOnly] internal NativeArray<RoutineResult> RoutineResultArray;
 
     public void Execute(int index)
     {

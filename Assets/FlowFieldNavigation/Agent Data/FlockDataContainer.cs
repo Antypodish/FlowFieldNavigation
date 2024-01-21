@@ -2,7 +2,7 @@
 
 public class FlockDataContainer
 {
-    public NativeList<Flock> FlockList;
+    internal NativeList<Flock> FlockList;
     public NativeList<int> UnusedFlockIndexList;
 
     public FlockDataContainer()
