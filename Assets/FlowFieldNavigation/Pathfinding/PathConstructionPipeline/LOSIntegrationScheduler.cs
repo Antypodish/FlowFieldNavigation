@@ -39,8 +39,8 @@ internal class LOSIntegrationScheduler
         CostField pickedCostField = _pathfindingManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset);
 
         JobHandle losHandle = flowHandle;
-        bool requestedSectorWithinLOS = (internalData.SectorWithinLOSState[0] & SectorsWihinLOSArgument.RequestedSectorWithinLOS) == SectorsWihinLOSArgument.RequestedSectorWithinLOS;
-        bool addedSectorWithinLOS = (internalData.SectorWithinLOSState[0] & SectorsWihinLOSArgument.AddedSectorWithinLOS) == SectorsWihinLOSArgument.AddedSectorWithinLOS;
+        bool requestedSectorWithinLOS = (internalData.SectorWithinLOSState.Value & SectorsWihinLOSArgument.RequestedSectorWithinLOS) == SectorsWihinLOSArgument.RequestedSectorWithinLOS;
+        bool addedSectorWithinLOS = (internalData.SectorWithinLOSState.Value & SectorsWihinLOSArgument.AddedSectorWithinLOS) == SectorsWihinLOSArgument.AddedSectorWithinLOS;
         bool losCalculated = _pathContainer.IsLOSCalculated(pathInfo.PathIndex);
         bool destinationMoved = pathInfo.DestinationState == DynamicDestinationState.Moved;
         if (losCalculated && (addedSectorWithinLOS || destinationMoved))
@@ -99,7 +99,7 @@ internal class LOSIntegrationScheduler
             losHandle = losjob.Schedule(flowHandle);
             _losCalculatedPaths.Add(pathInfo.PathIndex);
         }
-        internalData.SectorWithinLOSState[0] = SectorsWihinLOSArgument.None;
+        internalData.SectorWithinLOSState.Value = SectorsWihinLOSArgument.None;
 
         if (FlowFieldUtilities.DebugMode) { losHandle.Complete(); }
         pathInfo.Handle = losHandle;

@@ -4,9 +4,4 @@ internal struct PathLocationData
 {
     internal UnsafeList<int> SectorToPicked;
     internal UnsafeList<SectorFlowStart> DynamicAreaPickedSectorFlowStarts;
-
-    internal void Dispose()
-    {
-        DynamicAreaPickedSectorFlowStarts.Dispose();
-    }
 }

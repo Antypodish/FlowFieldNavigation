@@ -23,7 +23,7 @@ internal struct PortalTraversalReductionJob : IJob
     internal UnsafeList<PathSectorState> SectorStateTable;
     internal NativeList<int> PickedToSector;
     internal UnsafeList<DijkstraTile> TargetSectorCosts;
-    internal NativeArray<int> FlowFieldLength;
+    internal NativeReference<int> FlowFieldLength;
 
     [ReadOnly] internal NativeSlice<float2> SourcePositions;
     [ReadOnly] internal NativeArray<SectorNode> SectorNodes;
@@ -389,7 +389,7 @@ internal struct PortalTraversalReductionJob : IJob
             PickedToSector.Add(_targetSectorIndex1d);
             SectorStateTable[_targetSectorIndex1d] |= PathSectorState.Included;
         }
-        FlowFieldLength[0] = PickedToSector.Length * sectorTileAmount + 1;
+        FlowFieldLength.Value = PickedToSector.Length * sectorTileAmount + 1;
     }
     //HELPERS
     int GetPortalLocalIndexAtSector(PortalNode portalNode, int sectorIndex, int sectorStartIndex)

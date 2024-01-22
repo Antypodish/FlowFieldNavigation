@@ -25,7 +25,7 @@ internal struct AdditionalActivePortalSubmitJob : IJob
     [ReadOnly] internal UnsafeList<int> SectorToPicked;
     [ReadOnly] internal NativeArray<ActivePortal> PortalSequence;
     [ReadOnly] internal NativeArray<int> PortalSequenceBorders;
-    [ReadOnly] internal NativeArray<int> NewSectorStartIndex;
+    [ReadOnly] internal NativeReference<int> NewSectorStartIndex;
 
     internal SectorBitArray SectorBitArray;
     internal NativeArray<UnsafeList<ActiveWaveFront>> ActiveWaveFrontListArray;
@@ -34,7 +34,7 @@ internal struct AdditionalActivePortalSubmitJob : IJob
     public void Execute()
     {
         //CALCULATE SECTOR TO PICKED
-        for (int i = NewSectorStartIndex[0]; i < PickedToSector.Length; i++)
+        for (int i = NewSectorStartIndex.Value; i < PickedToSector.Length; i++)
         {
             int pickedSector = PickedToSector[i];
             SectorToPicked[pickedSector] = i * SectorTileAmount + 1;

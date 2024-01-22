@@ -24,7 +24,7 @@ internal struct PortalNodeTraversalJob : IJob
     internal UnsafeList<int> SectorToPicked;
     internal UnsafeList<PathSectorState> SectorStateTable;
     internal NativeList<int> PickedToSector;
-    internal NativeArray<int> FlowFieldLength;
+    internal NativeReference<int> FlowFieldLength;
     internal NativeList<int> SourcePortals;
 
     [ReadOnly] internal NativeSlice<float2> SourcePositions;
@@ -370,7 +370,7 @@ internal struct PortalNodeTraversalJob : IJob
             PickedToSector.Add(_targetSectorIndex1d);
             SectorStateTable[_targetSectorIndex1d] |= PathSectorState.Included;
         }
-        FlowFieldLength[0] = PickedToSector.Length * sectorTileAmount + 1;
+        FlowFieldLength.Value = PickedToSector.Length * sectorTileAmount + 1;
     }
     private struct SingleUnsafeHeap<T> where T : unmanaged
     {

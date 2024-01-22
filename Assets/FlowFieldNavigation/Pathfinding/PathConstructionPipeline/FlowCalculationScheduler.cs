@@ -50,7 +50,7 @@ internal class FlowCalculationScheduler
 
         //RESET NEW INT FIELD INDICIES
         int lastIntegrationFieldLength = pathInternalData.IntegrationField.Length;
-        int curIntegrationFieldLength = pathInternalData.FlowFieldLength[0];
+        int curIntegrationFieldLength = pathInternalData.FlowFieldLength.Value;
         if (lastIntegrationFieldLength != curIntegrationFieldLength)
         {
             pathInternalData.IntegrationField.Resize(curIntegrationFieldLength, NativeArrayOptions.UninitializedMemory);
@@ -223,11 +223,11 @@ internal class FlowCalculationScheduler
             PathFlowData flowData = flowDataList[pathIndex];
 
             UnsafeList<FlowData> flowfield = flowData.FlowField;
-            flowfield.Resize(pathInternalData.FlowFieldLength[0], NativeArrayOptions.ClearMemory);
+            flowfield.Resize(pathInternalData.FlowFieldLength.Value, NativeArrayOptions.ClearMemory);
             flowData.FlowField = flowfield;
 
             UnsafeLOSBitmap losmap = flowData.LOSMap;
-            losmap.Resize(pathInternalData.FlowFieldLength[0], NativeArrayOptions.ClearMemory);
+            losmap.Resize(pathInternalData.FlowFieldLength.Value, NativeArrayOptions.ClearMemory);
             flowData.LOSMap = losmap;
 
             flowDataList[pathIndex] = flowData;

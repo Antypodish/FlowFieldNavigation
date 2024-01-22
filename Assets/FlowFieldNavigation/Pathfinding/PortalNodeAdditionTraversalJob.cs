@@ -22,7 +22,7 @@ internal struct PortalNodeAdditionTraversalJob : IJob
     internal NativeList<int> PortalSequenceBorders;
     internal UnsafeList<PathSectorState> SectorStateTable;
     internal NativeList<int> PickedToSector;
-    internal NativeArray<int> FlowFieldLength;
+    internal NativeReference<int> FlowFieldLength;
 
     [ReadOnly] internal NativeArray<SectorNode> SectorNodes;
     [ReadOnly] internal NativeArray<WindowNode> WindowNodes;
@@ -30,11 +30,11 @@ internal struct PortalNodeAdditionTraversalJob : IJob
     [ReadOnly] internal NativeArray<PortalNode> PortalNodes;
     [ReadOnly] internal NativeArray<PortalToPortal> PorPtrs;
     [ReadOnly] internal NativeArray<UnsafeList<int>> IslandFields;
-    [ReadOnly] internal NativeArray<int> NewPickedSectorStartIndex;
+    [ReadOnly] internal NativeReference<int> NewPickedSectorStartIndex;
 
     internal NativeList<int> SourcePortalIndexList;
     internal NativeList<int> DijkstraStartIndicies;
-    internal NativeArray<SectorsWihinLOSArgument> SectorWithinLOSState;
+    internal NativeReference<SectorsWihinLOSArgument> SectorWithinLOSState;
 
     public void Execute()
     {
@@ -46,14 +46,14 @@ internal struct PortalNodeAdditionTraversalJob : IJob
         }
         PickSectorsFromPortalSequence();
 
-        int newAddedSectorStart = NewPickedSectorStartIndex[0];
+        int newAddedSectorStart = NewPickedSectorStartIndex.Value;
         int newAddedSectorCount = PickedToSector.Length - newAddedSectorStart;
         NativeSlice<int> newAddedSectors = new NativeSlice<int>(PickedToSector, newAddedSectorStart, newAddedSectorCount);
         if (ContainsSectorsWithinLOSRange(newAddedSectors))
         {
-            SectorsWihinLOSArgument argument = SectorWithinLOSState[0];
+            SectorsWihinLOSArgument argument = SectorWithinLOSState.Value;
             argument |= SectorsWihinLOSArgument.AddedSectorWithinLOS;
-            SectorWithinLOSState[0] = argument;
+            SectorWithinLOSState.Value = argument;
         }
     }
     void PickPortalSequenceFromDijkstra(int sourcePortal)
@@ -234,7 +234,7 @@ internal struct PortalNodeAdditionTraversalJob : IJob
         }
 
         int sectorTileAmount = SectorColAmount * SectorColAmount;
-        FlowFieldLength[0] = PickedToSector.Length * sectorTileAmount + 1;
+        FlowFieldLength.Value = PickedToSector.Length * sectorTileAmount + 1;
     }
     void PickSectorsBetweenportals(int portalIndex1, int portalIndex2)
     {

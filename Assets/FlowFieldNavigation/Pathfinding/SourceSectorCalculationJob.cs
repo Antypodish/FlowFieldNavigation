@@ -27,7 +27,7 @@ internal struct SourceSectorCalculationJob : IJob
     internal NativeList<int> SectorFlowStartIndiciesToCalculateFlow;
 
     internal UnsafeList<PathSectorState> SectorStateTable;
-    internal NativeArray<SectorsWihinLOSArgument> SectorWithinLOSState;
+    internal NativeReference<SectorsWihinLOSArgument> SectorWithinLOSState;
     public void Execute()
     {
         SectorFlowStartIndiciesToCalculateFlow.Clear();
@@ -102,9 +102,9 @@ internal struct SourceSectorCalculationJob : IJob
 
         if (ContainsSectorsWithinLOSRange(SectorFlowStartIndiciesToCalculateIntegration))
         {
-            SectorsWihinLOSArgument argument = SectorWithinLOSState[0];
+            SectorsWihinLOSArgument argument = SectorWithinLOSState.Value;
             argument |= SectorsWihinLOSArgument.RequestedSectorWithinLOS;
-            SectorWithinLOSState[0] = argument;
+            SectorWithinLOSState.Value = argument;
         }
     }
     bool ContainsSectorsWithinLOSRange(NativeArray<int> integrationRequestedSectors)

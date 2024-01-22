@@ -33,8 +33,8 @@ internal class AdditionPortalTraversalScheduler
         UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathInfo.PathIndex];
         PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathInfo.PathIndex];
         PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
-        portalTraversalData.PathAdditionSequenceBorderStartIndex[0] = portalTraversalData.PortalSequenceBorders.Length - 1;
-        portalTraversalData.NewPickedSectorStartIndex[0] = internalData.PickedSectorList.Length;
+        portalTraversalData.PathAdditionSequenceBorderStartIndex.Value = portalTraversalData.PortalSequenceBorders.Length - 1;
+        portalTraversalData.NewPickedSectorStartIndex.Value = internalData.PickedSectorList.Length;
 
         FieldGraph pickedFieldGraph = _pathfindingManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
 

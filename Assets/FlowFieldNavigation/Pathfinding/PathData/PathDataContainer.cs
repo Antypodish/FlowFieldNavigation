@@ -90,11 +90,7 @@ internal class PathDataContainer
                 UnsafeList<DijkstraTile> targetSectorIntegration = TargetSectorIntegrationList[i];
                 PathDestinationData destinationData = PathDestinationDataList[i];
                 SectorBitArray sectorBitArray = PathSectorBitArrays[i];
-                sectorBitArray.Dispose();
-                internalData.Dispose();
-                locationData.Dispose();
                 flowData.Dispose();
-                portalTraversalData.Dispose();
                 ExposedPathStateList[i] = PathState.Removed;
                 _removedPathIndicies.Push(i);
                 PreallocationPack preallocations = new PreallocationPack()
@@ -105,12 +101,24 @@ internal class PathDataContainer
                     PortalSequenceBorders = portalTraversalData.PortalSequenceBorders,
                     PortalTraversalDataArray = portalTraversalData.PortalTraversalDataArray,
                     TargetSectorCosts = targetSectorIntegration,
-                    FlowFieldLength = internalData.FlowFieldLength,
                     SourcePortalIndexList = portalTraversalData.SourcePortalIndexList,
                     AStartTraverseIndexList = portalTraversalData.AStartTraverseIndexList,
                     TargetSectorPortalIndexList = portalTraversalData.TargetSectorPortalIndexList,
                     PortalTraversalFastMarchingQueue = internalData.PortalTraversalQueue,
                     SectorStateTable = sectorStateTable,
+                    SectorStartIndexListToCalculateFlow = internalData.SectorFlowStartIndiciesToCalculateFlow,
+                    SectorStartIndexListToCalculateIntegration = internalData.SectorFlowStartIndiciesToCalculateIntegration,
+                    NotActivePortalList = internalData.NotActivePortalList,
+                    NewPickedSectorStartIndex = portalTraversalData.NewPickedSectorStartIndex,
+                    FlowFieldLength = internalData.FlowFieldLength,
+                    PathAdditionSequenceBorderStartIndex = portalTraversalData.PathAdditionSequenceBorderStartIndex,
+                    DynamicAreaIntegrationField = internalData.DynamicArea.IntegrationField,
+                    DynamicAreaFlowFieldCalculationBuffer = internalData.DynamicArea.FlowFieldCalculationBuffer,
+                    DynamicAreaSectorFlowStartCalculationList = internalData.DynamicArea.SectorFlowStartCalculationBuffer,
+                    DynamicAreaSectorFlowStartList = locationData.DynamicAreaPickedSectorFlowStarts,
+                    DynamicAreaFlowField = flowData.DynamicAreaFlowField,
+                    SectorsWithinLOSState = internalData.SectorWithinLOSState,
+                    SectorBitArray = sectorBitArray,
                 };
                 _preallocator.SendPreallocationsBack(ref preallocations, internalData.ActivePortalList, flowData.FlowField, internalData.IntegrationField, destinationData.Offset);
             }
@@ -151,15 +159,15 @@ internal class PathDataContainer
             PickedSectorList = preallocations.PickedToSector,
             FlowFieldLength = preallocations.FlowFieldLength,
             PortalTraversalQueue = preallocations.PortalTraversalFastMarchingQueue,
-            NotActivePortalList = new NativeList<int>(Allocator.Persistent),
-            SectorFlowStartIndiciesToCalculateIntegration = new NativeList<int>(Allocator.Persistent),
-            SectorFlowStartIndiciesToCalculateFlow = new NativeList<int>(Allocator.Persistent),
-            SectorWithinLOSState = new NativeArray<SectorsWihinLOSArgument>(1, Allocator.Persistent),
+            NotActivePortalList = preallocations.NotActivePortalList,
+            SectorFlowStartIndiciesToCalculateIntegration = preallocations.SectorStartIndexListToCalculateIntegration,
+            SectorFlowStartIndiciesToCalculateFlow = preallocations.SectorStartIndexListToCalculateFlow,
+            SectorWithinLOSState = preallocations.SectorsWithinLOSState,
             DynamicArea = new DynamicArea()
             {
-                FlowFieldCalculationBuffer = new UnsafeList<FlowData>(0, Allocator.Persistent),
-                IntegrationField = new NativeList<IntegrationTile>(0, Allocator.Persistent),
-                SectorFlowStartCalculationBuffer = new UnsafeList<SectorFlowStart>(0, Allocator.Persistent),
+                FlowFieldCalculationBuffer = preallocations.DynamicAreaFlowFieldCalculationBuffer,
+                IntegrationField = preallocations.DynamicAreaIntegrationField,
+                SectorFlowStartCalculationBuffer = preallocations.DynamicAreaSectorFlowStartCalculationList,
             }
         };
 
@@ -175,12 +183,12 @@ internal class PathDataContainer
         PathLocationData locationData = new PathLocationData()
         {
             SectorToPicked = preallocations.SectorToPicked,
-            DynamicAreaPickedSectorFlowStarts = new UnsafeList<SectorFlowStart>(0, Allocator.Persistent),
+            DynamicAreaPickedSectorFlowStarts = preallocations.DynamicAreaSectorFlowStartList,
         };
 
         PathFlowData flowData = new PathFlowData()
         {
-            DynamicAreaFlowField = new UnsafeList<FlowData>(0, Allocator.Persistent),
+            DynamicAreaFlowField = preallocations.DynamicAreaFlowField,
         };
 
         PathPortalTraversalData portalTraversalData = new PathPortalTraversalData()
@@ -191,8 +199,8 @@ internal class PathDataContainer
             SourcePortalIndexList = preallocations.SourcePortalIndexList,
             AStartTraverseIndexList = preallocations.AStartTraverseIndexList,
             TargetSectorPortalIndexList = preallocations.TargetSectorPortalIndexList,
-            NewPickedSectorStartIndex = new NativeArray<int>(1, Allocator.Persistent),
-            PathAdditionSequenceBorderStartIndex = new NativeArray<int>(1, Allocator.Persistent),
+            NewPickedSectorStartIndex = preallocations.NewPickedSectorStartIndex,
+            PathAdditionSequenceBorderStartIndex = preallocations.PathAdditionSequenceBorderStartIndex,
         };
         if (PathfindingInternalDataList.Count == pathIndex)
         {
@@ -204,7 +212,7 @@ internal class PathDataContainer
             PathDestinationDataList.Add(destinationData);
             TargetSectorIntegrationList.Add(preallocations.TargetSectorCosts);
             PathRoutineDataList.Add(new PathRoutineData());
-            PathSectorBitArrays.Add(new SectorBitArray(FlowFieldUtilities.SectorMatrixTileAmount, Allocator.Persistent));
+            PathSectorBitArrays.Add(preallocations.SectorBitArray);
             PathSubscriberCounts.Add(request.SourceCount);
             PathFlockIndicies.Add(request.FlockIndex);
         }
@@ -218,7 +226,7 @@ internal class PathDataContainer
             PathDestinationDataList[pathIndex] = destinationData;
             TargetSectorIntegrationList[pathIndex] = preallocations.TargetSectorCosts;
             PathRoutineDataList[pathIndex] = new PathRoutineData();
-            PathSectorBitArrays[pathIndex] = new SectorBitArray(FlowFieldUtilities.SectorMatrixTileAmount, Allocator.Persistent);
+            PathSectorBitArrays[pathIndex] = preallocations.SectorBitArray;
             PathSubscriberCounts[pathIndex] = request.SourceCount;
             PathFlockIndicies[pathIndex] = request.FlockIndex;
         }
@@ -229,10 +237,9 @@ internal class PathDataContainer
     {
         PathfindingInternalData internalData = PathfindingInternalDataList[pathIndex];
         PathFlowData pathFlowData = PathFlowDataList[pathIndex];
-        NativeArray<int> flowFieldLength = internalData.FlowFieldLength;
-        pathFlowData.FlowField = _preallocator.GetFlowField(flowFieldLength[0]);
-        pathFlowData.LOSMap = new UnsafeLOSBitmap(flowFieldLength[0], Allocator.Persistent, NativeArrayOptions.ClearMemory);
-        internalData.IntegrationField = _preallocator.GetIntegrationField(flowFieldLength[0]);
+        pathFlowData.FlowField = _preallocator.GetFlowField(internalData.FlowFieldLength.Value);
+        pathFlowData.LOSMap = new UnsafeLOSBitmap(internalData.FlowFieldLength.Value, Allocator.Persistent, NativeArrayOptions.ClearMemory);
+        internalData.IntegrationField = _preallocator.GetIntegrationField(internalData.FlowFieldLength.Value);
         internalData.ActivePortalList = _preallocator.GetActiveWaveFrontListPersistent(internalData.PickedSectorList.Length);
         PathfindingInternalDataList[pathIndex] = internalData;
         PathFlowDataList[pathIndex] = pathFlowData;

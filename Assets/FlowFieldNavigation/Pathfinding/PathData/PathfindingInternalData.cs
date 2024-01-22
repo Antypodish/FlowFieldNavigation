@@ -8,21 +8,13 @@ internal struct PathfindingInternalData
     internal DynamicArea DynamicArea;
     internal NativeList<int> PickedSectorList;
     internal NativeList<IntegrationTile> IntegrationField;
-    internal NativeArray<int> FlowFieldLength;
+    internal NativeReference<int> FlowFieldLength;
     internal NativeQueue<int> PortalTraversalQueue;
     internal NativeList<UnsafeList<ActiveWaveFront>> ActivePortalList;
     internal NativeList<int> NotActivePortalList;
     internal NativeList<int> SectorFlowStartIndiciesToCalculateIntegration;
     internal NativeList<int> SectorFlowStartIndiciesToCalculateFlow;
-    internal NativeArray<SectorsWihinLOSArgument> SectorWithinLOSState;
-    internal void Dispose()
-    {
-        NotActivePortalList.Dispose();
-        SectorFlowStartIndiciesToCalculateFlow.Dispose();
-        SectorFlowStartIndiciesToCalculateIntegration.Dispose();
-        SectorWithinLOSState.Dispose();
-        DynamicArea.Dispose();
-    }
+    internal NativeReference<SectorsWihinLOSArgument> SectorWithinLOSState;
 }
 
 internal enum PathState : byte

@@ -9,6 +9,5 @@ internal struct PathFlowData
     internal void Dispose()
     {
         LOSMap.Dispose();
-        DynamicAreaFlowField.Dispose();
     }
 }
