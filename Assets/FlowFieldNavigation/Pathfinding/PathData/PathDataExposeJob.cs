@@ -58,6 +58,8 @@ internal struct PathDataExposeJob : IJob
             int pathIndex = DestinationUpdatedPathIndicies[i];
 
             ExposedPathDestinationList[pathIndex] = PathDestinationDataArray[pathIndex].Destination;
+            ExposedPathLocationList[pathIndex] = PathLocationDataArray[pathIndex];
+            ExposedPathFlowDataList[pathIndex] = PathFlowDataArray[pathIndex];
         }
     }
 }

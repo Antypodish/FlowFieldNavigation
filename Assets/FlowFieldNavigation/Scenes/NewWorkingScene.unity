@@ -896,6 +896,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1328932017, guid: 5e3867b8afbc0bb49a0027ab49965980, type: 3}
+      propertyPath: _debugFlowField
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1328932017, guid: 5e3867b8afbc0bb49a0027ab49965980, type: 3}
       propertyPath: _debugHeightMap
       value: 1
       objectReference: {fileID: 0}
@@ -913,7 +917,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1328932017, guid: 5e3867b8afbc0bb49a0027ab49965980, type: 3}
       propertyPath: _debugPickedSectors
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1328932017, guid: 5e3867b8afbc0bb49a0027ab49965980, type: 3}
       propertyPath: _pathfindingManager
