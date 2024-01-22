@@ -36,7 +36,7 @@ internal struct FinalPathRequestDestinationExpansionJob : IJob
 
             int2 destination2d = FlowFieldUtilities.PosTo2D(request.Destination, TileSize);
             LocalIndex1d destinationLocal = FlowFieldUtilities.GetLocal1D(destination2d, SectorColAmount, SectorMatrixColAmount);
-            if (sourceIsland == destinationIsland && CostFields[request.Offset][destinationLocal.sector * SectorTileAmount + destinationLocal.index] != byte.MaxValue) { return; }
+            if (sourceIsland == destinationIsland && CostFields[request.Offset][destinationLocal.sector * SectorTileAmount + destinationLocal.index] != byte.MaxValue) { continue; }
             float2 newDestination = GetClosestIndex(request.Destination, sourceIsland, islandProcessor, CostFields[request.Offset]);
             request.Destination = newDestination;
             pickedFinalRequests[index] = request;
