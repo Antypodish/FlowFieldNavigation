@@ -68,25 +68,14 @@ internal class EditorCostFieldDebugger
         for (int s = 0; s < FlowFieldUtilities.SectorMatrixTileAmount; s++)
         {
             NativeSlice<byte> sector = new NativeSlice<byte>(costs, s * FlowFieldUtilities.SectorTileAmount, FlowFieldUtilities.SectorTileAmount);
-            Vector3 sectorStartPos = GetSectorStartPosition(s, sectorMatrixColAmount, sectorColAmount, tileSize);
             for (int i = 0; i < sector.Length; i++)
             {
-                Vector3 indexPos = GetIndexPosition(sectorStartPos, i, sectorColAmount, tileSize);
                 if (sector[i] == 1) { continue; }
+                int2 index2d = FlowFieldUtilities.GetGeneral2d(i, s, sectorMatrixColAmount, sectorColAmount);
+                Vector2 indexpos2 = FlowFieldUtilities.IndexToPos(index2d, tileSize) - new float2(tileSize / 2, tileSize / 2);
+                Vector3 indexPos = new Vector3(indexpos2.x, yOffset, indexpos2.y);
                 Gizmos.DrawMesh(_debugMesh, indexPos);
             }
-        }
-
-        Vector3 GetSectorStartPosition(int sector1d, int sectorMatrixColAmount, int sectorColAmount, float tileSize)
-        {
-            int2 sector2d = new int2(sector1d % sectorMatrixColAmount, sector1d / sectorMatrixColAmount);
-            return new Vector3(sector2d.x * sectorColAmount * tileSize, yOffset, sector2d.y * sectorColAmount * tileSize);
-        }
-        Vector3 GetIndexPosition(Vector3 sectorStartPosition, int local1d, int sectorColAmount, float tileSize)
-        {
-            int2 local2d = new int2(local1d % sectorColAmount, local1d / sectorColAmount);
-            Vector3 localIndexPos = new Vector3(local2d.x * tileSize, yOffset, local2d.y * tileSize);
-            return sectorStartPosition + localIndexPos;
         }
     }
 }

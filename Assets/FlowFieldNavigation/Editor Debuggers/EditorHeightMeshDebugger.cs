@@ -49,19 +49,28 @@ internal class EditorHeightMeshDebugger
         float tileSize = triangleHashGrid.GetGridTileSize(gridIndex);
         int colAmount = triangleHashGrid.GetGridColAmount(gridIndex);
         int rowAmount = triangleHashGrid.GetGridRowAmount(gridIndex);
-        float maxZ = rowAmount * tileSize;
-        float maxX = colAmount * tileSize;
+        float2 maxPos = FlowFieldUtilities.GetGridMaxPosExcluding(rowAmount, colAmount, tileSize, FlowFieldUtilities.HeightMeshStartPosition);
+        float maxZ = maxPos.y;
+        float maxX = maxPos.x;
         float yOffset = 0.2f;
         for (int i = 0; i < colAmount; i++)
         {
-            Vector3 start = new Vector3(i * tileSize, yOffset, 0f);
-            Vector3 end = new Vector3(start.x, yOffset, maxZ);
+            float2 start2 = new float2(i * tileSize, 0f);
+            float2 end2 = new float2(start2.x, maxZ);
+            start2 += FlowFieldUtilities.HeightMeshStartPosition;
+            end2 += FlowFieldUtilities.HeightMeshStartPosition;
+            Vector3 start = new Vector3(start2.x, yOffset, start2.y);
+            Vector3 end = new Vector3(end2.x, yOffset, end2.y);
             Gizmos.DrawLine(start, end);
         }
         for (int i = 0; i < rowAmount; i++)
         {
-            Vector3 start = new Vector3(0f, yOffset, tileSize * i);
-            Vector3 end = new Vector3(maxX, yOffset, start.z);
+            float2 start2 = new float2(0f, tileSize * i);
+            float2 end2 = new float2(maxX, start2.y);
+            start2 += FlowFieldUtilities.HeightMeshStartPosition;
+            end2 += FlowFieldUtilities.HeightMeshStartPosition;
+            Vector3 start = new Vector3(start2.x, yOffset, start2.y);
+            Vector3 end = new Vector3(end2.x, yOffset, end2.y);
             Gizmos.DrawLine(start, end);
         }
     }

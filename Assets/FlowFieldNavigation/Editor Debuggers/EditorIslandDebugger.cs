@@ -145,7 +145,8 @@ internal class EditorIslandDebugger
                 else { islandIndex = portalNodes[islandIndex].IslandIndex; }
                 int2 local2d = FlowFieldUtilities.To2D(i, FlowFieldUtilities.SectorColAmount);
                 int2 general2d = FlowFieldUtilities.GetGeneral2d(local2d, sector2d, FlowFieldUtilities.SectorColAmount, FlowFieldUtilities.FieldColAmount);
-                float3 pos = new float3(general2d.x * tileSize, yOffset, general2d.y * tileSize);
+                float2 pos2 = FlowFieldUtilities.IndexToPos(general2d, tileSize) - new float2(tileSize / 2, tileSize / 2);
+                float3 pos = new float3(pos2.x, yOffset, pos2.y);
 
                 Gizmos.color = _colors[islandIndex % _colors.Length];
                 Gizmos.DrawMesh(_debugMesh, pos);
@@ -162,7 +163,8 @@ internal class EditorIslandDebugger
                 if (cost == byte.MaxValue) { continue; }
                 int2 local2d = FlowFieldUtilities.To2D(i, FlowFieldUtilities.SectorColAmount);
                 int2 general2d = FlowFieldUtilities.GetGeneral2d(local2d, sector2d, FlowFieldUtilities.SectorColAmount, FlowFieldUtilities.FieldColAmount);
-                float3 pos = new float3(general2d.x * tileSize, yOffset, general2d.y * tileSize);
+                float2 pos2 = FlowFieldUtilities.IndexToPos(general2d, tileSize) - new float2(tileSize / 2, tileSize / 2);
+                float3 pos = new float3(pos2.x, yOffset, pos2.y);
 
                 Gizmos.DrawMesh(_debugMesh, pos);
             }

@@ -12,11 +12,7 @@ public class EditorDebuggingController : MonoBehaviour
     [SerializeField] bool _costField;
     [SerializeField] bool _sectors;
     [SerializeField] bool _windows;
-    [SerializeField] bool _sectorWindows;
-    [SerializeField] bool _windowSectors;
     [SerializeField] bool _portals;
-    [SerializeField] bool _portalsOnSector;
-    [SerializeField] bool _costsToPortal;
     [SerializeField] bool _portalIslands;
     [SerializeField] bool _sectorIslands;
     [SerializeField] bool _portalErrorDetection;
@@ -52,7 +48,6 @@ public class EditorDebuggingController : MonoBehaviour
     //debuggers
     EditorSectorDebugger _sectorDebugger;
     EditorWindowDebugger _windowDebugger;
-    EditorSectorGraphDebugger _sectorGraphDebugger;
     EditorPortalDebugger _portalDebugger;
     EditorPathDebugger _pathDebugger;
     EditorAgentDirectionDebugger _agentDirectionDebugger;
@@ -62,13 +57,11 @@ public class EditorDebuggingController : MonoBehaviour
     EditorAvoidanceDirectionDebugger _avoidanceDirectionDebugger;
     EditorSpatialHashGridDebugger _spatialHashGridDebugger;
     EditorIslandDebugger _islandDebugger;
-    EditorSectorPortalErrorDetector _portalErrorDetector;
     EditorHeightMeshDebugger _heightMeshDebugger;
     private void Start()
     {
         _sectorDebugger = new EditorSectorDebugger(_pathfindingManager);
         _windowDebugger = new EditorWindowDebugger(_pathfindingManager);
-        _sectorGraphDebugger = new EditorSectorGraphDebugger(_pathfindingManager);
         _portalDebugger = new EditorPortalDebugger(_pathfindingManager);
         _agentDirectionDebugger = new EditorAgentDirectionDebugger(_pathfindingManager);
         _costFieldDebugger = new EditorCostFieldDebugger(_pathfindingManager);
@@ -77,7 +70,6 @@ public class EditorDebuggingController : MonoBehaviour
         _avoidanceDirectionDebugger = new EditorAvoidanceDirectionDebugger(_pathfindingManager);
         _spatialHashGridDebugger = new EditorSpatialHashGridDebugger(_pathfindingManager);
         _islandDebugger = new EditorIslandDebugger(_pathfindingManager);
-        _portalErrorDetector = new EditorSectorPortalErrorDetector(_pathfindingManager);
         _heightMeshDebugger = new EditorHeightMeshDebugger(_pathfindingManager);
 
 #if UNITY_STANDALONE && !UNITY_EDITOR
@@ -96,15 +88,10 @@ _debuggingEnabled = false;
 
         if (_sectors && _sectorDebugger != null) { _sectorDebugger.DebugSectors((int) _costFieldOffset); }
         if( _windows && _windowDebugger != null) { _windowDebugger.DebugWindows((int) _costFieldOffset); }
-        if(_sectorWindows && _sectorGraphDebugger != null) { _sectorGraphDebugger.DebugSectorToWindow((int) _costFieldOffset); }
-        if(_windowSectors && _sectorGraphDebugger != null) { _sectorGraphDebugger.DebugWindowToSector((int) _costFieldOffset); }
         if(_portals && _portalDebugger != null) { _portalDebugger.DebugPortals((int) _costFieldOffset); }
-        if(_portalsOnSector && _portalDebugger != null) { _portalDebugger.DebugPortalsOnClickedSector((int) _costFieldOffset); }
-        if(_costsToPortal && _portalDebugger != null) { _portalDebugger.DebugCostsToClickedPortal((int) _costFieldOffset); }
         if(_costField && _costFieldDebugger != null) { _costFieldDebugger.DebugCostFieldWithMesh((int) _costFieldOffset); }
         if(_portalIslands && _islandDebugger != null) { _islandDebugger.DebugPortalIslands((int) _costFieldOffset); }
         if(_sectorIslands && _islandDebugger != null) { _islandDebugger.DebugTileIslands((int) _costFieldOffset); }
-        if(_portalErrorDetection && _portalErrorDetector != null) { _portalErrorDetector.Debug((int) _costFieldOffset); }
         if(_debugHeightMesh && _heightMeshDebugger != null) { _heightMeshDebugger.DebugHeightMapMesh(); }
         if(_debugTrianglesAtClickedTile && _heightMeshDebugger != null) { _heightMeshDebugger.DebugTrianglesAtTile(); }
         if(_debugGridBorders && _heightMeshDebugger != null) { _heightMeshDebugger.DebugBorders(_meshGridIndex); }

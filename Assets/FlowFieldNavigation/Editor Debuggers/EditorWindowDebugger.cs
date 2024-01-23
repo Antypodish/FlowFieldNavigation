@@ -2,6 +2,7 @@
 
 using Unity.Collections;
 using UnityEngine;
+using Unity.Mathematics;
 internal class EditorWindowDebugger
 {
     PathfindingManager _pathfindingManager;
@@ -68,8 +69,11 @@ internal class EditorWindowDebugger
             {
                 for(int c = botLeftBound.C; c <= upRightBound.C; c++)
                 {
-                    Vector3 pos = new Vector3(c * tileSize, yOffset, r * tileSize);
-                    Gizmos.DrawMesh(_debugMesh, pos);
+                    int2 index = new int2(c, r);
+                    float2 pos2 = FlowFieldUtilities.IndexToPos(index, tileSize);
+                    pos2 -= new float2(tileSize / 2, tileSize / 2);
+                    float3 pos3 = new float3(pos2.x, yOffset, pos2.y);
+                    Gizmos.DrawMesh(_debugMesh, pos3);
                 }
             }
 

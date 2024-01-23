@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using Unity.Burst;
-
+using Unity.Mathematics;
 internal struct PortalNode
 {
     internal Portal Portal1;
@@ -24,13 +24,13 @@ internal struct PortalNode
     }
     internal Vector3 GetPosition(float tileSize)
     {
-        Index2 index1 = Portal1.Index;
-        Index2 index2 = Portal2.Index;
+        int2 index1 = new int2(Portal1.Index.C, Portal1.Index.R);
+        int2 index2 = new int2(Portal2.Index.C, Portal2.Index.R);
 
-        Vector3 pos1 = new Vector3(tileSize / 2 + tileSize * index1.C, 0.1f, tileSize / 2 + tileSize * index1.R);
-        Vector3 pos2 = new Vector3(tileSize / 2 + tileSize * index2.C, 0.1f, tileSize / 2 + tileSize * index2.R);
-
-        return (pos1 + pos2) / 2;
+        float2 pos1 = FlowFieldUtilities.IndexToPos(index1, tileSize);
+        float2 pos2 = FlowFieldUtilities.IndexToPos(index2, tileSize);
+        float2 pos = (pos1 + pos2) / 2;
+        return new Vector3(pos.x, 0.1f, pos.y);
     }
     internal bool IsIslandValid()
     {

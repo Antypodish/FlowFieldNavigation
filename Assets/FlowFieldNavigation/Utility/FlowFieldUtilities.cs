@@ -23,8 +23,8 @@ internal static class FlowFieldUtilities
     internal static float MaxAgentSize;
     internal static int LOSRange;
     internal static int MaxCostFieldOffset;
-    internal static float2 HeightMeshTranslation;
-    internal static float2 FieldGridTranslation;
+    internal static float2 HeightMeshStartPosition;
+    internal static float2 FieldGridStartPosition;
 
     internal static int To1D(int2 index2, int colAmount)
     {
@@ -48,6 +48,10 @@ internal static class FlowFieldUtilities
         int2 general2d = To2D(general1d, fieldColAmount);
         return new float2(general2d.x * tileSize + tileSize / 2, general2d.y * tileSize + tileSize / 2);
     }
+    internal static float2 GetGridMaxPosExcluding(int rowAmount, int colAmount, float tileSize, float2 gridStartPos)
+    {
+        return gridStartPos + new float2(colAmount * tileSize, rowAmount * tileSize);
+    }
     internal static float2 LocalIndexToPos(int local1d, int sector1d, int sectorMatrixColAmount, int sectorColAmount, float tileSize, float sectorSize)
     {
         float2 sectorStartPos = new float2((sector1d % sectorMatrixColAmount) * sectorSize, (sector1d / sectorMatrixColAmount) * sectorSize);
@@ -67,6 +71,10 @@ internal static class FlowFieldUtilities
     internal static float2 IndexToPos(int2 general2d, float tileSize)
     {
         return new float2(general2d.x * tileSize + tileSize / 2, general2d.y * tileSize + tileSize / 2);
+    }
+    internal static float2 IndexStartPos(int2 general2d, float tileSize, float2 gridStartPos)
+    {
+        return gridStartPos + new float2(general2d.x * tileSize, general2d.y * tileSize);
     }
     internal static int2 GetSector2D(int2 index, int sectorColAmount)
     {

@@ -4,7 +4,7 @@ using Unity.Collections;
 using Unity.Mathematics;
 
 [BurstCompile]
-internal struct HeightMeshBaseTranslationDeterminationJob : IJob
+internal struct HeightMeshStartPositionDeterminationJob : IJob
 {
     [ReadOnly] public NativeArray<float3> Verticies;
     [WriteOnly] public NativeReference<float2> BaseTranslationOut;
@@ -18,6 +18,6 @@ internal struct HeightMeshBaseTranslationDeterminationJob : IJob
             minX = math.min(vertex.x, minX);
             minY = math.min(vertex.z, minY);
         }
-        BaseTranslationOut.Value = new float2(-minX, -minY);
+        BaseTranslationOut.Value = new float2(minX, minY);
     }
 }

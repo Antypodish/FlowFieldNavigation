@@ -66,7 +66,7 @@ public class PathfindingManager : MonoBehaviour
         FlowFieldUtilities.FieldMaxXExcluding = startParameters.FieldStartPositionXZ.x + FlowFieldUtilities.FieldColAmount * FlowFieldUtilities.TileSize;
         FlowFieldUtilities.FieldMaxYExcluding = startParameters.FieldStartPositionXZ.y + FlowFieldUtilities.FieldRowAmount * FlowFieldUtilities.TileSize;
         FlowFieldUtilities.MaxCostFieldOffset = startParameters.MaxCostFieldOffset;
-        FlowFieldUtilities.FieldGridTranslation = -startParameters.FieldStartPositionXZ;
+        FlowFieldUtilities.FieldGridStartPosition = startParameters.FieldStartPositionXZ;
     }
     internal void StartSimulation(SimulationStartParameters startParameters)
     {

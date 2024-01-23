@@ -62,13 +62,13 @@ internal class HeightMeshProducer
         tempTriangles.Dispose();
 
         NativeReference<float2> baseTranslation = new NativeReference<float2>(0, Allocator.TempJob);
-        HeightMeshBaseTranslationDeterminationJob baseTranslationJob = new HeightMeshBaseTranslationDeterminationJob()
+        HeightMeshStartPositionDeterminationJob meshStartPosJob = new HeightMeshStartPositionDeterminationJob()
         {
             BaseTranslationOut = baseTranslation,
             Verticies = Verticies,
         };
-        baseTranslationJob.Schedule().Complete();
-        FlowFieldUtilities.HeightMeshTranslation = baseTranslation.Value;
+        meshStartPosJob.Schedule().Complete();
+        FlowFieldUtilities.HeightMeshStartPosition = baseTranslation.Value;
         baseTranslation.Dispose();
 
 
@@ -91,7 +91,7 @@ internal class HeightMeshProducer
         NativeList<int> newTriangles = new NativeList<int>(Allocator.Persistent);
         SpatialHashingTriangleSubmissionJob spatialHashingTriangleSubmission = new SpatialHashingTriangleSubmissionJob()
         {
-            HeightMapTranslation = FlowFieldUtilities.HeightMeshTranslation,
+            HeightMapTranslation = FlowFieldUtilities.HeightMeshStartPosition,
             BaseSpatialGridSize = FlowFieldUtilities.BaseTriangleSpatialGridSize,
             FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
             FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
@@ -109,7 +109,7 @@ internal class HeightMeshProducer
     {
         return new TriangleSpatialHashGrid()
         {
-            HeightMapTranslation = FlowFieldUtilities.HeightMeshTranslation,
+            HeightMapStartPosition = FlowFieldUtilities.HeightMeshStartPosition,
             BaseSpatialGridSize = FlowFieldUtilities.BaseTriangleSpatialGridSize,
             FieldHorizontalSize = FlowFieldUtilities.FieldColAmount * FlowFieldUtilities.TileSize,
             FieldVerticalSize = FlowFieldUtilities.FieldRowAmount * FlowFieldUtilities.TileSize,
