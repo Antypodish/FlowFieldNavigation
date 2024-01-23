@@ -185,37 +185,6 @@ internal struct ActivePortalSubmitJob : IJob
         }
         return connected;
     }
-    int GetUncommonIndex(int curPortalSequenceIndex, int nextPortalSequenceIndex)
-    {
-        ActivePortal curPortal = PortalSequence[curPortalSequenceIndex];
-        ActivePortal nextPortal = PortalSequence[nextPortalSequenceIndex];
-        int curPortalIndex = curPortal.Index;
-        int nextPortalIndex = nextPortal.Index;
-        int windowIndex1 = PortalNodes[curPortalIndex].WinPtr;
-        int windowIndex2 = PortalNodes[nextPortalIndex].WinPtr;
-        WindowNode winNode1 = WindowNodes[windowIndex1];
-        WindowNode winNode2 = WindowNodes[windowIndex2];
-        int curSec1Index = WinToSecPtrs[winNode1.WinToSecPtr];
-        int curSec2Index = WinToSecPtrs[winNode1.WinToSecPtr + 1];
-        int nextSec1Index = WinToSecPtrs[winNode2.WinToSecPtr];
-        int nextSec2Index = WinToSecPtrs[winNode2.WinToSecPtr + 1];
-
-        bool sector1Common = (curSec1Index == nextSec1Index || curSec1Index == nextSec2Index);
-        bool sector2Common = (curSec2Index == nextSec1Index || curSec2Index == nextSec2Index);
-        bool sector1Included = SectorToPicked[curSec1Index] != 0;
-        bool sector2Included = SectorToPicked[curSec2Index] != 0;
-
-        
-        if (!sector1Common && sector1Included)
-        {
-            return curSec1Index;
-        }
-        else if (!sector2Common && sector2Included)
-        {
-            return curSec2Index;
-        }
-        return -1;
-    }
     bool ActiveWaveFrontExists(ActiveWaveFront front, UnsafeList<ActiveWaveFront> list)
     {
         for(int i = 0; i < list.Length; i++)

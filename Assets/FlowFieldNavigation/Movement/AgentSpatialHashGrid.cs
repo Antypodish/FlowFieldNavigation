@@ -7,11 +7,13 @@ internal struct AgentSpatialHashGrid
     internal float BaseSpatialGridSize;
     internal float FieldHorizontalSize;
     internal float FieldVerticalSize;
+    internal float2 FieldGridStartPosition;
     internal NativeArray<AgentMovementData> RawAgentMovementDataArray;
     internal NativeArray<UnsafeList<HashTile>> AgentHashGridArray;
     internal int GetGridCount() => AgentHashGridArray.Length;
     internal SpatialHashGridIterator GetIterator(float2 agentPos, float checkRange, int hashGridIndex)
     {
+        agentPos -= FieldGridStartPosition;
         if(AgentHashGridArray.Length <= hashGridIndex) { return new SpatialHashGridIterator(); }
         float tileSize = hashGridIndex * BaseSpatialGridSize + BaseSpatialGridSize;
         int2 startingTileIndex = GetStartingTileIndex(agentPos, tileSize);
@@ -31,6 +33,18 @@ internal struct AgentSpatialHashGrid
     }
     internal int2 GetStartingTileIndex(float2 position, float tileSize) => new int2((int)math.floor(position.x / tileSize), (int)math.floor(position.y / tileSize));
     internal int GetOffset(float size, float tileSize) => (int)math.ceil(size / tileSize);
+    internal float GetTileSize(int hashGridIndex)
+    {
+        return hashGridIndex * BaseSpatialGridSize + BaseSpatialGridSize;
+    }
+    internal int GetColAmount(int hashGridIndex)
+    {
+        return (int)math.ceil(FieldHorizontalSize / GetTileSize(hashGridIndex));
+    }
+    internal int GetRowAmount(int hashGridIndex)
+    {
+        return (int)math.ceil(FieldVerticalSize / GetTileSize(hashGridIndex));
+    }
 }
 internal struct SpatialHashGridIterator
 {

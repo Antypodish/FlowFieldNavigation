@@ -233,7 +233,6 @@ internal struct FlowFieldJob : IJobParallelFor
 
         bool moved = horizontalDif != 0 || verticalDif != 0;
 
-        float2 tileOffset = new float2(TileSize / 2, TileSize / 2);
         if (neCorner)
         {
             int2 neSector2d = FlowFieldUtilities.To2D(neSector1d, SectorMatrixColAmount);

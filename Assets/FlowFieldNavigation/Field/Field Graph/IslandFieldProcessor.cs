@@ -9,12 +9,14 @@ internal struct IslandFieldProcessor
     internal int SectorColAmount;
     internal int SectorMatrixColAmount;
     internal int FieldColAmount;
+    internal float2 FieldGridStartPosition;
 
     [ReadOnly] internal UnsafeListReadOnly<SectorNode> SectorNodes;
     [ReadOnly] internal UnsafeListReadOnly<PortalNode> PortalNodes;
     [ReadOnly] internal UnsafeListReadOnly<UnsafeList<int>> IslandFields;
     internal int GetIsland(float2 pos)
     {
+        pos -= FieldGridStartPosition;
         int2 index2d = FlowFieldUtilities.PosTo2D(pos, TileSize);
         int2 sector2d = FlowFieldUtilities.GetSector2D(index2d, SectorColAmount);
         int sector1d = FlowFieldUtilities.To1D(sector2d, SectorMatrixColAmount);

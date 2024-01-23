@@ -97,7 +97,7 @@ internal struct PortalNodeAdditionReductionJob : IJob
         for (int i = 0; i < SourcePositions.Length; i++)
         {
             float2 sourcePos = SourcePositions[i];
-            int2 sourceIndex = new int2((int)math.floor(sourcePos.x / FieldTileSize), (int)math.floor(sourcePos.y / FieldTileSize));
+            int2 sourceIndex = FlowFieldUtilities.PosTo2D(sourcePos, FieldTileSize);
             int2 sourceSectorIndex = sourceIndex / SectorColAmount;
             int sourceSectorIndexFlat = sourceSectorIndex.y * SectorMatrixColAmount + sourceSectorIndex.x;
             //ADD SOURCE SECTOR TO THE PICKED SECTORS

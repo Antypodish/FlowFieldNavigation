@@ -38,6 +38,7 @@ internal class EditorSpatialHashGridDebugger
             FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
             RawAgentMovementDataArray = movData,
             AgentHashGridArray = hashGridArray,
+            FieldGridStartPosition = FlowFieldUtilities.FieldGridStartPosition,
         };
 
         int agentIndex = agent.AgentDataIndex;
@@ -63,29 +64,44 @@ internal class EditorSpatialHashGridDebugger
     {
         NativeArray<UnsafeList<HashTile>> hashGridArray = _pathfindingManager.GetSpatialHashGridArray();
         if (gridIndex >= hashGridArray.Length || gridIndex < 0) { return; }
-        AgentSpatialGridUtils gridUtils = new AgentSpatialGridUtils(0);
+        AgentSpatialHashGrid grid = new AgentSpatialHashGrid()
+        {
+            BaseSpatialGridSize = FlowFieldUtilities.BaseAgentSpatialGridSize,
+            FieldGridStartPosition = FlowFieldUtilities.FieldGridStartPosition,
+            FieldVerticalSize = FlowFieldUtilities.FieldRowAmount * FlowFieldUtilities.TileSize,
+            FieldHorizontalSize = FlowFieldUtilities.FieldColAmount * FlowFieldUtilities.TileSize,
+            AgentHashGridArray = hashGridArray,
+        };
 
         DrawTileBorders();
         void DrawTileBorders()
         {
             Gizmos.color = Color.black;
-            float tileSize = gridUtils.GetTileSize(gridIndex);
-            int colAmount = gridUtils.GetColAmount(gridIndex);
-            int rowAmount = gridUtils.GetRowAmount(gridIndex);
-
-            float maxZ = rowAmount * tileSize;
-            float maxX = colAmount * tileSize;
+            float tileSize = grid.GetTileSize(gridIndex);
+            int colAmount = grid.GetColAmount(gridIndex);
+            int rowAmount = grid.GetRowAmount(gridIndex);
+            float2 maxPos = FlowFieldUtilities.GetGridMaxPosExcluding(rowAmount, colAmount, tileSize, FlowFieldUtilities.FieldGridStartPosition);
+            float maxZ = maxPos.y;
+            float maxX = maxPos.x;
             float yOffset = 0.2f;
             for (int i = 0; i < colAmount; i++)
             {
-                Vector3 start = new Vector3(i * tileSize, yOffset, 0f);
-                Vector3 end = new Vector3(start.x, yOffset, maxZ);
+                float2 start2 = new float2(i * tileSize, 0f);
+                float2 end2 = new float2(start2.x, maxZ);
+                start2 += FlowFieldUtilities.HeightMeshStartPosition;
+                end2 += FlowFieldUtilities.HeightMeshStartPosition;
+                Vector3 start = new Vector3(start2.x, yOffset, start2.y);
+                Vector3 end = new Vector3(end2.x, yOffset, end2.y);
                 Gizmos.DrawLine(start, end);
             }
             for (int i = 0; i < rowAmount; i++)
             {
-                Vector3 start = new Vector3(0f, yOffset, tileSize * i);
-                Vector3 end = new Vector3(maxX, yOffset, start.z);
+                float2 start2 = new float2(0f, tileSize * i);
+                float2 end2 = new float2(maxX, start2.y);
+                start2 += FlowFieldUtilities.HeightMeshStartPosition;
+                end2 += FlowFieldUtilities.HeightMeshStartPosition;
+                Vector3 start = new Vector3(start2.x, yOffset, start2.y);
+                Vector3 end = new Vector3(end2.x, yOffset, end2.y);
                 Gizmos.DrawLine(start, end);
             }
         }

@@ -153,69 +153,8 @@ internal class FieldGraph
             SectorNodes = FlowFieldUtilitiesUnsafe.ToUnsafeListRedonly(SectorNodes),
             IslandFields = FlowFieldUtilitiesUnsafe.ToUnsafeListRedonly(IslandFields),
             PortalNodes = FlowFieldUtilitiesUnsafe.ToUnsafeListRedonly(PortalNodes),
+            FieldGridStartPosition = FlowFieldUtilities.FieldGridStartPosition,
         };
-    }
-    internal NativeArray<WindowNode> GetWindowNodesOf(SectorNode sectorNode)
-    {
-        NativeArray <WindowNode> windowNodes = new NativeArray<WindowNode>(sectorNode.SecToWinCnt, Allocator.Temp);
-        for(int i = sectorNode.SecToWinPtr; i < sectorNode.SecToWinPtr + sectorNode.SecToWinCnt; i++)
-        {
-            windowNodes[i - sectorNode.SecToWinPtr] = WindowNodes[SecToWinPtrs[i]];
-        }
-        return windowNodes;
-    }
-    internal NativeArray<SectorNode> GetSectorNodesOf(WindowNode windowNode)
-    {
-        NativeArray<SectorNode> sectorNodes = new NativeArray<SectorNode>(windowNode.WinToSecCnt, Allocator.Temp);
-        for (int i = windowNode.WinToSecPtr; i < windowNode.WinToSecPtr + windowNode.WinToSecCnt; i++)
-        {
-            sectorNodes[i - windowNode.WinToSecPtr] = SectorNodes[WinToSecPtrs[i]];
-        }
-        return sectorNodes;
-    }
-    internal NativeArray<SectorNode> GetSectorNodesOf(PortalNode portal)
-    {
-        WindowNode windowNode = WindowNodes[portal.WinPtr];
-        NativeArray<SectorNode> sectorNodes = new NativeArray<SectorNode>(2, Allocator.Temp);
-
-        for (int i = windowNode.WinToSecPtr; i < windowNode.WinToSecPtr + windowNode.WinToSecCnt; i++)
-        {
-            sectorNodes[i - windowNode.WinToSecPtr] = SectorNodes[WinToSecPtrs[i]];
-        }
-        return sectorNodes;
-    }
-    internal SectorNode GetSectorNodeAt(Vector3 pos)
-    {
-        float sectorSize = FlowFieldUtilities.SectorColAmount * FlowFieldUtilities.TileSize;
-        Index2 index2 = new Index2(Mathf.FloorToInt(pos.z / sectorSize), Mathf.FloorToInt(pos.x / sectorSize));
-        int index = Index2.ToIndex(index2, FlowFieldUtilities.SectorMatrixColAmount);
-        return SectorNodes[index];
-    }
-    internal NativeArray<int> GetPortalIndicies(SectorNode sectorNode, NativeArray<WindowNode> windowNodes)
-    {
-        NativeArray<int> portalIndicies;
-        int secToWinCnt = sectorNode.SecToWinCnt;
-        int secToWinPtr = sectorNode.SecToWinPtr;
-
-        //determine portal count
-        int portalIndexCount = 0;
-        for (int i = 0; i < secToWinCnt; i++)
-        {
-            portalIndexCount += windowNodes[SecToWinPtrs[secToWinPtr + i]].PorCnt;
-        }
-        portalIndicies = new NativeArray<int>(portalIndexCount, Allocator.Temp);
-        //get portals
-        int portalIndiciesIterable = 0;
-        for (int i = 0; i < secToWinCnt; i++)
-        {
-            int windowPorPtr = windowNodes[SecToWinPtrs[secToWinPtr + i]].PorPtr;
-            int windowPorCnt = windowNodes[SecToWinPtrs[secToWinPtr + i]].PorCnt;
-            for (int j = 0; j < windowPorCnt; j++)
-            {
-                portalIndicies[portalIndiciesIterable++] = windowPorPtr + j;
-            }
-        }
-        return portalIndicies;
     }
 }
 

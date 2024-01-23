@@ -52,8 +52,8 @@ internal struct AvoidanceWallDetectionJob : IJobParallelFor
         float2 dif = rightPoint - leftPoint;
         float slope = dif.y / dif.x;
         float c = leftPoint.y - (slope * leftPoint.x);
-        int2 point1Index = (int2)math.floor(point1 / TileSize);
-        int2 point2Index = (int2)math.floor(point2 / TileSize);
+        int2 point1Index = FlowFieldUtilities.PosTo2D(point1, TileSize);
+        int2 point2Index = FlowFieldUtilities.PosTo2D(point2, TileSize);
         if (point1Index.x == point2Index.x || dif.x == 0)
         {
             int startY = (int)math.floor(math.select(point2.y, point1.y, point1.y < point2.y) / TileSize);
@@ -84,8 +84,8 @@ internal struct AvoidanceWallDetectionJob : IJobParallelFor
         float2 startPoint = leftPoint;
         float nextPointX = math.ceil(startPoint.x / TileSize) * TileSize;
         float2 nextPoint = new float2(nextPointX, c + slope * nextPointX);
-        int2 startIndex = (int2)math.floor(startPoint / TileSize);
-        int2 nextIndex = (int2)math.floor(nextPoint / TileSize);
+        int2 startIndex = FlowFieldUtilities.PosTo2D(startPoint, TileSize);
+        int2 nextIndex = FlowFieldUtilities.PosTo2D(nextPoint, TileSize);
         int minY = math.select(nextIndex.y, startIndex.y, startIndex.y < nextIndex.y);
         int maxY = math.select(startIndex.y, nextIndex.y, startIndex.y < nextIndex.y);
         for (int y = minY; y <= maxY; y++)
@@ -99,8 +99,8 @@ internal struct AvoidanceWallDetectionJob : IJobParallelFor
         float2 endPoint = rightPoint;
         float prevPointX = math.floor(endPoint.x / TileSize) * TileSize;
         float2 prevPoint = new float2(prevPointX, c + slope * prevPointX);
-        int2 endIndex = (int2)math.floor(endPoint / TileSize);
-        int2 prevIndex = (int2)math.floor(prevPoint / TileSize);
+        int2 endIndex = FlowFieldUtilities.PosTo2D(endPoint, TileSize);
+        int2 prevIndex = FlowFieldUtilities.PosTo2D(prevPoint, TileSize);
         minY = math.select(prevIndex.y, endIndex.y, endIndex.y < prevIndex.y);
         maxY = math.select(endIndex.y, prevIndex.y, endIndex.y < prevIndex.y);
         for (int y = minY; y <= maxY; y++)
@@ -119,8 +119,10 @@ internal struct AvoidanceWallDetectionJob : IJobParallelFor
         {
             float newPointX = curPointX + TileSize;
             float newtPointY = slope * newPointX + c;
-            int curIndexY = (int)math.floor(curPointY / TileSize);
-            int newIndexY = (int)math.floor(newtPointY / TileSize);
+            int2 curIndex = FlowFieldUtilities.PosTo2D(new float2(curPointX, curPointY), TileSize);
+            int2 newIndex = FlowFieldUtilities.PosTo2D(new float2(newPointX, newtPointY), TileSize);
+            int curIndexY = curIndex.y;
+            int newIndexY = newIndex.y;
             minY = math.select(curIndexY, newIndexY, newIndexY < curIndexY);
             maxY = math.select(newIndexY, curIndexY, newIndexY < curIndexY);
             for (int y = minY; y <= maxY; y++)

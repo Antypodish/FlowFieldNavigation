@@ -56,8 +56,9 @@ internal struct AgentDataSpatialHasherJob : IJob
             int hashGridIndex = (int)math.floor(agentData.Radius * 2 / BaseSpatialGridSize);
             float tileSize = hashGridIndex * BaseSpatialGridSize + BaseSpatialGridSize;
             int gridColAmount = (int)math.ceil(fieldHorizontalSize / tileSize);
-            int hashTileRow = (int)math.floor(pos.y / tileSize);
-            int hashTileCol = (int)math.floor(pos.x / tileSize);
+            int2 hashTileIndex2 = FlowFieldUtilities.PosTo2D(pos, tileSize);
+            int hashTileRow = hashTileIndex2.y;
+            int hashTileCol = hashTileIndex2.x;
             int hashTileIndex = hashTileRow * gridColAmount + hashTileCol;
             UnsafeList<HashTile> hashGrid = AgentHashGridArray[hashGridIndex];
             HashTile tile = hashGrid[hashTileIndex];
@@ -88,8 +89,9 @@ internal struct AgentDataSpatialHasherJob : IJob
             int hashGridIndex = (int)math.floor(agentData.Radius * 2 / BaseSpatialGridSize);
             float tileSize = hashGridIndex * BaseSpatialGridSize + BaseSpatialGridSize;
             int gridColAmount = (int)math.ceil(fieldHorizontalSize / tileSize);
-            int hashTileRow = (int)math.floor(pos.y / tileSize);
-            int hashTileCol = (int)math.floor(pos.x / tileSize);
+            int2 hashTileIndex2 = FlowFieldUtilities.PosTo2D(pos, tileSize);
+            int hashTileRow = hashTileIndex2.y;
+            int hashTileCol = hashTileIndex2.x;
             int hashTileIndex = hashTileRow * gridColAmount + hashTileCol;
             UnsafeList<HashTile> hashGrid = AgentHashGridArray[hashGridIndex];
             HashTile tile = hashGrid[hashTileIndex];

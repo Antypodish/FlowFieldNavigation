@@ -25,11 +25,10 @@ internal struct AgentRoutineDataCalculationJob : IJobParallelFor
         //FIRST
         AgentMovementData data = AgentMovementData[index];
         float2 agentPos = new float2(data.Position.x, data.Position.z);
-        int2 agentSector2d = new int2((int)math.floor(agentPos.x / (SectorColAmount * TileSize)), (int)math.floor(agentPos.y / (SectorColAmount * TileSize)));
-        int2 general2d = new int2((int)math.floor(agentPos.x / TileSize), (int)math.floor(agentPos.y / TileSize));
-        int2 sectorStart2d = agentSector2d * SectorColAmount;
-        int2 local2d = general2d - sectorStart2d;
-        int local1d = local2d.y * SectorColAmount + local2d.x;
+        int2 general2d = FlowFieldUtilities.PosTo2D(agentPos, TileSize);
+        LocalIndex1d agentLocal = FlowFieldUtilities.GetLocal1D(general2d, SectorColAmount, SectorMatrixColAmount);
+        int local1d = agentLocal.index;
+        int agentSector1d = agentLocal.sector;
 
 
         //IF NOT MOVING
@@ -58,7 +57,6 @@ internal struct AgentRoutineDataCalculationJob : IJobParallelFor
         UnsafeList<FlowData> flowField = pathFlowData.FlowField;
         UnsafeLOSBitmap losMap = pathFlowData.LOSMap;
         UnsafeList<int> sectorFlowStarts = pathLocationData.SectorToPicked;
-        int agentSector1d = FlowFieldUtilities.To1D(agentSector2d, SectorMatrixColAmount);
         int agentSectorFlowStart = sectorFlowStarts[agentSector1d];
 
         if (agentSectorFlowStart == 0 || agentSectorFlowStart >= flowField.Length || agentSectorFlowStart >= losMap.BitLength)
