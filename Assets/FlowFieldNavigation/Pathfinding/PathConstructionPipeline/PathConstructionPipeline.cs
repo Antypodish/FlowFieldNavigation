@@ -235,6 +235,10 @@ internal class PathConstructionPipeline
                 FieldColAmount = FlowFieldUtilities.FieldColAmount,
                 FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
                 TileSize = FlowFieldUtilities.TileSize,
+                FieldMinXIncluding = FlowFieldUtilities.FieldMinXIncluding,
+                FieldMinYIncluding = FlowFieldUtilities.FieldMinYIncluding,
+                FieldMaxXExcluding = FlowFieldUtilities.FieldMaxXExcluding,
+                FieldMaxYExcluding = FlowFieldUtilities.FieldMaxYExcluding,
                 FinalPathRequests = _finalPathRequests,
                 IslandFieldProcessors = _islandFieldProcessors,
                 CostFields = costFieldCosts,
@@ -271,7 +275,6 @@ internal class PathConstructionPipeline
         {
             _islandFieldProcessors.Dispose();
         }
-        NativeArray<int> newPathIndicies = _pathfindingManager.AgentDataContainer.AgentNewPathIndicies;
 
         //SET PATH INDICIES OF REQUESTED PATHS
         for (int i = 0; i < _finalPathRequests.Length; i++)

@@ -21,6 +21,10 @@ internal struct FinalPathRequestDestinationExpansionJob : IJob
     internal int SectorTileAmount;
     internal int FieldRowAmount;
     internal int FieldColAmount;
+    internal float FieldMinXIncluding;
+    internal float FieldMinYIncluding;
+    internal float FieldMaxXExcluding;
+    internal float FieldMaxYExcluding;
     [NativeDisableContainerSafetyRestriction] internal NativeList<FinalPathRequest> FinalPathRequests;
     [ReadOnly] internal NativeArray<IslandFieldProcessor> IslandFieldProcessors;
     [ReadOnly] internal NativeArray<UnsafeListReadOnly<byte>> CostFields;
@@ -32,8 +36,14 @@ internal struct FinalPathRequestDestinationExpansionJob : IJob
             FinalPathRequest request = pickedFinalRequests[index];
             IslandFieldProcessor islandProcessor = IslandFieldProcessors[request.Offset];
             int sourceIsland = request.SourceIsland;
-            int destinationIsland = islandProcessor.GetIsland(request.Destination);
+            
+            //Clamp destination to bounds
+            request.Destination.x = math.select(request.Destination.x, FieldMinXIncluding, request.Destination.x < FieldMinXIncluding);
+            request.Destination.y = math.select(request.Destination.y, FieldMinYIncluding, request.Destination.y < FieldMinYIncluding);
+            request.Destination.x = math.select(request.Destination.x, FieldMaxXExcluding - TileSize / 2, request.Destination.x >= FieldMaxXExcluding);
+            request.Destination.y = math.select(request.Destination.y, FieldMaxYExcluding - TileSize / 2, request.Destination.y >= FieldMaxYExcluding);
 
+            int destinationIsland = islandProcessor.GetIsland(request.Destination);
             int2 destination2d = FlowFieldUtilities.PosTo2D(request.Destination, TileSize);
             LocalIndex1d destinationLocal = FlowFieldUtilities.GetLocal1D(destination2d, SectorColAmount, SectorMatrixColAmount);
             if (sourceIsland == destinationIsland && CostFields[request.Offset][destinationLocal.sector * SectorTileAmount + destinationLocal.index] != byte.MaxValue) { continue; }
