@@ -45,11 +45,11 @@ internal struct FieldGraphConfigurationJob : IJob
                 int index = r * SectorMatrixColAmount + c;
                 Sector sect = new Sector(new Index2(r * sectorColAmount, c * sectorColAmount), sectorColAmount);
                 int secToWinCnt = 4;
-                if (sect.IsOnCorner(FieldColAmount, FieldRowAmount))
+                if (IsOnCorner(index))
                 {
                     secToWinCnt = 2;
                 }
-                else if (sect.IsOnEdge(FieldColAmount, FieldRowAmount))
+                else if (IsOnEdge(index))
                 {
                     secToWinCnt = 3;
                 }
@@ -58,13 +58,41 @@ internal struct FieldGraphConfigurationJob : IJob
             }
         }
     }
+    bool IsOnCorner(int sectorIndex)
+    {
+        bool leftOrRight = IsOnLeft(sectorIndex) || IsOnRight(sectorIndex);
+        bool botOrTop = IsOnBot(sectorIndex) || IsOnTop(sectorIndex);
+        return leftOrRight && botOrTop;
+    }
+    bool IsOnEdge(int sectorIndex)
+    {
+        return IsOnRight(sectorIndex) || IsOnLeft(sectorIndex) || IsOnTop(sectorIndex) || IsOnBot(sectorIndex);
+    }
+    bool IsOnRight(int sectorIndex)
+    {
+        return (sectorIndex + 1) % SectorMatrixColAmount == 0;
+    }
+    bool IsOnLeft(int sectorIndex)
+    {
+        return sectorIndex % SectorMatrixColAmount == 0;
+    }
+    bool IsOnBot(int sectorIndex)
+    {
+        return sectorIndex - SectorMatrixColAmount < 0;
+    }
+    bool IsOnTop(int sectorIndex)
+    {
+        return sectorIndex + SectorMatrixColAmount >= (SectorMatrixColAmount * SectorMatrixRowAmount);
+    }
     void ConfigureSectorToWindowPoiners()
     {
         int sectorSize = SectorNodes[0].Sector.Size;
         int secToWinPtrIterable = 0;
         for (int i = 0; i < SectorNodes.Length; i++)
         {
-            Index2 sectorStartIndex = SectorNodes[i].Sector.StartIndex;
+            int2 sector2 = FlowFieldUtilities.To2D(i, SectorMatrixColAmount);
+            int2 sectorStart = FlowFieldUtilities.GetSectorStartIndex(sector2, SectorColAmount);
+            Index2 sectorStartIndex = new Index2(sectorStart.y, sectorStart.x);
             Index2 topWinIndex = new Index2(sectorStartIndex.R + sectorSize - 1, sectorStartIndex.C);
             Index2 rightWinIndex = new Index2(sectorStartIndex.R, sectorStartIndex.C + sectorSize - 1);
             Index2 botWinIndex = new Index2(sectorStartIndex.R - 1, sectorStartIndex.C);
@@ -102,18 +130,18 @@ internal struct FieldGraphConfigurationJob : IJob
                 Sector sector = SectorNodes[index].Sector;
 
                 //create upper window relative to the sector
-                if (!sector.IsOnTop(FieldRowAmount))
+                if (!IsOnTop(index))
                 {
-                    Window window = GetUpperWindowFor(sector);
+                    Window window = GetUpperWindowFor(sector, index);
                     WindowNodes[windowNodesIndex] = new WindowNode(window, 2, iterableWinToSecPtr, windowNodesIndex * porPtrJumpFactor, GetPortalCountFor(window));
                     windowNodesIndex++;
                     iterableWinToSecPtr += 2;
                 }
 
                 //create right window relative to the sector
-                if (!sector.IsOnRight(fieldColAmount))
+                if (!IsOnRight(index))
                 {
-                    Window window = GetRightWindowFor(sector);
+                    Window window = GetRightWindowFor(sector, index);
                     WindowNodes[windowNodesIndex] = new WindowNode(window, 2, iterableWinToSecPtr, windowNodesIndex * porPtrJumpFactor, GetPortalCountFor(window));
                     windowNodesIndex++;
                     iterableWinToSecPtr += 2;
@@ -123,15 +151,19 @@ internal struct FieldGraphConfigurationJob : IJob
         
         //HELPERS
 
-        Window GetUpperWindowFor(Sector sector)
+        Window GetUpperWindowFor(Sector sector, int sectorIndex)
         {
-            Index2 bottomLeftBoundary = new Index2(sector.StartIndex.R + sector.Size - 1, sector.StartIndex.C);
-            Index2 topRightBoundary = new Index2(sector.StartIndex.R + sector.Size, sector.StartIndex.C + sector.Size - 1);
+            int2 sector2 = FlowFieldUtilities.To2D(sectorIndex, sectorMatrixColAmount);
+            int2 sectorStart = FlowFieldUtilities.GetSectorStartIndex(sector2, sectorColAmount);
+            Index2 bottomLeftBoundary = new Index2(sectorStart.y + sector.Size - 1, sectorStart.x);
+            Index2 topRightBoundary = new Index2(sectorStart.y + sector.Size, sectorStart.x + sector.Size - 1);
             return new Window(bottomLeftBoundary, topRightBoundary);
         }
-        Window GetRightWindowFor(Sector sector)
+        Window GetRightWindowFor(Sector sector, int sectorIndex)
         {
-            Index2 bottomLeftBoundary = new Index2(sector.StartIndex.R, sector.StartIndex.C + sector.Size - 1);
+            int2 sector2 = FlowFieldUtilities.To2D(sectorIndex, sectorMatrixColAmount);
+            int2 sectorStart = FlowFieldUtilities.GetSectorStartIndex(sector2, sectorColAmount);
+            Index2 bottomLeftBoundary = new Index2(sectorStart.y, sectorStart.x + sector.Size - 1);
             Index2 topRightBoundary = new Index2(bottomLeftBoundary.R + sector.Size - 1, bottomLeftBoundary.C + 1);
             return new Window(bottomLeftBoundary, topRightBoundary);
         }
@@ -188,17 +220,12 @@ internal struct FieldGraphConfigurationJob : IJob
         {
             Index2 botLeft = WindowNodes[i].Window.BottomLeftBoundary;
             Index2 topRight = WindowNodes[i].Window.TopRightBoundary;
-            for (int j = 0; j < SectorNodes.Length; j++)
-            {
-                if (SectorNodes[j].Sector.ContainsIndex(botLeft))
-                {
-                    WinToSecPtrs[winToSecPtrIterable] = j;
-                }
-                else if (SectorNodes[j].Sector.ContainsIndex(topRight))
-                {
-                    WinToSecPtrs[winToSecPtrIterable + 1] = j;
-                }
-            }
+            int2 botleft = new int2(botLeft.C, botLeft.R);
+            int2 topright = new int2(topRight.C, topRight.R);
+            int sector1 = FlowFieldUtilities.GetSector1D(botleft, SectorColAmount, SectorMatrixColAmount);
+            int sector2 = FlowFieldUtilities.GetSector1D(topright, SectorColAmount, SectorMatrixColAmount);
+            WinToSecPtrs[winToSecPtrIterable] = sector1;
+            WinToSecPtrs[winToSecPtrIterable + 1] = sector2;
             winToSecPtrIterable += 2;
         }
     }

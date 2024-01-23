@@ -415,15 +415,13 @@ internal struct PortalTraversalReductionJob : IJob
     void CalculateIntegratedCosts(UnsafeList<DijkstraTile> integratedCosts, NativeQueue<int> aStarQueue, Sector sector, int targetIndexFlat)
     {
         //DATA
-        int sectorTileAmount = SectorColAmount;
-        int fieldColAmount = FieldColAmount;
-        int sectorStartIndexFlat = sector.StartIndex.R * fieldColAmount + sector.StartIndex.C;
+        int2 targetIndex2d = FlowFieldUtilities.To2D(targetIndexFlat, FieldColAmount);
         NativeSlice<byte> costs = new NativeSlice<byte>(Costs, _targetSectorIndex1d * SectorTileAmount, SectorTileAmount);
 
         //CODE
 
         Reset();
-        int targetLocalIndex = GetLocalIndex(targetIndexFlat);
+        int targetLocalIndex = FlowFieldUtilities.GetLocal1D(targetIndex2d, SectorColAmount, SectorMatrixColAmount).index;
         DijkstraTile targetTile = integratedCosts[targetLocalIndex];
         targetTile.IntegratedCost = 0f;
         targetTile.IsAvailable = false;
@@ -508,11 +506,6 @@ internal struct PortalTraversalReductionJob : IJob
             if (wCost < costToReturn) { costToReturn = wCost; }
             if (nwCost < costToReturn) { costToReturn = nwCost; }
             return costToReturn;
-        }
-        int GetLocalIndex(int index)
-        {
-            int distanceFromSectorStart = index - sectorStartIndexFlat;
-            return (distanceFromSectorStart % fieldColAmount) + (sectorTileAmount * (distanceFromSectorStart / fieldColAmount));
         }
     }
     private struct DoubleUnsafeHeap<T> where T : unmanaged

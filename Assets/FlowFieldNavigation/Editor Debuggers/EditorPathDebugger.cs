@@ -308,21 +308,18 @@ internal class EditorPathDebugger
         PathDestinationData destinationData = _pathfindingManager.PathDataContainer.PathDestinationDataList[pathIndex];
         int sectorColAmount = FlowFieldUtilities.SectorColAmount;
         int sectorTileAmount = sectorColAmount * sectorColAmount;
-        NativeArray<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset).SectorNodes;
         UnsafeList<int> sectorMarks = locationData.SectorToPicked;
         NativeArray<IntegrationTile> integrationField = internalData.IntegrationField;
         for (int i = 0; i < sectorMarks.Length; i++)
         {
             if (sectorMarks[i] == 0) { continue; }
             int pickedStartIndex = sectorMarks[i];
-            int2 sectorIndex = new int2(sectorNodes[i].Sector.StartIndex.C, sectorNodes[i].Sector.StartIndex.R);
-            Vector3 sectorIndexPos = new Vector3(sectorIndex.x * _tileSize, 0f, sectorIndex.y * _tileSize);
             for (int j = pickedStartIndex; j < pickedStartIndex + sectorTileAmount; j++)
             {
                 int local1d = (j - 1) % sectorTileAmount;
-                int2 local2d = new int2(local1d % sectorColAmount, local1d / sectorColAmount);
-                Vector3 localIndexPos = new Vector3(local2d.x * _tileSize, 0f, local2d.y * _tileSize);
-                Vector3 debugPos = localIndexPos + sectorIndexPos + new Vector3(_tileSize / 2, 0.02f, _tileSize / 2);
+                int2 general2d = FlowFieldUtilities.GetGeneral2d(local1d, i, FlowFieldUtilities.SectorMatrixColAmount, sectorColAmount);
+                float2 debugPos2 = FlowFieldUtilities.IndexToPos(general2d, _tileSize);
+                float3 debugPos = new float3(debugPos2.x, 0.02f, debugPos2.y);
                 float cost = integrationField[j].Cost;
                 if (cost != float.MaxValue)
                 {
@@ -344,7 +341,6 @@ internal class EditorPathDebugger
         PathLocationData locationData = _pathfindingManager.PathDataContainer.PathLocationDataList[pathIndex];
         PathDestinationData destinationData = _pathfindingManager.PathDataContainer.PathDestinationDataList[pathIndex];
         UnsafeList<int> sectorMarks = locationData.SectorToPicked;
-        NativeArray<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset).SectorNodes;
         NativeArray<IntegrationTile> integrationField = internalData.IntegrationField;
         int sectorColAmount = FlowFieldUtilities.SectorColAmount;
         int sectorTileAmount = sectorColAmount * sectorColAmount;
@@ -357,23 +353,19 @@ internal class EditorPathDebugger
                 if ((integrationField[j].Mark & IntegrationMark.LOSBlock) == IntegrationMark.LOSBlock)
                 {
                     Gizmos.color = Color.white;
-                    int2 sectorIndex = new int2(sectorNodes[i].Sector.StartIndex.C, sectorNodes[i].Sector.StartIndex.R);
-                    Vector3 sectorIndexPos = new Vector3(sectorIndex.x * _tileSize, 0f, sectorIndex.y * _tileSize);
                     int local1d = (j - 1) % sectorTileAmount;
-                    int2 local2d = new int2(local1d % sectorColAmount, local1d / sectorColAmount);
-                    Vector3 localIndexPos = new Vector3(local2d.x * _tileSize, 0f, local2d.y * _tileSize);
-                    Vector3 debugPos = localIndexPos + sectorIndexPos + new Vector3(_tileSize / 2, 0.02f, _tileSize / 2);
+                    int2 general2d = FlowFieldUtilities.GetGeneral2d(local1d, i, FlowFieldUtilities.SectorMatrixColAmount, sectorColAmount);
+                    float2 debugPos2 = FlowFieldUtilities.IndexToPos(general2d, _tileSize);
+                    float3 debugPos = new float3(debugPos2.x, 0.02f, debugPos2.y);
                     Gizmos.DrawCube(debugPos, new Vector3(0.3f, 0.3f, 0.3f));
                 }
                 else if ((integrationField[j].Mark & IntegrationMark.LOSC) == IntegrationMark.LOSC)
                 {
                     Gizmos.color = Color.black;
-                    int2 sectorIndex = new int2(sectorNodes[i].Sector.StartIndex.C, sectorNodes[i].Sector.StartIndex.R);
-                    Vector3 sectorIndexPos = new Vector3(sectorIndex.x * _tileSize, 0f, sectorIndex.y * _tileSize);
                     int local1d = (j - 1) % sectorTileAmount;
-                    int2 local2d = new int2(local1d % sectorColAmount, local1d / sectorColAmount);
-                    Vector3 localIndexPos = new Vector3(local2d.x * _tileSize, 0f, local2d.y * _tileSize);
-                    Vector3 debugPos = localIndexPos + sectorIndexPos + new Vector3(_tileSize / 2, 0.02f, _tileSize / 2);
+                    int2 general2d = FlowFieldUtilities.GetGeneral2d(local1d, i, FlowFieldUtilities.SectorMatrixColAmount, sectorColAmount);
+                    float2 debugPos2 = FlowFieldUtilities.IndexToPos(general2d, _tileSize);
+                    float3 debugPos = new float3(debugPos2.x, 0.02f, debugPos2.y);
                     Gizmos.DrawCube(debugPos, new Vector3(0.3f, 0.3f, 0.3f));
                 }
             } 
@@ -393,7 +385,6 @@ internal class EditorPathDebugger
         PathFlowData pathFlowData = _pathfindingManager.PathDataContainer.PathFlowDataList[pathIndex];
         float yOffset = 0.2f;
         UnsafeList<int> sectorMarks = locationData.SectorToPicked;
-        NativeArray<SectorNode> sectorNodes = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset).SectorNodes;
         UnsafeList<FlowData> flowField = pathFlowData.FlowField;
         UnsafeLOSBitmap losmap = pathFlowData.LOSMap;
         UnsafeList<SectorFlowStart> dynamicAreaFlowStarts = locationData.DynamicAreaPickedSectorFlowStarts;
@@ -406,13 +397,11 @@ internal class EditorPathDebugger
             int pickedStartIndex = sectorMarks[i];
             for (int j = pickedStartIndex; j < pickedStartIndex + sectorTileAmount; j++)
             {
-                int2 sectorIndex = new int2(sectorNodes[i].Sector.StartIndex.C, sectorNodes[i].Sector.StartIndex.R);
-                Vector3 sectorIndexPos = new Vector3(sectorIndex.x * _tileSize, 0f, sectorIndex.y * _tileSize);
                 int local1d = (j - 1) % sectorTileAmount;
-                int2 local2d = new int2(local1d % sectorColAmount, local1d / sectorColAmount);
-                Vector3 localIndexPos = new Vector3(local2d.x * _tileSize, 0f, local2d.y * _tileSize);
-                Vector3 debugPos = localIndexPos + sectorIndexPos + new Vector3(_tileSize / 2, 0.02f, _tileSize / 2);
-                if(j >= flowField.Length) { continue; }
+                int2 general2d = FlowFieldUtilities.GetGeneral2d(local1d, i, FlowFieldUtilities.SectorMatrixColAmount, sectorColAmount);
+                float2 debugPos2 = FlowFieldUtilities.IndexToPos(general2d, _tileSize);
+                float3 debugPos = new float3(debugPos2.x, 0.02f, debugPos2.y);
+                if (j >= flowField.Length) { continue; }
                 if(HasLOS(i, local1d))
                 {
                     Gizmos.color = Color.white;
