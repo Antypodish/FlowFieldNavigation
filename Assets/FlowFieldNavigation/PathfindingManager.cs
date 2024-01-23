@@ -61,11 +61,12 @@ public class PathfindingManager : MonoBehaviour
         FlowFieldUtilities.MinAgentSize = 0;
         FlowFieldUtilities.MaxAgentSize = (startParameters.MaxCostFieldOffset * tileSize * 2) + tileSize;
         FlowFieldUtilities.LOSRange = LineOfSightRange;
-        FlowFieldUtilities.FieldMinXIncluding = 0f;
-        FlowFieldUtilities.FieldMinYIncluding = 0f;
-        FlowFieldUtilities.FieldMaxXExcluding = FlowFieldUtilities.FieldColAmount * FlowFieldUtilities.TileSize;
-        FlowFieldUtilities.FieldMaxYExcluding = FlowFieldUtilities.FieldRowAmount * FlowFieldUtilities.TileSize;
+        FlowFieldUtilities.FieldMinXIncluding = startParameters.FieldStartPositionXZ.x;
+        FlowFieldUtilities.FieldMinYIncluding = startParameters.FieldStartPositionXZ.y;
+        FlowFieldUtilities.FieldMaxXExcluding = startParameters.FieldStartPositionXZ.x + FlowFieldUtilities.FieldColAmount * FlowFieldUtilities.TileSize;
+        FlowFieldUtilities.FieldMaxYExcluding = startParameters.FieldStartPositionXZ.y + FlowFieldUtilities.FieldRowAmount * FlowFieldUtilities.TileSize;
         FlowFieldUtilities.MaxCostFieldOffset = startParameters.MaxCostFieldOffset;
+        FlowFieldUtilities.FieldGridTranslation = -startParameters.FieldStartPositionXZ;
     }
     internal void StartSimulation(SimulationStartParameters startParameters)
     {

@@ -68,6 +68,7 @@ public struct SimulationStartParameters
     public float BaseAgentSpatialGridSize;
     public Mesh[] Meshes;
     public Transform[] Transforms;
+    public Vector2 FieldStartPositionXZ;
 }
 public struct WalkabilityCell
 {

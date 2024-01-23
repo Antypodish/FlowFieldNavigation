@@ -48,6 +48,7 @@ public class TerrainGenerator : MonoBehaviour
             WalkabilityMatrix = WalkabilityData.WalkabilityMatrix,
             Meshes = _generatedMeshes.ToArray(),
             Transforms = _generatedMeshTransforms.ToArray(),
+            FieldStartPositionXZ = new Vector2(transform.position.x, transform.position.z),
         };
         _pathfindingManager.Interface.StartSimulation(simParam);
     }

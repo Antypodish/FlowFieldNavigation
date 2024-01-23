@@ -24,6 +24,7 @@ internal static class FlowFieldUtilities
     internal static int LOSRange;
     internal static int MaxCostFieldOffset;
     internal static float2 HeightMeshTranslation;
+    internal static float2 FieldGridTranslation;
 
     internal static int To1D(int2 index2, int colAmount)
     {
