@@ -10,6 +10,7 @@ internal struct NewPathToCurPathTransferJob : IJob
     internal NativeArray<int> AgentNewPathIndicies;
     internal NativeArray<int> PathSubscribers;
     internal NativeArray<bool> AgentDestinationReachedArray;
+    [ReadOnly] internal NativeArray<FinalPathRequest> FinalPathRequests;
     public void Execute()
     {
         for (int i = 0; i < AgentCurPathIndicies.Length; i++)
@@ -17,6 +18,8 @@ internal struct NewPathToCurPathTransferJob : IJob
             int curPathIndex = AgentCurPathIndicies[i];
             int newPathIndex = AgentNewPathIndicies[i];
             if (newPathIndex == -1) { continue; }
+            FinalPathRequest finalReq = FinalPathRequests[newPathIndex];
+            newPathIndex = finalReq.PathIndex;
             if (curPathIndex == -1)
             {
                 AgentCurPathIndicies[i] = newPathIndex;
@@ -29,11 +32,14 @@ internal struct NewPathToCurPathTransferJob : IJob
                 AgentCurPathIndicies[i] = newPathIndex;
                 AgentNewPathIndicies[i] = -1;
             }
-            AgentData agent = AgentDataArray[i];
-            agent.ClearStatusBit(AgentStatus.HoldGround);
-            agent.SetStatusBit(AgentStatus.Moving);
-            AgentDestinationReachedArray[i] = false;
-            AgentDataArray[i] = agent;
+            if (!finalReq.ReconstructionFlag)
+            {
+                AgentData agent = AgentDataArray[i];
+                agent.ClearStatusBit(AgentStatus.HoldGround);
+                agent.SetStatusBit(AgentStatus.Moving);
+                AgentDestinationReachedArray[i] = false;
+                AgentDataArray[i] = agent;
+            }
         }
     }
 }

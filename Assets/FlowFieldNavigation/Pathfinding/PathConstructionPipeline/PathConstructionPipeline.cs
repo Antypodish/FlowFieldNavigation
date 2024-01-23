@@ -286,13 +286,6 @@ internal class PathConstructionPipeline
             currentpath.PathIndex = newPathIndex;
             _finalPathRequests[i] = currentpath;
         }
-        //SET NEW PATH INDICIES OF AGENTS
-        OrganizedAgentNewPathIndiciesSetJob newpathindiciesSetJob = new OrganizedAgentNewPathIndiciesSetJob()
-        {
-            AgentNewPathIndicies = newPathIndicies,
-            RequestedPaths = _finalPathRequests,
-        };
-        JobHandle newPathIndiciesHandle = newpathindiciesSetJob.Schedule();
 
         //SCHEDULE PATH ADDITIONS AND FLOW REQUESTS
         NativeArray<PathRoutineData> pathRoutineDataArray = _pathContainer.PathRoutineDataList;
@@ -323,7 +316,6 @@ internal class PathConstructionPipeline
             }
         }
 
-        newPathIndiciesHandle.Complete();
         TryComplete();
     }
 
@@ -357,40 +349,18 @@ internal class PathConstructionPipeline
         _requestedSectorCalculationScheduler.ForceComplete();
         _pathContainer.ExposeBuffers(_destinationUpdatedPathIndicies, _newPathIndicies, _expandedPathIndicies);
     }
-}
-internal struct RequestPipelineInfoWithHandle
-{
-    internal JobHandle Handle;
-    internal int PathIndex;
-    internal int RequestIndex;
-    internal DynamicDestinationState DestinationState;
-
-    internal RequestPipelineInfoWithHandle(JobHandle handle, int pathIndex, int requestIndex, DynamicDestinationState destinationState = DynamicDestinationState.None)
+    internal void TransferNewPathsToCurPaths()
     {
-        Handle = handle;
-        PathIndex = pathIndex;
-        RequestIndex = requestIndex;
-        DestinationState = destinationState;
-    }
-    internal PathPipelineInfoWithHandle ToPathPipelineInfoWithHandle()
-    {
-        return new PathPipelineInfoWithHandle()
+        //TRANSFER NEW PATH INDICIES TO CUR PATH INDICIES
+        NewPathToCurPathTransferJob newPathToCurPathTransferJob = new NewPathToCurPathTransferJob()
         {
-            Handle = Handle,
-            PathIndex = PathIndex,
-            DestinationState = DestinationState,
+            AgentDestinationReachedArray = _pathfindingManager.AgentDataContainer.AgentDestinationReachedArray,
+            AgentDataArray = _pathfindingManager.AgentDataContainer.AgentDataList,
+            AgentCurPathIndicies = _pathfindingManager.AgentDataContainer.AgentCurPathIndicies,
+            AgentNewPathIndicies = _pathfindingManager.AgentDataContainer.AgentNewPathIndicies,
+            PathSubscribers = _pathfindingManager.PathDataContainer.PathSubscriberCounts,
+            FinalPathRequests = _finalPathRequests,
         };
-    }
-}
-internal struct PathPipelineInfoWithHandle
-{
-    internal JobHandle Handle;
-    internal int PathIndex;
-    internal DynamicDestinationState DestinationState;
-    internal PathPipelineInfoWithHandle(JobHandle handle, int pathIndex, DynamicDestinationState destinationState = DynamicDestinationState.None)
-    {
-        Handle = handle;
-        PathIndex = pathIndex;
-        DestinationState = destinationState;
+        newPathToCurPathTransferJob.Schedule().Complete();
     }
 }

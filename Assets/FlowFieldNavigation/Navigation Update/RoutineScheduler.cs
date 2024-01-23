@@ -138,17 +138,7 @@ internal class RoutineScheduler
         _movementManager.ForceCompleteRoutine();
         _pathConstructionPipeline.ForceComplete();
         _movementManager.SendRoutineResults();
-
-        //TRANSFER NEW PATH INDICIES TO CUR PATH INDICIES
-        NewPathToCurPathTransferJob newPathToCurPathTransferJob = new NewPathToCurPathTransferJob()
-        {
-            AgentDestinationReachedArray = _pathfindingManager.AgentDataContainer.AgentDestinationReachedArray,
-            AgentDataArray = _pathfindingManager.AgentDataContainer.AgentDataList,
-            AgentCurPathIndicies = _pathfindingManager.AgentDataContainer.AgentCurPathIndicies,
-            AgentNewPathIndicies = _pathfindingManager.AgentDataContainer.AgentNewPathIndicies,
-            PathSubscribers = _pathfindingManager.PathDataContainer.PathSubscriberCounts,
-        };
-        newPathToCurPathTransferJob.Schedule().Complete();
+        _pathConstructionPipeline.TransferNewPathsToCurPaths();
 
         CurrentRequestedPaths.Clear();
         EditedSectorBitArray.Clear();

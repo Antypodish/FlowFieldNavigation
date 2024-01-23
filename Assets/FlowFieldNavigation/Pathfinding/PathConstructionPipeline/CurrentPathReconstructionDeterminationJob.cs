@@ -34,12 +34,14 @@ internal struct CurrentPathReconstructionDeterminationJob : IJob
                 float2 targetAgentPos2 = new float2(targetAgentPos.x, targetAgentPos.z);
                 reconReq.Destination = targetAgentPos2;
                 reconReq.FlockIndex = PathFlockIndexArray[i];
+                reconReq.ReconstructionFlag = true;
                 PathRequests.Add(reconReq);
             }
             else
             {
                 PathRequest reconReq = new PathRequest(curDestinationData.DesiredDestination);
                 reconReq.FlockIndex = PathFlockIndexArray[i];
+                reconReq.ReconstructionFlag = true;
                 PathRequests.Add(reconReq);
 
             }

@@ -9,7 +9,7 @@ internal struct PathRequest
     internal DestinationType Type;
     internal ushort OffsetMask;
     internal int FlockIndex;
-
+    internal bool ReconstructionFlag;
     internal PathRequest(float2 destination)
     {
         Destination = destination;
@@ -19,6 +19,7 @@ internal struct PathRequest
         DerivedRequestStartIndex = 0;
         OffsetMask = 0;
         FlockIndex = 0;
+        ReconstructionFlag = false;
     }
 
     internal PathRequest(int targetAgentIndex)
@@ -30,6 +31,7 @@ internal struct PathRequest
         DerivedRequestStartIndex = 0;
         OffsetMask = 0;
         FlockIndex = 0;
+        ReconstructionFlag = false;
     }
 }
 
@@ -42,6 +44,7 @@ internal struct OffsetDerivedPathRequest
     internal int Offset;
     internal DestinationType Type;
     internal int FlockIndex;
+    internal bool ReconstructionFlag;
 
     internal OffsetDerivedPathRequest(PathRequest initialPathRequest, int offset)
     {
@@ -52,6 +55,7 @@ internal struct OffsetDerivedPathRequest
         DerivedFialRequestStartIndex = 0;
         DerivedFinalRequestCount = 0;
         FlockIndex = initialPathRequest.FlockIndex;
+        ReconstructionFlag = initialPathRequest.ReconstructionFlag;
     }
 
     internal bool IsCreated()
@@ -72,6 +76,7 @@ internal struct FinalPathRequest
     internal int SourceIsland;
     internal DestinationType Type;
     internal int FlockIndex;
+    internal bool ReconstructionFlag;
 
     internal FinalPathRequest(OffsetDerivedPathRequest derivedReq, int sourceIsland)
     {
@@ -82,6 +87,7 @@ internal struct FinalPathRequest
         TargetAgentIndex = derivedReq.TargetAgentIndex;
         SourceIsland = sourceIsland;
         FlockIndex = derivedReq.FlockIndex;
+        ReconstructionFlag = derivedReq.ReconstructionFlag;
 
         SourceCount = 0;
         SourcePositionStartIndex = 0;
