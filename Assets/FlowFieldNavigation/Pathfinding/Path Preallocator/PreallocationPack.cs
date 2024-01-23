@@ -27,4 +27,5 @@ internal struct PreallocationPack
     internal UnsafeList<SectorFlowStart> DynamicAreaSectorFlowStartCalculationList;
     internal NativeReference<SectorsWihinLOSArgument> SectorsWithinLOSState;
     internal SectorBitArray SectorBitArray;
+    internal NativeList<int> DijkstraStartIndicies;
 }

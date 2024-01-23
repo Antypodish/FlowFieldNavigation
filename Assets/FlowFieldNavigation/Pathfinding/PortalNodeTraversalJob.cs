@@ -137,6 +137,7 @@ internal struct PortalNodeTraversalJob : IJob
             int index = TargetNeighbourPortalIndicies[i];
             PortalTraversalData targetNeighbour = PortalTraversalDataArray[index];
             targetNeighbour.Mark |= PortalTraversalMark.DijkstraTraversed;
+            targetNeighbour.DistanceFromTarget++;
             PortalTraversalDataArray[index] = targetNeighbour;
         }
 

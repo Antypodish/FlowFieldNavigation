@@ -119,6 +119,7 @@ internal class PathDataContainer
                     DynamicAreaFlowField = flowData.DynamicAreaFlowField,
                     SectorsWithinLOSState = internalData.SectorWithinLOSState,
                     SectorBitArray = sectorBitArray,
+                    DijkstraStartIndicies = portalTraversalData.DiskstraStartIndicies,
                 };
                 _preallocator.SendPreallocationsBack(ref preallocations, internalData.ActivePortalList, flowData.FlowField, internalData.IntegrationField, destinationData.Offset);
             }
@@ -201,6 +202,7 @@ internal class PathDataContainer
             TargetSectorPortalIndexList = preallocations.TargetSectorPortalIndexList,
             NewPickedSectorStartIndex = preallocations.NewPickedSectorStartIndex,
             PathAdditionSequenceBorderStartIndex = preallocations.PathAdditionSequenceBorderStartIndex,
+            DiskstraStartIndicies = preallocations.DijkstraStartIndicies,
         };
         if (PathfindingInternalDataList.Count == pathIndex)
         {

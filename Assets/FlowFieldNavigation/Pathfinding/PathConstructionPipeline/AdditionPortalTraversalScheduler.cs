@@ -58,7 +58,7 @@ internal class AdditionPortalTraversalScheduler
             AStarTraverseIndexList = portalTraversalData.AStartTraverseIndexList,
             IslandFields = pickedFieldGraph.IslandFields,
             SectorStateTable = sectorStateTable,
-            DijkstraStartIndicies = new NativeList<int>(Allocator.Persistent),
+            DijkstraStartIndicies = portalTraversalData.DiskstraStartIndicies,
         };
 
         PortalNodeAdditionTraversalJob travJob = new PortalNodeAdditionTraversalJob()
@@ -82,7 +82,7 @@ internal class AdditionPortalTraversalScheduler
             SourcePortalIndexList = portalTraversalData.SourcePortalIndexList,
             IslandFields = pickedFieldGraph.IslandFields,
             SectorStateTable = sectorStateTable,
-            DijkstraStartIndicies = reductionJob.DijkstraStartIndicies,
+            DijkstraStartIndicies = portalTraversalData.DiskstraStartIndicies,
             AddedPortalSequenceBorderStartIndex = portalTraversalData.PortalSequenceBorders.Length,
             SectorWithinLOSState = internalData.SectorWithinLOSState,
             NewPickedSectorStartIndex = portalTraversalData.NewPickedSectorStartIndex,

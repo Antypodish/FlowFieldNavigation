@@ -69,6 +69,7 @@ internal class PathPreallocator
             DynamicAreaSectorFlowStartList = _sectorFlowStartListFactory.GetSectorFlowStartList(),
             SectorsWithinLOSState = _sectorWithinLOSStateReferanceFactory.GetNativeReferance(),
             SectorBitArray = _sectorBitArrayFactory.GetSectorBitArray(),
+            DijkstraStartIndicies = _nativeIntListFactory.GetNativeIntList(),
         };
     }
     internal void SendPreallocationsBack(ref PreallocationPack preallocations, NativeList<UnsafeList<ActiveWaveFront>> activeWaveFrontList, UnsafeList<FlowData> flowField, NativeList<IntegrationTile> integrationField, int offset)
@@ -98,6 +99,7 @@ internal class PathPreallocator
         _sectorFlowStartListFactory.SendSectorFlowStartList(preallocations.DynamicAreaSectorFlowStartCalculationList);
         _sectorWithinLOSStateReferanceFactory.SendNativeReferance(preallocations.SectorsWithinLOSState);
         _sectorBitArrayFactory.SendSectorBitArray(preallocations.SectorBitArray);
+        _nativeIntListFactory.SendNativeIntList(preallocations.DijkstraStartIndicies);
     }
     internal NativeList<UnsafeList<ActiveWaveFront>> GetActiveWaveFrontListPersistent(int count)
     {

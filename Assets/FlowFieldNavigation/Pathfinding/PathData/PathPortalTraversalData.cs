@@ -11,4 +11,5 @@ internal struct PathPortalTraversalData
     internal NativeReference<int> PathAdditionSequenceBorderStartIndex;
     internal NativeReference<int> NewPickedSectorStartIndex;
     internal NativeArray<DijkstraTile> TargetSectorCosts;
+    internal NativeList<int> DiskstraStartIndicies;
 }
