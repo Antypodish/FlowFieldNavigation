@@ -7,12 +7,14 @@ internal struct TriangleSpatialHashGrid
     internal float BaseSpatialGridSize;
     internal float FieldHorizontalSize;
     internal float FieldVerticalSize;
+    internal float2 HeightMapTranslation;
     internal NativeArray<int> HashedTriangles;
     internal NativeArray<UnsafeList<HashTile>> TriangleHashGrids;
     internal NativeHashMap<int, float> GridIndexToTileSize;
     internal int GetGridCount() => TriangleHashGrids.Length;
     internal TriangleSpatialHashGridIterator GetIterator(float2 checkPosition, int hashGridIndex)
     {
+        checkPosition += HeightMapTranslation;
         if (TriangleHashGrids.Length <= hashGridIndex) { return new TriangleSpatialHashGridIterator(); }
         bool succesfull = GridIndexToTileSize.TryGetValue(hashGridIndex, out float tileSize);
         if (!succesfull) { return new TriangleSpatialHashGridIterator(); }

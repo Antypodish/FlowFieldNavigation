@@ -23,6 +23,8 @@ internal static class FlowFieldUtilities
     internal static float MaxAgentSize;
     internal static int LOSRange;
     internal static int MaxCostFieldOffset;
+    internal static float2 HeightMeshTranslation;
+
     internal static int To1D(int2 index2, int colAmount)
     {
         return index2.y * colAmount + index2.x;

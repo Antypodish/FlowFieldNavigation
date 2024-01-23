@@ -61,6 +61,17 @@ internal class HeightMeshProducer
         tempVericies.Dispose();
         tempTriangles.Dispose();
 
+        NativeReference<float2> baseTranslation = new NativeReference<float2>(0, Allocator.TempJob);
+        HeightMeshBaseTranslationDeterminationJob baseTranslationJob = new HeightMeshBaseTranslationDeterminationJob()
+        {
+            BaseTranslationOut = baseTranslation,
+            Verticies = Verticies,
+        };
+        baseTranslationJob.Schedule().Complete();
+        FlowFieldUtilities.HeightMeshTranslation = baseTranslation.Value;
+        baseTranslation.Dispose();
+
+
         //Get grid tile sizes
         NativeList<float> gridTileSizes = new NativeList<float>(Allocator.TempJob);
         TriangleSpatialHashingTileSizeCalculationJob spatialHashingTileSizeCalculation = new TriangleSpatialHashingTileSizeCalculationJob()
@@ -80,6 +91,7 @@ internal class HeightMeshProducer
         NativeList<int> newTriangles = new NativeList<int>(Allocator.Persistent);
         SpatialHashingTriangleSubmissionJob spatialHashingTriangleSubmission = new SpatialHashingTriangleSubmissionJob()
         {
+            HeightMapTranslation = FlowFieldUtilities.HeightMeshTranslation,
             BaseSpatialGridSize = FlowFieldUtilities.BaseTriangleSpatialGridSize,
             FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
             FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
@@ -97,6 +109,7 @@ internal class HeightMeshProducer
     {
         return new TriangleSpatialHashGrid()
         {
+            HeightMapTranslation = FlowFieldUtilities.HeightMeshTranslation,
             BaseSpatialGridSize = FlowFieldUtilities.BaseTriangleSpatialGridSize,
             FieldHorizontalSize = FlowFieldUtilities.FieldColAmount * FlowFieldUtilities.TileSize,
             FieldVerticalSize = FlowFieldUtilities.FieldRowAmount * FlowFieldUtilities.TileSize,

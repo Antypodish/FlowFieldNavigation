@@ -42,11 +42,11 @@ internal struct FinalPathRequestDestinationExpansionJob : IJob
             request.Destination.y = math.select(request.Destination.y, FieldMinYIncluding, request.Destination.y < FieldMinYIncluding);
             request.Destination.x = math.select(request.Destination.x, FieldMaxXExcluding - TileSize / 2, request.Destination.x >= FieldMaxXExcluding);
             request.Destination.y = math.select(request.Destination.y, FieldMaxYExcluding - TileSize / 2, request.Destination.y >= FieldMaxYExcluding);
-
             request.DesiredDestination.x = math.select(request.DesiredDestination.x, FieldMinXIncluding, request.DesiredDestination.x < FieldMinXIncluding);
             request.DesiredDestination.y = math.select(request.DesiredDestination.y, FieldMinYIncluding, request.DesiredDestination.y < FieldMinYIncluding);
             request.DesiredDestination.x = math.select(request.DesiredDestination.x, FieldMaxXExcluding - TileSize / 2, request.DesiredDestination.x >= FieldMaxXExcluding);
             request.DesiredDestination.y = math.select(request.DesiredDestination.y, FieldMaxYExcluding - TileSize / 2, request.DesiredDestination.y >= FieldMaxYExcluding);
+
             int destinationIsland = islandProcessor.GetIsland(request.Destination);
             int2 destination2d = FlowFieldUtilities.PosTo2D(request.Destination, TileSize);
             LocalIndex1d destinationLocal = FlowFieldUtilities.GetLocal1D(destination2d, SectorColAmount, SectorMatrixColAmount);

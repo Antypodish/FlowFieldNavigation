@@ -10,6 +10,7 @@ internal struct SpatialHashingTriangleSubmissionJob : IJob
     internal float FieldVerticalSize;
     internal float FieldHorizontalSize;
     internal float BaseSpatialGridSize;
+    internal float2 HeightMapTranslation;
     [ReadOnly] internal NativeArray<float3> Verticies;
     [ReadOnly] internal NativeArray<int> Triangles;
 
@@ -45,7 +46,7 @@ internal struct SpatialHashingTriangleSubmissionJob : IJob
             if (TileSizeToGridIndex.TryGetValue(tileSize, out int gridIndex))
             {
                 UnsafeList<HashTile> hashGrid = SpatialHashGrids[gridIndex];
-                int2 cellIndex = FlowFieldUtilities.PosTo2D(boxPos, tileSize);
+                int2 cellIndex = FlowFieldUtilities.PosTo2D(boxPos + HeightMapTranslation, tileSize);
                 int gridColAmount = (int)math.ceil(FieldHorizontalSize / tileSize);
                 int cellIndex1d = cellIndex.y * gridColAmount + cellIndex.x;
                 HashTile cell = hashGrid[cellIndex1d];
@@ -91,7 +92,7 @@ internal struct SpatialHashingTriangleSubmissionJob : IJob
             if (TileSizeToGridIndex.TryGetValue(tileSize, out int gridIndex))
             {
                 UnsafeList<HashTile> hashGrid = SpatialHashGrids[gridIndex];
-                int2 cellIndex = FlowFieldUtilities.PosTo2D(boxPos, tileSize);
+                int2 cellIndex = FlowFieldUtilities.PosTo2D(boxPos + HeightMapTranslation, tileSize);
                 int gridColAmount = (int)math.ceil(FieldHorizontalSize / tileSize);
                 int cellIndex1d = cellIndex.y * gridColAmount + cellIndex.x;
                 HashTile cell = hashGrid[cellIndex1d];
