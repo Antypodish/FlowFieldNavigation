@@ -8,20 +8,17 @@ using UnityEngine;
 
 public class FlowFieldAgent : MonoBehaviour
 {
-    PathfindingManager _pathfindingManager;
+    internal PathfindingManager _pathfindingManager;
+    internal int AgentDataIndex = -1;   //-1 means not subscribed yet
     [SerializeField] float Radius;
     [SerializeField] float Speed;
     [SerializeField] float LandOffset;
 
-    [HideInInspector] public int AgentDataIndex;   //-1 means not subscribed yet
     [HideInInspector] public Transform Transform;
 
     private void Start()
     {
-        _pathfindingManager = FindObjectOfType<PathfindingManager>();
-        _pathfindingManager.Interface.RequestSubscription(this);
         Transform = transform;
-        AgentDataIndex = -1;
     }
     public int GetPathIndex()
     {

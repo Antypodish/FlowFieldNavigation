@@ -67,10 +67,6 @@ public class PathfindingManager : MonoBehaviour
         FlowFieldUtilities.FieldMaxYExcluding = startParameters.FieldStartPositionXZ.y + FlowFieldUtilities.FieldRowAmount * FlowFieldUtilities.TileSize - 0.01f;
         FlowFieldUtilities.MaxCostFieldOffset = startParameters.MaxCostFieldOffset;
         FlowFieldUtilities.FieldGridStartPosition = startParameters.FieldStartPositionXZ;
-        UnityEngine.Debug.Log(FlowFieldUtilities.FieldMinXIncluding);
-        UnityEngine.Debug.Log(FlowFieldUtilities.FieldMinYIncluding);
-        UnityEngine.Debug.Log(FlowFieldUtilities.FieldMaxXExcluding);
-        UnityEngine.Debug.Log(FlowFieldUtilities.FieldMaxYExcluding);
     }
     internal void StartSimulation(SimulationStartParameters startParameters)
     {
@@ -78,7 +74,7 @@ public class PathfindingManager : MonoBehaviour
         SetFlowFieldUtilities(startParameters);
         FieldDataContainer = new FieldDataContainer(startParameters.WalkabilityMatrix, startParameters.Meshes, startParameters.Transforms);
         FieldDataContainer.CreateField(startParameters.MaxCostFieldOffset);
-        AgentDataContainer = new AgentDataContainer();
+        AgentDataContainer = new AgentDataContainer(this);
         PathDataContainer = new PathDataContainer(this);
         RequestAccumulator = new RequestAccumulator(this);
         _navigationUpdater = new NavigationUpdater(this, RequestAccumulator);

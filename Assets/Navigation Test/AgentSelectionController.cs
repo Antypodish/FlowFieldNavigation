@@ -25,7 +25,7 @@ public class AgentSelectionController : MonoBehaviour
     {
         _agentsToCreate = _startingAgentCount;
         _agentSelector = new AgentBoundSelector(_selectionBox);
-        _agentFactory = new AgentFactory(_agentPrefab);
+        _agentFactory = new AgentFactory(_agentPrefab, _pathfindingManager);
         _costEditController = new CostEditController(_pathfindingManager);
         _state = ControllerState.SingleSelection;
     }

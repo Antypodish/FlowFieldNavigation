@@ -23,32 +23,39 @@ public class FlowFieldNavigationInterface
     }
     public void SetDestination(List<FlowFieldAgent> agents, Vector3 target)
     {
+        if (!_pathfindingManager.SimulationStarted) { return; }
         if (agents.Count == 0) { UnityEngine.Debug.Log("Agent list passed is empty"); return; }
         _pathfindingManager.RequestAccumulator.RequestPath(agents, target);
     }
     public void SetDestination(List<FlowFieldAgent> agents, FlowFieldAgent targetAgent)
     {
+        if (!_pathfindingManager.SimulationStarted) { return; }
         if (agents.Count == 0) { UnityEngine.Debug.Log("Agent list passed is empty"); return; }
         _pathfindingManager.RequestAccumulator.RequestPath(agents, targetAgent);
     }
     public void SetObstacle(NativeArray<ObstacleRequest> obstacleRequests, NativeList<int> outputListToAddObstacleIndicies)
     {
+        if (!_pathfindingManager.SimulationStarted) { return; }
         _pathfindingManager.RequestAccumulator.HandleObstacleRequest(obstacleRequests, outputListToAddObstacleIndicies);
     }
     public void RemoveObstacle(NativeArray<int>.ReadOnly obstaclesToRemove)
     {
+        if (!_pathfindingManager.SimulationStarted) { return; }
         _pathfindingManager.RequestAccumulator.HandleObstacleRemovalRequest(obstaclesToRemove);
     }
     public void RequestSubscription(FlowFieldAgent agent)
     {
+        if(agent.AgentDataIndex != -1) { return; }
         _pathfindingManager.RequestAccumulator.RequestAgentAddition(agent);
     }
     public int GetPathIndex(int agentIndex)
     {
+        if (!_pathfindingManager.SimulationStarted) { return -1; }
         return _pathfindingManager.AgentDataContainer.AgentCurPathIndicies[agentIndex];
     }
     public List<FlowFieldAgent> GetAllAgents()
     {
+        if (!_pathfindingManager.SimulationStarted) { return null; }
         return _pathfindingManager.AgentDataContainer.Agents;
     }
     public int GetAgentCount()
