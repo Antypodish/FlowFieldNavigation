@@ -14,6 +14,7 @@ internal struct PortalNodeAdditionReductionJob : IJob
     internal float FieldTileSize;
     internal int SectorColAmount;
     internal int SectorMatrixColAmount;
+    internal float2 FieldGridStartPos;
 
     internal NativeArray<PortalTraversalData> PortalTraversalDataArray;
     internal UnsafeList<PathSectorState> SectorStateTable;
@@ -97,7 +98,7 @@ internal struct PortalNodeAdditionReductionJob : IJob
         for (int i = 0; i < SourcePositions.Length; i++)
         {
             float2 sourcePos = SourcePositions[i];
-            int2 sourceIndex = FlowFieldUtilities.PosTo2D(sourcePos, FieldTileSize);
+            int2 sourceIndex = FlowFieldUtilities.PosTo2D(sourcePos, FieldTileSize, FieldGridStartPos);
             int2 sourceSectorIndex = sourceIndex / SectorColAmount;
             int sourceSectorIndexFlat = sourceSectorIndex.y * SectorMatrixColAmount + sourceSectorIndex.x;
             //ADD SOURCE SECTOR TO THE PICKED SECTORS

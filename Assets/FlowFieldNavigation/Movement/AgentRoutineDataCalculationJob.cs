@@ -12,6 +12,7 @@ internal struct AgentRoutineDataCalculationJob : IJobParallelFor
     internal int SectorColAmount;
     internal int SectorMatrixColAmount;
     internal float SectorSize;
+    internal float2 FieldGridStartPos;
     [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
     [ReadOnly] internal NativeArray<int> AgentCurPathIndicies;
     [ReadOnly] internal NativeArray<PathLocationData> ExposedPathLocationDataArray;
@@ -25,7 +26,7 @@ internal struct AgentRoutineDataCalculationJob : IJobParallelFor
         //FIRST
         AgentMovementData data = AgentMovementData[index];
         float2 agentPos = new float2(data.Position.x, data.Position.z);
-        int2 general2d = FlowFieldUtilities.PosTo2D(agentPos, TileSize);
+        int2 general2d = FlowFieldUtilities.PosTo2D(agentPos, TileSize, FieldGridStartPos);
         LocalIndex1d agentLocal = FlowFieldUtilities.GetLocal1D(general2d, SectorColAmount, SectorMatrixColAmount);
         int local1d = agentLocal.index;
         int agentSector1d = agentLocal.sector;

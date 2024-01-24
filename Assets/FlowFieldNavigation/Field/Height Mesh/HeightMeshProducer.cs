@@ -91,7 +91,7 @@ internal class HeightMeshProducer
         NativeList<int> newTriangles = new NativeList<int>(Allocator.Persistent);
         SpatialHashingTriangleSubmissionJob spatialHashingTriangleSubmission = new SpatialHashingTriangleSubmissionJob()
         {
-            HeightMapTranslation = FlowFieldUtilities.HeightMeshStartPosition,
+            HeightMeshStartPos = FlowFieldUtilities.HeightMeshStartPosition,
             BaseSpatialGridSize = FlowFieldUtilities.BaseTriangleSpatialGridSize,
             FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
             FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,

@@ -19,6 +19,7 @@ internal struct FlowFieldJob : IJobParallelFor
     internal int FieldTileAmount;
     internal int SectorStartIndex;
     internal float TileSize;
+    internal float2 FieldGridStartPos;
     [ReadOnly] internal UnsafeList<int> SectorToPicked;
     [ReadOnly] internal NativeArray<int> PickedToSector;
     [ReadOnly] internal NativeArray<IntegrationTile> IntegrationField;
@@ -46,7 +47,7 @@ internal struct FlowFieldJob : IJobParallelFor
         int bestLocal1d = startLocalIndex;
         int bestSector1d = startPickedSector1d;
         float bestIntCost = curIntCost;
-        float2 startPos = FlowFieldUtilities.LocalIndexToPos(startLocalIndex, startPickedSector1d, SectorMatrixColAmount, SectorColAmount, TileSize, sectorSize);
+        float2 startPos = FlowFieldUtilities.LocalIndexToPos(startLocalIndex, startPickedSector1d, SectorMatrixColAmount, SectorColAmount, TileSize, sectorSize, FieldGridStartPos);
         float2 lastCornerPos = 0;
         CornerBlockDirection lastCornerBlockDirection = CornerBlockDirection.None;
         //LOOP
@@ -65,13 +66,13 @@ internal struct FlowFieldJob : IJobParallelFor
             {
                 if (lastCornerBlockDirection == CornerBlockDirection.None)
                 {
-                    float2 curIndexPos = FlowFieldUtilities.LocalIndexToPos(curLocalIndex, curPickedSector1d, SectorMatrixColAmount, SectorColAmount, TileSize, sectorSize);
+                    float2 curIndexPos = FlowFieldUtilities.LocalIndexToPos(curLocalIndex, curPickedSector1d, SectorMatrixColAmount, SectorColAmount, TileSize, sectorSize, FieldGridStartPos);
                     lastCornerPos = curIndexPos;
                     lastCornerBlockDirection = newIndex.CornerBlockDirection;
                 }
                 else
                 {
-                    float2 curIndexPos = FlowFieldUtilities.LocalIndexToPos(curLocalIndex, curPickedSector1d, SectorMatrixColAmount, SectorColAmount, TileSize, sectorSize);
+                    float2 curIndexPos = FlowFieldUtilities.LocalIndexToPos(curLocalIndex, curPickedSector1d, SectorMatrixColAmount, SectorColAmount, TileSize, sectorSize, FieldGridStartPos);
                     if (!IsBlocked(startPos, lastCornerPos, lastCornerBlockDirection, curIndexPos))
                     {
                         lastCornerPos = curIndexPos;
@@ -83,7 +84,7 @@ internal struct FlowFieldJob : IJobParallelFor
 
             if (lastCornerBlockDirection != CornerBlockDirection.None)
             {
-                float2 newIndexPos = FlowFieldUtilities.LocalIndexToPos(newLocalIndex, newPickedSector1d, SectorMatrixColAmount, SectorColAmount, TileSize, sectorSize);
+                float2 newIndexPos = FlowFieldUtilities.LocalIndexToPos(newLocalIndex, newPickedSector1d, SectorMatrixColAmount, SectorColAmount, TileSize, sectorSize, FieldGridStartPos);
                 if (!IsBlocked(startPos, lastCornerPos, lastCornerBlockDirection, newIndexPos))
                 {
                     bestLocal1d = newLocalIndex;
@@ -240,8 +241,8 @@ internal struct FlowFieldJob : IJobParallelFor
             int2 neGeneral2d = FlowFieldUtilities.GetGeneral2d(neLocal2d, neSector2d, SectorColAmount, FieldColAmount);
             if(IsSightCorner(startGeneral2d, curGeneral2d, neGeneral2d))
             {
-                float2 nePos = FlowFieldUtilities.IndexToPos(neGeneral2d, TileSize);
-                float2 curPos = FlowFieldUtilities.IndexToPos(curGeneral2d, TileSize);
+                float2 nePos = FlowFieldUtilities.IndexToPos(neGeneral2d, TileSize, FieldGridStartPos);
+                float2 curPos = FlowFieldUtilities.IndexToPos(curGeneral2d, TileSize, FieldGridStartPos);
                 float2 neDir = nePos - startPos;
                 float2 curDir = curPos - startPos;
                 bool isRight = curDir.x * neDir.y + curDir.y * -neDir.x < 0;
@@ -255,8 +256,8 @@ internal struct FlowFieldJob : IJobParallelFor
             int2 seGeneral2d = FlowFieldUtilities.GetGeneral2d(seLocal2d, seSector2d, SectorColAmount, FieldColAmount);
             if (IsSightCorner(startGeneral2d, curGeneral2d, seGeneral2d))
             {
-                float2 sePos = FlowFieldUtilities.IndexToPos(seGeneral2d, TileSize);
-                float2 curPos = FlowFieldUtilities.IndexToPos(curGeneral2d, TileSize);
+                float2 sePos = FlowFieldUtilities.IndexToPos(seGeneral2d, TileSize, FieldGridStartPos);
+                float2 curPos = FlowFieldUtilities.IndexToPos(curGeneral2d, TileSize, FieldGridStartPos);
                 float2 seDir = sePos - startPos;
                 float2 curDir = curPos - startPos;
                 bool isRight = curDir.x * seDir.y + curDir.y * -seDir.x < 0;
@@ -270,8 +271,8 @@ internal struct FlowFieldJob : IJobParallelFor
             int2 swGeneral2d = FlowFieldUtilities.GetGeneral2d(swLocal2d, swSector2d, SectorColAmount, FieldColAmount);
             if (IsSightCorner(startGeneral2d, curGeneral2d, swGeneral2d))
             {
-                float2 swPos = FlowFieldUtilities.IndexToPos(swGeneral2d, TileSize);
-                float2 curPos = FlowFieldUtilities.IndexToPos(curGeneral2d, TileSize);
+                float2 swPos = FlowFieldUtilities.IndexToPos(swGeneral2d, TileSize, FieldGridStartPos);
+                float2 curPos = FlowFieldUtilities.IndexToPos(curGeneral2d, TileSize, FieldGridStartPos);
                 float2 swDir = swPos - startPos;
                 float2 curDir = curPos - startPos;
                 bool isRight = curDir.x * swDir.y + curDir.y * -swDir.x < 0;
@@ -285,8 +286,8 @@ internal struct FlowFieldJob : IJobParallelFor
             int2 nwGeneral2d = FlowFieldUtilities.GetGeneral2d(nwLocal2d, nwSector2d, SectorColAmount, FieldColAmount);
             if (IsSightCorner(startGeneral2d, curGeneral2d, nwGeneral2d))
             {
-                float2 nwPos = FlowFieldUtilities.IndexToPos(nwGeneral2d, TileSize);
-                float2 curPos = FlowFieldUtilities.IndexToPos(curGeneral2d, TileSize);
+                float2 nwPos = FlowFieldUtilities.IndexToPos(nwGeneral2d, TileSize, FieldGridStartPos);
+                float2 curPos = FlowFieldUtilities.IndexToPos(curGeneral2d, TileSize, FieldGridStartPos);
                 float2 nwDir = nwPos - startPos;
                 float2 curDir = curPos - startPos;
                 bool isRight = curDir.x * nwDir.y + curDir.y * -nwDir.x < 0;

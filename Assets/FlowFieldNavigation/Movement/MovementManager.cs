@@ -97,6 +97,7 @@ internal class MovementManager
             FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
             MaxAgentSize = FlowFieldUtilities.MaxAgentSize,
             MinAgentSize = FlowFieldUtilities.MinAgentSize,
+            FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
             AgentDataArray = agentDataArray,
             AgentFlockIndexArray = agentFlockIndexArray,
             AgentHashGridArray = HashGridArray,
@@ -124,6 +125,7 @@ internal class MovementManager
             TileSize = FlowFieldUtilities.TileSize,
             SectorColAmount = FlowFieldUtilities.SectorColAmount,
             AgentMovementData = AgentMovementDataList,
+            FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
         };
         JobHandle movDataHandle = routineDataCalcJob.Schedule(routineDataCalcJob.AgentMovementData.Length, 64, spatialHasherHandle);
 
@@ -157,6 +159,7 @@ internal class MovementManager
             BaseSpatialGridSize = FlowFieldUtilities.BaseAgentSpatialGridSize,
             FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
             FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
+            FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
             RoutineResultArray = RoutineResults,
             AgentSpatialHashGrid = new AgentSpatialHashGrid()
             {
@@ -217,6 +220,7 @@ internal class MovementManager
             FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
             SectorRowAmount = FlowFieldUtilities.SectorRowAmount,
             HalfTileSize = FlowFieldUtilities.TileSize / 2,
+            FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
             AgentMovementData = AgentMovementDataList,
             AgentPositionChangeBuffer = AgentPositionChangeBuffer,
             CostFieldEachOffset = costFieldCosts,
@@ -234,6 +238,7 @@ internal class MovementManager
             SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
             SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
             TileSize = FlowFieldUtilities.TileSize,
+            FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
             AgentMovementDataArray = AgentMovementDataList,
             CostFieldPerOffset = costFieldCosts,
             RoutineResultArray = RoutineResults,

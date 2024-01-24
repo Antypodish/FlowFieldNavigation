@@ -9,6 +9,7 @@ internal struct CurrentPathUpdateDeterminationJob : IJob
     internal float TileSize;
     internal int SectorColAmount;
     internal int SectorMatrixColAmount;
+    internal float2 FieldGridStartPos;
     [ReadOnly] internal NativeArray<UnsafeList<PathSectorState>> PathSectorStateTableArray;
     [ReadOnly] internal NativeArray<PathLocationData> PathLocationDataArray;
     [ReadOnly] internal NativeArray<PathFlowData> PathFlowDataArray;
@@ -33,7 +34,7 @@ internal struct CurrentPathUpdateDeterminationJob : IJob
             PathLocationData curLocationData = PathLocationDataArray[curPathIndex];
             PathFlowData curFlowData = PathFlowDataArray[curPathIndex];
             PathRoutineData curRoutineData = PathRoutineDataArray[curPathIndex];
-            int2 agentGeneral2d = FlowFieldUtilities.PosTo2D(agentPosition2d, TileSize);
+            int2 agentGeneral2d = FlowFieldUtilities.PosTo2D(agentPosition2d, TileSize, FieldGridStartPos);
             int2 agentSector2d = FlowFieldUtilities.GetSector2D(agentGeneral2d, SectorColAmount);
             int agentSector1d = FlowFieldUtilities.To1D(agentSector2d, SectorMatrixColAmount);
             int2 agentSectorStart2d = FlowFieldUtilities.GetSectorStartIndex(agentSector2d, SectorColAmount);

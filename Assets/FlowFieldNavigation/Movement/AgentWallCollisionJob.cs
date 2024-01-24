@@ -15,6 +15,7 @@ internal struct AgentWallCollisionJob : IJobParallelFor
     internal int SectorTileAmount;
     internal float TileSize;
     internal float HalfTileSize;
+    internal float2 FieldGridStartPos;
     [ReadOnly] internal NativeArray<AgentMovementData> AgentMovementData;
     [ReadOnly] internal NativeArray<UnsafeListReadOnly<byte>> CostFieldEachOffset;
     internal NativeArray<float3> AgentPositionChangeBuffer;
@@ -27,7 +28,7 @@ internal struct AgentWallCollisionJob : IJobParallelFor
         float2 agentPos = new float2(agentData.Position.x, agentData.Position.z);
         int agentOffset = FlowFieldUtilities.RadiusToOffset(agentData.Radius, TileSize);
         UnsafeListReadOnly<byte> costs = CostFieldEachOffset[agentOffset];
-        int2 agentGeneral2d = FlowFieldUtilities.PosTo2D(agentPos, TileSize);
+        int2 agentGeneral2d = FlowFieldUtilities.PosTo2D(agentPos, TileSize, FieldGridStartPos);
         LocalIndex1d agentLocal = FlowFieldUtilities.GetLocal1D(agentGeneral2d, SectorColAmount, SectorMatrixColAmount);
         int2 cleanGeneral2d;
         if (costs[agentLocal.sector * SectorTileAmount + agentLocal.index] != byte.MaxValue)
@@ -36,7 +37,7 @@ internal struct AgentWallCollisionJob : IJobParallelFor
             WallDirection wallDirections = GetWallData(cleanGeneral2d, costs);
             WallDirection wallDirectionToCollide = GetWallDirectionToCollide(agentPos, agentGeneral2d, cleanGeneral2d, wallDirections);
             if(wallDirectionToCollide == WallDirection.None) { return; }
-            float2 clearTilePos = FlowFieldUtilities.IndexToPos(cleanGeneral2d, TileSize);
+            float2 clearTilePos = FlowFieldUtilities.IndexToPos(cleanGeneral2d, TileSize, FieldGridStartPos);
             float2 pushForce = GetPushForceOutside(agentPos, agentRadius, clearTilePos, wallDirectionToCollide);
             AgentPositionChangeBuffer[index] += new float3(pushForce.x, 0f, pushForce.y);
         }
@@ -46,7 +47,7 @@ internal struct AgentWallCollisionJob : IJobParallelFor
             WallDirection wallDirections = GetWallData(cleanGeneral2d, costs);
             WallDirection wallDirectionToCollide = GetWallDirectionToCollide(agentPos, agentGeneral2d, cleanGeneral2d, wallDirections);
             if (wallDirectionToCollide == WallDirection.None) { return; }
-            float2 clearTilePos = FlowFieldUtilities.IndexToPos(cleanGeneral2d, TileSize);
+            float2 clearTilePos = FlowFieldUtilities.IndexToPos(cleanGeneral2d, TileSize, FieldGridStartPos);
             float2 pushForce = GetPushForceInside(agentPos, agentRadius, clearTilePos, wallDirectionToCollide);
             AgentPositionChangeBuffer[index] += new float3(pushForce.x, 0f, pushForce.y);
         }
@@ -163,15 +164,16 @@ internal struct AgentWallCollisionJob : IJobParallelFor
     }
     int2 GetClosestCleanIndex(float2 agentPosition, UnsafeListReadOnly<byte> costField)
     {
+        float2 fieldGridStartPos = FieldGridStartPos;
         int sectorTileAmount = SectorTileAmount;
         int sectorColAmount = SectorColAmount;
         int sectorMatrixColAmount = SectorMatrixColAmount;
         int fieldColAmount = FieldColAmount;
         float tileSize = TileSize;
 
-        int2 destinationIndex = FlowFieldUtilities.PosTo2D(agentPosition, TileSize);
+        int2 destinationIndex = FlowFieldUtilities.PosTo2D(agentPosition, TileSize, FieldGridStartPos);
         LocalIndex1d destinationLocal = FlowFieldUtilities.GetLocal1D(destinationIndex, SectorColAmount, SectorMatrixColAmount);
-        if (costField[destinationLocal.sector * sectorTileAmount + destinationLocal.index] != byte.MaxValue) { return FlowFieldUtilities.PosTo2D(agentPosition, TileSize); }
+        if (costField[destinationLocal.sector * sectorTileAmount + destinationLocal.index] != byte.MaxValue) { return FlowFieldUtilities.PosTo2D(agentPosition, TileSize, FieldGridStartPos); }
         int destinationLocalIndex = destinationLocal.index;
         int destinationSector = destinationLocal.sector;
 
@@ -309,7 +311,7 @@ internal struct AgentWallCollisionJob : IJobParallelFor
                 int localIndex = indexToCheck - sectorStride;
                 byte cost = costField[indexToCheck];
                 if (cost == byte.MaxValue) { continue; }
-                float2 indexPos = FlowFieldUtilities.Local1dToPos(localIndex, sectorToCheck, sectorColAmount, sectorMatrixColAmount, fieldColAmount, tileSize);
+                float2 indexPos = FlowFieldUtilities.Local1dToPos(localIndex, sectorToCheck, sectorColAmount, sectorMatrixColAmount, fieldColAmount, tileSize, fieldGridStartPos);
                 float newExtensionCost = math.distancesq(agentPosition, indexPos);
                 if (newExtensionCost < currentExtensionIndexCost) { currentExtensionIndexCost = newExtensionCost; currentExtensionIndexLocalIndex = localIndex; }
             }
@@ -338,7 +340,7 @@ internal struct AgentWallCollisionJob : IJobParallelFor
                 int localIndex = indexToCheck - sectorStride;
                 byte cost = costField[indexToCheck];
                 if (cost == byte.MaxValue) { continue; }
-                float2 indexPos = FlowFieldUtilities.Local1dToPos(localIndex, sectorToCheck, sectorColAmount, sectorMatrixColAmount, fieldColAmount, tileSize);
+                float2 indexPos = FlowFieldUtilities.Local1dToPos(localIndex, sectorToCheck, sectorColAmount, sectorMatrixColAmount, fieldColAmount, tileSize, fieldGridStartPos);
                 float newExtensionCost = math.distancesq(agentPosition, indexPos);
                 if (newExtensionCost < currentExtensionIndexCost) { currentExtensionIndexCost = newExtensionCost; currentExtensionIndexLocalIndex = localIndex; }
             }
@@ -426,7 +428,7 @@ internal struct AgentWallCollisionJob : IJobParallelFor
     }
     WallDirection GetWallDirectionToCollide(float2 agentPos, int2 agentGeneral2d, int2 general2dToCheck, WallDirection wallDirections)
     {
-        float2 checkedIndexPos = FlowFieldUtilities.IndexToPos(general2dToCheck, TileSize);
+        float2 checkedIndexPos = FlowFieldUtilities.IndexToPos(general2dToCheck, TileSize, FieldGridStartPos);
 
         float2 nPos = checkedIndexPos;
         float2 ePos = checkedIndexPos;

@@ -31,7 +31,7 @@ internal class EditorPortalDebugger
             {
                 PortalNode pickedPortalNode = portalNodes[porPtr + j];
                 if (pickedPortalNode.Portal1.Index == pickedPortalNode.Portal2.Index) { continue; }
-                Gizmos.DrawCube(pickedPortalNode.GetPosition(FlowFieldUtilities.TileSize), Vector3.one / 4);
+                Gizmos.DrawCube(pickedPortalNode.GetPosition(FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition), Vector3.one / 4);
             }
         }
     }

@@ -29,7 +29,7 @@ internal class DynamicAreaScheduler
         UnsafeList<SectorFlowStart> pickedSectorFlowStarts = dynamicArea.SectorFlowStartCalculationBuffer;
         UnsafeList<FlowData> flowFieldCalculationBuffer = dynamicArea.FlowFieldCalculationBuffer;
 
-        int2 targetIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize);
+        int2 targetIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition);
         int2 targetSectorIndex = FlowFieldUtilities.GetSector2D(targetIndex, FlowFieldUtilities.SectorColAmount);
         int2 nsector2d = targetSectorIndex + new int2(0, 1);
         int2 esector2d = targetSectorIndex + new int2(1, 0);
@@ -100,6 +100,7 @@ internal class DynamicAreaScheduler
             TileSize = FlowFieldUtilities.TileSize,
             FieldColAmount = FlowFieldUtilities.FieldColAmount,
             FieldTileAmount = FlowFieldUtilities.FieldTileAmount,
+            FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
             CombinedDynamicAreaFieldReader = new CombinedDynamicAreaFieldReader()
             {
                 SectorFlowStartIndicies = pickedSectorFlowStarts,

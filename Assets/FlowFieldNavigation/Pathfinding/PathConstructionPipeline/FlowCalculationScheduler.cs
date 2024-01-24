@@ -113,6 +113,7 @@ internal class FlowCalculationScheduler
                 FieldTileAmount = FlowFieldUtilities.FieldTileAmount,
                 FieldColAmount = FlowFieldUtilities.FieldColAmount,
                 SectorRowAmount = FlowFieldUtilities.SectorRowAmount,
+                FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
                 SectorToPicked = locationData.SectorToPicked,
                 PickedToSector = pathInternalData.PickedSectorList,
                 FlowFieldCalculationBuffer = flowFieldCalculationBuffer,

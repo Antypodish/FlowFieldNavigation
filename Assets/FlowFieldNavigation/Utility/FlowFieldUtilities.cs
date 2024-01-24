@@ -34,47 +34,31 @@ internal static class FlowFieldUtilities
     {
         return new int2(index % colAmount, index / colAmount);
     }
-    internal static int2 PosTo2D(float2 pos, float tileSize)
+    internal static int2 PosTo2D(float2 pos, float tileSize, float2 gridStartPos)
     {
+        pos -= gridStartPos;
         return new int2((int)math.floor(pos.x / tileSize), (int)math.floor(pos.y / tileSize));
-    }
-    internal static int PosTo1D(float2 pos, float tileSize, int colAmount)
-    {
-        int2 index2d = new int2((int)math.floor(pos.x / tileSize), (int)math.floor(pos.y / tileSize));
-        return index2d.y * colAmount + index2d.x;
-    }
-    internal static float2 IndexToPos(int general1d, float tileSize, int fieldColAmount)
-    {
-        int2 general2d = To2D(general1d, fieldColAmount);
-        return new float2(general2d.x * tileSize + tileSize / 2, general2d.y * tileSize + tileSize / 2);
     }
     internal static float2 GetGridMaxPosExcluding(int rowAmount, int colAmount, float tileSize, float2 gridStartPos)
     {
         return gridStartPos + new float2(colAmount * tileSize, rowAmount * tileSize);
     }
-    internal static float2 LocalIndexToPos(int local1d, int sector1d, int sectorMatrixColAmount, int sectorColAmount, float tileSize, float sectorSize)
+    internal static float2 LocalIndexToPos(int local1d, int sector1d, int sectorMatrixColAmount, int sectorColAmount, float tileSize, float sectorSize, float2 gridStartPos)
     {
         float2 sectorStartPos = new float2((sector1d % sectorMatrixColAmount) * sectorSize, (sector1d / sectorMatrixColAmount) * sectorSize);
         float2 indexOffset = new float2((local1d % sectorColAmount) * tileSize, (local1d / sectorColAmount) * tileSize);
         float2 tileCenter = new float2(tileSize / 2, tileSize / 2);
-        return sectorStartPos + indexOffset + tileCenter;
+        return gridStartPos + sectorStartPos + indexOffset + tileCenter;
     }
-    internal static int2 PosToSector2D(float2 pos, float sectorSize)
+    internal static int PosToSector1D(float2 pos, float sectorSize, int sectorMatrixColAmount, float2 gridStartPos)
     {
-        return new int2((int)math.floor(pos.x / sectorSize), (int)math.floor(pos.y / sectorSize));
-    }
-    internal static int PosToSector1D(float2 pos, float sectorSize, int sectorMatrixColAmount)
-    {
+        pos -= gridStartPos;
         int2 sector2d = new int2((int)math.floor(pos.x / sectorSize), (int)math.floor(pos.y / sectorSize));
         return sector2d.y * sectorMatrixColAmount + sector2d.x;
     }
-    internal static float2 IndexToPos(int2 general2d, float tileSize)
+    internal static float2 IndexToPos(int2 general2d, float tileSize, float2 gridStartPos)
     {
-        return new float2(general2d.x * tileSize + tileSize / 2, general2d.y * tileSize + tileSize / 2);
-    }
-    internal static float2 IndexStartPos(int2 general2d, float tileSize, float2 gridStartPos)
-    {
-        return gridStartPos + new float2(general2d.x * tileSize, general2d.y * tileSize);
+        return gridStartPos + new float2(general2d.x * tileSize + tileSize / 2, general2d.y * tileSize + tileSize / 2);
     }
     internal static int2 GetSector2D(int2 index, int sectorColAmount)
     {
@@ -95,10 +79,10 @@ internal static class FlowFieldUtilities
         return local2d.y * sectorColAmount + local2d.x;
     }
     internal static LocalIndex1d GetLocal1D(int2 general2d, int sectorColAmount, int sectorMatrixColAmount)
-    {
-        int2 sector2d = general2d / sectorColAmount;
-        int2 local2d = general2d - (sector2d * sectorColAmount);
-        int sector1d = sector2d.y * sectorMatrixColAmount + sector2d.x;
+    {//1000,995
+        int2 sector2d = general2d / sectorColAmount;//100,99
+        int2 local2d = general2d - (sector2d * sectorColAmount);//0,5
+        int sector1d = sector2d.y * sectorMatrixColAmount + sector2d.x;//10000
         return new LocalIndex1d()
         {
             sector = sector1d,
@@ -210,12 +194,12 @@ internal static class FlowFieldUtilities
         int maxComponent = math.max(change.x, change.y);
         return minComponent * 1.4f + (maxComponent - minComponent);
     }
-    internal static float2 Local1dToPos(int localIndex, int sectorIndex, int sectorColAmount, int sectorMatrixColAmount, int fieldColAmount, float tileSize)
+    internal static float2 Local1dToPos(int localIndex, int sectorIndex, int sectorColAmount, int sectorMatrixColAmount, int fieldColAmount, float tileSize, float2 gridStartPos)
     {
         int2 local2d = new int2(localIndex % sectorColAmount, localIndex / sectorColAmount);
         int2 sector2d = new int2(sectorIndex % sectorMatrixColAmount, sectorIndex / sectorMatrixColAmount);
         int2 sectorStart = new int2(sector2d.x * sectorColAmount, sector2d.y * sectorColAmount);
         int2 general2d = local2d + sectorStart;
-        return new float2(general2d.x * tileSize + tileSize / 2, general2d.y * tileSize + tileSize / 2);
+        return gridStartPos + new float2(general2d.x * tileSize + tileSize / 2, general2d.y * tileSize + tileSize / 2);
     }
 }

@@ -15,6 +15,7 @@ internal struct ObstacleRequestToCostEdit : IJob
     internal float FieldMaxYExcluding;
     internal float FieldMinXIncluding;
     internal float FieldMinYIncluding;
+    internal float2 FieldGridStartPos;
 
     internal NativeArray<ObstacleRequest> ObstacleRequests;
     internal NativeList<CostEdit> CostEditOutput;
@@ -34,8 +35,8 @@ internal struct ObstacleRequestToCostEdit : IJob
 
             float2 botLeft = pos2d - halfSize;
             float2 topRight = pos2d + halfSize;
-            int2 botLeftBound = FlowFieldUtilities.PosTo2D(botLeft, TileSize);
-            int2 toprightBound = FlowFieldUtilities.PosTo2D(topRight, TileSize);
+            int2 botLeftBound = FlowFieldUtilities.PosTo2D(botLeft, TileSize, FieldGridStartPos);
+            int2 toprightBound = FlowFieldUtilities.PosTo2D(topRight, TileSize, FieldGridStartPos);
             botLeftBound.x = math.select(botLeftBound.x, 0, botLeftBound.x < 0);
             botLeftBound.y = math.select(botLeftBound.y, 0, botLeftBound.y < 0);
             toprightBound.x = math.select(toprightBound.x, FieldColAmount - 1, toprightBound.x >= FieldColAmount);

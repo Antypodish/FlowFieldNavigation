@@ -257,7 +257,7 @@ internal class PathDataContainer
         PathDestinationData destinationData = PathDestinationDataList[pathIndex];
         int sectorColAmount = FlowFieldUtilities.SectorColAmount;
         int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
-        LocalIndex1d local = FlowFieldUtilities.GetLocal1D(FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize), sectorColAmount, sectorMatrixColAmount);
+        LocalIndex1d local = FlowFieldUtilities.GetLocal1D(FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition), sectorColAmount, sectorMatrixColAmount);
         return (internalData.IntegrationField[locationData.SectorToPicked[local.sector] + local.index].Mark & IntegrationMark.LOSPass) == IntegrationMark.LOSPass;
     }
 }

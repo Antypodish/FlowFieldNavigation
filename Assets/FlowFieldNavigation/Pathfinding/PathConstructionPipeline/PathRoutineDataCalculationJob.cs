@@ -3,6 +3,7 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Burst;
 using Unity.Mathematics;
+using UnityEditor.PackageManager.Requests;
 
 [BurstCompile]
 internal struct PathRoutineDataCalculationJob : IJobParallelFor
@@ -14,6 +15,11 @@ internal struct PathRoutineDataCalculationJob : IJobParallelFor
     internal int SectorTileAmount;
     internal int FieldRowAmount;
     internal int FieldColAmount;
+    internal float FieldMinXIncluding;
+    internal float FieldMinYIncluding;
+    internal float FieldMaxXExcluding;
+    internal float FieldMaxYExcluding;
+    internal float2 FieldGridStartPos;
     [ReadOnly] internal NativeArray<UnsafeList<DijkstraTile>> TargetSectorIntegrations;
     [ReadOnly] internal NativeArray<PathLocationData> PathLocationDataArray;
     [ReadOnly] internal NativeArray<PathFlowData> PathFlowDataArray;
@@ -28,7 +34,8 @@ internal struct PathRoutineDataCalculationJob : IJobParallelFor
     public void Execute(int index)
     {
         PathState pathState = PathStateArray[index];
-        if (pathState == PathState.Removed)
+        bool isBeingReconstructed = (PathOrganizationDataArray[index].Task & PathTask.Reconstruct) == PathTask.Reconstruct;
+        if (pathState == PathState.Removed || isBeingReconstructed)
         {
             return;
         }
@@ -36,44 +43,63 @@ internal struct PathRoutineDataCalculationJob : IJobParallelFor
         PathDestinationData destinationData = PathDestinationDataArray[index];
         if (destinationData.DestinationType == DestinationType.DynamicDestination)
         {
-            int2 oldTargetIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, TileSize);
+            //Data structures
+            UnsafeListReadOnly<byte> costs = CostFields[destinationData.Offset];
+            IslandFieldProcessor islandFieldProcessor = IslandFieldProcessors[destinationData.Offset];
+
+            //Get targets
             float3 targetAgentPos = AgentDataArray[destinationData.TargetAgentIndex].Position;
             float2 targetAgentPos2 = new float2(targetAgentPos.x, targetAgentPos.z);
-            targetAgentPos2 = CheckIfDestinationExtensionNeeded(targetAgentPos2, oldTargetIndex, destinationData.Offset);
-            int2 newTargetIndex = (int2)math.floor(targetAgentPos2 / TileSize);
-            int oldSector = FlowFieldUtilities.GetSector1D(oldTargetIndex, SectorColAmount, SectorMatrixColAmount);
-            LocalIndex1d newLocal = FlowFieldUtilities.GetLocal1D(newTargetIndex, SectorColAmount, SectorMatrixColAmount);
-            bool outOfReach = oldSector != newLocal.sector;
-            DijkstraTile targetTile = targetSectorIntegration[newLocal.index];
-            outOfReach = outOfReach || targetTile.IntegratedCost == float.MaxValue;
-            DynamicDestinationState destinationState = oldTargetIndex.Equals(newTargetIndex) ? DynamicDestinationState.None : DynamicDestinationState.Moved;
-            destinationState = outOfReach ? DynamicDestinationState.OutOfReach : destinationState;
-            destinationData.DesiredDestination = targetAgentPos2;
-            destinationData.Destination = targetAgentPos2;
-            PathDestinationDataArray[index] = destinationData;
 
+            //Clamp destination to bounds
+            targetAgentPos2.x = math.select(targetAgentPos2.x, FieldMinXIncluding, targetAgentPos2.x < FieldMinXIncluding);
+            targetAgentPos2.y = math.select(targetAgentPos2.y, FieldMinYIncluding, targetAgentPos2.y < FieldMinYIncluding);
+            targetAgentPos2.x = math.select(targetAgentPos2.x, FieldMaxXExcluding - TileSize / 2, targetAgentPos2.x >= FieldMaxXExcluding);
+            targetAgentPos2.y = math.select(targetAgentPos2.y, FieldMaxYExcluding - TileSize / 2, targetAgentPos2.y >= FieldMaxYExcluding);
+
+            float2 oldDestination = destinationData.Destination;
+            float2 newDestination = targetAgentPos2;
+            int2 oldDestinationIndex = FlowFieldUtilities.PosTo2D(oldDestination, TileSize, FieldGridStartPos);
+            int2 newDestinationIndex = FlowFieldUtilities.PosTo2D(newDestination, TileSize, FieldGridStartPos);
+            LocalIndex1d newDestinationLocal = FlowFieldUtilities.GetLocal1D(newDestinationIndex, SectorColAmount, SectorMatrixColAmount);
+            byte newDestinationCost = costs[newDestinationLocal.sector * SectorTileAmount + newDestinationLocal.index];
+            int oldDestinationIsland = islandFieldProcessor.GetIsland(oldDestinationIndex);
+            int newDestinationIsland = islandFieldProcessor.GetIsland(newDestinationIndex);
+
+            //Test
+            bool shouldExpandNewDestination = newDestinationCost == byte.MaxValue || oldDestinationIsland != newDestinationIsland;
+            if (shouldExpandNewDestination)
+            {
+                int desiredIsland = math.select(newDestinationIsland, oldDestinationIsland, newDestinationIsland == int.MaxValue);
+                bool succesfull = TryGetExtendedPosition(newDestination, desiredIsland, islandFieldProcessor, costs, out float2 extendedPos);
+                newDestination = math.select(oldDestination, extendedPos, succesfull);
+                newDestinationIndex = FlowFieldUtilities.PosTo2D(newDestination, TileSize, FieldGridStartPos);
+                newDestinationLocal = FlowFieldUtilities.GetLocal1D(newDestinationIndex, SectorColAmount, SectorMatrixColAmount);
+            }
+            int oldSector = FlowFieldUtilities.GetSector1D(oldDestinationIndex, SectorColAmount, SectorMatrixColAmount);
+            bool outOfReach = oldSector != newDestinationLocal.sector;
+            DijkstraTile targetTile = targetSectorIntegration[newDestinationLocal.index];
+            outOfReach = outOfReach || targetTile.IntegratedCost == float.MaxValue;
+
+            //Output
+            DynamicDestinationState destinationState = oldDestinationIndex.Equals(newDestinationIndex) ? DynamicDestinationState.None : DynamicDestinationState.Moved;
+            destinationState = outOfReach ? DynamicDestinationState.OutOfReach : destinationState;
+            destinationData.DesiredDestination = newDestination;
+            destinationData.Destination = newDestination;
+            PathDestinationDataArray[index] = destinationData;
             PathRoutineData organizationData = PathOrganizationDataArray[index];
             organizationData.DestinationState = destinationState;
             PathOrganizationDataArray[index] = organizationData;
         }
     }
-
-    float2 CheckIfDestinationExtensionNeeded(float2 newPosition, int2 oldTargetIndex, int offset)
+    bool TryGetExtendedPosition(float2 position, int desiredIsland, IslandFieldProcessor islandFieldProcessor, UnsafeListReadOnly<byte> costs, out float2 extendedPos)
     {
-        UnsafeListReadOnly<byte> costs = CostFields[offset];
-        int2 newTargetIndex = FlowFieldUtilities.PosTo2D(newPosition, TileSize);
-        LocalIndex1d curLocal = FlowFieldUtilities.GetLocal1D(newTargetIndex, SectorColAmount, SectorMatrixColAmount);
-        byte cost = costs[curLocal.sector * SectorTileAmount + curLocal.index];
-        IslandFieldProcessor islandFieldProcessor = IslandFieldProcessors[offset];
-        int desiredIsland = islandFieldProcessor.GetIsland(oldTargetIndex);
-        int currentIsland = islandFieldProcessor.GetIsland(newTargetIndex);
-        if (cost != byte.MaxValue && desiredIsland == currentIsland) { return newPosition; }
-
-        float2 closestDestination = GetClosestDestination(newTargetIndex, desiredIsland, islandFieldProcessor, costs);
-        return math.select(closestDestination, 0, closestDestination.Equals(-1));
+        int2 newTargetIndex = FlowFieldUtilities.PosTo2D(position, TileSize, FieldGridStartPos);
+        bool succesfull = TryGetClosestDestination(newTargetIndex, desiredIsland, islandFieldProcessor, costs, out float2 closestDestination);
+        extendedPos = closestDestination;
+        return succesfull;
     }
-
-    float2 GetClosestDestination(int2 destinationIndex, int desiredIsland, IslandFieldProcessor islandFieldProcessors, UnsafeListReadOnly<byte> costField)
+    bool TryGetClosestDestination(int2 destinationIndex, int desiredIsland, IslandFieldProcessor islandFieldProcessors, UnsafeListReadOnly<byte> costField, out float2 closestDestination)
     {
         int sectorTileAmount = SectorTileAmount;
         int sectorColAmount = SectorColAmount;
@@ -102,7 +128,11 @@ internal struct PathRoutineDataCalculationJob : IJobParallelFor
             bool rightOverflow = topRight.x >= FieldColAmount;
             bool leftOverflow = topLeft.x < 0;
 
-            if (topOverflow && botOverflow && rightOverflow && leftOverflow) { return -1; }
+            if (topOverflow && botOverflow && rightOverflow && leftOverflow)
+            {
+                closestDestination = 0;
+                return false;
+            }
 
             if (topOverflow)
             {
@@ -197,7 +227,8 @@ internal struct PathRoutineDataCalculationJob : IJobParallelFor
         }
 
         int2 outputGeneral2d = FlowFieldUtilities.GetGeneral2d(pickedExtensionIndexLocalIndex, pickedExtensionIndexSector, sectorMatrixColAmount, sectorColAmount);
-        return FlowFieldUtilities.IndexToPos(outputGeneral2d, TileSize);
+        closestDestination = FlowFieldUtilities.IndexToPos(outputGeneral2d, TileSize, FieldGridStartPos);
+        return true;
 
         ExtensionIndex CheckSectorRow(int sectorToCheck, int rowToCheck, int colToStart, int colToEnd)
         {

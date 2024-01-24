@@ -23,7 +23,7 @@ internal class EditorSectorDebugger
         {
             int2 sector2d = FlowFieldUtilities.To2D(i, FlowFieldUtilities.SectorMatrixColAmount);
             float sectorSize = FlowFieldUtilities.SectorColAmount * FlowFieldUtilities.TileSize;
-            float2 sectorPos = FlowFieldUtilities.IndexToPos(sector2d, sectorSize);
+            float2 sectorPos = FlowFieldUtilities.IndexToPos(sector2d, sectorSize, FlowFieldUtilities.FieldGridStartPosition);
             float2 botLeft2 = sectorPos + new float2(-sectorSize / 2, -sectorSize / 2);
             float2 topLeft2 = sectorPos + new float2(-sectorSize / 2, sectorSize / 2);
             float2 botRight2 = sectorPos + new float2(sectorSize / 2, -sectorSize / 2);

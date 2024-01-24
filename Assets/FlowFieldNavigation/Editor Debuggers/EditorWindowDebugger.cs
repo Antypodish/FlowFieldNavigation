@@ -70,7 +70,7 @@ internal class EditorWindowDebugger
                 for(int c = botLeftBound.C; c <= upRightBound.C; c++)
                 {
                     int2 index = new int2(c, r);
-                    float2 pos2 = FlowFieldUtilities.IndexToPos(index, tileSize);
+                    float2 pos2 = FlowFieldUtilities.IndexToPos(index, tileSize, FlowFieldUtilities.FieldGridStartPosition);
                     pos2 -= new float2(tileSize / 2, tileSize / 2);
                     float3 pos3 = new float3(pos2.x, yOffset, pos2.y);
                     Gizmos.DrawMesh(_debugMesh, pos3);

@@ -93,7 +93,7 @@ internal class EditorIslandDebugger
                 PortalNode pickedPortalNode = portalNodes[porPtr + j];
                 if (pickedPortalNode.Portal1.Index == pickedPortalNode.Portal2.Index) { continue; }
                 Gizmos.color = _colors[pickedPortalNode.IslandIndex % _colors.Length];
-                Vector3 pickedPos = pickedPortalNode.GetPosition(FlowFieldUtilities.TileSize);
+                Vector3 pickedPos = pickedPortalNode.GetPosition(FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition);
                 Gizmos.DrawCube(pickedPos, new Vector3(0.5f, 0.5f, 0.5f));
                 DebugNeighboursOf(pickedPortalNode.Portal1, pickedPos);
                 DebugNeighboursOf(pickedPortalNode.Portal2, pickedPos);
@@ -107,7 +107,7 @@ internal class EditorIslandDebugger
             {
                 int index = portalToPortals[porToPorPtr + i].Index;
                 PortalNode neighbourNode = portalNodes[index];
-                Gizmos.DrawLine(pickedPos, neighbourNode.GetPosition(FlowFieldUtilities.TileSize));
+                Gizmos.DrawLine(pickedPos, neighbourNode.GetPosition(FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition));
             }
         }
     }
@@ -145,7 +145,7 @@ internal class EditorIslandDebugger
                 else { islandIndex = portalNodes[islandIndex].IslandIndex; }
                 int2 local2d = FlowFieldUtilities.To2D(i, FlowFieldUtilities.SectorColAmount);
                 int2 general2d = FlowFieldUtilities.GetGeneral2d(local2d, sector2d, FlowFieldUtilities.SectorColAmount, FlowFieldUtilities.FieldColAmount);
-                float2 pos2 = FlowFieldUtilities.IndexToPos(general2d, tileSize) - new float2(tileSize / 2, tileSize / 2);
+                float2 pos2 = FlowFieldUtilities.IndexToPos(general2d, tileSize, FlowFieldUtilities.FieldGridStartPosition) - new float2(tileSize / 2, tileSize / 2);
                 float3 pos = new float3(pos2.x, yOffset, pos2.y);
 
                 Gizmos.color = _colors[islandIndex % _colors.Length];
@@ -163,7 +163,7 @@ internal class EditorIslandDebugger
                 if (cost == byte.MaxValue) { continue; }
                 int2 local2d = FlowFieldUtilities.To2D(i, FlowFieldUtilities.SectorColAmount);
                 int2 general2d = FlowFieldUtilities.GetGeneral2d(local2d, sector2d, FlowFieldUtilities.SectorColAmount, FlowFieldUtilities.FieldColAmount);
-                float2 pos2 = FlowFieldUtilities.IndexToPos(general2d, tileSize) - new float2(tileSize / 2, tileSize / 2);
+                float2 pos2 = FlowFieldUtilities.IndexToPos(general2d, tileSize, FlowFieldUtilities.FieldGridStartPosition) - new float2(tileSize / 2, tileSize / 2);
                 float3 pos = new float3(pos2.x, yOffset, pos2.y);
 
                 Gizmos.DrawMesh(_debugMesh, pos);

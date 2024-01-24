@@ -25,6 +25,7 @@ internal struct FinalPathRequestDestinationExpansionJob : IJob
     internal float FieldMinYIncluding;
     internal float FieldMaxXExcluding;
     internal float FieldMaxYExcluding;
+    internal float2 FieldGridStartPos;
     [NativeDisableContainerSafetyRestriction] internal NativeList<FinalPathRequest> FinalPathRequests;
     [ReadOnly] internal NativeArray<IslandFieldProcessor> IslandFieldProcessors;
     [ReadOnly] internal NativeArray<UnsafeListReadOnly<byte>> CostFields;
@@ -48,7 +49,7 @@ internal struct FinalPathRequestDestinationExpansionJob : IJob
             request.DesiredDestination.y = math.select(request.DesiredDestination.y, FieldMaxYExcluding - TileSize / 2, request.DesiredDestination.y >= FieldMaxYExcluding);
 
             int destinationIsland = islandProcessor.GetIsland(request.Destination);
-            int2 destination2d = FlowFieldUtilities.PosTo2D(request.Destination, TileSize);
+            int2 destination2d = FlowFieldUtilities.PosTo2D(request.Destination, TileSize, FieldGridStartPos);
             LocalIndex1d destinationLocal = FlowFieldUtilities.GetLocal1D(destination2d, SectorColAmount, SectorMatrixColAmount);
             if (sourceIsland == destinationIsland && CostFields[request.Offset][destinationLocal.sector * SectorTileAmount + destinationLocal.index] != byte.MaxValue)
             {
@@ -90,7 +91,7 @@ internal struct FinalPathRequestDestinationExpansionJob : IJob
         int sectorColAmount = SectorColAmount;
         int sectorMatrixColAmount = SectorMatrixColAmount;
 
-        int2 destinationIndex = FlowFieldUtilities.PosTo2D(destination, TileSize);
+        int2 destinationIndex = FlowFieldUtilities.PosTo2D(destination, TileSize, FieldGridStartPos);
         LocalIndex1d destinationLocal = FlowFieldUtilities.GetLocal1D(destinationIndex, SectorColAmount, SectorMatrixColAmount);
         int destinationLocalIndex = destinationLocal.index;
         int destinationSector = destinationLocal.sector;
@@ -209,7 +210,7 @@ internal struct FinalPathRequestDestinationExpansionJob : IJob
         }
 
         int2 outputGeneral2d = FlowFieldUtilities.GetGeneral2d(pickedExtensionIndexLocalIndex, pickedExtensionIndexSector, sectorMatrixColAmount, sectorColAmount);
-        return FlowFieldUtilities.IndexToPos(outputGeneral2d, TileSize);
+        return FlowFieldUtilities.IndexToPos(outputGeneral2d, TileSize, FieldGridStartPos);
 
         ExtensionIndex CheckSectorRow(int sectorToCheck, int rowToCheck, int colToStart, int colToEnd)
         {

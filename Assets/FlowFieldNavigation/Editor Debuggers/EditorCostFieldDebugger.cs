@@ -72,7 +72,7 @@ internal class EditorCostFieldDebugger
             {
                 if (sector[i] == 1) { continue; }
                 int2 index2d = FlowFieldUtilities.GetGeneral2d(i, s, sectorMatrixColAmount, sectorColAmount);
-                Vector2 indexpos2 = FlowFieldUtilities.IndexToPos(index2d, tileSize) - new float2(tileSize / 2, tileSize / 2);
+                Vector2 indexpos2 = FlowFieldUtilities.IndexToPos(index2d, tileSize, FlowFieldUtilities.FieldGridStartPosition) - new float2(tileSize / 2, tileSize / 2);
                 Vector3 indexPos = new Vector3(indexpos2.x, yOffset, indexpos2.y);
                 Gizmos.DrawMesh(_debugMesh, indexPos);
             }

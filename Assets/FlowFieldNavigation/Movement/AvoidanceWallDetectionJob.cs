@@ -14,6 +14,7 @@ internal struct AvoidanceWallDetectionJob : IJobParallelFor
     internal int SectorColAmount;
     internal int SectorMatrixColAmount;
     internal int SectorTileAmount;
+    internal float2 FieldGridStartPos;
     [ReadOnly] internal NativeArray<AgentMovementData> AgentMovementDataArray;
     [ReadOnly] internal NativeArray<UnsafeListReadOnly<byte>> CostFieldPerOffset;
     internal NativeArray<RoutineResult> RoutineResultArray;
@@ -52,12 +53,12 @@ internal struct AvoidanceWallDetectionJob : IJobParallelFor
         float2 dif = rightPoint - leftPoint;
         float slope = dif.y / dif.x;
         float c = leftPoint.y - (slope * leftPoint.x);
-        int2 point1Index = FlowFieldUtilities.PosTo2D(point1, TileSize);
-        int2 point2Index = FlowFieldUtilities.PosTo2D(point2, TileSize);
+        int2 point1Index = FlowFieldUtilities.PosTo2D(point1, TileSize, FieldGridStartPos);
+        int2 point2Index = FlowFieldUtilities.PosTo2D(point2, TileSize, FieldGridStartPos);
         if (point1Index.x == point2Index.x || dif.x == 0)
         {
-            int startY = (int)math.floor(math.select(point2.y, point1.y, point1.y < point2.y) / TileSize);
-            int endY = (int)math.floor(math.select(point2.y, point1.y, point1.y > point2.y) / TileSize);
+            int startY = math.min(point1Index.y, point2Index.y);
+            int endY = math.max(point1Index.y, point2Index.y);
             for (int y = startY; y <= endY; y++)
             {
                 int2 index = new int2(point1Index.x, y);
@@ -68,8 +69,8 @@ internal struct AvoidanceWallDetectionJob : IJobParallelFor
         }
         if (dif.y == 0)
         {
-            int startX = (int)math.floor(math.select(point2.x, point1.x, point1.x < point2.x) / TileSize);
-            int endX = (int)math.floor(math.select(point2.x, point1.x, point1.x > point2.x) / TileSize);
+            int startX = math.min(point1Index.x, point2Index.x);
+            int endX = math.max(point1Index.x, point2Index.x);
             for (int x = startX; x <= endX; x++)
             {
                 int2 index = new int2(x, point1Index.y);
@@ -84,8 +85,8 @@ internal struct AvoidanceWallDetectionJob : IJobParallelFor
         float2 startPoint = leftPoint;
         float nextPointX = math.ceil(startPoint.x / TileSize) * TileSize;
         float2 nextPoint = new float2(nextPointX, c + slope * nextPointX);
-        int2 startIndex = FlowFieldUtilities.PosTo2D(startPoint, TileSize);
-        int2 nextIndex = FlowFieldUtilities.PosTo2D(nextPoint, TileSize);
+        int2 startIndex = FlowFieldUtilities.PosTo2D(startPoint, TileSize, FieldGridStartPos);
+        int2 nextIndex = FlowFieldUtilities.PosTo2D(nextPoint, TileSize, FieldGridStartPos);
         int minY = math.select(nextIndex.y, startIndex.y, startIndex.y < nextIndex.y);
         int maxY = math.select(startIndex.y, nextIndex.y, startIndex.y < nextIndex.y);
         for (int y = minY; y <= maxY; y++)
@@ -99,8 +100,8 @@ internal struct AvoidanceWallDetectionJob : IJobParallelFor
         float2 endPoint = rightPoint;
         float prevPointX = math.floor(endPoint.x / TileSize) * TileSize;
         float2 prevPoint = new float2(prevPointX, c + slope * prevPointX);
-        int2 endIndex = FlowFieldUtilities.PosTo2D(endPoint, TileSize);
-        int2 prevIndex = FlowFieldUtilities.PosTo2D(prevPoint, TileSize);
+        int2 endIndex = FlowFieldUtilities.PosTo2D(endPoint, TileSize, FieldGridStartPos);
+        int2 prevIndex = FlowFieldUtilities.PosTo2D(prevPoint, TileSize, FieldGridStartPos);
         minY = math.select(prevIndex.y, endIndex.y, endIndex.y < prevIndex.y);
         maxY = math.select(endIndex.y, prevIndex.y, endIndex.y < prevIndex.y);
         for (int y = minY; y <= maxY; y++)
@@ -119,8 +120,8 @@ internal struct AvoidanceWallDetectionJob : IJobParallelFor
         {
             float newPointX = curPointX + TileSize;
             float newtPointY = slope * newPointX + c;
-            int2 curIndex = FlowFieldUtilities.PosTo2D(new float2(curPointX, curPointY), TileSize);
-            int2 newIndex = FlowFieldUtilities.PosTo2D(new float2(newPointX, newtPointY), TileSize);
+            int2 curIndex = FlowFieldUtilities.PosTo2D(new float2(curPointX, curPointY), TileSize, FieldGridStartPos);
+            int2 newIndex = FlowFieldUtilities.PosTo2D(new float2(newPointX, newtPointY), TileSize, FieldGridStartPos);
             int curIndexY = curIndex.y;
             int newIndexY = newIndex.y;
             minY = math.select(curIndexY, newIndexY, newIndexY < curIndexY);

@@ -61,12 +61,16 @@ public class PathfindingManager : MonoBehaviour
         FlowFieldUtilities.MinAgentSize = 0;
         FlowFieldUtilities.MaxAgentSize = (startParameters.MaxCostFieldOffset * tileSize * 2) + tileSize;
         FlowFieldUtilities.LOSRange = LineOfSightRange;
-        FlowFieldUtilities.FieldMinXIncluding = startParameters.FieldStartPositionXZ.x;
-        FlowFieldUtilities.FieldMinYIncluding = startParameters.FieldStartPositionXZ.y;
-        FlowFieldUtilities.FieldMaxXExcluding = startParameters.FieldStartPositionXZ.x + FlowFieldUtilities.FieldColAmount * FlowFieldUtilities.TileSize;
-        FlowFieldUtilities.FieldMaxYExcluding = startParameters.FieldStartPositionXZ.y + FlowFieldUtilities.FieldRowAmount * FlowFieldUtilities.TileSize;
+        FlowFieldUtilities.FieldMinXIncluding = startParameters.FieldStartPositionXZ.x + 0.01f;
+        FlowFieldUtilities.FieldMinYIncluding = startParameters.FieldStartPositionXZ.y + 0.01f;
+        FlowFieldUtilities.FieldMaxXExcluding = startParameters.FieldStartPositionXZ.x + FlowFieldUtilities.FieldColAmount * FlowFieldUtilities.TileSize - 0.01f;
+        FlowFieldUtilities.FieldMaxYExcluding = startParameters.FieldStartPositionXZ.y + FlowFieldUtilities.FieldRowAmount * FlowFieldUtilities.TileSize - 0.01f;
         FlowFieldUtilities.MaxCostFieldOffset = startParameters.MaxCostFieldOffset;
         FlowFieldUtilities.FieldGridStartPosition = startParameters.FieldStartPositionXZ;
+        UnityEngine.Debug.Log(FlowFieldUtilities.FieldMinXIncluding);
+        UnityEngine.Debug.Log(FlowFieldUtilities.FieldMinYIncluding);
+        UnityEngine.Debug.Log(FlowFieldUtilities.FieldMaxXExcluding);
+        UnityEngine.Debug.Log(FlowFieldUtilities.FieldMaxYExcluding);
     }
     internal void StartSimulation(SimulationStartParameters startParameters)
     {

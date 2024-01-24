@@ -37,7 +37,11 @@ internal class EditorPathDebugger
         PathLocationData locationData = _pathfindingManager.PathDataContainer.PathLocationDataList[pathIndex];
         UnsafeList<SectorFlowStart> pickedSectorFlowStarts = locationData.DynamicAreaPickedSectorFlowStarts;
         NativeArray<IntegrationTile> integrationField = internalData.DynamicArea.IntegrationField;
-
+        int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
+        int sectorColAmount = FlowFieldUtilities.SectorColAmount;
+        float tileSize = FlowFieldUtilities.TileSize;
+        float sectorSize = tileSize * sectorColAmount;
+        float2 fieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition;
         for (int i = 0; i < pickedSectorFlowStarts.Length; i++)
         {
             int pickedSectorFlowStart = pickedSectorFlowStarts[i].FlowStartIndex;
@@ -46,7 +50,7 @@ internal class EditorPathDebugger
             for (int j = pickedSectorFlowStart; j < pickedSectorFlowStart + FlowFieldUtilities.SectorTileAmount; j++)
             {
                 int local1d = (j - 1) % FlowFieldUtilities.SectorTileAmount;
-                float2 debugPos = FlowFieldUtilities.LocalIndexToPos(local1d, pickedSectorIndex, FlowFieldUtilities.SectorMatrixColAmount, FlowFieldUtilities.SectorColAmount, FlowFieldUtilities.TileSize, FlowFieldUtilities.TileSize * FlowFieldUtilities.SectorColAmount);
+                float2 debugPos = FlowFieldUtilities.LocalIndexToPos(local1d, pickedSectorIndex, sectorMatrixColAmount, sectorColAmount, tileSize, sectorSize, fieldGridStartPos);
                 Vector3 debugPos3 = new Vector3(debugPos.x, 0.02f, debugPos.y);
                 float cost = integrationField[j].Cost;
                 if (cost != float.MaxValue)
@@ -70,6 +74,11 @@ internal class EditorPathDebugger
         UnsafeList<SectorFlowStart> pickedSectorFlowStarts = locationData.DynamicAreaPickedSectorFlowStarts;
         UnsafeList<FlowData> flowField = flowData.DynamicAreaFlowField;
         Gizmos.color = Color.blue;
+        int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
+        int sectorColAmount = FlowFieldUtilities.SectorColAmount;
+        float tileSize = FlowFieldUtilities.TileSize;
+        float sectorSize = tileSize * sectorColAmount;
+        float2 fieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition;
         for (int i = 0; i < pickedSectorFlowStarts.Length; i++)
         {
             int pickedSectorFlowStart = pickedSectorFlowStarts[i].FlowStartIndex;
@@ -78,7 +87,7 @@ internal class EditorPathDebugger
             for (int j = pickedSectorFlowStart; j < pickedSectorFlowStart + FlowFieldUtilities.SectorTileAmount; j++)
             {
                 int local1d = (j - 1) % FlowFieldUtilities.SectorTileAmount;
-                float2 debugPos = FlowFieldUtilities.LocalIndexToPos(local1d, pickedSectorIndex, FlowFieldUtilities.SectorMatrixColAmount, FlowFieldUtilities.SectorColAmount, FlowFieldUtilities.TileSize, FlowFieldUtilities.TileSize * FlowFieldUtilities.SectorColAmount);
+                float2 debugPos = FlowFieldUtilities.LocalIndexToPos(local1d, pickedSectorIndex, sectorMatrixColAmount, sectorColAmount, tileSize, sectorSize, fieldGridStartPos);
                 Vector3 debugPos3 = new Vector3(debugPos.x, 0.02f, debugPos.y);
                 if(j >= flowField.Length) { continue; }
                 FlowData flow = flowField[j];
@@ -132,7 +141,7 @@ internal class EditorPathDebugger
                 ActiveWaveFront front = fronts[j];
                 int2 local2d = FlowFieldUtilities.To2D(front.LocalIndex, sectorColAmount);
                 int2 general2d = FlowFieldUtilities.GetGeneral2d(local2d, sector2d, sectorColAmount, FlowFieldUtilities.FieldColAmount);
-                float2 pos = FlowFieldUtilities.IndexToPos(general2d, tileSize);
+                float2 pos = FlowFieldUtilities.IndexToPos(general2d, tileSize, FlowFieldUtilities.FieldGridStartPosition);
                 Vector3 pos3 = new Vector3(pos.x, 0f, pos.y);
                 Gizmos.DrawCube(pos3, new Vector3(0.6f, 0.6f, 0.6f));
             }            
@@ -160,14 +169,14 @@ internal class EditorPathDebugger
             if (travData.HasMark(PortalTraversalMark.DijkstraPicked))
             {
                 Gizmos.color = Color.white;
-                Vector3 portalPos = node.GetPosition(tileSize);
+                Vector3 portalPos = node.GetPosition(tileSize, FlowFieldUtilities.FieldGridStartPosition);
                 Handles.Label(portalPos + new Vector3(0, 0, 0.75f), "d: " + travData.DistanceFromTarget.ToString());
                 Gizmos.DrawSphere(portalPos, 0.25f);
             }
             else if (travData.HasMark(PortalTraversalMark.Reduced))
             {
                 Gizmos.color = Color.black;
-                Vector3 portalPos = node.GetPosition(tileSize);
+                Vector3 portalPos = node.GetPosition(tileSize, FlowFieldUtilities.FieldGridStartPosition);
                 Handles.Label(portalPos + new Vector3(0, 0, 0.75f), "d: " + travData.DistanceFromTarget.ToString());
                 Gizmos.DrawSphere(portalPos, 0.25f);
             }
@@ -194,7 +203,7 @@ internal class EditorPathDebugger
             if (travData.HasMark(PortalTraversalMark.TargetNeighbour))
             {
                 Gizmos.color = Color.magenta;
-                Vector3 portalPos = node.GetPosition(tileSize);
+                Vector3 portalPos = node.GetPosition(tileSize, FlowFieldUtilities.FieldGridStartPosition);
                 Handles.Label(portalPos + new Vector3(0, 0, 0.75f), "d: " + travData.DistanceFromTarget.ToString());
                 Gizmos.DrawSphere(portalPos, 0.25f);
             }
@@ -230,8 +239,8 @@ internal class EditorPathDebugger
                 PortalNode firstportalNode = portalNodes[curPortalIndex];
                 PortalNode secondportalNode = portalNodes[nextPortalIndex];
                 if (firstportalNode.Portal1.Index.R == 0) { continue; }
-                Vector3 secondPorPos = secondportalNode.GetPosition(_tileSize);
-                Vector3 firstPorPos = firstportalNode.GetPosition(_tileSize);
+                Vector3 secondPorPos = secondportalNode.GetPosition(_tileSize, FlowFieldUtilities.FieldGridStartPosition);
+                Vector3 firstPorPos = firstportalNode.GetPosition(_tileSize, FlowFieldUtilities.FieldGridStartPosition);
 
                 Vector3 relativeSecond = secondPorPos - firstPorPos;
                 Vector2 relativeSecond2d = new Vector2(relativeSecond.x, relativeSecond.z);
@@ -280,7 +289,7 @@ internal class EditorPathDebugger
             if (sectorMarks[i] == 0) { continue; }
             int2 sector2d = FlowFieldUtilities.To2D(i, FlowFieldUtilities.SectorMatrixColAmount);
             float sectorSize = FlowFieldUtilities.SectorColAmount * FlowFieldUtilities.TileSize;
-            float2 sectorPos = FlowFieldUtilities.IndexToPos(sector2d, sectorSize);
+            float2 sectorPos = FlowFieldUtilities.IndexToPos(sector2d, sectorSize, FlowFieldUtilities.FieldGridStartPosition);
             float2 botLeft2 = sectorPos + new float2(-sectorSize / 2, -sectorSize / 2);
             float2 topLeft2 = sectorPos + new float2(-sectorSize / 2, sectorSize / 2);
             float2 botRight2 = sectorPos + new float2(sectorSize / 2, -sectorSize / 2);
@@ -318,7 +327,7 @@ internal class EditorPathDebugger
             {
                 int local1d = (j - 1) % sectorTileAmount;
                 int2 general2d = FlowFieldUtilities.GetGeneral2d(local1d, i, FlowFieldUtilities.SectorMatrixColAmount, sectorColAmount);
-                float2 debugPos2 = FlowFieldUtilities.IndexToPos(general2d, _tileSize);
+                float2 debugPos2 = FlowFieldUtilities.IndexToPos(general2d, _tileSize, FlowFieldUtilities.FieldGridStartPosition);
                 float3 debugPos = new float3(debugPos2.x, 0.02f, debugPos2.y);
                 float cost = integrationField[j].Cost;
                 if (cost != float.MaxValue)
@@ -355,7 +364,7 @@ internal class EditorPathDebugger
                     Gizmos.color = Color.white;
                     int local1d = (j - 1) % sectorTileAmount;
                     int2 general2d = FlowFieldUtilities.GetGeneral2d(local1d, i, FlowFieldUtilities.SectorMatrixColAmount, sectorColAmount);
-                    float2 debugPos2 = FlowFieldUtilities.IndexToPos(general2d, _tileSize);
+                    float2 debugPos2 = FlowFieldUtilities.IndexToPos(general2d, _tileSize, FlowFieldUtilities.FieldGridStartPosition);
                     float3 debugPos = new float3(debugPos2.x, 0.02f, debugPos2.y);
                     Gizmos.DrawCube(debugPos, new Vector3(0.3f, 0.3f, 0.3f));
                 }
@@ -364,7 +373,7 @@ internal class EditorPathDebugger
                     Gizmos.color = Color.black;
                     int local1d = (j - 1) % sectorTileAmount;
                     int2 general2d = FlowFieldUtilities.GetGeneral2d(local1d, i, FlowFieldUtilities.SectorMatrixColAmount, sectorColAmount);
-                    float2 debugPos2 = FlowFieldUtilities.IndexToPos(general2d, _tileSize);
+                    float2 debugPos2 = FlowFieldUtilities.IndexToPos(general2d, _tileSize, FlowFieldUtilities.FieldGridStartPosition);
                     float3 debugPos = new float3(debugPos2.x, 0.02f, debugPos2.y);
                     Gizmos.DrawCube(debugPos, new Vector3(0.3f, 0.3f, 0.3f));
                 }
@@ -399,7 +408,7 @@ internal class EditorPathDebugger
             {
                 int local1d = (j - 1) % sectorTileAmount;
                 int2 general2d = FlowFieldUtilities.GetGeneral2d(local1d, i, FlowFieldUtilities.SectorMatrixColAmount, sectorColAmount);
-                float2 debugPos2 = FlowFieldUtilities.IndexToPos(general2d, _tileSize);
+                float2 debugPos2 = FlowFieldUtilities.IndexToPos(general2d, _tileSize, FlowFieldUtilities.FieldGridStartPosition);
                 float3 debugPos = new float3(debugPos2.x, 0.02f, debugPos2.y);
                 if (j >= flowField.Length) { continue; }
                 if(HasLOS(i, local1d))

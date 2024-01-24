@@ -16,6 +16,7 @@ internal struct SourceSectorCalculationJob : IJob
     internal int SectorMatrixRowAmount;
     internal int LOSRange;
     internal int2 TargetIndex;
+    internal float2 FieldGridStartPos;
     [ReadOnly] internal NativeSlice<float2> Sources;
     [ReadOnly] internal NativeArray<ActivePortal> PortalSequence;
     [ReadOnly] internal UnsafeList<int> SectorToPickedTable;
@@ -38,7 +39,7 @@ internal struct SourceSectorCalculationJob : IJob
         for (int i = 0; i < Sources.Length; i++)
         {
             float2 pos = Sources[i];
-            int sector1d = FlowFieldUtilities.PosToSector1D(pos, SectorSize, SectorMatrixColAmount);
+            int sector1d = FlowFieldUtilities.PosToSector1D(pos, SectorSize, SectorMatrixColAmount, FieldGridStartPos);
             if ((SectorStateTable[sector1d] & PathSectorState.IntegrationCalculated) != PathSectorState.IntegrationCalculated)
             {
                 SectorStateTable[sector1d] |= PathSectorState.IntegrationCalculated;

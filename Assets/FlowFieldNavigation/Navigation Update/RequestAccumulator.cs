@@ -49,6 +49,7 @@ internal class RequestAccumulator
             FieldMaxYExcluding = FlowFieldUtilities.FieldMaxYExcluding,
             FieldMinXIncluding = FlowFieldUtilities.FieldMinXIncluding,
             FieldMinYIncluding = FlowFieldUtilities.FieldMinYIncluding,
+            FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
             CostEditOutput = CostEditRequests,
             ObstacleRequests = obstacleRequests,
             NewObstacleKeyListToAdd = outputListToAddObstacleIndicies,
