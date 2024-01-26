@@ -15,6 +15,7 @@ internal class AgentDataContainer
     public List<FlowFieldAgent> Agents;
     public TransformAccessArray AgentTransforms;
     public NativeList<AgentData> AgentDataList;
+    public NativeList<bool> AgentLookingForPathFlags;
     public NativeList<bool> AgentDestinationReachedArray;
     public NativeList<int> AgentFlockIndicies;
     public NativeList<int> AgentRequestedPathIndicies;
@@ -32,6 +33,7 @@ internal class AgentDataContainer
         AgentRequestedPathIndicies = new NativeList<int>(0, Allocator.Persistent);
         AgentFlockIndicies = new NativeList<int>(Allocator.Persistent);
         AgentDestinationReachedArray = new NativeList<bool>(Allocator.Persistent);
+        AgentLookingForPathFlags = new NativeList<bool>(Allocator.Persistent);
     }
     public void DisposeAll()
     {
@@ -72,6 +74,7 @@ internal class AgentDataContainer
         AgentRequestedPathIndicies.Add(-1);
         AgentFlockIndicies.Add(0);
         AgentDestinationReachedArray.Add(false);
+        AgentLookingForPathFlags.Add(false);
     }
     public void Stop(int agentIndex)
     {

@@ -38,6 +38,7 @@ public class EditorDebuggingController : MonoBehaviour
     [SerializeField] bool _debugAgentsHoldingGround;
     [SerializeField] bool _debugAgentSeperationRadius;
     [SerializeField] bool _debugAvoidanceDirections;
+    [SerializeField] bool _debugAgentPathIndicies;
     [Header("Spatial Hash Grid Debugger")]
     [SerializeField] int _gridIndex;
     [SerializeField] bool _debugSpatialHashGrid;
@@ -58,6 +59,8 @@ public class EditorDebuggingController : MonoBehaviour
     EditorSpatialHashGridDebugger _spatialHashGridDebugger;
     EditorIslandDebugger _islandDebugger;
     EditorHeightMeshDebugger _heightMeshDebugger;
+    EditorAgentPathIndexDebugger _agentPathIndexDebugger;
+    
     private void Start()
     {
         _sectorDebugger = new EditorSectorDebugger(_pathfindingManager);
@@ -71,6 +74,7 @@ public class EditorDebuggingController : MonoBehaviour
         _spatialHashGridDebugger = new EditorSpatialHashGridDebugger(_pathfindingManager);
         _islandDebugger = new EditorIslandDebugger(_pathfindingManager);
         _heightMeshDebugger = new EditorHeightMeshDebugger(_pathfindingManager);
+        _agentPathIndexDebugger = new EditorAgentPathIndexDebugger(_pathfindingManager);
 
 #if UNITY_STANDALONE && !UNITY_EDITOR
 _debuggingEnabled = false;
@@ -111,6 +115,7 @@ _debuggingEnabled = false;
             if (_debugDynamicAreaIntegration && _pathDebugger != null) { _pathDebugger.DebugDynamicAreaIntegration(_agentToDebug); }
             if (_debugDynamicAreaFlow && _pathDebugger != null) { _pathDebugger.DebugDynamicAreaFlow(_agentToDebug); }
             if (_debugAroundAgent && _spatialHashGridDebugger != null) { _spatialHashGridDebugger.DebugAgent(_agentToDebug, _gridIndex, _checkRange); }
+            if (_debugAgentPathIndicies && _agentPathIndexDebugger != null) { _agentPathIndexDebugger.Debug(_agentToDebug); }
         }
 
         if (_debugAgentDirections && _agentDirectionDebugger != null) { _agentDirectionDebugger.Debug(); }

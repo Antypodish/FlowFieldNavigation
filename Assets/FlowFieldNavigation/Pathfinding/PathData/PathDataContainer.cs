@@ -13,7 +13,6 @@ internal class PathDataContainer
     internal NativeList<float> ExposedPathReachDistanceCheckRanges;
     internal NativeList<PathState> ExposedPathStateList;
     internal NativeList<bool> ExposedPathAgentStopFlagList;
-
     internal List<PathfindingInternalData> PathfindingInternalDataList;
     internal NativeList<PathLocationData> PathLocationDataList;
     internal NativeList<PathFlowData> PathFlowDataList;

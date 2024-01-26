@@ -29,7 +29,6 @@ internal struct PathRoutineDataCalculationJob : IJobParallelFor
     [ReadOnly] internal NativeArray<UnsafeListReadOnly<byte>> CostFields;
     internal NativeArray<PathDestinationData> PathDestinationDataArray;
     internal NativeArray<PathRoutineData> PathOrganizationDataArray;
-    internal NativeArray<UnsafeList<PathSectorState>> PathSectorStateTables;
 
     public void Execute(int index)
     {

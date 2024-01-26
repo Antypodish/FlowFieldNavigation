@@ -3,6 +3,7 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Burst;
 using Unity.Mathematics;
+using System.Collections.Generic;
 
 [BurstCompile]
 internal struct PathRequestIslandDerivationJob : IJob
@@ -25,7 +26,6 @@ internal struct PathRequestIslandDerivationJob : IJob
             islandFieldsOfDerivedPathRequests[i] = new UnsafeList<int>(0, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
         }
 
-
         //SET ISLAND DERIVATIONS FOR EACH REQUEST
         int finalPathRequestCount = 0;
         for (int i = 0; i < AgentDataArray.Length; i++)
@@ -38,12 +38,6 @@ internal struct PathRequestIslandDerivationJob : IJob
             float2 agentPos = new float2(agentData.Position.x, agentData.Position.z);
             int offset = FlowFieldUtilities.RadiusToOffset(agentRadius, TileSize);
             int island = IslandFieldProcesorsPerOffset[offset].GetIsland(agentPos);
-            if(island == int.MaxValue)
-            {
-                NewAgentPathIndicies[i] = -1;
-                continue;
-            }
-
             UnsafeList<int> pointedRequestIslands = islandFieldsOfDerivedPathRequests[pathRequestIndex];
             if(!Contains(island, pointedRequestIslands))
             {
@@ -52,7 +46,6 @@ internal struct PathRequestIslandDerivationJob : IJob
                 islandFieldsOfDerivedPathRequests[pathRequestIndex] = pointedRequestIslands;
             }
         }
-
         FinalPathRequests.Length = finalPathRequestCount;
 
         int initializedFinalRequestCount = 0;
@@ -107,6 +100,7 @@ internal struct PathRequestIslandDerivationJob : IJob
             islandFieldsOfDerivedPathRequests[i].Dispose();
         }
         islandFieldsOfDerivedPathRequests.Dispose();
+        
     }
 
     bool Contains(int islandFieldIndex, UnsafeList<int> list)
