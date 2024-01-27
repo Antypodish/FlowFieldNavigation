@@ -2,9 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Mathematics;
+using Unity.Collections;
+using Unity.Jobs;
+using Unity.Burst;
+using System.Diagnostics;
+
 public class test : MonoBehaviour
 {
-    // Start is called before the first frame update
+    public int buffercnt;
     void Start()
     {
         
@@ -12,48 +17,154 @@ public class test : MonoBehaviour
 
     // Update is called once per frame
     void Update()
-    {
-        
-    }
-    private void OnDrawGizmos()
     {/*
-        Vector3[] verts = gameObject.GetComponent<MeshFilter>().mesh.vertices;
-        int[] trigs = gameObject.GetComponent<MeshFilter>().mesh.triangles;
-        float3 pos = gameObject.transform.position;
-        float3 scale = gameObject.transform.localScale;
-        quaternion rotation = transform.rotation;
+        NativeArray<int> d1 = new NativeArray<int>(buffercnt * 4, Allocator.Persistent);
+        NativeArray<float> d2 = new NativeArray<float>(buffercnt * 4, Allocator.Persistent);
+        NativeArray<int> d3 = new NativeArray<int>(buffercnt * 4, Allocator.Persistent);
+        NativeArray<float> d4 = new NativeArray<float>(buffercnt * 4, Allocator.Persistent);
+        NativeArray<int> d5 = new NativeArray<int>(buffercnt * 4, Allocator.Persistent);
 
-        Gizmos.color = Color.blue;
-        for (int i = 0; i < trigs.Length; i += 3)
+        NativeArray<normalStr> normalbuff = new NativeArray<normalStr>(buffercnt * 4, Allocator.Persistent);
+        for(int i = 0; i < buffercnt * 4; i++)
         {
-            float3 v1 = verts[trigs[i]];
-            float3 v2 = verts[trigs[i + 1]];
-            float3 v3 = verts[trigs[i + 2]];
-            v1 = pos + math.rotate(rotation, v1 * scale);
-            v2 = pos + math.rotate(rotation, v2 * scale);
-            v3 = pos + math.rotate(rotation, v3 * scale);
-            float3 normal = math.cross(v3 - v2, v1 - v2);
+            d1[i] = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+            d2[i] = UnityEngine.Random.Range(float.MinValue, float.MaxValue);
+            d3[i] = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+            d4[i] = UnityEngine.Random.Range(float.MinValue, float.MaxValue);
+            d5[i] = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
 
-            if(math.dot(normal, new float3(0, 1f, 0)) > 0)
+            normalbuff[i] = new normalStr()
             {
-                Gizmos.DrawSphere(v1, 0.2f);
-                Gizmos.DrawSphere(v2, 0.2f);
-                Gizmos.DrawSphere(v3, 0.2f);
-                Gizmos.color = Color.red;
-                float3 normalStart = (v1 + v2 + v3) / 3;
-                normal *= 0.2f;
-                float3 normalEnd = normalStart + normal;
-                Gizmos.DrawLine(normalStart, normalEnd);
-            }
-            
-            Gizmos.color = Color.red;
-            float3 normalStart = (v1 + v2 + v3) / 3;
-            float3 normalEnd = normalStart + normal;
-            Gizmos.DrawLine(normalStart, normalEnd);
+                d1 = d1[i],
+                d2 = d2[i],
+                d3 = d3[i],
+                d4 = d4[i],
+                d5 = d5[i],
+            };
+        }
 
-            Gizmos.DrawSphere(normalEnd, 0.2f);
-            UnityEngine.Debug.Log();
-            
-        }*/
+        normaljob nj = new normaljob()
+        {
+            buff = normalbuff,
+            result = new NativeArray<float>(buffercnt * 4, Allocator.Persistent),
+        };
+        Stopwatch sw = new Stopwatch();
+        JobHandle nh = nj.Schedule();
+        sw.Start();
+        nh.Complete();
+        sw.Stop();
+        UnityEngine.Debug.Log("normal: " + sw.Elapsed.TotalMilliseconds);
+        simdjob sj = new simdjob()
+        {
+            d1 = d1,
+            d2 = d2,
+            d3 = d3,
+            d4 = d4,
+            d5 = d5,
+            result = new NativeArray<float>(buffercnt * 4, Allocator.Persistent),
+        };
+        sw = new Stopwatch();
+        JobHandle sh = sj.Schedule();
+        sw.Start();
+        sh.Complete();
+        sw.Stop();
+        UnityEngine.Debug.Log("simd: " + sw.Elapsed.TotalMilliseconds);
+        d1.Dispose();
+        d2.Dispose();
+        d3.Dispose();
+        d4.Dispose();
+        d5.Dispose();
+        normalbuff.Dispose();
+        nj.result.Dispose();
+        sj.result.Dispose();*/
     }
+
+
+}
+[BurstCompile]
+struct normaljob : IJob
+{
+    [ReadOnly] public NativeArray<normalStr> buff;
+
+    [WriteOnly] public NativeArray<float> result;
+    public void Execute()
+    {
+        for(int i = 0; i < buff.Length; i++)
+        {
+            normalStr normal = buff[i];
+            float res = (normal.d1 * normal.d2 + normal.d3 * normal.d4) / normal.d5;
+            result[i] = res;
+        }
+    }
+}
+[BurstCompile]
+struct simdjob : IJob
+{
+    [ReadOnly] public NativeArray<int> d1;
+    [ReadOnly] public NativeArray<float> d2;
+    [ReadOnly] public NativeArray<int> d3;
+    [ReadOnly] public NativeArray<float> d4;
+    [ReadOnly] public NativeArray<int> d5;
+
+    [WriteOnly] public NativeArray<float> result;
+
+    public void Execute()
+    {
+        for (int i = 0; i < d1.Length; i+=4)
+        {
+            int4 data1 = new int4()
+            {
+                x = d1[i],
+                y = d1[i + 1],
+                z = d1[i + 2],
+                w = d1[i + 3],
+            };
+            float4 data2 = new float4()
+            {
+                x = d2[i],
+                y = d2[i + 1],
+                z = d2[i + 2],
+                w = d2[i + 3],
+            };
+            float4 res1 = (data1 * data2);
+            int4 data3 = new int4()
+            {
+                x = d3[i],
+                y = d3[i + 1],
+                z = d3[i + 2],
+                w = d3[i + 3],
+            };
+            float4 data4 = new float4()
+            {
+                x = d4[i],
+                y = d4[i + 1],
+                z = d4[i + 2],
+                w = d4[i + 3],
+            };
+            float4 res2 = (data3 * data4);
+            int4 data5 = new int4()
+            {
+                x = d5[i],
+                y = d5[i + 1],
+                z = d5[i + 2],
+                w = d5[i + 3],
+            };
+
+            float4 res = (res1 + res2) / data5;
+            result[i] = res.x;
+            result[i + 1] = res.y;
+            result[i + 1] = res.z;
+            result[i + 1] = res.w;
+        }
+
+    }
+}
+
+public struct normalStr
+{
+    public int d1;
+    public float d2;
+    public int d3;
+    public float d4;
+    public int d5;
 }

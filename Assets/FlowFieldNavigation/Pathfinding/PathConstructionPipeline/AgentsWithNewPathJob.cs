@@ -4,17 +4,17 @@ using Unity.Jobs;
 using Unity.Mathematics;
 
 [BurstCompile]
-internal struct PathRequestedAgentSubmissionJob : IJob
+internal struct AgentsWithNewPathJob : IJob
 {
     [ReadOnly] public NativeArray<int> AgentNewPathIndicies;
-    [WriteOnly] public NativeList<int> PathRequestedAgents;
+    [WriteOnly] public NativeList<int> AgentsWithNewPath;
     public void Execute()
     {
         for(int i = 0; i <AgentNewPathIndicies.Length; i++)
         {
             if (AgentNewPathIndicies[i] != -1)
             {
-                PathRequestedAgents.Add(i);
+                AgentsWithNewPath.Add(i);
             }
         }
     }

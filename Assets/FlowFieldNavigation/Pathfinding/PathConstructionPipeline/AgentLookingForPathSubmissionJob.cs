@@ -2,8 +2,10 @@
 using Unity.Collections;
 using Unity.Mathematics;
 using Unity.Burst;
+using System;
+
 [BurstCompile]
-internal struct AgentLookingForPathSubmissionJob : IJobParallelFor
+internal struct AgentLookingForPathSubmissionJob : IJob
 {
     internal float TileSize;
     internal int SectorColAmount;
@@ -12,25 +14,44 @@ internal struct AgentLookingForPathSubmissionJob : IJobParallelFor
     internal float2 FieldGridStartPos;
     [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
     [ReadOnly] internal NativeArray<UnsafeListReadOnly<byte>> CostFields;
+    [ReadOnly] internal NativeList<PathRequest> InitialPathRequests;
     internal NativeArray<int> AgentNewPathIndicies;
-    internal NativeArray<bool> AgentLookingForPathFlags;
-    public void Execute(int index)
+    internal NativeList<int> AgentsLookingForPath;
+    internal NativeList<PathRequestRecord> AgentsLookingForPathRequestRecords;
+    public void Execute()
     {
-        int newPathIndex = AgentNewPathIndicies[index];
-        if(newPathIndex == -1) { return; }
-
-        AgentData agentData = AgentDataArray[index];
-        float2 agentPos2 = new float2(agentData.Position.x, agentData.Position.z);
-        int agentOffset = FlowFieldUtilities.RadiusToOffset(agentData.Radius, TileSize);
-        int2 agentIndex = FlowFieldUtilities.PosTo2D(agentPos2, TileSize, FieldGridStartPos);
-        LocalIndex1d agentLocal = FlowFieldUtilities.GetLocal1D(agentIndex, SectorColAmount, SectorMatrixColAmount);
-        byte agentIndexCost = CostFields[agentOffset][agentLocal.sector * SectorTileAmount + agentLocal.index];
-        if(agentIndexCost == byte.MaxValue)
+        NativeArray<PathRequest> intitialPathRequestsAsArra = InitialPathRequests;
+        //Unsubmit
+        for(int i = AgentsLookingForPath.Length - 1; i >= 0; i--)
         {
-            AgentLookingForPathFlags[index] = true;
-            AgentNewPathIndicies[index] = -1;
-            return;
+            int agentIndex = AgentsLookingForPath[i];
+            int newPathIndex = AgentNewPathIndicies[agentIndex];
+            if (newPathIndex == -1) { continue; }
+            AgentsLookingForPath.RemoveAtSwapBack(i);
+            AgentsLookingForPathRequestRecords.RemoveAtSwapBack(i);
         }
-        AgentLookingForPathFlags[index] = false;
+
+        //Submit
+        for(int index = 0; index < AgentNewPathIndicies.Length; index++)
+        {
+            int newPathIndex = AgentNewPathIndicies[index];
+            if (newPathIndex == -1) { continue; }
+
+            AgentData agentData = AgentDataArray[index];
+            float2 agentPos2 = new float2(agentData.Position.x, agentData.Position.z);
+            int agentOffset = FlowFieldUtilities.RadiusToOffset(agentData.Radius, TileSize);
+            int2 agentIndex = FlowFieldUtilities.PosTo2D(agentPos2, TileSize, FieldGridStartPos);
+            LocalIndex1d agentLocal = FlowFieldUtilities.GetLocal1D(agentIndex, SectorColAmount, SectorMatrixColAmount);
+            byte agentIndexCost = CostFields[agentOffset][agentLocal.sector * SectorTileAmount + agentLocal.index];
+            if (agentIndexCost == byte.MaxValue)
+            {
+                AgentsLookingForPath.Add(index);
+                PathRequest pointedPathRequest = intitialPathRequestsAsArra[newPathIndex];
+                PathRequestRecord lookingForPathDestination = new PathRequestRecord(pointedPathRequest);
+                AgentsLookingForPathRequestRecords.Add(lookingForPathDestination);
+                AgentNewPathIndicies[index] = -1;
+                continue;
+            }
+        }
     }
 }

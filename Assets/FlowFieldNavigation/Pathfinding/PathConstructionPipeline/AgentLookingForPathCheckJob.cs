@@ -21,14 +21,16 @@ internal struct AgentLookingForPathCheckJob : IJob
     [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
     internal NativeArray<int> PathSubscriberCounts;
     internal NativeList<PathRequest> InitialPathRequests;
-    internal NativeArray<bool> AgentLookingForPathFlags;
+    internal NativeList<int> AgentsLookingForPath;
+    internal NativeList<PathRequestRecord> AgentsLookingForPathRequestRecords;
     internal NativeArray<int> AgentCurPathIndicies;
+    internal NativeArray<int> AgentNewPathIndicies;
     public void Execute()
     {
-        for(int agentIndex = 0; agentIndex < AgentLookingForPathFlags.Length; agentIndex++)
+        for(int i = AgentsLookingForPath.Length -1; i >= 0; i--)
         {
-            bool flag = AgentLookingForPathFlags[agentIndex];
-            if (!flag) { continue; }
+            int agentIndex = AgentsLookingForPath[i];
+            PathRequestRecord requestRecord = AgentsLookingForPathRequestRecords[i];
 
             AgentData agentData = AgentDataArray[agentIndex];
             float2 agentPos2 = new float2(agentData.Position.x, agentData.Position.z);
@@ -36,32 +38,50 @@ internal struct AgentLookingForPathCheckJob : IJob
             int2 agentIndex2d = FlowFieldUtilities.PosTo2D(agentPos2, TileSize, FieldGridStartPos);
             LocalIndex1d agentLocal = FlowFieldUtilities.GetLocal1D(agentIndex2d, SectorColAmount, SectorMatrixColAmount);
             byte agentIndexCost = CostFields[agentOffset][agentLocal.sector * SectorTileAmount + agentLocal.index];
-            if(agentIndexCost == byte.MaxValue) { continue; }
+            if (agentIndexCost == byte.MaxValue) { continue; }
 
             IslandFieldProcessor islandFieldProcessor = IslandFieldProcessors[agentOffset];
             int agentIsland = islandFieldProcessor.GetIsland(agentIndex2d);
             int agentFlock = AgentFlockIndicies[agentIndex];
 
-            for(int pathIndex = 0; pathIndex < PathStateArray.Length; pathIndex++)
+            bool existingPathSuccesfull = TryFindingExistingPath(agentIndex, agentFlock, agentOffset, agentIsland, islandFieldProcessor);
+            if (!existingPathSuccesfull)
             {
-                if (PathStateArray[pathIndex] == PathState.Removed) { continue; }
-                int pathFlock = PathFlockIndicies[pathIndex];
-                if(pathFlock != agentFlock) { continue; }
-                PathDestinationData destinationData = PathDestinationDataArray[pathIndex];
-                if(agentOffset != destinationData.Offset) { continue; }
-                int destinationIsland = islandFieldProcessor.GetIsland(destinationData.Destination);
-                if(destinationIsland != agentIsland) { continue; }
-                PathRoutineData routineData = PathRoutineDataArray[pathIndex];
-                if(routineData.ReconstructionRequestIndex != -1) { continue; }
-
-                PathSubscriberCounts[pathIndex]++;
-                AgentCurPathIndicies[agentIndex] = pathIndex;
-                AgentLookingForPathFlags[agentIndex] = false;
-                break;
+                PathRequest newRequest = new PathRequest(requestRecord);
+                AgentNewPathIndicies[agentIndex] = InitialPathRequests.Length;
+                InitialPathRequests.Add(newRequest);
             }
+            AgentsLookingForPath.RemoveAtSwapBack(i);
+            AgentsLookingForPathRequestRecords.RemoveAtSwapBack(i);
         }
     }
+
+    bool TryFindingExistingPath(int agentIndex, int agentFlock, int agentOffset, int agentIsland, IslandFieldProcessor islandFieldProcessor)
+    {
+        for (int pathIndex = 0; pathIndex < PathStateArray.Length; pathIndex++)
+        {
+            if (PathStateArray[pathIndex] == PathState.Removed) { continue; }
+            int pathFlock = PathFlockIndicies[pathIndex];
+            if (pathFlock != agentFlock) { continue; }
+            PathDestinationData destinationData = PathDestinationDataArray[pathIndex];
+            if (agentOffset != destinationData.Offset) { continue; }
+            int destinationIsland = islandFieldProcessor.GetIsland(destinationData.Destination);
+            if (destinationIsland != agentIsland) { continue; }
+            PathRoutineData routineData = PathRoutineDataArray[pathIndex];
+            if (routineData.ReconstructionRequestIndex != -1)
+            {
+                AgentNewPathIndicies[agentIndex] = routineData.ReconstructionRequestIndex;
+            }
+            else
+            {
+                PathSubscriberCounts[pathIndex]++;
+                AgentCurPathIndicies[agentIndex] = pathIndex;
+            }
+            return true;
+        }
+        return false;
+    }
+
 }
-//Agents cant do anything if there is not an existing path which conforms to their requirements
-//Cannot handle paths being reconstructed at the moment
+//Requested paths in case of !existingPathSuccesfull do not consider other agents. Each agent request a unique one. Make them consider each other.
 //Does not handle dynamic paths

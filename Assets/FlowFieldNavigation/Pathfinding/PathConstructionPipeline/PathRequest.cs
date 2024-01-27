@@ -33,6 +33,17 @@ internal struct PathRequest
         FlockIndex = 0;
         ReconstructionFlag = false;
     }
+    internal PathRequest(PathRequestRecord requestRecord)
+    {
+        Destination = requestRecord.Destination;
+        Type = requestRecord.Type;
+        TargetAgentIndex = requestRecord.TargetAgent;
+        DerivedRequestCount = 0;
+        DerivedRequestStartIndex = 0;
+        OffsetMask = 0;
+        FlockIndex = 0;
+        ReconstructionFlag = false;
+    }
 }
 
 internal struct OffsetDerivedPathRequest
