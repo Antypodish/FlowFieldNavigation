@@ -221,6 +221,7 @@ internal class MovementManager
             SectorRowAmount = FlowFieldUtilities.SectorRowAmount,
             HalfTileSize = FlowFieldUtilities.TileSize / 2,
             FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
+            SectorMatrixTileAmont = FlowFieldUtilities.SectorMatrixTileAmount,
             AgentMovementData = AgentMovementDataList,
             AgentPositionChangeBuffer = AgentPositionChangeBuffer,
             CostFieldEachOffset = costFieldCosts,
