@@ -25,6 +25,7 @@ internal struct AgentLookingForPathCheckJob : IJob
     internal NativeList<PathRequestRecord> AgentsLookingForPathRequestRecords;
     internal NativeArray<int> AgentCurPathIndicies;
     internal NativeArray<int> AgentNewPathIndicies;
+    internal NativeHashMap<int, int> FlockIndexToPathRequestIndex;
     public void Execute()
     {
         for(int i = AgentsLookingForPath.Length -1; i >= 0; i--)
@@ -47,9 +48,18 @@ internal struct AgentLookingForPathCheckJob : IJob
             bool existingPathSuccesfull = TryFindingExistingPath(agentIndex, agentFlock, agentOffset, agentIsland, islandFieldProcessor);
             if (!existingPathSuccesfull)
             {
-                PathRequest newRequest = new PathRequest(requestRecord);
-                AgentNewPathIndicies[agentIndex] = InitialPathRequests.Length;
-                InitialPathRequests.Add(newRequest);
+                if(FlockIndexToPathRequestIndex.TryGetValue(agentFlock, out int pathRequestIndex))
+                {
+                    AgentNewPathIndicies[agentIndex] = pathRequestIndex;
+                }
+                else
+                {
+                    int newPathRequestIndex = InitialPathRequests.Length;
+                    PathRequest newRequest = new PathRequest(requestRecord);
+                    AgentNewPathIndicies[agentIndex] = newPathRequestIndex;
+                    InitialPathRequests.Add(newRequest);
+                    FlockIndexToPathRequestIndex.Add(agentFlock, newPathRequestIndex);
+                }
             }
             AgentsLookingForPath.RemoveAtSwapBack(i);
             AgentsLookingForPathRequestRecords.RemoveAtSwapBack(i);
@@ -68,20 +78,14 @@ internal struct AgentLookingForPathCheckJob : IJob
             int destinationIsland = islandFieldProcessor.GetIsland(destinationData.Destination);
             if (destinationIsland != agentIsland) { continue; }
             PathRoutineData routineData = PathRoutineDataArray[pathIndex];
-            if (routineData.ReconstructionRequestIndex != -1)
-            {
-                AgentNewPathIndicies[agentIndex] = routineData.ReconstructionRequestIndex;
-            }
-            else
-            {
-                PathSubscriberCounts[pathIndex]++;
-                AgentCurPathIndicies[agentIndex] = pathIndex;
-            }
+            if (routineData.PathReconstructionFlag) { continue; }
+            PathSubscriberCounts[pathIndex]++;
+            AgentCurPathIndicies[agentIndex] = pathIndex;
             return true;
         }
         return false;
     }
 
 }
-//Requested paths in case of !existingPathSuccesfull do not consider other agents. Each agent request a unique one. Make them consider each other.
 //Does not handle dynamic paths
+//Very naive approach O(m*n). Searches all paths for each agent in the list. Make it O(n).

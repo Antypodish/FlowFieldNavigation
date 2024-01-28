@@ -9,10 +9,11 @@ internal struct CurrentPathReconstructionDeterminationJob : IJob
     [ReadOnly] internal NativeArray<PathState> PathStateArray;
     [ReadOnly] internal NativeArray<PathDestinationData> PathDestinationDataArray;
     [ReadOnly] internal NativeArray<int> PathFlockIndexArray;
-    internal NativeArray<PathRoutineData> PathRoutineDataArray;
-    internal NativeArray<int> AgentNewPathIndicies;
     [ReadOnly] internal NativeArray<int> AgentCurPathIndicies;
+    [WriteOnly] internal NativeArray<int> AgentNewPathIndicies;
+    internal NativeArray<PathRoutineData> PathRoutineDataArray;
     internal NativeList<PathRequest> PathRequests;
+    internal NativeHashMap<int, int> FlockIndexToPathRequestIndex;
     public void Execute()
     {
         //CHECK IF DYNAMIC PATH TARGETS ARE MOVED
@@ -21,19 +22,22 @@ internal struct CurrentPathReconstructionDeterminationJob : IJob
             PathState curPathState = PathStateArray[i];
             PathDestinationData curDestinationData = PathDestinationDataArray[i];
             PathRoutineData curRoutineData = PathRoutineDataArray[i];
+            int pathFlockIndex = PathFlockIndexArray[i];
             bool shouldNotConsider = curPathState == PathState.Removed;
             bool shouldNotReconstruct = curRoutineData.DestinationState != DynamicDestinationState.OutOfReach && (curRoutineData.Task & PathTask.Reconstruct) != PathTask.Reconstruct;
             if (shouldNotConsider || shouldNotReconstruct) { continue; }
-            curRoutineData.ReconstructionRequestIndex = PathRequests.Length;
+            curRoutineData.PathReconstructionFlag = true;
             PathRoutineDataArray[i] = curRoutineData;
 
+            if (FlockIndexToPathRequestIndex.ContainsKey(pathFlockIndex)) { continue; }
+            FlockIndexToPathRequestIndex.Add(pathFlockIndex, PathRequests.Length);
             if(curDestinationData.DestinationType == DestinationType.DynamicDestination)
             {
                 PathRequest reconReq = new PathRequest(curDestinationData.TargetAgentIndex);
                 float3 targetAgentPos = AgentDataArray[reconReq.TargetAgentIndex].Position;
                 float2 targetAgentPos2 = new float2(targetAgentPos.x, targetAgentPos.z);
                 reconReq.Destination = targetAgentPos2;
-                reconReq.FlockIndex = PathFlockIndexArray[i];
+                reconReq.FlockIndex = pathFlockIndex;
                 reconReq.ReconstructionFlag = true;
                 PathRequests.Add(reconReq);
             }
@@ -53,8 +57,12 @@ internal struct CurrentPathReconstructionDeterminationJob : IJob
             if (curPathIndex == -1) { continue; }
             PathRoutineData curRoutineData = PathRoutineDataArray[curPathIndex];
             PathState curPathState = PathStateArray[curPathIndex];
-            if (curPathState == PathState.Removed || curRoutineData.ReconstructionRequestIndex == -1) { continue; }
-            AgentNewPathIndicies[i] = curRoutineData.ReconstructionRequestIndex;
+            if (curPathState == PathState.Removed || !curRoutineData.PathReconstructionFlag) { continue; }
+            int pahtFlockIndex = PathFlockIndexArray[curPathIndex];
+            if(FlockIndexToPathRequestIndex.TryGetValue(pahtFlockIndex, out int pathRequestIndex))
+            {
+                AgentNewPathIndicies[i] = pathRequestIndex;
+            }
         }
     }
 }

@@ -10,7 +10,7 @@ internal struct PathRoutineData
     internal int FlowRequestSourceCount;
     internal int PathAdditionSourceStart;
     internal int PathAdditionSourceCount;
-    internal int ReconstructionRequestIndex;
+    internal bool PathReconstructionFlag;
 }
 [Flags]
 internal enum PathTask : byte

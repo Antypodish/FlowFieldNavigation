@@ -20,7 +20,7 @@ internal struct PathRoutineDataResetJob : IJob
                 FlowRequestSourceStart = 0,
                 PathAdditionSourceCount = 0,
                 PathAdditionSourceStart = 0,
-                ReconstructionRequestIndex = -1,
+                PathReconstructionFlag = false,
                 Task = 0,
             };
         }

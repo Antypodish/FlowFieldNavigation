@@ -32,6 +32,7 @@ internal class PathConstructionPipeline
     NativeList<int> _agentIndiciesToSubNewPath;
     NativeList<int> _agentsLookingForPath;
     NativeList<PathRequestRecord> _agentsLookingForPathRecords;
+    NativeHashMap<int, int> _flockIndexToPathRequestIndex;
     List<JobHandle> _pathfindingTaskOrganizationHandle;
     internal PathConstructionPipeline(PathfindingManager pathfindingManager)
     {
@@ -59,6 +60,7 @@ internal class PathConstructionPipeline
         _agentIndiciesToSubNewPath = new NativeList<int>(Allocator.Persistent);
         _agentsLookingForPath = new NativeList<int>(Allocator.Persistent);
         _agentsLookingForPathRecords = new NativeList<PathRequestRecord>(Allocator.Persistent);
+        _flockIndexToPathRequestIndex = new NativeHashMap<int, int>(0, Allocator.Persistent);
     }
     internal void DisposeAll()
     {
@@ -78,6 +80,7 @@ internal class PathConstructionPipeline
         _agentIndiciesToUnsubCurPath.Dispose();
         _agentsLookingForPath.Dispose();
         _agentsLookingForPathRecords.Dispose();
+        _flockIndexToPathRequestIndex.Dispose();
         _portalTravesalScheduler.DisposeAll();
         _requestedSectorCalculationScheduler.DisposeAll();
         _additionPortalTraversalScheduler.DisposeAll();
@@ -106,6 +109,7 @@ internal class PathConstructionPipeline
         _newPathRequestedAgentIndicies.Clear();
         _agentIndiciesToUnsubCurPath.Clear();
         _agentIndiciesToSubNewPath.Clear();
+        _flockIndexToPathRequestIndex.Clear();
         _pathRequestSourceCount.Value = 0;
         _currentPathSourceCount.Value = 0;
 
@@ -226,6 +230,7 @@ internal class PathConstructionPipeline
             PathStateArray = pathStateArray,
             PathDestinationDataArray = pathDestinationDataArray,
             PathRoutineDataArray = pathRoutineDataArray,
+            FlockIndexToPathRequestIndex = _flockIndexToPathRequestIndex,
         };
         JobHandle reconstructionDeterminationHandle = reconstructionDetermination.Schedule(JobHandle.CombineDependencies(routineDataCalculationHandle, agentTaskCleaningHandle, selfTargetingFixHandle));
         if (FlowFieldUtilities.DebugMode) { reconstructionDeterminationHandle.Complete(); }
@@ -299,6 +304,7 @@ internal class PathConstructionPipeline
             PathRoutineDataArray = pathRoutineDataArray,
             PathSubscriberCounts = pathSubscriberCountArray,
             AgentNewPathIndicies = AgentNewPathIndicies,
+            FlockIndexToPathRequestIndex = _flockIndexToPathRequestIndex,
         };
         JobHandle agentLookingForPathCheckHandle = agentLookingForPathCheck.Schedule(agentLookingForPathSubmissionHandle);
         if (FlowFieldUtilities.DebugMode) { agentLookingForPathCheckHandle.Complete(); }

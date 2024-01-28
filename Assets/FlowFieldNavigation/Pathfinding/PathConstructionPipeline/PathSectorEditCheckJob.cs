@@ -26,7 +26,7 @@ internal struct PathSectorEditCheckJob : IJobParallelFor
                 FlowRequestSourceStart = routineData.FlowRequestSourceStart,
                 PathAdditionSourceCount = routineData.PathAdditionSourceCount,
                 PathAdditionSourceStart = routineData.PathAdditionSourceStart,
-                ReconstructionRequestIndex = routineData.ReconstructionRequestIndex,
+                PathReconstructionFlag = routineData.PathReconstructionFlag,
                 Task = routineData.Task | PathTask.Reconstruct,
             };
         }
