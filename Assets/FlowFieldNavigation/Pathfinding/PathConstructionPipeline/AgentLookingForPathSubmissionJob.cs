@@ -18,17 +18,36 @@ internal struct AgentLookingForPathSubmissionJob : IJob
     internal NativeArray<int> AgentNewPathIndicies;
     internal NativeList<int> AgentsLookingForPath;
     internal NativeList<PathRequestRecord> AgentsLookingForPathRequestRecords;
+    internal NativeList<PathRequestRecord> ReadyAgentsLookingForPathRequestRecords;
+    internal NativeList<int> ReadyAgentsLookingForPath;
     public void Execute()
     {
-        NativeArray<PathRequest> intitialPathRequestsAsArra = InitialPathRequests;
+        NativeArray<PathRequest> intitialPathRequestsAsArray = InitialPathRequests;
         //Unsubmit
         for(int i = AgentsLookingForPath.Length - 1; i >= 0; i--)
         {
             int agentIndex = AgentsLookingForPath[i];
             int newPathIndex = AgentNewPathIndicies[agentIndex];
-            if (newPathIndex == -1) { continue; }
-            AgentsLookingForPath.RemoveAtSwapBack(i);
-            AgentsLookingForPathRequestRecords.RemoveAtSwapBack(i);
+            if (newPathIndex != -1)
+            {
+                AgentsLookingForPath.RemoveAtSwapBack(i);
+                AgentsLookingForPathRequestRecords.RemoveAtSwapBack(i);
+                continue;
+            }
+            AgentData agentData = AgentDataArray[agentIndex];
+            float2 agentPos2 = new float2(agentData.Position.x, agentData.Position.z);
+            int agentOffset = FlowFieldUtilities.RadiusToOffset(agentData.Radius, TileSize);
+            int2 agentIndex2d = FlowFieldUtilities.PosTo2D(agentPos2, TileSize, FieldGridStartPos);
+            LocalIndex1d agentLocal = FlowFieldUtilities.GetLocal1D(agentIndex2d, SectorColAmount, SectorMatrixColAmount);
+            byte agentIndexCost = CostFields[agentOffset][agentLocal.sector * SectorTileAmount + agentLocal.index];
+            if(agentIndexCost != byte.MaxValue)
+            {
+                PathRequestRecord lookingForPathDestination = AgentsLookingForPathRequestRecords[i];
+                ReadyAgentsLookingForPath.Add(agentIndex);
+                ReadyAgentsLookingForPathRequestRecords.Add(lookingForPathDestination);
+                AgentsLookingForPath.RemoveAtSwapBack(i);
+                AgentsLookingForPathRequestRecords.RemoveAtSwapBack(i);
+            }
         }
 
         //Submit
@@ -46,7 +65,7 @@ internal struct AgentLookingForPathSubmissionJob : IJob
             if (agentIndexCost == byte.MaxValue)
             {
                 AgentsLookingForPath.Add(index);
-                PathRequest pointedPathRequest = intitialPathRequestsAsArra[newPathIndex];
+                PathRequest pointedPathRequest = intitialPathRequestsAsArray[newPathIndex];
                 PathRequestRecord lookingForPathDestination = new PathRequestRecord(pointedPathRequest);
                 AgentsLookingForPathRequestRecords.Add(lookingForPathDestination);
                 AgentNewPathIndicies[index] = -1;

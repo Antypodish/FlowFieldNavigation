@@ -1,11 +1,11 @@
 ﻿using Unity.Collections;
 
-public class FlockDataContainer
+internal class FlockDataContainer
 {
     internal NativeList<Flock> FlockList;
-    public NativeList<int> UnusedFlockIndexList;
+    internal NativeList<int> UnusedFlockIndexList;
 
-    public FlockDataContainer()
+    internal FlockDataContainer()
     {
         FlockList = new NativeList<Flock>(Allocator.Persistent);
         FlockList.Add(new Flock());

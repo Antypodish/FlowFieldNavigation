@@ -32,7 +32,9 @@ internal class PathConstructionPipeline
     NativeList<int> _agentIndiciesToSubNewPath;
     NativeList<AgentAndPath> _agentIndiciesToSubExistingPath;
     NativeList<int> _agentsLookingForPath;
+    NativeList<int> _readyAgentsLookingForPath;
     NativeList<PathRequestRecord> _agentsLookingForPathRecords;
+    NativeList<PathRequestRecord> _readyAgentsLookingForPathRecords;
     NativeHashMap<int, int> _flockIndexToPathRequestIndex;
     List<JobHandle> _pathfindingTaskOrganizationHandle;
     internal PathConstructionPipeline(PathfindingManager pathfindingManager)
@@ -60,7 +62,9 @@ internal class PathConstructionPipeline
         _agentIndiciesToUnsubCurPath = new NativeList<int>(Allocator.Persistent);
         _agentIndiciesToSubNewPath = new NativeList<int>(Allocator.Persistent);
         _agentsLookingForPath = new NativeList<int>(Allocator.Persistent);
+        _readyAgentsLookingForPath = new NativeList<int>(Allocator.Persistent);
         _agentsLookingForPathRecords = new NativeList<PathRequestRecord>(Allocator.Persistent);
+        _readyAgentsLookingForPathRecords = new NativeList<PathRequestRecord>(Allocator.Persistent);
         _flockIndexToPathRequestIndex = new NativeHashMap<int, int>(0, Allocator.Persistent);
         _agentIndiciesToSubExistingPath = new NativeList<AgentAndPath>(Allocator.Persistent);
     }
@@ -85,6 +89,8 @@ internal class PathConstructionPipeline
         _flockIndexToPathRequestIndex.Dispose();
         _flockIndexToPathRequestIndex.Dispose();
         _agentIndiciesToSubExistingPath.Dispose();
+        _readyAgentsLookingForPath.Dispose();
+        _readyAgentsLookingForPathRecords.Dispose();
         _portalTravesalScheduler.DisposeAll();
         _requestedSectorCalculationScheduler.DisposeAll();
         _additionPortalTraversalScheduler.DisposeAll();
@@ -115,6 +121,8 @@ internal class PathConstructionPipeline
         _agentIndiciesToSubNewPath.Clear();
         _flockIndexToPathRequestIndex.Clear();
         _agentIndiciesToSubExistingPath.Clear();
+        _readyAgentsLookingForPath.Clear();
+        _readyAgentsLookingForPathRecords.Clear();
         _pathRequestSourceCount.Value = 0;
         _currentPathSourceCount.Value = 0;
 
@@ -282,7 +290,9 @@ internal class PathConstructionPipeline
             CostFields = costFieldCosts,
             AgentsLookingForPath = _agentsLookingForPath,
             AgentsLookingForPathRequestRecords = _agentsLookingForPathRecords,
+            ReadyAgentsLookingForPathRequestRecords = _readyAgentsLookingForPathRecords,
             InitialPathRequests = requestedPaths,
+            ReadyAgentsLookingForPath = _readyAgentsLookingForPath,
         };
         JobHandle agentLookingForPathSubmissionHandle = agentLookingForPathSubmission.Schedule(agentsToUnsubCurPathSubmissionHandle);
         if (FlowFieldUtilities.DebugMode) { agentLookingForPathSubmissionHandle.Complete(); }
@@ -298,9 +308,8 @@ internal class PathConstructionPipeline
             PathStateArray = pathStateArray,
             AgentDataArray = agentDataArray,
             AgentFlockIndicies = AgentFlockIndexArray,
-            AgentsLookingForPath = _agentsLookingForPath,
-            AgentsLookingForPathRequestRecords = _agentsLookingForPathRecords,
-            CostFields = costFieldCosts,
+            ReadyAgentsLookingForPath = _readyAgentsLookingForPath,
+            ReadyAgentsLookingForPathRequestRecords = _readyAgentsLookingForPathRecords,
             InitialPathRequests = requestedPaths,
             IslandFieldProcessors = islandFieldProcessors,
             PathDestinationDataArray = pathDestinationDataArray,

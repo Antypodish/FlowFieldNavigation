@@ -671,7 +671,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f6a024449df98fe45a1a1dcf09cb2f72, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  buffercnt: 2000
+  count1: 100
+  count2: 10
+  iterationCOunt: 1
 --- !u!1 &1050310759
 GameObject:
   m_ObjectHideFlags: 0

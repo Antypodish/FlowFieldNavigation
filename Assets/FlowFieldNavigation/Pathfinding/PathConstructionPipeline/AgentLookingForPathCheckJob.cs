@@ -12,34 +12,31 @@ internal struct AgentLookingForPathCheckJob : IJob
     internal int SectorTileAmount;
     internal float2 FieldGridStartPos;
     [ReadOnly] internal NativeArray<IslandFieldProcessor> IslandFieldProcessors;
-    [ReadOnly] internal NativeArray<UnsafeListReadOnly<byte>> CostFields;
     [ReadOnly] internal NativeArray<int> PathFlockIndicies;
     [ReadOnly] internal NativeArray<PathRoutineData> PathRoutineDataArray;
     [ReadOnly] internal NativeArray<PathState> PathStateArray;
     [ReadOnly] internal NativeArray<PathDestinationData> PathDestinationDataArray;
     [ReadOnly] internal NativeArray<int> AgentFlockIndicies;
     [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
+    [ReadOnly] internal NativeList<int> ReadyAgentsLookingForPath;
+    [ReadOnly] internal NativeList<PathRequestRecord> ReadyAgentsLookingForPathRequestRecords;
     internal NativeArray<int> PathSubscriberCounts;
     internal NativeList<PathRequest> InitialPathRequests;
-    internal NativeList<int> AgentsLookingForPath;
-    internal NativeList<PathRequestRecord> AgentsLookingForPathRequestRecords;
     internal NativeArray<int> AgentNewPathIndicies;
     internal NativeHashMap<int, int> FlockIndexToPathRequestIndex;
     internal NativeList<AgentAndPath> AgentIndiciesToSubExistingPath;
     public void Execute()
     {
-        for(int i = AgentsLookingForPath.Length -1; i >= 0; i--)
+        NativeArray<int> ReadyAgentsLookingForPathAsArray = ReadyAgentsLookingForPath.AsArray();
+        for (int i = ReadyAgentsLookingForPathAsArray.Length -1; i >= 0; i--)
         {
-            int agentIndex = AgentsLookingForPath[i];
-            PathRequestRecord requestRecord = AgentsLookingForPathRequestRecords[i];
+            int agentIndex = ReadyAgentsLookingForPathAsArray[i];
+            PathRequestRecord requestRecord = ReadyAgentsLookingForPathRequestRecords[i];
 
             AgentData agentData = AgentDataArray[agentIndex];
             float2 agentPos2 = new float2(agentData.Position.x, agentData.Position.z);
             int agentOffset = FlowFieldUtilities.RadiusToOffset(agentData.Radius, TileSize);
             int2 agentIndex2d = FlowFieldUtilities.PosTo2D(agentPos2, TileSize, FieldGridStartPos);
-            LocalIndex1d agentLocal = FlowFieldUtilities.GetLocal1D(agentIndex2d, SectorColAmount, SectorMatrixColAmount);
-            byte agentIndexCost = CostFields[agentOffset][agentLocal.sector * SectorTileAmount + agentLocal.index];
-            if (agentIndexCost == byte.MaxValue) { continue; }
 
             IslandFieldProcessor islandFieldProcessor = IslandFieldProcessors[agentOffset];
             int agentIsland = islandFieldProcessor.GetIsland(agentIndex2d);
@@ -61,8 +58,6 @@ internal struct AgentLookingForPathCheckJob : IJob
                     FlockIndexToPathRequestIndex.Add(agentFlock, newPathRequestIndex);
                 }
             }
-            AgentsLookingForPath.RemoveAtSwapBack(i);
-            AgentsLookingForPathRequestRecords.RemoveAtSwapBack(i);
         }
     }
 
