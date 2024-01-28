@@ -4,17 +4,18 @@ using Unity.Burst;
 using Unity.Collections;
 
 [BurstCompile]
-internal struct PathPerFlockCalculationJob : IJob
+internal struct FlockToPathHashMapConstructionJob : IJob
 {
     internal int FlockListLength;
     internal NativeList<FlockSlice> FlockSlices;
-    [ReadOnly] internal NativeArray<int> ReadyAgentsLookingForPath;
+    [ReadOnly] internal NativeList<int> ReadyAgentsLookingForPath;
     [ReadOnly] internal NativeArray<int> AgentFlockIndicies;
     [ReadOnly] internal NativeArray<int> PathFlockIndicies;
     [ReadOnly] internal NativeArray<PathState> PathStates;
     internal NativeList<int> PathIndicies;
     public void Execute()
     {
+        NativeArray<int> ReadyAgentsLookingForPathAsArray = ReadyAgentsLookingForPath.AsArray();
         //Reset flock slices
         FlockSlices.Length = FlockListLength;
         for(int i = 0; i < FlockSlices.Length; i++)
@@ -28,9 +29,9 @@ internal struct PathPerFlockCalculationJob : IJob
 
         //Mark flocks
         //If start == 0, marked. If start == -1, not marked
-        for(int i = 0; i < ReadyAgentsLookingForPath.Length; i++)
+        for(int i = 0; i < ReadyAgentsLookingForPathAsArray.Length; i++)
         {
-            int agentIndex = ReadyAgentsLookingForPath[i];
+            int agentIndex = ReadyAgentsLookingForPathAsArray[i];
             int flockIndex = AgentFlockIndicies[agentIndex];
             FlockSlices[flockIndex] = new FlockSlice()
             {

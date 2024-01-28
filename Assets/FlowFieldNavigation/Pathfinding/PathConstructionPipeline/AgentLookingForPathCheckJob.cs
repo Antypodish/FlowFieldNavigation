@@ -12,14 +12,13 @@ internal struct AgentLookingForPathCheckJob : IJob
     internal int SectorTileAmount;
     internal float2 FieldGridStartPos;
     [ReadOnly] internal NativeArray<IslandFieldProcessor> IslandFieldProcessors;
-    [ReadOnly] internal NativeArray<int> PathFlockIndicies;
     [ReadOnly] internal NativeArray<PathRoutineData> PathRoutineDataArray;
-    [ReadOnly] internal NativeArray<PathState> PathStateArray;
     [ReadOnly] internal NativeArray<PathDestinationData> PathDestinationDataArray;
     [ReadOnly] internal NativeArray<int> AgentFlockIndicies;
     [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
     [ReadOnly] internal NativeList<int> ReadyAgentsLookingForPath;
     [ReadOnly] internal NativeList<PathRequestRecord> ReadyAgentsLookingForPathRequestRecords;
+    [ReadOnly] internal FlockToPathHashMap FlockToPathHashmap;
     internal NativeArray<int> PathSubscriberCounts;
     internal NativeList<PathRequest> InitialPathRequests;
     internal NativeArray<int> AgentNewPathIndicies;
@@ -63,6 +62,26 @@ internal struct AgentLookingForPathCheckJob : IJob
 
     bool TryFindingExistingPath(int agentIndex, int agentFlock, int agentOffset, int agentIsland, IslandFieldProcessor islandFieldProcessor)
     {
+        NativeSlice<int> pathIndicies = FlockToPathHashmap.GetPathIndiciesOfFlock(agentFlock);
+        
+        for(int i = 0; i< pathIndicies.Length; i++)
+        {
+            int pathIndex = pathIndicies[i];
+            PathDestinationData destinationData = PathDestinationDataArray[pathIndex];
+            if (agentOffset != destinationData.Offset) { continue; }
+            int destinationIsland = islandFieldProcessor.GetIsland(destinationData.Destination);
+            if (destinationIsland != agentIsland) { continue; }
+            PathRoutineData routineData = PathRoutineDataArray[pathIndex];
+            if (routineData.PathReconstructionFlag) { continue; }
+            AgentAndPath agentAndPath = new AgentAndPath()
+            {
+                AgentIndex = agentIndex,
+                PathIndex = pathIndex,
+            };
+            AgentIndiciesToSubExistingPath.Add(agentAndPath);
+            return true;
+        }
+        return false;/*
         for (int pathIndex = 0; pathIndex < PathStateArray.Length; pathIndex++)
         {
             if (PathStateArray[pathIndex] == PathState.Removed) { continue; }
@@ -82,7 +101,7 @@ internal struct AgentLookingForPathCheckJob : IJob
             AgentIndiciesToSubExistingPath.Add(agentAndPath);
             return true;
         }
-        return false;
+        return false;*/
     }
 
 }

@@ -36,6 +36,8 @@ internal class PathConstructionPipeline
     NativeList<PathRequestRecord> _agentsLookingForPathRecords;
     NativeList<PathRequestRecord> _readyAgentsLookingForPathRecords;
     NativeHashMap<int, int> _flockIndexToPathRequestIndex;
+    NativeList<FlockSlice> _hashMapFlockSlices;
+    NativeList<int> _hashMapPathIndicies;
     List<JobHandle> _pathfindingTaskOrganizationHandle;
     internal PathConstructionPipeline(PathfindingManager pathfindingManager)
     {
@@ -67,6 +69,8 @@ internal class PathConstructionPipeline
         _readyAgentsLookingForPathRecords = new NativeList<PathRequestRecord>(Allocator.Persistent);
         _flockIndexToPathRequestIndex = new NativeHashMap<int, int>(0, Allocator.Persistent);
         _agentIndiciesToSubExistingPath = new NativeList<AgentAndPath>(Allocator.Persistent);
+        _hashMapFlockSlices = new NativeList<FlockSlice>(Allocator.Persistent);
+        _hashMapPathIndicies = new NativeList<int>(Allocator.Persistent);
     }
     internal void DisposeAll()
     {
@@ -90,6 +94,8 @@ internal class PathConstructionPipeline
         _flockIndexToPathRequestIndex.Dispose();
         _agentIndiciesToSubExistingPath.Dispose();
         _readyAgentsLookingForPath.Dispose();
+        _hashMapPathIndicies.Dispose();
+        _hashMapFlockSlices.Dispose();
         _readyAgentsLookingForPathRecords.Dispose();
         _portalTravesalScheduler.DisposeAll();
         _requestedSectorCalculationScheduler.DisposeAll();
@@ -297,6 +303,19 @@ internal class PathConstructionPipeline
         JobHandle agentLookingForPathSubmissionHandle = agentLookingForPathSubmission.Schedule(agentsToUnsubCurPathSubmissionHandle);
         if (FlowFieldUtilities.DebugMode) { agentLookingForPathSubmissionHandle.Complete(); }
 
+        FlockToPathHashMapConstructionJob flockToPathConstruction = new FlockToPathHashMapConstructionJob()
+        {
+            PathStates = pathStateArray,
+            AgentFlockIndicies = AgentFlockIndexArray,
+            FlockListLength = _pathfindingManager.FlockDataContainer.FlockList.Length,
+            ReadyAgentsLookingForPath = _readyAgentsLookingForPath,
+            PathFlockIndicies = pathFlockIndexArray,
+            FlockSlices = _hashMapFlockSlices,
+            PathIndicies = _hashMapPathIndicies,
+        };
+        JobHandle flockToPathConstructionHandle = flockToPathConstruction.Schedule(agentLookingForPathSubmissionHandle);
+        if (FlowFieldUtilities.DebugMode) { flockToPathConstructionHandle.Complete(); }
+
         //Agent looking for path check
         AgentLookingForPathCheckJob agentLookingForPathCheck = new AgentLookingForPathCheckJob()
         {
@@ -305,7 +324,11 @@ internal class PathConstructionPipeline
             SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
             FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
             SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
-            PathStateArray = pathStateArray,
+            FlockToPathHashmap = new FlockToPathHashMap()
+            {
+                FlockSlices = _hashMapFlockSlices,
+                PathIndicies = _hashMapPathIndicies,
+            },
             AgentDataArray = agentDataArray,
             AgentFlockIndicies = AgentFlockIndexArray,
             ReadyAgentsLookingForPath = _readyAgentsLookingForPath,
@@ -313,14 +336,13 @@ internal class PathConstructionPipeline
             InitialPathRequests = requestedPaths,
             IslandFieldProcessors = islandFieldProcessors,
             PathDestinationDataArray = pathDestinationDataArray,
-            PathFlockIndicies = pathFlockIndexArray,
             PathRoutineDataArray = pathRoutineDataArray,
             PathSubscriberCounts = pathSubscriberCountArray,
             AgentNewPathIndicies = AgentNewPathIndicies,
             FlockIndexToPathRequestIndex = _flockIndexToPathRequestIndex,
             AgentIndiciesToSubExistingPath = _agentIndiciesToSubExistingPath,
         };
-        JobHandle agentLookingForPathCheckHandle = agentLookingForPathCheck.Schedule(agentLookingForPathSubmissionHandle);
+        JobHandle agentLookingForPathCheckHandle = agentLookingForPathCheck.Schedule(flockToPathConstructionHandle);
         if (FlowFieldUtilities.DebugMode) { agentLookingForPathCheckHandle.Complete(); }
 
         //Set path requested agents
