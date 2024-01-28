@@ -23,9 +23,9 @@ internal struct AgentLookingForPathCheckJob : IJob
     internal NativeList<PathRequest> InitialPathRequests;
     internal NativeList<int> AgentsLookingForPath;
     internal NativeList<PathRequestRecord> AgentsLookingForPathRequestRecords;
-    internal NativeArray<int> AgentCurPathIndicies;
     internal NativeArray<int> AgentNewPathIndicies;
     internal NativeHashMap<int, int> FlockIndexToPathRequestIndex;
+    internal NativeList<AgentAndPath> AgentIndiciesToSubExistingPath;
     public void Execute()
     {
         for(int i = AgentsLookingForPath.Length -1; i >= 0; i--)
@@ -79,8 +79,12 @@ internal struct AgentLookingForPathCheckJob : IJob
             if (destinationIsland != agentIsland) { continue; }
             PathRoutineData routineData = PathRoutineDataArray[pathIndex];
             if (routineData.PathReconstructionFlag) { continue; }
-            PathSubscriberCounts[pathIndex]++;
-            AgentCurPathIndicies[agentIndex] = pathIndex;
+            AgentAndPath agentAndPath = new AgentAndPath()
+            {
+                AgentIndex = agentIndex,
+                PathIndex = pathIndex,
+            };
+            AgentIndiciesToSubExistingPath.Add(agentAndPath);
             return true;
         }
         return false;

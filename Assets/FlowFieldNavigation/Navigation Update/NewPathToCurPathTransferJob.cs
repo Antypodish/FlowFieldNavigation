@@ -11,6 +11,7 @@ internal struct NewPathToCurPathTransferJob : IJob
     [ReadOnly] internal NativeArray<FinalPathRequest> FinalPathRequests;
     [ReadOnly] internal NativeArray<int> AgentsToTryUnsubCurPath;
     [ReadOnly] internal NativeArray<int> AgentsToTrySubNewPath;
+    [ReadOnly] internal NativeArray<AgentAndPath> AgentIndiciesToSubExistingPath;
     public void Execute()
     {
         for (int i = 0; i < AgentsToTryUnsubCurPath.Length; i++)
@@ -35,6 +36,12 @@ internal struct NewPathToCurPathTransferJob : IJob
                 AgentCurPathIndicies[agentIndex] = newPathIndex;
                 AgentNewPathIndicies[agentIndex] = -1;
             }
+        }
+        for(int i = 0; i < AgentIndiciesToSubExistingPath.Length; i++)
+        {
+            AgentAndPath agentAndPath = AgentIndiciesToSubExistingPath[i];
+            AgentCurPathIndicies[agentAndPath.AgentIndex] = agentAndPath.PathIndex;
+            PathSubscribers[agentAndPath.PathIndex]++;
         }
     }
 }
