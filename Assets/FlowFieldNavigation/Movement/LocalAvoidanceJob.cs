@@ -614,96 +614,48 @@ internal struct LocalAvoidanceJob : IJobParallelFor
 
         return LineCast(agentPos, linecastPoint2, offset);
     }
-    bool LineCast(float2 point1, float2 point2, int offset)
+    bool LineCast(float2 start, float2 end, int offset)
     {
         UnsafeListReadOnly<byte> costs = CostFieldEachOffset[offset];
-        float2 leftPoint = math.select(point2, point1, point1.x < point2.x);
-        float2 rightPoint = math.select(point1, point2, point1.x < point2.x);
-        float2 dif = rightPoint - leftPoint;
-        float slope = dif.y / dif.x;
-        float c = leftPoint.y - (slope * leftPoint.x);
-        int2 point1Index = FlowFieldUtilities.PosTo2D(point1, TileSize, FieldGridStartPos);
-        int2 point2Index = FlowFieldUtilities.PosTo2D(point2, TileSize, FieldGridStartPos);
-        if (point1Index.x == point2Index.x || dif.x == 0)
+
+        start += math.select(0f, 0.0001f, start.x == end.x);
+        float2 leftPoint = math.select(end, start, start.x < end.x);
+        float2 rigthPoint = math.select(start, end, start.x < end.x);
+        float xMin = leftPoint.x;
+        float xMax = rigthPoint.x;
+        int2 leftIndex = FlowFieldUtilities.PosTo2D(leftPoint, TileSize, FieldGridStartPos);
+        int2 rightIndex = FlowFieldUtilities.PosTo2D(rigthPoint, TileSize, FieldGridStartPos);
+
+        float deltaX = (leftPoint.x - rigthPoint.x);
+        float x1 = rigthPoint.x;
+        float deltaY = (leftPoint.y - rigthPoint.y);
+        float y1 = rigthPoint.y;
+        for (int xIndex = leftIndex.x; xIndex <= rightIndex.x; xIndex++)
         {
-            int startY = math.min(point1Index.y, point2Index.y);
-            int endY = math.max(point1Index.y, point2Index.y);
-            for (int y = startY; y <= endY; y++)
+            float xLeft = FieldGridStartPos.x + xIndex * TileSize;
+            float xRight = xLeft + TileSize;
+            xLeft = math.max(xLeft, xMin);
+            xRight = math.min(xRight, xMax);
+
+            float tLeft = (xLeft - x1) / deltaX;
+            float tRight = (xRight - x1) / deltaX;
+            float yLeft = y1 + deltaY * tLeft;
+            float yRight = y1 + deltaY * tRight;
+
+            int yIndexLeft = (int)math.floor((yLeft - FieldGridStartPos.y) / TileSize);
+            int yIndexRight = (int)math.floor((yRight - FieldGridStartPos.y) / TileSize);
+            int yIndexMin = math.min(yIndexLeft, yIndexRight);
+            int yIndexMax = math.max(yIndexLeft, yIndexRight);
+
+            for (int yIndex = yIndexMin; yIndex <= yIndexMax; yIndex++)
             {
-                int2 index = new int2(point1Index.x, y);
-                LocalIndex1d local = FlowFieldUtilities.GetLocal1D(index, SectorColAmount, SectorMatrixColAmount);
-                if (costs[local.sector * SectorTileAmount + local.index] == byte.MaxValue) { return true; }
+                int2 indexToPlot = new int2(xIndex, yIndex);
+                LocalIndex1d localToPlot = FlowFieldUtilities.GetLocal1D(indexToPlot, SectorColAmount, SectorMatrixColAmount);
+                if (costs[localToPlot.sector * SectorTileAmount + localToPlot.index] == byte.MaxValue)
+                {
+                    return true;
+                }
             }
-            return false;
-        }
-        if (dif.y == 0)
-        {
-            int startX = math.min(point1Index.x, point2Index.x);
-            int endX = math.max(point1Index.x, point2Index.x);
-            for (int x = startX; x <= endX; x++)
-            {
-                int2 index = new int2(x, point1Index.y);
-                LocalIndex1d local = FlowFieldUtilities.GetLocal1D(index, SectorColAmount, SectorMatrixColAmount);
-                if (costs[local.sector * SectorTileAmount + local.index] == byte.MaxValue) { return true; }
-            }
-            return false;
-        }
-
-
-        //HANDLE START
-        float2 startPoint = leftPoint;
-        float nextPointX = math.ceil(startPoint.x / TileSize) * TileSize;
-        float2 nextPoint = new float2(nextPointX, c + slope * nextPointX);
-        int2 startIndex = FlowFieldUtilities.PosTo2D(startPoint, TileSize, FieldGridStartPos);
-        int2 nextIndex = FlowFieldUtilities.PosTo2D(nextPoint, TileSize, FieldGridStartPos);
-        int minY = math.select(nextIndex.y, startIndex.y, startIndex.y < nextIndex.y);
-        int maxY = math.select(startIndex.y, nextIndex.y, startIndex.y < nextIndex.y);
-        for (int y = minY; y <= maxY; y++)
-        {
-            int2 index = new int2(startIndex.x, y);
-            LocalIndex1d local = FlowFieldUtilities.GetLocal1D(index, SectorColAmount, SectorMatrixColAmount);
-            if (costs[local.sector * SectorTileAmount + local.index] == byte.MaxValue) { return true; }
-        }
-
-        //HANDLE END
-        float2 endPoint = rightPoint;
-        float prevPointX = math.floor(endPoint.x / TileSize) * TileSize;
-        float2 prevPoint = new float2(prevPointX, c + slope * prevPointX);
-        int2 endIndex = FlowFieldUtilities.PosTo2D(endPoint, TileSize, FieldGridStartPos);
-        int2 prevIndex = FlowFieldUtilities.PosTo2D(prevPoint, TileSize, FieldGridStartPos);
-        minY = math.select(prevIndex.y, endIndex.y, endIndex.y < prevIndex.y);
-        maxY = math.select(endIndex.y, prevIndex.y, endIndex.y < prevIndex.y);
-        for (int y = minY; y <= maxY; y++)
-        {
-            int2 index = new int2(endIndex.x, y);
-            LocalIndex1d local = FlowFieldUtilities.GetLocal1D(index, SectorColAmount, SectorMatrixColAmount);
-            if (costs[local.sector * SectorTileAmount + local.index] == byte.MaxValue) { return true; }
-        }
-
-        //HANDLE MIDDLE
-        float curPointY = nextPoint.y;
-        float curPointX = nextPoint.x;
-        int curIndexX = nextIndex.x;
-        int stepCount = (endIndex.x - startIndex.x) - 1;
-        for (int i = 0; i < stepCount; i++)
-        {
-            float newPointX = curPointX + TileSize;
-            float newtPointY = slope * newPointX + c;
-            int2 curIndex = FlowFieldUtilities.PosTo2D(new float2(curPointX, curPointY), TileSize, FieldGridStartPos);
-            int2 newIndex = FlowFieldUtilities.PosTo2D(new float2(newPointX, newtPointY), TileSize, FieldGridStartPos);
-            int curIndexY = curIndex.y;
-            int newIndexY = newIndex.y;
-            minY = math.select(curIndexY, newIndexY, newIndexY < curIndexY);
-            maxY = math.select(newIndexY, curIndexY, newIndexY < curIndexY);
-            for (int y = minY; y <= maxY; y++)
-            {
-                int2 index = new int2(curIndexX, y);
-                LocalIndex1d local = FlowFieldUtilities.GetLocal1D(index, SectorColAmount, SectorMatrixColAmount);
-                if (costs[local.sector * SectorTileAmount + local.index] == byte.MaxValue) { return true; }
-            }
-            curIndexX++;
-            curPointY = newtPointY;
-            curPointX = newPointX;
         }
         return false;
     }

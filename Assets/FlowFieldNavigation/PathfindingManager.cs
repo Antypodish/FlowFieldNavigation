@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-using Unity.Collections;
+﻿using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
-
 public class PathfindingManager : MonoBehaviour
 {
     [SerializeField] internal int LineOfSightRange;
