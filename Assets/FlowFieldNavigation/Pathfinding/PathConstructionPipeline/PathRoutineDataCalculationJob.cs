@@ -69,7 +69,7 @@ internal struct PathRoutineDataCalculationJob : IJobParallelFor
             bool shouldExpandNewDestination = newDestinationCost == byte.MaxValue || oldDestinationIsland != newDestinationIsland;
             if (shouldExpandNewDestination)
             {
-                int desiredIsland = math.select(newDestinationIsland, oldDestinationIsland, newDestinationIsland == int.MaxValue);
+                int desiredIsland = oldDestinationIsland;
                 bool succesfull = TryGetExtendedPosition(newDestination, desiredIsland, islandFieldProcessor, costs, out float2 extendedPos);
                 newDestination = math.select(oldDestination, extendedPos, succesfull);
                 newDestinationIndex = FlowFieldUtilities.PosTo2D(newDestination, TileSize, FieldGridStartPos);
@@ -83,7 +83,7 @@ internal struct PathRoutineDataCalculationJob : IJobParallelFor
             //Output
             DynamicDestinationState destinationState = oldDestinationIndex.Equals(newDestinationIndex) ? DynamicDestinationState.None : DynamicDestinationState.Moved;
             destinationState = outOfReach ? DynamicDestinationState.OutOfReach : destinationState;
-            destinationData.DesiredDestination = newDestination;
+            destinationData.DesiredDestination = targetAgentPos2;
             destinationData.Destination = newDestination;
             PathDestinationDataArray[index] = destinationData;
             PathRoutineData organizationData = PathOrganizationDataArray[index];

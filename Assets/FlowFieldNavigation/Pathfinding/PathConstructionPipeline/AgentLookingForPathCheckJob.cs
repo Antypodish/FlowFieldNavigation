@@ -91,5 +91,4 @@ internal struct AgentLookingForPathCheckJob : IJob
     }
 
 }
-//Does not handle dynamic paths
 //Very naive approach O(m*n). Searches all paths for each agent in the list. Make it O(n).

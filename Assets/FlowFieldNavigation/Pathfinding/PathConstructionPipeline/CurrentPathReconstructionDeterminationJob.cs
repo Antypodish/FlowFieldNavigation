@@ -31,7 +31,7 @@ internal struct CurrentPathReconstructionDeterminationJob : IJob
 
             if (FlockIndexToPathRequestIndex.ContainsKey(pathFlockIndex)) { continue; }
             FlockIndexToPathRequestIndex.Add(pathFlockIndex, PathRequests.Length);
-            if(curDestinationData.DestinationType == DestinationType.DynamicDestination)
+            if (curDestinationData.DestinationType == DestinationType.DynamicDestination)
             {
                 PathRequest reconReq = new PathRequest(curDestinationData.TargetAgentIndex);
                 float3 targetAgentPos = AgentDataArray[reconReq.TargetAgentIndex].Position;
