@@ -34,7 +34,7 @@ internal class AgentRemovingSystem
 
         _agentRemovalMarks.Length = agents.Count;
         NativeList<int> removedAgentIndicies = new NativeList<int>(Allocator.TempJob);
-        for(int i = 0; i < agentsToRemove.Count; i++)
+        for (int i = 0; i < agentsToRemove.Count; i++)
         {
             FlowFieldAgent agentMonobehaviour = agentsToRemove[i];
             int agentIndex = agentMonobehaviour.AgentDataIndex;
@@ -43,6 +43,7 @@ internal class AgentRemovingSystem
             removedAgentIndicies.Add(agentIndex);
         }
         if(removedAgentIndicies.Length == 0) { removedAgentIndicies.Dispose(); return; }
+
         AgentRemovalMarkJob agentMark = new AgentRemovalMarkJob()
         {
             CurAgentCount = agentDataList.Length,

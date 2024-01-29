@@ -37,9 +37,10 @@ internal struct AgentRemovalIndexShiftingJob : IJob
             for(int i = toRemoveAgentListPointer; i < AgentIndiciesToRemove.Length; i++)
             {
                 int agentIndex = AgentIndiciesToRemove[i];
-                if(agentIndex >= lengthAfterRemoval) { continue; }
+                if (agentIndex >= lengthAfterRemoval) { continue; }
                 indexToShiftTowards = agentIndex;
                 toRemoveAgentListPointer = i + 1;
+                break;
             }
             IndexShiftingPair shiftPair = new IndexShiftingPair()
             {

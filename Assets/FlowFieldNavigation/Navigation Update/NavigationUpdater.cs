@@ -20,7 +20,6 @@ internal class NavigationUpdater
     internal void RoutineFixedUpdate()
     {
         _scheduler.ForceCompleteAll();
-        _pathfindingManager.PathDataContainer.Update();
         List<FlowFieldAgent> agentAddRequest = _requestAccumulator.AgentAddRequest;
         List<FlowFieldAgent> agentRemovalRequests = _requestAccumulator.AgentRemovalRequests;
         NativeList<PathRequest> pathRequests = _requestAccumulator.PathRequests;
@@ -30,8 +29,8 @@ internal class NavigationUpdater
         {
             _pathfindingManager.AgentDataContainer.Subscribe(agentAddRequest[i]);
         }
-
         _pathfindingManager.AgentRemovingSystem.RemoveAgents(agentRemovalRequests);
+        _pathfindingManager.PathDataContainer.Update();
 
         _scheduler.Schedule(pathRequests, costEditRequests.AsArray().AsReadOnly());
 
