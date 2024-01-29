@@ -21,11 +21,11 @@ internal class RoutineScheduler
     internal RoutineScheduler(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
-        _movementManager = new MovementManager(pathfindingManager.AgentDataContainer, pathfindingManager);
+        _movementManager = pathfindingManager.MovementManager;
+        _pathConstructionPipeline = pathfindingManager.PathConstructionPipeline;
         _costEditHandle = new List<JobHandle>();
         CurrentRequestedPaths = new NativeList<PathRequest>(Allocator.Persistent);
         _islandReconfigHandle = new List<JobHandle>();
-        _pathConstructionPipeline = new PathConstructionPipeline(pathfindingManager);
         _costFieldCosts = new NativeList<UnsafeListReadOnly<byte>>(Allocator.Persistent);
         EditedSectorBitArray = new NativeList<SectorBitArray>(Allocator.Persistent);
         NewCostEditRequests = new NativeList<CostEdit>(Allocator.Persistent);

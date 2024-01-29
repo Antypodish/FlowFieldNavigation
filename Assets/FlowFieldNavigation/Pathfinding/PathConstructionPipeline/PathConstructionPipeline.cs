@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 internal class PathConstructionPipeline
 {
+    internal NativeList<int> AgentsLookingForPath;
+    internal NativeList<PathRequestRecord> AgentsLookingForPathRecords;
     const int _FinalPathRequestExpansionJobCount = 12;
 
     PathfindingManager _pathfindingManager;
@@ -31,9 +33,7 @@ internal class PathConstructionPipeline
     NativeList<int> _agentIndiciesToUnsubCurPath;
     NativeList<int> _agentIndiciesToSubNewPath;
     NativeList<AgentAndPath> _agentIndiciesToSubExistingPath;
-    NativeList<int> _agentsLookingForPath;
     NativeList<int> _readyAgentsLookingForPath;
-    NativeList<PathRequestRecord> _agentsLookingForPathRecords;
     NativeList<PathRequestRecord> _readyAgentsLookingForPathRecords;
     NativeHashMap<int, int> _flockIndexToPathRequestIndex;
     NativeList<FlockSlice> _hashMapFlockSlices;
@@ -63,9 +63,9 @@ internal class PathConstructionPipeline
         _newPathRequestedAgentIndicies = new NativeList<int>(Allocator.Persistent);
         _agentIndiciesToUnsubCurPath = new NativeList<int>(Allocator.Persistent);
         _agentIndiciesToSubNewPath = new NativeList<int>(Allocator.Persistent);
-        _agentsLookingForPath = new NativeList<int>(Allocator.Persistent);
+        AgentsLookingForPath = new NativeList<int>(Allocator.Persistent);
         _readyAgentsLookingForPath = new NativeList<int>(Allocator.Persistent);
-        _agentsLookingForPathRecords = new NativeList<PathRequestRecord>(Allocator.Persistent);
+        AgentsLookingForPathRecords = new NativeList<PathRequestRecord>(Allocator.Persistent);
         _readyAgentsLookingForPathRecords = new NativeList<PathRequestRecord>(Allocator.Persistent);
         _flockIndexToPathRequestIndex = new NativeHashMap<int, int>(0, Allocator.Persistent);
         _agentIndiciesToSubExistingPath = new NativeList<AgentAndPath>(Allocator.Persistent);
@@ -88,8 +88,8 @@ internal class PathConstructionPipeline
         _newPathRequestedAgentIndicies.Dispose();
         _agentIndiciesToSubNewPath.Dispose();
         _agentIndiciesToUnsubCurPath.Dispose();
-        _agentsLookingForPath.Dispose();
-        _agentsLookingForPathRecords.Dispose();
+        AgentsLookingForPath.Dispose();
+        AgentsLookingForPathRecords.Dispose();
         _flockIndexToPathRequestIndex.Dispose();
         _flockIndexToPathRequestIndex.Dispose();
         _agentIndiciesToSubExistingPath.Dispose();
@@ -294,8 +294,8 @@ internal class PathConstructionPipeline
             AgentDataArray = agentDataArray,
             AgentNewPathIndicies = AgentNewPathIndicies,
             CostFields = costFieldCosts,
-            AgentsLookingForPath = _agentsLookingForPath,
-            AgentsLookingForPathRequestRecords = _agentsLookingForPathRecords,
+            AgentsLookingForPath = AgentsLookingForPath,
+            AgentsLookingForPathRequestRecords = AgentsLookingForPathRecords,
             ReadyAgentsLookingForPathRequestRecords = _readyAgentsLookingForPathRecords,
             InitialPathRequests = requestedPaths,
             ReadyAgentsLookingForPath = _readyAgentsLookingForPath,

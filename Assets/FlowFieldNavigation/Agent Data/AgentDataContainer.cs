@@ -20,9 +20,6 @@ internal class AgentDataContainer
     internal NativeList<int> AgentRequestedPathIndicies;
     internal NativeList<int> AgentNewPathIndicies;
     internal NativeList<int> AgentCurPathIndicies;
-    internal NativeList<bool> AgentRemovedFlags;
-
-    internal Stack<int> RemovedAgentIndicies;
     public AgentDataContainer(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
@@ -34,8 +31,6 @@ internal class AgentDataContainer
         AgentRequestedPathIndicies = new NativeList<int>(0, Allocator.Persistent);
         AgentFlockIndicies = new NativeList<int>(Allocator.Persistent);
         AgentDestinationReachedArray = new NativeList<bool>(Allocator.Persistent);
-        AgentRemovedFlags = new NativeList<bool>(Allocator.Persistent);
-        RemovedAgentIndicies = new Stack<int>();
     }
     public void DisposeAll()
     {
@@ -46,7 +41,6 @@ internal class AgentDataContainer
         Agents.Clear();
         Agents.TrimExcess();
         Agents = null;
-        RemovedAgentIndicies = null;
         AgentTransforms.Dispose();
         AgentDataList.Dispose();
         AgentDestinationReachedArray.Dispose();
@@ -54,72 +48,29 @@ internal class AgentDataContainer
         AgentRequestedPathIndicies.Dispose();
         AgentNewPathIndicies.Dispose();
         AgentCurPathIndicies.Dispose();
-        AgentRemovedFlags.Dispose();
     }
     public void Subscribe(FlowFieldAgent agent)
     {
-        if(RemovedAgentIndicies.Count > 0)
+        agent.AgentDataIndex = Agents.Count;
+        agent._pathfindingManager = _pathfindingManager;
+        AgentData data = new AgentData()
         {
-            int agentIndex = RemovedAgentIndicies.Pop();
-            agent.AgentDataIndex = agentIndex;
-            agent._pathfindingManager = _pathfindingManager;
-            AgentData data = new AgentData()
-            {
-                Speed = agent.GetSpeed(),
-                Status = 0,
-                Destination = Vector2.zero,
-                Direction = Vector2.zero,
-                Radius = agent.GetRadius(),
-                Position = agent.transform.position,
-                LandOffset = agent.GetLandOffset(),
-            };
-            Agents[agentIndex] = agent;
-            AgentTransforms[agentIndex] = agent.transform;
-            AgentDataList[agentIndex] = data;
-            AgentNewPathIndicies[agentIndex] = -1;
-            AgentCurPathIndicies[agentIndex] = -1;
-            AgentRequestedPathIndicies[agentIndex] = -1;
-            AgentFlockIndicies[agentIndex] = 0;
-            AgentDestinationReachedArray[agentIndex] = false;
-            AgentRemovedFlags[agentIndex] = false;
-        }
-        else
-        {
-            agent.AgentDataIndex = Agents.Count;
-            agent._pathfindingManager = _pathfindingManager;
-            AgentData data = new AgentData()
-            {
-                Speed = agent.GetSpeed(),
-                Status = 0,
-                Destination = Vector2.zero,
-                Direction = Vector2.zero,
-                Radius = agent.GetRadius(),
-                Position = agent.transform.position,
-                LandOffset = agent.GetLandOffset(),
-            };
-            Agents.Add(agent);
-            AgentTransforms.Add(agent.transform);
-            AgentDataList.Add(data);
-            AgentNewPathIndicies.Add(-1);
-            AgentCurPathIndicies.Add(-1);
-            AgentRequestedPathIndicies.Add(-1);
-            AgentFlockIndicies.Add(0);
-            AgentDestinationReachedArray.Add(false);
-            AgentRemovedFlags.Add(false);
-        }
-    }
-    public void Unsubscribe(FlowFieldAgent agent)
-    {
-        if(agent.AgentDataIndex == -1) { return; }
-        int agentIndex = agent.AgentDataIndex;
-        agent.AgentDataIndex = -1;
-        agent._pathfindingManager = null;
-        AgentRemovedFlags[agentIndex] = true;
-        RemovedAgentIndicies.Push(agentIndex);
-        //I need to:
-        //Clean paths
-        //Clean flocks
-        //Handle movement system
+            Speed = agent.GetSpeed(),
+            Status = 0,
+            Destination = Vector2.zero,
+            Direction = Vector2.zero,
+            Radius = agent.GetRadius(),
+            Position = agent.transform.position,
+            LandOffset = agent.GetLandOffset(),
+        };
+        Agents.Add(agent);
+        AgentTransforms.Add(agent.transform);
+        AgentDataList.Add(data);
+        AgentNewPathIndicies.Add(-1);
+        AgentCurPathIndicies.Add(-1);
+        AgentRequestedPathIndicies.Add(-1);
+        AgentFlockIndicies.Add(0);
+        AgentDestinationReachedArray.Add(false);
     }
     public void Stop(int agentIndex)
     {

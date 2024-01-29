@@ -48,6 +48,11 @@ public class FlowFieldNavigationInterface
         if(agent.AgentDataIndex != -1) { return; }
         _pathfindingManager.RequestAccumulator.RequestAgentAddition(agent);
     }
+    public void RequestUnsubscription(FlowFieldAgent agent)
+    {
+        if(agent.AgentDataIndex == -1) { return; }
+        _pathfindingManager.RequestAccumulator.RequestAgentRemoval(agent);
+    }
     public int GetPathIndex(int agentIndex)
     {
         if (!_pathfindingManager.SimulationStarted) { return -1; }

@@ -13,6 +13,9 @@ public class PathfindingManager : MonoBehaviour
     internal AgentDataContainer AgentDataContainer;
     internal FlockDataContainer FlockDataContainer;
     internal RequestAccumulator RequestAccumulator;
+    internal PathConstructionPipeline PathConstructionPipeline;
+    internal MovementManager MovementManager;
+    internal AgentRemovingSystem AgentRemovingSystem;
 
     NavigationUpdater _navigationUpdater;
     void Awake()
@@ -73,8 +76,11 @@ public class PathfindingManager : MonoBehaviour
         FieldDataContainer = new FieldDataContainer(startParameters.WalkabilityMatrix, startParameters.Meshes, startParameters.Transforms);
         FieldDataContainer.CreateField(startParameters.MaxCostFieldOffset);
         AgentDataContainer = new AgentDataContainer(this);
+        AgentRemovingSystem = new AgentRemovingSystem(this);
         PathDataContainer = new PathDataContainer(this);
         RequestAccumulator = new RequestAccumulator(this);
+        PathConstructionPipeline = new PathConstructionPipeline(this);
+        MovementManager = new MovementManager(AgentDataContainer, this);
         _navigationUpdater = new NavigationUpdater(this, RequestAccumulator);
         FlockDataContainer = new FlockDataContainer();
     }
