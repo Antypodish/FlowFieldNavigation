@@ -30,7 +30,8 @@ public class FlowFieldNavigationInterface
     public void SetDestination(List<FlowFieldAgent> agents, FlowFieldAgent targetAgent)
     {
         if (!_pathfindingManager.SimulationStarted) { return; }
-        if (agents.Count == 0) { UnityEngine.Debug.Log("Agent list passed is empty"); return; }
+        if (agents.Count == 0) { return; }
+        if(targetAgent.AgentDataIndex == -1) { SetDestination(agents, targetAgent.transform.position); return; }
         _pathfindingManager.RequestAccumulator.RequestPath(agents, targetAgent);
     }
     public void SetObstacle(NativeArray<ObstacleRequest> obstacleRequests, NativeList<int> outputListToAddObstacleIndicies)

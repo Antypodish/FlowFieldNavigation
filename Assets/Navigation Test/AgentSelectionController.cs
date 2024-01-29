@@ -154,6 +154,13 @@ public class AgentSelectionController : MonoBehaviour
                 agentTransform.position = pos;
             }
         }
+        if (Input.GetKeyUp(KeyCode.Delete))
+        {
+            for(int i = 0; i < SelectedAgents.Count; i++)
+            {
+                _pathfindingManager.Interface.RequestUnsubscription(SelectedAgents[i]);
+            }
+        }
     }
     void SetDestination()
     {

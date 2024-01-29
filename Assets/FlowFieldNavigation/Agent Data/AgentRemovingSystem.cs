@@ -15,6 +15,7 @@ internal class AgentRemovingSystem
     }
     internal void RemoveAgents(List<FlowFieldAgent> agentsToRemove)
     {
+        if(agentsToRemove.Count == 0) { return; }
         List<FlowFieldAgent> agents = _pathfindingManager.AgentDataContainer.Agents;
         TransformAccessArray agentTransforms = _pathfindingManager.AgentDataContainer.AgentTransforms;
         NativeList<AgentData> agentDataList = _pathfindingManager.AgentDataContainer.AgentDataList;
@@ -41,7 +42,7 @@ internal class AgentRemovingSystem
             agentMonobehaviour.AgentDataIndex = -1;
             removedAgentIndicies.Add(agentIndex);
         }
-
+        if(removedAgentIndicies.Length == 0) { removedAgentIndicies.Dispose(); return; }
         AgentRemovalMarkJob agentMark = new AgentRemovalMarkJob()
         {
             CurAgentCount = agentDataList.Length,
