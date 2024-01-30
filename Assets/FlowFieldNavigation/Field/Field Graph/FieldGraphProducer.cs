@@ -21,17 +21,18 @@ internal class FieldGraphProducer
         //CONFIGURE FIELD GRAPHS
         //field graph config job is weird. It breaks when you want to schedule
         //field graph config job of multiple fields. No unsafe stuff used. Weird.
-        NativeArray<JobHandle> combinedHandles = new NativeArray<JobHandle>(_fieldGraphs.Length, Allocator.Temp, NativeArrayOptions.ClearMemory);
+        NativeList<JobHandle> combinedHandles = new NativeList<JobHandle>(Allocator.Persistent);
         for (int i = 0; i < _fieldGraphs.Length; i++)
         {
             FieldGraphConfigurationJob _fieldGraphConfigJob = _fieldGraphs[i].GetConfigJob(costFields[i].Costs);
             IslandConfigurationJob islandConfigJob = _fieldGraphs[i].GetIslandConfigJob(costFields[i].Costs);
             JobHandle fieldHandle = _fieldGraphConfigJob.Schedule();
             JobHandle islandHandle = islandConfigJob.Schedule(fieldHandle);
-            islandHandle.Complete();
-            combinedHandles[i] = islandHandle;
+            //islandHandle.Complete();
+            combinedHandles.Add(islandHandle);
         }
-        //JobHandle.CompleteAll(combinedHandles);
+        JobHandle.CompleteAll(combinedHandles.AsArray());
+        combinedHandles.Dispose();
     }
     internal FieldGraph GetFieldGraphWithOffset(int offset)
     {
