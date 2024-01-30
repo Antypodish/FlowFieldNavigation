@@ -1,11 +1,8 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
-using UnityEngine.Networking.Match;
-
 internal class LOSIntegrationScheduler
 {
     PathfindingManager _pathfindingManager;

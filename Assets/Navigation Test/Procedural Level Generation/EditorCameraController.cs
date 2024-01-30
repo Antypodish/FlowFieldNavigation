@@ -26,7 +26,7 @@ public class EditorCameraController : MonoBehaviour
     }
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.AltGr))
+        if (Input.GetKeyDown(KeyCode.RightAlt))
         {
             SwitchCameraMode();
         }
