@@ -403,10 +403,10 @@ internal struct AgentWallCollisionJob : IJobParallelFor
         nwSector1d = math.select(nwSector1d, nwSector1d - 1, wLocalOverflow);
 
         //Sector Overflows
+        bool wSectorOverflow = (curSector1d % SectorMatrixColAmount) == 0;
         bool nSectorOverflow = nSector1d >= SectorMatrixTileAmont;
         bool eSectorOverflow = eSector1d % SectorMatrixColAmount == 0;
         bool sSectorOverflow = sSector1d < 0;
-        bool wSectorOverflow = (curSector1d % SectorMatrixColAmount) == 0;
 
         nSector1d = math.select(nSector1d, curSector1d, nSectorOverflow);
         eSector1d = math.select(eSector1d, curSector1d, eSectorOverflow);
