@@ -16,8 +16,5 @@ public class EditorDebugCameraBehaviour : MonoBehaviour
 
     void Update()
     {
-        transform.position = _cameraToOverlay.transform.position;
-        transform.rotation = _cameraToOverlay.transform.rotation;
-        transform.localScale = _cameraToOverlay.transform.localScale;
     }
 }

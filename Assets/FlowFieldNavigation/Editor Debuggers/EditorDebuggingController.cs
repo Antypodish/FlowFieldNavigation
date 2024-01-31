@@ -1,14 +1,16 @@
 ﻿#if (UNITY_EDITOR) 
 
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 
 public class EditorDebuggingController : MonoBehaviour
 {
     [SerializeField] PathfindingManager _pathfindingManager;
+    [SerializeField] Camera _cameraToOverlayOnTopOf;
     [SerializeField] bool _debuggingEnabled;
     [HideInInspector] public FlowFieldAgent AgentToDebug;
     [Header("Field Debugger")]
-    [SerializeField] CostFieldOffset _costFieldOffset;
+    [SerializeField] int _costFieldOffset;
     [SerializeField] bool _costField;
     [SerializeField] bool _sectors;
     [SerializeField] bool _windows;
@@ -60,9 +62,13 @@ public class EditorDebuggingController : MonoBehaviour
     EditorIslandDebugger _islandDebugger;
     EditorHeightMeshDebugger _heightMeshDebugger;
     EditorAgentPathIndexDebugger _agentPathIndexDebugger;
-    
+
+    Camera _cameraToRender;
     private void Start()
     {
+        _cameraToRender = GetComponent<Camera>();
+        _cameraToOverlayOnTopOf.GetComponent<UniversalAdditionalCameraData>().cameraStack.Add(_cameraToRender);
+
         _sectorDebugger = new EditorSectorDebugger(_pathfindingManager);
         _windowDebugger = new EditorWindowDebugger(_pathfindingManager);
         _portalDebugger = new EditorPortalDebugger(_pathfindingManager);
@@ -83,39 +89,40 @@ _debuggingEnabled = false;
     private void Update()
     {
         if(_pathDebugger == null) { _pathDebugger = new EditorPathDebugger(_pathfindingManager); }
+        HandleNewPos();
     }
     private void OnDrawGizmos()
     {
         if (!_pathfindingManager.SimulationStarted) { return; }
         FlowFieldUtilities.DebugMode = _debuggingEnabled;
         if (!_debuggingEnabled) { return; }
+        if(Camera.current != _cameraToRender) { return; }
 
-        if (_sectors && _sectorDebugger != null) { _sectorDebugger.DebugSectors((int) _costFieldOffset); }
-        if( _windows && _windowDebugger != null) { _windowDebugger.DebugWindows((int) _costFieldOffset); }
-        if(_portals && _portalDebugger != null) { _portalDebugger.DebugPortals((int) _costFieldOffset); }
-        if(_costField && _costFieldDebugger != null) { _costFieldDebugger.DebugCostFieldWithMesh((int) _costFieldOffset); }
-        if(_portalIslands && _islandDebugger != null) { _islandDebugger.DebugPortalIslands((int) _costFieldOffset); }
-        if(_sectorIslands && _islandDebugger != null) { _islandDebugger.DebugTileIslands((int) _costFieldOffset); }
+        if (_sectors && _sectorDebugger != null) { _sectorDebugger.DebugSectors(_costFieldOffset); }
+        if( _windows && _windowDebugger != null) { _windowDebugger.DebugWindows(_costFieldOffset); }
+        if(_portals && _portalDebugger != null) { _portalDebugger.DebugPortals(_costFieldOffset); }
+        if(_costField && _costFieldDebugger != null) { _costFieldDebugger.DebugCostFieldWithMesh(_costFieldOffset); }
+        if(_portalIslands && _islandDebugger != null) { _islandDebugger.DebugPortalIslands(_costFieldOffset); }
+        if(_sectorIslands && _islandDebugger != null) { _islandDebugger.DebugTileIslands(_costFieldOffset); }
         if(_debugHeightMesh && _heightMeshDebugger != null) { _heightMeshDebugger.DebugHeightMapMesh(); }
         if(_debugTrianglesAtClickedTile && _heightMeshDebugger != null) { _heightMeshDebugger.DebugTrianglesAtTile(); }
         if(_debugGridBorders && _heightMeshDebugger != null) { _heightMeshDebugger.DebugBorders(_meshGridIndex); }
 
-        FlowFieldAgent _agentToDebug = AgentToDebug;
-        if(_agentToDebug != null)
+        if(AgentToDebug != null)
         {
-            if (_debugPortalTraversalMarks && _pathDebugger != null) { _pathDebugger.DebugPortalTraversalMarks(_agentToDebug); }
-            if (_debugPortalSequence && _pathDebugger != null) { _pathDebugger.DebugPortalSequence(_agentToDebug); }
-            if (_debugPickedSectors && _pathDebugger != null) { _pathDebugger.DebugPickedSectors(_agentToDebug); }
-            if (_debugIntegrationField && _pathDebugger != null) { _pathDebugger.DebugIntegrationField(_agentToDebug); }
-            if (_debugFlowField && _pathDebugger != null) { _pathDebugger.DebugFlowField(_agentToDebug); }
-            if (_debugLOSBlocks && _pathDebugger != null) { _pathDebugger.LOSBlockDebug(_agentToDebug); }
-            if(_debugActiveWaveFronts && _pathDebugger != null) { _pathDebugger.DebugActiveWaveFronts(_agentToDebug); }
-            if(_debugPortalTargetNeighbours && _pathDebugger != null) { _pathDebugger.DebugTargetNeighbourPortals(_agentToDebug); }
-            if(_debugDestination && _pathDebugger != null) { _pathDebugger.DebugDestination(_agentToDebug); }
-            if (_debugDynamicAreaIntegration && _pathDebugger != null) { _pathDebugger.DebugDynamicAreaIntegration(_agentToDebug); }
-            if (_debugDynamicAreaFlow && _pathDebugger != null) { _pathDebugger.DebugDynamicAreaFlow(_agentToDebug); }
-            if (_debugAroundAgent && _spatialHashGridDebugger != null) { _spatialHashGridDebugger.DebugAgent(_agentToDebug, _gridIndex, _checkRange); }
-            if (_debugAgentPathIndicies && _agentPathIndexDebugger != null) { _agentPathIndexDebugger.Debug(_agentToDebug); }
+            if (_debugPortalTraversalMarks && _pathDebugger != null) { _pathDebugger.DebugPortalTraversalMarks(AgentToDebug); }
+            if (_debugPortalSequence && _pathDebugger != null) { _pathDebugger.DebugPortalSequence(AgentToDebug); }
+            if (_debugPickedSectors && _pathDebugger != null) { _pathDebugger.DebugPickedSectors(AgentToDebug); }
+            if (_debugIntegrationField && _pathDebugger != null) { _pathDebugger.DebugIntegrationField(AgentToDebug); }
+            if (_debugFlowField && _pathDebugger != null) { _pathDebugger.DebugFlowField(AgentToDebug); }
+            if (_debugLOSBlocks && _pathDebugger != null) { _pathDebugger.LOSBlockDebug(AgentToDebug); }
+            if(_debugActiveWaveFronts && _pathDebugger != null) { _pathDebugger.DebugActiveWaveFronts(AgentToDebug); }
+            if(_debugPortalTargetNeighbours && _pathDebugger != null) { _pathDebugger.DebugTargetNeighbourPortals(AgentToDebug); }
+            if(_debugDestination && _pathDebugger != null) { _pathDebugger.DebugDestination(AgentToDebug); }
+            if (_debugDynamicAreaIntegration && _pathDebugger != null) { _pathDebugger.DebugDynamicAreaIntegration(AgentToDebug); }
+            if (_debugDynamicAreaFlow && _pathDebugger != null) { _pathDebugger.DebugDynamicAreaFlow(AgentToDebug); }
+            if (_debugAroundAgent && _spatialHashGridDebugger != null) { _spatialHashGridDebugger.DebugAgent(AgentToDebug, _gridIndex, _checkRange); }
+            if (_debugAgentPathIndicies && _agentPathIndexDebugger != null) { _agentPathIndexDebugger.Debug(AgentToDebug); }
         }
 
         if (_debugAgentDirections && _agentDirectionDebugger != null) { _agentDirectionDebugger.Debug(); }
@@ -126,15 +133,11 @@ _debuggingEnabled = false;
         if(_debugBorders && _spatialHashGridDebugger != null) { _spatialHashGridDebugger.DebugBorders(_gridIndex); }
     }
 
-    enum CostFieldOffset : byte
+    void HandleNewPos()
     {
-        Zero = 0,
-        One = 1,
-        Two = 2,
-        Three = 3,
-        Four = 4,
-        Five = 5,
+        transform.position = _cameraToOverlayOnTopOf.transform.position;
+        transform.rotation = _cameraToOverlayOnTopOf.transform.rotation;
+        transform.localScale = _cameraToOverlayOnTopOf.transform.localScale;
     }
-
 }
 #endif
