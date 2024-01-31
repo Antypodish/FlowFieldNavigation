@@ -7,7 +7,8 @@ using Unity.Jobs;
 using Unity.Burst;
 using System.Diagnostics;
 using Unity.Collections.LowLevel.Unsafe;
-
+using UnityEngine.Rendering.Universal;
+using UnityEditor;
 public class test : MonoBehaviour
 {
     private void OnDrawGizmos()
