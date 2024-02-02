@@ -129,7 +129,7 @@ MonoBehaviour:
     type: 3}
   m_PrefabInstance: {fileID: 371105075}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2069623530}
+  m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7f0954277a5e3694aa1c77d4546aa096, type: 3}
@@ -404,12 +404,12 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: MaxHeight
-      value: 1
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: RowAmount
-      value: 200
+      value: 300
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
@@ -419,17 +419,17 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: _resolution
-      value: 20
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: ColumnAmount
-      value: 200
+      value: 300
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: RandomHeights
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
@@ -449,17 +449,17 @@ PrefabInstance:
     - target: {fileID: 1284591848226207641, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -200
-      objectReference: {fileID: 0}
-    - target: {fileID: 1284591848226207641, guid: f04ffee1160a8494782072c6bf5424ca,
-        type: 3}
-      propertyPath: m_LocalPosition.y
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207641, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -10
+      objectReference: {fileID: 0}
+    - target: {fileID: 1284591848226207641, guid: f04ffee1160a8494782072c6bf5424ca,
+        type: 3}
       propertyPath: m_LocalPosition.z
-      value: -200
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207641, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
@@ -499,11 +499,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 1284591848226207636, guid: f04ffee1160a8494782072c6bf5424ca,
-        type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 2069623532}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f04ffee1160a8494782072c6bf5424ca, type: 3}
 --- !u!1001 &786654712
 PrefabInstance:
@@ -1008,6 +1004,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7249324459304311081, guid: 5e3867b8afbc0bb49a0027ab49965980,
         type: 3}
+      propertyPath: LineOfSightRange
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 7249324459304311081, guid: 5e3867b8afbc0bb49a0027ab49965980,
+        type: 3}
       propertyPath: _baseTriangleSpatialGridSize
       value: 0.25
       objectReference: {fileID: 0}
@@ -1116,27 +1117,6 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 786654712}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &2069623530 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1284591848226207636, guid: f04ffee1160a8494782072c6bf5424ca,
-    type: 3}
-  m_PrefabInstance: {fileID: 371105075}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &2069623532
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2069623530}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: be418f150cc215f47b9d251777258753, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _terrainGenerator: {fileID: 214059218}
-  _debugTiles: 0
-  _debugUnwalkableTiles: 0
 --- !u!114 &870189873970780506 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
@@ -1209,18 +1189,103 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
         type: 3}
+      propertyPath: _islands
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
+      propertyPath: _portals
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
+      propertyPath: _sectors
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
+      propertyPath: _costField
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
+      propertyPath: _debugTiles
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
+      propertyPath: _debugBorders
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
+      propertyPath: _meshGridIndex
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
+      propertyPath: _sectorIslands
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
+      propertyPath: _debugFlowField
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
+      propertyPath: _debugHeightMesh
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
+      propertyPath: _debugDestination
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
+      propertyPath: _debugGridBorders
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
       propertyPath: _pathfindingManager
       value: 
       objectReference: {fileID: 1328932016}
     - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
         type: 3}
+      propertyPath: _debugPortalSequence
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
+      propertyPath: _debugDynamicAreaFlow
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
+      propertyPath: _debugIntegrationField
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
       propertyPath: _cameraToOverlayOnTopOf
       value: 
       objectReference: {fileID: 1632713465}
+    - target: {fileID: 6271735691019985205, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7535577792338288069, guid: 36909ba34dc9cc34aa509e8036cbe263,
         type: 3}
       propertyPath: m_Name
       value: Flow Field Debugger
+      objectReference: {fileID: 0}
+    - target: {fileID: 7535577792338288069, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
+      propertyPath: m_Layer
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

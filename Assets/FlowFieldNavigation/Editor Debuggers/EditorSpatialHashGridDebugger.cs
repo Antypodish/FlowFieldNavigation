@@ -2,14 +2,17 @@
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
+using System.Collections.Generic;
+
 internal class EditorSpatialHashGridDebugger
 {
     PathfindingManager _pathfindingManager;
-
+    GenericDebugTileMeshBuilder _genericDebugTileMeshBuilder;
     Color[] _colors;
     internal EditorSpatialHashGridDebugger(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
+        _genericDebugTileMeshBuilder = new GenericDebugTileMeshBuilder(pathfindingManager);
         _colors = new Color[]
         {
             Color.black,
@@ -24,7 +27,7 @@ internal class EditorSpatialHashGridDebugger
         };
     }
 
-    internal void DebugAgent(FlowFieldAgent agent, int gridIndex, float checkRange)
+    internal void DebugAgent(FlowFieldAgent agent, int gridIndex)
     {
         NativeArray<UnsafeList<HashTile>> hashGridArray = _pathfindingManager.GetSpatialHashGridArray();
         if (gridIndex >= hashGridArray.Length || gridIndex < 0) { return; }
@@ -73,39 +76,16 @@ internal class EditorSpatialHashGridDebugger
             AgentHashGridArray = hashGridArray,
         };
 
-        DrawTileBorders();
-        void DrawTileBorders()
-        {
-            Gizmos.color = Color.black;
-            float tileSize = grid.GetTileSize(gridIndex);
-            int colAmount = grid.GetColAmount(gridIndex);
-            int rowAmount = grid.GetRowAmount(gridIndex);
-            float2 maxPos = FlowFieldUtilities.GetGridMaxPosExcluding(rowAmount, colAmount, tileSize, FlowFieldUtilities.FieldGridStartPosition);
-            float maxZ = maxPos.y;
-            float maxX = maxPos.x;
-            float yOffset = 0.2f;
-            for (int i = 0; i < colAmount; i++)
-            {
-                float2 start2 = new float2(i * tileSize, 0f);
-                float2 end2 = new float2(start2.x, maxZ);
-                start2 += FlowFieldUtilities.HeightMeshStartPosition;
-                end2 += FlowFieldUtilities.HeightMeshStartPosition;
-                Vector3 start = new Vector3(start2.x, yOffset, start2.y);
-                Vector3 end = new Vector3(end2.x, yOffset, end2.y);
-                Gizmos.DrawLine(start, end);
-            }
-            for (int i = 0; i < rowAmount; i++)
-            {
-                float2 start2 = new float2(0f, tileSize * i);
-                float2 end2 = new float2(maxX, start2.y);
-                start2 += FlowFieldUtilities.HeightMeshStartPosition;
-                end2 += FlowFieldUtilities.HeightMeshStartPosition;
-                Vector3 start = new Vector3(start2.x, yOffset, start2.y);
-                Vector3 end = new Vector3(end2.x, yOffset, end2.y);
-                Gizmos.DrawLine(start, end);
-            }
-        }
+        Gizmos.color = Color.black;
+        float tileSize = grid.GetTileSize(gridIndex);
+        int colAmount = grid.GetColAmount(gridIndex);
+        int rowAmount = grid.GetRowAmount(gridIndex);
 
+        List<Mesh> meshes = _genericDebugTileMeshBuilder.GetDebugMesh(colAmount, rowAmount, tileSize, FlowFieldUtilities.FieldGridStartPosition);
+        for (int i = 0; i < meshes.Count; i++)
+        {
+            Gizmos.DrawMesh(meshes[i]);
+        }
     }
     internal void Debug(int gridIndex)
     {

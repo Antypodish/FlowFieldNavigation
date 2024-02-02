@@ -60,7 +60,7 @@ internal static class FlowFieldUtilities
     {
         return gridStartPos + new float2(general2d.x * tileSize + tileSize / 2, general2d.y * tileSize + tileSize / 2);
     }
-    internal static float2 IndexStartToPos(int2 general2d, float tileSize, float2 gridStartPos)
+    internal static float2 IndexToStartPos(int2 general2d, float tileSize, float2 gridStartPos)
     {
         return gridStartPos + new float2(general2d.x * tileSize, general2d.y * tileSize);
     }

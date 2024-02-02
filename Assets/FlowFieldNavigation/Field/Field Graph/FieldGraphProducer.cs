@@ -28,8 +28,8 @@ internal class FieldGraphProducer
             IslandConfigurationJob islandConfigJob = _fieldGraphs[i].GetIslandConfigJob(costFields[i].Costs);
             JobHandle fieldHandle = _fieldGraphConfigJob.Schedule();
             JobHandle islandHandle = islandConfigJob.Schedule(fieldHandle);
-            //islandHandle.Complete();
-            combinedHandles.Add(islandHandle);
+            islandHandle.Complete();
+            //combinedHandles.Add(islandHandle);
         }
         JobHandle.CompleteAll(combinedHandles.AsArray());
         combinedHandles.Dispose();

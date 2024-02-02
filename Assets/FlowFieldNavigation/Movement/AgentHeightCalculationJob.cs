@@ -20,7 +20,8 @@ internal struct AgentHeightCalculationJob : IJobParallelFor
         float desiredHeight = float.MinValue;
         for(int i = 0; i < TriangleSpatialHashGrid.GetGridCount(); i++)
         {
-            TriangleSpatialHashGridIterator triangleGridIterator = TriangleSpatialHashGrid.GetIterator(agentPos2, i);
+            bool succesfull = TriangleSpatialHashGrid.TryGetIterator(agentPos2, i, out TriangleSpatialHashGridIterator triangleGridIterator);
+            if (!succesfull) { desiredHeight = 0; break; }
             while (triangleGridIterator.HasNext())
             {
                 NativeSlice<int> triangles = triangleGridIterator.GetNextRow();
@@ -130,10 +131,10 @@ internal struct AgentHeightCalculationJob : IJobParallelFor
         return isPointInsideTriangle;
     }
 
-    private struct BarycentricCoordinates
-    {
-        internal float u;
-        internal float v;
-        internal float w;
-    }
+}
+public struct BarycentricCoordinates
+{
+    internal float u;
+    internal float v;
+    internal float w;
 }

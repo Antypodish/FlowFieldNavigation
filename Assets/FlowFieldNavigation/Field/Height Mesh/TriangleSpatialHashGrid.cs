@@ -12,13 +12,15 @@ internal struct TriangleSpatialHashGrid
     internal NativeArray<UnsafeList<HashTile>> TriangleHashGrids;
     internal NativeHashMap<int, float> GridIndexToTileSize;
     internal int GetGridCount() => TriangleHashGrids.Length;
-    internal TriangleSpatialHashGridIterator GetIterator(float2 checkPosition, int hashGridIndex)
+    internal bool TryGetIterator(float2 checkPosition, int hashGridIndex, out TriangleSpatialHashGridIterator iterator)
     {
-        checkPosition -= HeightMapStartPosition;
-        if (TriangleHashGrids.Length <= hashGridIndex) { return new TriangleSpatialHashGridIterator(); }
         bool succesfull = GridIndexToTileSize.TryGetValue(hashGridIndex, out float tileSize);
-        if (!succesfull) { return new TriangleSpatialHashGridIterator(); }
-
+        if (!succesfull || !IsWithinBounds(checkPosition) || TriangleHashGrids.Length <= hashGridIndex)
+        {
+            iterator = new TriangleSpatialHashGridIterator();
+            return false;
+        }
+        checkPosition -= HeightMapStartPosition;
         int2 startingTileIndex = GetStartingTileIndex(checkPosition, tileSize);
         int2 botleft = startingTileIndex - new int2(1, 1);
         int2 topright = startingTileIndex + new int2(1, 1);
@@ -30,7 +32,15 @@ internal struct TriangleSpatialHashGrid
         topright.y = math.select(topright.y, gridRowAmount - 1, topright.y >= gridRowAmount);
         int botleft1d = botleft.y * gridColAmount + botleft.x;
         int verticalSize = topright.y - botleft.y + 1;
-        return new TriangleSpatialHashGridIterator(botleft1d, verticalSize, topright.x - botleft.x + 1, gridColAmount, HashedTriangles, TriangleHashGrids[hashGridIndex]);
+        iterator = new TriangleSpatialHashGridIterator(botleft1d, verticalSize, topright.x - botleft.x + 1, gridColAmount, HashedTriangles, TriangleHashGrids[hashGridIndex]);
+        return true;
+    }
+    internal bool IsWithinBounds(float2 point)
+    {
+        float2 endPos = HeightMapStartPosition + new float2(FieldHorizontalSize, FieldVerticalSize);
+        bool2 greaterThanMin = point > HeightMapStartPosition;
+        bool2 lessThanMax = point < endPos;
+        return greaterThanMin.x && greaterThanMin.y && lessThanMax.x && lessThanMax.y;
     }
     internal float GetGridTileSize(int gridIndex)
     {
@@ -87,6 +97,7 @@ internal struct TriangleSpatialHashGridIterator
         _curRowIndex += _gridTotalColAmount;
 
         NativeSlice<int> slice = new NativeSlice<int>(_hashedTriangleStartIndicies, trigPointerStart, trigPointerCount);
+
         return slice;
     }
 }

@@ -26,7 +26,7 @@ internal class EditorPathDebugger
         _fieldProducer = pathfindingManager.FieldDataContainer;
         _tileSize = FlowFieldUtilities.TileSize;
     }
-    internal void DebugDynamicAreaIntegration(FlowFieldAgent agent)
+    internal void DebugDynamicAreaIntegration(FlowFieldAgent agent, NativeArray<float> tileCenterHeights)
     {
         if (_pathContainer == null) { return; }
         if (_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
@@ -36,7 +36,7 @@ internal class EditorPathDebugger
         PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathIndex];
         PathLocationData locationData = _pathfindingManager.PathDataContainer.PathLocationDataList[pathIndex];
         UnsafeList<SectorFlowStart> pickedSectorFlowStarts = locationData.DynamicAreaPickedSectorFlowStarts;
-        NativeArray<IntegrationTile> integrationField = internalData.DynamicArea.IntegrationField;
+        NativeArray<IntegrationTile> integrationField = internalData.DynamicArea.IntegrationField.AsArray();
         int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
         int sectorColAmount = FlowFieldUtilities.SectorColAmount;
         float tileSize = FlowFieldUtilities.TileSize;
@@ -51,7 +51,10 @@ internal class EditorPathDebugger
             {
                 int local1d = (j - 1) % FlowFieldUtilities.SectorTileAmount;
                 float2 debugPos = FlowFieldUtilities.LocalIndexToPos(local1d, pickedSectorIndex, sectorMatrixColAmount, sectorColAmount, tileSize, sectorSize, fieldGridStartPos);
-                Vector3 debugPos3 = new Vector3(debugPos.x, 0.02f, debugPos.y);
+                int2 local2d = FlowFieldUtilities.To2D(local1d, sectorColAmount);
+                int2 sector2d = FlowFieldUtilities.To2D(pickedSectorIndex, sectorMatrixColAmount);
+                int general1d = FlowFieldUtilities.GetGeneral1d(local2d, sector2d, sectorColAmount, sectorMatrixColAmount);
+                Vector3 debugPos3 = new Vector3(debugPos.x, tileCenterHeights[general1d], debugPos.y);
                 float cost = integrationField[j].Cost;
                 if (cost != float.MaxValue)
                 {
@@ -60,7 +63,7 @@ internal class EditorPathDebugger
             }
         }
     }
-    internal void DebugDynamicAreaFlow(FlowFieldAgent agent)
+    internal void DebugDynamicAreaFlow(FlowFieldAgent agent, NativeArray<float> tileCenterHeights)
     {
         if (_pathContainer == null) { return; }
         if (_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
@@ -88,8 +91,11 @@ internal class EditorPathDebugger
             {
                 int local1d = (j - 1) % FlowFieldUtilities.SectorTileAmount;
                 float2 debugPos = FlowFieldUtilities.LocalIndexToPos(local1d, pickedSectorIndex, sectorMatrixColAmount, sectorColAmount, tileSize, sectorSize, fieldGridStartPos);
-                Vector3 debugPos3 = new Vector3(debugPos.x, 0.02f, debugPos.y);
-                if(j >= flowField.Length) { continue; }
+                int2 local2d = FlowFieldUtilities.To2D(local1d, sectorColAmount);
+                int2 sector2d = FlowFieldUtilities.To2D(pickedSectorIndex, sectorMatrixColAmount);
+                int general1d = FlowFieldUtilities.GetGeneral1d(local2d, sector2d, sectorColAmount, sectorMatrixColAmount);
+                Vector3 debugPos3 = new Vector3(debugPos.x, tileCenterHeights[general1d], debugPos.y);
+                if (j >= flowField.Length) { continue; }
                 FlowData flow = flowField[j];
                 if (!flow.IsValid()) { continue; }
                 DrawSquare(debugPos3, 0.2f);
@@ -99,10 +105,10 @@ internal class EditorPathDebugger
 
         void DrawSquare(Vector3 pos, float size)
         {
-            Vector3 botLeft = new Vector3(pos.x - size / 2, yOffset, pos.z - size / 2);
-            Vector3 botRight = new Vector3(pos.x + size / 2, yOffset, pos.z - size / 2);
-            Vector3 topLeft = new Vector3(pos.x - size / 2, yOffset, pos.z + size / 2);
-            Vector3 topRight = new Vector3(pos.x + size / 2, yOffset, pos.z + size / 2);
+            Vector3 botLeft = new Vector3(pos.x - size / 2, pos.y, pos.z - size / 2);
+            Vector3 botRight = new Vector3(pos.x + size / 2, pos.y, pos.z - size / 2);
+            Vector3 topLeft = new Vector3(pos.x - size / 2, pos.y, pos.z + size / 2);
+            Vector3 topRight = new Vector3(pos.x + size / 2, pos.y, pos.z + size / 2);
 
             Gizmos.DrawLine(topRight, botRight);
             Gizmos.DrawLine(botRight, botLeft);
@@ -111,43 +117,13 @@ internal class EditorPathDebugger
         }
         void DrawFlow(int flowIndex, Vector3 pos, float2 destination)
         {
-            pos = new Vector3(pos.x, yOffset, pos.z);
             float2 flowDir = flowField[flowIndex].GetFlow(_tileSize);
             flowDir = math.normalizesafe(flowDir) * 0.4f;
             Vector3 targetPos = pos + new Vector3(flowDir.x, 0f, flowDir.y);
             Gizmos.DrawLine(pos, targetPos);
         }
     }
-    internal void DebugActiveWaveFronts(FlowFieldAgent agent)
-    {
-        if (_pathContainer == null) { return; }
-        if (_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
-        int pathIndex = agent.GetPathIndex();
-        if (pathIndex == -1) { return; }
-        PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathIndex];
-
-        float tileSize = FlowFieldUtilities.TileSize;
-        int sectorColAmount = FlowFieldUtilities.SectorColAmount;
-        NativeArray<UnsafeList<ActiveWaveFront>> waveFronts = internalData.ActivePortalList;
-        NativeArray<int> pickedToSector = internalData.PickedSectorList;
-        Gizmos.color = Color.red;
-        for (int i = 0; i < pickedToSector.Length; i++)
-        {
-            int sectorIndex = pickedToSector[i];
-            int2 sector2d = FlowFieldUtilities.To2D(sectorIndex, FlowFieldUtilities.SectorMatrixColAmount);
-            UnsafeList<ActiveWaveFront> fronts = waveFronts[i];
-            for (int j = 0; j < fronts.Length; j++)
-            {
-                ActiveWaveFront front = fronts[j];
-                int2 local2d = FlowFieldUtilities.To2D(front.LocalIndex, sectorColAmount);
-                int2 general2d = FlowFieldUtilities.GetGeneral2d(local2d, sector2d, sectorColAmount, FlowFieldUtilities.FieldColAmount);
-                float2 pos = FlowFieldUtilities.IndexToPos(general2d, tileSize, FlowFieldUtilities.FieldGridStartPosition);
-                Vector3 pos3 = new Vector3(pos.x, 0f, pos.y);
-                Gizmos.DrawCube(pos3, new Vector3(0.6f, 0.6f, 0.6f));
-            }            
-        }
-    }
-    internal void DebugPortalTraversalMarks(FlowFieldAgent agent)
+    internal void DebugPortalTraversalMarks(FlowFieldAgent agent, NativeArray<float> portalHeights)
     {
         if (_pathContainer == null) { return; }
         if(_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
@@ -170,19 +146,23 @@ internal class EditorPathDebugger
             {
                 Gizmos.color = Color.white;
                 Vector3 portalPos = node.GetPosition(tileSize, FlowFieldUtilities.FieldGridStartPosition);
-                Handles.Label(portalPos + new Vector3(0, 0, 0.75f), "d: " + travData.DistanceFromTarget.ToString());
+                portalPos.y = portalHeights[i];
+                Vector3 labelPos = portalPos + new Vector3(0, 3, 0);
+                Handles.Label(labelPos, "d: " + travData.DistanceFromTarget.ToString());
                 Gizmos.DrawSphere(portalPos, 0.25f);
             }
             else if (travData.HasMark(PortalTraversalMark.Reduced))
             {
                 Gizmos.color = Color.black;
                 Vector3 portalPos = node.GetPosition(tileSize, FlowFieldUtilities.FieldGridStartPosition);
-                Handles.Label(portalPos + new Vector3(0, 0, 0.75f), "d: " + travData.DistanceFromTarget.ToString());
+                portalPos.y = portalHeights[i];
+                Vector3 labelPos = portalPos + new Vector3(0, 3,0);
+                Handles.Label(labelPos, "d: " + travData.DistanceFromTarget.ToString());
                 Gizmos.DrawSphere(portalPos, 0.25f);
             }
         }
     }
-    internal void DebugTargetNeighbourPortals(FlowFieldAgent agent)
+    internal void DebugTargetNeighbourPortals(FlowFieldAgent agent, NativeArray<float> portalHeights)
     {
         if (_pathContainer == null) { return; }
         if(_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
@@ -204,12 +184,14 @@ internal class EditorPathDebugger
             {
                 Gizmos.color = Color.magenta;
                 Vector3 portalPos = node.GetPosition(tileSize, FlowFieldUtilities.FieldGridStartPosition);
-                Handles.Label(portalPos + new Vector3(0, 0, 0.75f), "d: " + travData.DistanceFromTarget.ToString());
+                portalPos.y = portalHeights[i];
+                Vector3 labelPos = portalPos + new Vector3(0, 3, 0);
+                Handles.Label(labelPos, "d: " + travData.DistanceFromTarget.ToString());
                 Gizmos.DrawSphere(portalPos, 0.25f);
             }
         }
     }
-    internal void DebugPortalSequence(FlowFieldAgent agent)
+    internal void DebugPortalSequence(FlowFieldAgent agent, NativeArray<float> portalHeights)
     {
         if (_pathContainer == null) { return; }
         if (_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
@@ -239,30 +221,19 @@ internal class EditorPathDebugger
                 PortalNode firstportalNode = portalNodes[curPortalIndex];
                 PortalNode secondportalNode = portalNodes[nextPortalIndex];
                 if (firstportalNode.Portal1.Index.R == 0) { continue; }
-                Vector3 secondPorPos = secondportalNode.GetPosition(_tileSize, FlowFieldUtilities.FieldGridStartPosition);
-                Vector3 firstPorPos = firstportalNode.GetPosition(_tileSize, FlowFieldUtilities.FieldGridStartPosition);
+                Vector3 secondPorPos = secondportalNode.GetPosition(_tileSize, FlowFieldUtilities.FieldGridStartPosition) + new Vector3(0, portalHeights[nextPortalIndex], 0);
+                Vector3 firstPorPos = firstportalNode.GetPosition(_tileSize, FlowFieldUtilities.FieldGridStartPosition) + new Vector3(0, portalHeights[curNodeIndex], 0);
 
-                Vector3 relativeSecond = secondPorPos - firstPorPos;
-                Vector2 relativeSecond2d = new Vector2(relativeSecond.x, relativeSecond.z);
-                relativeSecond2d = relativeSecond2d.normalized;
-                Vector2 perpLeft = new Vector2(-relativeSecond2d.y, relativeSecond2d.x);
-                Vector2 perpRight = new Vector2(relativeSecond2d.y, -relativeSecond2d.x);
-
-                Vector2 rightArrow = (perpRight - relativeSecond2d).normalized;
-                Vector2 leftArrow = (perpLeft - relativeSecond2d).normalized;
-
-                Vector3 rightArrow3 = new Vector3(rightArrow.x, secondPorPos.y, rightArrow.y);
-                Vector3 leftArrow3 = new Vector3(leftArrow.x, secondPorPos.y, leftArrow.y);
                 Gizmos.DrawLine(firstPorPos, secondPorPos);
-                Gizmos.DrawLine(secondPorPos, secondPorPos + rightArrow3);
-                Gizmos.DrawLine(secondPorPos, secondPorPos + leftArrow3);
+                //Gizmos.DrawLine(secondPorPos, secondPorPos + rightArrow3);
+                //Gizmos.DrawLine(secondPorPos, secondPorPos + leftArrow3);
 
                 curNodeIndex = nextNodeIndex;
                 nextNodeIndex = porSeq[nextNodeIndex].NextIndex;
             }
         }
     }
-    internal void DebugPickedSectors(FlowFieldAgent agent)
+    internal void DebugPickedSectors(FlowFieldAgent agent, NativeArray<float> sectorCornerHeights)
     {
         if (_pathContainer == null) { return; }
         if (_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
@@ -272,7 +243,6 @@ internal class EditorPathDebugger
         PathLocationData locationData = _pathfindingManager.PathDataContainer.PathLocationDataList[pathIndex];
         PathDestinationData destinationData = _pathfindingManager.PathDataContainer.PathDestinationDataList[pathIndex];
         SectorBitArray sectorBitArray = _pathfindingManager.PathDataContainer.PathSectorBitArrays[pathIndex];
-        float yOffset = 0.3f;
         Gizmos.color = Color.black;
         FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
         NativeArray<SectorNode> sectorNodes = fg.SectorNodes;
@@ -294,17 +264,17 @@ internal class EditorPathDebugger
             float2 topLeft2 = sectorPos + new float2(-sectorSize / 2, sectorSize / 2);
             float2 botRight2 = sectorPos + new float2(sectorSize / 2, -sectorSize / 2);
             float2 topRight2 = sectorPos + new float2(sectorSize / 2, sectorSize / 2);
-            float3 botLeft3 = new float3(botLeft2.x, yOffset, botLeft2.y);
-            float3 topLeft3 = new float3(topLeft2.x, yOffset, topLeft2.y);
-            float3 botRight3 = new float3(botRight2.x, yOffset, botRight2.y);
-            float3 topRight3 = new float3(topRight2.x, yOffset, topRight2.y);
+            float3 botLeft3 = new float3(botLeft2.x, sectorCornerHeights[i * 4], botLeft2.y);
+            float3 topLeft3 = new float3(topLeft2.x, sectorCornerHeights[i * 4 + 1], topLeft2.y);
+            float3 topRight3 = new float3(topRight2.x, sectorCornerHeights[i * 4 + 2], topRight2.y);
+            float3 botRight3 = new float3(botRight2.x, sectorCornerHeights[i * 4 + 3], botRight2.y);
             Gizmos.DrawLine(botLeft3, topLeft3);
             Gizmos.DrawLine(topLeft3, topRight3);
             Gizmos.DrawLine(topRight3, botRight3);
             Gizmos.DrawLine(botRight3, botLeft3);
         }
     }
-    internal void DebugIntegrationField(FlowFieldAgent agent)
+    internal void DebugIntegrationField(FlowFieldAgent agent, NativeArray<float> tileCenterHeights)
     {
         if (_pathContainer == null) { return; }
         if (_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
@@ -317,8 +287,9 @@ internal class EditorPathDebugger
         PathDestinationData destinationData = _pathfindingManager.PathDataContainer.PathDestinationDataList[pathIndex];
         int sectorColAmount = FlowFieldUtilities.SectorColAmount;
         int sectorTileAmount = sectorColAmount * sectorColAmount;
+        int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
         UnsafeList<int> sectorMarks = locationData.SectorToPicked;
-        NativeArray<IntegrationTile> integrationField = internalData.IntegrationField;
+        NativeArray<IntegrationTile> integrationField = internalData.IntegrationField.AsArray();
         for (int i = 0; i < sectorMarks.Length; i++)
         {
             if (sectorMarks[i] == 0) { continue; }
@@ -328,11 +299,12 @@ internal class EditorPathDebugger
                 int local1d = (j - 1) % sectorTileAmount;
                 int2 general2d = FlowFieldUtilities.GetGeneral2d(local1d, i, FlowFieldUtilities.SectorMatrixColAmount, sectorColAmount);
                 float2 debugPos2 = FlowFieldUtilities.IndexToPos(general2d, _tileSize, FlowFieldUtilities.FieldGridStartPosition);
-                float3 debugPos = new float3(debugPos2.x, 0.02f, debugPos2.y);
+                int general1d = FlowFieldUtilities.To1D(general2d, FlowFieldUtilities.FieldColAmount);
+                Vector3 debugPos3 = new Vector3(debugPos2.x, tileCenterHeights[general1d], debugPos2.y);
                 float cost = integrationField[j].Cost;
                 if (cost != float.MaxValue)
                 {
-                    Handles.Label(debugPos, cost.ToString());
+                    Handles.Label(debugPos3, cost.ToString());
                 }
             }
             
@@ -350,7 +322,7 @@ internal class EditorPathDebugger
         PathLocationData locationData = _pathfindingManager.PathDataContainer.PathLocationDataList[pathIndex];
         PathDestinationData destinationData = _pathfindingManager.PathDataContainer.PathDestinationDataList[pathIndex];
         UnsafeList<int> sectorMarks = locationData.SectorToPicked;
-        NativeArray<IntegrationTile> integrationField = internalData.IntegrationField;
+        NativeArray<IntegrationTile> integrationField = internalData.IntegrationField.AsArray();
         int sectorColAmount = FlowFieldUtilities.SectorColAmount;
         int sectorTileAmount = sectorColAmount * sectorColAmount;
         for (int i = 0; i < sectorMarks.Length; i++)
@@ -380,7 +352,7 @@ internal class EditorPathDebugger
             } 
         }
     }
-    internal void DebugFlowField(FlowFieldAgent agent)
+    internal void DebugFlowField(FlowFieldAgent agent, NativeArray<float> tileCenterHeights)
     {
         if (_pathContainer == null) { return; }
         if (_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
@@ -409,7 +381,8 @@ internal class EditorPathDebugger
                 int local1d = (j - 1) % sectorTileAmount;
                 int2 general2d = FlowFieldUtilities.GetGeneral2d(local1d, i, FlowFieldUtilities.SectorMatrixColAmount, sectorColAmount);
                 float2 debugPos2 = FlowFieldUtilities.IndexToPos(general2d, _tileSize, FlowFieldUtilities.FieldGridStartPosition);
-                float3 debugPos = new float3(debugPos2.x, 0.02f, debugPos2.y);
+                int general1d = FlowFieldUtilities.To1D(general2d, FlowFieldUtilities.FieldColAmount);
+                float3 debugPos = new float3(debugPos2.x, tileCenterHeights[general1d], debugPos2.y);
                 if (j >= flowField.Length) { continue; }
                 if(HasLOS(i, local1d))
                 {
@@ -470,10 +443,10 @@ internal class EditorPathDebugger
 
         void DrawSquare(Vector3 pos, float size)
         {
-            Vector3 botLeft = new Vector3(pos.x - size / 2, yOffset, pos.z - size / 2);
-            Vector3 botRight = new Vector3(pos.x + size / 2, yOffset, pos.z - size / 2);
-            Vector3 topLeft = new Vector3(pos.x - size / 2, yOffset, pos.z + size / 2);
-            Vector3 topRight = new Vector3(pos.x + size / 2, yOffset, pos.z + size / 2);
+            Vector3 botLeft = new Vector3(pos.x - size / 2, pos.y, pos.z - size / 2);
+            Vector3 botRight = new Vector3(pos.x + size / 2, pos.y, pos.z - size / 2);
+            Vector3 topLeft = new Vector3(pos.x - size / 2, pos.y, pos.z + size / 2);
+            Vector3 topRight = new Vector3(pos.x + size / 2, pos.y, pos.z + size / 2);
 
             Gizmos.DrawLine(topRight, botRight);
             Gizmos.DrawLine(botRight, botLeft);
@@ -482,8 +455,7 @@ internal class EditorPathDebugger
         }
         void DrawLOS(Vector3 pos, float2 destination)
         {
-            pos = new Vector3(pos.x, yOffset, pos.z);
-            float3 destination3 = new float3(destination.x, yOffset, destination.y);
+            float3 destination3 = new float3(destination.x, pos.y, destination.y);
             float3 dirToDes = destination3 - (float3)pos;
             dirToDes = math.normalizesafe(dirToDes) * 0.4f;
             Vector3 target = pos + (Vector3)dirToDes;
@@ -491,7 +463,6 @@ internal class EditorPathDebugger
         }
         void DrawFlow(FlowData flowData, Vector3 pos)
         {
-            pos = new Vector3(pos.x, yOffset, pos.z);
             float2 flowDir = flowData.GetFlow(_tileSize);
             flowDir = math.normalizesafe(flowDir) * 0.4f;
             Vector3 targetPos = pos + new Vector3(flowDir.x, 0f, flowDir.y);
@@ -506,10 +477,65 @@ internal class EditorPathDebugger
         if (pathIndex == -1) { return; }
 
         PathDestinationData destinationData = _pathfindingManager.PathDataContainer.PathDestinationDataList[_pathfindingManager.Interface.GetPathIndex(agent.AgentDataIndex)];
+        NativeArray<float3> heightMeshVerticies = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray();
+        TriangleSpatialHashGrid spatialHashGrid = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid();
         Vector2 destination = destinationData.Destination;
-        Vector3 destination3 = new Vector3(destination.x, 0.1f, destination.y);
+        Vector3 destination3 = new Vector3(destination.x, GetHeight(destination, spatialHashGrid, heightMeshVerticies), destination.y);
         Gizmos.color = Color.blue;
         Gizmos.DrawSphere(destination3, 0.3f);
+
+
+
+        float GetHeight(float2 pos, TriangleSpatialHashGrid triangleSpatialHashGrid, NativeArray<float3> heightMeshVerts)
+        {
+            float curHeight = float.MinValue;
+            for (int i = 0; i < triangleSpatialHashGrid.GetGridCount(); i++)
+            {
+                bool succesfull = triangleSpatialHashGrid.TryGetIterator(pos, i, out TriangleSpatialHashGridIterator triangleGridIterator);
+                if (!succesfull) { return 0; }
+                while (triangleGridIterator.HasNext())
+                {
+                    NativeSlice<int> triangles = triangleGridIterator.GetNextRow();
+                    for (int j = 0; j < triangles.Length; j += 3)
+                    {
+                        int v1Index = triangles[j];
+                        int v2Index = triangles[j + 1];
+                        int v3Index = triangles[j + 2];
+                        float3 v13d = heightMeshVerts[v1Index];
+                        float3 v23d = heightMeshVerts[v2Index];
+                        float3 v33d = heightMeshVerts[v3Index];
+                        float2 v1 = new float2(v13d.x, v13d.z);
+                        float2 v2 = new float2(v23d.x, v23d.z);
+                        float2 v3 = new float2(v33d.x, v33d.z);
+
+                        BarycentricCoordinates barCords = GetBarycentricCoordinatesForEachVectorInTheOrderUVW(v1, v2, v3, pos);
+                        if (barCords.u < 0 || barCords.w < 0 || barCords.v < 0) { continue; }
+                        float newHeight = v13d.y * barCords.u + v23d.y * barCords.v + v33d.y * barCords.w;
+                        curHeight = math.select(curHeight, newHeight, newHeight > curHeight);
+                    }
+                }
+            }
+            return math.select(curHeight, 0, curHeight == float.MinValue);
+        }
+        BarycentricCoordinates GetBarycentricCoordinatesForEachVectorInTheOrderUVW(float2 a, float2 b, float2 c, float2 p)
+        {
+            float2 v0 = b - a, v1 = c - a, v2 = p - a;
+            float d00 = math.dot(v0, v0);
+            float d01 = math.dot(v0, v1);
+            float d11 = math.dot(v1, v1);
+            float d20 = math.dot(v2, v0);
+            float d21 = math.dot(v2, v1);
+            float denom = d00 * d11 - d01 * d01;
+            float v = (d11 * d20 - d01 * d21) / denom;
+            float w = (d00 * d21 - d01 * d20) / denom;
+            float u = 1.0f - v - w;
+            return new BarycentricCoordinates()
+            {
+                v = v,
+                u = u,
+                w = w,
+            };
+        }
     }
 }
 #endif

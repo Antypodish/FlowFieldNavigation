@@ -11,17 +11,15 @@ public class EditorDebuggingController : MonoBehaviour
     [HideInInspector] public FlowFieldAgent AgentToDebug;
     [Header("Field Debugger")]
     [SerializeField] int _costFieldOffset;
+    [SerializeField] bool _debugTiles;
     [SerializeField] bool _costField;
     [SerializeField] bool _sectors;
-    [SerializeField] bool _windows;
     [SerializeField] bool _portals;
-    [SerializeField] bool _portalIslands;
-    [SerializeField] bool _sectorIslands;
+    [SerializeField] bool _islands;
     [SerializeField] bool _portalErrorDetection;
     [Header("Height Mesh Debugger")]
     [SerializeField] int _meshGridIndex;
     [SerializeField] bool _debugHeightMesh;
-    [SerializeField] bool _debugTrianglesAtClickedTile;
     [SerializeField] bool _debugGridBorders;
     [Header("PathDebugger")]
     [SerializeField] bool _debugDestination;
@@ -30,9 +28,7 @@ public class EditorDebuggingController : MonoBehaviour
     [SerializeField] bool _debugPortalSequence;
     [SerializeField] bool _debugPickedSectors;
     [SerializeField] bool _debugIntegrationField;
-    [SerializeField] bool _debugLOSBlocks;
     [SerializeField] bool _debugFlowField;
-    [SerializeField] bool _debugActiveWaveFronts;
     [SerializeField] bool _debugDynamicAreaIntegration;
     [SerializeField] bool _debugDynamicAreaFlow;
     [Header("Agent Debugger")]
@@ -40,17 +36,14 @@ public class EditorDebuggingController : MonoBehaviour
     [SerializeField] bool _debugAgentsHoldingGround;
     [SerializeField] bool _debugAgentSeperationRadius;
     [SerializeField] bool _debugAvoidanceDirections;
-    [SerializeField] bool _debugAgentPathIndicies;
     [Header("Spatial Hash Grid Debugger")]
     [SerializeField] int _gridIndex;
     [SerializeField] bool _debugSpatialHashGrid;
     [SerializeField] bool _debugBorders;
     [SerializeField] bool _debugAroundAgent;
-    [SerializeField] float _checkRange;
 
     //debuggers
     EditorSectorDebugger _sectorDebugger;
-    EditorWindowDebugger _windowDebugger;
     EditorPortalDebugger _portalDebugger;
     EditorPathDebugger _pathDebugger;
     EditorAgentDirectionDebugger _agentDirectionDebugger;
@@ -59,18 +52,20 @@ public class EditorDebuggingController : MonoBehaviour
     EditorAgentRadiusDebugger _agentRadiusDebugger;
     EditorAvoidanceDirectionDebugger _avoidanceDirectionDebugger;
     EditorSpatialHashGridDebugger _spatialHashGridDebugger;
-    EditorIslandDebugger _islandDebugger;
+    EditorTileIslandDebugger _islandDebugger;
     EditorHeightMeshDebugger _heightMeshDebugger;
-    EditorAgentPathIndexDebugger _agentPathIndexDebugger;
+    EditorTileDebugger _tileDebugger;
 
-    Camera _cameraToRender;
+    Camera _overlayCamera;
+    PortalHeightBuilder _portalHeightBuilder;
+    TileCenterHeightBuilder _tileCenterHeightBuilder;
+    SectorCornerHeightBuilder _sectorCornerHeightBuilder;
     private void Start()
     {
-        _cameraToRender = GetComponent<Camera>();
-        _cameraToOverlayOnTopOf.GetComponent<UniversalAdditionalCameraData>().cameraStack.Add(_cameraToRender);
+        _overlayCamera = GetComponent<Camera>();
+        _cameraToOverlayOnTopOf.GetComponent<UniversalAdditionalCameraData>().cameraStack.Add(_overlayCamera);
 
         _sectorDebugger = new EditorSectorDebugger(_pathfindingManager);
-        _windowDebugger = new EditorWindowDebugger(_pathfindingManager);
         _portalDebugger = new EditorPortalDebugger(_pathfindingManager);
         _agentDirectionDebugger = new EditorAgentDirectionDebugger(_pathfindingManager);
         _costFieldDebugger = new EditorCostFieldDebugger(_pathfindingManager);
@@ -78,10 +73,12 @@ public class EditorDebuggingController : MonoBehaviour
         _agentRadiusDebugger = new EditorAgentRadiusDebugger(_pathfindingManager);
         _avoidanceDirectionDebugger = new EditorAvoidanceDirectionDebugger(_pathfindingManager);
         _spatialHashGridDebugger = new EditorSpatialHashGridDebugger(_pathfindingManager);
-        _islandDebugger = new EditorIslandDebugger(_pathfindingManager);
+        _islandDebugger = new EditorTileIslandDebugger(_pathfindingManager);
         _heightMeshDebugger = new EditorHeightMeshDebugger(_pathfindingManager);
-        _agentPathIndexDebugger = new EditorAgentPathIndexDebugger(_pathfindingManager);
-
+        _tileDebugger = new EditorTileDebugger(_pathfindingManager);
+        _portalHeightBuilder = new PortalHeightBuilder(_pathfindingManager);
+        _tileCenterHeightBuilder = new TileCenterHeightBuilder(_pathfindingManager);
+        _sectorCornerHeightBuilder = new SectorCornerHeightBuilder(_pathfindingManager);
 #if UNITY_STANDALONE && !UNITY_EDITOR
 _debuggingEnabled = false;
 #endif
@@ -96,41 +93,35 @@ _debuggingEnabled = false;
         if (!_pathfindingManager.SimulationStarted) { return; }
         FlowFieldUtilities.DebugMode = _debuggingEnabled;
         if (!_debuggingEnabled) { return; }
-        if(Camera.current != _cameraToRender) { return; }
 
-        if (_sectors && _sectorDebugger != null) { _sectorDebugger.DebugSectors(_costFieldOffset); }
-        if( _windows && _windowDebugger != null) { _windowDebugger.DebugWindows(_costFieldOffset); }
-        if(_portals && _portalDebugger != null) { _portalDebugger.DebugPortals(_costFieldOffset); }
-        if(_costField && _costFieldDebugger != null) { _costFieldDebugger.DebugCostFieldWithMesh(_costFieldOffset); }
-        if(_portalIslands && _islandDebugger != null) { _islandDebugger.DebugPortalIslands(_costFieldOffset); }
-        if(_sectorIslands && _islandDebugger != null) { _islandDebugger.DebugTileIslands(_costFieldOffset); }
-        if(_debugHeightMesh && _heightMeshDebugger != null) { _heightMeshDebugger.DebugHeightMapMesh(); }
-        if(_debugTrianglesAtClickedTile && _heightMeshDebugger != null) { _heightMeshDebugger.DebugTrianglesAtTile(); }
-        if(_debugGridBorders && _heightMeshDebugger != null) { _heightMeshDebugger.DebugBorders(_meshGridIndex); }
+        if (_debugTiles) { _tileDebugger.Debug(); }
+        if (_costField) { _costFieldDebugger.DebugCostFieldWithMesh(_costFieldOffset); }
+        if (_sectors) { _sectorDebugger.DebugSectors(); }
+        if (_portals) { _portalDebugger.DebugPortals(_costFieldOffset); }
+        if (_islands) { _islandDebugger.DebugTileIslands(_costFieldOffset); }
+        if (_debugHeightMesh) { _heightMeshDebugger.DebugHeightMapMesh(); }
+        if (_debugGridBorders) { _heightMeshDebugger.DebugBorders(_meshGridIndex); }
+        if (_debugBorders) { _spatialHashGridDebugger.DebugBorders(_gridIndex); }
+        if (_debugAgentDirections) { _agentDirectionDebugger.Debug(); }
+        if (_debugAgentsHoldingGround) { _holdGroundDebugger.Debug(); }
+        if (_debugAgentSeperationRadius) { _agentRadiusDebugger.DebugSeperationRadius(); }
+        if (_debugAvoidanceDirections) { _avoidanceDirectionDebugger.Debug(); }
+        if (_debugSpatialHashGrid) { _spatialHashGridDebugger.Debug(_gridIndex); }
 
-        if(AgentToDebug != null)
+        if (AgentToDebug != null)
         {
-            if (_debugPortalTraversalMarks && _pathDebugger != null) { _pathDebugger.DebugPortalTraversalMarks(AgentToDebug); }
-            if (_debugPortalSequence && _pathDebugger != null) { _pathDebugger.DebugPortalSequence(AgentToDebug); }
-            if (_debugPickedSectors && _pathDebugger != null) { _pathDebugger.DebugPickedSectors(AgentToDebug); }
-            if (_debugIntegrationField && _pathDebugger != null) { _pathDebugger.DebugIntegrationField(AgentToDebug); }
-            if (_debugFlowField && _pathDebugger != null) { _pathDebugger.DebugFlowField(AgentToDebug); }
-            if (_debugLOSBlocks && _pathDebugger != null) { _pathDebugger.LOSBlockDebug(AgentToDebug); }
-            if(_debugActiveWaveFronts && _pathDebugger != null) { _pathDebugger.DebugActiveWaveFronts(AgentToDebug); }
-            if(_debugPortalTargetNeighbours && _pathDebugger != null) { _pathDebugger.DebugTargetNeighbourPortals(AgentToDebug); }
-            if(_debugDestination && _pathDebugger != null) { _pathDebugger.DebugDestination(AgentToDebug); }
-            if (_debugDynamicAreaIntegration && _pathDebugger != null) { _pathDebugger.DebugDynamicAreaIntegration(AgentToDebug); }
-            if (_debugDynamicAreaFlow && _pathDebugger != null) { _pathDebugger.DebugDynamicAreaFlow(AgentToDebug); }
-            if (_debugAroundAgent && _spatialHashGridDebugger != null) { _spatialHashGridDebugger.DebugAgent(AgentToDebug, _gridIndex, _checkRange); }
-            if (_debugAgentPathIndicies && _agentPathIndexDebugger != null) { _agentPathIndexDebugger.Debug(AgentToDebug); }
+            if (_debugAroundAgent) { _spatialHashGridDebugger.DebugAgent(AgentToDebug, _gridIndex); }
+            if (_debugPortalTraversalMarks) { _pathDebugger.DebugPortalTraversalMarks(AgentToDebug, _portalHeightBuilder.GetPortalHeights(_costFieldOffset)); }
+            if (_debugPortalTargetNeighbours) { _pathDebugger.DebugTargetNeighbourPortals(AgentToDebug, _portalHeightBuilder.GetPortalHeights(_costFieldOffset)); }
+            if (_debugPortalSequence) { _pathDebugger.DebugPortalSequence(AgentToDebug, _portalHeightBuilder.GetPortalHeights(_costFieldOffset)); }
+            if (_debugIntegrationField) { _pathDebugger.DebugIntegrationField(AgentToDebug, _tileCenterHeightBuilder.GetTileCenterHeights()); }
+            if (_debugFlowField) { _pathDebugger.DebugFlowField(AgentToDebug, _tileCenterHeightBuilder.GetTileCenterHeights()); }
+            if (_debugDestination) { _pathDebugger.DebugDestination(AgentToDebug); }
+            if (_debugDynamicAreaIntegration) { _pathDebugger.DebugDynamicAreaIntegration(AgentToDebug, _tileCenterHeightBuilder.GetTileCenterHeights()); }
+            if (_debugDynamicAreaFlow) { _pathDebugger.DebugDynamicAreaFlow(AgentToDebug, _tileCenterHeightBuilder.GetTileCenterHeights()); }
+            if (_debugPickedSectors) { _pathDebugger.DebugPickedSectors(AgentToDebug, _sectorCornerHeightBuilder.GetSectorCornerHeights()); }
         }
 
-        if (_debugAgentDirections && _agentDirectionDebugger != null) { _agentDirectionDebugger.Debug(); }
-        if(_debugAgentsHoldingGround && _holdGroundDebugger != null) { _holdGroundDebugger.Debug(); }
-        if(_debugAgentSeperationRadius && _agentRadiusDebugger != null) { _agentRadiusDebugger.DebugSeperationRadius(); }
-        if (_debugAvoidanceDirections && _avoidanceDirectionDebugger != null) { _avoidanceDirectionDebugger.Debug(); }
-        if(_debugSpatialHashGrid && _spatialHashGridDebugger != null) { _spatialHashGridDebugger.Debug(_gridIndex); }
-        if(_debugBorders && _spatialHashGridDebugger != null) { _spatialHashGridDebugger.DebugBorders(_gridIndex); }
     }
 
     void HandleNewPos()
