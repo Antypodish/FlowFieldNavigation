@@ -9,6 +9,7 @@ public struct AgentData
     internal MovingAvoidanceStatus MovingAvoidance;
     public float2 Destination;
     public float2 Direction;
+    public float3 Direction3;
     public float2 DesiredDirection;
     public float3 Seperation;
     public float3 Position;

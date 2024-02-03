@@ -246,6 +246,14 @@ internal class MovementManager
         };
         JobHandle wallDetectionHandle = wallDetection.Schedule(agentDataArray.Length, 64, wallCollisionHandle);
 
+        AgentDirectionHeightCalculationJob directionHeightJob = new AgentDirectionHeightCalculationJob()
+        {
+            TriangleSpatialHashGrid = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
+            Verticies = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.Verticies,
+            AgentMovementDataArray = AgentMovementDataList,
+            RoutineResultArray = RoutineResults,
+        };
+        JobHandle directionHeightJobHandle = directionHeightJob.Schedule(agentDataArray.Length, 64, wallDetectionHandle);
 
         PathReachDistances.Length = exposedPathReachDistanceCheckRanges.Length;
         DestinationReachedAgentCountJob destinationReachedCounter = new DestinationReachedAgentCountJob()
@@ -269,7 +277,7 @@ internal class MovementManager
             PathStateList = exposedPathStateList,
             PathAgentStopFlagList = exposedPathAgentStopFlagList,
         };
-        JobHandle destinationReachedCounterHandle = destinationReachedCounter.Schedule(exposedPathFlockIndicies.Length, 64, wallDetectionHandle);
+        JobHandle destinationReachedCounterHandle = destinationReachedCounter.Schedule(exposedPathFlockIndicies.Length, 64, directionHeightJobHandle);
 
         AgentStoppingJob stoppingJob = new AgentStoppingJob()
         {

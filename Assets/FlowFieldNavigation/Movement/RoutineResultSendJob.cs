@@ -20,6 +20,7 @@ struct RoutineResultSendJob : IJob
             int hashedIndex = NormalToHashed[i];
             AgentMovementData movementData = MovementDataArray[hashedIndex];
             RoutineResult result = RoutineResultArray[hashedIndex];
+            agentData.Direction3 = result.NewDirection3;
             agentData.DesiredDirection = movementData.DesiredDirection;
             agentData.Direction = result.NewDirection;
             agentData.Seperation = result.NewSeperation;
