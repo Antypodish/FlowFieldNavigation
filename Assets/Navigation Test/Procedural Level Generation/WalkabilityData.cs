@@ -66,7 +66,7 @@ public class WalkabilityData
             noiseMap[r] = new float[ColAmount];
             for(int c = 0; c < noiseMap[r].Length; c++)
             {
-                noiseMap[r][c] = Mathf.PerlinNoise((float)r / _resolution, (float)c / _resolution);
+                noiseMap[r][c] = Mathf.PerlinNoise(r / _resolution, c / _resolution);
             }
         }
 

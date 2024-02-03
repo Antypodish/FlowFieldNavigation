@@ -9,7 +9,9 @@ public class TerrainGenerator : MonoBehaviour
     [SerializeField] MeshFilter _fieldMeshFilter;
     [SerializeField] PathfindingManager _pathfindingManager;
     [Header("Random Generator")]
-    [SerializeField][Range(1,100)] float _resolution;    //5 good
+    [SerializeField][Range(1,100)] float _unwalkabilityResolution;
+    [SerializeField][Range(1,200)] float _heightNoiseResolution;
+    public float MaxHeight;
     [SerializeField] SimulationState _simulationState;
     [SerializeField] Material _obstacleMat;
     [SerializeField] Material _fieldMat;
@@ -19,7 +21,6 @@ public class TerrainGenerator : MonoBehaviour
     public int RowAmount;
     public int ColumnAmount;
     public bool RandomHeights;
-    public float MaxHeight;
 
     ObstacleGenerator obsGenerator;
 
@@ -29,12 +30,12 @@ public class TerrainGenerator : MonoBehaviour
     {
         _generatedMeshes = new List<Mesh>();
         _generatedMeshTransforms = new List<Transform>();
-        WalkabilityData = new WalkabilityData(TileSize, RowAmount, ColumnAmount, _resolution, _simulationState);
+        WalkabilityData = new WalkabilityData(TileSize, RowAmount, ColumnAmount, _unwalkabilityResolution, _simulationState);
 
-        GenerateMesh();
+        NativeArray<float> vertexHeights = GenerateMesh();
 
         obsGenerator = new ObstacleGenerator(this, WalkabilityData, _obstacleMat);
-        obsGenerator.CreateMesh();
+        obsGenerator.CreateMesh(vertexHeights);
 
 
         //Start Simulation
@@ -52,7 +53,7 @@ public class TerrainGenerator : MonoBehaviour
         };
         _pathfindingManager.Interface.StartSimulation(simParam);
     }
-    public void GenerateMesh()
+    public NativeArray<float> GenerateMesh()
     {
         int vertColAmount = ColumnAmount + 1;
         int vertRowAmount = RowAmount + 1;
@@ -62,7 +63,7 @@ public class TerrainGenerator : MonoBehaviour
         {
             for(int j = 0; j < vertColAmount; j++)
             {
-                float height = RandomHeights ? Random.Range(0f, MaxHeight) : 0;
+                float height = Mathf.PerlinNoise(j / _heightNoiseResolution, i / _heightNoiseResolution) * MaxHeight;
                 vertexHeights[vertexHeightIndex] = height;
                 vertexHeightIndex++;
             }
@@ -88,6 +89,7 @@ public class TerrainGenerator : MonoBehaviour
                 GeneratePartition(partitionStartPos, partitionVertColAmount, partitionVertRowAmount, vertexHeights, startVertexRow * vertColAmount + startVertexCol);
             }
         }
+        return vertexHeights;
     }
 
     void GeneratePartition(Vector3 startPos, int vertColAmount, int vertRowAmount, NativeArray<float> heights, int vertStartIndex)
@@ -97,13 +99,12 @@ public class TerrainGenerator : MonoBehaviour
         partitionObject.transform.position = startPos + new Vector3((vertColAmount -1)* TileSize / 2, 0f, (vertRowAmount -1) * TileSize / 2);
         partitionObject.transform.parent = gameObject.transform;
         partitionObject.AddComponent<MeshFilter>();
-        partitionObject.AddComponent<BoxCollider>();
+        partitionObject.AddComponent<MeshCollider>();
         partitionObject.AddComponent<MeshRenderer>();
 
         MeshFilter meshFilter = partitionObject.GetComponent<MeshFilter>();
-        BoxCollider boxCollider = partitionObject.GetComponent<BoxCollider>();
+        MeshCollider meshCollider = partitionObject.GetComponent<MeshCollider>();
         MeshRenderer meshRenderer = partitionObject.GetComponent<MeshRenderer>();
-        boxCollider.size = new Vector3((vertColAmount - 1) * TileSize, 0f, (vertRowAmount - 1) * TileSize);
         meshRenderer.material = _fieldMat;
 
 
@@ -164,6 +165,7 @@ public class TerrainGenerator : MonoBehaviour
 
         _generatedMeshes.Add(partitionMesh);
         _generatedMeshTransforms.Add(partitionObject.transform);
+        meshCollider.sharedMesh = partitionMesh;
     }
 }
 public enum SimulationState : byte

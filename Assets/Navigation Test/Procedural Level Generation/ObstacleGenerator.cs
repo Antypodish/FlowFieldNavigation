@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using Unity.Collections;
 
 public class ObstacleGenerator
 {
@@ -17,7 +18,7 @@ public class ObstacleGenerator
         obstacleObjects = new List<GameObject>();
     }
 
-    public void CreateMesh()
+    public void CreateMesh(NativeArray<float> vertexHeights)
     {
         float tileSize = _terrainGenerator.TileSize;
         float yOffset = 0.001f;
@@ -30,6 +31,8 @@ public class ObstacleGenerator
         curObsObject.GetComponent<MeshFilter>().mesh = curMesh;
 
         WalkabilityCell[][] walkabilityMatrix = _walkabilityData.WalkabilityMatrix;
+        int rowAmount = walkabilityMatrix.Length;
+        int colAmount = walkabilityMatrix[0].Length;
         for (int y = 0; y < walkabilityMatrix.Length; y++)
         {
             for (int x = 0; x < walkabilityMatrix[y].Length; x++)
@@ -37,6 +40,8 @@ public class ObstacleGenerator
                 WalkabilityCell cell = walkabilityMatrix[y][x];
                 if (cell.Walkability == Walkability.Unwalkable)
                 {
+                    int heightIndex = y * (colAmount + 1) + x;
+                    float height = vertexHeights[heightIndex];
                     //DETERMINE OBSTACLE OBJECT
                     obsCount++;
                     if ((obsCount % 6000) == 0)
@@ -61,10 +66,10 @@ public class ObstacleGenerator
                     Vector3 lowerTopRight = cell.CellPosition + new Vector3(tileSize, 0, tileSize);
                     Vector3 lowerBotRight = cell.CellPosition + new Vector3(tileSize, 0, 0);
 
-                    Vector3 upperBotLeft = cell.CellPosition + new Vector3(0, 2f, 0);
-                    Vector3 upperTopLeft = cell.CellPosition + new Vector3(0, 2f, tileSize);
-                    Vector3 upperTopRight = cell.CellPosition + new Vector3(tileSize, 2f, tileSize);
-                    Vector3 upperBotRight = cell.CellPosition + new Vector3(tileSize, 2f, 0);
+                    Vector3 upperBotLeft = cell.CellPosition + new Vector3(0, height + 2f, 0);
+                    Vector3 upperTopLeft = cell.CellPosition + new Vector3(0, height + 2f, tileSize);
+                    Vector3 upperTopRight = cell.CellPosition + new Vector3(tileSize, height + 2f, tileSize);
+                    Vector3 upperBotRight = cell.CellPosition + new Vector3(tileSize, height + 2f, 0);
 
                     int lbl = vertexStartIndex;
                     int ltl = vertexStartIndex + 1;
