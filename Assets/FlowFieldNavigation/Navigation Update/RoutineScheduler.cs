@@ -6,6 +6,8 @@ using UnityEngine.Jobs;
 
 internal class RoutineScheduler
 {
+    internal uint FieldState { get { return _fieldState; } }
+
     PathfindingManager _pathfindingManager;
     MovementManager _movementManager;
     PathConstructionPipeline _pathConstructionPipeline;
@@ -13,6 +15,7 @@ internal class RoutineScheduler
     List<JobHandle> _costEditHandle;
     List<JobHandle> _islandReconfigHandle;
 
+    uint _fieldState;
     internal NativeList<PathRequest> CurrentRequestedPaths;
 
     NativeList<UnsafeListReadOnly<byte>> _costFieldCosts;
@@ -29,6 +32,7 @@ internal class RoutineScheduler
         _costFieldCosts = new NativeList<UnsafeListReadOnly<byte>>(Allocator.Persistent);
         EditedSectorBitArray = new NativeList<SectorBitArray>(Allocator.Persistent);
         NewCostEditRequests = new NativeList<CostEdit>(Allocator.Persistent);
+        _fieldState = 0;
     }
     internal void DisposeAll()
     {
@@ -67,11 +71,9 @@ internal class RoutineScheduler
         //SCHEDULE COST EDITS
         JobHandle costEditHandle = ScheduleCostEditRequests();
         JobHandle islandFieldReconfigHandle = ScheduleIslandFieldReconfig(costEditHandle);
-        _costEditHandle.Add(costEditHandle);
-        _islandReconfigHandle.Add(islandFieldReconfigHandle);
 
         //SET POSITIONS OF AGENT DATA
-        NativeArray<AgentData> agentData = _pathfindingManager.AgentDataContainer.AgentDataList;
+        NativeArray<AgentData> agentData = _pathfindingManager.AgentDataContainer.AgentDataList.AsArray();
 
         TransformAccessArray agentTransforms = _pathfindingManager.AgentDataContainer.AgentTransforms;
         AgentDataSetPositionJob posSetJob = new AgentDataSetPositionJob()
@@ -95,16 +97,16 @@ internal class RoutineScheduler
         //TRANSFER REQUESTED PATHS TO NEW PATHS
         RequestedToNewPathIndexTransferJob reqToNewTransfer = new RequestedToNewPathIndexTransferJob()
         {
-            AgentRequestedPathIndicies = _pathfindingManager.AgentDataContainer.AgentRequestedPathIndicies,
-            AgentNewPathIndicies = _pathfindingManager.AgentDataContainer.AgentNewPathIndicies,
+            AgentRequestedPathIndicies = _pathfindingManager.AgentDataContainer.AgentRequestedPathIndicies.AsArray(),
+            AgentNewPathIndicies = _pathfindingManager.AgentDataContainer.AgentNewPathIndicies.AsArray(),
         };
         JobHandle transferHandle = reqToNewTransfer.Schedule();
 
         JobHandle.CombineDependencies(transferHandle, copyHandle, posSetHandle).Complete();
 
 
-        _pathConstructionPipeline.ShcedulePathRequestEvalutaion(CurrentRequestedPaths, _costFieldCosts, EditedSectorBitArray.AsArray().AsReadOnly(), islandFieldProcessors, islandFieldReconfigHandle);
-        _movementManager.ScheduleRoutine(_costFieldCosts, costEditHandle);
+        _pathConstructionPipeline.ShcedulePathRequestEvalutaion(CurrentRequestedPaths, _costFieldCosts.AsArray(), EditedSectorBitArray.AsArray().AsReadOnly(), islandFieldProcessors, islandFieldReconfigHandle);
+        _movementManager.ScheduleRoutine(_costFieldCosts.AsArray(), costEditHandle);
     }
     internal void TryCompletePredecessorJobs()
     {
@@ -116,6 +118,7 @@ internal class RoutineScheduler
                 _islandReconfigHandle[0].Complete();
                 _islandReconfigHandle.RemoveAtSwapBack(0);
             }
+            _fieldState++;
         }
 
         _pathConstructionPipeline.TryComplete();
@@ -128,11 +131,12 @@ internal class RoutineScheduler
             _costEditHandle[0].Complete();
             _costEditHandle.RemoveAtSwapBack(0);
         }
-        //ISLAND RECONFİG
+        //ISLAND RECONFIG
         if (_islandReconfigHandle.Count != 0)
         {
             _islandReconfigHandle[0].Complete();
             _islandReconfigHandle.RemoveAtSwapBack(0);
+            _fieldState++;
         }
 
         _movementManager.ForceCompleteRoutine();
@@ -143,10 +147,6 @@ internal class RoutineScheduler
         CurrentRequestedPaths.Clear();
         EditedSectorBitArray.Clear();
         NewCostEditRequests.Clear();
-    }
-    internal MovementManager GetMovementManager()
-    {
-        return _movementManager;
     }
     JobHandle ScheduleCostEditRequests()
     {
@@ -187,7 +187,7 @@ internal class RoutineScheduler
                 EditedWindowMarks = fieldGraph.EditedWindowMarks,
                 IntegratedCosts = fieldGraph.SectorIntegrationField,
                 IslandFields = fieldGraph.IslandFields,
-                Islands = fieldGraph.IslandDataList,
+                Islands = fieldGraph.IslandDataList.AsArray(),
                 NewCostEdits = fieldGraph.NewCostEdits,
                 PorPtrs = fieldGraph.PorToPorPtrs,
                 PortalNodes = fieldGraph.PortalNodes,
@@ -199,10 +199,11 @@ internal class RoutineScheduler
 
             EditedSectorBitArray.Add(costEditJob.EditedSectorBits);
         }
-        JobHandle cominedHandle = JobHandle.CombineDependencies(editHandles);
+        JobHandle cominedHandle = JobHandle.CombineDependencies(editHandles.AsArray());
         editHandles.Dispose();
 
         if (FlowFieldUtilities.DebugMode) { cominedHandle.Complete(); }
+        _costEditHandle.Add(cominedHandle);
         return cominedHandle;
     }
     JobHandle ScheduleIslandFieldReconfig(JobHandle dependency)
@@ -236,7 +237,7 @@ internal class RoutineScheduler
         JobHandle combinedHandles = JobHandle.CombineDependencies(handlesToCombine);
 
         if (FlowFieldUtilities.DebugMode) { combinedHandles.Complete(); }
-
+        _islandReconfigHandle.Add(combinedHandles);
         return combinedHandles;
     }
 }

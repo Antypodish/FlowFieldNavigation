@@ -12,22 +12,32 @@ internal class PortalDebugMeshBuilder
     PathfindingManager _pathfindingManager;
     List<Mesh> _debugMeshes;
     bool _isCreated;
+    uint _lastFieldState;
+    int _lastOffset;
 
     internal PortalDebugMeshBuilder(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
         _isCreated = false;
         _debugMeshes = new List<Mesh>();
+        _lastFieldState = pathfindingManager.GetFieldState();
+        _lastOffset = 0;
     }
     internal List<Mesh> GetDebugMeshes(int offset)
     {
-        if (!_isCreated) { Create(offset); }
+        uint curFieldState = _pathfindingManager.GetFieldState();
+        if (!_isCreated || _lastOffset != offset || _lastFieldState != curFieldState)
+        {
+            _lastOffset = offset;
+            _lastFieldState = curFieldState;
+            Create(offset);
+        }
         return _debugMeshes;
     }
     void Create(int offset)
     {
         _isCreated = true;
-
+        _debugMeshes.Clear();
         float3 portalDebugPrimitiveSize = new float3(0.25f, 0.25f, 0.25f);
         NativeArray<WindowNode> windowNodes = _pathfindingManager.FieldDataContainer.GetFieldGraphWithOffset(offset).WindowNodes;
         NativeArray<PortalNode> portalNodes = _pathfindingManager.FieldDataContainer.GetFieldGraphWithOffset(offset).PortalNodes;

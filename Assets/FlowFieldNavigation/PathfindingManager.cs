@@ -99,17 +99,21 @@ public class PathfindingManager : MonoBehaviour
         RequestAccumulator.DisposeAll();
         _navigationUpdater.DisposeAll();
     }
+    internal uint GetFieldState()
+    {
+        return _navigationUpdater.GetFieldState();
+    }
     internal NativeArray<UnsafeList<HashTile>> GetSpatialHashGridArray()
     {
-        return _navigationUpdater.GetRoutineScheduler().GetMovementManager().HashGridArray;
+        return MovementManager.HashGridArray;
     }
     internal NativeArray<int> GetNormalToHashed()
     {
-        return _navigationUpdater.GetRoutineScheduler().GetMovementManager().NormalToHashed;
+        return MovementManager.NormalToHashed;
     }
     internal NativeArray<AgentMovementData> GetAgentMovementData()
     {
-        return _navigationUpdater.GetRoutineScheduler().GetMovementManager().AgentMovementDataList;
+        return MovementManager.AgentMovementDataList;
     }
     internal UnsafeListReadOnly<byte>[] GetAllCostFieldCostsAsUnsafeListReadonly()
     {

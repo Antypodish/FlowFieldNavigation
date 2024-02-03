@@ -39,6 +39,7 @@ internal class GenericDebugTileMeshBuilder
     void Create()
     {
         _isCreated = true;
+        _debugMeshes.Clear();
         const int maxRowEachMesh = 100;
         const int maxColEachMesh = 100;
         for (int r = 0; r < _rowCount; r += maxRowEachMesh)

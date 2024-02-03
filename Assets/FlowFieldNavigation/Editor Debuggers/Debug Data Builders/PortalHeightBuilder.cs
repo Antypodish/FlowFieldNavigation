@@ -6,22 +6,34 @@ internal class PortalHeightBuilder
     PathfindingManager _pathfindingManager;
     NativeList<float> _heights;
     bool _isCreated;
+    uint _lastFieldState;
+    int _lastOffset;
 
     internal PortalHeightBuilder(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
         _isCreated = false;
+        _heights = new NativeList<float>(Allocator.Persistent);
+        _lastFieldState = pathfindingManager.GetFieldState();
+        _lastOffset = 0;
     }
     internal NativeArray<float> GetPortalHeights(int offset)
     {
-        if (!_isCreated) { Create(offset); }
+        uint curFieldState = _pathfindingManager.GetFieldState();
+        if (!_isCreated || _lastOffset != offset || _lastFieldState != curFieldState)
+        {
+            _lastOffset = offset;
+            _lastFieldState = curFieldState;
+            Create(offset);
+        }
         return _heights.AsArray();
     }
 
     void Create(int offset)
     {
         _isCreated = true;
-        if (!_heights.IsCreated) { _heights = new NativeList<float>(Allocator.Persistent); }
+        _heights.Clear();
+
         float tileSize = FlowFieldUtilities.TileSize;
         float2 fieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition;
         NativeArray<PortalNode> portalNodes = _pathfindingManager.FieldDataContainer.GetFieldGraphWithOffset(offset).PortalNodes;

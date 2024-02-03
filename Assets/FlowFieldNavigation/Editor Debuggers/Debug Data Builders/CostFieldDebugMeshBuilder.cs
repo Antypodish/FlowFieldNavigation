@@ -9,21 +9,31 @@ internal class CostFieldDebugMeshBuilder
     PathfindingManager _pathfindingManager;
     bool _isCreated;
     List<Mesh> _debugMeshes;
-
+    uint _lastFieldState;
+    int _lastOffset;
     internal CostFieldDebugMeshBuilder(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
         _debugMeshes = new List<Mesh>();
         _isCreated = false;
+        _lastFieldState = pathfindingManager.GetFieldState();
+        _lastOffset = 0;
     }
     internal List<Mesh> GetDebugMesh(int offset)
     {
-        if (!_isCreated) { Create(offset); }
+        uint curFieldState = _pathfindingManager.GetFieldState();
+        if (!_isCreated || _lastOffset != offset || _lastFieldState != curFieldState)
+        {
+            _lastOffset = offset;
+            _lastFieldState = curFieldState;
+            Create(offset);
+        }
         return _debugMeshes;
     }
     internal void Create(int offset)
     {
         _isCreated = true;
+        _debugMeshes.Clear();
         int fieldColAmount = FlowFieldUtilities.FieldColAmount;
         int fieldRowAmount = FlowFieldUtilities.FieldRowAmount;
         const int maxRowEachMesh = 100;

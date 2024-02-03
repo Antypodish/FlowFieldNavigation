@@ -26,9 +26,9 @@ internal class AgentRemovingSystem
         NativeList<int> agentCurPathIndicies = _pathfindingManager.AgentDataContainer.AgentCurPathIndicies;
         NativeList<Flock> flockList = _pathfindingManager.FlockDataContainer.FlockList;
         NativeList<int> pathSubscriberCounts = _pathfindingManager.PathDataContainer.PathSubscriberCounts;
-        NativeArray<PathState> pathStates = _pathfindingManager.PathDataContainer.ExposedPathStateList;
-        NativeArray<PathDestinationData> pathDestinationArray = _pathfindingManager.PathDataContainer.PathDestinationDataList;
-        NativeArray<PathRequest> pathRequests = _pathfindingManager.RequestAccumulator.PathRequests;
+        NativeArray<PathState> pathStates = _pathfindingManager.PathDataContainer.ExposedPathStateList.AsArray();
+        NativeArray<PathDestinationData> pathDestinationArray = _pathfindingManager.PathDataContainer.PathDestinationDataList.AsArray();
+        NativeArray<PathRequest> pathRequests = _pathfindingManager.RequestAccumulator.PathRequests.AsArray();
         NativeList<int> agentsLookingForPath = _pathfindingManager.PathConstructionPipeline.AgentsLookingForPath;
         NativeList<PathRequestRecord> agentsLookingForPathRecords = _pathfindingManager.PathConstructionPipeline.AgentsLookingForPathRecords;
 

@@ -9,6 +9,8 @@ internal class TileIslandDebugMeshBuilder
     List<Mesh> _debugMeshes;
     List<int> _debugMeshColorIndicies;
     bool _isCreated;
+    uint _lastFieldState;
+    int _lastOffset;
 
     internal TileIslandDebugMeshBuilder(PathfindingManager pathfindingManager)
     {
@@ -16,17 +18,27 @@ internal class TileIslandDebugMeshBuilder
         _debugMeshes = new List<Mesh>();
         _debugMeshColorIndicies = new List<int>();
         _isCreated = false;
+        _lastFieldState = pathfindingManager.GetFieldState();
+        _lastOffset = 0;
     }
 
     internal void GetTileIslandDebugMesh(int offset, out List<Mesh> debugMeshes, out List<int> debugMeshColorIndicies)
     {
-        if (!_isCreated) { CreateTileIslandDebugMesh(offset); }
+        uint curFieldState = _pathfindingManager.GetFieldState();
+        if (!_isCreated || _lastOffset != offset || _lastFieldState != curFieldState)
+        {
+            _lastOffset = offset;
+            _lastFieldState = curFieldState;
+            CreateTileIslandDebugMesh(offset);
+        }
         debugMeshes = _debugMeshes;
         debugMeshColorIndicies = _debugMeshColorIndicies;
     }
     void CreateTileIslandDebugMesh(int offset)
     {
         _isCreated = true;
+        _debugMeshes.Clear();
+        _debugMeshColorIndicies.Clear();
         IslandFieldProcessor islandFieldProcessor = _pathfindingManager.FieldDataContainer.GetFieldGraphWithOffset(offset).GetIslandFieldProcessor();
         NativeArray<byte> costField = _pathfindingManager.FieldDataContainer.GetCostFieldWithOffset(offset).Costs;
         NativeList<IndexIslandPair> indiciesWithValidIsland = new NativeList<IndexIslandPair>(Allocator.TempJob);

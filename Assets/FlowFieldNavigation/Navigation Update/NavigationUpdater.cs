@@ -11,6 +11,7 @@ internal class NavigationUpdater
     PathfindingManager _pathfindingManager;
     RoutineScheduler _scheduler;
     RequestAccumulator _requestAccumulator;
+
     internal NavigationUpdater(PathfindingManager pathfindingManager, RequestAccumulator requestAccumulator)
     {
         _pathfindingManager = pathfindingManager;
@@ -39,9 +40,9 @@ internal class NavigationUpdater
         agentAddRequest.Clear();
         agentRemovalRequests.Clear();
     }
-    internal RoutineScheduler GetRoutineScheduler()
+    internal uint GetFieldState()
     {
-        return _scheduler;
+        return _scheduler.FieldState;
     }
     internal void IntermediateUpdate()
     {
