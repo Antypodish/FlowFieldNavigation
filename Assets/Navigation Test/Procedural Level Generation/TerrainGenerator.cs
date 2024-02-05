@@ -64,7 +64,7 @@ public class TerrainGenerator : MonoBehaviour
             for(int j = 0; j < vertColAmount; j++)
             {
                 float height = Mathf.PerlinNoise(j / _heightNoiseResolution, i / _heightNoiseResolution) * MaxHeight;
-                vertexHeights[vertexHeightIndex] = height;
+                vertexHeights[vertexHeightIndex] = RandomHeights ? height : 0;
                 vertexHeightIndex++;
             }
         }

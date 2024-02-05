@@ -11,6 +11,9 @@ using UnityEngine.Rendering.Universal;
 using UnityEditor;
 public class test : MonoBehaviour
 {
+    private void Start()
+    {
+    }
     private void OnDrawGizmos()
     {
     }

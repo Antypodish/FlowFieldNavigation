@@ -5,15 +5,18 @@ internal class FieldDataContainer
 {
     internal ObstacleContainer ObstacleContainer { get; private set; }
     internal HeightMeshProducer HeightMeshGenerator { get; private set; }
+    internal NavigationVolumeSystem NavigationVolumeSystem { get; private set; }
     CostFieldProducer _costFieldProducer;
     FieldGraphProducer _fieldGraphProducer;
-    internal FieldDataContainer(WalkabilityCell[][] walkabilityMatrix, Mesh[] meshes, Transform[] transforms)
+    internal FieldDataContainer(WalkabilityCell[][] walkabilityMatrix, Mesh[] meshes, Transform[] transforms, float voxelHorizontalSize, float voxelVerticalSize)
     {
         _costFieldProducer = new CostFieldProducer(walkabilityMatrix);
         _fieldGraphProducer = new FieldGraphProducer();
         ObstacleContainer = new ObstacleContainer();
         HeightMeshGenerator = new HeightMeshProducer();
         HeightMeshGenerator.GenerateHeightMesh(meshes, transforms);
+        NavigationVolumeSystem = new NavigationVolumeSystem();
+        NavigationVolumeSystem.CalculateVolume(HeightMeshGenerator.Verticies.AsArray(), HeightMeshGenerator.Triangles.AsArray(), voxelHorizontalSize, voxelVerticalSize);
     }
     internal void CreateField(int maxOffset)
     {

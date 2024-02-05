@@ -17,6 +17,9 @@ public class EditorDebuggingController : MonoBehaviour
     [SerializeField] bool _portals;
     [SerializeField] bool _islands;
     [SerializeField] bool _portalErrorDetection;
+    [Header("Navigation Volume Debugger")]
+    [SerializeField] bool _debugVolumeBounds;
+    [SerializeField] bool _debugNavigationSurfaceVolume;
     [Header("Height Mesh Debugger")]
     [SerializeField] int _meshGridIndex;
     [SerializeField] bool _debugHeightMesh;
@@ -55,6 +58,7 @@ public class EditorDebuggingController : MonoBehaviour
     EditorTileIslandDebugger _islandDebugger;
     EditorHeightMeshDebugger _heightMeshDebugger;
     EditorTileDebugger _tileDebugger;
+    EditorNavigationVolumeDebugger _navVolDebugger;
 
     Camera _overlayCamera;
     PortalHeightBuilder _portalHeightBuilder;
@@ -79,6 +83,7 @@ public class EditorDebuggingController : MonoBehaviour
         _portalHeightBuilder = new PortalHeightBuilder(_pathfindingManager);
         _tileCenterHeightBuilder = new TileCenterHeightBuilder(_pathfindingManager);
         _sectorCornerHeightBuilder = new SectorCornerHeightBuilder(_pathfindingManager);
+        _navVolDebugger = new EditorNavigationVolumeDebugger(_pathfindingManager);
 #if UNITY_STANDALONE && !UNITY_EDITOR
 _debuggingEnabled = false;
 #endif
@@ -107,6 +112,8 @@ _debuggingEnabled = false;
         if (_debugAgentSeperationRadius) { _agentRadiusDebugger.DebugSeperationRadius(); }
         if (_debugAvoidanceDirections) { _avoidanceDirectionDebugger.Debug(); }
         if (_debugSpatialHashGrid) { _spatialHashGridDebugger.Debug(_gridIndex); }
+        if (_debugVolumeBounds) { _navVolDebugger.DebugVolumeBoundaries(); }
+        if (_debugNavigationSurfaceVolume) { _navVolDebugger.DebugNavigationSurfaceVolume(); }
 
         if (AgentToDebug != null)
         {

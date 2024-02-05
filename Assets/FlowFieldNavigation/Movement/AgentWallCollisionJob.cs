@@ -401,7 +401,7 @@ internal struct AgentWallCollisionJob : IJobParallelFor
         swSector1d = math.select(swSector1d, swSector1d - 1, wLocalOverflow);
         int nwSector1d = math.select(curSector1d, curSector1d + SectorMatrixColAmount, nLocalOverflow);
         nwSector1d = math.select(nwSector1d, nwSector1d - 1, wLocalOverflow);
-
+        /*
         //Sector Overflows
         bool wSectorOverflow = (curSector1d % SectorMatrixColAmount) == 0;
         bool nSectorOverflow = nSector1d >= SectorMatrixTileAmont;
@@ -415,7 +415,7 @@ internal struct AgentWallCollisionJob : IJobParallelFor
         neSector1d = math.select(neSector1d, curSector1d, nSectorOverflow || eSectorOverflow);
         seSector1d = math.select(seSector1d, curSector1d, sSectorOverflow || eSectorOverflow);
         swSector1d = math.select(swSector1d, curSector1d, sSectorOverflow || wSectorOverflow);
-        nwSector1d = math.select(nwSector1d, curSector1d, nSectorOverflow || wSectorOverflow);
+        nwSector1d = math.select(nwSector1d, curSector1d, nSectorOverflow || wSectorOverflow);*/
 
         nLocal1d = math.select(nLocal1d, curLocal1d - (SectorColAmount * SectorColAmount - SectorColAmount), nLocalOverflow);
         eLocal1d = math.select(eLocal1d, curLocal1d - SectorColAmount + 1, eLocalOverflow);
