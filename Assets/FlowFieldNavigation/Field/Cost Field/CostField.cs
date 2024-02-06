@@ -38,6 +38,7 @@ internal class CostField
                 {
                     int index = r * fieldColAmount + c;
                     byte cost = walkabilityMatrix[r][c] == Walkability.Walkable ? (byte)1 : byte.MaxValue;
+                    cost = c == 0 || c == fieldColAmount - 1 || r == 0 || r == fieldRowAmount - 1 ? byte.MaxValue : cost;
                     costsG[index] = cost;
                 }
             }

@@ -19,7 +19,6 @@ public class WalkabilityData
 
         if(simulationState == SimulationState.FullWalkable) { SimulateFullyWalkable(); }
         if(simulationState == SimulationState.PerlinNoise) { SimulatePerlinNoise(); }
-        SetEdgesUnwalkable();
 
         void InnitializeWalkabilityMatrix()
         {
@@ -27,19 +26,6 @@ public class WalkabilityData
             for (int i = 0; i < RowAmount; i++)
             {
                 WalkabilityMatrix[i] = new Walkability[ColAmount];
-            }
-        }
-        void SetEdgesUnwalkable()
-        {
-            for(int c = 0; c < colAmount; c++)
-            {
-                WalkabilityMatrix[0][c] = Walkability.Unwalkable;
-                WalkabilityMatrix[rowAmount - 1][c] = Walkability.Unwalkable;
-            }
-            for (int r = 0; r < rowAmount; r++)
-            {
-                WalkabilityMatrix[r][0] = Walkability.Unwalkable;
-                WalkabilityMatrix[r][colAmount - 1] = Walkability.Unwalkable;
             }
         }
     }
