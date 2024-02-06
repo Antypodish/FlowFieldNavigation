@@ -4,7 +4,7 @@ using Unity.Burst;
 using Unity.Mathematics;
 
 [BurstCompile]
-internal struct NavVolumeSectorDetectionJob : IJob
+internal struct NavSurfaceSectorDetectionJob : IJob
 {
     internal float3 VolumeStartPos;
     internal float SecHorSize;

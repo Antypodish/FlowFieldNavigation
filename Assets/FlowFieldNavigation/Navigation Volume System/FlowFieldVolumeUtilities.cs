@@ -58,6 +58,12 @@ internal static class FlowFieldVolumeUtilities
         index.z = math.min(index.z, zVoxCount - 1);
         return index;
     }
+    internal static bool WithinBounds(int3 index, int xVoxCount, int yVoxCount, int zVoxCount)
+    {
+        float3 maxs = new float3(xVoxCount, yVoxCount, zVoxCount);
+        bool3 check = index < maxs & index >= 0;
+        return check.x & check.y & check.z;
+    }
     internal static float3 GetVoxelStartPos(int3 index, float3 volmeStartPos, float voxHorSize, float voxVerSize)
     {
         return volmeStartPos + (index * new float3(voxHorSize, voxVerSize, voxHorSize));

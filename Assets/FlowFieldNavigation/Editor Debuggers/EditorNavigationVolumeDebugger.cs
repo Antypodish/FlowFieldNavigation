@@ -76,7 +76,7 @@ internal class EditorNavigationVolumeDebugger
         int zAxisSectorCount = FlowFieldVolumeUtilities.ZAxisSectorCount;
         float secHorSize = FlowFieldVolumeUtilities.SectorHorizontalSize;
         float secVerSize = FlowFieldVolumeUtilities.SectorVerticalSize;
-        NativeHashMap<int, UnsafeBitArray> volumeBits = _pathfindingManager.FieldDataContainer.NavigationVolumeSystem.VolumeBits;
+        NativeHashMap<int, UnsafeBitArray> volumeBits = _pathfindingManager.FieldDataContainer.NavigationVolumeSystem.SurfaceVolumeBits;
         NativeArray<int> sectors = volumeBits.GetKeyArray(Allocator.Temp);
         for(int i = 0; i < sectors.Length; i++)
         {
@@ -96,7 +96,7 @@ internal class EditorNavigationVolumeDebugger
         int xSecCount = FlowFieldVolumeUtilities.XAxisSectorCount;
         int zSecCount = FlowFieldVolumeUtilities.ZAxisSectorCount;
         float3 volumeStartPos = FlowFieldVolumeUtilities.VolumeStartPos;
-        NativeHashMap<int, UnsafeBitArray> sectorBits = _pathfindingManager.FieldDataContainer.NavigationVolumeSystem.VolumeBits;
+        NativeHashMap<int, UnsafeBitArray> sectorBits = _pathfindingManager.FieldDataContainer.NavigationVolumeSystem.SurfaceVolumeBits;
         NativeHashMap<int, UnsafeBitArray>.Enumerator sectorBitsEnumerator = sectorBits.GetEnumerator();
         while (sectorBitsEnumerator.MoveNext())
         {

@@ -16,7 +16,7 @@ internal class FieldDataContainer
         HeightMeshGenerator = new HeightMeshProducer();
         HeightMeshGenerator.GenerateHeightMesh(meshes, transforms);
         NavigationVolumeSystem = new NavigationVolumeSystem();
-        NavigationVolumeSystem.CalculateVolume(HeightMeshGenerator.Verticies.AsArray(), HeightMeshGenerator.Triangles.AsArray(), voxelHorizontalSize, voxelVerticalSize);
+        NavigationVolumeSystem.CalculateVolume(HeightMeshGenerator.Verticies.AsArray(), HeightMeshGenerator.Triangles.AsArray(), new StaticObstacleInput[0], voxelHorizontalSize, voxelVerticalSize);
     }
     internal void CreateField(int maxOffset)
     {
