@@ -39,6 +39,11 @@ internal static class FlowFieldUtilities
         pos -= gridStartPos;
         return new int2((int)math.floor(pos.x / tileSize), (int)math.floor(pos.y / tileSize));
     }
+    internal static int2 Clamp(int2 index, int colAmount, int rowAmount)
+    {
+        index = math.max(index, 0);
+        return math.min(index, new int2(colAmount - 1, rowAmount - 1));
+    }
     internal static float2 GetGridMaxPosExcluding(int rowAmount, int colAmount, float tileSize, float2 gridStartPos)
     {
         return gridStartPos + new float2(colAmount * tileSize, rowAmount * tileSize);

@@ -6,7 +6,7 @@ using Unity.Collections;
 using UnityEditor;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
-
+using System.Diagnostics;
 internal class EditorCostFieldDebugger
 {
     CostFieldDebugMeshBuilder _costFieldDebugMeshContainer;

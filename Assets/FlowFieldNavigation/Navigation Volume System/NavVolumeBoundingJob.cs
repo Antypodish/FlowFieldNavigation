@@ -47,13 +47,13 @@ internal struct NavVolumeBoundingJob : IJob
             yMin = math.min(obstacle.UBR.y, yMin);
 
             yMax = math.max(obstacle.LBL.y, yMax);
-            yMax = math.min(obstacle.LTL.y, yMax);
-            yMax = math.min(obstacle.LTR.y, yMax);
-            yMax = math.min(obstacle.LBR.y, yMax);
-            yMax = math.min(obstacle.UBL.y, yMax);
-            yMax = math.min(obstacle.UTL.y, yMax);
-            yMax = math.min(obstacle.UTR.y, yMax);
-            yMax = math.min(obstacle.UBR.y, yMax);
+            yMax = math.max(obstacle.LTL.y, yMax);
+            yMax = math.max(obstacle.LTR.y, yMax);
+            yMax = math.max(obstacle.LBR.y, yMax);
+            yMax = math.max(obstacle.UBL.y, yMax);
+            yMax = math.max(obstacle.UTL.y, yMax);
+            yMax = math.max(obstacle.UTR.y, yMax);
+            yMax = math.max(obstacle.UBR.y, yMax);
         }
         float3 volumeStartPos = new float3(FieldGridStartPos.x, yMin, FieldGridStartPos.y);
 

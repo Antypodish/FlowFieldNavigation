@@ -77,11 +77,14 @@ public struct SimulationStartParameters
     public int RowCount;
     public int ColumCount;
     public Walkability[][] WalkabilityMatrix;
+    public FlowFieldStaticObstacle[] StaticObstacles;
     public int MaxCostFieldOffset;
     public float BaseAgentSpatialGridSize;
     public Mesh[] Meshes;
     public Transform[] Transforms;
     public Vector2 FieldStartPositionXZ;
+    public float HorizontalVoxelSize;
+    public float VerticalVoxelSize;
 }
 public enum Walkability : byte
 {

@@ -1,8 +1,9 @@
-﻿using Unity.Jobs;
-using Unity.Burst;
+﻿using Unity.Burst;
 using Unity.Collections;
-using Unity.Mathematics;
 using Unity.Collections.LowLevel.Unsafe;
+using Unity.Jobs;
+using Unity.Mathematics;
+using UnityEditor;
 
 [BurstCompile]
 internal struct NavObstacleDetectionJob : IJob
@@ -23,22 +24,22 @@ internal struct NavObstacleDetectionJob : IJob
     {
         NativeHashSet<int3> markedIndicies = new NativeHashSet<int3>(0, Allocator.Temp);
         NativeQueue<int3> bfsQueue = new NativeQueue<int3>(Allocator.Temp);
-        for(int i = 0; i < StaticObstacles.Length; i++)
+        for (int i = 0; i < StaticObstacles.Length; i++)
         {
             bfsQueue.Clear();
             StaticObstacle obstacle = StaticObstacles[i];
             float3 leftFacePoint = obstacle.LBL;
-            float3 leftFaceNormal = math.cross(obstacle.LBL - obstacle.LTL, obstacle.LBL - obstacle.UTL);
+            float3 leftFaceNormal = -math.cross(obstacle.LTL - obstacle.LBL, obstacle.UTL - obstacle.LBL);
             float3 rightFacePoint = obstacle.LTR;
-            float3 rightFaceNormal = math.cross(obstacle.LTR - obstacle.LBR, obstacle.LTR - obstacle.UBR);
+            float3 rightFaceNormal = -math.cross(obstacle.LBR - obstacle.LTR, obstacle.UBR - obstacle.LTR);
             float3 frontFacePoint = obstacle.LBL;
-            float3 frontFaceNormal = math.cross(obstacle.LBL - obstacle.UBL, obstacle.LBL - obstacle.UBR);
+            float3 frontFaceNormal = -math.cross(obstacle.UBL - obstacle.LBL, obstacle.UBR - obstacle.LBL);
             float3 backFacePoint = obstacle.LTR;
-            float3 backFaceNormal = math.cross(obstacle.LTR - obstacle.UTR, obstacle.LTR - obstacle.UTL);
-            float3 topFacePoint = obstacle.LBL;
-            float3 topFaceNormal = math.cross(obstacle.LBL - obstacle.UTL, obstacle.LBL - obstacle.UTR);
+            float3 backFaceNormal = -math.cross(obstacle.UTR - obstacle.LTR, obstacle.UTL - obstacle.LTR);
+            float3 topFacePoint = obstacle.UBL;
+            float3 topFaceNormal = -math.cross(obstacle.UTL - obstacle.UBL, obstacle.UTR - obstacle.UBL);
             float3 botFacePoint = obstacle.LTL;
-            float3 botFaceNormal = math.cross(obstacle.LTL - obstacle.LBL, obstacle.LTL - obstacle.LBR);
+            float3 botFaceNormal = -math.cross(obstacle.LBL - obstacle.LTL, obstacle.LBR - obstacle.LTL);
 
             float3 obsatcelCenter = (obstacle.LBL + obstacle.LBR + obstacle.LTL + obstacle.LTR + obstacle.UBL + obstacle.UBR + obstacle.UTL + obstacle.UTR) / 8;
             int3 bfsStartIndex = FlowFieldVolumeUtilities.PosToIndex(obsatcelCenter, VolStartPos, VoxHorSize, VoxVerSize);
@@ -50,7 +51,7 @@ internal struct NavObstacleDetectionJob : IJob
             while (!bfsQueue.IsEmpty())
             {
                 int3 curIndex = bfsQueue.Dequeue();
-                
+
                 //Check if inside the obstacle
                 float3 indexPos = FlowFieldVolumeUtilities.GetVoxelCenterPos(curIndex, VolStartPos, VoxHorSize, VoxVerSize);
                 float4 dots4 = new float4()
@@ -71,11 +72,10 @@ internal struct NavObstacleDetectionJob : IJob
 
                 //Check if collides
                 LocalIndex1d curLocal = FlowFieldVolumeUtilities.GetLocal1D(curIndex, SecCompVoxCount, XSecCount, ZSecCount);
-                if(SurfaceVolumeBits.TryGetValue(curLocal.sector, out UnsafeBitArray bits))
+                if (SurfaceVolumeBits.TryGetValue(curLocal.sector, out UnsafeBitArray bits))
                 {
                     if (bits.IsSet(curLocal.index)) { CollidedIndicies.Add(curIndex); }
                 }
-
                 //Enqueue neighbours
                 int3 left = new int3(curIndex.x - 1, curIndex.y, curIndex.z);
                 int3 right = new int3(curIndex.x + 1, curIndex.y, curIndex.z);
@@ -83,7 +83,7 @@ internal struct NavObstacleDetectionJob : IJob
                 int3 bot = new int3(curIndex.x, curIndex.y - 1, curIndex.z);
                 int3 front = new int3(curIndex.x, curIndex.y, curIndex.z - 1);
                 int3 back = new int3(curIndex.x, curIndex.y, curIndex.z + 1);
-                if(FlowFieldVolumeUtilities.WithinBounds(left, XVoxCount, YVoxCount, ZVoxCount) && !markedIndicies.Contains(left))
+                if (FlowFieldVolumeUtilities.WithinBounds(left, XVoxCount, YVoxCount, ZVoxCount) && !markedIndicies.Contains(left))
                 {
                     markedIndicies.Add(left);
                     bfsQueue.Enqueue(left);

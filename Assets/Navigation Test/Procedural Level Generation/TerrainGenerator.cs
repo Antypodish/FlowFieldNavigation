@@ -38,6 +38,8 @@ public class TerrainGenerator : MonoBehaviour
         obsGenerator.CreateMesh(vertexHeights);
 
 
+        FlowFieldStaticObstacle[] obstacleBehaviors = FindObjectsByType<FlowFieldStaticObstacle>(FindObjectsSortMode.None);
+
         //Start Simulation
         SimulationStartParameters simParam = new SimulationStartParameters()
         {
@@ -47,9 +49,12 @@ public class TerrainGenerator : MonoBehaviour
             RowCount = RowAmount,
             MaxCostFieldOffset = 5,
             WalkabilityMatrix = WalkabilityData.WalkabilityMatrix,
+            StaticObstacles = obstacleBehaviors,
             Meshes = _generatedMeshes.ToArray(),
             Transforms = _generatedMeshTransforms.ToArray(),
             FieldStartPositionXZ = new Vector2(transform.position.x, transform.position.z),
+            HorizontalVoxelSize = 0.1f,
+            VerticalVoxelSize = 0.1f,
         };
         _pathfindingManager.Interface.StartSimulation(simParam);
     }

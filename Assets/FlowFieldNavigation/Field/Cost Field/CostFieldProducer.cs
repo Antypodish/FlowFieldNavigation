@@ -6,15 +6,12 @@ using UnityEngine;
 
 internal class CostFieldProducer
 {
-    Walkability[][] _walkabilityMatrix;
     CostField[] _producedCostFields;
 
     //utility
     internal NativeArray<SectorDirectionData> SectorDirections;
-    internal CostFieldProducer(Walkability[][] walkabilityMatrix)
+    internal CostFieldProducer()
     {
-        _walkabilityMatrix = walkabilityMatrix;
-
         //CALCULATE SECTOR DIRECTIONS
         SectorDirections = new NativeArray<SectorDirectionData>(FlowFieldUtilities.SectorTileAmount, Allocator.Persistent);
         for (byte i = 0; i < SectorDirections.Length; i++)
@@ -22,13 +19,25 @@ internal class CostFieldProducer
             SectorDirections[i] = new SectorDirectionData(i, FlowFieldUtilities.SectorColAmount);
         }
     }
-    internal void ProduceCostFields(int maxOffset)
+    internal void ProduceCostFields(int maxOffset, NativeArray<byte> inputCosts)
     {
         int count = maxOffset + 1;
         _producedCostFields = new CostField[count];
-        for(int i = 0; i < count; i++)
+
+        //set edges unwalkable
+        for (int r = 0; r < FlowFieldUtilities.FieldRowAmount; r++)
         {
-            _producedCostFields[i] = new CostField(_walkabilityMatrix, i);
+            for (int c = 0; c < FlowFieldUtilities.FieldColAmount; c++)
+            {
+                int index = r * FlowFieldUtilities.FieldColAmount + c;
+                if(!(c == 0 || c == FlowFieldUtilities.FieldColAmount - 1 || r == 0 || r == FlowFieldUtilities.FieldRowAmount - 1)) { continue; }
+                inputCosts[index] = byte.MaxValue;
+            }
+        }
+
+        for (int i = 0; i < count; i++)
+        {
+            _producedCostFields[i] = new CostField(inputCosts, i);
         }
     }
     internal CostField[] GetAllCostFields()

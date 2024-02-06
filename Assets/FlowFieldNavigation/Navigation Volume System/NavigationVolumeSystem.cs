@@ -4,15 +4,17 @@ using Unity.Collections;
 using Unity.Mathematics;
 using Unity.Jobs;
 using Unity.Collections.LowLevel.Unsafe;
+using System.Diagnostics;
 internal class NavigationVolumeSystem
 {
     internal NativeHashMap<int, UnsafeBitArray> SurfaceVolumeBits;
 
-    internal void CalculateVolume(NativeArray<float3> navigationSurfaceVerticies, 
+    internal NativeArray<byte> GetCostsFromCollisions(NativeArray<float3> navigationSurfaceVerticies, 
         NativeArray<int> navigationSurfaceTriangles,
-        StaticObstacleInput[] staticObstacleInput,
+        FlowFieldStaticObstacle[] staticObstacleBehaviors,
         float voxelHorizontalSize, 
-        float voxelVerticalSize)
+        float voxelVerticalSize,
+        Allocator allocator)
     {
         float fieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount;
         float fieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount;
@@ -20,7 +22,7 @@ internal class NavigationVolumeSystem
         float sectorHorizontalSize = sectorComponentVoxelCount * voxelHorizontalSize;
         float sectorVerticalSize = sectorComponentVoxelCount * voxelVerticalSize;
 
-        NativeArray<StaticObstacle> staticObstacles = GetTransformedStaticObstacles(staticObstacleInput, Allocator.TempJob);
+        NativeArray<StaticObstacle> staticObstacles = GetTransformedStaticObstacles(staticObstacleBehaviors, Allocator.TempJob);
 
         NativeReference<float3> volumeStartPos = new NativeReference<float3>(0, Allocator.TempJob);
         NativeReference<int> xAxisVoxelCount = new NativeReference<int>(0, Allocator.TempJob);
@@ -112,6 +114,22 @@ internal class NavigationVolumeSystem
             CollidedIndicies = collidedIndicies,
         };
         obstacleDetection.Schedule().Complete();
+
+        NativeArray<byte> costs = new NativeArray<byte>(FlowFieldUtilities.FieldTileAmount, allocator);
+        CollidedIndexToCostField collisionToCost = new CollidedIndexToCostField()
+        {
+            FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
+            FieldTileSize = FlowFieldUtilities.TileSize,
+            FieldColAmount = FlowFieldUtilities.FieldColAmount,
+            FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
+            VolStartPos = FlowFieldVolumeUtilities.VolumeStartPos,
+            VoxHorSize = FlowFieldVolumeUtilities.VoxelHorizontalSize,
+            VoxVerSize = FlowFieldVolumeUtilities.VoxelVerticalSize,
+            CollidedIndicies = collidedIndicies,
+            Costs = costs,
+        };
+        collisionToCost.Schedule().Complete();
+        return costs;
     }
     NativeHashMap<int, UnsafeBitArray> AllocateSectors(NativeHashSet<int> sectorToAllocate)
     {
@@ -128,32 +146,35 @@ internal class NavigationVolumeSystem
         }
         return volumeBits;
     }
-    NativeArray<StaticObstacle> GetTransformedStaticObstacles(StaticObstacleInput[] staticObstacleInput, Allocator allocator)
+    NativeArray<StaticObstacle> GetTransformedStaticObstacles(FlowFieldStaticObstacle[] staticObstacles, Allocator allocator)
     {
-        NativeArray<StaticObstacle> obstacleOut = new NativeArray<StaticObstacle>(staticObstacleInput.Length, allocator);
-        for(int i = 0; i <staticObstacleInput.Length; i++)
+        NativeArray<StaticObstacle> obstacleOut = new NativeArray<StaticObstacle>(staticObstacles.Length, allocator);
+        for(int i = 0; i < staticObstacles.Length; i++)
         {
-            StaticObstacleInput input = staticObstacleInput[i];
-            Vector3 lbl = input.Obstacle.LBL;
-            Vector3 ltl = input.Obstacle.LTL;
-            Vector3 ltr = input.Obstacle.LTR;
-            Vector3 lbr = input.Obstacle.LBR;
-            Vector3 ubl = input.Obstacle.UBL;
-            Vector3 utl = input.Obstacle.UTL;
-            Vector3 utr = input.Obstacle.UTR;
-            Vector3 ubr = input.Obstacle.UBR;
+            FlowFieldStaticObstacle obstacle = staticObstacles[i];
+            StaticObstacle inputBounds = obstacle.GetBoundaries();
+            Transform inputTransform = obstacle.transform;
+            Vector3 lbl = inputBounds.LBL;
+            Vector3 ltl = inputBounds.LTL;
+            Vector3 ltr = inputBounds.LTR;
+            Vector3 lbr = inputBounds.LBR;
+            Vector3 ubl = inputBounds.UBL;
+            Vector3 utl = inputBounds.UTL;
+            Vector3 utr = inputBounds.UTR;
+            Vector3 ubr = inputBounds.UBR;
 
             obstacleOut[i] = new StaticObstacle()
             {
-                LBL = input.Transform.TransformPoint(lbl),
-                LTL = input.Transform.TransformPoint(ltl),
-                LTR = input.Transform.TransformPoint(ltr),
-                LBR = input.Transform.TransformPoint(lbr),
-                UBL = input.Transform.TransformPoint(ubl),
-                UTL = input.Transform.TransformPoint(utl),
-                UTR = input.Transform.TransformPoint(utr),
-                UBR = input.Transform.TransformPoint(ubr),
+                LBL = inputTransform.TransformPoint(lbl),
+                LTL = inputTransform.TransformPoint(ltl),
+                LTR = inputTransform.TransformPoint(ltr),
+                LBR = inputTransform.TransformPoint(lbr),
+                UBL = inputTransform.TransformPoint(ubl),
+                UTL = inputTransform.TransformPoint(utl),
+                UTR = inputTransform.TransformPoint(utr),
+                UBR = inputTransform.TransformPoint(ubr),
             };
+            obstacle.CanBeDisposed = true;
         }
         return obstacleOut;
     }

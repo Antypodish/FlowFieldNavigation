@@ -73,8 +73,9 @@ public class PathfindingManager : MonoBehaviour
     {
         SimulationStarted = true;
         SetFlowFieldUtilities(startParameters);
-        FieldDataContainer = new FieldDataContainer(startParameters.WalkabilityMatrix, startParameters.Meshes, startParameters.Transforms, startParameters.TileSize, startParameters.TileSize);
-        FieldDataContainer.CreateField(startParameters.MaxCostFieldOffset);
+        FieldDataContainer = new FieldDataContainer(startParameters.Meshes, startParameters.Transforms);
+        FieldDataContainer.CreateField(startParameters.WalkabilityMatrix, startParameters.MaxCostFieldOffset);
+        //FieldDataContainer.CreateField(startParameters.StaticObstacles, startParameters.MaxCostFieldOffset, startParameters.HorizontalVoxelSize, startParameters.VerticalVoxelSize);
         AgentDataContainer = new AgentDataContainer(this);
         AgentRemovingSystem = new AgentRemovingSystem(this);
         PathDataContainer = new PathDataContainer(this);
