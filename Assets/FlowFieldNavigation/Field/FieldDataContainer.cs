@@ -8,7 +8,7 @@ internal class FieldDataContainer
     internal NavigationVolumeSystem NavigationVolumeSystem { get; private set; }
     CostFieldProducer _costFieldProducer;
     FieldGraphProducer _fieldGraphProducer;
-    internal FieldDataContainer(WalkabilityCell[][] walkabilityMatrix, Mesh[] meshes, Transform[] transforms, float voxelHorizontalSize, float voxelVerticalSize)
+    internal FieldDataContainer(Walkability[][] walkabilityMatrix, Mesh[] meshes, Transform[] transforms, float voxelHorizontalSize, float voxelVerticalSize)
     {
         _costFieldProducer = new CostFieldProducer(walkabilityMatrix);
         _fieldGraphProducer = new FieldGraphProducer();

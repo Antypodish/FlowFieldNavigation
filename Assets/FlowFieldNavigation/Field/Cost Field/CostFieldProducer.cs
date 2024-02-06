@@ -6,12 +6,12 @@ using UnityEngine;
 
 internal class CostFieldProducer
 {
-    WalkabilityCell[][] _walkabilityMatrix;
+    Walkability[][] _walkabilityMatrix;
     CostField[] _producedCostFields;
 
     //utility
     internal NativeArray<SectorDirectionData> SectorDirections;
-    internal CostFieldProducer(WalkabilityCell[][] walkabilityMatrix)
+    internal CostFieldProducer(Walkability[][] walkabilityMatrix)
     {
         _walkabilityMatrix = walkabilityMatrix;
 

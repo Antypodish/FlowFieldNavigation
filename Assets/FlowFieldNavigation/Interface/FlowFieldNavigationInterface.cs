@@ -76,17 +76,12 @@ public struct SimulationStartParameters
     public float TileSize;
     public int RowCount;
     public int ColumCount;
-    public WalkabilityCell[][] WalkabilityMatrix;
+    public Walkability[][] WalkabilityMatrix;
     public int MaxCostFieldOffset;
     public float BaseAgentSpatialGridSize;
     public Mesh[] Meshes;
     public Transform[] Transforms;
     public Vector2 FieldStartPositionXZ;
-}
-public struct WalkabilityCell
-{
-    public Vector3 CellPosition;
-    public Walkability Walkability;
 }
 public enum Walkability : byte
 {

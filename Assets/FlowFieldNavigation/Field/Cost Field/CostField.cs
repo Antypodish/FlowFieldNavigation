@@ -11,7 +11,7 @@ internal class CostField
     internal NativeArray<byte> BaseCosts;
     internal NativeArray<uint> StampCounts;
     internal UnsafeListReadOnly<byte> CostsLReadonlyUnsafe;
-    internal CostField(WalkabilityCell[][] walkabilityMatrix, int offset)
+    internal CostField(Walkability[][] walkabilityMatrix, int offset)
     {
         int fieldRowAmount = FlowFieldUtilities.FieldRowAmount;
         int fieldColAmount = FlowFieldUtilities.FieldColAmount;
@@ -37,7 +37,7 @@ internal class CostField
                 for (int c = 0; c < fieldColAmount; c++)
                 {
                     int index = r * fieldColAmount + c;
-                    byte cost = walkabilityMatrix[r][c].Walkability == Walkability.Walkable ? (byte)1 : byte.MaxValue;
+                    byte cost = walkabilityMatrix[r][c] == Walkability.Walkable ? (byte)1 : byte.MaxValue;
                     costsG[index] = cost;
                 }
             }
@@ -46,7 +46,7 @@ internal class CostField
             {
                 for (int c = 0; c < fieldColAmount; c++)
                 {
-                    if (walkabilityMatrix[r][c].Walkability == Walkability.Unwalkable)
+                    if (walkabilityMatrix[r][c] == Walkability.Unwalkable)
                     {
                         Index2 index = new Index2(r, c);
                         int minX = index.C - Offset < 0 ? 0 : index.C - Offset;

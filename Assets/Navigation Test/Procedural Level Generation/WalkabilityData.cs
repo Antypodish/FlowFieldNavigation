@@ -5,7 +5,7 @@ public class WalkabilityData
     public float TileSize;
     public int RowAmount;
     public int ColAmount;
-    public WalkabilityCell[][] WalkabilityMatrix;
+    public Walkability[][] WalkabilityMatrix;
     float _resolution;
 
     public WalkabilityData(float tileSize, int rowAmount, int colAmount, float resolution, SimulationState simulationState)
@@ -23,23 +23,23 @@ public class WalkabilityData
 
         void InnitializeWalkabilityMatrix()
         {
-            WalkabilityMatrix = new WalkabilityCell[RowAmount][];
+            WalkabilityMatrix = new Walkability[RowAmount][];
             for (int i = 0; i < RowAmount; i++)
             {
-                WalkabilityMatrix[i] = new WalkabilityCell[ColAmount];
+                WalkabilityMatrix[i] = new Walkability[ColAmount];
             }
         }
         void SetEdgesUnwalkable()
         {
             for(int c = 0; c < colAmount; c++)
             {
-                WalkabilityMatrix[0][c].Walkability = Walkability.Unwalkable;
-                WalkabilityMatrix[rowAmount - 1][c].Walkability = Walkability.Unwalkable;
+                WalkabilityMatrix[0][c] = Walkability.Unwalkable;
+                WalkabilityMatrix[rowAmount - 1][c] = Walkability.Unwalkable;
             }
             for (int r = 0; r < rowAmount; r++)
             {
-                WalkabilityMatrix[r][0].Walkability = Walkability.Unwalkable;
-                WalkabilityMatrix[r][colAmount - 1].Walkability = Walkability.Unwalkable;
+                WalkabilityMatrix[r][0] = Walkability.Unwalkable;
+                WalkabilityMatrix[r][colAmount - 1] = Walkability.Unwalkable;
             }
         }
     }
@@ -49,11 +49,7 @@ public class WalkabilityData
         {
             for (int c = 0; c < WalkabilityMatrix[r].Length; c++)
             {
-                WalkabilityMatrix[r][c] = new WalkabilityCell
-                {
-                    Walkability = Walkability.Walkable,
-                    CellPosition = new Vector3(c * TileSize, 0, r * TileSize)
-                };
+                WalkabilityMatrix[r][c] = Walkability.Walkable;
             }
         }
     }
@@ -75,13 +71,8 @@ public class WalkabilityData
         {
             for (int c = 0; c < WalkabilityMatrix[r].Length; c++)
             {
-                Vector3 cellPosition = new Vector3(c * TileSize, 0, r * TileSize);
                 Walkability walkability = noiseMap[r][c] < 0.3f ? Walkability.Unwalkable : Walkability.Walkable;
-                WalkabilityMatrix[r][c] = new WalkabilityCell
-                {
-                    Walkability = walkability,
-                    CellPosition = cellPosition
-                };
+                WalkabilityMatrix[r][c] = walkability;
             }
         }
     }
