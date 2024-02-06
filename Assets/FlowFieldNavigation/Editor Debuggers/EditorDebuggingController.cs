@@ -19,6 +19,8 @@ public class EditorDebuggingController : MonoBehaviour
     [SerializeField] bool _portalErrorDetection;
     [Header("Navigation Volume Debugger")]
     [SerializeField] bool _debugVolumeBounds;
+    [SerializeField] bool _debugSectorBounds;
+    [SerializeField] bool _debugDetectedSectors;
     [SerializeField] bool _debugNavigationSurfaceVolume;
     [Header("Height Mesh Debugger")]
     [SerializeField] int _meshGridIndex;
@@ -113,6 +115,8 @@ _debuggingEnabled = false;
         if (_debugAvoidanceDirections) { _avoidanceDirectionDebugger.Debug(); }
         if (_debugSpatialHashGrid) { _spatialHashGridDebugger.Debug(_gridIndex); }
         if (_debugVolumeBounds) { _navVolDebugger.DebugVolumeBoundaries(); }
+        if (_debugSectorBounds) { _navVolDebugger.DebugVolumeSectorBounds(); }
+        if (_debugDetectedSectors) { _navVolDebugger.DebugVolumeDetectedSectors(); }
         if (_debugNavigationSurfaceVolume) { _navVolDebugger.DebugNavigationSurfaceVolume(); }
 
         if (AgentToDebug != null)

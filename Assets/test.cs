@@ -9,10 +9,11 @@ using System.Diagnostics;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Rendering.Universal;
 using UnityEditor;
-public class test : MonoBehaviour
+public class testjob : MonoBehaviour
 {
     private void Start()
     {
+
     }
     private void OnDrawGizmos()
     {

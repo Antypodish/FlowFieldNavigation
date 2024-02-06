@@ -2,22 +2,19 @@
 using Unity.Collections;
 using Unity.Burst;
 using Unity.Mathematics;
-using Unity.Collections.LowLevel.Unsafe;
+
 [BurstCompile]
-internal struct NavSurfaceMarkingJob : IJob
+internal struct NavVolumeSectorDetectionJob : IJob
 {
     internal float3 VolumeStartPos;
-    internal float VoxHorSize;
-    internal float VoxVerSize;
-    internal int XVoxCount;
-    internal int YVoxCount;
-    internal int ZVoxCount;
-    internal int SectorCompVoxCount;
+    internal float SecHorSize;
+    internal float SecVerSize;
     internal int XSecCount;
+    internal int YSecCount;
     internal int ZSecCount;
     [ReadOnly] internal NativeArray<float3> Verts;
     [ReadOnly] internal NativeArray<int> Trigs;
-    internal NativeHashMap<int, UnsafeBitArray> SectorBits;
+    internal NativeHashSet<int> SectorIndexSet;
     public void Execute()
     {
         for (int i = 0; i < Trigs.Length; i += 3)
@@ -33,12 +30,12 @@ internal struct NavSurfaceMarkingJob : IJob
             float3 boundingBoxMax = math.max(math.max(v1, v2), v3);
             float3 boundingBoxSize = boundingBoxMax - boundingBoxMin;
 
-            int3 boxMinIndex = FlowFieldVolumeUtilities.PosToIndex(boundingBoxMin, VolumeStartPos, VoxHorSize, VoxVerSize);
-            int3 boxMaxIndex = FlowFieldVolumeUtilities.PosToIndex(boundingBoxMax, VolumeStartPos, VoxHorSize, VoxVerSize);
+            int3 boxMinIndex = FlowFieldVolumeUtilities.PosToIndex(boundingBoxMin, VolumeStartPos, SecHorSize, SecVerSize);
+            int3 boxMaxIndex = FlowFieldVolumeUtilities.PosToIndex(boundingBoxMax, VolumeStartPos, SecHorSize, SecVerSize);
 
             //Clamp
-            boxMinIndex = FlowFieldVolumeUtilities.Clamp(boxMinIndex, XVoxCount, YVoxCount, ZVoxCount);
-            boxMaxIndex = FlowFieldVolumeUtilities.Clamp(boxMaxIndex, XVoxCount, YVoxCount, ZVoxCount);
+            boxMinIndex = FlowFieldVolumeUtilities.Clamp(boxMinIndex, XSecCount, YSecCount, ZSecCount);
+            boxMaxIndex = FlowFieldVolumeUtilities.Clamp(boxMaxIndex, XSecCount, YSecCount, ZSecCount);
             for (int y = boxMinIndex.y; y <= boxMaxIndex.y; y++)
             {
                 for (int z = boxMinIndex.z; z <= boxMaxIndex.z; z++)
@@ -46,16 +43,12 @@ internal struct NavSurfaceMarkingJob : IJob
                     for (int x = boxMinIndex.x; x <= boxMaxIndex.x; x++)
                     {
                         int3 voxToCheck = new int3(x, y, z);
-                        float3 voxelStartPos = FlowFieldVolumeUtilities.GetVoxelStartPos(voxToCheck, VolumeStartPos, VoxHorSize, VoxVerSize);
-                        float3 voxelSize = new float3(VoxHorSize, VoxVerSize, VoxHorSize);
-                        if (IsColliding(v1,v2,v3,voxelStartPos, voxelSize))
+                        float3 voxelStartPos = FlowFieldVolumeUtilities.GetVoxelStartPos(voxToCheck, VolumeStartPos, SecHorSize, SecVerSize);
+                        float3 voxelSize = new float3(SecHorSize, SecVerSize, SecHorSize);
+                        if (IsColliding(v1, v2, v3, voxelStartPos, voxelSize))
                         {
-                            int vox1d = FlowFieldVolumeUtilities.To1D(voxToCheck, XVoxCount, ZVoxCount);
-                            LocalIndex1d local = FlowFieldVolumeUtilities.GetLocal1D(voxToCheck, SectorCompVoxCount, XSecCount, ZSecCount);
-                            if(SectorBits.TryGetValue(local.sector, out UnsafeBitArray bitArray))
-                            {
-                                bitArray.Set(local.index, true);
-                            }
+                            int vox1d = FlowFieldVolumeUtilities.To1D(voxToCheck, XSecCount, ZSecCount);
+                            SectorIndexSet.Add(vox1d);
                         }
                     }
                 }
@@ -355,3 +348,4 @@ internal struct NavSurfaceMarkingJob : IJob
         return alpha >= 0 && alpha <= 1 && beta >= 0 && beta <= 1;
     }
 }
+

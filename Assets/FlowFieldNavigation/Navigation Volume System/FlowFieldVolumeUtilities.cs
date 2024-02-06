@@ -7,22 +7,46 @@ internal static class FlowFieldVolumeUtilities
     internal static int ZAxisVoxelCount;
     internal static float VoxelHorizontalSize;
     internal static float VoxelVerticalSize;
+    internal static int SectorComponentVoxelCount;
+    internal static int XAxisSectorCount;
+    internal static int YAxisSectorCount;
+    internal static int ZAxisSectorCount;
+    internal static float SectorHorizontalSize;
+    internal static float SectorVerticalSize;
 
     internal static int3 PosToIndex(float3 pos, float3 volumeStartPos, float voxelHorizontalSize, float voxelVerticalSize)
     {
         pos -= volumeStartPos;
         return (int3)math.floor(pos / new float3(voxelHorizontalSize, voxelVerticalSize, voxelHorizontalSize));
     }
-    internal static int To1D(int3 index, int xVoxCount, int yVoxCount, int zVoxCount)
+    internal static int To1D(int3 index, int xVoxCount, int zVoxCount)
     {
         return (index.y * xVoxCount * zVoxCount) + (index.z * xVoxCount) + index.x;
     }
-    internal static int3 To3D(int index, int xVoxCount, int yVoxCount, int zVoxCount)
+    internal static int3 To3D(int index, int xVoxCount, int zVoxCount)
     {
         int y = index / (xVoxCount * zVoxCount);
         int z = index % (xVoxCount * zVoxCount) / xVoxCount;
         int x = index % xVoxCount;
         return new int3(x, y, z);
+    }
+    internal static LocalIndex1d GetLocal1D(int3 generalIndex, int sectorComponentVoxCount, int xSecCount, int zSecCount)
+    {
+        int3 sector3 = generalIndex / sectorComponentVoxCount;
+        int3 sectorStart3 = sector3 * sectorComponentVoxCount;
+        int3 local3 = generalIndex - sectorStart3;
+        return new LocalIndex1d()
+        {
+            sector = To1D(sector3, xSecCount, zSecCount),
+            index = To1D(local3, sectorComponentVoxCount, sectorComponentVoxCount),
+        };
+    }
+    internal static int3 GetGeneral3D(int sector1d, int local1, int sectorComponentVoxCount, int xSecCount, int zSecCount)
+    {
+        int3 sector3 = To3D(sector1d, xSecCount, zSecCount);
+        int3 sectorStart3 = sector3 * sectorComponentVoxCount;
+        int3 local3 = To3D(local1, sectorComponentVoxCount, sectorComponentVoxCount);
+        return sectorStart3 + local3;
     }
     internal static int3 Clamp(int3 index, int xVoxCount, int yVoxCount, int zVoxCount)
     {

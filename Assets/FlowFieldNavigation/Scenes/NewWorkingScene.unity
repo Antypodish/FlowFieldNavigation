@@ -409,7 +409,7 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: RowAmount
-      value: 30
+      value: 1000
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
@@ -424,7 +424,7 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: ColumnAmount
-      value: 30
+      value: 1000
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
@@ -607,6 +607,7 @@ GameObject:
   - component: {fileID: 799166822}
   - component: {fileID: 799166821}
   - component: {fileID: 799166825}
+  - component: {fileID: 799166826}
   m_Layer: 0
   m_Name: Cube
   m_TagString: Untagged
@@ -712,6 +713,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f6a024449df98fe45a1a1dcf09cb2f72, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &799166826
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 799166820}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6586e9f6f4d8ac42885eeef88e4b46e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Size: {x: 1.1, y: 1.1, z: 1.1}
 --- !u!1 &1050310759
 GameObject:
   m_ObjectHideFlags: 0
@@ -1259,8 +1273,13 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
         type: 3}
+      propertyPath: _debugSectorBounds
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
       propertyPath: _debugVolumeBounds
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
         type: 3}
@@ -1270,6 +1289,11 @@ PrefabInstance:
     - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
         type: 3}
       propertyPath: _debugPortalSequence
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
+      propertyPath: _debugDetectedSectors
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
@@ -1295,7 +1319,7 @@ PrefabInstance:
     - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
         type: 3}
       propertyPath: _debugNavigationSurfaceVolume
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6271735691019985205, guid: 36909ba34dc9cc34aa509e8036cbe263,
         type: 3}

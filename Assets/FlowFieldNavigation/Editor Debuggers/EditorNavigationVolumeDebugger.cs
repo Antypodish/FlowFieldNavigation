@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using Unity.Mathematics;
+﻿using Unity.Mathematics;
 using UnityEngine;
 using Unity.Collections;
-using static UnityEditor.PlayerSettings;
 using UnityEditor;
+using Unity.Collections.LowLevel.Unsafe;
 internal class EditorNavigationVolumeDebugger
 {
     PathfindingManager _pathfindingManager;
@@ -51,23 +45,72 @@ internal class EditorNavigationVolumeDebugger
         Gizmos.DrawLine(ltr, utr);
         Gizmos.DrawLine(lbr, ubr);
     }
+    internal void DebugVolumeSectorBounds()
+    {
+        Gizmos.color = Color.white;
+        float3 volumeStartPos = FlowFieldVolumeUtilities.VolumeStartPos;
+        int xAxisSectorCount = FlowFieldVolumeUtilities.XAxisSectorCount;
+        int yAxisSectorCount = FlowFieldVolumeUtilities.YAxisSectorCount;
+        int zAxisSectorCount = FlowFieldVolumeUtilities.ZAxisSectorCount;
+        float secHorSize = FlowFieldVolumeUtilities.SectorHorizontalSize;
+        float secVerSize = FlowFieldVolumeUtilities.SectorVerticalSize;
+        for(int x = 0; x < xAxisSectorCount; x++)
+        {
+            for (int z = 0; z < zAxisSectorCount; z++)
+            {
+                for (int y = 0; y < yAxisSectorCount; y++)
+                {
+                    int3 sectorIndex = new int3(x, y, z);
+                    float3 secPos = FlowFieldVolumeUtilities.GetVoxelCenterPos(sectorIndex, volumeStartPos, secHorSize, secVerSize);
+                    Gizmos.DrawWireCube(secPos, new Vector3(secHorSize, secVerSize, secHorSize));
+                }
+            }
+        }
+    }
+    internal void DebugVolumeDetectedSectors()
+    {
+        Gizmos.color = new Color(0, 1, 1, 0.5f);
+        float3 volumeStartPos = FlowFieldVolumeUtilities.VolumeStartPos;
+        int xAxisSectorCount = FlowFieldVolumeUtilities.XAxisSectorCount;
+        int yAxisSectorCount = FlowFieldVolumeUtilities.YAxisSectorCount;
+        int zAxisSectorCount = FlowFieldVolumeUtilities.ZAxisSectorCount;
+        float secHorSize = FlowFieldVolumeUtilities.SectorHorizontalSize;
+        float secVerSize = FlowFieldVolumeUtilities.SectorVerticalSize;
+        NativeHashMap<int, UnsafeBitArray> volumeBits = _pathfindingManager.FieldDataContainer.NavigationVolumeSystem.VolumeBits;
+        NativeArray<int> sectors = volumeBits.GetKeyArray(Allocator.Temp);
+        for(int i = 0; i < sectors.Length; i++)
+        {
+            int currentSector = sectors[i];
+            int3 index3 = FlowFieldVolumeUtilities.To3D(currentSector, xAxisSectorCount, zAxisSectorCount);
+            float3 secPos = FlowFieldVolumeUtilities.GetVoxelCenterPos(index3, volumeStartPos, secHorSize, secVerSize);
+            Gizmos.DrawCube(secPos, new Vector3(secHorSize, secVerSize, secHorSize));
+
+        }
+    }
     internal void DebugNavigationSurfaceVolume()
     {
         Gizmos.color = new Color(1, 0, 0, 0.5f);
-        int xVoxCount = FlowFieldVolumeUtilities.XAxisVoxelCount;
-        int yVoxCount = FlowFieldVolumeUtilities.YAxisVoxelCount;
-        int zVoxCount = FlowFieldVolumeUtilities.ZAxisVoxelCount;
         float voxHorSize = FlowFieldVolumeUtilities.VoxelHorizontalSize;
         float voxVerSize = FlowFieldVolumeUtilities.VoxelVerticalSize;
+        int sectorComponentVoxCount = FlowFieldVolumeUtilities.SectorComponentVoxelCount;
+        int xSecCount = FlowFieldVolumeUtilities.XAxisSectorCount;
+        int zSecCount = FlowFieldVolumeUtilities.ZAxisSectorCount;
         float3 volumeStartPos = FlowFieldVolumeUtilities.VolumeStartPos;
-        NativeBitArray surfaceVolume = _pathfindingManager.FieldDataContainer.NavigationVolumeSystem.NavigationVolumeBitArray;
-        for(int i = 0; i < surfaceVolume.Length; i++)
+        NativeHashMap<int, UnsafeBitArray> sectorBits = _pathfindingManager.FieldDataContainer.NavigationVolumeSystem.VolumeBits;
+        NativeHashMap<int, UnsafeBitArray>.Enumerator sectorBitsEnumerator = sectorBits.GetEnumerator();
+        while (sectorBitsEnumerator.MoveNext())
         {
-            if (!surfaceVolume.IsSet(i)) { continue; }
-            int3 index = FlowFieldVolumeUtilities.To3D(i, xVoxCount, yVoxCount, zVoxCount);
-            float3 pos = FlowFieldVolumeUtilities.GetVoxelCenterPos(index, volumeStartPos, voxHorSize, voxVerSize);
-            float3 size = new float3(voxHorSize, voxVerSize, voxHorSize);
-            Gizmos.DrawCube(pos, size);
+            KVPair<int, UnsafeBitArray> sectorBitsPair = sectorBitsEnumerator.Current;
+            int sector1d = sectorBitsPair.Key;
+            UnsafeBitArray bits = sectorBitsPair.Value;
+            for(int i = 0; i < bits.Length; i++)
+            {
+                if (!bits.IsSet(i)) { continue; }
+                int3 sector3d = FlowFieldVolumeUtilities.GetGeneral3D(sector1d, i, sectorComponentVoxCount, xSecCount, zSecCount);
+                float3 pos = FlowFieldVolumeUtilities.GetVoxelCenterPos(sector3d, volumeStartPos, voxHorSize, voxVerSize);
+                float3 size = new float3(voxHorSize, voxVerSize, voxHorSize);
+                Gizmos.DrawCube(pos, size);
+            }
         }
     }
 }
