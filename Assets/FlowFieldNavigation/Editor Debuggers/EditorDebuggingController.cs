@@ -16,13 +16,13 @@ public class EditorDebuggingController : MonoBehaviour
     [SerializeField] bool _sectors;
     [SerializeField] bool _portals;
     [SerializeField] bool _islands;
-    [SerializeField] bool _portalErrorDetection;
+    [SerializeField] bool _portalErrorDetection;/*
     [Header("Navigation Volume Debugger")]
     [SerializeField] bool _debugVolumeBounds;
     [SerializeField] bool _debugSectorBounds;
     [SerializeField] bool _debugDetectedSectors;
     [SerializeField] bool _debugNavigationSurfaceVolume;
-    [SerializeField] bool _debugHighestSurfaceVoxels;
+    [SerializeField] bool _debugHighestSurfaceVoxels;*/
     [Header("Height Mesh Debugger")]
     [SerializeField] int _meshGridIndex;
     [SerializeField] bool _debugHeightMesh;
@@ -114,12 +114,12 @@ _debuggingEnabled = false;
         if (_debugAgentsHoldingGround) { _holdGroundDebugger.Debug(); }
         if (_debugAgentSeperationRadius) { _agentRadiusDebugger.DebugSeperationRadius(); }
         if (_debugAvoidanceDirections) { _avoidanceDirectionDebugger.Debug(); }
-        if (_debugSpatialHashGrid) { _spatialHashGridDebugger.Debug(_gridIndex); }
+        if (_debugSpatialHashGrid) { _spatialHashGridDebugger.Debug(_gridIndex); }/*
         if (_debugVolumeBounds) { _navVolDebugger.DebugVolumeBoundaries(); }
         if (_debugSectorBounds) { _navVolDebugger.DebugVolumeSectorBounds(); }
         if (_debugDetectedSectors) { _navVolDebugger.DebugVolumeDetectedSectors(); }
         if (_debugNavigationSurfaceVolume) { _navVolDebugger.DebugNavigationSurfaceVolume(); }
-        if (_debugHighestSurfaceVoxels) { _navVolDebugger.DebugHighestVoxels(); }
+        if (_debugHighestSurfaceVoxels) { _navVolDebugger.DebugHighestVoxels(); }*/
 
         if (AgentToDebug != null)
         {

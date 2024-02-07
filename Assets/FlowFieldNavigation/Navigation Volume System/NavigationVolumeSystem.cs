@@ -7,8 +7,6 @@ using Unity.Collections.LowLevel.Unsafe;
 using System.Diagnostics;
 internal class NavigationVolumeSystem
 {
-    internal NativeHashMap<int, UnsafeBitArray> SurfaceVolumeBits;
-    internal NativeArray<HeightTile> HighestVoxelSaveTable;
     internal void AnalyzeVolume(NativeArray<float3> navigationSurfaceVerticies, 
         NativeArray<int> navigationSurfaceTriangles,
         FlowFieldStaticObstacle[] staticObstacleBehaviors,
@@ -24,7 +22,7 @@ internal class NavigationVolumeSystem
         float sectorHorizontalSize = sectorComponentVoxelCount * voxelHorizontalSize;
         float sectorVerticalSize = sectorComponentVoxelCount * voxelVerticalSize;
 
-        HighestVoxelSaveTable = new NativeArray<HeightTile>(FlowFieldUtilities.FieldTileAmount, Allocator.TempJob);
+        NativeArray<HeightTile> HighestVoxelSaveTable = new NativeArray<HeightTile>(FlowFieldUtilities.FieldTileAmount, Allocator.TempJob);
         HighestVoxSaveTableResetJob highestVoxelReset = new HighestVoxSaveTableResetJob() { Table = HighestVoxelSaveTable };
         highestVoxelReset.Schedule().Complete();
 
@@ -36,6 +34,7 @@ internal class NavigationVolumeSystem
         NativeReference<int> xAxisSectorCount = new NativeReference<int>(0, Allocator.TempJob);
         NativeReference<int> yAxisSectorCount = new NativeReference<int>(0, Allocator.TempJob);
         NativeReference<int> zAxisSectorCount = new NativeReference<int>(0, Allocator.TempJob);
+
         NavVolumeBoundingJob volumeBounding = new NavVolumeBoundingJob()
         {
             FieldGridSize = new float2(fieldHorizontalSize, fieldVerticalSize),
@@ -70,6 +69,7 @@ internal class NavigationVolumeSystem
         FlowFieldVolumeUtilities.SectorHorizontalSize = sectorHorizontalSize;
         FlowFieldVolumeUtilities.SectorVerticalSize = sectorVerticalSize;
         NativeHashSet<int> detectedSectorSet = new NativeHashSet<int>(0, Allocator.TempJob);
+
         NavSurfaceSectorDetectionJob surfaceSectorDetection = new NavSurfaceSectorDetectionJob()
         {
             VolumeStartPos = FlowFieldVolumeUtilities.VolumeStartPos,
@@ -83,7 +83,7 @@ internal class NavigationVolumeSystem
             SectorIndexSet = detectedSectorSet,
         };
         surfaceSectorDetection.Schedule().Complete();
-        SurfaceVolumeBits = AllocateSectors(detectedSectorSet);
+        NativeHashMap<int, UnsafeBitArray> SurfaceVolumeBits = AllocateSectors(detectedSectorSet, Allocator.TempJob);
 
         NavSurfaceMarkingJob surfaceMarking = new NavSurfaceMarkingJob()
         {
@@ -114,6 +114,7 @@ internal class NavigationVolumeSystem
         heightTileStackCount.Schedule(HighestVoxelSaveTable.Length, 64).Complete();
 
         NativeList<int3> collidedIndicies = new NativeList<int3>(Allocator.TempJob);
+
         NavObstacleDetectionJob obstacleDetection = new NavObstacleDetectionJob()
         {
             SecCompVoxCount = FlowFieldVolumeUtilities.SectorComponentVoxelCount,
@@ -132,6 +133,7 @@ internal class NavigationVolumeSystem
         obstacleDetection.Schedule().Complete();
 
         NativeList<int> slopeExcludedTrigs = new NativeList<int>(Allocator.TempJob);
+
         TriangleSlopeExclusionJob trigSlopeExclusion = new TriangleSlopeExclusionJob()
         {
             SlopeExcludedTriangles = slopeExcludedTrigs,
@@ -189,18 +191,39 @@ internal class NavigationVolumeSystem
             TileHeights = HighestVoxelSaveTable,
         };
         tileHeightExclusionJob.Schedule(costsToWriteOnTopOf.Length, 64).Complete();
+
+
+        HighestVoxelSaveTable.Dispose();
+        volumeStartPos.Dispose();
+        xAxisSectorCount.Dispose();
+        yAxisSectorCount.Dispose();
+        zAxisSectorCount.Dispose();
+        xAxisVoxelCount.Dispose();
+        yAxisVoxelCount.Dispose();
+        zAxisVoxelCount.Dispose();
+        staticObstacles.Dispose();
+        detectedSectorSet.Dispose();
+        collidedIndicies.Dispose();
+        slopeExcludedTrigs.Dispose();
+        NativeHashMap<int, UnsafeBitArray>.Enumerator volumeBitsEnumerator = SurfaceVolumeBits.GetEnumerator();
+        while (volumeBitsEnumerator.MoveNext())
+        {
+            KVPair<int, UnsafeBitArray> kv = volumeBitsEnumerator.Current;
+            kv.Value.Dispose();
+        }
+        volumeBitsEnumerator.Dispose();
     }
-    NativeHashMap<int, UnsafeBitArray> AllocateSectors(NativeHashSet<int> sectorToAllocate)
+    NativeHashMap<int, UnsafeBitArray> AllocateSectors(NativeHashSet<int> sectorToAllocate, Allocator allocator)
     {
         int sectorComponentVoxelCount = FlowFieldVolumeUtilities.SectorComponentVoxelCount;
         int sectorVoxelCount = sectorComponentVoxelCount * sectorComponentVoxelCount * sectorComponentVoxelCount;
-        NativeHashMap<int, UnsafeBitArray> volumeBits = new NativeHashMap<int, UnsafeBitArray>(0, Allocator.Persistent);
+        NativeHashMap<int, UnsafeBitArray> volumeBits = new NativeHashMap<int, UnsafeBitArray>(0, allocator);
 
         NativeHashSet<int>.Enumerator setEnumerator = sectorToAllocate.GetEnumerator();
         while (setEnumerator.MoveNext())
         {
             int curSector = setEnumerator.Current;
-            UnsafeBitArray bitArray = new UnsafeBitArray(sectorVoxelCount, Allocator.Persistent);
+            UnsafeBitArray bitArray = new UnsafeBitArray(sectorVoxelCount, allocator);
             volumeBits.Add(curSector, bitArray);
         }
         return volumeBits;

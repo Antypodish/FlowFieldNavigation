@@ -10,7 +10,7 @@ internal class EditorNavigationVolumeDebugger
     {
         _pathfindingManager = pathfindingManager;
     }
-
+    /*
     internal void DebugVolumeBoundaries()
     {
         float3 volumeStartPos = FlowFieldVolumeUtilities.VolumeStartPos;
@@ -136,6 +136,5 @@ internal class EditorNavigationVolumeDebugger
                 Gizmos.DrawCube(pos, size);
             }
         }
-
-    }
+    }*/
 }
