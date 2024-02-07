@@ -9,12 +9,12 @@ internal class NavigationVolumeSystem
 {
     internal NativeHashMap<int, UnsafeBitArray> SurfaceVolumeBits;
 
-    internal NativeArray<byte> GetCostsFromCollisions(NativeArray<float3> navigationSurfaceVerticies, 
+    internal void GetCostsFromCollisions(NativeArray<float3> navigationSurfaceVerticies, 
         NativeArray<int> navigationSurfaceTriangles,
         FlowFieldStaticObstacle[] staticObstacleBehaviors,
         float voxelHorizontalSize, 
         float voxelVerticalSize,
-        Allocator allocator)
+        NativeArray<byte> costsToWriteOnTopOf)
     {
         float fieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount;
         float fieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount;
@@ -115,7 +115,6 @@ internal class NavigationVolumeSystem
         };
         obstacleDetection.Schedule().Complete();
 
-        NativeArray<byte> costs = new NativeArray<byte>(FlowFieldUtilities.FieldTileAmount, allocator);
         CollidedIndexToCostField collisionToCost = new CollidedIndexToCostField()
         {
             FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
@@ -126,10 +125,9 @@ internal class NavigationVolumeSystem
             VoxHorSize = FlowFieldVolumeUtilities.VoxelHorizontalSize,
             VoxVerSize = FlowFieldVolumeUtilities.VoxelVerticalSize,
             CollidedIndicies = collidedIndicies,
-            Costs = costs,
+            Costs = costsToWriteOnTopOf,
         };
         collisionToCost.Schedule().Complete();
-        return costs;
     }
     NativeHashMap<int, UnsafeBitArray> AllocateSectors(NativeHashSet<int> sectorToAllocate)
     {

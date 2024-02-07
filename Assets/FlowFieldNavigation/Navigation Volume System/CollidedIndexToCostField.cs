@@ -18,11 +18,6 @@ internal struct CollidedIndexToCostField : IJob
     [WriteOnly] internal NativeArray<byte> Costs;
     public void Execute()
     {
-        //Make everywhere walkable
-        for(int i = 0; i < Costs.Length; i++)
-        {
-            Costs[i] = 1;
-        }
         for(int i = 0; i < CollidedIndicies.Length; i++)
         {
             int3 collidedVolumeIndex = CollidedIndicies[i];

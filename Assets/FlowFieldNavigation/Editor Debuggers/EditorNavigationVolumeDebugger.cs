@@ -89,7 +89,7 @@ internal class EditorNavigationVolumeDebugger
     }
     internal void DebugNavigationSurfaceVolume()
     {
-        Gizmos.color = new Color(1, 0, 0, 0.5f);
+        Gizmos.color = new Color(1, 0, 0, 1f);
         float voxHorSize = FlowFieldVolumeUtilities.VoxelHorizontalSize;
         float voxVerSize = FlowFieldVolumeUtilities.VoxelVerticalSize;
         int sectorComponentVoxCount = FlowFieldVolumeUtilities.SectorComponentVoxelCount;

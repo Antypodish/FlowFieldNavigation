@@ -18,16 +18,12 @@ internal class FieldDataContainer
         HeightMeshGenerator.GenerateHeightMesh(meshes, transforms);
         NavigationVolumeSystem = new NavigationVolumeSystem();
     }
-    internal void CreateField(Walkability[][] walkabilityMatrix, int maxOffset)
+    internal void CreateField(Walkability[][] walkabilityMatrix, FlowFieldStaticObstacle[] staticObstacles, int maxOffset, float voxelHorizontalSize, float voxelVerticalSize)
     {
         NativeArray<byte> inputCosts = WalkabilityMatrixToCosts(walkabilityMatrix, Allocator.TempJob);
-        _costFieldProducer.ProduceCostFields(maxOffset, inputCosts);
-        _fieldGraphProducer.ProduceFieldGraphs(_costFieldProducer.GetAllCostFields());
-        inputCosts.Dispose();
-    }
-    internal void CreateField(FlowFieldStaticObstacle[] staticObstacles, int maxOffset, float voxelHorizontalSize, float voxelVerticalSize)
-    {
-        NativeArray<byte> inputCosts = NavigationVolumeSystem.GetCostsFromCollisions(HeightMeshGenerator.Verticies.AsArray(), HeightMeshGenerator.Triangles.AsArray(), staticObstacles, voxelHorizontalSize, voxelVerticalSize, Allocator.TempJob);
+        NativeArray<float3> heightMeshVerts = HeightMeshGenerator.Verticies.AsArray();
+        NativeArray<int> heightMeshTrigs = HeightMeshGenerator.Triangles.AsArray();
+        NavigationVolumeSystem.GetCostsFromCollisions(heightMeshVerts, heightMeshTrigs, staticObstacles, voxelHorizontalSize, voxelVerticalSize, inputCosts);
         _costFieldProducer.ProduceCostFields(maxOffset, inputCosts);
         _fieldGraphProducer.ProduceFieldGraphs(_costFieldProducer.GetAllCostFields());
         inputCosts.Dispose();
@@ -35,6 +31,12 @@ internal class FieldDataContainer
     NativeArray<byte> WalkabilityMatrixToCosts(Walkability[][] walkabilityMatrix, Allocator allocator)
     {
         NativeArray<byte> costs = new NativeArray<byte>(FlowFieldUtilities.FieldTileAmount, allocator);
+        if(walkabilityMatrix == null)
+        {
+            for(int i = 0; i < costs.Length; i++) { costs[i] = 1; }
+            return costs;
+        }
+
         for(int r = 0; r < FlowFieldUtilities.FieldRowAmount; r++)
         {
             for (int c = 0; c < FlowFieldUtilities.FieldColAmount; c++)

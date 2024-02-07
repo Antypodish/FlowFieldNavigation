@@ -37,9 +37,13 @@ public class TerrainGenerator : MonoBehaviour
         obsGenerator = new ObstacleGenerator(this, WalkabilityData, _obstacleMat);
         obsGenerator.CreateMesh(vertexHeights);
 
-
+        GameObject plane = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        plane.transform.position = new Vector3(30, 5, 30);
+        plane.transform.localScale = new Vector3(15, 1, 15);
+        Mesh planeMesh = plane.GetComponent<MeshFilter>().mesh;
+        _generatedMeshes.Add(planeMesh);
+        _generatedMeshTransforms.Add(plane.transform);
         FlowFieldStaticObstacle[] obstacleBehaviors = FindObjectsByType<FlowFieldStaticObstacle>(FindObjectsSortMode.None);
-
         //Start Simulation
         SimulationStartParameters simParam = new SimulationStartParameters()
         {
@@ -53,7 +57,6 @@ public class TerrainGenerator : MonoBehaviour
             Meshes = _generatedMeshes.ToArray(),
             Transforms = _generatedMeshTransforms.ToArray(),
             FieldStartPositionXZ = new Vector2(transform.position.x, transform.position.z),
-            HorizontalVoxelSize = 0.1f,
             VerticalVoxelSize = 0.1f,
         };
         _pathfindingManager.Interface.StartSimulation(simParam);
