@@ -24,12 +24,8 @@ public class TerrainGenerator : MonoBehaviour
 
     ObstacleGenerator obsGenerator;
 
-    List<Mesh> _generatedMeshes;
-    List<Transform> _generatedMeshTransforms;
     private void Start()
     {
-        _generatedMeshes = new List<Mesh>();
-        _generatedMeshTransforms = new List<Transform>();
         WalkabilityData = new WalkabilityData(TileSize, RowAmount, ColumnAmount, _unwalkabilityResolution, _simulationState);
 
         NativeArray<float> vertexHeights = GenerateMesh();
@@ -38,6 +34,8 @@ public class TerrainGenerator : MonoBehaviour
         obsGenerator.CreateMesh(vertexHeights);
 
         FlowFieldStaticObstacle[] obstacleBehaviors = FindObjectsByType<FlowFieldStaticObstacle>(FindObjectsSortMode.None);
+        FlowFieldSurface[] flowFieldSurfaces = FindObjectsByType<FlowFieldSurface>(FindObjectsSortMode.None);
+
         //Start Simulation
         SimulationStartParameters simParam = new SimulationStartParameters()
         {
@@ -48,8 +46,7 @@ public class TerrainGenerator : MonoBehaviour
             MaxCostFieldOffset = 5,
             WalkabilityMatrix = WalkabilityData.WalkabilityMatrix,
             StaticObstacles = obstacleBehaviors,
-            Meshes = _generatedMeshes.ToArray(),
-            Transforms = _generatedMeshTransforms.ToArray(),
+            NavigationSurfaces = flowFieldSurfaces,
             FieldStartPositionXZ = new Vector2(transform.position.x, transform.position.z),
             VerticalVoxelSize = 0.1f,
             MaxSurfaceHeightDifference = 0.1f,
@@ -105,7 +102,8 @@ public class TerrainGenerator : MonoBehaviour
         partitionObject.AddComponent<MeshFilter>();
         partitionObject.AddComponent<MeshCollider>();
         partitionObject.AddComponent<MeshRenderer>();
-
+        partitionObject.AddComponent<FlowFieldSurface>();
+        FlowFieldSurface navSurface = partitionObject.GetComponent<FlowFieldSurface>();
         MeshFilter meshFilter = partitionObject.GetComponent<MeshFilter>();
         MeshCollider meshCollider = partitionObject.GetComponent<MeshCollider>();
         MeshRenderer meshRenderer = partitionObject.GetComponent<MeshRenderer>();
@@ -167,8 +165,6 @@ public class TerrainGenerator : MonoBehaviour
         partitionMesh.triangles = triangles;
         partitionMesh.RecalculateNormals();
 
-        _generatedMeshes.Add(partitionMesh);
-        _generatedMeshTransforms.Add(partitionObject.transform);
         meshCollider.sharedMesh = partitionMesh;
     }
 }

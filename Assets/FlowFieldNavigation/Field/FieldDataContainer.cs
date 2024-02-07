@@ -9,13 +9,13 @@ internal class FieldDataContainer
     internal NavigationVolumeSystem NavigationVolumeSystem { get; private set; }
     CostFieldProducer _costFieldProducer;
     FieldGraphProducer _fieldGraphProducer;
-    internal FieldDataContainer(Mesh[] meshes, Transform[] transforms)
+    internal FieldDataContainer(FlowFieldSurface[] navigationSurfaces)
     {
         _costFieldProducer = new CostFieldProducer();
         _fieldGraphProducer = new FieldGraphProducer();
         ObstacleContainer = new ObstacleContainer();
         HeightMeshGenerator = new HeightMeshProducer();
-        HeightMeshGenerator.GenerateHeightMesh(meshes, transforms);
+        HeightMeshGenerator.GenerateHeightMesh(navigationSurfaces);
         NavigationVolumeSystem = new NavigationVolumeSystem();
     }
     internal void CreateField(Walkability[][] walkabilityMatrix, 

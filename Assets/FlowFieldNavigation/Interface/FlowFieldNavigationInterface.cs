@@ -80,8 +80,7 @@ public struct SimulationStartParameters
     public FlowFieldStaticObstacle[] StaticObstacles;
     public int MaxCostFieldOffset;
     public float BaseAgentSpatialGridSize;
-    public Mesh[] Meshes;
-    public Transform[] Transforms;
+    public FlowFieldSurface[] NavigationSurfaces;
     public Vector2 FieldStartPositionXZ;
     public float VerticalVoxelSize;
     public float MaxSurfaceHeightDifference;

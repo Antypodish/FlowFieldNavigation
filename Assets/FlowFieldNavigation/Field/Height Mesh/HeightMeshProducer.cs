@@ -20,21 +20,32 @@ internal class HeightMeshProducer
         TileSizeToGridIndex = new NativeHashMap<float, int>(0, Allocator.Persistent);
         GridIndexToTileSize = new NativeHashMap<int, float>(0, Allocator.Persistent);
     }
-    internal void GenerateHeightMesh(Mesh[] meshes, Transform[] meshParentTransforms)
+    internal void GenerateHeightMesh(FlowFieldSurface[] navigationSurfaces)
     {
         //Merge and copy data to native containers
         NativeList<float3> tempVericies = new NativeList<float3>(Allocator.TempJob);
         NativeList<int> tempTriangles = new NativeList<int>(Allocator.TempJob);
-        int vertexStart = 0;
-        for (int i = 0; i < meshes.Length; i++)
-        {
-            Vector3[] meshVerticies = meshes[i].vertices;
-            int[] meshTriangles = meshes[i].triangles;
 
-            Transform meshTransform = meshParentTransforms[i];
-            float3 position = meshTransform.position;
-            float3 scale = meshTransform.localScale;
-            quaternion rotation = meshTransform.rotation;
+        int vertexStart = 0;
+        for (int i = 0; i < navigationSurfaces.Length; i++)
+        {
+            FlowFieldSurface surface = navigationSurfaces[i];
+            if(surface == null) { continue; }
+
+            GameObject surfaceObject = surface.gameObject;
+            Transform surfaceTransform = surfaceObject.transform;
+            MeshFilter surfaceMeshFilter = surfaceObject.GetComponent<MeshFilter>();
+            if(surfaceMeshFilter == null) { continue; }
+
+            Mesh surfaceMesh = surfaceMeshFilter.mesh;
+            if(surfaceMesh == null) { continue; }
+
+            Vector3[] meshVerticies = surfaceMesh.vertices;
+            int[] meshTriangles = surfaceMesh.triangles;
+
+            float3 position = surfaceTransform.position;
+            float3 scale = surfaceTransform.localScale;
+            quaternion rotation = surfaceTransform.rotation;
 
             for (int j = 0; j < meshVerticies.Length; j++)
             {
