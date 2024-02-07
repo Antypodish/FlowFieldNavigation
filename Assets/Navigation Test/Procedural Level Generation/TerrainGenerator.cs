@@ -39,8 +39,8 @@ public class TerrainGenerator : MonoBehaviour
         
         GameObject plane = GameObject.CreatePrimitive(PrimitiveType.Cube);
         plane.transform.position = new Vector3(10.5f, 0, 10.5f);
-        plane.transform.localScale = new Vector3(15, 0.3f, 15);
-        plane.transform.rotation = Quaternion.Euler(0, 0, 0);
+        plane.transform.localScale = new Vector3(15, 1f, 15);
+        plane.transform.rotation = Quaternion.Euler(0, -45, 45);
         Mesh planeMesh = plane.GetComponent<MeshFilter>().mesh;
         _generatedMeshes.Add(planeMesh);
         _generatedMeshTransforms.Add(plane.transform);
@@ -59,6 +59,7 @@ public class TerrainGenerator : MonoBehaviour
             Transforms = _generatedMeshTransforms.ToArray(),
             FieldStartPositionXZ = new Vector2(transform.position.x, transform.position.z),
             VerticalVoxelSize = 0.1f,
+            MaxSurfaceHeightDifference = 0.1f,
         };
         _pathfindingManager.Interface.StartSimulation(simParam);
     }

@@ -9,11 +9,12 @@ internal class NavigationVolumeSystem
 {
     internal NativeHashMap<int, UnsafeBitArray> SurfaceVolumeBits;
     internal NativeArray<HeightTile> HighestVoxelSaveTable;
-    internal void GetCostsFromCollisions(NativeArray<float3> navigationSurfaceVerticies, 
+    internal void AnalyzeVolume(NativeArray<float3> navigationSurfaceVerticies, 
         NativeArray<int> navigationSurfaceTriangles,
         FlowFieldStaticObstacle[] staticObstacleBehaviors,
         float voxelHorizontalSize, 
         float voxelVerticalSize,
+        float maxSurfaceHeightDifference,
         NativeArray<byte> costsToWriteOnTopOf)
     {
         float fieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount;
@@ -169,6 +170,8 @@ internal class NavigationVolumeSystem
 
         HeightDifToCostField heightDifToCostEdit = new HeightDifToCostField()
         {
+            VoxVerSize = FlowFieldVolumeUtilities.VoxelVerticalSize,
+            MaxSurfaceHeightDifference = maxSurfaceHeightDifference,
             XVoxCount = FlowFieldVolumeUtilities.XAxisVoxelCount,
             ZVoxCount = FlowFieldVolumeUtilities.ZAxisVoxelCount,
             Costs = costsToWriteOnTopOf,

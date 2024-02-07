@@ -6,6 +6,8 @@ using Unity.Mathematics;
 [BurstCompile]
 internal struct HeightDifToCostField : IJob
 {
+    internal float VoxVerSize;
+    internal float MaxSurfaceHeightDifference;
     internal int XVoxCount;
     internal int ZVoxCount;
     [ReadOnly] internal NativeArray<HeightTile> HighestVoxelTable;
@@ -49,24 +51,24 @@ internal struct HeightDifToCostField : IJob
             HeightTile swHeightTile = HighestVoxelTable[sw];
             HeightTile nwHeightTile = HighestVoxelTable[nw];
 
-            int curHeight = curHeightTile.VoxIndex.y - curHeightTile.StackCount + 1;
-            int nHeight = nHeightTile.VoxIndex.y;
-            int eHeight = eHeightTile.VoxIndex.y;
-            int sHeight = sHeightTile.VoxIndex.y;
-            int wHeight = wHeightTile.VoxIndex.y;
-            int neHeight = neHeightTile.VoxIndex.y;
-            int seHeight = seHeightTile.VoxIndex.y;
-            int swHeight = swHeightTile.VoxIndex.y;
-            int nwHeight = nwHeightTile.VoxIndex.y;
+            float curHeight = (curHeightTile.VoxIndex.y - curHeightTile.StackCount + 1) * VoxVerSize;
+            float nHeight = nHeightTile.VoxIndex.y * VoxVerSize;
+            float eHeight = eHeightTile.VoxIndex.y * VoxVerSize;
+            float sHeight = sHeightTile.VoxIndex.y * VoxVerSize;
+            float wHeight = wHeightTile.VoxIndex.y * VoxVerSize;
+            float neHeight = neHeightTile.VoxIndex.y * VoxVerSize;
+            float seHeight = seHeightTile.VoxIndex.y * VoxVerSize;
+            float swHeight = swHeightTile.VoxIndex.y * VoxVerSize;
+            float nwHeight = nwHeightTile.VoxIndex.y * VoxVerSize;
 
-            int4 y1 = new int4(nHeight, eHeight, sHeight, wHeight);
-            int4 y2 = new int4(neHeight, seHeight, swHeight, nwHeight);
+            float4 y1 = new float4(nHeight, eHeight, sHeight, wHeight);
+            float4 y2 = new float4(neHeight, seHeight, swHeight, nwHeight);
 
-            int4 yDif1 = curHeight - y1;
-            int4 yDif2 = curHeight - y2;
+            float4 yDif1 = curHeight - y1;
+            float4 yDif2 = curHeight - y2;
 
-            bool4 muchDifferent1 = yDif1 > 1;
-            bool4 muchDifferent2 = yDif2 > 1;
+            bool4 muchDifferent1 = yDif1 > MaxSurfaceHeightDifference;
+            bool4 muchDifferent2 = yDif2 > MaxSurfaceHeightDifference;
             bool4 muchDifResult = muchDifferent1 | muchDifferent2;
 
             if (muchDifResult.x | muchDifResult.y | muchDifResult.z | muchDifResult.w) { Costs[i] = byte.MaxValue; }
