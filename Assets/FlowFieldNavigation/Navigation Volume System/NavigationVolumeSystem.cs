@@ -15,6 +15,7 @@ internal class NavigationVolumeSystem
         float voxelHorizontalSize, 
         float voxelVerticalSize,
         float maxSurfaceHeightDifference,
+        float maxTileHeight,
         NativeArray<byte> costsToWriteOnTopOf)
     {
         float fieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount;
@@ -178,6 +179,16 @@ internal class NavigationVolumeSystem
             HighestVoxelTable = HighestVoxelSaveTable,
         };
         heightDifToCostEdit.Schedule().Complete();
+
+        TileHeightExclusionJob tileHeightExclusionJob = new TileHeightExclusionJob()
+        {
+            VolumeStartPos = FlowFieldVolumeUtilities.VolumeStartPos,
+            VoxVerSize = FlowFieldVolumeUtilities.VoxelVerticalSize,
+            CostField = costsToWriteOnTopOf,
+            MaxTileHeight = maxTileHeight,
+            TileHeights = HighestVoxelSaveTable,
+        };
+        tileHeightExclusionJob.Schedule(costsToWriteOnTopOf.Length, 64).Complete();
     }
     NativeHashMap<int, UnsafeBitArray> AllocateSectors(NativeHashSet<int> sectorToAllocate)
     {

@@ -60,6 +60,7 @@ public class TerrainGenerator : MonoBehaviour
             FieldStartPositionXZ = new Vector2(transform.position.x, transform.position.z),
             VerticalVoxelSize = 0.1f,
             MaxSurfaceHeightDifference = 0.1f,
+            MaxWalkableHeight = float.MaxValue,
         };
         _pathfindingManager.Interface.StartSimulation(simParam);
     }

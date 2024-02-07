@@ -18,12 +18,17 @@ internal class FieldDataContainer
         HeightMeshGenerator.GenerateHeightMesh(meshes, transforms);
         NavigationVolumeSystem = new NavigationVolumeSystem();
     }
-    internal void CreateField(Walkability[][] walkabilityMatrix, FlowFieldStaticObstacle[] staticObstacles, int maxOffset, float voxelHorizontalSize, float voxelVerticalSize, float maxSurfaceHeightDifference)
+    internal void CreateField(Walkability[][] walkabilityMatrix, 
+        FlowFieldStaticObstacle[] staticObstacles, 
+        int maxOffset, float voxelHorizontalSize,
+        float voxelVerticalSize, 
+        float maxSurfaceHeightDifference,
+        float maxWalkableHeight)
     {
         NativeArray<byte> inputCosts = WalkabilityMatrixToCosts(walkabilityMatrix, Allocator.TempJob);
         NativeArray<float3> heightMeshVerts = HeightMeshGenerator.Verticies.AsArray();
         NativeArray<int> heightMeshTrigs = HeightMeshGenerator.Triangles.AsArray();
-        NavigationVolumeSystem.AnalyzeVolume(heightMeshVerts, heightMeshTrigs, staticObstacles, voxelHorizontalSize, voxelVerticalSize, maxSurfaceHeightDifference, inputCosts);
+        NavigationVolumeSystem.AnalyzeVolume(heightMeshVerts, heightMeshTrigs, staticObstacles, voxelHorizontalSize, voxelVerticalSize, maxSurfaceHeightDifference, maxWalkableHeight, inputCosts);
         _costFieldProducer.ProduceCostFields(maxOffset, inputCosts);
         _fieldGraphProducer.ProduceFieldGraphs(_costFieldProducer.GetAllCostFields());
         inputCosts.Dispose();

@@ -85,6 +85,7 @@ public struct SimulationStartParameters
     public Vector2 FieldStartPositionXZ;
     public float VerticalVoxelSize;
     public float MaxSurfaceHeightDifference;
+    public float MaxWalkableHeight;
 }
 public enum Walkability : byte
 {

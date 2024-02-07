@@ -78,7 +78,8 @@ public class PathfindingManager : MonoBehaviour
             startParameters.StaticObstacles, startParameters.MaxCostFieldOffset, 
             startParameters.TileSize, 
             startParameters.VerticalVoxelSize,
-            startParameters.MaxSurfaceHeightDifference);
+            startParameters.MaxSurfaceHeightDifference,
+            startParameters.MaxWalkableHeight);
         AgentDataContainer = new AgentDataContainer(this);
         AgentRemovingSystem = new AgentRemovingSystem(this);
         PathDataContainer = new PathDataContainer(this);
