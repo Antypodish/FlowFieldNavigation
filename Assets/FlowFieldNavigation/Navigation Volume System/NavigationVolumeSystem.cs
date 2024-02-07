@@ -21,7 +21,7 @@ internal class NavigationVolumeSystem
         const int sectorComponentVoxelCount = 10;
         float sectorHorizontalSize = sectorComponentVoxelCount * voxelHorizontalSize;
         float sectorVerticalSize = sectorComponentVoxelCount * voxelVerticalSize;
-       
+
         HighestVoxelSaveTable = new NativeArray<HeightTile>(FlowFieldUtilities.FieldTileAmount, Allocator.TempJob);
         HighestVoxSaveTableResetJob highestVoxelReset = new HighestVoxSaveTableResetJob() { Table = HighestVoxelSaveTable };
         highestVoxelReset.Schedule().Complete();
@@ -129,6 +129,30 @@ internal class NavigationVolumeSystem
         };
         obstacleDetection.Schedule().Complete();
 
+        NativeList<int> slopeExcludedTrigs = new NativeList<int>(Allocator.TempJob);
+        TriangleSlopeExclusionJob trigSlopeExclusion = new TriangleSlopeExclusionJob()
+        {
+            SlopeExcludedTriangles = slopeExcludedTrigs,
+            Triangles = navigationSurfaceTriangles,
+            Verticies = navigationSurfaceVerticies,
+        };
+        trigSlopeExclusion.Schedule().Complete();
+
+        SlopeExcludedTriangleVoxelOccupationJob slopeExcludedTrigVoxelOccupation = new SlopeExcludedTriangleVoxelOccupationJob()
+        {
+            VolumeStartPos = FlowFieldVolumeUtilities.VolumeStartPos,
+            VoxHorSize = FlowFieldVolumeUtilities.VoxelHorizontalSize,
+            VoxVerSize = FlowFieldVolumeUtilities.VoxelVerticalSize,
+            XVoxCount = FlowFieldVolumeUtilities.XAxisVoxelCount,
+            YVoxCount = FlowFieldVolumeUtilities.YAxisVoxelCount,
+            ZVoxCount = FlowFieldVolumeUtilities.ZAxisVoxelCount,
+            Verts = navigationSurfaceVerticies,
+            SlopeExcludedTrigs = slopeExcludedTrigs.AsArray(),
+            CollidedIndicies = collidedIndicies,
+            HighestVoxelsEachTile = HighestVoxelSaveTable,
+        };
+        slopeExcludedTrigVoxelOccupation.Schedule().Complete();
+
         CollidedIndexToCostField collisionToCost = new CollidedIndexToCostField()
         {
             FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
@@ -142,7 +166,6 @@ internal class NavigationVolumeSystem
             Costs = costsToWriteOnTopOf,
         };
         collisionToCost.Schedule().Complete();
-
 
         HeightDifToCostField heightDifToCostEdit = new HeightDifToCostField()
         {

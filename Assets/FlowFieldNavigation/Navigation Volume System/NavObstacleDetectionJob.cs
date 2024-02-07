@@ -71,7 +71,6 @@ internal struct NavObstacleDetectionJob : IJob
                 if (!(indexInside2.x && indexInside2.y && indexInside4.x && indexInside4.y && indexInside4.z && indexInside4.w)) { continue; }
 
                 //Check if collides
-                LocalIndex1d curLocal = FlowFieldVolumeUtilities.GetLocal1D(curIndex, SecCompVoxCount, XSecCount, ZSecCount);
                 int2 curFieldIndex2 = new int2(curIndex.x, curIndex.z);
                 int curFieldIndex1 = FlowFieldUtilities.To1D(curFieldIndex2, ZVoxCount);
                 HeightTile highestVoxel = HighestVoxelsEachTile[curFieldIndex1];
