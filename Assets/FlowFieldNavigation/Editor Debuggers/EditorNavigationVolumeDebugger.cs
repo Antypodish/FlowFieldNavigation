@@ -122,15 +122,19 @@ internal class EditorNavigationVolumeDebugger
         int xSecCount = FlowFieldVolumeUtilities.XAxisSectorCount;
         int zSecCount = FlowFieldVolumeUtilities.ZAxisSectorCount;
         float3 volumeStartPos = FlowFieldVolumeUtilities.VolumeStartPos;
-        NativeArray<int3> highestVoxels = _pathfindingManager.FieldDataContainer.NavigationVolumeSystem.HighestVoxelSaveTable;
+        NativeArray<HeightTile> highestVoxels = _pathfindingManager.FieldDataContainer.NavigationVolumeSystem.HighestVoxelSaveTable;
         for(int i = 0; i < highestVoxels.Length; i++)
         {
-            int3 voxel = highestVoxels[i];
-            if(voxel.y == int.MinValue) { continue; }
-            float3 pos = FlowFieldVolumeUtilities.GetVoxelCenterPos(voxel, volumeStartPos, voxHorSize, voxVerSize);
-            float3 size = new float3(voxHorSize, voxVerSize, voxHorSize);
-            Gizmos.DrawCube(pos, size);
-
+            HeightTile heightTile = highestVoxels[i];
+            if(heightTile.VoxIndex.y == int.MinValue) { continue; }
+            for(int j = 0; j < heightTile.StackCount; j++)
+            {
+                int3 voxel = heightTile.VoxIndex;
+                voxel.y -= j;
+                float3 pos = FlowFieldVolumeUtilities.GetVoxelCenterPos(voxel, volumeStartPos, voxHorSize, voxVerSize);
+                float3 size = new float3(voxHorSize, voxVerSize, voxHorSize);
+                Gizmos.DrawCube(pos, size);
+            }
         }
 
     }

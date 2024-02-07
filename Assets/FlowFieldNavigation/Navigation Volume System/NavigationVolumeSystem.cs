@@ -8,7 +8,7 @@ using System.Diagnostics;
 internal class NavigationVolumeSystem
 {
     internal NativeHashMap<int, UnsafeBitArray> SurfaceVolumeBits;
-    internal NativeArray<int3> HighestVoxelSaveTable;
+    internal NativeArray<HeightTile> HighestVoxelSaveTable;
     internal void GetCostsFromCollisions(NativeArray<float3> navigationSurfaceVerticies, 
         NativeArray<int> navigationSurfaceTriangles,
         FlowFieldStaticObstacle[] staticObstacleBehaviors,
@@ -21,8 +21,8 @@ internal class NavigationVolumeSystem
         const int sectorComponentVoxelCount = 10;
         float sectorHorizontalSize = sectorComponentVoxelCount * voxelHorizontalSize;
         float sectorVerticalSize = sectorComponentVoxelCount * voxelVerticalSize;
-
-        HighestVoxelSaveTable = new NativeArray<int3>(FlowFieldUtilities.FieldTileAmount, Allocator.TempJob);
+       
+        HighestVoxelSaveTable = new NativeArray<HeightTile>(FlowFieldUtilities.FieldTileAmount, Allocator.TempJob);
         HighestVoxSaveTableResetJob highestVoxelReset = new HighestVoxSaveTableResetJob() { Table = HighestVoxelSaveTable };
         highestVoxelReset.Schedule().Complete();
 
@@ -101,6 +101,16 @@ internal class NavigationVolumeSystem
         };
         surfaceMarking.Schedule().Complete();
 
+        HeightTileStackCountJob heightTileStackCount = new HeightTileStackCountJob()
+        {
+            SecCompVoxCount = FlowFieldVolumeUtilities.SectorComponentVoxelCount,
+            XSecCount = FlowFieldVolumeUtilities.XAxisSectorCount,
+            ZSecCount = FlowFieldVolumeUtilities.ZAxisSectorCount,
+            HeightTiles = HighestVoxelSaveTable,
+            SectorBits = SurfaceVolumeBits,
+        };
+        heightTileStackCount.Schedule(HighestVoxelSaveTable.Length, 64).Complete();
+
         NativeList<int3> collidedIndicies = new NativeList<int3>(Allocator.TempJob);
         NavObstacleDetectionJob obstacleDetection = new NavObstacleDetectionJob()
         {
@@ -113,7 +123,7 @@ internal class NavigationVolumeSystem
             XVoxCount = FlowFieldVolumeUtilities.XAxisVoxelCount,
             YVoxCount = FlowFieldVolumeUtilities.YAxisVoxelCount,
             ZVoxCount = FlowFieldVolumeUtilities.ZAxisVoxelCount,
-            SurfaceVolumeBits = SurfaceVolumeBits,
+            HighestVoxelsEachTile = HighestVoxelSaveTable,
             StaticObstacles = staticObstacles,
             CollidedIndicies = collidedIndicies,
         };
@@ -132,6 +142,7 @@ internal class NavigationVolumeSystem
             Costs = costsToWriteOnTopOf,
         };
         collisionToCost.Schedule().Complete();
+
 
         HeightDifToCostField heightDifToCostEdit = new HeightDifToCostField()
         {

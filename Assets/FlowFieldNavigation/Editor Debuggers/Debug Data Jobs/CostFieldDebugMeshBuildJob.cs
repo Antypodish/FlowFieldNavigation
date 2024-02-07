@@ -37,10 +37,16 @@ internal struct CostFieldDebugMeshBuildJob : IJob
                 float2 tr = bl + new float2(TileSize, TileSize);
                 float2 br = bl + new float2(TileSize, 0);
 
-                float3 bl3 = new float3(bl.x, GetHeight(bl) + 0.1f, bl.y);
-                float3 tl3 = new float3(tl.x, GetHeight(tl) + 0.1f, tl.y);
-                float3 tr3 = new float3(tr.x, GetHeight(tr) + 0.1f, tr.y);
-                float3 br3 = new float3(br.x, GetHeight(br) + 0.1f, br.y);
+                float blHeight = GetHeight(bl);
+                float tlHeight = GetHeight(tl);
+                float trHeight = GetHeight(tr);
+                float brHeight = GetHeight(br);
+
+
+                float3 bl3 = new float3(bl.x, blHeight + 0.1f, bl.y);
+                float3 tl3 = new float3(tl.x, tlHeight + 0.1f, tl.y);
+                float3 tr3 = new float3(tr.x, trHeight + 0.1f, tr.y);
+                float3 br3 = new float3(br.x, brHeight + 0.1f, br.y);
 
                 int blIndex = Verts.Length;
                 int tlIndex = blIndex + 1;

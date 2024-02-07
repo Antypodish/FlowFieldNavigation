@@ -36,10 +36,11 @@ public class TerrainGenerator : MonoBehaviour
 
         obsGenerator = new ObstacleGenerator(this, WalkabilityData, _obstacleMat);
         obsGenerator.CreateMesh(vertexHeights);
-
+        
         GameObject plane = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        plane.transform.position = new Vector3(30, 5, 30);
+        plane.transform.position = new Vector3(10.5f, 0, 10.5f);
         plane.transform.localScale = new Vector3(15, 1, 15);
+        plane.transform.rotation = Quaternion.Euler(0, -45, 25);
         Mesh planeMesh = plane.GetComponent<MeshFilter>().mesh;
         _generatedMeshes.Add(planeMesh);
         _generatedMeshTransforms.Add(plane.transform);

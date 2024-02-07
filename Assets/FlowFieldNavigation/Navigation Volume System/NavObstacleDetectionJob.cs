@@ -18,7 +18,7 @@ internal struct NavObstacleDetectionJob : IJob
     internal int XSecCount;
     internal int ZSecCount;
     [ReadOnly] internal NativeArray<StaticObstacle> StaticObstacles;
-    [ReadOnly] internal NativeHashMap<int, UnsafeBitArray> SurfaceVolumeBits;
+    [ReadOnly] internal NativeArray<HeightTile> HighestVoxelsEachTile;
     [WriteOnly] internal NativeList<int3> CollidedIndicies;
     public void Execute()
     {
@@ -72,9 +72,14 @@ internal struct NavObstacleDetectionJob : IJob
 
                 //Check if collides
                 LocalIndex1d curLocal = FlowFieldVolumeUtilities.GetLocal1D(curIndex, SecCompVoxCount, XSecCount, ZSecCount);
-                if (SurfaceVolumeBits.TryGetValue(curLocal.sector, out UnsafeBitArray bits))
+                int2 curFieldIndex2 = new int2(curIndex.x, curIndex.z);
+                int curFieldIndex1 = FlowFieldUtilities.To1D(curFieldIndex2, ZVoxCount);
+                HeightTile highestVoxel = HighestVoxelsEachTile[curFieldIndex1];
+                int maxY = highestVoxel.VoxIndex.y;
+                int depth = highestVoxel.StackCount;
+                if (curIndex .y <= maxY && curIndex.y > maxY - depth)
                 {
-                    if (bits.IsSet(curLocal.index)) { CollidedIndicies.Add(curIndex); }
+                    CollidedIndicies.Add(curIndex);
                 }
                 //Enqueue neighbours
                 int3 left = new int3(curIndex.x - 1, curIndex.y, curIndex.z);

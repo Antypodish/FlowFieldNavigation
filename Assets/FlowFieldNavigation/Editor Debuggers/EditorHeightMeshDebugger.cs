@@ -4,6 +4,7 @@ using Unity.Mathematics;
 using Unity.Collections.LowLevel.Unsafe;
 using System.Diagnostics;
 using System.Collections.Generic;
+using UnityEditor;
 internal class EditorHeightMeshDebugger
 {
     PathfindingManager _pathfindingManager;

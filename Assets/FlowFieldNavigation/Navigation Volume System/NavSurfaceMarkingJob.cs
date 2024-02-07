@@ -18,7 +18,7 @@ internal struct NavSurfaceMarkingJob : IJob
     [ReadOnly] internal NativeArray<float3> Verts;
     [ReadOnly] internal NativeArray<int> Trigs;
     internal NativeHashMap<int, UnsafeBitArray> SectorBits;
-    internal NativeArray<int3> HighestVoxelTable;
+    internal NativeArray<HeightTile> HighestVoxelTable;
     public void Execute()
     {
         for (int i = 0; i < Trigs.Length; i += 3)
@@ -40,7 +40,7 @@ internal struct NavSurfaceMarkingJob : IJob
             //Clamp
             boxMinIndex = FlowFieldVolumeUtilities.Clamp(boxMinIndex, XVoxCount, YVoxCount, ZVoxCount);
             boxMaxIndex = FlowFieldVolumeUtilities.Clamp(boxMaxIndex, XVoxCount, YVoxCount, ZVoxCount);
-            for (int y = boxMinIndex.y; y <= boxMaxIndex.y; y++)
+            for (int y = boxMaxIndex.y; y >= boxMinIndex.y; y--)
             {
                 for (int z = boxMinIndex.z; z <= boxMaxIndex.z; z++)
                 {
@@ -56,8 +56,13 @@ internal struct NavSurfaceMarkingJob : IJob
                             {
                                 bitArray.Set(local.index, true);
                                 int voxToCheckOnlyHorizontal1d = z * XVoxCount + x;
-                                int3 highestVoxelHere = HighestVoxelTable[voxToCheckOnlyHorizontal1d];
-                                if(y > highestVoxelHere.y) { HighestVoxelTable[voxToCheckOnlyHorizontal1d] = voxToCheck; }
+                                HeightTile heightTileHere = HighestVoxelTable[voxToCheckOnlyHorizontal1d];
+                                bool isHigher = y > heightTileHere.VoxIndex.y;
+                                if (isHigher)
+                                {
+                                    heightTileHere.VoxIndex = voxToCheck;
+                                    HighestVoxelTable[voxToCheckOnlyHorizontal1d] = heightTileHere;
+                                }
                             }
                         }
                     }

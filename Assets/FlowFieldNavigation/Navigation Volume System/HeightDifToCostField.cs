@@ -8,7 +8,7 @@ internal struct HeightDifToCostField : IJob
 {
     internal int XVoxCount;
     internal int ZVoxCount;
-    [ReadOnly] internal NativeArray<int3> HighestVoxelTable;
+    [ReadOnly] internal NativeArray<HeightTile> HighestVoxelTable;
     [WriteOnly] internal NativeArray<byte> Costs;
     public void Execute()
     {
@@ -39,26 +39,42 @@ internal struct HeightDifToCostField : IJob
             sw = math.select(sw, cur, sOverflow || wOverflow);
             nw = math.select(nw, cur, nOverflow || wOverflow);
 
-            int3 curVoxel = HighestVoxelTable[cur];
-            int3 nVoxel = HighestVoxelTable[n];
-            int3 eVoxel = HighestVoxelTable[e];
-            int3 sVoxel = HighestVoxelTable[s];
-            int3 wVoxel = HighestVoxelTable[w];
-            int3 neVoxel = HighestVoxelTable[ne];
-            int3 seVoxel = HighestVoxelTable[se];
-            int3 swVoxel = HighestVoxelTable[sw];
-            int3 nwVoxel = HighestVoxelTable[nw];
+            HeightTile curHeightTile = HighestVoxelTable[cur];
+            HeightTile nHeightTile = HighestVoxelTable[n];
+            HeightTile eHeightTile = HighestVoxelTable[e];
+            HeightTile sHeightTile = HighestVoxelTable[s];
+            HeightTile wHeightTile = HighestVoxelTable[w];
+            HeightTile neHeightTile = HighestVoxelTable[ne];
+            HeightTile seHeightTile = HighestVoxelTable[se];
+            HeightTile swHeightTile = HighestVoxelTable[sw];
+            HeightTile nwHeightTile = HighestVoxelTable[nw];
 
-            int4 y1 = new int4(nVoxel.y, eVoxel.y, sVoxel.y, wVoxel.y);
-            int4 y2 = new int4(neVoxel.y, seVoxel.y, swVoxel.y, nwVoxel.y);
+            int curHeight = curHeightTile.VoxIndex.y - curHeightTile.StackCount + 1;
+            int nHeight = nHeightTile.VoxIndex.y;
+            int eHeight = eHeightTile.VoxIndex.y;
+            int sHeight = sHeightTile.VoxIndex.y;
+            int wHeight = wHeightTile.VoxIndex.y;
+            int neHeight = neHeightTile.VoxIndex.y;
+            int seHeight = seHeightTile.VoxIndex.y;
+            int swHeight = swHeightTile.VoxIndex.y;
+            int nwHeight = nwHeightTile.VoxIndex.y;
 
-            int4 yDif1 = curVoxel.y - y1;
-            int4 yDif2 = curVoxel.y - y2;
+            int4 y1 = new int4(nHeight, eHeight, sHeight, wHeight);
+            int4 y2 = new int4(neHeight, seHeight, swHeight, nwHeight);
 
-            bool4 muchDifferent1 = yDif1 > 5;
-            bool4 muchDifferent2 = yDif2 > 5;
-            bool4 muchDifResult = muchDifferent1 & muchDifferent2;
-            if(muchDifResult.x | muchDifResult.y | muchDifResult.z | muchDifResult.w) { Costs[i] = byte.MaxValue; }
+            int4 yDif1 = curHeight - y1;
+            int4 yDif2 = curHeight - y2;
+
+            bool4 muchDifferent1 = yDif1 > 1;
+            bool4 muchDifferent2 = yDif2 > 1;
+            bool4 muchDifResult = muchDifferent1 | muchDifferent2;
+
+            if (muchDifResult.x | muchDifResult.y | muchDifResult.z | muchDifResult.w) { Costs[i] = byte.MaxValue; }
         }
     }
+}
+internal struct HeightTile
+{
+    internal int3 VoxIndex;
+    internal int StackCount;
 }

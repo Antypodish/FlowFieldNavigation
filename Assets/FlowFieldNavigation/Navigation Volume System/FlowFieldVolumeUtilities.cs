@@ -30,6 +30,15 @@ internal static class FlowFieldVolumeUtilities
         int x = index % xVoxCount;
         return new int3(x, y, z);
     }
+    internal static int3 GetSector(int3 index, int sectorComponentVoxelCount)
+    {
+        return index / sectorComponentVoxelCount;
+    }
+    internal static int3 GetLocal3d(int3 generalIndex, int3 sectorIndex, int sectorComponentVoxCount)
+    {
+        int3 sectorStart3 = sectorIndex * sectorComponentVoxCount;
+        return generalIndex - sectorStart3;
+    }
     internal static LocalIndex1d GetLocal1D(int3 generalIndex, int sectorComponentVoxCount, int xSecCount, int zSecCount)
     {
         int3 sector3 = generalIndex / sectorComponentVoxCount;
