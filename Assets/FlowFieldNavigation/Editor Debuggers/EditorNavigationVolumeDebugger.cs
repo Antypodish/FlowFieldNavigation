@@ -113,4 +113,25 @@ internal class EditorNavigationVolumeDebugger
             }
         }
     }
+    internal void DebugHighestVoxels()
+    {
+        Gizmos.color = Color.blue;
+        float voxHorSize = FlowFieldVolumeUtilities.VoxelHorizontalSize;
+        float voxVerSize = FlowFieldVolumeUtilities.VoxelVerticalSize;
+        int sectorComponentVoxCount = FlowFieldVolumeUtilities.SectorComponentVoxelCount;
+        int xSecCount = FlowFieldVolumeUtilities.XAxisSectorCount;
+        int zSecCount = FlowFieldVolumeUtilities.ZAxisSectorCount;
+        float3 volumeStartPos = FlowFieldVolumeUtilities.VolumeStartPos;
+        NativeArray<int3> highestVoxels = _pathfindingManager.FieldDataContainer.NavigationVolumeSystem.HighestVoxelSaveTable;
+        for(int i = 0; i < highestVoxels.Length; i++)
+        {
+            int3 voxel = highestVoxels[i];
+            if(voxel.y == int.MinValue) { continue; }
+            float3 pos = FlowFieldVolumeUtilities.GetVoxelCenterPos(voxel, volumeStartPos, voxHorSize, voxVerSize);
+            float3 size = new float3(voxHorSize, voxVerSize, voxHorSize);
+            Gizmos.DrawCube(pos, size);
+
+        }
+
+    }
 }

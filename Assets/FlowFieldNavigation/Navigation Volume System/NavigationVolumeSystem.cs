@@ -8,7 +8,7 @@ using System.Diagnostics;
 internal class NavigationVolumeSystem
 {
     internal NativeHashMap<int, UnsafeBitArray> SurfaceVolumeBits;
-
+    internal NativeArray<int3> HighestVoxelSaveTable;
     internal void GetCostsFromCollisions(NativeArray<float3> navigationSurfaceVerticies, 
         NativeArray<int> navigationSurfaceTriangles,
         FlowFieldStaticObstacle[] staticObstacleBehaviors,
@@ -22,8 +22,11 @@ internal class NavigationVolumeSystem
         float sectorHorizontalSize = sectorComponentVoxelCount * voxelHorizontalSize;
         float sectorVerticalSize = sectorComponentVoxelCount * voxelVerticalSize;
 
-        NativeArray<StaticObstacle> staticObstacles = GetTransformedStaticObstacles(staticObstacleBehaviors, Allocator.TempJob);
+        HighestVoxelSaveTable = new NativeArray<int3>(FlowFieldUtilities.FieldTileAmount, Allocator.TempJob);
+        HighestVoxSaveTableResetJob highestVoxelReset = new HighestVoxSaveTableResetJob() { Table = HighestVoxelSaveTable };
+        highestVoxelReset.Schedule().Complete();
 
+        NativeArray<StaticObstacle> staticObstacles = GetTransformedStaticObstacles(staticObstacleBehaviors, Allocator.TempJob);
         NativeReference<float3> volumeStartPos = new NativeReference<float3>(0, Allocator.TempJob);
         NativeReference<int> xAxisVoxelCount = new NativeReference<int>(0, Allocator.TempJob);
         NativeReference<int> yAxisVoxelCount = new NativeReference<int>(0, Allocator.TempJob);
@@ -94,6 +97,7 @@ internal class NavigationVolumeSystem
             Trigs = navigationSurfaceTriangles,
             Verts = navigationSurfaceVerticies,
             SectorBits = SurfaceVolumeBits,
+            HighestVoxelTable = HighestVoxelSaveTable,
         };
         surfaceMarking.Schedule().Complete();
 
@@ -128,6 +132,15 @@ internal class NavigationVolumeSystem
             Costs = costsToWriteOnTopOf,
         };
         collisionToCost.Schedule().Complete();
+
+        HeightDifToCostField heightDifToCostEdit = new HeightDifToCostField()
+        {
+            XVoxCount = FlowFieldVolumeUtilities.XAxisVoxelCount,
+            ZVoxCount = FlowFieldVolumeUtilities.ZAxisVoxelCount,
+            Costs = costsToWriteOnTopOf,
+            HighestVoxelTable = HighestVoxelSaveTable,
+        };
+        heightDifToCostEdit.Schedule().Complete();
     }
     NativeHashMap<int, UnsafeBitArray> AllocateSectors(NativeHashSet<int> sectorToAllocate)
     {

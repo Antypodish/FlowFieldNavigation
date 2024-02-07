@@ -18,6 +18,7 @@ internal struct NavSurfaceMarkingJob : IJob
     [ReadOnly] internal NativeArray<float3> Verts;
     [ReadOnly] internal NativeArray<int> Trigs;
     internal NativeHashMap<int, UnsafeBitArray> SectorBits;
+    internal NativeArray<int3> HighestVoxelTable;
     public void Execute()
     {
         for (int i = 0; i < Trigs.Length; i += 3)
@@ -50,11 +51,13 @@ internal struct NavSurfaceMarkingJob : IJob
                         float3 voxelSize = new float3(VoxHorSize, VoxVerSize, VoxHorSize);
                         if (IsColliding(v1,v2,v3,voxelStartPos, voxelSize))
                         {
-                            int vox1d = FlowFieldVolumeUtilities.To1D(voxToCheck, XVoxCount, ZVoxCount);
                             LocalIndex1d local = FlowFieldVolumeUtilities.GetLocal1D(voxToCheck, SectorCompVoxCount, XSecCount, ZSecCount);
                             if(SectorBits.TryGetValue(local.sector, out UnsafeBitArray bitArray))
                             {
                                 bitArray.Set(local.index, true);
+                                int voxToCheckOnlyHorizontal1d = z * XVoxCount + x;
+                                int3 highestVoxelHere = HighestVoxelTable[voxToCheckOnlyHorizontal1d];
+                                if(y > highestVoxelHere.y) { HighestVoxelTable[voxToCheckOnlyHorizontal1d] = voxToCheck; }
                             }
                         }
                     }

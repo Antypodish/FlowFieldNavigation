@@ -22,6 +22,7 @@ public class EditorDebuggingController : MonoBehaviour
     [SerializeField] bool _debugSectorBounds;
     [SerializeField] bool _debugDetectedSectors;
     [SerializeField] bool _debugNavigationSurfaceVolume;
+    [SerializeField] bool _debugHighestSurfaceVoxels;
     [Header("Height Mesh Debugger")]
     [SerializeField] int _meshGridIndex;
     [SerializeField] bool _debugHeightMesh;
@@ -118,6 +119,7 @@ _debuggingEnabled = false;
         if (_debugSectorBounds) { _navVolDebugger.DebugVolumeSectorBounds(); }
         if (_debugDetectedSectors) { _navVolDebugger.DebugVolumeDetectedSectors(); }
         if (_debugNavigationSurfaceVolume) { _navVolDebugger.DebugNavigationSurfaceVolume(); }
+        if (_debugHighestSurfaceVoxels) { _navVolDebugger.DebugHighestVoxels(); }
 
         if (AgentToDebug != null)
         {
