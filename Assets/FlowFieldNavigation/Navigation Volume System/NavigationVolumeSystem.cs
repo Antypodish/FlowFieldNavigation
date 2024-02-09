@@ -9,7 +9,7 @@ internal class NavigationVolumeSystem
 {
     internal void AnalyzeVolume(NativeArray<float3> navigationSurfaceVerticies, 
         NativeArray<int> navigationSurfaceTriangles,
-        FlowFieldStaticObstacle[] staticObstacleBehaviors,
+        NativeArray<StaticObstacle> staticObstacles,
         float voxelHorizontalSize, 
         float voxelVerticalSize,
         float maxSurfaceHeightDifference,
@@ -26,7 +26,6 @@ internal class NavigationVolumeSystem
         HighestVoxSaveTableResetJob highestVoxelReset = new HighestVoxSaveTableResetJob() { Table = HighestVoxelSaveTable };
         highestVoxelReset.Schedule().Complete();
 
-        NativeArray<StaticObstacle> staticObstacles = GetTransformedStaticObstacles(staticObstacleBehaviors, Allocator.TempJob);
         NativeReference<float3> volumeStartPos = new NativeReference<float3>(0, Allocator.TempJob);
         NativeReference<int> xAxisVoxelCount = new NativeReference<int>(0, Allocator.TempJob);
         NativeReference<int> yAxisVoxelCount = new NativeReference<int>(0, Allocator.TempJob);
@@ -201,7 +200,6 @@ internal class NavigationVolumeSystem
         xAxisVoxelCount.Dispose();
         yAxisVoxelCount.Dispose();
         zAxisVoxelCount.Dispose();
-        staticObstacles.Dispose();
         detectedSectorSet.Dispose();
         collidedIndicies.Dispose();
         slopeExcludedTrigs.Dispose();
@@ -227,37 +225,5 @@ internal class NavigationVolumeSystem
             volumeBits.Add(curSector, bitArray);
         }
         return volumeBits;
-    }
-    NativeArray<StaticObstacle> GetTransformedStaticObstacles(FlowFieldStaticObstacle[] staticObstacles, Allocator allocator)
-    {
-        NativeArray<StaticObstacle> obstacleOut = new NativeArray<StaticObstacle>(staticObstacles.Length, allocator);
-        for(int i = 0; i < staticObstacles.Length; i++)
-        {
-            FlowFieldStaticObstacle obstacle = staticObstacles[i];
-            StaticObstacle inputBounds = obstacle.GetBoundaries();
-            Transform inputTransform = obstacle.transform;
-            Vector3 lbl = inputBounds.LBL;
-            Vector3 ltl = inputBounds.LTL;
-            Vector3 ltr = inputBounds.LTR;
-            Vector3 lbr = inputBounds.LBR;
-            Vector3 ubl = inputBounds.UBL;
-            Vector3 utl = inputBounds.UTL;
-            Vector3 utr = inputBounds.UTR;
-            Vector3 ubr = inputBounds.UBR;
-
-            obstacleOut[i] = new StaticObstacle()
-            {
-                LBL = inputTransform.TransformPoint(lbl),
-                LTL = inputTransform.TransformPoint(ltl),
-                LTR = inputTransform.TransformPoint(ltr),
-                LBR = inputTransform.TransformPoint(lbr),
-                UBL = inputTransform.TransformPoint(ubl),
-                UTL = inputTransform.TransformPoint(utl),
-                UTR = inputTransform.TransformPoint(utr),
-                UBR = inputTransform.TransformPoint(ubr),
-            };
-            obstacle.CanBeDisposed = true;
-        }
-        return obstacleOut;
     }
 }

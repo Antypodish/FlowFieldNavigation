@@ -9,49 +9,27 @@ internal class FieldDataContainer
     internal NavigationVolumeSystem NavigationVolumeSystem { get; private set; }
     CostFieldProducer _costFieldProducer;
     FieldGraphProducer _fieldGraphProducer;
-    internal FieldDataContainer(FlowFieldSurface[] navigationSurfaces)
+    internal FieldDataContainer(NativeArray<float3> surfaceMeshVerticies, NativeArray<int> surfaceMeshTriangles)
     {
         _costFieldProducer = new CostFieldProducer();
         _fieldGraphProducer = new FieldGraphProducer();
         ObstacleContainer = new ObstacleContainer();
         HeightMeshGenerator = new HeightMeshProducer();
-        HeightMeshGenerator.GenerateHeightMesh(navigationSurfaces);
+        HeightMeshGenerator.GenerateHeightMesh(surfaceMeshVerticies, surfaceMeshTriangles);
         NavigationVolumeSystem = new NavigationVolumeSystem();
     }
-    internal void CreateField(Walkability[][] walkabilityMatrix, 
-        FlowFieldStaticObstacle[] staticObstacles, 
+    internal void CreateField(NativeArray<byte> baseCostField, 
+        NativeArray<StaticObstacle> staticObstacles, 
         int maxOffset, float voxelHorizontalSize,
         float voxelVerticalSize, 
         float maxSurfaceHeightDifference,
         float maxWalkableHeight)
     {
-        NativeArray<byte> inputCosts = WalkabilityMatrixToCosts(walkabilityMatrix, Allocator.TempJob);
         NativeArray<float3> heightMeshVerts = HeightMeshGenerator.Verticies.AsArray();
         NativeArray<int> heightMeshTrigs = HeightMeshGenerator.Triangles.AsArray();
-        NavigationVolumeSystem.AnalyzeVolume(heightMeshVerts, heightMeshTrigs, staticObstacles, voxelHorizontalSize, voxelVerticalSize, maxSurfaceHeightDifference, maxWalkableHeight, inputCosts);
-        _costFieldProducer.ProduceCostFields(maxOffset, inputCosts);
+        NavigationVolumeSystem.AnalyzeVolume(heightMeshVerts, heightMeshTrigs, staticObstacles, voxelHorizontalSize, voxelVerticalSize, maxSurfaceHeightDifference, maxWalkableHeight, baseCostField);
+        _costFieldProducer.ProduceCostFields(maxOffset, baseCostField);
         _fieldGraphProducer.ProduceFieldGraphs(_costFieldProducer.GetAllCostFields());
-        inputCosts.Dispose();
-    }
-    NativeArray<byte> WalkabilityMatrixToCosts(Walkability[][] walkabilityMatrix, Allocator allocator)
-    {
-        NativeArray<byte> costs = new NativeArray<byte>(FlowFieldUtilities.FieldTileAmount, allocator);
-        if(walkabilityMatrix == null)
-        {
-            for(int i = 0; i < costs.Length; i++) { costs[i] = 1; }
-            return costs;
-        }
-
-        for(int r = 0; r < FlowFieldUtilities.FieldRowAmount; r++)
-        {
-            for (int c = 0; c < FlowFieldUtilities.FieldColAmount; c++)
-            {
-                int2 index2 = new int2(c, r);
-                int index1 = FlowFieldUtilities.To1D(index2, FlowFieldUtilities.FieldColAmount);
-                costs[index1] = walkabilityMatrix[r][c] == Walkability.Unwalkable ? byte.MaxValue : (byte)1;
-            }
-        }
-        return costs;
     }
     internal FieldGraph GetFieldGraphWithOffset(int offset)
     {

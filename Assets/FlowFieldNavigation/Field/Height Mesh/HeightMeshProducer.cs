@@ -20,57 +20,18 @@ internal class HeightMeshProducer
         TileSizeToGridIndex = new NativeHashMap<float, int>(0, Allocator.Persistent);
         GridIndexToTileSize = new NativeHashMap<int, float>(0, Allocator.Persistent);
     }
-    internal void GenerateHeightMesh(FlowFieldSurface[] navigationSurfaces)
+    internal void GenerateHeightMesh(NativeArray<float3> surfaceMeshVerticiesInput, NativeArray<int> surfaceMeshTrianglesInput)
     {
-        //Merge and copy data to native containers
-        NativeList<float3> tempVericies = new NativeList<float3>(Allocator.TempJob);
-        NativeList<int> tempTriangles = new NativeList<int>(Allocator.TempJob);
-
-        int vertexStart = 0;
-        for (int i = 0; i < navigationSurfaces.Length; i++)
-        {
-            FlowFieldSurface surface = navigationSurfaces[i];
-            if(surface == null) { continue; }
-
-            GameObject surfaceObject = surface.gameObject;
-            Transform surfaceTransform = surfaceObject.transform;
-            MeshFilter surfaceMeshFilter = surfaceObject.GetComponent<MeshFilter>();
-            if(surfaceMeshFilter == null) { continue; }
-
-            Mesh surfaceMesh = surfaceMeshFilter.mesh;
-            if(surfaceMesh == null) { continue; }
-
-            Vector3[] meshVerticies = surfaceMesh.vertices;
-            int[] meshTriangles = surfaceMesh.triangles;
-
-            float3 position = surfaceTransform.position;
-            float3 scale = surfaceTransform.localScale;
-            quaternion rotation = surfaceTransform.rotation;
-
-            for (int j = 0; j < meshVerticies.Length; j++)
-            {
-                tempVericies.Add(position + math.rotate(rotation, meshVerticies[j] * scale));
-            }
-            for (int j = 0; j < meshTriangles.Length; j++)
-            {
-                tempTriangles.Add(vertexStart + meshTriangles[j]);
-            }
-            vertexStart += meshVerticies.Length;
-
-        }
-
         //Eliminate wrong normals
         TriangleNormalTestJob heightMapJob = new TriangleNormalTestJob()
         {
             UpDirection = new float3(0, 1f, 0f),
-            InputTriangles = tempTriangles,
-            InputVertecies = tempVericies,
+            InputTriangles = surfaceMeshTrianglesInput,
+            InputVertecies = surfaceMeshVerticiesInput,
             OutputTriangles = Triangles,
             OutputVerticies = Verticies,
         };
         heightMapJob.Schedule().Complete();
-        tempVericies.Dispose();
-        tempTriangles.Dispose();
 
         NativeReference<float2> baseTranslation = new NativeReference<float2>(0, Allocator.TempJob);
         HeightMeshStartPositionDeterminationJob meshStartPosJob = new HeightMeshStartPositionDeterminationJob()

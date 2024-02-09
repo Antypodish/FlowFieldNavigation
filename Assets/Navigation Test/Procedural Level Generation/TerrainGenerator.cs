@@ -36,22 +36,11 @@ public class TerrainGenerator : MonoBehaviour
         FlowFieldStaticObstacle[] obstacleBehaviors = FindObjectsByType<FlowFieldStaticObstacle>(FindObjectsSortMode.None);
         FlowFieldSurface[] flowFieldSurfaces = FindObjectsByType<FlowFieldSurface>(FindObjectsSortMode.None);
 
-        //Start Simulation
-        SimulationStartParameters simParam = new SimulationStartParameters()
-        {
-            TileSize = TileSize,
-            BaseAgentSpatialGridSize = 3,
-            ColumCount = ColumnAmount,
-            RowCount = RowAmount,
-            MaxCostFieldOffset = 5,
-            WalkabilityMatrix = WalkabilityData.WalkabilityMatrix,
-            StaticObstacles = obstacleBehaviors,
-            NavigationSurfaces = flowFieldSurfaces,
-            FieldStartPositionXZ = new Vector2(transform.position.x, transform.position.z),
-            VerticalVoxelSize = 0.1f,
-            MaxSurfaceHeightDifference = 0.1f,
-            MaxWalkableHeight = float.MaxValue,
-        };
+        Vector2 fieldStartPos = new Vector2(transform.position.x, transform.position.z);
+        Walkability[][] walkabilityMatrix = WalkabilityData.WalkabilityMatrix;
+        SimulationStartParameters simParam;
+        simParam = new SimulationStartParameters(walkabilityMatrix, flowFieldSurfaces, obstacleBehaviors, 3f, 5, 0.1f, TileSize, fieldStartPos, 0.1f);
+
         _pathfindingManager.Interface.StartSimulation(simParam);
     }
     public NativeArray<float> GenerateMesh()

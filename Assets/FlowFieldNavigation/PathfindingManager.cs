@@ -37,13 +37,15 @@ public class PathfindingManager : MonoBehaviour
         if (!SimulationStarted) { return; }
         _navigationUpdater.IntermediateUpdate();
     }
-    void SetFlowFieldUtilities(SimulationStartParameters startParameters)
+
+    //Handle inappropriate col/row counts
+    void SetFlowFieldUtilities(SimulationInputs startInputs)
     {
-        int sectorColAmount = 10;
-        float baseAgentSpatialGridSize = startParameters.BaseAgentSpatialGridSize;
-        float tileSize = startParameters.TileSize;
-        int rowAmount = startParameters.RowCount;
-        int columnAmount = startParameters.ColumCount;
+        const int sectorColAmount = 10;
+        float baseAgentSpatialGridSize = startInputs.BaseAgentSpatialGridSize;
+        float tileSize = startInputs.TileSize;
+        int rowAmount = startInputs.RowCount;
+        int columnAmount = startInputs.ColumnCount;
         int sectorMatrixColAmount = columnAmount / sectorColAmount;
         int sectorMatrixRowAmount = rowAmount / sectorColAmount;
         FlowFieldUtilities.DebugMode = false;
@@ -60,26 +62,27 @@ public class PathfindingManager : MonoBehaviour
         FlowFieldUtilities.BaseAgentSpatialGridSize = baseAgentSpatialGridSize;
         FlowFieldUtilities.BaseTriangleSpatialGridSize = _baseTriangleSpatialGridSize;
         FlowFieldUtilities.MinAgentSize = 0;
-        FlowFieldUtilities.MaxAgentSize = (startParameters.MaxCostFieldOffset * tileSize * 2) + tileSize;
+        FlowFieldUtilities.MaxAgentSize = (startInputs.MaxCostFieldOffset * tileSize * 2) + tileSize;
         FlowFieldUtilities.LOSRange = LineOfSightRange;
-        FlowFieldUtilities.FieldMinXIncluding = startParameters.FieldStartPositionXZ.x + 0.01f;
-        FlowFieldUtilities.FieldMinYIncluding = startParameters.FieldStartPositionXZ.y + 0.01f;
-        FlowFieldUtilities.FieldMaxXExcluding = startParameters.FieldStartPositionXZ.x + FlowFieldUtilities.FieldColAmount * FlowFieldUtilities.TileSize - 0.01f;
-        FlowFieldUtilities.FieldMaxYExcluding = startParameters.FieldStartPositionXZ.y + FlowFieldUtilities.FieldRowAmount * FlowFieldUtilities.TileSize - 0.01f;
-        FlowFieldUtilities.MaxCostFieldOffset = startParameters.MaxCostFieldOffset;
-        FlowFieldUtilities.FieldGridStartPosition = startParameters.FieldStartPositionXZ;
+        FlowFieldUtilities.FieldMinXIncluding = startInputs.FieldStartPositionXZ.x + 0.01f;
+        FlowFieldUtilities.FieldMinYIncluding = startInputs.FieldStartPositionXZ.y + 0.01f;
+        FlowFieldUtilities.FieldMaxXExcluding = startInputs.FieldStartPositionXZ.x + FlowFieldUtilities.FieldColAmount * FlowFieldUtilities.TileSize - 0.01f;
+        FlowFieldUtilities.FieldMaxYExcluding = startInputs.FieldStartPositionXZ.y + FlowFieldUtilities.FieldRowAmount * FlowFieldUtilities.TileSize - 0.01f;
+        FlowFieldUtilities.MaxCostFieldOffset = startInputs.MaxCostFieldOffset;
+        FlowFieldUtilities.FieldGridStartPosition = startInputs.FieldStartPositionXZ;
     }
-    internal void StartSimulation(SimulationStartParameters startParameters)
+    internal void StartSimulation(SimulationInputs startInputs)
     {
         SimulationStarted = true;
-        SetFlowFieldUtilities(startParameters);
-        FieldDataContainer = new FieldDataContainer(startParameters.NavigationSurfaces);
-        FieldDataContainer.CreateField(startParameters.WalkabilityMatrix, 
-            startParameters.StaticObstacles, startParameters.MaxCostFieldOffset, 
-            startParameters.TileSize, 
-            startParameters.VerticalVoxelSize,
-            startParameters.MaxSurfaceHeightDifference,
-            startParameters.MaxWalkableHeight);
+        SetFlowFieldUtilities(startInputs);
+        FieldDataContainer = new FieldDataContainer(startInputs.NavigationSurfaceVerticies, startInputs.NavigationSurfaceTriangles);
+        FieldDataContainer.CreateField(startInputs.BaseCostField,
+            startInputs.StaticObstacles, 
+            startInputs.MaxCostFieldOffset,
+            startInputs.TileSize,
+            startInputs.VerticalVoxelSize,
+            startInputs.MaxSurfaceHeightDifference,
+            startInputs.MaxWalkableHeight);
         AgentDataContainer = new AgentDataContainer(this);
         AgentRemovingSystem = new AgentRemovingSystem(this);
         PathDataContainer = new PathDataContainer(this);
