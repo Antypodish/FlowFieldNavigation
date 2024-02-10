@@ -124,6 +124,12 @@ public class ObstacleGenerator
                     _obstacleTriangles.Add(utr);
                     _obstacleTriangles.Add(utl);
                     _obstacleTriangles.Add(ltl);
+
+                    GameObject staticObstacleObject = new GameObject();
+                    staticObstacleObject.AddComponent<FlowFieldStaticObstacle>();
+                    FlowFieldStaticObstacle staticObstacleBehaviour = staticObstacleObject.GetComponent<FlowFieldStaticObstacle>();
+                    staticObstacleBehaviour.Size = upperTopRight - lowerBotLeft;
+                    staticObstacleObject.transform.position = (upperTopRight + lowerBotLeft) / 2;
                 }
             }
         }
@@ -131,7 +137,6 @@ public class ObstacleGenerator
         curMesh.vertices = _obstacleVerticies.ToArray();
         curMesh.triangles = _obstacleTriangles.ToArray();
         curMesh.RecalculateNormals();
-
     }
     GameObject GetObstacleObject(Mesh mesh)
     {

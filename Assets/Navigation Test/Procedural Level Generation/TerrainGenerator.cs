@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Unity.Collections;
 using UnityEngine;
-
+using System.Diagnostics;
 public class TerrainGenerator : MonoBehaviour
 {
     [SerializeField] MeshCollider _fieldMeshCollider;
@@ -36,12 +36,13 @@ public class TerrainGenerator : MonoBehaviour
         FlowFieldStaticObstacle[] obstacleBehaviors = FindObjectsByType<FlowFieldStaticObstacle>(FindObjectsSortMode.None);
         FlowFieldSurface[] flowFieldSurfaces = FindObjectsByType<FlowFieldSurface>(FindObjectsSortMode.None);
 
-        Vector2 fieldStartPos = new Vector2(transform.position.x, transform.position.z);
-        Walkability[][] walkabilityMatrix = WalkabilityData.WalkabilityMatrix;
-        SimulationStartParameters simParam;
-        simParam = new SimulationStartParameters(walkabilityMatrix, flowFieldSurfaces, obstacleBehaviors, 3f, 5, 0.1f, TileSize, fieldStartPos, 0.1f);
-
+        SimulationStartParametersStandard simParam = new SimulationStartParametersStandard(flowFieldSurfaces, obstacleBehaviors, 3f, 0.5f, 0.1f, TileSize, 0.1f);
         _pathfindingManager.Interface.StartSimulation(simParam);
+
+        for(int i = 0; i < obstacleBehaviors.Length; i++)
+        {
+            Destroy(obstacleBehaviors[i].gameObject);
+        }
     }
     public NativeArray<float> GenerateMesh()
     {

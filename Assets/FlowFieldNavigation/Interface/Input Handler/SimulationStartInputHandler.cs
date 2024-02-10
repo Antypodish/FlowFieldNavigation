@@ -5,59 +5,30 @@ using UnityEngine;
 
 internal class SimulationStartInputHandler
 {
-    internal SimulationInputs HandleInput(SimulationStartParameters simStartParam, Allocator allocator)
+    internal SimulationInputs HandleInput(SimulationStartParametersStandard simStartParam, Allocator allocator)
     {
         GetNavgiationSurface(simStartParam.NavigationSurfaces, out NativeArray<float3> navSurfaceVerticies, out NativeArray<int> navSurfaceTriangles, allocator);
-        
         NativeArray<StaticObstacle> staticObstacles = GetStaticObstacles(simStartParam.StaticObstacles, allocator);
-        
         GetSurfaceMeshStartAndEndPositions(navSurfaceVerticies, out float2 surfaceStartPos, out float2 surfaceEndPos);
-        float2 fieldStartPos = math.select(simStartParam.FieldStartPositionXZ, surfaceStartPos, simStartParam.FieldStartPositionXZ == SimulationStartParameters.InvalidFieldStartPos);
-        float2 fieldEndPos = math.select(simStartParam.FieldEndPositionXZ, surfaceEndPos, simStartParam.FieldEndPositionXZ == SimulationStartParameters.InvalidFieldStartPos);
-        
-        int colAmount = simStartParam.ColumnCount;
-        int rowAmount = simStartParam.RowCount;
-        if(colAmount == 0 || rowAmount == 0)
-        {
-            GetRowAndColAmount(fieldStartPos, fieldEndPos, simStartParam.TileSize, out colAmount, out rowAmount);
-        }
-
-        NativeArray<byte> baseCostField = GetBaseCostField(simStartParam.WalkabilityData, colAmount, rowAmount, allocator);
+        float2 fieldStartPos = math.select(simStartParam.FieldStartPositionXZ, surfaceStartPos, simStartParam.FieldStartPositionXZ == new Vector2(float.MinValue, float.MinValue));
+        float2 fieldEndPos = math.select(simStartParam.FieldEndPositionXZ, surfaceEndPos, simStartParam.FieldEndPositionXZ == new Vector2(float.MaxValue, float.MaxValue));
+        GetRowAndColAmount(fieldStartPos, fieldEndPos, simStartParam.TileSize, out int colAmount, out int rowAmount);
 
         return new SimulationInputs()
         {
             BaseAgentSpatialGridSize = simStartParam.BaseAgentSpatialGridSize,
-            MaxCostFieldOffset = simStartParam.MaxCostFieldOffset,
             MaxSurfaceHeightDifference = simStartParam.MaxSurfaceHeightDifference,
             TileSize = simStartParam.TileSize,
             NavigationSurfaceVerticies = navSurfaceVerticies,
             NavigationSurfaceTriangles = navSurfaceTriangles,
             StaticObstacles = staticObstacles,
             FieldStartPositionXZ = fieldStartPos,
+            MaxAgentRadius = simStartParam.MaxAgentRadius,
             RowCount = rowAmount,
             ColumnCount = colAmount,
             MaxWalkableHeight = simStartParam.MaxWalkableHeight,
             VerticalVoxelSize = simStartParam.VerticalVoxelSize,
-            BaseCostField = baseCostField,
         };
-    }
-    NativeArray<byte> GetBaseCostField(Walkability[][] walkabilityData, int colCount, int rowCount, Allocator allocator)
-    {
-        NativeArray<byte> costField = new NativeArray<byte>(colCount * rowCount, allocator);
-        if(walkabilityData == null)
-        {
-            for(int i = 0; i < costField.Length; i++) { costField[i] = 1; }
-            return costField;
-        }
-        for(int r = 0; r < walkabilityData.Length; r++)
-        {
-            for (int c = 0; c < walkabilityData[0].Length; c++)
-            {
-                int index1d = r * colCount + c;
-                costField[index1d] = (byte)math.select(1, byte.MaxValue, walkabilityData[r][c] == Walkability.Unwalkable);
-            }
-        }
-        return costField;
     }
     void GetRowAndColAmount(float2 fieldStartPos, float2 fieldEndPos, float tileSize, out int colAmount, out int rowAmount)
     {
@@ -154,7 +125,7 @@ internal class SimulationStartInputHandler
 internal struct SimulationInputs
 {
     internal float BaseAgentSpatialGridSize;
-    internal int MaxCostFieldOffset;
+    internal float MaxAgentRadius;
     internal float MaxSurfaceHeightDifference;
     internal float TileSize;
     internal int RowCount;
@@ -162,14 +133,12 @@ internal struct SimulationInputs
     internal float MaxWalkableHeight;
     public float VerticalVoxelSize;
     internal Vector2 FieldStartPositionXZ;
-    internal NativeArray<byte> BaseCostField;
     internal NativeArray<float3> NavigationSurfaceVerticies;
     internal NativeArray<int> NavigationSurfaceTriangles;
     internal NativeArray<StaticObstacle> StaticObstacles;
 
     internal void Dispose()
     {
-        BaseCostField.Dispose();
         NavigationSurfaceTriangles.Dispose();
         NavigationSurfaceVerticies.Dispose();
         StaticObstacles.Dispose();

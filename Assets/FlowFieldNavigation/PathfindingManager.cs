@@ -1,6 +1,7 @@
 ﻿using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
+using Unity.Mathematics;
 public class PathfindingManager : MonoBehaviour
 {
     [SerializeField] internal int LineOfSightRange;
@@ -42,10 +43,17 @@ public class PathfindingManager : MonoBehaviour
     void SetFlowFieldUtilities(SimulationInputs startInputs)
     {
         const int sectorColAmount = 10;
+        const int minRowCount = sectorColAmount * 2; //Does not work below. Can be improved.
+        const int minColCount = sectorColAmount * 2; //Does not work below. Can be improved.
+        int columnAmount = startInputs.ColumnCount;
+        int rowAmount = startInputs.RowCount;
+        columnAmount = columnAmount + (sectorColAmount - (columnAmount % sectorColAmount));
+        rowAmount = rowAmount + (sectorColAmount - (rowAmount % sectorColAmount));
+        rowAmount = math.select(rowAmount, minRowCount, rowAmount < minRowCount);
+        columnAmount = math.select(columnAmount, minColCount, columnAmount < minColCount);
+
         float baseAgentSpatialGridSize = startInputs.BaseAgentSpatialGridSize;
         float tileSize = startInputs.TileSize;
-        int rowAmount = startInputs.RowCount;
-        int columnAmount = startInputs.ColumnCount;
         int sectorMatrixColAmount = columnAmount / sectorColAmount;
         int sectorMatrixRowAmount = rowAmount / sectorColAmount;
         FlowFieldUtilities.DebugMode = false;
@@ -62,13 +70,13 @@ public class PathfindingManager : MonoBehaviour
         FlowFieldUtilities.BaseAgentSpatialGridSize = baseAgentSpatialGridSize;
         FlowFieldUtilities.BaseTriangleSpatialGridSize = _baseTriangleSpatialGridSize;
         FlowFieldUtilities.MinAgentSize = 0;
-        FlowFieldUtilities.MaxAgentSize = (startInputs.MaxCostFieldOffset * tileSize * 2) + tileSize;
+        FlowFieldUtilities.MaxAgentSize = startInputs.MaxAgentRadius;
         FlowFieldUtilities.LOSRange = LineOfSightRange;
         FlowFieldUtilities.FieldMinXIncluding = startInputs.FieldStartPositionXZ.x + 0.01f;
         FlowFieldUtilities.FieldMinYIncluding = startInputs.FieldStartPositionXZ.y + 0.01f;
         FlowFieldUtilities.FieldMaxXExcluding = startInputs.FieldStartPositionXZ.x + FlowFieldUtilities.FieldColAmount * FlowFieldUtilities.TileSize - 0.01f;
         FlowFieldUtilities.FieldMaxYExcluding = startInputs.FieldStartPositionXZ.y + FlowFieldUtilities.FieldRowAmount * FlowFieldUtilities.TileSize - 0.01f;
-        FlowFieldUtilities.MaxCostFieldOffset = startInputs.MaxCostFieldOffset;
+        FlowFieldUtilities.MaxCostFieldOffset = FlowFieldUtilities.RadiusToOffset(startInputs.MaxAgentRadius, tileSize);
         FlowFieldUtilities.FieldGridStartPosition = startInputs.FieldStartPositionXZ;
     }
     internal void StartSimulation(SimulationInputs startInputs)
@@ -76,9 +84,7 @@ public class PathfindingManager : MonoBehaviour
         SimulationStarted = true;
         SetFlowFieldUtilities(startInputs);
         FieldDataContainer = new FieldDataContainer(startInputs.NavigationSurfaceVerticies, startInputs.NavigationSurfaceTriangles);
-        FieldDataContainer.CreateField(startInputs.BaseCostField,
-            startInputs.StaticObstacles, 
-            startInputs.MaxCostFieldOffset,
+        FieldDataContainer.CreateField(startInputs.StaticObstacles, 
             startInputs.TileSize,
             startInputs.VerticalVoxelSize,
             startInputs.MaxSurfaceHeightDifference,

@@ -18,17 +18,19 @@ internal class FieldDataContainer
         HeightMeshGenerator.GenerateHeightMesh(surfaceMeshVerticies, surfaceMeshTriangles);
         NavigationVolumeSystem = new NavigationVolumeSystem();
     }
-    internal void CreateField(NativeArray<byte> baseCostField, 
-        NativeArray<StaticObstacle> staticObstacles, 
-        int maxOffset, float voxelHorizontalSize,
+    internal void CreateField(NativeArray<StaticObstacle> staticObstacles,
+        float voxelHorizontalSize,
         float voxelVerticalSize, 
         float maxSurfaceHeightDifference,
         float maxWalkableHeight)
     {
+        NativeArray<byte> baseCostField = new NativeArray<byte>(FlowFieldUtilities.FieldTileAmount, Allocator.TempJob);
+        for(int i = 0; i < baseCostField.Length; i++) { baseCostField[i] = 1; }
+
         NativeArray<float3> heightMeshVerts = HeightMeshGenerator.Verticies.AsArray();
         NativeArray<int> heightMeshTrigs = HeightMeshGenerator.Triangles.AsArray();
         NavigationVolumeSystem.AnalyzeVolume(heightMeshVerts, heightMeshTrigs, staticObstacles, voxelHorizontalSize, voxelVerticalSize, maxSurfaceHeightDifference, maxWalkableHeight, baseCostField);
-        _costFieldProducer.ProduceCostFields(maxOffset, baseCostField);
+        _costFieldProducer.ProduceCostFields(FlowFieldUtilities.MaxCostFieldOffset, baseCostField);
         _fieldGraphProducer.ProduceFieldGraphs(_costFieldProducer.GetAllCostFields());
     }
     internal FieldGraph GetFieldGraphWithOffset(int offset)

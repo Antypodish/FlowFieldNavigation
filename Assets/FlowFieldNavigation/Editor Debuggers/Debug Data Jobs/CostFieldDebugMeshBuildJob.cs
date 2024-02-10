@@ -97,7 +97,7 @@ internal struct CostFieldDebugMeshBuildJob : IJob
                 }
             }
         }
-        return curHeight;
+        return math.select(curHeight, 0, curHeight == float.MinValue);
     }
     BarycentricCoordinates GetBarycentricCoordinatesForEachVectorInTheOrderUVW(float2 a, float2 b, float2 c, float2 p)
     {

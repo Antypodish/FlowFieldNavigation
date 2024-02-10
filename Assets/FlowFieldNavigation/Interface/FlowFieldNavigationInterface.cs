@@ -13,7 +13,7 @@ public class FlowFieldNavigationInterface
         _simStartInputHandler = new SimulationStartInputHandler();
     }
 
-    public void StartSimulation(SimulationStartParameters startParameters)
+    public void StartSimulation(SimulationStartParametersStandard startParameters)
     {
         if (_pathfindingManager.SimulationStarted)
         {
@@ -116,6 +116,40 @@ public class SimulationStartParameters
         MaxWalkableHeight = maxWalkableHeight;
         VerticalVoxelSize = verticalVoxelSize;
         WalkabilityData = baseWalkabilityData;
+    }
+}
+public struct SimulationStartParametersStandard
+{
+    internal FlowFieldSurface[] NavigationSurfaces;
+    internal FlowFieldStaticObstacle[] StaticObstacles;
+    internal float BaseAgentSpatialGridSize;
+    internal float MaxSurfaceHeightDifference;
+    internal float TileSize;
+    internal float MaxWalkableHeight;
+    internal float VerticalVoxelSize;
+    internal float MaxAgentRadius;
+    internal Vector2 FieldStartPositionXZ;
+    internal Vector2 FieldEndPositionXZ;
+
+    public SimulationStartParametersStandard(FlowFieldSurface[] navigationSurfaces,
+        FlowFieldStaticObstacle[] staticObstacles,
+        float baseAgentSpatialGridSize,
+        float maxAgentRadius,
+        float maxSurfaceHeightDifference,
+        float tileSize,
+        float verticalVoxelSize,
+        float maxWalkableHeight = float.MaxValue)
+    {
+        NavigationSurfaces = navigationSurfaces;
+        StaticObstacles = staticObstacles;
+        BaseAgentSpatialGridSize = baseAgentSpatialGridSize;
+        MaxSurfaceHeightDifference = maxSurfaceHeightDifference;
+        TileSize = tileSize;
+        MaxWalkableHeight = maxWalkableHeight;
+        VerticalVoxelSize = verticalVoxelSize;
+        MaxAgentRadius = maxAgentRadius;
+        FieldStartPositionXZ = new Vector2(float.MinValue, float.MinValue);
+        FieldEndPositionXZ = new Vector2(float.MaxValue, float.MaxValue);
     }
 }
 public enum Walkability : byte
