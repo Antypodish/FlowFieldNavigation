@@ -154,28 +154,28 @@ internal struct IntegrationFieldJob : IJob
             float eDif = eIntCost - curIntCost;
             float sDif = sIntCost - curIntCost;
             float wDif = wIntCost - curIntCost;
-            if (nAvailable && nDif > 2f)
+            if (nAvailable && nDif > 1f)
             {
                 IntegrationTile tile = integrationField[nLocal1d];
                 tile.Mark |= IntegrationMark.Awaiting;
                 integrationField[nLocal1d] = tile;
                 integrationQueue.Enqueue(new LocalIndex1d(nLocal1d, 0));
             }
-            if (eAvailable && eDif > 2f)
+            if (eAvailable && eDif > 1f)
             {
                 IntegrationTile tile = integrationField[eLocal1d];
                 tile.Mark |= IntegrationMark.Awaiting;
                 integrationField[eLocal1d] = tile;
                 integrationQueue.Enqueue(new LocalIndex1d(eLocal1d, 0));
             }
-            if (sAvailable && sDif > 2f)
+            if (sAvailable && sDif > 1f)
             {
                 IntegrationTile tile = integrationField[sLocal1d];
                 tile.Mark |= IntegrationMark.Awaiting;
                 integrationField[sLocal1d] = tile;
                 integrationQueue.Enqueue(new LocalIndex1d(sLocal1d, 0));
             }
-            if (wAvailable && wDif > 2f)
+            if (wAvailable && wDif > 1f)
             {
                 IntegrationTile tile = integrationField[wLocal1d];
                 tile.Mark |= IntegrationMark.Awaiting;

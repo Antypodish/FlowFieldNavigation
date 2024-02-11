@@ -4,7 +4,7 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
-
+using System.Diagnostics;
 internal class FlowCalculationScheduler
 {
     PathfindingManager _pathfindingManager;

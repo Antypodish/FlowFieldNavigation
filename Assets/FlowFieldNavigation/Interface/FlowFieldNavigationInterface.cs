@@ -74,50 +74,6 @@ public class FlowFieldNavigationInterface
     }
 
 }
-public class SimulationStartParameters
-{
-    internal static Vector2 InvalidFieldStartPos { get; } = new Vector2(float.MaxValue, float.MaxValue);
-    internal static Vector2 InvalidFieldEndPos { get; } = new Vector2(float.MaxValue, float.MaxValue);
-
-    internal FlowFieldSurface[] NavigationSurfaces;
-    internal FlowFieldStaticObstacle[] StaticObstacles;
-    internal Walkability[][] WalkabilityData;
-    internal float BaseAgentSpatialGridSize;
-    internal float MaxSurfaceHeightDifference;
-    internal float TileSize;
-    internal float MaxWalkableHeight;
-    internal float VerticalVoxelSize;
-    internal int MaxCostFieldOffset;
-    internal int RowCount;
-    internal int ColumnCount;
-    internal Vector2 FieldStartPositionXZ;
-    internal Vector2 FieldEndPositionXZ;
-    public SimulationStartParameters(Walkability[][] baseWalkabilityData,
-        FlowFieldSurface[] navigationSurfaces,
-        FlowFieldStaticObstacle[] staticObstacles,
-        float baseAgentSpatialGridSize,
-        int maxCostFieldOffset,
-        float maxSurfaceHeightDifference,
-        float tileSize,
-        Vector2 fieldStartPositionXZ,
-        float verticalVoxelSize,
-        float maxWalkableHeight = float.MaxValue)
-    {
-        BaseAgentSpatialGridSize = baseAgentSpatialGridSize;
-        MaxCostFieldOffset = maxCostFieldOffset;
-        NavigationSurfaces = navigationSurfaces;
-        StaticObstacles = staticObstacles;
-        MaxSurfaceHeightDifference = maxSurfaceHeightDifference;
-        TileSize = tileSize;
-        RowCount = baseWalkabilityData.Length;
-        ColumnCount = baseWalkabilityData[0].Length;
-        FieldStartPositionXZ = fieldStartPositionXZ;
-        FieldEndPositionXZ = InvalidFieldEndPos;
-        MaxWalkableHeight = maxWalkableHeight;
-        VerticalVoxelSize = verticalVoxelSize;
-        WalkabilityData = baseWalkabilityData;
-    }
-}
 public struct SimulationStartParametersStandard
 {
     internal FlowFieldSurface[] NavigationSurfaces;
