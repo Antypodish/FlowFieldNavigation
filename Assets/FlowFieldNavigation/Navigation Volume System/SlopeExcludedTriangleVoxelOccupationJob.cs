@@ -50,7 +50,7 @@ internal struct SlopeExcludedTriangleVoxelOccupationJob : IJob
                         if (IsColliding(v1, v2, v3, voxelStartPos, voxelSize))
                         {
                             int2 curFieldIndex2 = new int2(voxToCheck.x, voxToCheck.z);
-                            int curFieldIndex1 = FlowFieldUtilities.To1D(curFieldIndex2, ZVoxCount);
+                            int curFieldIndex1 = FlowFieldUtilities.To1D(curFieldIndex2, XVoxCount);
                             HeightTile highestVoxel = HighestVoxelsEachTile[curFieldIndex1];
                             int maxY = highestVoxel.VoxIndex.y;
                             int depth = highestVoxel.StackCount;

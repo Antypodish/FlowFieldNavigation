@@ -38,13 +38,13 @@ internal struct AgentHeightCalculationJob : IJobParallelFor
                     float2 v3 = new float2(v33d.x, v33d.z);
 
                     BarycentricCoordinates barCords = GetBarycentricCoordinatesForEachVectorInTheOrderUVW(v1, v2, v3, agentPos2);
-                    if(barCords.u < 0 || barCords.w < 0 || barCords.v < 0) { continue; }
+                    if(barCords.u <= 0 || barCords.w <= 0 || barCords.v <= 0) { continue; }
                     float newHeight = v13d.y * barCords.u + v23d.y * barCords.v + v33d.y * barCords.w + agentData.LandOffset;
                     desiredHeight = math.select(desiredHeight, newHeight, newHeight > desiredHeight);
                 }
             }
         }
-        desiredHeight = math.select(desiredHeight, 1f, desiredHeight == float.MinValue);
+        desiredHeight = math.select(desiredHeight, currentHeight, desiredHeight == float.MinValue);
         float3 agentPositionChange = AgentPositionChangeArray[index];
         agentPositionChange.y = desiredHeight - currentHeight;
         AgentPositionChangeArray[index] = agentPositionChange;

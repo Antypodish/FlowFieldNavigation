@@ -4,6 +4,7 @@ using Unity.Collections;
 using Unity.Mathematics;
 using Unity.Collections.LowLevel.Unsafe;
 
+[BurstCompile]
 internal struct TriangleSpatialHashingTileSizeCalculationJob : IJob
 {
     internal float BaseSpatialGridSize;

@@ -4,6 +4,7 @@ using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 
+[BurstCompile]
 internal struct CostFieldDebugMeshBuildJob : IJob
 {
     internal int FieldColAmount;
@@ -41,7 +42,6 @@ internal struct CostFieldDebugMeshBuildJob : IJob
                 float tlHeight = GetHeight(tl);
                 float trHeight = GetHeight(tr);
                 float brHeight = GetHeight(br);
-
 
                 float3 bl3 = new float3(bl.x, blHeight + 0.1f, bl.y);
                 float3 tl3 = new float3(tl.x, tlHeight + 0.1f, tl.y);
@@ -91,7 +91,7 @@ internal struct CostFieldDebugMeshBuildJob : IJob
                     float2 v3 = new float2(v33d.x, v33d.z);
 
                     BarycentricCoordinates barCords = GetBarycentricCoordinatesForEachVectorInTheOrderUVW(v1, v2, v3, pos);
-                    if (barCords.u < 0 || barCords.w < 0 || barCords.v < 0) { continue; }
+                    if (barCords.u <= 0 || barCords.w <= 0 || barCords.v <= 0) { continue; }
                     float newHeight = v13d.y * barCords.u + v23d.y * barCords.v + v33d.y * barCords.w;
                     curHeight = math.select(curHeight, newHeight, newHeight > curHeight);
                 }

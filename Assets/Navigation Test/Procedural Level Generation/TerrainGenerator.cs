@@ -36,7 +36,7 @@ public class TerrainGenerator : MonoBehaviour
         FlowFieldStaticObstacle[] obstacleBehaviors = FindObjectsByType<FlowFieldStaticObstacle>(FindObjectsSortMode.None);
         FlowFieldSurface[] flowFieldSurfaces = FindObjectsByType<FlowFieldSurface>(FindObjectsSortMode.None);
 
-        SimulationStartParametersStandard simParam = new SimulationStartParametersStandard(flowFieldSurfaces, obstacleBehaviors, 3f, 0.5f, 0.1f, TileSize, 0.1f);
+        SimulationStartParametersStandard simParam = new SimulationStartParametersStandard(flowFieldSurfaces, obstacleBehaviors, 3f, 0.5f, 0.1f, 1f, 0.1f);
         _pathfindingManager.Interface.StartSimulation(simParam);
 
         for(int i = 0; i < obstacleBehaviors.Length; i++)
@@ -89,6 +89,7 @@ public class TerrainGenerator : MonoBehaviour
         partitionObject.layer = 3;
         partitionObject.transform.position = startPos + new Vector3((vertColAmount -1)* TileSize / 2, 0f, (vertRowAmount -1) * TileSize / 2);
         partitionObject.transform.parent = gameObject.transform;
+        //partitionObject.transform.eulerAngles = new Vector3(0, 45, 0);
         partitionObject.AddComponent<MeshFilter>();
         partitionObject.AddComponent<MeshCollider>();
         partitionObject.AddComponent<MeshRenderer>();
