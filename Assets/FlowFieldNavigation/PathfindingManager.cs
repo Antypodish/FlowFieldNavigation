@@ -16,8 +16,9 @@ public class PathfindingManager : MonoBehaviour
     internal RequestAccumulator RequestAccumulator;
     internal PathConstructionPipeline PathConstructionPipeline;
     internal MovementManager MovementManager;
-    internal AgentRemovingSystem AgentRemovingSystem;
 
+    internal AgentRemovingSystem AgentRemovingSystem;
+    internal AgentStatChangeSystem AgentStatChangeSystem;
     NavigationUpdater _navigationUpdater;
     void Awake()
     {
@@ -91,6 +92,7 @@ public class PathfindingManager : MonoBehaviour
             startInputs.MaxWalkableHeight);
         AgentDataContainer = new AgentDataContainer(this);
         AgentRemovingSystem = new AgentRemovingSystem(this);
+        AgentStatChangeSystem = new AgentStatChangeSystem(this);
         PathDataContainer = new PathDataContainer(this);
         RequestAccumulator = new RequestAccumulator(this);
         PathConstructionPipeline = new PathConstructionPipeline(this);

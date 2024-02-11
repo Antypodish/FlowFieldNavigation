@@ -49,13 +49,29 @@ public class FlowFieldNavigationInterface
     }
     public void RequestSubscription(FlowFieldAgent agent)
     {
-        if(agent.AgentDataIndex != -1) { return; }
+        if (!_pathfindingManager.SimulationStarted) { return; }
+        if (agent.AgentDataIndex != -1) { return; }
         _pathfindingManager.RequestAccumulator.RequestAgentAddition(agent);
     }
     public void RequestUnsubscription(FlowFieldAgent agent)
     {
-        if(agent.AgentDataIndex == -1) { return; }
+        if (!_pathfindingManager.SimulationStarted) { return; }
+        if (agent.AgentDataIndex == -1) { return; }
         _pathfindingManager.RequestAccumulator.RequestAgentRemoval(agent);
+    }
+    public void SetHoldGround(FlowFieldAgent agent)
+    {
+        if (!_pathfindingManager.SimulationStarted) { return; }
+        int agentDataIndex = agent.AgentDataIndex;
+        if(agent.AgentDataIndex == -1) { return; }
+        _pathfindingManager.RequestAccumulator.RequestHoldGround(agentDataIndex);
+    }
+    public void SetStopped(FlowFieldAgent agent)
+    {
+        if (!_pathfindingManager.SimulationStarted) { return; }
+        int agentDataIndex = agent.AgentDataIndex;
+        if(agent.AgentDataIndex == -1) { return; }
+        _pathfindingManager.RequestAccumulator.RequestStop(agentDataIndex);
     }
     public int GetPathIndex(int agentIndex)
     {

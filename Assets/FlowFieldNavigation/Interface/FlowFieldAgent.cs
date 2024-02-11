@@ -10,9 +10,9 @@ public class FlowFieldAgent : MonoBehaviour
 {
     internal PathfindingManager _pathfindingManager;
     internal int AgentDataIndex = -1;   //-1 means not subscribed yet
-    [SerializeField] float Radius;
-    [SerializeField] float Speed;
-    [SerializeField] float LandOffset;
+    [SerializeField] internal float Radius;
+    [SerializeField] internal float Speed;
+    [SerializeField] internal float LandOffset;
 
     [HideInInspector] public Transform Transform;
 
@@ -23,17 +23,5 @@ public class FlowFieldAgent : MonoBehaviour
     public int GetPathIndex()
     {
         return _pathfindingManager.Interface.GetPathIndex(AgentDataIndex);
-    }
-    public float GetSpeed() => Speed;
-    public float GetRadius() => Radius;
-    public float GetLandOffset() => LandOffset;
-    public void Stop()
-    {
-        _pathfindingManager.AgentDataContainer.Stop(AgentDataIndex);
-    }
-    public void SetHoldGround()
-    {
-        Stop();
-        _pathfindingManager.AgentDataContainer.SetHoldGround(AgentDataIndex);
     }
 }

@@ -25,11 +25,14 @@ internal class NavigationUpdater
         List<FlowFieldAgent> agentRemovalRequests = _requestAccumulator.AgentRemovalRequests;
         NativeList<PathRequest> pathRequests = _requestAccumulator.PathRequests;
         NativeList<CostEdit> costEditRequests = _requestAccumulator.CostEditRequests;
-
+        NativeList<int> agentsToHoldGround = _requestAccumulator.AgentIndiciesToSetHoldGround;
+        NativeList<int> agentsToStop = _requestAccumulator.AgentIndiciesToStop;
         for (int i = 0; i < agentAddRequest.Count; i++)
         {
             _pathfindingManager.AgentDataContainer.Subscribe(agentAddRequest[i]);
         }
+        _pathfindingManager.AgentStatChangeSystem.SetAgentsHoldGround(agentsToHoldGround.AsArray());
+        _pathfindingManager.AgentStatChangeSystem.SetAgentsStopped(agentsToStop.AsArray());
         _pathfindingManager.AgentRemovingSystem.RemoveAgents(agentRemovalRequests);
         _pathfindingManager.PathDataContainer.Update();
 
@@ -39,6 +42,8 @@ internal class NavigationUpdater
         costEditRequests.Clear();
         agentAddRequest.Clear();
         agentRemovalRequests.Clear();
+        agentsToHoldGround.Clear();
+        agentsToStop.Clear();
     }
     internal uint GetFieldState()
     {

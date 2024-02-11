@@ -55,13 +55,13 @@ internal class AgentDataContainer
         agent._pathfindingManager = _pathfindingManager;
         AgentData data = new AgentData()
         {
-            Speed = agent.GetSpeed(),
+            Speed = agent.Speed,
             Status = 0,
             Destination = Vector2.zero,
             Direction = Vector2.zero,
-            Radius = agent.GetRadius(),
+            Radius = agent.Radius,
             Position = agent.transform.position,
-            LandOffset = agent.GetLandOffset(),
+            LandOffset = agent.LandOffset,
         };
         Agents.Add(agent);
         AgentTransforms.Add(agent.transform);

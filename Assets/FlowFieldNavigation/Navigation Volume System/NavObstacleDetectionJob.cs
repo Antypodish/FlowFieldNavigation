@@ -46,7 +46,7 @@ internal struct NavObstacleDetectionJob : IJob
             bfsStartIndex = FlowFieldVolumeUtilities.Clamp(bfsStartIndex, XVoxCount, YVoxCount, ZVoxCount);
             bfsQueue.Enqueue(bfsStartIndex);
             markedIndicies.Add(bfsStartIndex);
-            if(bfsStartIndex.x == 40 && bfsStartIndex.y == 4) { UnityEngine.Debug.Log(bfsStartIndex); }
+
             //6 connected 3d bfs
             int markcnt = 0;
             while (!bfsQueue.IsEmpty())
