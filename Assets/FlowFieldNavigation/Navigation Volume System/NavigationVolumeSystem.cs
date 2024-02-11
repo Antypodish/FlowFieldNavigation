@@ -192,7 +192,6 @@ internal class NavigationVolumeSystem
         tileHeightExclusionJob.Schedule(costsToWriteOnTopOf.Length, 64).Complete();
 
 
-        HighestVoxelSaveTable.Dispose();
         volumeStartPos.Dispose();
         xAxisSectorCount.Dispose();
         yAxisSectorCount.Dispose();
@@ -203,13 +202,6 @@ internal class NavigationVolumeSystem
         detectedSectorSet.Dispose();
         collidedIndicies.Dispose();
         slopeExcludedTrigs.Dispose();
-        NativeHashMap<int, UnsafeBitArray>.Enumerator volumeBitsEnumerator = SurfaceVolumeBits.GetEnumerator();
-        while (volumeBitsEnumerator.MoveNext())
-        {
-            KVPair<int, UnsafeBitArray> kv = volumeBitsEnumerator.Current;
-            kv.Value.Dispose();
-        }
-        volumeBitsEnumerator.Dispose();
     }
     NativeHashMap<int, UnsafeBitArray> AllocateSectors(NativeHashSet<int> sectorToAllocate, Allocator allocator)
     {

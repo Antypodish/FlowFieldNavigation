@@ -129,7 +129,7 @@ public class ObstacleGenerator
                     staticObstacleObject.AddComponent<FlowFieldStaticObstacle>();
                     FlowFieldStaticObstacle staticObstacleBehaviour = staticObstacleObject.GetComponent<FlowFieldStaticObstacle>();
                     staticObstacleBehaviour.Size = upperTopRight - lowerBotLeft;
-                    staticObstacleObject.transform.position = (upperTopRight + lowerBotLeft) / 2;
+                    staticObstacleObject.transform.position = _terrainGenerator.transform.position + (upperTopRight + lowerBotLeft) / 2;
                 }
             }
         }

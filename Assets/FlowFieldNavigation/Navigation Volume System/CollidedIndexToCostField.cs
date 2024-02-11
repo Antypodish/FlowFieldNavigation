@@ -30,7 +30,7 @@ internal struct CollidedIndexToCostField : IJob
             startIndex = FlowFieldUtilities.Clamp(startIndex, FieldColAmount, FieldRowAmount);
             endIndex = FlowFieldUtilities.Clamp(endIndex, FieldColAmount, FieldRowAmount);
 
-            for(int r = startIndex.y; r <= endIndex.y; r++)
+            for (int r = startIndex.y; r <= endIndex.y; r++)
             {
                 for (int c = startIndex.x; c <= endIndex.x; c++)
                 {

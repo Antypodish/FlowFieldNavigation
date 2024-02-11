@@ -69,7 +69,7 @@ internal struct SectorMeshBuildJob : IJob
                     float2 v3 = new float2(v33d.x, v33d.z);
 
                     BarycentricCoordinates barCords = GetBarycentricCoordinatesForEachVectorInTheOrderUVW(v1, v2, v3, pos);
-                    if (barCords.u <= 0 || barCords.w <= 0 || barCords.v <= 0) { continue; }
+                    if (barCords.u < 0 || barCords.w < 0 || barCords.v < 0) { continue; }
                     float newHeight = v13d.y * barCords.u + v23d.y * barCords.v + v33d.y * barCords.w;
                     curHeight = math.select(curHeight, newHeight, newHeight > curHeight);
                 }

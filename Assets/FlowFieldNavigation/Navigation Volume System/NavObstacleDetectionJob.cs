@@ -46,8 +46,9 @@ internal struct NavObstacleDetectionJob : IJob
             bfsStartIndex = FlowFieldVolumeUtilities.Clamp(bfsStartIndex, XVoxCount, YVoxCount, ZVoxCount);
             bfsQueue.Enqueue(bfsStartIndex);
             markedIndicies.Add(bfsStartIndex);
-
+            if(bfsStartIndex.x == 40 && bfsStartIndex.y == 4) { UnityEngine.Debug.Log(bfsStartIndex); }
             //6 connected 3d bfs
+            int markcnt = 0;
             while (!bfsQueue.IsEmpty())
             {
                 int3 curIndex = bfsQueue.Dequeue();
@@ -68,7 +69,10 @@ internal struct NavObstacleDetectionJob : IJob
                 };
                 bool4 indexInside4 = dots4 >= 0;
                 bool2 indexInside2 = dots2 >= 0;
-                if (!(indexInside2.x && indexInside2.y && indexInside4.x && indexInside4.y && indexInside4.z && indexInside4.w)) { continue; }
+                if (!(indexInside2.x && indexInside2.y && indexInside4.x && indexInside4.y && indexInside4.z && indexInside4.w))
+                {
+                    continue;
+                }
 
                 //Check if collides
                 int2 curFieldIndex2 = new int2(curIndex.x, curIndex.z);
@@ -76,7 +80,7 @@ internal struct NavObstacleDetectionJob : IJob
                 HeightTile highestVoxel = HighestVoxelsEachTile[curFieldIndex1];
                 int maxY = highestVoxel.VoxIndex.y;
                 int depth = highestVoxel.StackCount;
-                if (curIndex .y <= maxY && curIndex.y > maxY - depth)
+                if (curIndex.y <= maxY && curIndex.y > maxY - depth)
                 {
                     CollidedIndicies.Add(curIndex);
                 }
@@ -91,33 +95,40 @@ internal struct NavObstacleDetectionJob : IJob
                 {
                     markedIndicies.Add(left);
                     bfsQueue.Enqueue(left);
+                    markcnt++;
                 }
                 if (FlowFieldVolumeUtilities.WithinBounds(right, XVoxCount, YVoxCount, ZVoxCount) && !markedIndicies.Contains(right))
                 {
                     markedIndicies.Add(right);
                     bfsQueue.Enqueue(right);
+                    markcnt++;
                 }
                 if (FlowFieldVolumeUtilities.WithinBounds(front, XVoxCount, YVoxCount, ZVoxCount) && !markedIndicies.Contains(front))
                 {
                     markedIndicies.Add(front);
                     bfsQueue.Enqueue(front);
+                    markcnt++;
                 }
                 if (FlowFieldVolumeUtilities.WithinBounds(back, XVoxCount, YVoxCount, ZVoxCount) && !markedIndicies.Contains(back))
                 {
                     markedIndicies.Add(back);
                     bfsQueue.Enqueue(back);
+                    markcnt++;
                 }
                 if (FlowFieldVolumeUtilities.WithinBounds(top, XVoxCount, YVoxCount, ZVoxCount) && !markedIndicies.Contains(top))
                 {
                     markedIndicies.Add(top);
                     bfsQueue.Enqueue(top);
+                    markcnt++;
                 }
                 if (FlowFieldVolumeUtilities.WithinBounds(bot, XVoxCount, YVoxCount, ZVoxCount) && !markedIndicies.Contains(bot))
                 {
                     markedIndicies.Add(bot);
                     bfsQueue.Enqueue(bot);
+                    markcnt++;
                 }
             }
+            markedIndicies.Clear();
         }
     }
 }
