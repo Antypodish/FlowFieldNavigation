@@ -14,6 +14,7 @@ internal class RequestAccumulator
     internal NativeList<CostEdit> CostEditRequests;
     internal NativeList<int> AgentIndiciesToSetHoldGround;
     internal NativeList<int> AgentIndiciesToStop;
+    internal NativeList<SetSpeedReq> SetSpeedRequests;
     internal RequestAccumulator(PathfindingManager pathfindingManager)
     {
         _pathfindingManager = pathfindingManager;
@@ -23,6 +24,7 @@ internal class RequestAccumulator
         CostEditRequests = new NativeList<CostEdit>(Allocator.Persistent);
         AgentIndiciesToSetHoldGround = new NativeList<int>(Allocator.Persistent);
         AgentIndiciesToStop = new NativeList<int>(Allocator.Persistent);
+        SetSpeedRequests = new NativeList<SetSpeedReq>(Allocator.Persistent);
     }
     internal void RequestAgentAddition(FlowFieldAgent agent)
     {
@@ -54,6 +56,15 @@ internal class RequestAccumulator
     internal void RequestStop(int agentIndex)
     {
         AgentIndiciesToStop.Add(agentIndex);
+    }
+    internal void RequestSetSpeed(int agentIndex, float speed)
+    {
+        SetSpeedReq setSpeedReq = new SetSpeedReq()
+        {
+            NewSpeed = speed,
+            AgentIndex = agentIndex,
+        };
+        SetSpeedRequests.Add(setSpeedReq);
     }
 
     internal void HandleObstacleRequest(NativeArray<ObstacleRequest> obstacleRequests, NativeList<int> outputListToAddObstacleIndicies)
@@ -95,4 +106,9 @@ internal class RequestAccumulator
         PathRequests.Dispose();
         CostEditRequests.Dispose();
     }
+}
+internal struct SetSpeedReq
+{
+    internal int AgentIndex;
+    internal float NewSpeed;
 }

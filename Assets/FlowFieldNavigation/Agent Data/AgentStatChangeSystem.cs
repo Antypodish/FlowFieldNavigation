@@ -26,4 +26,13 @@ internal class AgentStatChangeSystem
         };
         holdGroundJob.Schedule().Complete();
     }
+    public void SetAgentSpeed(NativeArray<SetSpeedReq> setSpeedRequests)
+    {
+        AgentSpeedSetJob setSpeedJob = new AgentSpeedSetJob()
+        {
+            AgentDataArray = _pathfindingManager.AgentDataContainer.AgentDataList.AsArray(),
+            SetSpeedRequests = setSpeedRequests,
+        };
+        setSpeedJob.Schedule().Complete();
+    }
 }

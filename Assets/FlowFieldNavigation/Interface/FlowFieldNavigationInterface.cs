@@ -73,6 +73,13 @@ public class FlowFieldNavigationInterface
         if(agent.AgentDataIndex == -1) { return; }
         _pathfindingManager.RequestAccumulator.RequestStop(agentDataIndex);
     }
+    public void SetSpeed(FlowFieldAgent agent, float speed)
+    {
+        if (!_pathfindingManager.SimulationStarted) { return; }
+        int agentDataIndex = agent.AgentDataIndex;
+        if (agent.AgentDataIndex == -1) { return; }
+        _pathfindingManager.RequestAccumulator.RequestSetSpeed(agentDataIndex, speed);
+    }
     public int GetPathIndex(int agentIndex)
     {
         if (!_pathfindingManager.SimulationStarted) { return -1; }

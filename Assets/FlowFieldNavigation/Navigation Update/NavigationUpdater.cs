@@ -32,12 +32,15 @@ internal class NavigationUpdater
             NativeList<CostEdit> costEditRequests = _requestAccumulator.CostEditRequests;
             NativeList<int> agentsToHoldGround = _requestAccumulator.AgentIndiciesToSetHoldGround;
             NativeList<int> agentsToStop = _requestAccumulator.AgentIndiciesToStop;
+            NativeList<SetSpeedReq> setSpeedRequests = _requestAccumulator.SetSpeedRequests;
+
             for (int i = 0; i < agentAddRequest.Count; i++)
             {
                 _pathfindingManager.AgentDataContainer.Subscribe(agentAddRequest[i]);
             }
             _pathfindingManager.AgentStatChangeSystem.SetAgentsHoldGround(agentsToHoldGround.AsArray());
             _pathfindingManager.AgentStatChangeSystem.SetAgentsStopped(agentsToStop.AsArray());
+            _pathfindingManager.AgentStatChangeSystem.SetAgentSpeed(setSpeedRequests.AsArray());
             _pathfindingManager.AgentRemovingSystem.RemoveAgents(agentRemovalRequests);
             _pathfindingManager.PathDataContainer.Update();
 
@@ -49,6 +52,7 @@ internal class NavigationUpdater
             agentRemovalRequests.Clear();
             agentsToHoldGround.Clear();
             agentsToStop.Clear();
+            setSpeedRequests.Clear();
         }
     }
     int SetTimerAndGetUpdateCount()
