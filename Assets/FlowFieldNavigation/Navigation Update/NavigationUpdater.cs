@@ -27,7 +27,7 @@ internal class NavigationUpdater
         {
             _scheduler.ForceCompleteAll(_updateFrequency);
             List<FlowFieldAgent> agentAddRequest = _requestAccumulator.AgentAddRequest;
-            List<FlowFieldAgent> agentRemovalRequests = _requestAccumulator.AgentRemovalRequests;
+            NativeList<int> agentIndiciesToRemove = _requestAccumulator.AgentIndiciesToRemove;
             NativeList<PathRequest> pathRequests = _requestAccumulator.PathRequests;
             NativeList<CostEdit> costEditRequests = _requestAccumulator.CostEditRequests;
             NativeList<int> agentsToHoldGround = _requestAccumulator.AgentIndiciesToSetHoldGround;
@@ -41,7 +41,7 @@ internal class NavigationUpdater
             _pathfindingManager.AgentStatChangeSystem.SetAgentsHoldGround(agentsToHoldGround.AsArray());
             _pathfindingManager.AgentStatChangeSystem.SetAgentsStopped(agentsToStop.AsArray());
             _pathfindingManager.AgentStatChangeSystem.SetAgentSpeed(setSpeedRequests.AsArray());
-            _pathfindingManager.AgentRemovingSystem.RemoveAgents(agentRemovalRequests);
+            _pathfindingManager.AgentRemovingSystem.RemoveAgents(agentIndiciesToRemove.AsArray());
             _pathfindingManager.PathDataContainer.Update();
 
             _scheduler.Schedule(pathRequests, costEditRequests.AsArray().AsReadOnly());
@@ -49,7 +49,7 @@ internal class NavigationUpdater
             pathRequests.Clear();
             costEditRequests.Clear();
             agentAddRequest.Clear();
-            agentRemovalRequests.Clear();
+            agentIndiciesToRemove.Clear();
             agentsToHoldGround.Clear();
             agentsToStop.Clear();
             setSpeedRequests.Clear();

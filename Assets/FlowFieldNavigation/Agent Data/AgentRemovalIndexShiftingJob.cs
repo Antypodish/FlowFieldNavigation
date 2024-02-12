@@ -63,7 +63,6 @@ internal struct AgentRemovalIndexShiftingJob : IJob
         AgentRequestedPathIndicies.Length = lengthAfterRemoval;
         AgentNewPathIndicies.Length = lengthAfterRemoval;
         AgentCurPathIndicies.Length = lengthAfterRemoval;
-
     }
 }
 internal struct IndexShiftingPair

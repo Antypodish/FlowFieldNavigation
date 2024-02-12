@@ -56,8 +56,10 @@ public class FlowFieldNavigationInterface
     public void RequestUnsubscription(FlowFieldAgent agent)
     {
         if (!_pathfindingManager.SimulationStarted) { return; }
-        if (agent.AgentDataIndex == -1) { return; }
-        _pathfindingManager.RequestAccumulator.RequestAgentRemoval(agent);
+        int agentDataIndex = agent.AgentDataIndex;
+        if (agentDataIndex == -1) { return; }
+        agent.AgentDataIndex = -1;
+        _pathfindingManager.RequestAccumulator.RequestAgentRemoval(agentDataIndex);
     }
     public void SetHoldGround(FlowFieldAgent agent)
     {

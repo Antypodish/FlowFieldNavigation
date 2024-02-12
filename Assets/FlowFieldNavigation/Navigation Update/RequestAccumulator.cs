@@ -9,7 +9,7 @@ internal class RequestAccumulator
     PathfindingManager _pathfindingManager;
 
     internal List<FlowFieldAgent> AgentAddRequest;
-    internal List<FlowFieldAgent> AgentRemovalRequests;
+    internal NativeList<int> AgentIndiciesToRemove;
     internal NativeList<PathRequest> PathRequests;
     internal NativeList<CostEdit> CostEditRequests;
     internal NativeList<int> AgentIndiciesToSetHoldGround;
@@ -19,7 +19,7 @@ internal class RequestAccumulator
     {
         _pathfindingManager = pathfindingManager;
         AgentAddRequest = new List<FlowFieldAgent>();
-        AgentRemovalRequests = new List<FlowFieldAgent>();
+        AgentIndiciesToRemove = new NativeList<int>(Allocator.Persistent);
         PathRequests = new NativeList<PathRequest>(Allocator.Persistent);
         CostEditRequests = new NativeList<CostEdit>(Allocator.Persistent);
         AgentIndiciesToSetHoldGround = new NativeList<int>(Allocator.Persistent);
@@ -30,9 +30,9 @@ internal class RequestAccumulator
     {
         AgentAddRequest.Add(agent);
     }
-    internal void RequestAgentRemoval(FlowFieldAgent agent)
+    internal void RequestAgentRemoval(int agentIndex)
     {
-        AgentRemovalRequests.Add(agent);
+        AgentIndiciesToRemove.Add(agentIndex);
     }
     internal void RequestPath(List<FlowFieldAgent> agents, Vector3 target)
     {

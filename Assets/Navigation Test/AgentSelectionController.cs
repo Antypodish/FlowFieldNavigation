@@ -156,9 +156,13 @@ public class AgentSelectionController : MonoBehaviour
         }
         if (Input.GetKeyUp(KeyCode.Delete))
         {
-            for(int i = 0; i < SelectedAgents.Count; i++)
+            for(int i = SelectedAgents.Count - 1; i >= 0; i--)
             {
-                _pathfindingManager.Interface.RequestUnsubscription(SelectedAgents[i]);
+                FlowFieldAgent agent = SelectedAgents[i];
+                _pathfindingManager.Interface.RequestUnsubscription(agent);
+                SelectedAgents[i] = SelectedAgents[SelectedAgents.Count - 1];
+                SelectedAgents.RemoveAt(SelectedAgents.Count - 1);
+                Destroy(agent.gameObject);
             }
         }
     }

@@ -13,9 +13,9 @@ internal class AgentRemovingSystem
         _pathfindingManager = pathfindingManager;
         _agentRemovalMarks = new NativeList<int>(Allocator.Persistent);
     }
-    internal void RemoveAgents(List<FlowFieldAgent> agentsToRemove)
+    internal void RemoveAgents(NativeArray<int> agentIndiciesToRemove)
     {
-        if(agentsToRemove.Count == 0) { return; }
+        if(agentIndiciesToRemove.Length == 0) { return; }
         List<FlowFieldAgent> agents = _pathfindingManager.AgentDataContainer.Agents;
         TransformAccessArray agentTransforms = _pathfindingManager.AgentDataContainer.AgentTransforms;
         NativeList<AgentData> agentDataList = _pathfindingManager.AgentDataContainer.AgentDataList;
@@ -33,22 +33,12 @@ internal class AgentRemovingSystem
         NativeList<PathRequestRecord> agentsLookingForPathRecords = _pathfindingManager.PathConstructionPipeline.AgentsLookingForPathRecords;
 
         _agentRemovalMarks.Length = agents.Count;
-        NativeList<int> removedAgentIndicies = new NativeList<int>(Allocator.TempJob);
-        for (int i = 0; i < agentsToRemove.Count; i++)
-        {
-            FlowFieldAgent agentMonobehaviour = agentsToRemove[i];
-            int agentIndex = agentMonobehaviour.AgentDataIndex;
-            if(agentIndex == -1) { continue; }
-            agentMonobehaviour.AgentDataIndex = -1;
-            removedAgentIndicies.Add(agentIndex);
-        }
-        if(removedAgentIndicies.Length == 0) { removedAgentIndicies.Dispose(); return; }
 
         AgentRemovalMarkJob agentMark = new AgentRemovalMarkJob()
         {
             CurAgentCount = agentDataList.Length,
             AgentRemovalMarks = _agentRemovalMarks,
-            RemovedAgentIndicies = removedAgentIndicies,
+            RemovedAgentIndicies = agentIndiciesToRemove,
         };
         JobHandle agentMarkHandle = agentMark.Schedule();
 
@@ -59,7 +49,7 @@ internal class AgentRemovingSystem
             AgentRequestedPathIndicies = agentRequestedPathIndicies,
             FlockList = flockList,
             PathSubscriberCounts = pathSubscriberCounts,
-            RemovedAgentIndicies = removedAgentIndicies,
+            RemovedAgentIndicies = agentIndiciesToRemove,
         };
         JobHandle agentDependencyUnsubHandle = agentDependencyUnsub.Schedule(agentMarkHandle);
 
@@ -71,7 +61,7 @@ internal class AgentRemovingSystem
             AgentDataList = agentDataList,
             AgentDestinationReachedArray = agentDestinationReachedArray,
             AgentFlockIndicies = agentFlockIndicies,
-            AgentIndiciesToRemove = removedAgentIndicies,
+            AgentIndiciesToRemove = agentIndiciesToRemove,
             AgentNewPathIndicies = agentNewPathIndicies,
             AgentRequestedPathIndicies = agentRequestedPathIndicies,
             RemovedAgentMarks = _agentRemovalMarks,
@@ -90,7 +80,7 @@ internal class AgentRemovingSystem
 
             agentTransforms[pair.Destination] = agentTransforms[pair.Source];
         }
-        int removedAgentCount = removedAgentIndicies.Length;
+        int removedAgentCount = agentIndiciesToRemove.Length;
         agents.RemoveRange(lengthAfterRemoval.Value, removedAgentCount);
         for(int i = 0; i < removedAgentCount; i++)
         {
@@ -124,7 +114,6 @@ internal class AgentRemovingSystem
         JobHandle pathCleanupHandle = pathCleanup.Schedule(lookingForPathListCleanupHandle);
         pathCleanupHandle.Complete();
 
-        removedAgentIndicies.Dispose();
         indexShiftingPairs.Dispose();
         lengthAfterRemoval.Dispose();
     }
