@@ -1,4 +1,4 @@
-﻿#if (UNITY_EDITOR) 
+﻿
 
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
@@ -47,7 +47,7 @@ public class EditorDebuggingController : MonoBehaviour
     [SerializeField] bool _debugSpatialHashGrid;
     [SerializeField] bool _debugBorders;
     [SerializeField] bool _debugAroundAgent;
-
+#if (UNITY_EDITOR)
     //debuggers
     EditorSectorDebugger _sectorDebugger;
     EditorPortalDebugger _portalDebugger;
@@ -87,9 +87,6 @@ public class EditorDebuggingController : MonoBehaviour
         _tileCenterHeightBuilder = new TileCenterHeightBuilder(_pathfindingManager);
         _sectorCornerHeightBuilder = new SectorCornerHeightBuilder(_pathfindingManager);
         _navVolDebugger = new EditorNavigationVolumeDebugger(_pathfindingManager);
-#if UNITY_STANDALONE && !UNITY_EDITOR
-_debuggingEnabled = false;
-#endif
     }
     private void Update()
     {
@@ -143,5 +140,5 @@ _debuggingEnabled = false;
         transform.rotation = _cameraToOverlayOnTopOf.transform.rotation;
         transform.localScale = _cameraToOverlayOnTopOf.transform.localScale;
     }
-}
 #endif
+}

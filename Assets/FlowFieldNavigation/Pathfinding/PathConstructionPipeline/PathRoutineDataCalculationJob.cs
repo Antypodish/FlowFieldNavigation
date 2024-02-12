@@ -3,7 +3,6 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Burst;
 using Unity.Mathematics;
-using UnityEditor.PackageManager.Requests;
 
 [BurstCompile]
 internal struct PathRoutineDataCalculationJob : IJobParallelFor

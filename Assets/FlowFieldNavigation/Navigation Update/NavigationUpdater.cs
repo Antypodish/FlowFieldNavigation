@@ -19,7 +19,7 @@ internal class NavigationUpdater
         _pathfindingManager = pathfindingManager;
         _requestAccumulator = requestAccumulator;
         _scheduler = new RoutineScheduler(pathfindingManager);
-    }
+    }   
     internal void RoutineUpdate()
     {
         int updateCount = SetTimerAndGetUpdateCount();
