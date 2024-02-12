@@ -59,7 +59,7 @@ internal class AgentDataContainer
             Status = 0,
             Destination = Vector2.zero,
             Direction = Vector2.zero,
-            Radius = agent.Radius,
+            Radius = Mathf.Min(agent.Radius, FlowFieldUtilities.MaxAgentSize),
             Position = agent.transform.position,
             LandOffset = agent.LandOffset,
         };
@@ -71,19 +71,6 @@ internal class AgentDataContainer
         AgentRequestedPathIndicies.Add(-1);
         AgentFlockIndicies.Add(0);
         AgentDestinationReachedArray.Add(false);
-    }
-    public void Stop(int agentIndex)
-    {
-        AgentData data = AgentDataList[agentIndex]; 
-        data.Status = ~(~data.Status | AgentStatus.Moving);
-        AgentDataList[agentIndex] = data;
-    }
-    public void SetHoldGround(int agentIndex)
-    {
-        AgentData data = AgentDataList[agentIndex];
-        data.Status |= AgentStatus.HoldGround;
-        data.Avoidance = 0;
-        AgentDataList[agentIndex] = data;
     }
     public void SetRequestedPathIndiciesOf(List<FlowFieldAgent> agents, int newPathIndex)
     {
