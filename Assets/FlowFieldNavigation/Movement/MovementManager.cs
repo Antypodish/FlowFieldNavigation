@@ -297,7 +297,7 @@ internal class MovementManager
     {
         _routineHandle.Complete();
     }
-    internal void SendRoutineResults()
+    internal void SendRoutineResults(float deltaTime)
     {
         TransformAccessArray agentTransforms = _pathfindingManager.AgentDataContainer.AgentTransforms;
         NativeList<bool> agentDestinationReachArray = _pathfindingManager.AgentDataContainer.AgentDestinationReachedArray;
@@ -325,7 +325,7 @@ internal class MovementManager
         //MOVE
         AgentMovementUpdateJob movJob = new AgentMovementUpdateJob()
         {
-            DeltaTime = Time.fixedDeltaTime,
+            DeltaTime = deltaTime,
             AgentDataArray = agentDataArray,
         };
         movJob.Schedule(agentTransforms).Complete();

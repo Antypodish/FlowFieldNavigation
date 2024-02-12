@@ -69,7 +69,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e46a278d55e37724f90380d2873ff50b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Radius: 0.5
+  Radius: 0.48
   Speed: 5
   LandOffset: 0
   Transform: {fileID: 0}

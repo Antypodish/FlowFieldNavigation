@@ -26,7 +26,7 @@ internal struct AgentWallCollisionJob : IJobParallelFor
         AgentMovementData agentData = AgentMovementData[index];
         float agentRadiusWithoutHalfTile = agentData.Radius - HalfTileSize;
         float agentRadius = math.select(agentRadiusWithoutHalfTile % TileSize, agentData.Radius, agentRadiusWithoutHalfTile < 0);
-        agentRadius = math.max(agentRadius, 0.1f);
+        agentRadius = math.max(agentRadius, 0.15f);
         float2 agentPos = new float2(agentData.Position.x, agentData.Position.z);
         int agentOffset = FlowFieldUtilities.RadiusToOffset(agentData.Radius, TileSize);
         UnsafeListReadOnly<byte> costs = CostFieldEachOffset[agentOffset];

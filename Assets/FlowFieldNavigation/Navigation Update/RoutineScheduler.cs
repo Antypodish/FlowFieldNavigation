@@ -123,7 +123,7 @@ internal class RoutineScheduler
 
         _pathConstructionPipeline.TryComplete();
     }
-    internal void ForceCompleteAll()
+    internal void ForceCompleteAll(float deltaTime)
     {
         //COST EDIT
         if (_costEditHandle.Count != 0)
@@ -141,7 +141,7 @@ internal class RoutineScheduler
 
         _movementManager.ForceCompleteRoutine();
         _pathConstructionPipeline.ForceComplete();
-        _movementManager.SendRoutineResults();
+        _movementManager.SendRoutineResults(deltaTime);
         _pathConstructionPipeline.TransferNewPathsToCurPaths();
 
         CurrentRequestedPaths.Clear();

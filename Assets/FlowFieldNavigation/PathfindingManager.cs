@@ -28,11 +28,11 @@ public class PathfindingManager : MonoBehaviour
     {
         if (!SimulationStarted) { return; }
         _navigationUpdater.IntermediateUpdate();
+        _navigationUpdater.RoutineUpdate();
     }
     void FixedUpdate()
     {
         if (!SimulationStarted) { return; }
-        _navigationUpdater.RoutineFixedUpdate();
     }
     void LateUpdate()
     {
