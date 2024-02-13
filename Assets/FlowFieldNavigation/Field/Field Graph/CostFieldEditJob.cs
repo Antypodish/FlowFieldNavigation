@@ -349,7 +349,7 @@ internal struct CostFieldEditJob : IJob
     }
     void RecalcualatePortalsAt()
     {
-        NativeArray<int> windowIndicies = EditedWindowIndicies;
+        NativeArray<int> windowIndicies = EditedWindowIndicies.AsArray();
         int porToPorCnt = PortalPerWindow * 8 - 2;
         int fieldColAmount = FieldColAmount;
         int sectorColAmount = SectorColAmount;
@@ -509,7 +509,7 @@ internal struct CostFieldEditJob : IJob
     }
     void RecalculatePortalConnectionsAt()
     {
-        NativeArray<int> sectorIndicies = EditedSectorIndicies;
+        NativeArray<int> sectorIndicies = EditedSectorIndicies.AsArray();
         //data
         NativeQueue<int> integrationQueue = new NativeQueue<int>(Allocator.Temp);
         int sectorMatrixColAmount = SectorMatrixColAmount;

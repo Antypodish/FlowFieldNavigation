@@ -70,7 +70,7 @@ internal struct FinalPathRequestDestinationExpansionJob : IJob
         {
             int partitionSize = math.select(1, 0, JobIndex >= finalPathRequestCount);
             int partitionStart = math.select(JobIndex, 0, JobIndex >= finalPathRequestCount);
-            sliceToReturn = new NativeSlice<FinalPathRequest>(FinalPathRequests, partitionStart, partitionSize);
+            sliceToReturn = new NativeSlice<FinalPathRequest>(FinalPathRequests.AsArray(), partitionStart, partitionSize);
         }
         else
         {
@@ -80,7 +80,7 @@ internal struct FinalPathRequestDestinationExpansionJob : IJob
             partitionSizeOverflow = math.select(partitionSizeOverflow, 0, partitionSizeOverflow < 0);
             int partitionSizeClamped = partitionSize - partitionSizeOverflow;
             partitionSizeClamped = math.select(partitionSizeClamped, finalPathRequestCount - partitionStart, JobIndex + 1 == TotalJobCount);
-            sliceToReturn = new NativeSlice<FinalPathRequest>(FinalPathRequests, partitionStart, partitionSizeClamped);
+            sliceToReturn = new NativeSlice<FinalPathRequest>(FinalPathRequests.AsArray(), partitionStart, partitionSizeClamped);
         }
         return sliceToReturn;
     }

@@ -23,7 +23,7 @@ internal class IntegrationFieldFactory
             IntegrationFieldResetJob resetJob = new IntegrationFieldResetJob()
             {
                 StartIndex = 0,
-                IntegrationField = field,
+                IntegrationField = field.AsArray(),
             };
             resetJob.Schedule().Complete();
             return field;
@@ -35,7 +35,7 @@ internal class IntegrationFieldFactory
             IntegrationFieldResetJob resetJob = new IntegrationFieldResetJob()
             {
                 StartIndex = 0,
-                IntegrationField = field,
+                IntegrationField = field.AsArray(),
             };
             resetJob.Schedule().Complete();
             _integrationFieldContainer.RemoveAtSwapBack(0);

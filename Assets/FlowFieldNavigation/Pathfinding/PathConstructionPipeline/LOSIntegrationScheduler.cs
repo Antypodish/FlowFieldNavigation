@@ -52,7 +52,7 @@ internal class LOSIntegrationScheduler
                 Target = targetIndex,
 
                 SectorToPickedTable = locationData.SectorToPicked,
-                IntegrationField = internalData.IntegrationField,
+                IntegrationField = internalData.IntegrationField.AsArray(),
             };
             JobHandle loscleanHandle = losClean.Schedule(flowHandle);
 
@@ -69,7 +69,7 @@ internal class LOSIntegrationScheduler
 
                 Costs = pickedCostField.Costs,
                 SectorToPicked = locationData.SectorToPicked,
-                IntegrationField = internalData.IntegrationField,
+                IntegrationField = internalData.IntegrationField.AsArray(),
                 Target = targetIndex,
             };
             losHandle = losjob.Schedule(loscleanHandle);
@@ -90,7 +90,7 @@ internal class LOSIntegrationScheduler
 
                 Costs = pickedCostField.Costs,
                 SectorToPicked = locationData.SectorToPicked,
-                IntegrationField = internalData.IntegrationField,
+                IntegrationField = internalData.IntegrationField.AsArray(),
                 Target = targetIndex,
             };
             losHandle = losjob.Schedule(flowHandle);
@@ -145,7 +145,7 @@ internal class LOSIntegrationScheduler
                 LOSRange = FlowFieldUtilities.LOSRange,
                 SectorToPickedTable = locationData.SectorToPicked,
                 LOSBitmap = flowData.LOSMap,
-                IntegrationField = internalData.IntegrationField,
+                IntegrationField = internalData.IntegrationField.AsArray(),
                 Target = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition),
             };
             _transferHandles.Add(losTransfer.Schedule());

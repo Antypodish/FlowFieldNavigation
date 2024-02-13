@@ -85,7 +85,7 @@ internal class DynamicAreaScheduler
             TargetIndex = targetIndex,
             Costs = _pathfindingManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset).Costs,
             PickedSectorFlowStarts = pickedSectorFlowStarts,
-            IntegrationField = integrationField,
+            IntegrationField = integrationField.AsArray(),
         };
         JobHandle integrationHandle = integration.Schedule();
 
@@ -105,7 +105,7 @@ internal class DynamicAreaScheduler
             {
                 SectorFlowStartIndicies = pickedSectorFlowStarts,
                 FlowField = flowFieldCalculationBuffer,
-                IntegrationField = integrationField,
+                IntegrationField = integrationField.AsArray(),
             },
             Costs = _pathfindingManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset).Costs,
         };
@@ -165,6 +165,6 @@ internal class DynamicAreaScheduler
         }
         _scheduledDynamicAreas.Clear();
 
-        JobHandle.CompleteAll(handles);
+        JobHandle.CompleteAll(handles.AsArray());
     }
 }

@@ -44,7 +44,7 @@ internal struct PortalNodeAdditionReductionJob : IJob
         DoubleUnsafeHeap<int> walkerHeap = new DoubleUnsafeHeap<int>(10, Allocator.Temp);
         SourcePortalIndexList.Clear();
         SetSourcePortalIndicies();
-        NativeArray<int> sourcePortalsAsArray = SourcePortalIndexList;
+        NativeArray<int> sourcePortalsAsArray = SourcePortalIndexList.AsArray();
         for (int i = 0; i < sourcePortalsAsArray.Length; i++)
         {
             int stoppedIndex = RunReductionAStar(sourcePortalsAsArray[i], walkerHeap);

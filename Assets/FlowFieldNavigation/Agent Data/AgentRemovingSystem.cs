@@ -47,8 +47,8 @@ internal class AgentRemovingSystem
             AgentCurPathIndicies = agentCurPathIndicies,
             AgentFlockIndicies = agentFlockIndicies,
             AgentRequestedPathIndicies = agentRequestedPathIndicies,
-            FlockList = flockList,
-            PathSubscriberCounts = pathSubscriberCounts,
+            FlockList = flockList.AsArray(),
+            PathSubscriberCounts = pathSubscriberCounts.AsArray(),
             RemovedAgentIndicies = agentIndiciesToRemove,
         };
         JobHandle agentDependencyUnsubHandle = agentDependencyUnsub.Schedule(agentMarkHandle);
@@ -89,7 +89,7 @@ internal class AgentRemovingSystem
 
         AgentRemovalPathRequestCleanupJob pathRequestCleanup = new AgentRemovalPathRequestCleanupJob()
         {
-            AgentRemovalMarks = _agentRemovalMarks,
+            AgentRemovalMarks = _agentRemovalMarks.AsArray(),
             AgentRequestedPathIndicies = agentRequestedPathIndicies,
             PathRequests = pathRequests,
         };
@@ -97,7 +97,7 @@ internal class AgentRemovingSystem
 
         AgentRemovalLookingForPathListCleanupJob lookingForPathListCleanup = new AgentRemovalLookingForPathListCleanupJob()
         {
-            AgentRemovalMarks = _agentRemovalMarks,
+            AgentRemovalMarks = _agentRemovalMarks.AsArray(),
             AgentsLookingForPath = agentsLookingForPath,
             AgentsLookingForPathRecords = agentsLookingForPathRecords,
         };
@@ -105,10 +105,10 @@ internal class AgentRemovingSystem
 
         AgentRemovalPathCleanupJob pathCleanup = new AgentRemovalPathCleanupJob()
         {
-            AgentCurPathIndicies = agentCurPathIndicies,
-            AgentRemovalMarks = _agentRemovalMarks,
+            AgentCurPathIndicies = agentCurPathIndicies.AsArray(),
+            AgentRemovalMarks = _agentRemovalMarks.AsArray(),
             PathStates = pathStates,
-            PathSubscriberCounts = pathSubscriberCounts,
+            PathSubscriberCounts = pathSubscriberCounts.AsArray(),
             PathDestinationDataArray = pathDestinationArray,
         };
         JobHandle pathCleanupHandle = pathCleanup.Schedule(lookingForPathListCleanupHandle);

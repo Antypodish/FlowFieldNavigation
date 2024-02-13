@@ -39,7 +39,7 @@ internal struct PortalNodeAdditionTraversalJob : IJob
     public void Execute()
     {
         RunDijkstra();
-        NativeArray<int> sourcePortalsAsArray = SourcePortalIndexList;
+        NativeArray<int> sourcePortalsAsArray = SourcePortalIndexList.AsArray();
         for (int i = 0; i < sourcePortalsAsArray.Length; i++)
         {
             PickPortalSequenceFromDijkstra(sourcePortalsAsArray[i]);
@@ -48,7 +48,7 @@ internal struct PortalNodeAdditionTraversalJob : IJob
 
         int newAddedSectorStart = NewPickedSectorStartIndex.Value;
         int newAddedSectorCount = PickedToSector.Length - newAddedSectorStart;
-        NativeSlice<int> newAddedSectors = new NativeSlice<int>(PickedToSector, newAddedSectorStart, newAddedSectorCount);
+        NativeSlice<int> newAddedSectors = new NativeSlice<int>(PickedToSector.AsArray(), newAddedSectorStart, newAddedSectorCount);
         if (ContainsSectorsWithinLOSRange(newAddedSectors))
         {
             SectorsWihinLOSArgument argument = SectorWithinLOSState.Value;

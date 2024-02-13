@@ -37,7 +37,7 @@ internal class HeightMeshProducer
         HeightMeshStartPositionDeterminationJob meshStartPosJob = new HeightMeshStartPositionDeterminationJob()
         {
             BaseTranslationOut = baseTranslation,
-            Verticies = Verticies,
+            Verticies = Verticies.AsArray(),
         };
         meshStartPosJob.Schedule().Complete();
         FlowFieldUtilities.HeightMeshStartPosition = baseTranslation.Value;
@@ -49,8 +49,8 @@ internal class HeightMeshProducer
         TriangleSpatialHashingTileSizeCalculationJob spatialHashingTileSizeCalculation = new TriangleSpatialHashingTileSizeCalculationJob()
         {
             BaseSpatialGridSize = FlowFieldUtilities.BaseTriangleSpatialGridSize,
-            Triangles = Triangles,
-            Verticies = Verticies,
+            Triangles = Triangles.AsArray(),
+            Verticies = Verticies.AsArray(),
             GridTileSizes = gridTileSizes,
         };
         spatialHashingTileSizeCalculation.Schedule().Complete();
@@ -69,8 +69,8 @@ internal class HeightMeshProducer
             FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
             SpatialHashGrids = SpatialHashGrids,
             TileSizeToGridIndex = TileSizeToGridIndex,
-            Triangles = Triangles,
-            Verticies = Verticies,
+            Triangles = Triangles.AsArray(),
+            Verticies = Verticies.AsArray(),
             NewTriangles = newTriangles,
         };
         spatialHashingTriangleSubmission.Schedule().Complete();
@@ -86,8 +86,8 @@ internal class HeightMeshProducer
             FieldHorizontalSize = FlowFieldUtilities.FieldColAmount * FlowFieldUtilities.TileSize,
             FieldVerticalSize = FlowFieldUtilities.FieldRowAmount * FlowFieldUtilities.TileSize,
             GridIndexToTileSize = GridIndexToTileSize,
-            HashedTriangles = Triangles,
-            TriangleHashGrids = SpatialHashGrids,
+            HashedTriangles = Triangles.AsArray(),
+            TriangleHashGrids = SpatialHashGrids.AsArray(),
         };
     }
     internal void DisposeAll()

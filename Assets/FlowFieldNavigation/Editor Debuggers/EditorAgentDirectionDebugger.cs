@@ -12,7 +12,7 @@ internal class EditorAgentDirectionDebugger
     internal void Debug()
     {
         Gizmos.color = Color.white;
-        NativeArray<AgentData> agentData = _pathfindingManager.AgentDataContainer.AgentDataList;
+        NativeArray<AgentData> agentData = _pathfindingManager.AgentDataContainer.AgentDataList.AsArray();
         for(int i = 0; i < agentData.Length; i++)
         {
             Vector3 pos = agentData[i].Position;

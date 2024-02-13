@@ -74,7 +74,7 @@ internal class AgentDataContainer
     }
     public void SetRequestedPathIndiciesOf(List<FlowFieldAgent> agents, int newPathIndex)
     {
-        NativeArray<int> reqPathIndicies = AgentRequestedPathIndicies;
+        NativeArray<int> reqPathIndicies = AgentRequestedPathIndicies.AsArray();
         for(int i = 0; i < agents.Count; i++)
         {
             FlowFieldAgent agent = agents[i];

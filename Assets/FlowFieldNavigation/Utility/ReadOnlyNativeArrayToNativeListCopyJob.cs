@@ -10,7 +10,7 @@ internal struct ReadOnlyNativeArrayToNativeListCopyJob<T> : IJob where T : unman
     public void Execute()
     {
         Destination.Length = Source.Length;
-        NativeArray<T> destinationAsArray = Destination;
+        NativeArray<T> destinationAsArray = Destination.AsArray();
         for(int i = 0; i < Source.Length; i++)
         {
             destinationAsArray[i] = Source[i];

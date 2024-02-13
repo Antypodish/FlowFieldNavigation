@@ -66,16 +66,16 @@ internal class MovementManager
     }
     internal void ScheduleRoutine(NativeArray<UnsafeListReadOnly<byte>> costFieldCosts, JobHandle dependency)
     {
-        NativeArray<AgentData> agentDataArray = _agentDataContainer.AgentDataList;
-        NativeArray<int> agentCurPathIndexArray = _agentDataContainer.AgentCurPathIndicies;
-        NativeArray<PathLocationData> exposedPathLocationDataArray = _pathfindingManager.PathDataContainer.ExposedPathLocationData;
-        NativeArray<PathFlowData> exposedPathFlowDataArray = _pathfindingManager.PathDataContainer.ExposedPathFlowData;
-        NativeArray<float2> exposedPathDestinationArray = _pathfindingManager.PathDataContainer.ExposedPathDestinations;
-        NativeArray<int> agentFlockIndexArray = _pathfindingManager.AgentDataContainer.AgentFlockIndicies;
-        NativeArray<float> exposedPathReachDistanceCheckRanges = _pathfindingManager.PathDataContainer.ExposedPathReachDistanceCheckRanges;
-        NativeArray<int> exposedPathFlockIndicies = _pathfindingManager.PathDataContainer.ExposedPathFlockIndicies;
-        NativeArray<PathState> exposedPathStateList = _pathfindingManager.PathDataContainer.ExposedPathStateList;
-        NativeArray<bool> exposedPathAgentStopFlagList = _pathfindingManager.PathDataContainer.ExposedPathAgentStopFlagList;
+        NativeArray<AgentData> agentDataArray = _agentDataContainer.AgentDataList.AsArray();
+        NativeArray<int> agentCurPathIndexArray = _agentDataContainer.AgentCurPathIndicies.AsArray();
+        NativeArray<PathLocationData> exposedPathLocationDataArray = _pathfindingManager.PathDataContainer.ExposedPathLocationData.AsArray();
+        NativeArray<PathFlowData> exposedPathFlowDataArray = _pathfindingManager.PathDataContainer.ExposedPathFlowData.AsArray();
+        NativeArray<float2> exposedPathDestinationArray = _pathfindingManager.PathDataContainer.ExposedPathDestinations.AsArray();
+        NativeArray<int> agentFlockIndexArray = _pathfindingManager.AgentDataContainer.AgentFlockIndicies.AsArray();
+        NativeArray<float> exposedPathReachDistanceCheckRanges = _pathfindingManager.PathDataContainer.ExposedPathReachDistanceCheckRanges.AsArray();
+        NativeArray<int> exposedPathFlockIndicies = _pathfindingManager.PathDataContainer.ExposedPathFlockIndicies.AsArray();
+        NativeArray<PathState> exposedPathStateList = _pathfindingManager.PathDataContainer.ExposedPathStateList.AsArray();
+        NativeArray<bool> exposedPathAgentStopFlagList = _pathfindingManager.PathDataContainer.ExposedPathAgentStopFlagList.AsArray();
 
         //CLEAR
         AgentMovementDataList.Clear();
@@ -101,9 +101,9 @@ internal class MovementManager
             AgentDataArray = agentDataArray,
             AgentFlockIndexArray = agentFlockIndexArray,
             AgentHashGridArray = HashGridArray,
-            AgentMovementDataArray = AgentMovementDataList,
-            NormalToHashed = NormalToHashed,
-            HashedToNormal = HashedToNormal,
+            AgentMovementDataArray = AgentMovementDataList.AsArray(),
+            NormalToHashed = NormalToHashed.AsArray(),
+            HashedToNormal = HashedToNormal.AsArray(),
         };
         JobHandle spatialHasherHandle = spatialHasher.Schedule(dependency);
 
@@ -119,12 +119,12 @@ internal class MovementManager
             ExposedPathDestinationArray = exposedPathDestinationArray,
             ExposedPathFlowDataArray = exposedPathFlowDataArray,
             ExposedPathLocationDataArray = exposedPathLocationDataArray,
-            HashedToNormal = HashedToNormal,
+            HashedToNormal = HashedToNormal.AsArray(),
             
             FieldColAmount = FlowFieldUtilities.FieldColAmount,
             TileSize = FlowFieldUtilities.TileSize,
             SectorColAmount = FlowFieldUtilities.SectorColAmount,
-            AgentMovementData = AgentMovementDataList,
+            AgentMovementData = AgentMovementDataList.AsArray(),
             FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
         };
         JobHandle movDataHandle = routineDataCalcJob.Schedule(routineDataCalcJob.AgentMovementData.Length, 64, spatialHasherHandle);
@@ -133,9 +133,9 @@ internal class MovementManager
         AgentHeightCalculationJob heightCalculation = new AgentHeightCalculationJob()
         {
             TriangleSpatialHashGrid = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
-            AgentMovementDataArray = AgentMovementDataList,
-            AgentPositionChangeArray = AgentPositionChangeBuffer,
-            Verticies = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.Verticies,
+            AgentMovementDataArray = AgentMovementDataList.AsArray(),
+            AgentPositionChangeArray = AgentPositionChangeBuffer.AsArray(),
+            Verticies = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray(),
         };
         JobHandle heightCalculationHandle = heightCalculation.Schedule(agentDataArray.Length, 32, movDataHandle);
 
@@ -160,14 +160,14 @@ internal class MovementManager
             FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
             FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
             FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
-            RoutineResultArray = RoutineResults,
+            RoutineResultArray = RoutineResults.AsArray(),
             AgentSpatialHashGrid = new AgentSpatialHashGrid()
             {
                 BaseSpatialGridSize = FlowFieldUtilities.BaseAgentSpatialGridSize,
                 FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
                 FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
                 AgentHashGridArray = HashGridArray,
-                RawAgentMovementDataArray = AgentMovementDataList,
+                RawAgentMovementDataArray = AgentMovementDataList.AsArray(),
                 FieldGridStartPosition = FlowFieldUtilities.FieldGridStartPosition,
             },
             CostFieldEachOffset = costFieldCosts,
@@ -184,11 +184,11 @@ internal class MovementManager
                 FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
                 FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
                 AgentHashGridArray = HashGridArray,
-                RawAgentMovementDataArray = AgentMovementDataList,
+                RawAgentMovementDataArray = AgentMovementDataList.AsArray(),
                 FieldGridStartPosition = FlowFieldUtilities.FieldGridStartPosition,
             },
-            RoutineResultArray = RoutineResults,
-            AgentPositionChangeBuffer = AgentPositionChangeBuffer,
+            RoutineResultArray = RoutineResults.AsArray(),
+            AgentPositionChangeBuffer = AgentPositionChangeBuffer.AsArray(),
         };
         JobHandle colResHandle = colResJob.Schedule(agentDataArray.Length, 4, avoidanceHandle);
 
@@ -201,10 +201,10 @@ internal class MovementManager
                 FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
                 FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
                 AgentHashGridArray = HashGridArray,
-                RawAgentMovementDataArray = AgentMovementDataList,
+                RawAgentMovementDataArray = AgentMovementDataList.AsArray(),
                 FieldGridStartPosition = FlowFieldUtilities.FieldGridStartPosition,
             },
-            RoutineResultArray = RoutineResults,
+            RoutineResultArray = RoutineResults.AsArray(),
             SeperationRangeAddition = FlowFieldBoidUtilities.SeperationRangeAddition,
         };
         JobHandle tensionHandle = tensionResJob.Schedule(colResHandle);
@@ -222,8 +222,8 @@ internal class MovementManager
             HalfTileSize = FlowFieldUtilities.TileSize / 2,
             FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
             SectorMatrixTileAmont = FlowFieldUtilities.SectorMatrixTileAmount,
-            AgentMovementData = AgentMovementDataList,
-            AgentPositionChangeBuffer = AgentPositionChangeBuffer,
+            AgentMovementData = AgentMovementDataList.AsArray(),
+            AgentPositionChangeBuffer = AgentPositionChangeBuffer.AsArray(),
             CostFieldEachOffset = costFieldCosts,
         };
         JobHandle wallCollisionHandle = wallCollision.Schedule(wallCollision.AgentMovementData.Length, 64, tensionHandle);
@@ -240,38 +240,38 @@ internal class MovementManager
             SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
             TileSize = FlowFieldUtilities.TileSize,
             FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
-            AgentMovementDataArray = AgentMovementDataList,
+            AgentMovementDataArray = AgentMovementDataList.AsArray(),
             CostFieldPerOffset = costFieldCosts,
-            RoutineResultArray = RoutineResults,
+            RoutineResultArray = RoutineResults.AsArray(),
         };
         JobHandle wallDetectionHandle = wallDetection.Schedule(agentDataArray.Length, 64, wallCollisionHandle);
 
         AgentDirectionHeightCalculationJob directionHeightJob = new AgentDirectionHeightCalculationJob()
         {
             TriangleSpatialHashGrid = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
-            Verticies = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.Verticies,
-            AgentMovementDataArray = AgentMovementDataList,
-            RoutineResultArray = RoutineResults,
+            Verticies = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray(),
+            AgentMovementDataArray = AgentMovementDataList.AsArray(),
+            RoutineResultArray = RoutineResults.AsArray(),
         };
         JobHandle directionHeightJobHandle = directionHeightJob.Schedule(agentDataArray.Length, 64, wallDetectionHandle);
 
         PathReachDistances.Length = exposedPathReachDistanceCheckRanges.Length;
         DestinationReachedAgentCountJob destinationReachedCounter = new DestinationReachedAgentCountJob()
         {
-            AgentDestinationReachStatus = _agentDataContainer.AgentDestinationReachedArray,
-            HashedToNormal = HashedToNormal,
+            AgentDestinationReachStatus = _agentDataContainer.AgentDestinationReachedArray.AsArray(),
+            HashedToNormal = HashedToNormal.AsArray(),
             AgentSpatialHashGrid = new AgentSpatialHashGrid()
             {
                 BaseSpatialGridSize = FlowFieldUtilities.BaseAgentSpatialGridSize,
                 FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
                 FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
                 AgentHashGridArray = HashGridArray,
-                RawAgentMovementDataArray = AgentMovementDataList,
+                RawAgentMovementDataArray = AgentMovementDataList.AsArray(),
                 FieldGridStartPosition = FlowFieldUtilities.FieldGridStartPosition,
             },
             AgentFlockIndicies = agentFlockIndexArray,
             PathDestinationArray = exposedPathDestinationArray,
-            PathReachDistances = PathReachDistances,
+            PathReachDistances = PathReachDistances.AsArray(),
             PathReachDistanceCheckRanges = exposedPathReachDistanceCheckRanges,
             PathFlockIndexArray = exposedPathFlockIndicies,
             PathStateList = exposedPathStateList,
@@ -281,11 +281,11 @@ internal class MovementManager
 
         AgentStoppingJob stoppingJob = new AgentStoppingJob()
         {
-            AgentDestinationReachStatus = _agentDataContainer.AgentDestinationReachedArray,
+            AgentDestinationReachStatus = _agentDataContainer.AgentDestinationReachedArray.AsArray(),
             AgentCurPathIndicies = agentCurPathIndexArray,
-            PathDestinationReachRanges = PathReachDistances,
-            AgentMovementDataArray = AgentMovementDataList,
-            NormalToHashed = NormalToHashed,
+            PathDestinationReachRanges = PathReachDistances.AsArray(),
+            AgentMovementDataArray = AgentMovementDataList.AsArray(),
+            NormalToHashed = NormalToHashed.AsArray(),
             PathAgentStopFlags = exposedPathAgentStopFlagList,
         };
         JobHandle stoppingHandle = stoppingJob.Schedule(agentDataArray.Length, 64, destinationReachedCounterHandle);
@@ -306,19 +306,19 @@ internal class MovementManager
 
         AgentPositionChangeSendJob posSendJob = new AgentPositionChangeSendJob()
         {
-            AgentPositionChangeBuffer = AgentPositionChangeBuffer,
-            NormalToHashed = NormalToHashed,
+            AgentPositionChangeBuffer = AgentPositionChangeBuffer.AsArray(),
+            NormalToHashed = NormalToHashed.AsArray(),
         };
         posSendJob.Schedule(agentTransforms).Complete();
 
         RoutineResultSendJob directionSetJob = new RoutineResultSendJob()
         {
-            AgentDestinationReachedArray = agentDestinationReachArray,
-            AgentCurPathIndicies = agentCurPathIndicies,
-            MovementDataArray = AgentMovementDataList,
-            AgentDataArray = agentDataArray,
-            RoutineResultArray = RoutineResults,
-            NormalToHashed = NormalToHashed,
+            AgentDestinationReachedArray = agentDestinationReachArray.AsArray(),
+            AgentCurPathIndicies = agentCurPathIndicies.AsArray(),
+            MovementDataArray = AgentMovementDataList.AsArray(),
+            AgentDataArray = agentDataArray.AsArray(),
+            RoutineResultArray = RoutineResults.AsArray(),
+            NormalToHashed = NormalToHashed.AsArray(),
         };
         directionSetJob.Schedule().Complete();
 
@@ -326,14 +326,14 @@ internal class MovementManager
         AgentMovementUpdateJob movJob = new AgentMovementUpdateJob()
         {
             DeltaTime = deltaTime,
-            AgentDataArray = agentDataArray,
+            AgentDataArray = agentDataArray.AsArray(),
         };
         movJob.Schedule(agentTransforms).Complete();
 
         //ROTATE
         AgentRotationUpdateJob rotateJob = new AgentRotationUpdateJob()
         {
-            agentData = agentDataArray,
+            agentData = agentDataArray.AsArray(),
         };
         rotateJob.Schedule(agentTransforms).Complete();
     }

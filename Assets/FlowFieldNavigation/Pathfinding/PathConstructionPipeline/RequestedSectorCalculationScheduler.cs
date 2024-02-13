@@ -45,12 +45,12 @@ internal class RequestedSectorCalculationScheduler
             SectorStateTable = sectorStateTable,
             SectorToPickedTable = locationData.SectorToPicked,
             Sources = sources,
-            PortalSequence = portalTraversalData.PortalSequence,
-            ActiveWaveFrontListArray = pathInternalData.ActivePortalList,
+            PortalSequence = portalTraversalData.PortalSequence.AsArray(),
+            ActiveWaveFrontListArray = pathInternalData.ActivePortalList.AsArray(),
             PortalNodes = pickedFieldGraph.PortalNodes,
             SectorFlowStartIndiciesToCalculateIntegration = pathInternalData.SectorFlowStartIndiciesToCalculateIntegration,
             SectorFlowStartIndiciesToCalculateFlow = pathInternalData.SectorFlowStartIndiciesToCalculateFlow,
-            PickedToSectorTable = pathInternalData.PickedSectorList,
+            PickedToSectorTable = pathInternalData.PickedSectorList.AsArray(),
             SectorWithinLOSState = pathInternalData.SectorWithinLOSState,
         };
         JobHandle sourceSectorHandle = sectorCalcJob.Schedule(activePortalSubmissionHandle);

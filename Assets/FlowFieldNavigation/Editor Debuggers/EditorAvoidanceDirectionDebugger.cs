@@ -11,7 +11,7 @@ internal class EditorAvoidanceDirectionDebugger
 
     internal void Debug()
     {
-        NativeArray<AgentData> agents = _pathfindingManager.AgentDataContainer.AgentDataList;
+        NativeArray<AgentData> agents = _pathfindingManager.AgentDataContainer.AgentDataList.AsArray();
 
         for (int i = 0; i < agents.Length; i++)
         {

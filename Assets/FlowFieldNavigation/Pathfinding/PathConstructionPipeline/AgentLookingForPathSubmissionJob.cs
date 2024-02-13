@@ -22,7 +22,7 @@ internal struct AgentLookingForPathSubmissionJob : IJob
     internal NativeList<int> ReadyAgentsLookingForPath;
     public void Execute()
     {
-        NativeArray<PathRequest> intitialPathRequestsAsArray = InitialPathRequests;
+        NativeArray<PathRequest> intitialPathRequestsAsArray = InitialPathRequests.AsArray();
         //Unsubmit
         for(int i = AgentsLookingForPath.Length - 1; i >= 0; i--)
         {

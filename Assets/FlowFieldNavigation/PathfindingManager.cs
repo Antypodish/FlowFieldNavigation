@@ -125,11 +125,11 @@ public class PathfindingManager : MonoBehaviour
     }
     internal NativeArray<int> GetNormalToHashed()
     {
-        return MovementManager.NormalToHashed;
+        return MovementManager.NormalToHashed.AsArray();
     }
     internal NativeArray<AgentMovementData> GetAgentMovementData()
     {
-        return MovementManager.AgentMovementDataList;
+        return MovementManager.AgentMovementDataList.AsArray();
     }
     internal UnsafeListReadOnly<byte>[] GetAllCostFieldCostsAsUnsafeListReadonly()
     {

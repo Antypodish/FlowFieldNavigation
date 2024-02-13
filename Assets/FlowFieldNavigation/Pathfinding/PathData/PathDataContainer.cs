@@ -142,10 +142,10 @@ internal class PathDataContainer
             ExposedPathReachDistanceCheckRange = ExposedPathReachDistanceCheckRanges,
             PathStopFlagList = ExposedPathAgentStopFlagList,
             PathStateList = ExposedPathStateList,
-            PathDestinationDataArray = PathDestinationDataList,
-            PathFlowDataArray = PathFlowDataList,
-            PathLocationDataArray = PathLocationDataList,
-            PathFlockIndicies = PathFlockIndicies,
+            PathDestinationDataArray = PathDestinationDataList.AsArray(),
+            PathFlowDataArray = PathFlowDataList.AsArray(),
+            PathLocationDataArray = PathLocationDataList.AsArray(),
+            PathFlockIndicies = PathFlockIndicies.AsArray(),
         };
         dataExposeJob.Schedule().Complete();
     }

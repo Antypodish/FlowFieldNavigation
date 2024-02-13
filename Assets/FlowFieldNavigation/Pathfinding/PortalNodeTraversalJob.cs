@@ -51,7 +51,7 @@ internal struct PortalNodeTraversalJob : IJob
         //START GRAPH WALKER
         PortalSequenceBorders.Add(0);
         RunDijkstra();
-        NativeArray<int> sourcePortalsAsArray = SourcePortals;
+        NativeArray<int> sourcePortalsAsArray = SourcePortals.AsArray();
         for(int  i = 0; i < sourcePortalsAsArray.Length; i++)
         {
             PickPortalSequenceFromFastMarching(sourcePortalsAsArray[i]);

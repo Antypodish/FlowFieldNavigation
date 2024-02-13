@@ -33,13 +33,13 @@ internal class ActivePortalSubmissionScheduler
 
             PortalEdges = pickedFieldGraph.PorToPorPtrs,
             SectorToPicked = locationData.SectorToPicked,
-            PickedToSector = internalData.PickedSectorList,
-            PortalSequence = portalTraversalData.PortalSequence,
-            PortalSequenceBorders = portalTraversalData.PortalSequenceBorders,
+            PickedToSector = internalData.PickedSectorList.AsArray(),
+            PortalSequence = portalTraversalData.PortalSequence.AsArray(),
+            PortalSequenceBorders = portalTraversalData.PortalSequenceBorders.AsArray(),
             WinToSecPtrs = pickedFieldGraph.WinToSecPtrs,
             PortalNodes = pickedFieldGraph.PortalNodes,
             WindowNodes = pickedFieldGraph.WindowNodes,
-            ActiveWaveFrontListArray = internalData.ActivePortalList,
+            ActiveWaveFrontListArray = internalData.ActivePortalList.AsArray(),
             NotActivatedPortals = internalData.NotActivePortalList,
             SectorBitArray = sectorBitArray,
         };

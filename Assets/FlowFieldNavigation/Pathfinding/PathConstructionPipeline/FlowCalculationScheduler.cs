@@ -58,7 +58,7 @@ internal class FlowCalculationScheduler
             IntegrationFieldResetJob resJob = new IntegrationFieldResetJob()
             {
                 StartIndex = lastIntegrationFieldLength,
-                IntegrationField = pathInternalData.IntegrationField,
+                IntegrationField = pathInternalData.IntegrationField.AsArray(),
             };
             resJob.Schedule().Complete();
             _flowFieldResizedPaths.Add(pathInfo.PathIndex);
@@ -66,13 +66,13 @@ internal class FlowCalculationScheduler
 
         //SCHEDULE INTEGRATION FIELDS
         NativeList<JobHandle> intFieldHandles = new NativeList<JobHandle>(Allocator.Temp);
-        NativeArray<int> sectorFlowStartIndiciesToCalculateIntegration = pathInternalData.SectorFlowStartIndiciesToCalculateIntegration;
-        NativeArray<int> sectorFlowStartIndiciesToCalculateFlow = pathInternalData.SectorFlowStartIndiciesToCalculateFlow;
+        NativeArray<int> sectorFlowStartIndiciesToCalculateIntegration = pathInternalData.SectorFlowStartIndiciesToCalculateIntegration.AsArray();
+        NativeArray<int> sectorFlowStartIndiciesToCalculateFlow = pathInternalData.SectorFlowStartIndiciesToCalculateFlow.AsArray();
         for (int i = 0; i < sectorFlowStartIndiciesToCalculateIntegration.Length; i++)
         {
             int sectorStart = sectorFlowStartIndiciesToCalculateIntegration[i];
             int sectorIndex = pathInternalData.PickedSectorList[(sectorStart - 1) / FlowFieldUtilities.SectorTileAmount];
-            NativeSlice<IntegrationTile> integrationSector = new NativeSlice<IntegrationTile>(pathInternalData.IntegrationField, sectorStart, FlowFieldUtilities.SectorTileAmount);
+            NativeSlice<IntegrationTile> integrationSector = new NativeSlice<IntegrationTile>(pathInternalData.IntegrationField.AsArray(), sectorStart, FlowFieldUtilities.SectorTileAmount);
             IntegrationFieldJob intJob = new IntegrationFieldJob()
             {
                 SectorIndex = sectorIndex,
@@ -88,7 +88,7 @@ internal class FlowCalculationScheduler
             JobHandle intHandle = intJob.Schedule();
             intFieldHandles.Add(intHandle);
         }
-        JobHandle intFieldCombinedHandle = JobHandle.CombineDependencies(intFieldHandles);
+        JobHandle intFieldCombinedHandle = JobHandle.CombineDependencies(intFieldHandles.AsArray());
 
         //SCHEDULE FLOW FIELDS
         NativeList<JobHandle> flowfieldHandles = new NativeList<JobHandle>(Allocator.Temp);
@@ -115,9 +115,9 @@ internal class FlowCalculationScheduler
                 SectorRowAmount = FlowFieldUtilities.SectorRowAmount,
                 FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
                 SectorToPicked = locationData.SectorToPicked,
-                PickedToSector = pathInternalData.PickedSectorList,
+                PickedToSector = pathInternalData.PickedSectorList.AsArray(),
                 FlowFieldCalculationBuffer = flowFieldCalculationBuffer,
-                IntegrationField = pathInternalData.IntegrationField,
+                IntegrationField = pathInternalData.IntegrationField.AsArray(),
                 Costs = pickedCostField.Costs,
             };
             JobHandle flowHandle = ffJob.Schedule(flowFieldCalculationBuffer.Length, 256, intFieldCombinedHandle);
@@ -139,7 +139,7 @@ internal class FlowCalculationScheduler
         };
         _flowFieldCalculationBuffers.Add(parent);
 
-        JobHandle flowFieldCombinedHandle = JobHandle.CombineDependencies(flowfieldHandles);
+        JobHandle flowFieldCombinedHandle = JobHandle.CombineDependencies(flowfieldHandles.AsArray());
         _losIntegrationScheduler.ScheduleLOS(pathInfo, flowFieldCombinedHandle);
 
         if (FlowFieldUtilities.DebugMode) { flowFieldCombinedHandle.Complete(); }

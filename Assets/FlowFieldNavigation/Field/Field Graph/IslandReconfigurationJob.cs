@@ -27,7 +27,7 @@ internal struct IslandReconfigurationJob : IJob
         UnsafeList<int> islandCalculationMatrix = new UnsafeList<int>(SectorTileAmount, Allocator.Temp);
         islandCalculationMatrix.Length = SectorTileAmount;
         UnsafeStack<int> dfsStack = new UnsafeStack<int>(0);
-        NativeArray<int> editedSectorIndicies = EditedSectorIndicies;
+        NativeArray<int> editedSectorIndicies = EditedSectorIndicies.AsArray();
 
 
         //HANDLE PORTAL ISLANDS

@@ -101,7 +101,7 @@ internal struct SourceSectorCalculationJob : IJob
             }
         }
 
-        if (ContainsSectorsWithinLOSRange(SectorFlowStartIndiciesToCalculateIntegration))
+        if (ContainsSectorsWithinLOSRange(SectorFlowStartIndiciesToCalculateIntegration.AsArray()))
         {
             SectorsWihinLOSArgument argument = SectorWithinLOSState.Value;
             argument |= SectorsWihinLOSArgument.RequestedSectorWithinLOS;
