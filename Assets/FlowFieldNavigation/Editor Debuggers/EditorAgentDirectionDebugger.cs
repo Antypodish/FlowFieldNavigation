@@ -17,7 +17,7 @@ internal class EditorAgentDirectionDebugger
         {
             Vector3 pos = agentData[i].Position;
             pos.y = 2f;
-            Vector3 agentDirection = agentData[i].Direction3;
+            Vector3 agentDirection = agentData[i].DirectionWithHeigth;
             Gizmos.DrawLine(pos, pos + agentDirection);
         }
     }

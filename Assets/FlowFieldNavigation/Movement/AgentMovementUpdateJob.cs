@@ -18,8 +18,8 @@ internal struct AgentMovementUpdateJob : IJobParallelForTransform
         float speed = data.Speed;
         if((data.Status & AgentStatus.Moving) != AgentStatus.Moving) { speed = 0f; }
         float3 pos = transform.position;
-        float3 direction = data.Direction3;
-        float3 seperation = data.Seperation;
+        float3 direction = data.DirectionWithHeigth;
+        float3 seperation = new float3(data.Seperation.x, 0f, data.Seperation.y);
         float3 resultingDirection = direction;
         float3 newPos = pos + (resultingDirection) * speed * DeltaTime + seperation * DeltaTime;
         transform.position = newPos;

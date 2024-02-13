@@ -9,8 +9,8 @@ internal struct AgentHeightCalculationJob : IJobParallelFor
 {
     [ReadOnly] internal TriangleSpatialHashGrid TriangleSpatialHashGrid;
     [ReadOnly] internal NativeArray<float3> Verticies;
+    [ReadOnly] internal NativeArray<AgentMovementData> AgentMovementDataArray;
     internal NativeArray<float3> AgentPositionChangeArray;
-    internal NativeArray<AgentMovementData> AgentMovementDataArray;
     public void Execute(int index)
     {
         AgentMovementData agentData = AgentMovementDataArray[index];
@@ -48,10 +48,6 @@ internal struct AgentHeightCalculationJob : IJobParallelFor
         float3 agentPositionChange = AgentPositionChangeArray[index];
         agentPositionChange.y = desiredHeight - currentHeight;
         AgentPositionChangeArray[index] = agentPositionChange;
-
-        agentPos3.y = desiredHeight;
-        agentData.Position = agentPos3;
-        AgentMovementDataArray[index] = agentData;
     }
     BarycentricCoordinates GetBarycentricCoordinatesForEachVectorInTheOrderUVW(float2 a, float2 b, float2 c, float2 p)
     {

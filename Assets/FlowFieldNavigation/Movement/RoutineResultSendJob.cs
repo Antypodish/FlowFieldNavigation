@@ -21,7 +21,7 @@ struct RoutineResultSendJob : IJob
             AgentMovementData movementData = MovementDataArray[hashedIndex];
             RoutineResult result = RoutineResultArray[hashedIndex];
             AgentStatus newAgentStatus = AgentDestinationReachedArray[i] ? ~(~agentData.Status | AgentStatus.Moving) : agentData.Status;
-            agentData.Direction3 = result.NewDirection3;
+            agentData.DirectionWithHeigth = result.NewDirection3;
             agentData.DesiredDirection = movementData.DesiredDirection;
             agentData.Direction = result.NewDirection;
             agentData.Seperation = result.NewSeperation;

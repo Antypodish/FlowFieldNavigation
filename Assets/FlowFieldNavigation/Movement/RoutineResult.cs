@@ -4,7 +4,7 @@ internal struct RoutineResult
 {
     internal float2 NewDirection;
     internal float3 NewDirection3;
-    internal float3 NewSeperation;
+    internal float2 NewSeperation;
     internal float HeightChange;
     internal byte NewSplitInterval;
     internal byte NewSplitInfo;

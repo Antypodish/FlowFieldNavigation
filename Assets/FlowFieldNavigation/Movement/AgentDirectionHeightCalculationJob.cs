@@ -17,14 +17,12 @@ internal struct AgentDirectionHeightCalculationJob : IJobParallelFor
         RoutineResult routineResult = RoutineResultArray[index];
         float3 agentPos3 = agentData.Position;
         float2 agentPos2 = new float2(agentPos3.x, agentPos3.z);
-        float2 agentDir2 = routineResult.NewDirection;
-        float2 agentDir2Small = agentDir2 * 0.001f;
-        float2 posToCheck = agentPos2 + agentDir2Small;
+        float3 lastCrossProduct = new float3(float.MaxValue, float.MaxValue, float.MaxValue);
         float lastHeight = float.MinValue;
         for (int i = 0; i < TriangleSpatialHashGrid.GetGridCount(); i++)
         {
-            bool succesfull = TriangleSpatialHashGrid.TryGetIterator(posToCheck, i, out TriangleSpatialHashGridIterator triangleGridIterator);
-            if (!succesfull) { lastHeight = 0; break; }
+            bool succesfull = TriangleSpatialHashGrid.TryGetIterator(agentPos2, i, out TriangleSpatialHashGridIterator triangleGridIterator);
+            if (!succesfull) { break; }
             while (triangleGridIterator.HasNext())
             {
                 NativeSlice<int> triangles = triangleGridIterator.GetNextRow();
@@ -40,21 +38,25 @@ internal struct AgentDirectionHeightCalculationJob : IJobParallelFor
                     float2 v2 = new float2(v23d.x, v23d.z);
                     float2 v3 = new float2(v33d.x, v33d.z);
 
-                    BarycentricCoordinates barCords = GetBarycentricCoordinatesForEachVectorInTheOrderUVW(v1, v2, v3, posToCheck);
+                    BarycentricCoordinates barCords = GetBarycentricCoordinatesForEachVectorInTheOrderUVW(v1, v2, v3, agentPos2);
                     if (barCords.u < 0 || barCords.w < 0 || barCords.v < 0) { continue; }
                     float newHeight = v13d.y * barCords.u + v23d.y * barCords.v + v33d.y * barCords.w + agentData.LandOffset;
+                    float3 trigCross = math.cross(v23d - v13d, v33d - v13d);
+
                     bool isHigher = newHeight > lastHeight;
                     lastHeight = math.select(lastHeight, newHeight, isHigher);
+                    lastCrossProduct = math.select(lastCrossProduct, trigCross, isHigher);
                 }
             }
         }
-        lastHeight = math.select(lastHeight, agentPos3.y, lastHeight == float.MinValue);
-        float3 posToCheck3 = new float3(posToCheck.x, lastHeight, posToCheck.y);
-        float3 newDir3 = posToCheck3 - agentPos3;
-        newDir3 = math.normalizesafe(newDir3) * math.length(agentDir2);
-        routineResult.NewDirection3 = newDir3;
+        lastCrossProduct = math.select(lastCrossProduct, new float3(0.01f, 1, 0.01f), lastCrossProduct.Equals(new float3(float.MaxValue, float.MaxValue, float.MaxValue)));
+        float2 agentDir = routineResult.NewDirection;
+        float directionY = (lastCrossProduct.x * agentDir.x + lastCrossProduct.z * agentDir.y) / -lastCrossProduct.y;
+        float agentDirMagnitude = math.length(agentDir);
+        agentDirMagnitude = math.select(agentDirMagnitude, 0f, agentDirMagnitude == float.PositiveInfinity || agentDirMagnitude == float.NegativeInfinity);
+        float3 agentDir3 = math.normalizesafe(new float3(agentDir.x, directionY, agentDir.y)) * agentDirMagnitude;
+        routineResult.NewDirection3 = agentDir3;
         RoutineResultArray[index] = routineResult;
-
     }
     BarycentricCoordinates GetBarycentricCoordinatesForEachVectorInTheOrderUVW(float2 a, float2 b, float2 c, float2 p)
     {
