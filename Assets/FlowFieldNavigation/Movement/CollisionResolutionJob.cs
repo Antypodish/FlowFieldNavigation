@@ -91,6 +91,10 @@ internal struct CollisionResolutionJob : IJobParallelFor
         {
             return 0.05f;
         }
+        if (agentHoldGround && mateHoldGround)
+        {
+            return fullMultiplier / 2;
+        }
         return noneMultiplier;
     }
 }
