@@ -16,7 +16,7 @@ internal class CostFieldDebugMeshBuilder
         _pathfindingManager = pathfindingManager;
         _debugMeshes = new List<Mesh>();
         _isCreated = false;
-        _lastFieldState = pathfindingManager.GetFieldState();
+        _lastFieldState = 0;
         _lastOffset = 0;
     }
     internal List<Mesh> GetDebugMesh(int offset)

@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8734084087089525697}
   - component: {fileID: 7249324459304311081}
+  - component: {fileID: 5442464775926404439}
   m_Layer: 0
   m_Name: Flow Field
   m_TagString: Untagged
@@ -44,5 +45,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0742960d70d14054dab12a8a161a44fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  LineOfSightRange: 30
-  _baseTriangleSpatialGridSize: 0.25
+--- !u!114 &5442464775926404439
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8734084087089525702}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53c0fbb4ea9baa149b27cf5a90439745, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _pathfindingManager: {fileID: 7249324459304311081}
+  BaseAgentSpatialGridSize: 0
+  BaseTriangleSpatialGridSize: 0
+  MaxSurfaceHeightDifference: 0
+  TileSize: 0
+  MaxWalkableHeight: 1e+22
+  VerticalVoxelSize: 0
+  MaxAgentRadius: 0.5
+  LineOfSightRange: 0

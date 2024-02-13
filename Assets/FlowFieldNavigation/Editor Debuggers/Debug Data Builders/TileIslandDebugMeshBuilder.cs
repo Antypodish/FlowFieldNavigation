@@ -18,7 +18,7 @@ internal class TileIslandDebugMeshBuilder
         _debugMeshes = new List<Mesh>();
         _debugMeshColorIndicies = new List<int>();
         _isCreated = false;
-        _lastFieldState = pathfindingManager.GetFieldState();
+        _lastFieldState = 0;
         _lastOffset = 0;
     }
 

@@ -227,7 +227,7 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: DisableTerrainGeneration
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207641, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
@@ -689,8 +689,23 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
         type: 3}
-      propertyPath: _debuggingEnabled
+      propertyPath: _costField
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
+      propertyPath: _debugTiles
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
+      propertyPath: _costFieldOffset
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
+      propertyPath: _debuggingEnabled
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
         type: 3}
@@ -706,6 +721,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Flow Field Debugger
+      objectReference: {fileID: 0}
+    - target: {fileID: 7535577792338288069, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
+      propertyPath: m_Layer
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

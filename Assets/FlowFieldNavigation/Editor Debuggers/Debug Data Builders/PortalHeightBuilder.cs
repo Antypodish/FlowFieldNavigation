@@ -14,7 +14,7 @@ internal class PortalHeightBuilder
         _pathfindingManager = pathfindingManager;
         _isCreated = false;
         _heights = new NativeList<float>(Allocator.Persistent);
-        _lastFieldState = pathfindingManager.GetFieldState();
+        _lastFieldState = 0;
         _lastOffset = 0;
     }
     internal NativeArray<float> GetPortalHeights(int offset)

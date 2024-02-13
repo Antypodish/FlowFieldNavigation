@@ -98,6 +98,7 @@ public class EditorDebuggingController : MonoBehaviour
         if (!_pathfindingManager.SimulationStarted) { return; }
         FlowFieldUtilities.DebugMode = _debuggingEnabled;
         if (!_debuggingEnabled) { return; }
+        _costFieldOffset = Mathf.Min(FlowFieldUtilities.MaxCostFieldOffset, _costFieldOffset);
 
         if (_debugTiles) { _tileDebugger.Debug(); }
         if (_costField) { _costFieldDebugger.DebugCostFieldWithMesh(_costFieldOffset); }

@@ -20,7 +20,7 @@ internal class PortalDebugMeshBuilder
         _pathfindingManager = pathfindingManager;
         _isCreated = false;
         _debugMeshes = new List<Mesh>();
-        _lastFieldState = pathfindingManager.GetFieldState();
+        _lastFieldState = 0;
         _lastOffset = 0;
     }
     internal List<Mesh> GetDebugMeshes(int offset)
