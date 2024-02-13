@@ -24,4 +24,39 @@ public class FlowFieldAgent : MonoBehaviour
     {
         return _pathfindingManager.Interface.GetPathIndex(AgentDataIndex);
     }
+    public float GetSpeed()
+    {
+        if(_pathfindingManager == null) { return 0; }
+        return _pathfindingManager.Interface.GetSpeed(this);
+    }
+    public AgentStatus GetStatus()
+    {
+        if (_pathfindingManager == null) { return 0; }
+        return _pathfindingManager.Interface.GetStatus(this);
+    }
+    public void RequestSubscription()
+    {
+        if (_pathfindingManager == null) { return; }
+        _pathfindingManager.Interface.RequestSubscription(this);
+    }
+    public void RequestUnsubscription()
+    {
+        if (_pathfindingManager == null) { return; }
+        _pathfindingManager.Interface.RequestUnsubscription(this);
+    }
+    public void SetHoldGround()
+    {
+        if (_pathfindingManager == null) { return; }
+        _pathfindingManager.Interface.SetHoldGround(this);
+    }
+    public void SetStopped()
+    {
+        if (_pathfindingManager == null) { return; }
+        _pathfindingManager.Interface.SetStopped(this);
+    }
+    public void SetSpeed(float speed)
+    {
+        if (_pathfindingManager == null) { return; }
+        _pathfindingManager.Interface.SetSpeed(this, speed);
+    }
 }
