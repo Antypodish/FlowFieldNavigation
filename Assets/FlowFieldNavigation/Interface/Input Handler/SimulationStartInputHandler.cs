@@ -17,6 +17,7 @@ internal class SimulationStartInputHandler
         return new SimulationInputs()
         {
             BaseAgentSpatialGridSize = simStartParam.BaseAgentSpatialGridSize,
+            BaseTriangleSpatialGridSize = simStartParam.BaseTriangleSpatialGridSize,
             MaxSurfaceHeightDifference = simStartParam.MaxSurfaceHeightDifference,
             TileSize = simStartParam.TileSize,
             NavigationSurfaceVerticies = navSurfaceVerticies,
@@ -26,6 +27,7 @@ internal class SimulationStartInputHandler
             MaxAgentRadius = simStartParam.MaxAgentRadius,
             RowCount = rowAmount,
             ColumnCount = colAmount,
+            LineOfSightRange = simStartParam.LineOfSightRange,
             MaxWalkableHeight = simStartParam.MaxWalkableHeight,
             VerticalVoxelSize = simStartParam.VerticalVoxelSize,
         };
@@ -125,13 +127,15 @@ internal class SimulationStartInputHandler
 internal struct SimulationInputs
 {
     internal float BaseAgentSpatialGridSize;
+    internal float BaseTriangleSpatialGridSize;
     internal float MaxAgentRadius;
     internal float MaxSurfaceHeightDifference;
     internal float TileSize;
+    internal float MaxWalkableHeight;
+    internal float VerticalVoxelSize;
     internal int RowCount;
     internal int ColumnCount;
-    internal float MaxWalkableHeight;
-    public float VerticalVoxelSize;
+    internal int LineOfSightRange;
     internal Vector2 FieldStartPositionXZ;
     internal NativeArray<float3> NavigationSurfaceVerticies;
     internal NativeArray<int> NavigationSurfaceTriangles;

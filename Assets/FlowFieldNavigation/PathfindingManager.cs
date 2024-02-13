@@ -4,8 +4,6 @@ using UnityEngine;
 using Unity.Mathematics;
 public class PathfindingManager : MonoBehaviour
 {
-    [SerializeField] internal int LineOfSightRange;
-    [SerializeField] float _baseTriangleSpatialGridSize;
     public bool SimulationStarted { get; private set; }
     public FlowFieldNavigationInterface Interface { get; private set; }
 
@@ -69,10 +67,10 @@ public class PathfindingManager : MonoBehaviour
         FlowFieldUtilities.FieldRowAmount = rowAmount;
         FlowFieldUtilities.FieldTileAmount = columnAmount * rowAmount;
         FlowFieldUtilities.BaseAgentSpatialGridSize = baseAgentSpatialGridSize;
-        FlowFieldUtilities.BaseTriangleSpatialGridSize = _baseTriangleSpatialGridSize;
+        FlowFieldUtilities.BaseTriangleSpatialGridSize = startInputs.BaseTriangleSpatialGridSize;
         FlowFieldUtilities.MinAgentSize = 0;
         FlowFieldUtilities.MaxAgentSize = startInputs.MaxAgentRadius;
-        FlowFieldUtilities.LOSRange = LineOfSightRange;
+        FlowFieldUtilities.LOSRange = startInputs.LineOfSightRange;
         FlowFieldUtilities.FieldMinXIncluding = startInputs.FieldStartPositionXZ.x + 0.01f;
         FlowFieldUtilities.FieldMinYIncluding = startInputs.FieldStartPositionXZ.y + 0.01f;
         FlowFieldUtilities.FieldMaxXExcluding = startInputs.FieldStartPositionXZ.x + FlowFieldUtilities.FieldColAmount * FlowFieldUtilities.TileSize - 0.01f;

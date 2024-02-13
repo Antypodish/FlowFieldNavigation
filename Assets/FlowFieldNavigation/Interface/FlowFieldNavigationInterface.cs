@@ -104,31 +104,38 @@ public struct SimulationStartParametersStandard
     internal FlowFieldSurface[] NavigationSurfaces;
     internal FlowFieldStaticObstacle[] StaticObstacles;
     internal float BaseAgentSpatialGridSize;
+    internal float BaseTriangleSpatialGridSize;
     internal float MaxSurfaceHeightDifference;
     internal float TileSize;
     internal float MaxWalkableHeight;
     internal float VerticalVoxelSize;
     internal float MaxAgentRadius;
+    internal int LineOfSightRange;
     internal Vector2 FieldStartPositionXZ;
     internal Vector2 FieldEndPositionXZ;
 
     public SimulationStartParametersStandard(FlowFieldSurface[] navigationSurfaces,
         FlowFieldStaticObstacle[] staticObstacles,
         float baseAgentSpatialGridSize,
+        float baseTriangleSpatialGridSize,
         float maxAgentRadius,
         float maxSurfaceHeightDifference,
         float tileSize,
         float verticalVoxelSize,
+        int lineOfSightRange,
         float maxWalkableHeight = float.MaxValue)
     {
         NavigationSurfaces = navigationSurfaces;
         StaticObstacles = staticObstacles;
-        BaseAgentSpatialGridSize = baseAgentSpatialGridSize;
-        MaxSurfaceHeightDifference = maxSurfaceHeightDifference;
-        TileSize = tileSize;
+        BaseAgentSpatialGridSize = Mathf.Max(baseAgentSpatialGridSize, 0.1f);
+        BaseTriangleSpatialGridSize = Mathf.Max(baseTriangleSpatialGridSize, 0.1f);
+        VerticalVoxelSize = Mathf.Max(verticalVoxelSize, 0.01f);
+        MaxSurfaceHeightDifference = Mathf.Max(maxSurfaceHeightDifference, VerticalVoxelSize);
+        TileSize = Mathf.Max(tileSize, 0.25f);
         MaxWalkableHeight = maxWalkableHeight;
-        VerticalVoxelSize = verticalVoxelSize;
-        MaxAgentRadius = maxAgentRadius;
+        MaxAgentRadius = Mathf.Max(maxAgentRadius, 0.2f);
+        LineOfSightRange = Mathf.Max(lineOfSightRange, 0);
+        
         FieldStartPositionXZ = new Vector2(float.MinValue, float.MinValue);
         FieldEndPositionXZ = new Vector2(float.MaxValue, float.MaxValue);
     }
