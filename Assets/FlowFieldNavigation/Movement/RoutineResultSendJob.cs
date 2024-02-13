@@ -20,6 +20,7 @@ struct RoutineResultSendJob : IJob
             int hashedIndex = NormalToHashed[i];
             AgentMovementData movementData = MovementDataArray[hashedIndex];
             RoutineResult result = RoutineResultArray[hashedIndex];
+            AgentStatus newAgentStatus = AgentDestinationReachedArray[i] ? ~(~agentData.Status | AgentStatus.Moving) : agentData.Status;
             agentData.Direction3 = result.NewDirection3;
             agentData.DesiredDirection = movementData.DesiredDirection;
             agentData.Direction = result.NewDirection;
@@ -28,7 +29,7 @@ struct RoutineResultSendJob : IJob
             agentData.MovingAvoidance = result.NewMovingAvoidance;
             agentData.SplitInfo = result.NewSplitInfo;
             agentData.SplitInterval = result.NewSplitInterval;
-            agentData.Status = AgentDestinationReachedArray[i] ? 0 : agentData.Status;
+            agentData.Status = newAgentStatus;
             AgentDataArray[i] = agentData;
         }
     }
