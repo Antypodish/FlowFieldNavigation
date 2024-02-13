@@ -59,4 +59,9 @@ public class FlowFieldAgent : MonoBehaviour
         if (_pathfindingManager == null) { return; }
         _pathfindingManager.Interface.SetSpeed(this, speed);
     }
+    public Vector3 GetCurrentDirection()
+    {
+        if(_pathfindingManager == null) { return Vector3.zero; }
+        return _pathfindingManager.Interface.GetCurrentDirection(this);
+    }
 }

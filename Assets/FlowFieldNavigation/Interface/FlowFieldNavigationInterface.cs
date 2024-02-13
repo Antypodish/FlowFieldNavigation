@@ -2,6 +2,7 @@
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Collections;
 using UnityEngine;
+using static Codice.Client.Common.WebApi.WebApiEndpoints;
 
 public class FlowFieldNavigationInterface
 {
@@ -97,6 +98,14 @@ public class FlowFieldNavigationInterface
         if (agent.AgentDataIndex == -1) { return 0; }
         
         return _pathfindingManager.AgentDataContainer.AgentDataList[agentDataIndex].Status;
+    }
+    public Vector3 GetCurrentDirection(FlowFieldAgent agent)
+    {
+        if (!_pathfindingManager.SimulationStarted) { return Vector3.zero; }
+        int agentDataIndex = agent.AgentDataIndex;
+        if (agent.AgentDataIndex == -1) { return Vector3.zero; }
+
+        return _pathfindingManager.AgentDataContainer.AgentDataList[agentDataIndex].DirectionWithHeigth;
     }
     public int GetPathIndex(int agentIndex)
     {
