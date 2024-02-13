@@ -150,12 +150,12 @@ internal class MovementManager
             SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
             SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
             TileSize = FlowFieldUtilities.TileSize,
-            SeperationMultiplier = BoidController.Instance.SeperationMultiplier,
-            SeperationRangeAddition = BoidController.Instance.SeperationRangeAddition,
-            SeekMultiplier = BoidController.Instance.SeekMultiplier,
-            AlignmentMultiplier = BoidController.Instance.AlignmentMultiplier,
-            AlignmentRangeAddition = BoidController.Instance.AlignmentRangeAddition,
-            MovingAvoidanceRangeAddition = BoidController.Instance.MovingAvoidanceRangeAddition,
+            SeperationMultiplier = FlowFieldBoidUtilities.SeperationMultiplier,
+            SeperationRangeAddition = FlowFieldBoidUtilities.SeperationRangeAddition,
+            SeekMultiplier = FlowFieldBoidUtilities.SeekMultiplier,
+            AlignmentMultiplier = FlowFieldBoidUtilities.AlignmentMultiplier,
+            AlignmentRangeAddition = FlowFieldBoidUtilities.AlignmentRangeAddition,
+            MovingAvoidanceRangeAddition = FlowFieldBoidUtilities.MovingAvoidanceRangeAddition,
             BaseSpatialGridSize = FlowFieldUtilities.BaseAgentSpatialGridSize,
             FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
             FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
@@ -205,7 +205,7 @@ internal class MovementManager
                 FieldGridStartPosition = FlowFieldUtilities.FieldGridStartPosition,
             },
             RoutineResultArray = RoutineResults,
-            SeperationRangeAddition = BoidController.Instance.SeperationRangeAddition,
+            SeperationRangeAddition = FlowFieldBoidUtilities.SeperationRangeAddition,
         };
         JobHandle tensionHandle = tensionResJob.Schedule(colResHandle);
 

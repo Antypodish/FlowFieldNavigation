@@ -26,13 +26,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 194451664}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1284591848226207641}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &194451666
 MeshFilter:
@@ -50,9 +50,17 @@ MeshCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 194451664}
   m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_IsTrigger: 0
+  m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 4
+  serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 0}
@@ -122,6 +130,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1284591848226207636}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
@@ -129,7 +138,6 @@ Transform:
   m_Children:
   - {fileID: 194451665}
   m_Father: {fileID: 0}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1284591848226207637
 MonoBehaviour:
@@ -145,9 +153,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _fieldMeshCollider: {fileID: 194451667}
   _fieldMeshFilter: {fileID: 194451666}
-  _resolution: 25
+  _pathfindingManager: {fileID: 0}
+  _unwalkabilityResolution: 15
+  _heightNoiseResolution: 100
+  MaxHeight: 20
   _simulationState: 0
   _obstacleMat: {fileID: 2100000, guid: 7b47e3fc45da63945bb1a2b1d0d15c32, type: 2}
+  _fieldMat: {fileID: 2100000, guid: 43512bca82141e64fa00008910c03dfb, type: 2}
   TileSize: 1
-  RowAmount: 1000
-  ColumnAmount: 1000
+  RowAmount: 500
+  ColumnAmount: 500
+  RandomHeights: 1

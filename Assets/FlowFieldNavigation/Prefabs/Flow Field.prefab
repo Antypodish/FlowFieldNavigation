@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 8734084087089525697}
   - component: {fileID: 7249324459304311081}
-  - component: {fileID: 2062550143246277084}
   m_Layer: 0
   m_Name: Flow Field
   m_TagString: Untagged
@@ -45,23 +44,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0742960d70d14054dab12a8a161a44fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  LineOfSightRange: 0
-  _baseTriangleSpatialGridSize: 0
---- !u!114 &2062550143246277084
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8734084087089525702}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d6d535ca213de0d4db2061cf0a22b48d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  SeperationMultiplier: 15
-  SeperationRangeAddition: 0.2
-  SeekMultiplier: 0.1
-  AlignmentMultiplier: 0.95
-  AlignmentRangeAddition: 3
-  MovingAvoidanceRangeAddition: 0.05
+  LineOfSightRange: 30
+  _baseTriangleSpatialGridSize: 0.25

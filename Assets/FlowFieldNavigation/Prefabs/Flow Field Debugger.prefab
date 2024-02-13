@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 5797102840990353135}
   - component: {fileID: 6271735691019985205}
   - component: {fileID: 1101308310810593578}
-  m_Layer: 6
+  m_Layer: 0
   m_Name: Flow Field Debugger
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -48,19 +48,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _pathfindingManager: {fileID: 0}
   _cameraToOverlayOnTopOf: {fileID: 0}
-  _debuggingEnabled: 1
+  _debuggingEnabled: 0
   AgentToDebug: {fileID: 0}
-  _costFieldOffset: 0
+  _costFieldOffset: 1
+  _debugTiles: 0
   _costField: 0
-  _sectors: 1
-  _windows: 0
+  _sectors: 0
   _portals: 0
-  _portalIslands: 0
-  _sectorIslands: 0
+  _islands: 0
   _portalErrorDetection: 0
   _meshGridIndex: 0
   _debugHeightMesh: 0
-  _debugTrianglesAtClickedTile: 0
   _debugGridBorders: 0
   _debugDestination: 0
   _debugPortalTraversalMarks: 0
@@ -68,21 +66,17 @@ MonoBehaviour:
   _debugPortalSequence: 0
   _debugPickedSectors: 0
   _debugIntegrationField: 0
-  _debugLOSBlocks: 0
   _debugFlowField: 0
-  _debugActiveWaveFronts: 0
   _debugDynamicAreaIntegration: 0
   _debugDynamicAreaFlow: 0
   _debugAgentDirections: 0
   _debugAgentsHoldingGround: 0
-  _debugAgentSeperationRadius: 1
+  _debugAgentSeperationRadius: 0
   _debugAvoidanceDirections: 0
-  _debugAgentPathIndicies: 0
   _gridIndex: 0
   _debugSpatialHashGrid: 0
   _debugBorders: 0
   _debugAroundAgent: 0
-  _checkRange: 2
 --- !u!20 &6271735691019985205
 Camera:
   m_ObjectHideFlags: 0
