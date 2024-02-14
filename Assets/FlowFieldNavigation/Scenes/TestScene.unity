@@ -222,7 +222,7 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: m_Enabled
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
@@ -534,8 +534,38 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 5442464775926404439, guid: 5e3867b8afbc0bb49a0027ab49965980,
         type: 3}
+      propertyPath: TileSize
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5442464775926404439, guid: 5e3867b8afbc0bb49a0027ab49965980,
+        type: 3}
       propertyPath: m_Enabled
-      value: 0
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5442464775926404439, guid: 5e3867b8afbc0bb49a0027ab49965980,
+        type: 3}
+      propertyPath: LineOfSightRange
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 5442464775926404439, guid: 5e3867b8afbc0bb49a0027ab49965980,
+        type: 3}
+      propertyPath: VerticalVoxelSize
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5442464775926404439, guid: 5e3867b8afbc0bb49a0027ab49965980,
+        type: 3}
+      propertyPath: BaseAgentSpatialGridSize
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 5442464775926404439, guid: 5e3867b8afbc0bb49a0027ab49965980,
+        type: 3}
+      propertyPath: MaxSurfaceHeightDifference
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5442464775926404439, guid: 5e3867b8afbc0bb49a0027ab49965980,
+        type: 3}
+      propertyPath: BaseTriangleSpatialGridSize
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 8734084087089525697, guid: 5e3867b8afbc0bb49a0027ab49965980,
         type: 3}
@@ -696,6 +726,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
+      propertyPath: _costField
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
+      propertyPath: _debugTiles
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
         type: 3}

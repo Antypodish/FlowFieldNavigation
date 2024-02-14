@@ -6,7 +6,7 @@ using Unity.Mathematics;
 [BurstCompile]
 internal struct TriangleSlopeExclusionJob : IJob
 {
-    const float THRESHOLD = 0.2f;
+    const float THRESHOLD = 0.4f;
     [ReadOnly] internal NativeArray<int> Triangles;
     [ReadOnly] internal NativeArray<float3> Verticies;
     [WriteOnly] internal NativeList<int> SlopeExcludedTriangles;

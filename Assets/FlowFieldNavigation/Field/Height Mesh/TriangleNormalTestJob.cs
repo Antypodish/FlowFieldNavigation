@@ -28,6 +28,7 @@ internal struct TriangleNormalTestJob : IJob
             float3 vertex3 = InputVertecies[vertIndex3];
 
             float3 normal = math.cross(vertex2 - vertex1, vertex3 - vertex1);
+            normal = math.normalizesafe(normal);
             if(math.dot(normal, UpDirection) > 0.001f)
             {
                 OutputTriangles.Add(vertIndex1);
