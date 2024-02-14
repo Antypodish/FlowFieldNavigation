@@ -1,6 +1,6 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
     <ui:VisualElement name="MainElement" style="flex-grow: 1; align-items: auto; justify-content: space-between; flex-direction: row-reverse;">
-        <ui:VisualElement name="RightAligner" style="background-color: rgba(0, 0, 0, 0); width: 300px; height: 100%; border-left-color: rgba(0, 0, 0, 0); border-right-color: rgba(0, 0, 0, 0); border-top-color: rgba(0, 0, 0, 0); border-bottom-color: rgba(0, 0, 0, 0); border-left-width: 3px; border-right-width: 3px; border-top-width: 3px; border-bottom-width: 3px;">
+        <ui:VisualElement name="RightAligner" style="background-color: rgba(0, 0, 0, 0); width: 353px; height: 100%; border-left-color: rgba(0, 0, 0, 0); border-right-color: rgba(0, 0, 0, 0); border-top-color: rgba(0, 0, 0, 0); border-bottom-color: rgba(0, 0, 0, 0); border-left-width: 3px; border-right-width: 3px; border-top-width: 3px; border-bottom-width: 3px;">
             <ui:VisualElement name="TogglePanel" style="height: 388px; width: 100%; background-color: rgb(72, 60, 60); border-left-width: 3px; border-right-width: 3px; border-top-width: 3px; border-bottom-width: 3px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0);">
                 <ui:VisualElement name="AgentCounter" style="height: 50px; width: 100%; flex-direction: row; align-items: center;">
                     <ui:Label text="Agent Count:" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255);" />
@@ -14,6 +14,7 @@
                 <ui:Label text="Press &apos;H&apos; to make agents Hold Ground" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255);" />
                 <ui:Label text="Hold &apos;LShift&apos; to force ground destination" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255);" />
                 <ui:Label text="Press &apos;Delete&apos; to delete agents" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255);" />
+                <ui:Label text="Press &apos;Scroll Wheel&apos; to drag selected agent around" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255);" />
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

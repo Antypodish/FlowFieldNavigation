@@ -221,6 +221,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
+        type: 3}
       propertyPath: ColumnAmount
       value: 500
       objectReference: {fileID: 0}
@@ -527,6 +532,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 5442464775926404439, guid: 5e3867b8afbc0bb49a0027ab49965980,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8734084087089525697, guid: 5e3867b8afbc0bb49a0027ab49965980,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -689,9 +699,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
         type: 3}
+      propertyPath: _debugFlowField
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
       propertyPath: _navigationManager
       value: 
       objectReference: {fileID: 1328932016}
+    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
+      propertyPath: _debugPickedSectors
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
         type: 3}
       propertyPath: _cameraToOverlayOnTopOf
@@ -813,7 +833,7 @@ SceneRoots:
   - {fileID: 786654712}
   - {fileID: 230931690}
   - {fileID: 371105075}
+  - {fileID: 5836007237000737966}
   - {fileID: 1309928473}
   - {fileID: 1328932015}
   - {fileID: 1067293970754261100}
-  - {fileID: 5836007237000737966}

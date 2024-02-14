@@ -3,6 +3,8 @@ using Unity.Jobs;
 using UnityEngine;
 using Unity.Mathematics;
 using System.Collections.Generic;
+using System.Linq;
+
 internal class SectorDebugMeshBuilder
 {
     FlowFieldNavigationManager _navigationManager;
@@ -50,10 +52,13 @@ internal class SectorDebugMeshBuilder
                     Trigs = trigs,
                 };
                 tileMeshCalculation.Schedule().Complete();
-                Mesh mesh = CreateMesh(verts, trigs);
-                _debugMeshes.Add(mesh);
-                verts.Dispose();
-                trigs.Dispose();
+                if (verts.Length >= 3)
+                {
+                    Mesh mesh = CreateMesh(verts, trigs);
+                    _debugMeshes.Add(mesh);
+                    verts.Dispose();
+                    trigs.Dispose();
+                }
             }
         }
     }

@@ -96,11 +96,14 @@ internal class TileIslandDebugMeshBuilder
                     Trigs = trigs,
                 };
                 meshBuildJob.Schedule().Complete();
-                Mesh mesh = CreateMesh(verts.AsArray(), trigs.AsArray());
-                _debugMeshes.Add(mesh);
-                _debugMeshColorIndicies.Add(i);
-                verts.Clear();
-                trigs.Clear();
+                if (verts.Length >= 3)
+                {
+                    Mesh mesh = CreateMesh(verts.AsArray(), trigs.AsArray());
+                    _debugMeshes.Add(mesh);
+                    _debugMeshColorIndicies.Add(i);
+                    verts.Clear();
+                    trigs.Clear();
+                }
             }
         }
         verts.Dispose();

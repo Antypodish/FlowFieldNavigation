@@ -64,10 +64,13 @@ internal class GenericDebugTileMeshBuilder
                     Trigs = trigs,
                 };
                 tileMeshCalculation.Schedule().Complete();
-                Mesh mesh = CreateMesh(verts, trigs);
-                _debugMeshes.Add(mesh);
-                verts.Dispose();
-                trigs.Dispose();
+                if(verts.Length >= 3)
+                {
+                    Mesh mesh = CreateMesh(verts, trigs);
+                    _debugMeshes.Add(mesh);
+                    verts.Dispose();
+                    trigs.Dispose();
+                }
             }
         }
     }

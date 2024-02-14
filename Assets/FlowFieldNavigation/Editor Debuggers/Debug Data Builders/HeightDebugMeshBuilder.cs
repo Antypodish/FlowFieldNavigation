@@ -42,10 +42,13 @@ internal class HeightDebugMeshBuilder
                 Trigs = trigs,
             };
             debugMeshBuild.Schedule().Complete();
-            Mesh mesh = CreateMesh(verts.AsArray(), trigs.AsArray());
-            _debugMeshes.Add(mesh);
-            verts.Clear();
-            trigs.Clear();
+            if(verts.Length >= 3)
+            {
+                Mesh mesh = CreateMesh(verts.AsArray(), trigs.AsArray());
+                _debugMeshes.Add(mesh);
+                verts.Clear();
+                trigs.Clear();
+            }
         }
         verts.Dispose();
         trigs.Dispose();
