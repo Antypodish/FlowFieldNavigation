@@ -9,15 +9,15 @@ using UnityEngine;
 using Unity.Mathematics;
 internal class PortalDebugMeshBuilder
 {
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
     List<Mesh> _debugMeshes;
     bool _isCreated;
     uint _lastFieldState;
     int _lastOffset;
 
-    internal PortalDebugMeshBuilder(PathfindingManager pathfindingManager)
+    internal PortalDebugMeshBuilder(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
+        _navigationManager = navigationManager;
         _isCreated = false;
         _debugMeshes = new List<Mesh>();
         _lastFieldState = 0;
@@ -25,7 +25,7 @@ internal class PortalDebugMeshBuilder
     }
     internal List<Mesh> GetDebugMeshes(int offset)
     {
-        uint curFieldState = _pathfindingManager.GetFieldState();
+        uint curFieldState = _navigationManager.GetFieldState();
         if (!_isCreated || _lastOffset != offset || _lastFieldState != curFieldState)
         {
             _lastOffset = offset;
@@ -39,8 +39,8 @@ internal class PortalDebugMeshBuilder
         _isCreated = true;
         _debugMeshes.Clear();
         float3 portalDebugPrimitiveSize = new float3(0.25f, 0.25f, 0.25f);
-        NativeArray<WindowNode> windowNodes = _pathfindingManager.FieldDataContainer.GetFieldGraphWithOffset(offset).WindowNodes;
-        NativeArray<PortalNode> portalNodes = _pathfindingManager.FieldDataContainer.GetFieldGraphWithOffset(offset).PortalNodes;
+        NativeArray<WindowNode> windowNodes = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(offset).WindowNodes;
+        NativeArray<PortalNode> portalNodes = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(offset).PortalNodes;
         NativeList<int> alivePortals = new NativeList<int>(Allocator.TempJob);
         AlivePortalCalculationJob alivePortalJob = new AlivePortalCalculationJob()
         {
@@ -64,8 +64,8 @@ internal class PortalDebugMeshBuilder
             {
                 FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
                 TileSize = FlowFieldUtilities.TileSize,
-                TriangleSpatialHashGrid = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
-                HeightMeshVerts = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray(),
+                TriangleSpatialHashGrid = _navigationManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
+                HeightMeshVerts = _navigationManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray(),
                 PortalNodes = portalNodes,
                 AlivePortalIndicies = alivePortalSlice,
                 PortalDebugPrimitiveSize = portalDebugPrimitiveSize,

@@ -12,13 +12,13 @@ using UnityEngine;
 internal class EditorTileIslandDebugger
 {
     TileIslandDebugMeshBuilder _dubugMeshBuilder;
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
     Color[] _colors;
 
-    internal EditorTileIslandDebugger(PathfindingManager pathfindingManager)
+    internal EditorTileIslandDebugger(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
-        _dubugMeshBuilder = new TileIslandDebugMeshBuilder(pathfindingManager);
+        _navigationManager = navigationManager;
+        _dubugMeshBuilder = new TileIslandDebugMeshBuilder(navigationManager);
         _colors = new Color[]{
             new Color(1,0,0),
             new Color(0,1,0),

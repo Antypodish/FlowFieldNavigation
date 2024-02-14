@@ -2,17 +2,17 @@
 using Unity.Jobs;
 internal class AgentStatChangeSystem
 {
-    PathfindingManager _pathfindingManager;
-    internal AgentStatChangeSystem(PathfindingManager pathfindingManager)
+    FlowFieldNavigationManager _navigationManager;
+    internal AgentStatChangeSystem(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
+        _navigationManager = navigationManager;
     }
 
     public void SetAgentsHoldGround(NativeArray<int> agentIndiciesToHoldGround)
     {
         SetAgentHoldGroundJob holdGroundJob = new SetAgentHoldGroundJob()
         {
-            AgentDataArray = _pathfindingManager.AgentDataContainer.AgentDataList.AsArray(),
+            AgentDataArray = _navigationManager.AgentDataContainer.AgentDataList.AsArray(),
             AgentIndiciesToHoldGround = agentIndiciesToHoldGround,
         };
         holdGroundJob.Schedule().Complete();
@@ -21,7 +21,7 @@ internal class AgentStatChangeSystem
     {
         AgentStopJob holdGroundJob = new AgentStopJob()
         {
-            AgentDataArray = _pathfindingManager.AgentDataContainer.AgentDataList.AsArray(),
+            AgentDataArray = _navigationManager.AgentDataContainer.AgentDataList.AsArray(),
             AgentIndiciesToStop = agentIndiciesToStop,
         };
         holdGroundJob.Schedule().Complete();
@@ -30,7 +30,7 @@ internal class AgentStatChangeSystem
     {
         AgentSpeedSetJob setSpeedJob = new AgentSpeedSetJob()
         {
-            AgentDataArray = _pathfindingManager.AgentDataContainer.AgentDataList.AsArray(),
+            AgentDataArray = _navigationManager.AgentDataContainer.AgentDataList.AsArray(),
             SetSpeedRequests = setSpeedRequests,
         };
         setSpeedJob.Schedule().Complete();

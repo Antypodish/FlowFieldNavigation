@@ -6,14 +6,14 @@ using Unity.Mathematics;
 
 internal class CostFieldDebugMeshBuilder
 {
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
     bool _isCreated;
     List<Mesh> _debugMeshes;
     uint _lastFieldState;
     int _lastOffset;
-    internal CostFieldDebugMeshBuilder(PathfindingManager pathfindingManager)
+    internal CostFieldDebugMeshBuilder(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
+        _navigationManager = navigationManager;
         _debugMeshes = new List<Mesh>();
         _isCreated = false;
         _lastFieldState = 0;
@@ -21,7 +21,7 @@ internal class CostFieldDebugMeshBuilder
     }
     internal List<Mesh> GetDebugMesh(int offset)
     {
-        uint curFieldState = _pathfindingManager.GetFieldState();
+        uint curFieldState = _navigationManager.GetFieldState();
         if (!_isCreated || _lastOffset != offset || _lastFieldState != curFieldState)
         {
             _lastOffset = offset;
@@ -38,7 +38,7 @@ internal class CostFieldDebugMeshBuilder
         int fieldRowAmount = FlowFieldUtilities.FieldRowAmount;
         const int maxRowEachMesh = 100;
         const int maxColEachMesh = 100;
-        NativeArray<byte> costs = _pathfindingManager.FieldDataContainer.GetCostFieldWithOffset(offset).Costs;
+        NativeArray<byte> costs = _navigationManager.FieldDataContainer.GetCostFieldWithOffset(offset).Costs;
         for (int r = 0; r < fieldRowAmount; r += maxRowEachMesh)
         {
             for (int c = 0; c < fieldColAmount; c += maxColEachMesh)
@@ -59,8 +59,8 @@ internal class CostFieldDebugMeshBuilder
                     StartFieldIndex = startIndex,
                     EndFieldIndex = endIndex,
                     Costs = costs,
-                    TriangleSpatialHashGrid = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
-                    HeightMeshVerts = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray(),
+                    TriangleSpatialHashGrid = _navigationManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
+                    HeightMeshVerts = _navigationManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray(),
                     Trigs = trigs,
                     Verts = verts,
                 };

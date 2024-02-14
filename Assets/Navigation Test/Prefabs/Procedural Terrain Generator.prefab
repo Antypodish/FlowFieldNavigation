@@ -153,14 +153,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _fieldMeshCollider: {fileID: 194451667}
   _fieldMeshFilter: {fileID: 194451666}
-  _pathfindingManager: {fileID: 0}
-  _unwalkabilityResolution: 15
+  _navigationManager: {fileID: 0}
+  _unwalkabilityResolution: 15.9
   _heightNoiseResolution: 100
   MaxHeight: 20
   _simulationState: 0
   _obstacleMat: {fileID: 2100000, guid: 7b47e3fc45da63945bb1a2b1d0d15c32, type: 2}
   _fieldMat: {fileID: 2100000, guid: 43512bca82141e64fa00008910c03dfb, type: 2}
   TileSize: 1
-  RowAmount: 500
-  ColumnAmount: 500
-  RandomHeights: 1
+  RowAmount: 250
+  ColumnAmount: 250
+  RandomHeights: 0
+  DisableTerrainGeneration: 0

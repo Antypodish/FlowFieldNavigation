@@ -5,12 +5,12 @@ using System.Collections.Generic;
 using UnityEngine;
 internal class EditorSectorDebugger
 {
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
     SectorDebugMeshBuilder _sectorDebugMeshContainer;
-    internal EditorSectorDebugger(PathfindingManager pathfindingManager)
+    internal EditorSectorDebugger(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
-        _sectorDebugMeshContainer = new SectorDebugMeshBuilder(pathfindingManager);
+        _navigationManager = navigationManager;
+        _sectorDebugMeshContainer = new SectorDebugMeshBuilder(navigationManager);
     }
 
     internal void DebugSectors()

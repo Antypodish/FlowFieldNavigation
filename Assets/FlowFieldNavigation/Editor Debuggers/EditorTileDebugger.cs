@@ -4,9 +4,9 @@ using System.Diagnostics;
 internal class EditorTileDebugger
 {
     TileDebugMeshBuilder _tileDebugMeshContainer;
-    internal EditorTileDebugger(PathfindingManager pathfindingManager)
+    internal EditorTileDebugger(FlowFieldNavigationManager navigationManager)
     {
-        _tileDebugMeshContainer = new TileDebugMeshBuilder(pathfindingManager);
+        _tileDebugMeshContainer = new TileDebugMeshBuilder(navigationManager);
     }
     public void Debug()
     {

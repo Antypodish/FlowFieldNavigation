@@ -5,12 +5,12 @@ using Unity.Mathematics;
 using System.Collections.Generic;
 internal class SectorDebugMeshBuilder
 {
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
     List<Mesh> _debugMeshes;
     bool _isCreated;
-    internal SectorDebugMeshBuilder(PathfindingManager pathfindingManager)
+    internal SectorDebugMeshBuilder(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
+        _navigationManager = navigationManager;
         _debugMeshes = new List<Mesh>();
         _isCreated = false;
     }
@@ -42,8 +42,8 @@ internal class SectorDebugMeshBuilder
                 {
                     SectorSize = FlowFieldUtilities.SectorColAmount * FlowFieldUtilities.TileSize,
                     MeshStartPos = FlowFieldUtilities.IndexToStartPos(startTileIndex, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition),
-                    TriangleSpatialHashGrid = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
-                    HeightMeshVerts = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray(),
+                    TriangleSpatialHashGrid = _navigationManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
+                    HeightMeshVerts = _navigationManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray(),
                     MeshColCount = meshColAmount,
                     MeshRowCount = meshRowAmount,
                     Verts = verts,

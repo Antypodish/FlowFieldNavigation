@@ -7,14 +7,14 @@ using System.Collections.Generic;
 using UnityEditor;
 internal class EditorHeightMeshDebugger
 {
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
     HeightDebugMeshBuilder _heightDebugMeshBuilder;
     GenericDebugTileMeshBuilder _genericTileMeshBuilder;
-    internal EditorHeightMeshDebugger(PathfindingManager pathfindingManager)
+    internal EditorHeightMeshDebugger(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
-        _heightDebugMeshBuilder = new HeightDebugMeshBuilder(pathfindingManager);
-        _genericTileMeshBuilder = new GenericDebugTileMeshBuilder(pathfindingManager);
+        _navigationManager = navigationManager;
+        _heightDebugMeshBuilder = new HeightDebugMeshBuilder(navigationManager);
+        _genericTileMeshBuilder = new GenericDebugTileMeshBuilder(navigationManager);
     }
 
     internal void DebugHeightMapMesh()
@@ -29,7 +29,7 @@ internal class EditorHeightMeshDebugger
     internal void DebugBorders(int gridIndex)
     {
         Gizmos.color = Color.black;
-        TriangleSpatialHashGrid triangleHashGrid = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid();
+        TriangleSpatialHashGrid triangleHashGrid = _navigationManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid();
         if (gridIndex < 0 || gridIndex > triangleHashGrid.GetGridCount()) { return; }
         float tileSize = triangleHashGrid.GetGridTileSize(gridIndex);
         int colAmount = triangleHashGrid.GetGridColAmount(gridIndex);

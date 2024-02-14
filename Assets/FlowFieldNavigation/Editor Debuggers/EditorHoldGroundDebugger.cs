@@ -4,17 +4,17 @@ using System.Collections.Generic;
 
 internal class EditorHoldGroundDebugger
 {
-    PathfindingManager _pathfindingManager;
-    internal EditorHoldGroundDebugger(PathfindingManager pathfindingManager)
+    FlowFieldNavigationManager _navigationManager;
+    internal EditorHoldGroundDebugger(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
+        _navigationManager = navigationManager;
     }
 
     internal void Debug()
     {
         Gizmos.color = Color.yellow;
 
-        NativeArray<AgentData> agents = _pathfindingManager.AgentDataContainer.AgentDataList.AsArray();
+        NativeArray<AgentData> agents = _navigationManager.AgentDataContainer.AgentDataList.AsArray();
 
         for(int i = 0; i< agents.Length; i++)
         {            

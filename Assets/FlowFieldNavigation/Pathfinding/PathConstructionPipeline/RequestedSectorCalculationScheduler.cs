@@ -5,17 +5,17 @@ using Unity.Mathematics;
 
 internal class RequestedSectorCalculationScheduler
 {
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
     PathDataContainer _pathContainer;
     FlowCalculationScheduler _flowCalculationScheduler;
     NativeList<PathPipelineInfoWithHandle> ScheduledRequestedSectorCalculations;
 
-    internal RequestedSectorCalculationScheduler(PathfindingManager pathfindingManager, LOSIntegrationScheduler losScheduler)
+    internal RequestedSectorCalculationScheduler(FlowFieldNavigationManager navigationManager, LOSIntegrationScheduler losScheduler)
     {
-        _pathfindingManager = pathfindingManager;
-        _pathContainer = pathfindingManager.PathDataContainer;
+        _navigationManager = navigationManager;
+        _pathContainer = navigationManager.PathDataContainer;
         ScheduledRequestedSectorCalculations = new NativeList<PathPipelineInfoWithHandle>(Allocator.Persistent);
-        _flowCalculationScheduler = new FlowCalculationScheduler(pathfindingManager, losScheduler);
+        _flowCalculationScheduler = new FlowCalculationScheduler(navigationManager, losScheduler);
     }
     internal void DisposeAll()
     {
@@ -30,7 +30,7 @@ internal class RequestedSectorCalculationScheduler
         PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
         PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathInfo.PathIndex];
         UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathInfo.PathIndex];
-        FieldGraph pickedFieldGraph = _pathfindingManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
+        FieldGraph pickedFieldGraph = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
         //SOURCE SECTOR CALCULATION
         SourceSectorCalculationJob sectorCalcJob = new SourceSectorCalculationJob()
         {

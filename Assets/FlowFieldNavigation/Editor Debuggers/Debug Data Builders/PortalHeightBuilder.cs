@@ -3,15 +3,15 @@ using Unity.Mathematics;
 using Unity.Jobs;
 internal class PortalHeightBuilder
 {
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
     NativeList<float> _heights;
     bool _isCreated;
     uint _lastFieldState;
     int _lastOffset;
 
-    internal PortalHeightBuilder(PathfindingManager pathfindingManager)
+    internal PortalHeightBuilder(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
+        _navigationManager = navigationManager;
         _isCreated = false;
         _heights = new NativeList<float>(Allocator.Persistent);
         _lastFieldState = 0;
@@ -19,7 +19,7 @@ internal class PortalHeightBuilder
     }
     internal NativeArray<float> GetPortalHeights(int offset)
     {
-        uint curFieldState = _pathfindingManager.GetFieldState();
+        uint curFieldState = _navigationManager.GetFieldState();
         if (!_isCreated || _lastOffset != offset || _lastFieldState != curFieldState)
         {
             _lastOffset = offset;
@@ -36,7 +36,7 @@ internal class PortalHeightBuilder
 
         float tileSize = FlowFieldUtilities.TileSize;
         float2 fieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition;
-        NativeArray<PortalNode> portalNodes = _pathfindingManager.FieldDataContainer.GetFieldGraphWithOffset(offset).PortalNodes;
+        NativeArray<PortalNode> portalNodes = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(offset).PortalNodes;
         NativeArray<float2> portalPositions = new NativeArray<float2>(portalNodes.Length, Allocator.TempJob);
         _heights.Length = portalNodes.Length;
 
@@ -51,8 +51,8 @@ internal class PortalHeightBuilder
 
         PointHeightCalculationJob pointHeight = new PointHeightCalculationJob()
         {
-            TriangleSpatialHashGrid = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
-            HeightMeshVerts = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray(),
+            TriangleSpatialHashGrid = _navigationManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
+            HeightMeshVerts = _navigationManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray(),
             Heights = _heights.AsArray(),
             Points = portalPositions,
         };

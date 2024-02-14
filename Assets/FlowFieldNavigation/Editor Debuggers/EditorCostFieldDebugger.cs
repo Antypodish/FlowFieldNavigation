@@ -11,9 +11,9 @@ internal class EditorCostFieldDebugger
 {
     CostFieldDebugMeshBuilder _costFieldDebugMeshContainer;
 
-    internal EditorCostFieldDebugger(PathfindingManager pathfindingManager)
+    internal EditorCostFieldDebugger(FlowFieldNavigationManager navigationManager)
     {
-        _costFieldDebugMeshContainer = new CostFieldDebugMeshBuilder(pathfindingManager);
+        _costFieldDebugMeshContainer = new CostFieldDebugMeshBuilder(navigationManager);
     }
     internal void DebugCostFieldWithMesh(int offset)
     {

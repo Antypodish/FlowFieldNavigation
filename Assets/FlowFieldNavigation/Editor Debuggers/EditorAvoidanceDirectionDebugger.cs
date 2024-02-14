@@ -3,15 +3,15 @@ using UnityEngine;
 
 internal class EditorAvoidanceDirectionDebugger
 {
-    PathfindingManager _pathfindingManager;
-    internal EditorAvoidanceDirectionDebugger(PathfindingManager pathfindingManager)
+    FlowFieldNavigationManager _navigationManager;
+    internal EditorAvoidanceDirectionDebugger(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
+        _navigationManager = navigationManager;
     }
 
     internal void Debug()
     {
-        NativeArray<AgentData> agents = _pathfindingManager.AgentDataContainer.AgentDataList.AsArray();
+        NativeArray<AgentData> agents = _navigationManager.AgentDataContainer.AgentDataList.AsArray();
 
         for (int i = 0; i < agents.Length; i++)
         {

@@ -4,11 +4,11 @@ using UnityEngine;
 
 internal class EditorAgentGroupDebugger
 {
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
     Color[] _colors;
-    internal EditorAgentGroupDebugger(PathfindingManager pathfindingManager)
+    internal EditorAgentGroupDebugger(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
+        _navigationManager = navigationManager;
 
         _colors = new Color[]{
             new Color(0,0,0),
@@ -24,7 +24,7 @@ internal class EditorAgentGroupDebugger
     internal void OnEnable()
     {
         Gizmos.color = Color.white;
-        List<FlowFieldAgent> agents = _pathfindingManager.AgentDataContainer.Agents;
+        List<FlowFieldAgent> agents = _navigationManager.AgentDataContainer.Agents;
         for (int i = 0; i < agents.Count; i++)
         {
             FlowFieldAgent agent = agents[i];

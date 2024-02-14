@@ -5,18 +5,18 @@ using Unity.Mathematics;
 
 internal class PortalTraversalScheduler
 {
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
     PathDataContainer _pathContainer;
     ActivePortalSubmissionScheduler _activePortalSubmissionScheduler;
     RequestedSectorCalculationScheduler _requestedSectorCalculationScheduler;
 
     NativeList<RequestPipelineInfoWithHandle> ScheduledPortalTraversals;
-    internal PortalTraversalScheduler(PathfindingManager pathfindingManager, RequestedSectorCalculationScheduler requestedSectorCalculationScheduler)
+    internal PortalTraversalScheduler(FlowFieldNavigationManager navigationManager, RequestedSectorCalculationScheduler requestedSectorCalculationScheduler)
     {
         ScheduledPortalTraversals = new NativeList<RequestPipelineInfoWithHandle>(Allocator.Persistent);
-        _pathfindingManager = pathfindingManager;
-        _pathContainer = _pathfindingManager.PathDataContainer;
-        _activePortalSubmissionScheduler = new ActivePortalSubmissionScheduler(pathfindingManager);
+        _navigationManager = navigationManager;
+        _pathContainer = _navigationManager.PathDataContainer;
+        _activePortalSubmissionScheduler = new ActivePortalSubmissionScheduler(navigationManager);
         _requestedSectorCalculationScheduler = requestedSectorCalculationScheduler;
     }
     internal void DisposeAll()
@@ -29,14 +29,14 @@ internal class PortalTraversalScheduler
 
     internal void SchedulePortalTraversalFor(RequestPipelineInfoWithHandle reqInfo, NativeSlice<float2> sources)
     {
-        PathfindingInternalData pathInternalData = _pathfindingManager.PathDataContainer.PathfindingInternalDataList[reqInfo.PathIndex];
+        PathfindingInternalData pathInternalData = _navigationManager.PathDataContainer.PathfindingInternalDataList[reqInfo.PathIndex];
         PathDestinationData destinationData = _pathContainer.PathDestinationDataList[reqInfo.PathIndex];
         PathLocationData locationData = _pathContainer.PathLocationDataList[reqInfo.PathIndex];
         PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[reqInfo.PathIndex];
         UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[reqInfo.PathIndex];
         int2 destinationIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition);
-        CostField pickedCostField = _pathfindingManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset);
-        FieldGraph pickedFieldGraph = _pathfindingManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
+        CostField pickedCostField = _navigationManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset);
+        FieldGraph pickedFieldGraph = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
 
         PortalTraversalReductionJob reductionJob = new PortalTraversalReductionJob()
         {
@@ -58,7 +58,7 @@ internal class PortalTraversalScheduler
             PorPtrs = pickedFieldGraph.PorToPorPtrs,
             SectorNodes = pickedFieldGraph.SectorNodes,
             Costs = pickedCostField.Costs,
-            LocalDirections = _pathfindingManager.FieldDataContainer.GetSectorDirections(),
+            LocalDirections = _navigationManager.FieldDataContainer.GetSectorDirections(),
             SectorToPicked = locationData.SectorToPicked,
             FlowFieldLength = pathInternalData.FlowFieldLength,
             PortalTraversalDataArray = portalTraversalData.PortalTraversalDataArray,

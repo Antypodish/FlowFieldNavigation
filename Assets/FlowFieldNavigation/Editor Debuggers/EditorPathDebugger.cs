@@ -15,15 +15,15 @@ using static UnityEditor.PlayerSettings;
 internal class EditorPathDebugger
 {
     PathDataContainer _pathContainer;
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
     FieldDataContainer _fieldProducer;
     float _tileSize;
 
-    internal EditorPathDebugger(PathfindingManager pathfindingManager)
+    internal EditorPathDebugger(FlowFieldNavigationManager navigationManager)
     {
-        _pathContainer = pathfindingManager.PathDataContainer;
-        _pathfindingManager = pathfindingManager;
-        _fieldProducer = pathfindingManager.FieldDataContainer;
+        _pathContainer = navigationManager.PathDataContainer;
+        _navigationManager = navigationManager;
+        _fieldProducer = navigationManager.FieldDataContainer;
         _tileSize = FlowFieldUtilities.TileSize;
     }
     internal void DebugDynamicAreaIntegration(FlowFieldAgent agent, NativeArray<float> tileCenterHeights)
@@ -34,7 +34,7 @@ internal class EditorPathDebugger
         if(pathIndex == -1) { return; }
 
         PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathIndex];
-        PathLocationData locationData = _pathfindingManager.PathDataContainer.PathLocationDataList[pathIndex];
+        PathLocationData locationData = _navigationManager.PathDataContainer.PathLocationDataList[pathIndex];
         UnsafeList<SectorFlowStart> pickedSectorFlowStarts = locationData.DynamicAreaPickedSectorFlowStarts;
         NativeArray<IntegrationTile> integrationField = internalData.DynamicArea.IntegrationField.AsArray();
         int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
@@ -71,9 +71,9 @@ internal class EditorPathDebugger
         if (pathIndex == -1) { return; }
 
         float yOffset = 0.2f;
-        PathDestinationData destinationData = _pathfindingManager.PathDataContainer.PathDestinationDataList[pathIndex];
-        PathLocationData locationData = _pathfindingManager.PathDataContainer.PathLocationDataList[pathIndex];
-        PathFlowData flowData = _pathfindingManager.PathDataContainer.PathFlowDataList[pathIndex];
+        PathDestinationData destinationData = _navigationManager.PathDataContainer.PathDestinationDataList[pathIndex];
+        PathLocationData locationData = _navigationManager.PathDataContainer.PathLocationDataList[pathIndex];
+        PathFlowData flowData = _navigationManager.PathDataContainer.PathFlowDataList[pathIndex];
         UnsafeList<SectorFlowStart> pickedSectorFlowStarts = locationData.DynamicAreaPickedSectorFlowStarts;
         UnsafeList<FlowData> flowField = flowData.DynamicAreaFlowField;
         Gizmos.color = Color.blue;
@@ -132,7 +132,7 @@ internal class EditorPathDebugger
 
 
         PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathIndex];
-        PathDestinationData destinationData = _pathfindingManager.PathDataContainer.PathDestinationDataList[pathIndex];
+        PathDestinationData destinationData = _navigationManager.PathDataContainer.PathDestinationDataList[pathIndex];
         float tileSize = FlowFieldUtilities.TileSize;
         FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
         NativeArray<PortalNode> portalNodes = fg.PortalNodes;
@@ -170,7 +170,7 @@ internal class EditorPathDebugger
         if (pathIndex == -1) { return; }
 
         PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathIndex];
-        PathDestinationData destinationData = _pathfindingManager.PathDataContainer.PathDestinationDataList[pathIndex];
+        PathDestinationData destinationData = _navigationManager.PathDataContainer.PathDestinationDataList[pathIndex];
         float tileSize = FlowFieldUtilities.TileSize;
         FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
         NativeArray<PortalNode> portalNodes = fg.PortalNodes;
@@ -199,7 +199,7 @@ internal class EditorPathDebugger
         if (pathIndex == -1) { return; }
 
         PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathIndex];
-        PathDestinationData destinationData = _pathfindingManager.PathDataContainer.PathDestinationDataList[pathIndex];
+        PathDestinationData destinationData = _navigationManager.PathDataContainer.PathDestinationDataList[pathIndex];
         FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
         NativeArray<PortalNode> portalNodes = fg.PortalNodes;
         NativeList<ActivePortal> porSeq = portalTraversalData.PortalSequence;
@@ -240,9 +240,9 @@ internal class EditorPathDebugger
         int pathIndex = agent.GetPathIndex();
         if (pathIndex == -1) { return; }
 
-        PathLocationData locationData = _pathfindingManager.PathDataContainer.PathLocationDataList[pathIndex];
-        PathDestinationData destinationData = _pathfindingManager.PathDataContainer.PathDestinationDataList[pathIndex];
-        SectorBitArray sectorBitArray = _pathfindingManager.PathDataContainer.PathSectorBitArrays[pathIndex];
+        PathLocationData locationData = _navigationManager.PathDataContainer.PathLocationDataList[pathIndex];
+        PathDestinationData destinationData = _navigationManager.PathDataContainer.PathDestinationDataList[pathIndex];
+        SectorBitArray sectorBitArray = _navigationManager.PathDataContainer.PathSectorBitArrays[pathIndex];
         Gizmos.color = Color.black;
         FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
         NativeArray<SectorNode> sectorNodes = fg.SectorNodes;
@@ -283,8 +283,8 @@ internal class EditorPathDebugger
 
         PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathIndex];
 
-        PathLocationData locationData = _pathfindingManager.PathDataContainer.PathLocationDataList[pathIndex];
-        PathDestinationData destinationData = _pathfindingManager.PathDataContainer.PathDestinationDataList[pathIndex];
+        PathLocationData locationData = _navigationManager.PathDataContainer.PathLocationDataList[pathIndex];
+        PathDestinationData destinationData = _navigationManager.PathDataContainer.PathDestinationDataList[pathIndex];
         int sectorColAmount = FlowFieldUtilities.SectorColAmount;
         int sectorTileAmount = sectorColAmount * sectorColAmount;
         int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
@@ -319,8 +319,8 @@ internal class EditorPathDebugger
 
         PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathIndex];
 
-        PathLocationData locationData = _pathfindingManager.PathDataContainer.PathLocationDataList[pathIndex];
-        PathDestinationData destinationData = _pathfindingManager.PathDataContainer.PathDestinationDataList[pathIndex];
+        PathLocationData locationData = _navigationManager.PathDataContainer.PathLocationDataList[pathIndex];
+        PathDestinationData destinationData = _navigationManager.PathDataContainer.PathDestinationDataList[pathIndex];
         UnsafeList<int> sectorMarks = locationData.SectorToPicked;
         NativeArray<IntegrationTile> integrationField = internalData.IntegrationField.AsArray();
         int sectorColAmount = FlowFieldUtilities.SectorColAmount;
@@ -361,9 +361,9 @@ internal class EditorPathDebugger
 
         PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathIndex];
 
-        PathDestinationData destinationData = _pathfindingManager.PathDataContainer.PathDestinationDataList[pathIndex];
-        PathLocationData locationData = _pathfindingManager.PathDataContainer.PathLocationDataList[pathIndex];
-        PathFlowData pathFlowData = _pathfindingManager.PathDataContainer.PathFlowDataList[pathIndex];
+        PathDestinationData destinationData = _navigationManager.PathDataContainer.PathDestinationDataList[pathIndex];
+        PathLocationData locationData = _navigationManager.PathDataContainer.PathLocationDataList[pathIndex];
+        PathFlowData pathFlowData = _navigationManager.PathDataContainer.PathFlowDataList[pathIndex];
         float yOffset = 0.2f;
         UnsafeList<int> sectorMarks = locationData.SectorToPicked;
         UnsafeList<FlowData> flowField = pathFlowData.FlowField;
@@ -476,9 +476,9 @@ internal class EditorPathDebugger
         int pathIndex = agent.GetPathIndex();
         if (pathIndex == -1) { return; }
 
-        PathDestinationData destinationData = _pathfindingManager.PathDataContainer.PathDestinationDataList[_pathfindingManager.Interface.GetPathIndex(agent.AgentDataIndex)];
-        NativeArray<float3> heightMeshVerticies = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray();
-        TriangleSpatialHashGrid spatialHashGrid = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid();
+        PathDestinationData destinationData = _navigationManager.PathDataContainer.PathDestinationDataList[_navigationManager.Interface.GetPathIndex(agent.AgentDataIndex)];
+        NativeArray<float3> heightMeshVerticies = _navigationManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray();
+        TriangleSpatialHashGrid spatialHashGrid = _navigationManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid();
         Vector2 destination = destinationData.Destination;
         Vector3 destination3 = new Vector3(destination.x, GetHeight(destination, spatialHashGrid, heightMeshVerticies), destination.y);
         Gizmos.color = Color.blue;

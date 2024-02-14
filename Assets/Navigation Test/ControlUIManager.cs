@@ -4,7 +4,7 @@ using UnityEngine.UIElements;
 
 public class ControlUIManager : MonoBehaviour
 {
-    [SerializeField] PathfindingManager _pathfindingManager;
+    [SerializeField] FlowFieldNavigationManager _navigationManager;
     [SerializeField] AgentSelectionController _agentSelectionController;
     [SerializeField] UIDocument _debugUIDoc;
 
@@ -18,7 +18,7 @@ public class ControlUIManager : MonoBehaviour
     }
     private void Update()
     {
-        int newAgentCount = _pathfindingManager.Interface.GetAgentCount();
+        int newAgentCount = _navigationManager.Interface.GetAgentCount();
         if(newAgentCount != _agentCount)
         {
             _agentCount = newAgentCount;

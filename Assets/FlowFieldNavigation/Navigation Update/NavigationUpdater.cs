@@ -8,17 +8,17 @@ using UnityEngine;
 
 internal class NavigationUpdater
 {
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
     RoutineScheduler _scheduler;
     RequestAccumulator _requestAccumulator;
 
     float _timePassedSinceLastUpdate;
     const float _updateFrequency = 0.02f;
-    internal NavigationUpdater(PathfindingManager pathfindingManager, RequestAccumulator requestAccumulator)
+    internal NavigationUpdater(FlowFieldNavigationManager navigationManager, RequestAccumulator requestAccumulator)
     {
-        _pathfindingManager = pathfindingManager;
+        _navigationManager = navigationManager;
         _requestAccumulator = requestAccumulator;
-        _scheduler = new RoutineScheduler(pathfindingManager);
+        _scheduler = new RoutineScheduler(navigationManager);
     }   
     internal void RoutineUpdate()
     {
@@ -36,13 +36,13 @@ internal class NavigationUpdater
 
             for (int i = 0; i < agentAddRequest.Count; i++)
             {
-                _pathfindingManager.AgentDataContainer.Subscribe(agentAddRequest[i]);
+                _navigationManager.AgentDataContainer.Subscribe(agentAddRequest[i]);
             }
-            _pathfindingManager.AgentStatChangeSystem.SetAgentsHoldGround(agentsToHoldGround.AsArray());
-            _pathfindingManager.AgentStatChangeSystem.SetAgentsStopped(agentsToStop.AsArray());
-            _pathfindingManager.AgentStatChangeSystem.SetAgentSpeed(setSpeedRequests.AsArray());
-            _pathfindingManager.AgentRemovingSystem.RemoveAgents(agentIndiciesToRemove.AsArray());
-            _pathfindingManager.PathDataContainer.Update();
+            _navigationManager.AgentStatChangeSystem.SetAgentsHoldGround(agentsToHoldGround.AsArray());
+            _navigationManager.AgentStatChangeSystem.SetAgentsStopped(agentsToStop.AsArray());
+            _navigationManager.AgentStatChangeSystem.SetAgentSpeed(setSpeedRequests.AsArray());
+            _navigationManager.AgentRemovingSystem.RemoveAgents(agentIndiciesToRemove.AsArray());
+            _navigationManager.PathDataContainer.Update();
 
             _scheduler.Schedule(pathRequests, costEditRequests.AsArray().AsReadOnly());
 

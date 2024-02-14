@@ -5,18 +5,18 @@ using Unity.Mathematics;
 
 internal class AdditionPortalTraversalScheduler
 {
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
     PathDataContainer _pathContainer;
     AdditionActivePortalSubmissionScheduler _additionActivePortalSubmissionScheduler;
     RequestedSectorCalculationScheduler _requestedSectorCalculationScheduler;
     NativeList<PathPipelineInfoWithHandle> ScheduledAdditionPortalTraversals;
 
-    internal AdditionPortalTraversalScheduler(PathfindingManager pathfindingManager, RequestedSectorCalculationScheduler requestedSectorCalculationScheduler)
+    internal AdditionPortalTraversalScheduler(FlowFieldNavigationManager navigationManager, RequestedSectorCalculationScheduler requestedSectorCalculationScheduler)
     {
         ScheduledAdditionPortalTraversals = new NativeList<PathPipelineInfoWithHandle>(Allocator.Persistent);
-        _pathfindingManager = pathfindingManager;
-        _pathContainer = _pathfindingManager.PathDataContainer;
-        _additionActivePortalSubmissionScheduler = new AdditionActivePortalSubmissionScheduler(pathfindingManager);
+        _navigationManager = navigationManager;
+        _pathContainer = _navigationManager.PathDataContainer;
+        _additionActivePortalSubmissionScheduler = new AdditionActivePortalSubmissionScheduler(navigationManager);
         _requestedSectorCalculationScheduler = requestedSectorCalculationScheduler;
     }
     internal void DisposeAll()
@@ -35,7 +35,7 @@ internal class AdditionPortalTraversalScheduler
         portalTraversalData.PathAdditionSequenceBorderStartIndex.Value = portalTraversalData.PortalSequenceBorders.Length - 1;
         portalTraversalData.NewPickedSectorStartIndex.Value = internalData.PickedSectorList.Length;
 
-        FieldGraph pickedFieldGraph = _pathfindingManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
+        FieldGraph pickedFieldGraph = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
 
         PortalNodeAdditionReductionJob reductionJob = new PortalNodeAdditionReductionJob()
         {

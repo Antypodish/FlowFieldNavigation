@@ -5,10 +5,10 @@ using UnityEditor;
 using Unity.Collections.LowLevel.Unsafe;
 internal class EditorNavigationVolumeDebugger
 {
-    PathfindingManager _pathfindingManager;
-    internal EditorNavigationVolumeDebugger(PathfindingManager pathfindingManager)
+    FlowFieldNavigationManager _navigationManager;
+    internal EditorNavigationVolumeDebugger(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
+        _navigationManager = navigationManager;
     }
     /*
     internal void DebugVolumeBoundaries()
@@ -76,7 +76,7 @@ internal class EditorNavigationVolumeDebugger
         int zAxisSectorCount = FlowFieldVolumeUtilities.ZAxisSectorCount;
         float secHorSize = FlowFieldVolumeUtilities.SectorHorizontalSize;
         float secVerSize = FlowFieldVolumeUtilities.SectorVerticalSize;
-        NativeHashMap<int, UnsafeBitArray> volumeBits = _pathfindingManager.FieldDataContainer.NavigationVolumeSystem.SurfaceVolumeBits;
+        NativeHashMap<int, UnsafeBitArray> volumeBits = _navigationManager.FieldDataContainer.NavigationVolumeSystem.SurfaceVolumeBits;
         NativeArray<int> sectors = volumeBits.GetKeyArray(Allocator.Temp);
         for(int i = 0; i < sectors.Length; i++)
         {
@@ -96,7 +96,7 @@ internal class EditorNavigationVolumeDebugger
         int xSecCount = FlowFieldVolumeUtilities.XAxisSectorCount;
         int zSecCount = FlowFieldVolumeUtilities.ZAxisSectorCount;
         float3 volumeStartPos = FlowFieldVolumeUtilities.VolumeStartPos;
-        NativeHashMap<int, UnsafeBitArray> sectorBits = _pathfindingManager.FieldDataContainer.NavigationVolumeSystem.SurfaceVolumeBits;
+        NativeHashMap<int, UnsafeBitArray> sectorBits = _navigationManager.FieldDataContainer.NavigationVolumeSystem.SurfaceVolumeBits;
         NativeHashMap<int, UnsafeBitArray>.Enumerator sectorBitsEnumerator = sectorBits.GetEnumerator();
         while (sectorBitsEnumerator.MoveNext())
         {
@@ -122,7 +122,7 @@ internal class EditorNavigationVolumeDebugger
         int xSecCount = FlowFieldVolumeUtilities.XAxisSectorCount;
         int zSecCount = FlowFieldVolumeUtilities.ZAxisSectorCount;
         float3 volumeStartPos = FlowFieldVolumeUtilities.VolumeStartPos;
-        NativeArray<HeightTile> highestVoxels = _pathfindingManager.FieldDataContainer.NavigationVolumeSystem.HighestVoxelSaveTable;
+        NativeArray<HeightTile> highestVoxels = _navigationManager.FieldDataContainer.NavigationVolumeSystem.HighestVoxelSaveTable;
         for(int i = 0; i < highestVoxels.Length; i++)
         {
             HeightTile heightTile = highestVoxels[i];

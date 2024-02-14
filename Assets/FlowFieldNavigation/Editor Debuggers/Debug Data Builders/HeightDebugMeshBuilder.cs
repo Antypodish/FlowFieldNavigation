@@ -6,13 +6,13 @@ using UnityEngine;
 
 internal class HeightDebugMeshBuilder
 {
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
     List<Mesh> _debugMeshes;
     bool _isCreated;
 
-    internal HeightDebugMeshBuilder(PathfindingManager pathfindingManager)
+    internal HeightDebugMeshBuilder(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
+        _navigationManager = navigationManager;
         _debugMeshes = new List<Mesh>();
         _isCreated = false;
     }
@@ -25,8 +25,8 @@ internal class HeightDebugMeshBuilder
     void CreateTileIslandDebugMesh()
     {
         _isCreated = true;
-        NativeArray<float3> heightMeshVerts = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray();
-        NativeArray<int> heightMeshTrigs = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.Triangles.AsArray();
+        NativeArray<float3> heightMeshVerts = _navigationManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray();
+        NativeArray<int> heightMeshTrigs = _navigationManager.FieldDataContainer.HeightMeshGenerator.Triangles.AsArray();
         const int maxTrigPerMesh = 60000;
         NativeList<Vector3> verts = new NativeList<Vector3>(Allocator.TempJob);
         NativeList<int> trigs = new NativeList<int>(Allocator.TempJob);

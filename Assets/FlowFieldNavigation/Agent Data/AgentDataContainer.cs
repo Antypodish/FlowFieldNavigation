@@ -10,7 +10,7 @@ using UnityEngine.Jobs;
 
 internal class AgentDataContainer
 {
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
 
     internal List<FlowFieldAgent> Agents;
     internal TransformAccessArray AgentTransforms;
@@ -20,9 +20,9 @@ internal class AgentDataContainer
     internal NativeList<int> AgentRequestedPathIndicies;
     internal NativeList<int> AgentNewPathIndicies;
     internal NativeList<int> AgentCurPathIndicies;
-    public AgentDataContainer(PathfindingManager pathfindingManager)
+    public AgentDataContainer(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
+        _navigationManager = navigationManager;
         Agents = new List<FlowFieldAgent>();
         AgentTransforms = new TransformAccessArray(0);
         AgentDataList = new NativeList<AgentData>(Allocator.Persistent);
@@ -52,7 +52,7 @@ internal class AgentDataContainer
     public void Subscribe(FlowFieldAgent agent)
     {
         agent.AgentDataIndex = Agents.Count;
-        agent._pathfindingManager = _pathfindingManager;
+        agent._navigationManager = _navigationManager;
         AgentData data = new AgentData()
         {
             Speed = agent.Speed,

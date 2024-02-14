@@ -6,13 +6,13 @@ using Unity.Collections;
 using System.Diagnostics;
 public class CostEditController
 {
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
     float2 halfSize = new float2(1.5f, 1.5f);
     List<GameObject> obstacles;
     NativeList<int> _obstacleKeys;
-    public CostEditController(PathfindingManager pathfindingManager)
+    public CostEditController(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
+        _navigationManager = navigationManager;
         obstacles = new List<GameObject>();
         _obstacleKeys = new NativeList<int>(Allocator.Persistent);
     }
@@ -33,7 +33,7 @@ public class CostEditController
                     HalfSize = halfSize,
                 };
             }
-            _pathfindingManager.Interface.SetObstacle(obstacleRequestsTemp, _obstacleKeys);
+            _navigationManager.Interface.SetObstacle(obstacleRequestsTemp, _obstacleKeys);
             obstacleRequestsTemp.Dispose();
             GameObject obstacleCube = GameObject.CreatePrimitive(PrimitiveType.Cube);
             obstacleCube.transform.localScale = new Vector3(halfSize.x, 0f, halfSize.y) * 2 + new Vector3(0, 1f, 0);

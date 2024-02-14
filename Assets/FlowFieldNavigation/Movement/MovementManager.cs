@@ -9,7 +9,7 @@ using UnityEngine;
 internal class MovementManager
 {
     AgentDataContainer _agentDataContainer;
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
 
     internal NativeList<AgentMovementData> AgentMovementDataList;
     internal NativeList<float3> AgentPositionChangeBuffer;
@@ -20,10 +20,10 @@ internal class MovementManager
     internal NativeList<float> PathReachDistances;
 
     JobHandle _routineHandle;
-    internal MovementManager(AgentDataContainer agentDataContainer, PathfindingManager pathfindingManager)
+    internal MovementManager(AgentDataContainer agentDataContainer, FlowFieldNavigationManager navigationManager)
     {
         _agentDataContainer = agentDataContainer;
-        _pathfindingManager = pathfindingManager;
+        _navigationManager = navigationManager;
         AgentMovementDataList = new NativeList<AgentMovementData>(_agentDataContainer.Agents.Count, Allocator.Persistent);
         RoutineResults = new NativeList<RoutineResult>(Allocator.Persistent);
         AgentPositionChangeBuffer = new NativeList<float3>(Allocator.Persistent);
@@ -68,14 +68,14 @@ internal class MovementManager
     {
         NativeArray<AgentData> agentDataArray = _agentDataContainer.AgentDataList.AsArray();
         NativeArray<int> agentCurPathIndexArray = _agentDataContainer.AgentCurPathIndicies.AsArray();
-        NativeArray<PathLocationData> exposedPathLocationDataArray = _pathfindingManager.PathDataContainer.ExposedPathLocationData.AsArray();
-        NativeArray<PathFlowData> exposedPathFlowDataArray = _pathfindingManager.PathDataContainer.ExposedPathFlowData.AsArray();
-        NativeArray<float2> exposedPathDestinationArray = _pathfindingManager.PathDataContainer.ExposedPathDestinations.AsArray();
-        NativeArray<int> agentFlockIndexArray = _pathfindingManager.AgentDataContainer.AgentFlockIndicies.AsArray();
-        NativeArray<float> exposedPathReachDistanceCheckRanges = _pathfindingManager.PathDataContainer.ExposedPathReachDistanceCheckRanges.AsArray();
-        NativeArray<int> exposedPathFlockIndicies = _pathfindingManager.PathDataContainer.ExposedPathFlockIndicies.AsArray();
-        NativeArray<PathState> exposedPathStateList = _pathfindingManager.PathDataContainer.ExposedPathStateList.AsArray();
-        NativeArray<bool> exposedPathAgentStopFlagList = _pathfindingManager.PathDataContainer.ExposedPathAgentStopFlagList.AsArray();
+        NativeArray<PathLocationData> exposedPathLocationDataArray = _navigationManager.PathDataContainer.ExposedPathLocationData.AsArray();
+        NativeArray<PathFlowData> exposedPathFlowDataArray = _navigationManager.PathDataContainer.ExposedPathFlowData.AsArray();
+        NativeArray<float2> exposedPathDestinationArray = _navigationManager.PathDataContainer.ExposedPathDestinations.AsArray();
+        NativeArray<int> agentFlockIndexArray = _navigationManager.AgentDataContainer.AgentFlockIndicies.AsArray();
+        NativeArray<float> exposedPathReachDistanceCheckRanges = _navigationManager.PathDataContainer.ExposedPathReachDistanceCheckRanges.AsArray();
+        NativeArray<int> exposedPathFlockIndicies = _navigationManager.PathDataContainer.ExposedPathFlockIndicies.AsArray();
+        NativeArray<PathState> exposedPathStateList = _navigationManager.PathDataContainer.ExposedPathStateList.AsArray();
+        NativeArray<bool> exposedPathAgentStopFlagList = _navigationManager.PathDataContainer.ExposedPathAgentStopFlagList.AsArray();
 
         //CLEAR
         AgentMovementDataList.Clear();
@@ -132,10 +132,10 @@ internal class MovementManager
         //Height Calculation
         AgentHeightCalculationJob heightCalculation = new AgentHeightCalculationJob()
         {
-            TriangleSpatialHashGrid = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
+            TriangleSpatialHashGrid = _navigationManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
             AgentMovementDataArray = AgentMovementDataList.AsArray(),
             AgentPositionChangeArray = AgentPositionChangeBuffer.AsArray(),
-            Verticies = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray(),
+            Verticies = _navigationManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray(),
         };
         JobHandle heightCalculationHandle = heightCalculation.Schedule(agentDataArray.Length, 32, movDataHandle);
 
@@ -248,8 +248,8 @@ internal class MovementManager
 
         AgentDirectionHeightCalculationJob directionHeightJob = new AgentDirectionHeightCalculationJob()
         {
-            TriangleSpatialHashGrid = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
-            Verticies = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray(),
+            TriangleSpatialHashGrid = _navigationManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
+            Verticies = _navigationManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray(),
             AgentMovementDataArray = AgentMovementDataList.AsArray(),
             RoutineResultArray = RoutineResults.AsArray(),
         };
@@ -299,10 +299,10 @@ internal class MovementManager
     }
     internal void SendRoutineResults(float deltaTime)
     {
-        TransformAccessArray agentTransforms = _pathfindingManager.AgentDataContainer.AgentTransforms;
-        NativeList<bool> agentDestinationReachArray = _pathfindingManager.AgentDataContainer.AgentDestinationReachedArray;
-        NativeList<int> agentCurPathIndicies = _pathfindingManager.AgentDataContainer.AgentCurPathIndicies;
-        NativeList<AgentData> agentDataArray = _pathfindingManager.AgentDataContainer.AgentDataList;
+        TransformAccessArray agentTransforms = _navigationManager.AgentDataContainer.AgentTransforms;
+        NativeList<bool> agentDestinationReachArray = _navigationManager.AgentDataContainer.AgentDestinationReachedArray;
+        NativeList<int> agentCurPathIndicies = _navigationManager.AgentDataContainer.AgentCurPathIndicies;
+        NativeList<AgentData> agentDataArray = _navigationManager.AgentDataContainer.AgentDataList;
 
         AgentPositionChangeSendJob posSendJob = new AgentPositionChangeSendJob()
         {

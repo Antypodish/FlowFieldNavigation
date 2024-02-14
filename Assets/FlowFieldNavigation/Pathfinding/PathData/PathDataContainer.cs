@@ -28,9 +28,9 @@ internal class PathDataContainer
 
     FieldDataContainer _fieldProducer;
     PathPreallocator _preallocator;
-    internal PathDataContainer(PathfindingManager pathfindingManager)
+    internal PathDataContainer(FlowFieldNavigationManager navigationManager)
     {
-        _fieldProducer = pathfindingManager.FieldDataContainer;
+        _fieldProducer = navigationManager.FieldDataContainer;
         PathfindingInternalDataList = new List<PathfindingInternalData>(1);
         _preallocator = new PathPreallocator(_fieldProducer, FlowFieldUtilities.SectorTileAmount, FlowFieldUtilities.SectorMatrixTileAmount);
         _removedPathIndicies = new Stack<int>();

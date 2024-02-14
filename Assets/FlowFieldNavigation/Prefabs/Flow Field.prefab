@@ -52,12 +52,12 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8734084087089525702}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 53c0fbb4ea9baa149b27cf5a90439745, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _pathfindingManager: {fileID: 7249324459304311081}
+  _navigationManager: {fileID: 7249324459304311081}
   BaseAgentSpatialGridSize: 0
   BaseTriangleSpatialGridSize: 0
   MaxSurfaceHeightDifference: 0

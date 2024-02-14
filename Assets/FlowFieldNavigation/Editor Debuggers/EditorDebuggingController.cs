@@ -5,7 +5,7 @@ using UnityEngine.Rendering.Universal;
 
 public class EditorDebuggingController : MonoBehaviour
 {
-    [SerializeField] PathfindingManager _pathfindingManager;
+    [SerializeField] FlowFieldNavigationManager _navigationManager;
     [SerializeField] Camera _cameraToOverlayOnTopOf;
     [SerializeField] bool _debuggingEnabled;
     [HideInInspector] public FlowFieldAgent AgentToDebug;
@@ -72,30 +72,30 @@ public class EditorDebuggingController : MonoBehaviour
         _overlayCamera = GetComponent<Camera>();
         _cameraToOverlayOnTopOf.GetComponent<UniversalAdditionalCameraData>().cameraStack.Add(_overlayCamera);
 
-        _sectorDebugger = new EditorSectorDebugger(_pathfindingManager);
-        _portalDebugger = new EditorPortalDebugger(_pathfindingManager);
-        _agentDirectionDebugger = new EditorAgentDirectionDebugger(_pathfindingManager);
-        _costFieldDebugger = new EditorCostFieldDebugger(_pathfindingManager);
-        _holdGroundDebugger = new EditorHoldGroundDebugger(_pathfindingManager);
-        _agentRadiusDebugger = new EditorAgentRadiusDebugger(_pathfindingManager);
-        _avoidanceDirectionDebugger = new EditorAvoidanceDirectionDebugger(_pathfindingManager);
-        _spatialHashGridDebugger = new EditorSpatialHashGridDebugger(_pathfindingManager);
-        _islandDebugger = new EditorTileIslandDebugger(_pathfindingManager);
-        _heightMeshDebugger = new EditorHeightMeshDebugger(_pathfindingManager);
-        _tileDebugger = new EditorTileDebugger(_pathfindingManager);
-        _portalHeightBuilder = new PortalHeightBuilder(_pathfindingManager);
-        _tileCenterHeightBuilder = new TileCenterHeightBuilder(_pathfindingManager);
-        _sectorCornerHeightBuilder = new SectorCornerHeightBuilder(_pathfindingManager);
-        _navVolDebugger = new EditorNavigationVolumeDebugger(_pathfindingManager);
+        _sectorDebugger = new EditorSectorDebugger(_navigationManager);
+        _portalDebugger = new EditorPortalDebugger(_navigationManager);
+        _agentDirectionDebugger = new EditorAgentDirectionDebugger(_navigationManager);
+        _costFieldDebugger = new EditorCostFieldDebugger(_navigationManager);
+        _holdGroundDebugger = new EditorHoldGroundDebugger(_navigationManager);
+        _agentRadiusDebugger = new EditorAgentRadiusDebugger(_navigationManager);
+        _avoidanceDirectionDebugger = new EditorAvoidanceDirectionDebugger(_navigationManager);
+        _spatialHashGridDebugger = new EditorSpatialHashGridDebugger(_navigationManager);
+        _islandDebugger = new EditorTileIslandDebugger(_navigationManager);
+        _heightMeshDebugger = new EditorHeightMeshDebugger(_navigationManager);
+        _tileDebugger = new EditorTileDebugger(_navigationManager);
+        _portalHeightBuilder = new PortalHeightBuilder(_navigationManager);
+        _tileCenterHeightBuilder = new TileCenterHeightBuilder(_navigationManager);
+        _sectorCornerHeightBuilder = new SectorCornerHeightBuilder(_navigationManager);
+        _navVolDebugger = new EditorNavigationVolumeDebugger(_navigationManager);
     }
     private void Update()
     {
-        if(_pathDebugger == null) { _pathDebugger = new EditorPathDebugger(_pathfindingManager); }
+        if(_pathDebugger == null) { _pathDebugger = new EditorPathDebugger(_navigationManager); }
         HandleNewPos();
     }
     private void OnDrawGizmos()
     {
-        if (!_pathfindingManager.SimulationStarted) { return; }
+        if (!_navigationManager.SimulationStarted) { return; }
         FlowFieldUtilities.DebugMode = _debuggingEnabled;
         if (!_debuggingEnabled) { return; }
         _costFieldOffset = Mathf.Min(FlowFieldUtilities.MaxCostFieldOffset, _costFieldOffset);

@@ -6,7 +6,7 @@ using UnityEngine;
 
 internal class RequestAccumulator
 {
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
 
     internal List<FlowFieldAgent> AgentAddRequest;
     internal NativeList<int> AgentIndiciesToRemove;
@@ -15,9 +15,9 @@ internal class RequestAccumulator
     internal NativeList<int> AgentIndiciesToSetHoldGround;
     internal NativeList<int> AgentIndiciesToStop;
     internal NativeList<SetSpeedReq> SetSpeedRequests;
-    internal RequestAccumulator(PathfindingManager pathfindingManager)
+    internal RequestAccumulator(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
+        _navigationManager = navigationManager;
         AgentAddRequest = new List<FlowFieldAgent>();
         AgentIndiciesToRemove = new NativeList<int>(Allocator.Persistent);
         PathRequests = new NativeList<PathRequest>(Allocator.Persistent);
@@ -39,7 +39,7 @@ internal class RequestAccumulator
         int newPathIndex = PathRequests.Length;
         float2 target2d = new float2(target.x, target.z);
         PathRequests.Add(new PathRequest(target2d));
-        _pathfindingManager.AgentDataContainer.SetRequestedPathIndiciesOf(agents, newPathIndex);
+        _navigationManager.AgentDataContainer.SetRequestedPathIndiciesOf(agents, newPathIndex);
     }
     internal void RequestPath(List<FlowFieldAgent> agents, FlowFieldAgent targetAgent)
     {
@@ -47,7 +47,7 @@ internal class RequestAccumulator
         int targetAgentIndex = targetAgent.AgentDataIndex;
         PathRequest request = new PathRequest(targetAgentIndex);
         PathRequests.Add(request);
-        _pathfindingManager.AgentDataContainer.SetRequestedPathIndiciesOf(agents, newPathIndex);
+        _navigationManager.AgentDataContainer.SetRequestedPathIndiciesOf(agents, newPathIndex);
     }
     internal void RequestHoldGround(int agentIndex)
     {
@@ -82,8 +82,8 @@ internal class RequestAccumulator
             CostEditOutput = CostEditRequests,
             ObstacleRequests = obstacleRequests,
             NewObstacleKeyListToAdd = outputListToAddObstacleIndicies,
-            ObstacleList = _pathfindingManager.FieldDataContainer.ObstacleContainer.ObstacleList,
-            RemovedObstacleIndexList = _pathfindingManager.FieldDataContainer.ObstacleContainer.RemovedIndexList,
+            ObstacleList = _navigationManager.FieldDataContainer.ObstacleContainer.ObstacleList,
+            RemovedObstacleIndexList = _navigationManager.FieldDataContainer.ObstacleContainer.RemovedIndexList,
         };
         obstacleToEdit.Schedule().Complete();
     }
@@ -93,8 +93,8 @@ internal class RequestAccumulator
         {
             CostEditOutput = CostEditRequests,
             ObstacleRemovalIndicies = obstacleIndiciesToRemove,
-            ObstacleList = _pathfindingManager.FieldDataContainer.ObstacleContainer.ObstacleList,
-            RemovedObstacleIndexList = _pathfindingManager.FieldDataContainer.ObstacleContainer.RemovedIndexList,
+            ObstacleList = _navigationManager.FieldDataContainer.ObstacleContainer.ObstacleList,
+            RemovedObstacleIndexList = _navigationManager.FieldDataContainer.ObstacleContainer.RemovedIndexList,
         };
         obstacleToEdit.Schedule().Complete();
     }

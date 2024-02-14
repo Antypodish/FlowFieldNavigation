@@ -8,12 +8,12 @@ using Unity.Mathematics;
 using Unity.Jobs;
 internal class SectorCornerHeightBuilder
 {
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
     NativeArray<float> _sectorCornerHeights;
     bool _isCreated;
-    internal SectorCornerHeightBuilder(PathfindingManager pathfindingManager)
+    internal SectorCornerHeightBuilder(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
+        _navigationManager = navigationManager;
         _isCreated = false;
     }
     internal NativeArray<float> GetSectorCornerHeights()
@@ -57,8 +57,8 @@ internal class SectorCornerHeightBuilder
         }
         PointHeightCalculationJob poitnHeights = new PointHeightCalculationJob()
         {
-            TriangleSpatialHashGrid = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
-            HeightMeshVerts = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray(),
+            TriangleSpatialHashGrid = _navigationManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
+            HeightMeshVerts = _navigationManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray(),
             Heights = _sectorCornerHeights,
             Points = sectorCornerPositions,
         };

@@ -3,16 +3,16 @@ using UnityEngine;
 
 internal class EditorAgentDirectionDebugger
 {
-    PathfindingManager _pathfindingManager;
-    internal EditorAgentDirectionDebugger(PathfindingManager pathfindingManager)
+    FlowFieldNavigationManager _navigationManager;
+    internal EditorAgentDirectionDebugger(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
+        _navigationManager = navigationManager;
     }
 
     internal void Debug()
     {
         Gizmos.color = Color.white;
-        NativeArray<AgentData> agentData = _pathfindingManager.AgentDataContainer.AgentDataList.AsArray();
+        NativeArray<AgentData> agentData = _navigationManager.AgentDataContainer.AgentDataList.AsArray();
         for(int i = 0; i < agentData.Length; i++)
         {
             Vector3 pos = agentData[i].Position;

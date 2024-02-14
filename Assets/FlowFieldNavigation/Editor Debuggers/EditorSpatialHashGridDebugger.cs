@@ -6,13 +6,13 @@ using System.Collections.Generic;
 
 internal class EditorSpatialHashGridDebugger
 {
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
     GenericDebugTileMeshBuilder _genericDebugTileMeshBuilder;
     Color[] _colors;
-    internal EditorSpatialHashGridDebugger(PathfindingManager pathfindingManager)
+    internal EditorSpatialHashGridDebugger(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
-        _genericDebugTileMeshBuilder = new GenericDebugTileMeshBuilder(pathfindingManager);
+        _navigationManager = navigationManager;
+        _genericDebugTileMeshBuilder = new GenericDebugTileMeshBuilder(navigationManager);
         _colors = new Color[]
         {
             Color.black,
@@ -29,11 +29,11 @@ internal class EditorSpatialHashGridDebugger
 
     internal void DebugAgent(FlowFieldAgent agent, int gridIndex)
     {
-        NativeArray<UnsafeList<HashTile>> hashGridArray = _pathfindingManager.GetSpatialHashGridArray();
+        NativeArray<UnsafeList<HashTile>> hashGridArray = _navigationManager.GetSpatialHashGridArray();
         if (gridIndex >= hashGridArray.Length || gridIndex < 0) { return; }
         
-        NativeArray<int> normalToHashed = _pathfindingManager.GetNormalToHashed();
-        NativeArray<AgentMovementData> movData = _pathfindingManager.GetAgentMovementData();
+        NativeArray<int> normalToHashed = _navigationManager.GetNormalToHashed();
+        NativeArray<AgentMovementData> movData = _navigationManager.GetAgentMovementData();
         AgentSpatialHashGrid spatialHashGrid = new AgentSpatialHashGrid()
         {
             BaseSpatialGridSize = FlowFieldUtilities.BaseAgentSpatialGridSize,
@@ -65,7 +65,7 @@ internal class EditorSpatialHashGridDebugger
     }
     internal void DebugBorders(int gridIndex)
     {
-        NativeArray<UnsafeList<HashTile>> hashGridArray = _pathfindingManager.GetSpatialHashGridArray();
+        NativeArray<UnsafeList<HashTile>> hashGridArray = _navigationManager.GetSpatialHashGridArray();
         if (gridIndex >= hashGridArray.Length || gridIndex < 0) { return; }
         AgentSpatialHashGrid grid = new AgentSpatialHashGrid()
         {
@@ -89,9 +89,9 @@ internal class EditorSpatialHashGridDebugger
     }
     internal void Debug(int gridIndex)
     {
-        NativeArray<UnsafeList<HashTile>> hashGridArray = _pathfindingManager.GetSpatialHashGridArray();
+        NativeArray<UnsafeList<HashTile>> hashGridArray = _navigationManager.GetSpatialHashGridArray();
         if(gridIndex >= hashGridArray.Length || gridIndex < 0) { return; }
-        NativeArray<AgentMovementData> movData = _pathfindingManager.GetAgentMovementData();
+        NativeArray<AgentMovementData> movData = _navigationManager.GetAgentMovementData();
         UnsafeList<HashTile> pickedGrid = hashGridArray[gridIndex];
 
         for(int i = 0; i < pickedGrid.Length; i++)

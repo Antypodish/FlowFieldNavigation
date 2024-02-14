@@ -5,11 +5,11 @@ using UnityEngine;
 public class AgentFactory
 {
     public GameObject AgentPrefab;
-    PathfindingManager _pathfindingManager;
-    public AgentFactory(GameObject agentPrefab, PathfindingManager pathfindingManager)
+    FlowFieldNavigationManager _navigationManager;
+    public AgentFactory(GameObject agentPrefab, FlowFieldNavigationManager navigationManager)
     {
         AgentPrefab = agentPrefab;
-        _pathfindingManager = pathfindingManager;
+        _navigationManager = navigationManager;
     }
 
     public void AddAgent(Vector3 position)
@@ -18,6 +18,6 @@ public class AgentFactory
         GameObject obj = GameObject.Instantiate(AgentPrefab);
         FlowFieldAgent flowFieldAgentComponent = obj.GetComponent<FlowFieldAgent>();
         obj.transform.position = position;
-        _pathfindingManager.Interface.RequestSubscription(flowFieldAgentComponent);
+        _navigationManager.Interface.RequestSubscription(flowFieldAgentComponent);
     }
 }

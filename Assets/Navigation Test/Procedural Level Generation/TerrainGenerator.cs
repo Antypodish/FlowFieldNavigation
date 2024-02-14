@@ -7,7 +7,7 @@ public class TerrainGenerator : MonoBehaviour
 {
     [SerializeField] MeshCollider _fieldMeshCollider;
     [SerializeField] MeshFilter _fieldMeshFilter;
-    [SerializeField] PathfindingManager _pathfindingManager;
+    [SerializeField] FlowFieldNavigationManager _navigationManager;
     [Header("Random Generator")]
     [SerializeField][Range(1,100)] float _unwalkabilityResolution;
     [SerializeField][Range(1,200)] float _heightNoiseResolution;
@@ -39,7 +39,7 @@ public class TerrainGenerator : MonoBehaviour
             FlowFieldSurface[] flowFieldSurfaces = FindObjectsByType<FlowFieldSurface>(FindObjectsSortMode.None);
 
             SimulationStartParametersStandard simParam = new SimulationStartParametersStandard(flowFieldSurfaces, obstacleBehaviors, 3f, 0.25f, 0.5f, 0.1f, 1f, 0.1f, 30);
-            _pathfindingManager.Interface.StartSimulation(simParam);
+            _navigationManager.Interface.StartSimulation(simParam);
 
             for (int i = 0; i < obstacleBehaviors.Length; i++)
             {

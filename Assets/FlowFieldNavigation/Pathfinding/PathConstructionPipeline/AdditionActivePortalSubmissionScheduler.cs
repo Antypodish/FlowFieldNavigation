@@ -5,13 +5,13 @@ using Unity.Mathematics;
 
 internal class AdditionActivePortalSubmissionScheduler
 {
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
     PathDataContainer _pathContainer;
 
-    internal AdditionActivePortalSubmissionScheduler(PathfindingManager pathfindingManager)
+    internal AdditionActivePortalSubmissionScheduler(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
-        _pathContainer = pathfindingManager.PathDataContainer;
+        _navigationManager = navigationManager;
+        _pathContainer = navigationManager.PathDataContainer;
     }
     internal PathPipelineInfoWithHandle ScheduleActivePortalSubmission(PathPipelineInfoWithHandle pathInfo)
     {
@@ -21,7 +21,7 @@ internal class AdditionActivePortalSubmissionScheduler
         PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathInfo.PathIndex];
         UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathInfo.PathIndex];
         SectorBitArray sectorBitArray = _pathContainer.PathSectorBitArrays[pathInfo.PathIndex];
-        FieldGraph pickedFieldGraph = _pathfindingManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
+        FieldGraph pickedFieldGraph = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
         int newSecorCount = internalData.PickedSectorList.Length - internalData.ActivePortalList.Length;
         _pathContainer.ResizeActiveWaveFrontList(newSecorCount, internalData.ActivePortalList);
 

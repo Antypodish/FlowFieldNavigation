@@ -9,7 +9,7 @@ public class AgentSelectionController : MonoBehaviour
 
     [SerializeField] int _startingAgentCount;
     [SerializeField] GameObject _agentPrefab;
-    [SerializeField] PathfindingManager _pathfindingManager;
+    [SerializeField] FlowFieldNavigationManager _navigationManager;
     [SerializeField] EditorDebuggingController _navigationDebugger;
     [SerializeField] Material _normalAgentMaterial;
     [SerializeField] Material _selectedAgentMaterial;
@@ -25,8 +25,8 @@ public class AgentSelectionController : MonoBehaviour
     {
         _agentsToCreate = _startingAgentCount;
         _agentSelector = new AgentBoundSelector(_selectionBox);
-        _agentFactory = new AgentFactory(_agentPrefab, _pathfindingManager);
-        _costEditController = new CostEditController(_pathfindingManager);
+        _agentFactory = new AgentFactory(_agentPrefab, _navigationManager);
+        _costEditController = new CostEditController(_navigationManager);
         _state = ControllerState.SingleSelection;
     }
     private void Update()
@@ -69,14 +69,14 @@ public class AgentSelectionController : MonoBehaviour
         {
             for (int i = 0; i < SelectedAgents.Count; i++)
             {
-                _pathfindingManager.Interface.SetStopped(SelectedAgents[i]);
+                _navigationManager.Interface.SetStopped(SelectedAgents[i]);
             }
         }
         if (Input.GetKeyDown(KeyCode.H))
         {
             for (int i = 0; i < SelectedAgents.Count; i++)
             {
-                _pathfindingManager.Interface.SetHoldGround(SelectedAgents[i]);
+                _navigationManager.Interface.SetHoldGround(SelectedAgents[i]);
             }
         }
         if (_state == ControllerState.SingleSelection)
@@ -107,7 +107,7 @@ public class AgentSelectionController : MonoBehaviour
             else if (Input.GetMouseButtonUp(0))
             {
                 DeselectAllAgents();
-                _agentSelector.GetAgentsInBox(Input.mousePosition, Camera.main, _pathfindingManager.Interface.GetAllAgents(), SelectedAgents);
+                _agentSelector.GetAgentsInBox(Input.mousePosition, Camera.main, _navigationManager.Interface.GetAllAgents(), SelectedAgents);
                 SetMaterialOfAgents(SelectedAgents, _selectedAgentMaterial);
                 if(SelectedAgents.Count > 0)
                 {
@@ -159,7 +159,7 @@ public class AgentSelectionController : MonoBehaviour
             for(int i = SelectedAgents.Count - 1; i >= 0; i--)
             {
                 FlowFieldAgent agent = SelectedAgents[i];
-                _pathfindingManager.Interface.RequestUnsubscription(agent);
+                _navigationManager.Interface.RequestUnsubscription(agent);
                 SelectedAgents[i] = SelectedAgents[SelectedAgents.Count - 1];
                 SelectedAgents.RemoveAt(SelectedAgents.Count - 1);
                 Destroy(agent.gameObject);
@@ -177,7 +177,7 @@ public class AgentSelectionController : MonoBehaviour
             if (Physics.Raycast(ray, out hit, float.PositiveInfinity, 8))
             {
                 Vector3 destination = hit.point;
-                _pathfindingManager.Interface.SetDestination(agents, destination);
+                _navigationManager.Interface.SetDestination(agents, destination);
             }
             return;
         }
@@ -187,10 +187,10 @@ public class AgentSelectionController : MonoBehaviour
             if (agent == null)
             {
                 Vector3 destination = hit.point;
-                _pathfindingManager.Interface.SetDestination(agents, destination);
+                _navigationManager.Interface.SetDestination(agents, destination);
                 return;
             }
-            _pathfindingManager.Interface.SetDestination(agents, agent);
+            _navigationManager.Interface.SetDestination(agents, agent);
         }
 
     }

@@ -5,16 +5,16 @@ using Unity.Mathematics;
 using UnityEngine;
 internal class TileIslandDebugMeshBuilder
 {
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
     List<Mesh> _debugMeshes;
     List<int> _debugMeshColorIndicies;
     bool _isCreated;
     uint _lastFieldState;
     int _lastOffset;
 
-    internal TileIslandDebugMeshBuilder(PathfindingManager pathfindingManager)
+    internal TileIslandDebugMeshBuilder(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
+        _navigationManager = navigationManager;
         _debugMeshes = new List<Mesh>();
         _debugMeshColorIndicies = new List<int>();
         _isCreated = false;
@@ -24,7 +24,7 @@ internal class TileIslandDebugMeshBuilder
 
     internal void GetTileIslandDebugMesh(int offset, out List<Mesh> debugMeshes, out List<int> debugMeshColorIndicies)
     {
-        uint curFieldState = _pathfindingManager.GetFieldState();
+        uint curFieldState = _navigationManager.GetFieldState();
         if (!_isCreated || _lastOffset != offset || _lastFieldState != curFieldState)
         {
             _lastOffset = offset;
@@ -39,8 +39,8 @@ internal class TileIslandDebugMeshBuilder
         _isCreated = true;
         _debugMeshes.Clear();
         _debugMeshColorIndicies.Clear();
-        IslandFieldProcessor islandFieldProcessor = _pathfindingManager.FieldDataContainer.GetFieldGraphWithOffset(offset).GetIslandFieldProcessor();
-        NativeArray<byte> costField = _pathfindingManager.FieldDataContainer.GetCostFieldWithOffset(offset).Costs;
+        IslandFieldProcessor islandFieldProcessor = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(offset).GetIslandFieldProcessor();
+        NativeArray<byte> costField = _navigationManager.FieldDataContainer.GetCostFieldWithOffset(offset).Costs;
         NativeList<IndexIslandPair> indiciesWithValidIsland = new NativeList<IndexIslandPair>(Allocator.TempJob);
         IndiciesWithIslandIndexJob indiciesWithIslandIndexJob = new IndiciesWithIslandIndexJob()
         {
@@ -89,8 +89,8 @@ internal class TileIslandDebugMeshBuilder
                     TileSize = FlowFieldUtilities.TileSize,
                     FieldColAmount = FlowFieldUtilities.FieldColAmount,
                     FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
-                    TriangleSpatialHashGrid = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
-                    HeightMeshVerts = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray(),
+                    TriangleSpatialHashGrid = _navigationManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
+                    HeightMeshVerts = _navigationManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray(),
                     IndiciesToCreateMesh = indiciesForMesh,
                     Verts = verts,
                     Trigs = trigs,

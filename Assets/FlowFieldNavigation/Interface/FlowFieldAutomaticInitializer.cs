@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 public class FlowFieldAutomaticInitializer : MonoBehaviour
 {
-    [SerializeField] PathfindingManager _pathfindingManager;
+    [SerializeField] FlowFieldNavigationManager _navigationManager;
     [SerializeField] float BaseAgentSpatialGridSize;
     [SerializeField] float BaseTriangleSpatialGridSize;
     [SerializeField] float MaxSurfaceHeightDifference;
@@ -36,7 +36,7 @@ public class FlowFieldAutomaticInitializer : MonoBehaviour
             VerticalVoxelSize,
             LineOfSightRange,
             MaxWalkableHeight);
-        _pathfindingManager.Interface.StartSimulation(startParam);
+        _navigationManager.Interface.StartSimulation(startParam);
     }
 
 

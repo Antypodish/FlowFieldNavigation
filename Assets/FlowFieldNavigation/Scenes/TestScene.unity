@@ -216,44 +216,9 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
-      propertyPath: TileSize
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
-        type: 3}
-      propertyPath: MaxHeight
-      value: 20
-      objectReference: {fileID: 0}
-    - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
-        type: 3}
-      propertyPath: RowAmount
-      value: 250
-      objectReference: {fileID: 0}
-    - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
-        type: 3}
-      propertyPath: ColumnAmount
-      value: 250
-      objectReference: {fileID: 0}
-    - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
-        type: 3}
-      propertyPath: RandomHeights
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
-        type: 3}
-      propertyPath: _pathfindingManager
+      propertyPath: _navigationManager
       value: 
       objectReference: {fileID: 1328932016}
-    - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
-        type: 3}
-      propertyPath: DisableTerrainGeneration
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
-        type: 3}
-      propertyPath: _unwalkabilityResolution
-      value: 100
-      objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207641, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -552,11 +517,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 5442464775926404439, guid: 5e3867b8afbc0bb49a0027ab49965980,
-        type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 8734084087089525697, guid: 5e3867b8afbc0bb49a0027ab49965980,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -719,27 +679,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
         type: 3}
-      propertyPath: _costField
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
-        type: 3}
-      propertyPath: _debugTiles
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
-        type: 3}
-      propertyPath: _costFieldOffset
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
-        type: 3}
-      propertyPath: _debuggingEnabled
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
-        type: 3}
-      propertyPath: _pathfindingManager
+      propertyPath: _navigationManager
       value: 
       objectReference: {fileID: 1328932016}
     - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
@@ -747,20 +687,10 @@ PrefabInstance:
       propertyPath: _cameraToOverlayOnTopOf
       value: 
       objectReference: {fileID: 1632713465}
-    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
-        type: 3}
-      propertyPath: _debugAgentSeperationRadius
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 7535577792338288069, guid: 36909ba34dc9cc34aa509e8036cbe263,
         type: 3}
       propertyPath: m_Name
       value: Flow Field Debugger
-      objectReference: {fileID: 0}
-    - target: {fileID: 7535577792338288069, guid: 36909ba34dc9cc34aa509e8036cbe263,
-        type: 3}
-      propertyPath: m_Layer
-      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -777,7 +707,17 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 5836007236481813444, guid: f55c253bbe9585643ad7034e78074555,
         type: 3}
+      propertyPath: _navigationManager
+      value: 
+      objectReference: {fileID: 1328932016}
+    - target: {fileID: 5836007236481813444, guid: f55c253bbe9585643ad7034e78074555,
+        type: 3}
       propertyPath: _pathfindingManager
+      value: 
+      objectReference: {fileID: 1328932016}
+    - target: {fileID: 5836007236481813446, guid: f55c253bbe9585643ad7034e78074555,
+        type: 3}
+      propertyPath: _navigationManager
       value: 
       objectReference: {fileID: 1328932016}
     - target: {fileID: 5836007236481813446, guid: f55c253bbe9585643ad7034e78074555,

@@ -6,14 +6,14 @@ using System.Collections.Generic;
 
 internal class DynamicAreaScheduler
 {
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
     PathDataContainer _pathContainer;
 
     NativeList<PathPipelineInfoWithHandle> _scheduledDynamicAreas; 
-    internal DynamicAreaScheduler(PathfindingManager pathfindingManager)
+    internal DynamicAreaScheduler(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
-        _pathContainer = pathfindingManager.PathDataContainer;
+        _navigationManager = navigationManager;
+        _pathContainer = navigationManager.PathDataContainer;
         _scheduledDynamicAreas = new NativeList<PathPipelineInfoWithHandle>(Allocator.Persistent);
     }
     internal void DisposeAll()
@@ -83,7 +83,7 @@ internal class DynamicAreaScheduler
             SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
             FieldColAmount = FlowFieldUtilities.FieldColAmount,
             TargetIndex = targetIndex,
-            Costs = _pathfindingManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset).Costs,
+            Costs = _navigationManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset).Costs,
             PickedSectorFlowStarts = pickedSectorFlowStarts,
             IntegrationField = integrationField.AsArray(),
         };
@@ -107,7 +107,7 @@ internal class DynamicAreaScheduler
                 FlowField = flowFieldCalculationBuffer,
                 IntegrationField = integrationField.AsArray(),
             },
-            Costs = _pathfindingManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset).Costs,
+            Costs = _navigationManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset).Costs,
         };
 
         JobHandle flowHandle = flowJob.Schedule(flowFieldCalculationBuffer.Length, 64, integrationHandle);

@@ -2,7 +2,7 @@
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using Unity.Mathematics;
-public class PathfindingManager : MonoBehaviour
+public class FlowFieldNavigationManager : MonoBehaviour
 {
     public bool SimulationStarted { get; private set; }
     public FlowFieldNavigationInterface Interface { get; private set; }

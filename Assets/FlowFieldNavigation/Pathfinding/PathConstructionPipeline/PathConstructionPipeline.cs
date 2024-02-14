@@ -10,7 +10,7 @@ internal class PathConstructionPipeline
     internal NativeList<PathRequestRecord> AgentsLookingForPathRecords;
     const int _FinalPathRequestExpansionJobCount = 12;
 
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
     PathDataContainer _pathContainer;
     PortalTraversalScheduler _portalTravesalScheduler;
     RequestedSectorCalculationScheduler _requestedSectorCalculationScheduler;
@@ -39,15 +39,15 @@ internal class PathConstructionPipeline
     NativeList<FlockSlice> _hashMapFlockSlices;
     NativeList<int> _hashMapPathIndicies;
     List<JobHandle> _pathfindingTaskOrganizationHandle;
-    internal PathConstructionPipeline(PathfindingManager pathfindingManager)
+    internal PathConstructionPipeline(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
-        _pathContainer = pathfindingManager.PathDataContainer;
-        _losIntegrationScheduler = new LOSIntegrationScheduler(pathfindingManager);
-        _requestedSectorCalculationScheduler = new RequestedSectorCalculationScheduler(pathfindingManager, _losIntegrationScheduler);
-        _portalTravesalScheduler = new PortalTraversalScheduler(pathfindingManager, _requestedSectorCalculationScheduler);
-        _additionPortalTraversalScheduler = new AdditionPortalTraversalScheduler(pathfindingManager, _requestedSectorCalculationScheduler);
-        _dynamicAreaScheduler = new DynamicAreaScheduler(pathfindingManager);
+        _navigationManager = navigationManager;
+        _pathContainer = navigationManager.PathDataContainer;
+        _losIntegrationScheduler = new LOSIntegrationScheduler(navigationManager);
+        _requestedSectorCalculationScheduler = new RequestedSectorCalculationScheduler(navigationManager, _losIntegrationScheduler);
+        _portalTravesalScheduler = new PortalTraversalScheduler(navigationManager, _requestedSectorCalculationScheduler);
+        _additionPortalTraversalScheduler = new AdditionPortalTraversalScheduler(navigationManager, _requestedSectorCalculationScheduler);
+        _dynamicAreaScheduler = new DynamicAreaScheduler(navigationManager);
         _sourcePositions = new NativeList<float2>(Allocator.Persistent);
         _pathfindingTaskOrganizationHandle = new List<JobHandle>(1);
         _offsetDerivedPathRequests = new NativeList<OffsetDerivedPathRequest>(Allocator.Persistent);
@@ -132,10 +132,10 @@ internal class PathConstructionPipeline
         _pathRequestSourceCount.Value = 0;
         _currentPathSourceCount.Value = 0;
 
-        NativeArray<AgentData> agentDataArray = _pathfindingManager.AgentDataContainer.AgentDataList.AsArray();
-        NativeArray<int> AgentNewPathIndicies = _pathfindingManager.AgentDataContainer.AgentNewPathIndicies.AsArray();
-        NativeArray<int> AgentCurPathIndicies = _pathfindingManager.AgentDataContainer.AgentCurPathIndicies.AsArray();
-        NativeArray<int> AgentFlockIndexArray = _pathfindingManager.AgentDataContainer.AgentFlockIndicies.AsArray();
+        NativeArray<AgentData> agentDataArray = _navigationManager.AgentDataContainer.AgentDataList.AsArray();
+        NativeArray<int> AgentNewPathIndicies = _navigationManager.AgentDataContainer.AgentNewPathIndicies.AsArray();
+        NativeArray<int> AgentCurPathIndicies = _navigationManager.AgentDataContainer.AgentCurPathIndicies.AsArray();
+        NativeArray<int> AgentFlockIndexArray = _navigationManager.AgentDataContainer.AgentFlockIndicies.AsArray();
         _islandFieldProcessors = islandFieldProcessors;
         NativeArray<UnsafeList<DijkstraTile>> targetSectorIntegrations = _pathContainer.TargetSectorIntegrationList.AsArray();
         NativeArray<PathLocationData> pathLocationDataArray = _pathContainer.PathLocationDataList.AsArray();
@@ -154,8 +154,8 @@ internal class PathConstructionPipeline
             AgentFlockIndexArray = AgentFlockIndexArray,
             AgentNewPathIndexArray = AgentNewPathIndicies,
             InitialPathRequests = requestedPaths.AsArray(),
-            FlockList = _pathfindingManager.FlockDataContainer.FlockList,
-            UnusedFlockIndexList = _pathfindingManager.FlockDataContainer.UnusedFlockIndexList,
+            FlockList = _navigationManager.FlockDataContainer.FlockList,
+            UnusedFlockIndexList = _navigationManager.FlockDataContainer.UnusedFlockIndexList,
         };
         flockSubmission.Schedule().Complete();
 
@@ -307,7 +307,7 @@ internal class PathConstructionPipeline
         {
             PathStates = pathStateArray,
             AgentFlockIndicies = AgentFlockIndexArray,
-            FlockListLength = _pathfindingManager.FlockDataContainer.FlockList.Length,
+            FlockListLength = _navigationManager.FlockDataContainer.FlockList.Length,
             ReadyAgentsLookingForPath = _readyAgentsLookingForPath,
             PathFlockIndicies = pathFlockIndexArray,
             FlockSlices = _hashMapFlockSlices,
@@ -520,9 +520,9 @@ internal class PathConstructionPipeline
         //TRANSFER NEW PATH INDICIES TO CUR PATH INDICIES
         NewPathToCurPathTransferJob newPathToCurPathTransferJob = new NewPathToCurPathTransferJob()
         {
-            AgentCurPathIndicies = _pathfindingManager.AgentDataContainer.AgentCurPathIndicies.AsArray(),
-            AgentNewPathIndicies = _pathfindingManager.AgentDataContainer.AgentNewPathIndicies.AsArray(),
-            PathSubscribers = _pathfindingManager.PathDataContainer.PathSubscriberCounts.AsArray(),
+            AgentCurPathIndicies = _navigationManager.AgentDataContainer.AgentCurPathIndicies.AsArray(),
+            AgentNewPathIndicies = _navigationManager.AgentDataContainer.AgentNewPathIndicies.AsArray(),
+            PathSubscribers = _navigationManager.PathDataContainer.PathSubscriberCounts.AsArray(),
             FinalPathRequests = _finalPathRequests.AsArray(),
             AgentsToTrySubNewPath = _agentIndiciesToSubNewPath.AsArray(),
             AgentsToTryUnsubCurPath = _agentIndiciesToUnsubCurPath.AsArray(),
@@ -531,8 +531,8 @@ internal class PathConstructionPipeline
 
         AgentStartMovingJob agentStartMoving = new AgentStartMovingJob()
         {
-            AgentDataArray = _pathfindingManager.AgentDataContainer.AgentDataList.AsArray(),
-            AgentDestinationReachedArray = _pathfindingManager.AgentDataContainer.AgentDestinationReachedArray.AsArray(),
+            AgentDataArray = _navigationManager.AgentDataContainer.AgentDataList.AsArray(),
+            AgentDestinationReachedArray = _navigationManager.AgentDataContainer.AgentDestinationReachedArray.AsArray(),
             AgentIndiciesToStartMoving = _agentIndiciesToStartMoving.AsArray(),
         };
 

@@ -8,7 +8,7 @@ internal class RoutineScheduler
 {
     internal uint FieldState { get { return _fieldState; } }
 
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
     MovementManager _movementManager;
     PathConstructionPipeline _pathConstructionPipeline;
 
@@ -21,11 +21,11 @@ internal class RoutineScheduler
     NativeList<UnsafeListReadOnly<byte>> _costFieldCosts;
     NativeList<SectorBitArray> EditedSectorBitArray;
     NativeList<CostEdit> NewCostEditRequests;
-    internal RoutineScheduler(PathfindingManager pathfindingManager)
+    internal RoutineScheduler(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
-        _movementManager = pathfindingManager.MovementManager;
-        _pathConstructionPipeline = pathfindingManager.PathConstructionPipeline;
+        _navigationManager = navigationManager;
+        _movementManager = navigationManager.MovementManager;
+        _pathConstructionPipeline = navigationManager.PathConstructionPipeline;
         _costEditHandle = new List<JobHandle>();
         CurrentRequestedPaths = new NativeList<PathRequest>(Allocator.Persistent);
         _islandReconfigHandle = new List<JobHandle>();
@@ -50,7 +50,7 @@ internal class RoutineScheduler
     }
     internal void Schedule(NativeList<PathRequest> newPaths, NativeArray<CostEdit>.ReadOnly costEditRequests)
     {
-        NativeArray<IslandFieldProcessor> islandFieldProcessors = _pathfindingManager.FieldDataContainer.GetAllIslandFieldProcessors();
+        NativeArray<IslandFieldProcessor> islandFieldProcessors = _navigationManager.FieldDataContainer.GetAllIslandFieldProcessors();
 
         //COPY OBSTACLE REQUESTS
         ReadOnlyNativeArrayToNativeListCopyJob<CostEdit> obstacleRequestCopy = new ReadOnlyNativeArrayToNativeListCopyJob<CostEdit>()
@@ -61,7 +61,7 @@ internal class RoutineScheduler
         obstacleRequestCopy.Schedule().Complete();
 
         //REFRESH COST FIELD COSTS
-        UnsafeListReadOnly<byte>[] costFielCosts = _pathfindingManager.GetAllCostFieldCostsAsUnsafeListReadonly();
+        UnsafeListReadOnly<byte>[] costFielCosts = _navigationManager.GetAllCostFieldCostsAsUnsafeListReadonly();
         _costFieldCosts.Length = costFielCosts.Length;
         for(int i = 0; i < costFielCosts.Length; i++)
         {
@@ -73,9 +73,9 @@ internal class RoutineScheduler
         JobHandle islandFieldReconfigHandle = ScheduleIslandFieldReconfig(costEditHandle);
 
         //SET POSITIONS OF AGENT DATA
-        NativeArray<AgentData> agentData = _pathfindingManager.AgentDataContainer.AgentDataList.AsArray();
+        NativeArray<AgentData> agentData = _navigationManager.AgentDataContainer.AgentDataList.AsArray();
 
-        TransformAccessArray agentTransforms = _pathfindingManager.AgentDataContainer.AgentTransforms;
+        TransformAccessArray agentTransforms = _navigationManager.AgentDataContainer.AgentTransforms;
         AgentDataSetPositionJob posSetJob = new AgentDataSetPositionJob()
         {
             MaxXExcluding = FlowFieldUtilities.FieldMaxXExcluding,
@@ -97,8 +97,8 @@ internal class RoutineScheduler
         //TRANSFER REQUESTED PATHS TO NEW PATHS
         RequestedToNewPathIndexTransferJob reqToNewTransfer = new RequestedToNewPathIndexTransferJob()
         {
-            AgentRequestedPathIndicies = _pathfindingManager.AgentDataContainer.AgentRequestedPathIndicies.AsArray(),
-            AgentNewPathIndicies = _pathfindingManager.AgentDataContainer.AgentNewPathIndicies.AsArray(),
+            AgentRequestedPathIndicies = _navigationManager.AgentDataContainer.AgentRequestedPathIndicies.AsArray(),
+            AgentNewPathIndicies = _navigationManager.AgentDataContainer.AgentNewPathIndicies.AsArray(),
         };
         JobHandle transferHandle = reqToNewTransfer.Schedule();
 
@@ -155,8 +155,8 @@ internal class RoutineScheduler
         NativeList<JobHandle> editHandles = new NativeList<JobHandle>(Allocator.Temp);
         for(int i = 0; i <= FlowFieldUtilities.MaxCostFieldOffset; i++)
         {
-            CostField costField = _pathfindingManager.FieldDataContainer.GetCostFieldWithOffset(i);
-            FieldGraph fieldGraph = _pathfindingManager.FieldDataContainer.GetFieldGraphWithOffset(i);
+            CostField costField = _navigationManager.FieldDataContainer.GetCostFieldWithOffset(i);
+            FieldGraph fieldGraph = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(i);
 
             NativeListCopyJob<CostEdit> newObstaclesTransfer = new NativeListCopyJob<CostEdit>()
             {
@@ -213,8 +213,8 @@ internal class RoutineScheduler
         NativeArray<JobHandle> handlesToCombine = new NativeArray<JobHandle>(FlowFieldUtilities.MaxCostFieldOffset + 1, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
         for (int i = 0; i <= FlowFieldUtilities.MaxCostFieldOffset; i++)
         {
-            FieldGraph fieldGraph = _pathfindingManager.FieldDataContainer.GetFieldGraphWithOffset(i);
-            CostField costField = _pathfindingManager.FieldDataContainer.GetCostFieldWithOffset(i);
+            FieldGraph fieldGraph = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(i);
+            CostField costField = _navigationManager.FieldDataContainer.GetCostFieldWithOffset(i);
 
             IslandReconfigurationJob islandReconfig = new IslandReconfigurationJob()
             {

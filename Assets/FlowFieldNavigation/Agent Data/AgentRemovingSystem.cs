@@ -6,31 +6,31 @@ using UnityEngine.Jobs;
 
 internal class AgentRemovingSystem
 {
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
     NativeList<int> _agentRemovalMarks;//(index == -1:nothing)(index == -2:removed)(index >= 0: index redirection which means it can be used as new index)
-    public AgentRemovingSystem(PathfindingManager pathfindingManager)
+    public AgentRemovingSystem(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
+        _navigationManager = navigationManager;
         _agentRemovalMarks = new NativeList<int>(Allocator.Persistent);
     }
     internal void RemoveAgents(NativeArray<int> agentIndiciesToRemove)
     {
         if(agentIndiciesToRemove.Length == 0) { return; }
-        List<FlowFieldAgent> agents = _pathfindingManager.AgentDataContainer.Agents;
-        TransformAccessArray agentTransforms = _pathfindingManager.AgentDataContainer.AgentTransforms;
-        NativeList<AgentData> agentDataList = _pathfindingManager.AgentDataContainer.AgentDataList;
-        NativeList<bool> agentDestinationReachedArray = _pathfindingManager.AgentDataContainer.AgentDestinationReachedArray;
-        NativeList<int> agentFlockIndicies = _pathfindingManager.AgentDataContainer.AgentFlockIndicies;
-        NativeList<int> agentRequestedPathIndicies = _pathfindingManager.AgentDataContainer.AgentRequestedPathIndicies;
-        NativeList<int> agentNewPathIndicies = _pathfindingManager.AgentDataContainer.AgentNewPathIndicies;
-        NativeList<int> agentCurPathIndicies = _pathfindingManager.AgentDataContainer.AgentCurPathIndicies;
-        NativeList<Flock> flockList = _pathfindingManager.FlockDataContainer.FlockList;
-        NativeList<int> pathSubscriberCounts = _pathfindingManager.PathDataContainer.PathSubscriberCounts;
-        NativeArray<PathState> pathStates = _pathfindingManager.PathDataContainer.ExposedPathStateList.AsArray();
-        NativeArray<PathDestinationData> pathDestinationArray = _pathfindingManager.PathDataContainer.PathDestinationDataList.AsArray();
-        NativeArray<PathRequest> pathRequests = _pathfindingManager.RequestAccumulator.PathRequests.AsArray();
-        NativeList<int> agentsLookingForPath = _pathfindingManager.PathConstructionPipeline.AgentsLookingForPath;
-        NativeList<PathRequestRecord> agentsLookingForPathRecords = _pathfindingManager.PathConstructionPipeline.AgentsLookingForPathRecords;
+        List<FlowFieldAgent> agents = _navigationManager.AgentDataContainer.Agents;
+        TransformAccessArray agentTransforms = _navigationManager.AgentDataContainer.AgentTransforms;
+        NativeList<AgentData> agentDataList = _navigationManager.AgentDataContainer.AgentDataList;
+        NativeList<bool> agentDestinationReachedArray = _navigationManager.AgentDataContainer.AgentDestinationReachedArray;
+        NativeList<int> agentFlockIndicies = _navigationManager.AgentDataContainer.AgentFlockIndicies;
+        NativeList<int> agentRequestedPathIndicies = _navigationManager.AgentDataContainer.AgentRequestedPathIndicies;
+        NativeList<int> agentNewPathIndicies = _navigationManager.AgentDataContainer.AgentNewPathIndicies;
+        NativeList<int> agentCurPathIndicies = _navigationManager.AgentDataContainer.AgentCurPathIndicies;
+        NativeList<Flock> flockList = _navigationManager.FlockDataContainer.FlockList;
+        NativeList<int> pathSubscriberCounts = _navigationManager.PathDataContainer.PathSubscriberCounts;
+        NativeArray<PathState> pathStates = _navigationManager.PathDataContainer.ExposedPathStateList.AsArray();
+        NativeArray<PathDestinationData> pathDestinationArray = _navigationManager.PathDataContainer.PathDestinationDataList.AsArray();
+        NativeArray<PathRequest> pathRequests = _navigationManager.RequestAccumulator.PathRequests.AsArray();
+        NativeList<int> agentsLookingForPath = _navigationManager.PathConstructionPipeline.AgentsLookingForPath;
+        NativeList<PathRequestRecord> agentsLookingForPathRecords = _navigationManager.PathConstructionPipeline.AgentsLookingForPathRecords;
 
         _agentRemovalMarks.Length = agents.Count;
 

@@ -7,17 +7,17 @@ using Unity.Mathematics;
 using System.Diagnostics;
 internal class FlowCalculationScheduler
 {
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
     PathDataContainer _pathContainer;
     LOSIntegrationScheduler _losIntegrationScheduler;
     NativeList<PathPipelineInfoWithHandle> ScheduledFlow;
     NativeList<FlowFieldCalculationBufferParent> _flowFieldCalculationBuffers;
     NativeList<JobHandle> _flowTransferHandles;
     NativeList<int> _flowFieldResizedPaths;
-    internal FlowCalculationScheduler(PathfindingManager pathfindingManager, LOSIntegrationScheduler losIntegrationScheduler)
+    internal FlowCalculationScheduler(FlowFieldNavigationManager navigationManager, LOSIntegrationScheduler losIntegrationScheduler)
     {
-        _pathfindingManager = pathfindingManager;
-        _pathContainer = pathfindingManager.PathDataContainer;
+        _navigationManager = navigationManager;
+        _pathContainer = navigationManager.PathDataContainer;
         ScheduledFlow = new NativeList<PathPipelineInfoWithHandle>(Allocator.Persistent);
         _flowFieldCalculationBuffers = new NativeList<FlowFieldCalculationBufferParent>(Allocator.Persistent);
         _flowTransferHandles = new NativeList<JobHandle>(Allocator.Persistent);
@@ -46,7 +46,7 @@ internal class FlowCalculationScheduler
         PathfindingInternalData pathInternalData = _pathContainer.PathfindingInternalDataList[pathInfo.PathIndex];
         PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
         PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
-        CostField pickedCostField = _pathfindingManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset);
+        CostField pickedCostField = _navigationManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset);
 
         //RESET NEW INT FIELD INDICIES
         int lastIntegrationFieldLength = pathInternalData.IntegrationField.Length;

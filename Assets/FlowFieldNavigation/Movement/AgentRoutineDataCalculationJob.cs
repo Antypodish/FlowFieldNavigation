@@ -105,7 +105,7 @@ internal struct AgentRoutineDataCalculationJob : IJobParallelFor
     {
         float2 steeringToSeek = desiredDirection - currentDirection;
         float steeringToSeekLen = math.length(steeringToSeek);
-        float2 steeringForce = math.select(steeringToSeek / steeringToSeekLen, 0f, steeringToSeekLen == 0) * math.select(speed / 1000, steeringToSeekLen, steeringToSeekLen < speed / 1000);
+        float2 steeringForce = math.select(steeringToSeek / steeringToSeekLen, 0f, steeringToSeekLen == 0) * math.select(speed / 100, steeringToSeekLen, steeringToSeekLen < speed / 100);
         return math.normalizesafe(currentDirection + steeringForce);
     }
     bool GetSectorDynamicFlowStartIfExists(UnsafeList<SectorFlowStart> dynamicFlowSectosStarts, int agentSectorIndex, out int sectorFlowStart)

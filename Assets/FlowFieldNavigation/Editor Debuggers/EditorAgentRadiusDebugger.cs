@@ -3,15 +3,15 @@ using UnityEngine;
 
 internal class EditorAgentRadiusDebugger
 {
-    PathfindingManager _pathfindingManager;
-    internal EditorAgentRadiusDebugger(PathfindingManager pathfindingManager)
+    FlowFieldNavigationManager _navigationManager;
+    internal EditorAgentRadiusDebugger(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
+        _navigationManager = navigationManager;
     }
     internal void DebugSeperationRadius()
     {
         Gizmos.color = Color.white;
-        NativeArray<AgentData> agents = _pathfindingManager.AgentDataContainer.AgentDataList.AsArray();
+        NativeArray<AgentData> agents = _navigationManager.AgentDataContainer.AgentDataList.AsArray();
         for(int i = 0; i < agents.Length; i++)
         {
             Gizmos.DrawWireSphere(agents[i].Position, agents[i].Radius);

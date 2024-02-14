@@ -5,17 +5,17 @@ using Unity.Jobs;
 using Unity.Mathematics;
 internal class LOSIntegrationScheduler
 {
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
     PathDataContainer _pathContainer;
 
     NativeList<PathPipelineInfoWithHandle> ScheduledLOS;
     NativeList<int> _losCalculatedPaths;
     NativeList<JobHandle> _transferHandles;
 
-    internal LOSIntegrationScheduler(PathfindingManager pathfindingManager)
+    internal LOSIntegrationScheduler(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
-        _pathContainer = pathfindingManager.PathDataContainer;
+        _navigationManager = navigationManager;
+        _pathContainer = navigationManager.PathDataContainer;
         ScheduledLOS = new NativeList<PathPipelineInfoWithHandle>(Allocator.Persistent);
         _losCalculatedPaths = new NativeList<int>(Allocator.Persistent);
         _transferHandles = new NativeList<JobHandle>(Allocator.Persistent);
@@ -33,7 +33,7 @@ internal class LOSIntegrationScheduler
         PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
         PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
         int2 targetIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition);
-        CostField pickedCostField = _pathfindingManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset);
+        CostField pickedCostField = _navigationManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset);
 
         JobHandle losHandle = flowHandle;
         bool requestedSectorWithinLOS = (internalData.SectorWithinLOSState.Value & SectorsWihinLOSArgument.RequestedSectorWithinLOS) == SectorsWihinLOSArgument.RequestedSectorWithinLOS;

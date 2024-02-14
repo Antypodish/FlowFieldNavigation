@@ -8,12 +8,12 @@ using System.Collections.Generic;
 
 internal class EditorPortalDebugger
 {
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
     PortalDebugMeshBuilder _portalDebugMeshBuilder;
-    internal EditorPortalDebugger(PathfindingManager pathfindingManager)
+    internal EditorPortalDebugger(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
-        _portalDebugMeshBuilder = new PortalDebugMeshBuilder(pathfindingManager);
+        _navigationManager = navigationManager;
+        _portalDebugMeshBuilder = new PortalDebugMeshBuilder(navigationManager);
     }
     
     internal void DebugPortals(int offset)
@@ -28,7 +28,7 @@ internal class EditorPortalDebugger
     /*
     internal void DebugPortalIslands(int offset)
     {
-        FieldGraph fieldGraph = _pathfindingManager.FieldDataContainer.GetFieldGraphWithOffset(offset);
+        FieldGraph fieldGraph = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(offset);
         NativeArray<PortalNode> portalNodes = fieldGraph.PortalNodes;
         NativeArray<PortalToPortal> portalToPortals = fieldGraph.PorToPorPtrs;
         NativeArray<WindowNode> windowNodes = fieldGraph.WindowNodes;

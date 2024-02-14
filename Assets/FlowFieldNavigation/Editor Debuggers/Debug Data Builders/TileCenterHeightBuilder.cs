@@ -8,12 +8,12 @@ using static UnityEngine.ParticleSystem;
 
 internal class TileCenterHeightBuilder
 {
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
     NativeArray<float> _tileCenterHeights;
     bool _isCreated;
-    internal TileCenterHeightBuilder(PathfindingManager pathfindingManager)
+    internal TileCenterHeightBuilder(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
+        _navigationManager = navigationManager;
         _isCreated = false;
     }
     internal NativeArray<float> GetTileCenterHeights()
@@ -45,8 +45,8 @@ internal class TileCenterHeightBuilder
 
         PointHeightCalculationJob poitnHeights = new PointHeightCalculationJob()
         {
-            TriangleSpatialHashGrid = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
-            HeightMeshVerts = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray(),
+            TriangleSpatialHashGrid = _navigationManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
+            HeightMeshVerts = _navigationManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray(),
             Heights = _tileCenterHeights,
             Points = tileCenters,
         };

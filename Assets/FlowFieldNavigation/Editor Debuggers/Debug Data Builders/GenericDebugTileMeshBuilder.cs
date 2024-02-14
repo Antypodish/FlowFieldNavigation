@@ -5,7 +5,7 @@ using Unity.Mathematics;
 using System.Collections.Generic;
 internal class GenericDebugTileMeshBuilder
 {
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
     List<Mesh> _debugMeshes;
     bool _isCreated;
 
@@ -13,9 +13,9 @@ internal class GenericDebugTileMeshBuilder
     int _rowCount;
     float _tileSize;
     float2 _gridStartPos;
-    internal GenericDebugTileMeshBuilder(PathfindingManager pathfindingManager)
+    internal GenericDebugTileMeshBuilder(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
+        _navigationManager = navigationManager;
         _debugMeshes = new List<Mesh>();
         _isCreated = false;
         _rowCount = 0;
@@ -56,8 +56,8 @@ internal class GenericDebugTileMeshBuilder
                 {
                     SectorSize = _tileSize,
                     MeshStartPos = _gridStartPos + startIndex * new float2(_tileSize, _tileSize),
-                    TriangleSpatialHashGrid = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
-                    HeightMeshVerts = _pathfindingManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray(),
+                    TriangleSpatialHashGrid = _navigationManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
+                    HeightMeshVerts = _navigationManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray(),
                     MeshColCount = meshColAmount,
                     MeshRowCount = meshRowAmount,
                     Verts = verts,

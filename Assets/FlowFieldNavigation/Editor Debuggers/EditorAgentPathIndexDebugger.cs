@@ -4,17 +4,17 @@ using UnityEngine;
 using Unity.Mathematics;
 internal class EditorAgentPathIndexDebugger
 {
-    PathfindingManager _pathfindingManager;
+    FlowFieldNavigationManager _navigationManager;
 
-    public EditorAgentPathIndexDebugger(PathfindingManager pathfindingManager)
+    public EditorAgentPathIndexDebugger(FlowFieldNavigationManager navigationManager)
     {
-        _pathfindingManager = pathfindingManager;
+        _navigationManager = navigationManager;
     }
 
     public void Debug(FlowFieldAgent agent)
     {
         if(agent == null) { return; }
         if(agent.AgentDataIndex == -1) { return; }
-        UnityEngine.Debug.Log(_pathfindingManager.AgentDataContainer.AgentCurPathIndicies[agent.AgentDataIndex]);
+        UnityEngine.Debug.Log(_navigationManager.AgentDataContainer.AgentCurPathIndicies[agent.AgentDataIndex]);
     }
 }
