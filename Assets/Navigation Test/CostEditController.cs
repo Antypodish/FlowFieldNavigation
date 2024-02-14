@@ -16,7 +16,7 @@ public class CostEditController
         obstacles = new List<GameObject>();
         _obstacleKeys = new NativeList<int>(Allocator.Persistent);
     }
-    public void SetUnwalkable()
+    public void SetObstacle()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
@@ -40,7 +40,6 @@ public class CostEditController
             obstacleCube.transform.position = pos;
 
             obstacles.Add(obstacleCube);
-
         }
     }
 }

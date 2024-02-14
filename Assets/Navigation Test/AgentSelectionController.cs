@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 public class AgentSelectionController : MonoBehaviour
 {
-    [HideInInspector] public List<FlowFieldAgent> SelectedAgents;
+    List<FlowFieldAgent> _selectedAgents = new List<FlowFieldAgent>();
     [HideInInspector] public FlowFieldAgent DebuggableAgent;
 
     [SerializeField] int _startingAgentCount;
@@ -67,16 +67,16 @@ public class AgentSelectionController : MonoBehaviour
         }
         else if (Input.GetKeyDown(KeyCode.S))
         {
-            for (int i = 0; i < SelectedAgents.Count; i++)
+            for (int i = 0; i < _selectedAgents.Count; i++)
             {
-                _navigationManager.Interface.SetStopped(SelectedAgents[i]);
+                _navigationManager.Interface.SetStopped(_selectedAgents[i]);
             }
         }
         if (Input.GetKeyDown(KeyCode.H))
         {
-            for (int i = 0; i < SelectedAgents.Count; i++)
+            for (int i = 0; i < _selectedAgents.Count; i++)
             {
-                _navigationManager.Interface.SetHoldGround(SelectedAgents[i]);
+                _navigationManager.Interface.SetHoldGround(_selectedAgents[i]);
             }
         }
         if (_state == ControllerState.SingleSelection)
@@ -87,8 +87,8 @@ public class AgentSelectionController : MonoBehaviour
                 if(selectedAgent != null)
                 {
                     DeselectAllAgents();
-                    SelectedAgents.Add(selectedAgent);
-                    SetMaterialOfAgents(SelectedAgents, _selectedAgentMaterial);
+                    _selectedAgents.Add(selectedAgent);
+                    SetMaterialOfAgents(_selectedAgents, _selectedAgentMaterial);
                     DebuggableAgent = selectedAgent;
                 }
                 
@@ -107,11 +107,11 @@ public class AgentSelectionController : MonoBehaviour
             else if (Input.GetMouseButtonUp(0))
             {
                 DeselectAllAgents();
-                _agentSelector.GetAgentsInBox(Input.mousePosition, Camera.main, _navigationManager.Interface.GetAllAgents(), SelectedAgents);
-                SetMaterialOfAgents(SelectedAgents, _selectedAgentMaterial);
-                if(SelectedAgents.Count > 0)
+                _agentSelector.GetAgentsInBox(Input.mousePosition, Camera.main, _navigationManager.Interface.GetAllAgents(), _selectedAgents);
+                SetMaterialOfAgents(_selectedAgents, _selectedAgentMaterial);
+                if(_selectedAgents.Count > 0)
                 {
-                    DebuggableAgent = SelectedAgents[0];
+                    DebuggableAgent = _selectedAgents[0];
                 }
             }
         }
@@ -131,22 +131,22 @@ public class AgentSelectionController : MonoBehaviour
         {
             if (Input.GetMouseButtonDown(0))
             {
-                _costEditController.SetUnwalkable();
+                _costEditController.SetObstacle();
             }
         }
 
 
-        if (Input.GetMouseButtonDown(1) && SelectedAgents.Count != 0)
+        if (Input.GetMouseButtonDown(1) && _selectedAgents.Count != 0)
         {
             SetDestination();
         }
-        if (Input.GetMouseButton(2) && SelectedAgents.Count != 0)
+        if (Input.GetMouseButton(2) && _selectedAgents.Count != 0)
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
             if (Physics.Raycast(ray, out hit, float.PositiveInfinity, 8))
             {
-                Transform agentTransform = SelectedAgents[0].transform;
+                Transform agentTransform = _selectedAgents[0].transform;
                 Vector3 pos = agentTransform.position;
                 Vector3 hitpos = hit.point;
                 pos.x = hitpos.x;
@@ -156,12 +156,12 @@ public class AgentSelectionController : MonoBehaviour
         }
         if (Input.GetKeyUp(KeyCode.Delete))
         {
-            for(int i = SelectedAgents.Count - 1; i >= 0; i--)
+            for(int i = _selectedAgents.Count - 1; i >= 0; i--)
             {
-                FlowFieldAgent agent = SelectedAgents[i];
+                FlowFieldAgent agent = _selectedAgents[i];
                 _navigationManager.Interface.RequestUnsubscription(agent);
-                SelectedAgents[i] = SelectedAgents[SelectedAgents.Count - 1];
-                SelectedAgents.RemoveAt(SelectedAgents.Count - 1);
+                _selectedAgents[i] = _selectedAgents[_selectedAgents.Count - 1];
+                _selectedAgents.RemoveAt(_selectedAgents.Count - 1);
                 Destroy(agent.gameObject);
             }
         }
@@ -169,7 +169,7 @@ public class AgentSelectionController : MonoBehaviour
     void SetDestination()
     {
         bool forceGroundDestination = Input.GetKey(KeyCode.LeftShift);
-        List<FlowFieldAgent> agents = SelectedAgents;
+        List<FlowFieldAgent> agents = _selectedAgents;
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
         if (forceGroundDestination)
@@ -196,11 +196,11 @@ public class AgentSelectionController : MonoBehaviour
     }
     void DeselectAllAgents()
     {
-        for(int i = 0; i < SelectedAgents.Count; i++)
+        for(int i = 0; i < _selectedAgents.Count; i++)
         {
-            SelectedAgents[i].GetComponentInChildren<MeshRenderer>().material = _normalAgentMaterial;
+            _selectedAgents[i].GetComponentInChildren<MeshRenderer>().material = _normalAgentMaterial;
         }
-        SelectedAgents.Clear();
+        _selectedAgents.Clear();
     }
     void SetMaterialOfAgents(List<FlowFieldAgent> agents, Material mat)
     {

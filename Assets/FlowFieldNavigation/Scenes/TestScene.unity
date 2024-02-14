@@ -216,6 +216,16 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
+      propertyPath: RowAmount
+      value: 500
+      objectReference: {fileID: 0}
+    - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
+        type: 3}
+      propertyPath: ColumnAmount
+      value: 500
+      objectReference: {fileID: 0}
+    - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
+        type: 3}
       propertyPath: _navigationManager
       value: 
       objectReference: {fileID: 1328932016}
@@ -730,6 +740,11 @@ PrefabInstance:
       propertyPath: _pathfindingManager
       value: 
       objectReference: {fileID: 1328932016}
+    - target: {fileID: 5836007236481813446, guid: f55c253bbe9585643ad7034e78074555,
+        type: 3}
+      propertyPath: _startingAgentCount
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5836007236481813448, guid: f55c253bbe9585643ad7034e78074555,
         type: 3}
       propertyPath: m_Name
