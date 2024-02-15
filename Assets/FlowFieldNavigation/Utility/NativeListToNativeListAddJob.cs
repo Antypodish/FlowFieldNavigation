@@ -2,18 +2,22 @@
 using Unity.Jobs;
 using Unity.Collections;
 
-[BurstCompile]
-internal struct NativeListToNativeListAddJob<T> : IJob where T : unmanaged
+namespace FlowFieldNavigation
 {
-    internal NativeList<T> Source;
-    internal NativeList<T> Destination;
-    public void Execute()
+    [BurstCompile]
+    internal struct NativeListToNativeListAddJob<T> : IJob where T : unmanaged
     {
-        int initialSize = Destination.Length;
-        Destination.Resize(Destination.Length + Source.Length, NativeArrayOptions.ClearMemory);
-        for(int i = 0; i < Source.Length; i++)
+        internal NativeList<T> Source;
+        internal NativeList<T> Destination;
+        public void Execute()
         {
-            Destination[initialSize + i] = Source[i];
+            int initialSize = Destination.Length;
+            Destination.Resize(Destination.Length + Source.Length, NativeArrayOptions.ClearMemory);
+            for (int i = 0; i < Source.Length; i++)
+            {
+                Destination[initialSize + i] = Source[i];
+            }
         }
     }
+
 }

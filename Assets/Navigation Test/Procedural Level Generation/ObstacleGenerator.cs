@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using Unity.Collections;
+using FlowFieldNavigation;
 
 public class ObstacleGenerator
 {

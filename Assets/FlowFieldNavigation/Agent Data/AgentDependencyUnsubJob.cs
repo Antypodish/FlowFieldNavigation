@@ -5,43 +5,48 @@ using Unity.Burst;
 using System.Collections.Generic;
 using UnityEngine.Jobs;
 
-[BurstCompile]
-internal struct AgentDependencyUnsubJob : IJob
+namespace FlowFieldNavigation
 {
-    [ReadOnly] internal NativeArray<int> RemovedAgentIndicies;
-    [WriteOnly] internal NativeList<int> AgentRequestedPathIndicies;
-    internal NativeArray<int> PathSubscriberCounts;
-    internal NativeArray<Flock> FlockList;
-    internal NativeList<int> AgentFlockIndicies;
-    internal NativeList<int> AgentCurPathIndicies;
-    public void Execute()
+    [BurstCompile]
+    internal struct AgentDependencyUnsubJob : IJob
     {
-        //Unsub agents to be removed
-        for(int i = 0; i < RemovedAgentIndicies.Length; i++)
+        [ReadOnly] internal NativeArray<int> RemovedAgentIndicies;
+        [WriteOnly] internal NativeList<int> AgentRequestedPathIndicies;
+        internal NativeArray<int> PathSubscriberCounts;
+        internal NativeArray<Flock> FlockList;
+        internal NativeList<int> AgentFlockIndicies;
+        internal NativeList<int> AgentCurPathIndicies;
+        public void Execute()
         {
-            int agentIndex = RemovedAgentIndicies[i];
-
-            //Unsub cur path
-            int curPathIndex = AgentCurPathIndicies[agentIndex];
-            if (curPathIndex != -1)
+            //Unsub agents to be removed
+            for (int i = 0; i < RemovedAgentIndicies.Length; i++)
             {
-                AgentCurPathIndicies[agentIndex] = -1;
-                PathSubscriberCounts[curPathIndex]--;
+                int agentIndex = RemovedAgentIndicies[i];
+
+                //Unsub cur path
+                int curPathIndex = AgentCurPathIndicies[agentIndex];
+                if (curPathIndex != -1)
+                {
+                    AgentCurPathIndicies[agentIndex] = -1;
+                    PathSubscriberCounts[curPathIndex]--;
+                }
+
+                //Unsub new path
+                AgentRequestedPathIndicies[agentIndex] = -1;
+
+                //Unsub flock
+                int flockIndex = AgentFlockIndicies[agentIndex];
+                if (flockIndex != 0)
+                {
+                    AgentFlockIndicies[agentIndex] = 0;
+                    Flock flock = FlockList[flockIndex];
+                    flock.AgentCount--;
+                    FlockList[flockIndex] = flock;
+                }
+
             }
-
-            //Unsub new path
-            AgentRequestedPathIndicies[agentIndex] = -1;
-
-            //Unsub flock
-            int flockIndex = AgentFlockIndicies[agentIndex];
-            if (flockIndex != 0)
-            {
-                AgentFlockIndicies[agentIndex] = 0;
-                Flock flock = FlockList[flockIndex];
-                flock.AgentCount--;
-                FlockList[flockIndex] = flock;
-            }
-
         }
     }
+
+
 }

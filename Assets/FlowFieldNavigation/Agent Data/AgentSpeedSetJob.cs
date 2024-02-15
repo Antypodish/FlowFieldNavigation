@@ -3,19 +3,23 @@ using Unity.Jobs;
 using Unity.Burst;
 using Unity.Mathematics;
 
-[BurstCompile]
-internal struct AgentSpeedSetJob : IJob
+namespace FlowFieldNavigation
 {
-    [ReadOnly] internal NativeArray<SetSpeedReq> SetSpeedRequests;
-    internal NativeArray<AgentData> AgentDataArray;
-    public void Execute()
+    [BurstCompile]
+    internal struct AgentSpeedSetJob : IJob
     {
-        for(int i = 0; i < SetSpeedRequests.Length; i++)
+        [ReadOnly] internal NativeArray<SetSpeedReq> SetSpeedRequests;
+        internal NativeArray<AgentData> AgentDataArray;
+        public void Execute()
         {
-            SetSpeedReq req = SetSpeedRequests[i];
-            AgentData agent = AgentDataArray[req.AgentIndex];
-            agent.Speed = req.NewSpeed;
-            AgentDataArray[req.AgentIndex] = agent;
+            for (int i = 0; i < SetSpeedRequests.Length; i++)
+            {
+                SetSpeedReq req = SetSpeedRequests[i];
+                AgentData agent = AgentDataArray[req.AgentIndex];
+                agent.Speed = req.NewSpeed;
+                AgentDataArray[req.AgentIndex] = agent;
+            }
         }
     }
+
 }

@@ -3,19 +3,25 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Mathematics;
 
-[BurstCompile]
-internal struct AgentsToStartMovingSetJob : IJob
+
+namespace FlowFieldNavigation
 {
-    [ReadOnly] internal NativeArray<int> AgentNewPathIndicies;
-    internal NativeList<int> AgentsToStartMoving;
-    public void Execute()
+    [BurstCompile]
+    internal struct AgentsToStartMovingSetJob : IJob
     {
-        for(int i = 0; i < AgentNewPathIndicies.Length; i++)
+        [ReadOnly] internal NativeArray<int> AgentNewPathIndicies;
+        internal NativeList<int> AgentsToStartMoving;
+        public void Execute()
         {
-            if (AgentNewPathIndicies[i] != -1)
+            for (int i = 0; i < AgentNewPathIndicies.Length; i++)
             {
-                AgentsToStartMoving.Add(i);
+                if (AgentNewPathIndicies[i] != -1)
+                {
+                    AgentsToStartMoving.Add(i);
+                }
             }
         }
     }
+
+
 }

@@ -3,74 +3,79 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 
-internal class SectorTransformationFactory
+namespace FlowFieldNavigation
 {
-    List<UnsafeList<int>> _sectorToPickedArrays;
-    List<NativeList<int>> _pickedToSectorLists;
-    List<CleaningHandle> _cleaningHandles;
-    int _sectorMatrixSectorAmount;
+    internal class SectorTransformationFactory
+    {
+        List<UnsafeList<int>> _sectorToPickedArrays;
+        List<NativeList<int>> _pickedToSectorLists;
+        List<CleaningHandle> _cleaningHandles;
+        int _sectorMatrixSectorAmount;
 
-    internal SectorTransformationFactory(int sectorMatrixSectorAmount)
-    {
-        _sectorMatrixSectorAmount = sectorMatrixSectorAmount;
-        _sectorToPickedArrays = new List<UnsafeList<int>>();
-        _pickedToSectorLists = new List<NativeList<int>>();
-        _cleaningHandles = new List<CleaningHandle>();
-    }
-    internal void CheckForCleaningHandles()
-    {
-        for (int i = _cleaningHandles.Count - 1; i >= 0; i--)
+        internal SectorTransformationFactory(int sectorMatrixSectorAmount)
         {
-            CleaningHandle cleaningHandle = _cleaningHandles[i];
-            if (cleaningHandle.Handle.IsCompleted)
+            _sectorMatrixSectorAmount = sectorMatrixSectorAmount;
+            _sectorToPickedArrays = new List<UnsafeList<int>>();
+            _pickedToSectorLists = new List<NativeList<int>>();
+            _cleaningHandles = new List<CleaningHandle>();
+        }
+        internal void CheckForCleaningHandles()
+        {
+            for (int i = _cleaningHandles.Count - 1; i >= 0; i--)
             {
-                cleaningHandle.Handle.Complete();
-                _sectorToPickedArrays.Add(cleaningHandle.List);
-                _cleaningHandles.RemoveAtSwapBack(i);
+                CleaningHandle cleaningHandle = _cleaningHandles[i];
+                if (cleaningHandle.Handle.IsCompleted)
+                {
+                    cleaningHandle.Handle.Complete();
+                    _sectorToPickedArrays.Add(cleaningHandle.List);
+                    _cleaningHandles.RemoveAtSwapBack(i);
+                }
             }
         }
-    }
-    internal UnsafeList<int> GetSectorToPickedArray()
-    {
-        UnsafeList<int> array;
-        if (_sectorToPickedArrays.Count == 0)
+        internal UnsafeList<int> GetSectorToPickedArray()
         {
-            array = new UnsafeList<int>(_sectorMatrixSectorAmount, Allocator.Persistent, NativeArrayOptions.ClearMemory);
-            array.Length = _sectorMatrixSectorAmount;
+            UnsafeList<int> array;
+            if (_sectorToPickedArrays.Count == 0)
+            {
+                array = new UnsafeList<int>(_sectorMatrixSectorAmount, Allocator.Persistent, NativeArrayOptions.ClearMemory);
+                array.Length = _sectorMatrixSectorAmount;
+                return array;
+            }
+            int index = _sectorToPickedArrays.Count - 1;
+            array = _sectorToPickedArrays[index];
+            _sectorToPickedArrays.RemoveAtSwapBack(index);
             return array;
         }
-        int index = _sectorToPickedArrays.Count - 1;
-        array = _sectorToPickedArrays[index];
-        _sectorToPickedArrays.RemoveAtSwapBack(index);
-        return array;
-    }
-    internal NativeList<int> GetPickedToSectorList()
-    {
-        if (_pickedToSectorLists.Count == 0) { return new NativeList<int>(Allocator.Persistent); }
-        int index = _pickedToSectorLists.Count - 1;
-        NativeList<int> list = _pickedToSectorLists[index];
-        _pickedToSectorLists.RemoveAtSwapBack(index);
-        return list;
-    }
-    internal void SendSectorTransformationsBack(UnsafeList<int> sectorToPicked, NativeList<int> pickedToSector)
-    {
-        UnsafeListCleaningJob<int> cleaning = new UnsafeListCleaningJob<int>()
+        internal NativeList<int> GetPickedToSectorList()
         {
-            List = sectorToPicked,
-        };
-        CleaningHandle cleaningHandle = new CleaningHandle()
+            if (_pickedToSectorLists.Count == 0) { return new NativeList<int>(Allocator.Persistent); }
+            int index = _pickedToSectorLists.Count - 1;
+            NativeList<int> list = _pickedToSectorLists[index];
+            _pickedToSectorLists.RemoveAtSwapBack(index);
+            return list;
+        }
+        internal void SendSectorTransformationsBack(UnsafeList<int> sectorToPicked, NativeList<int> pickedToSector)
         {
-            Handle = cleaning.Schedule(),
-            List = sectorToPicked,
-        };
-        _cleaningHandles.Add(cleaningHandle);
-        pickedToSector.Clear();
-        _pickedToSectorLists.Add(pickedToSector);
+            UnsafeListCleaningJob<int> cleaning = new UnsafeListCleaningJob<int>()
+            {
+                List = sectorToPicked,
+            };
+            CleaningHandle cleaningHandle = new CleaningHandle()
+            {
+                Handle = cleaning.Schedule(),
+                List = sectorToPicked,
+            };
+            _cleaningHandles.Add(cleaningHandle);
+            pickedToSector.Clear();
+            _pickedToSectorLists.Add(pickedToSector);
+        }
+
+        struct CleaningHandle
+        {
+            internal UnsafeList<int> List;
+            internal JobHandle Handle;
+        }
     }
 
-    struct CleaningHandle
-    {
-        internal UnsafeList<int> List;
-        internal JobHandle Handle;
-    }
+
 }

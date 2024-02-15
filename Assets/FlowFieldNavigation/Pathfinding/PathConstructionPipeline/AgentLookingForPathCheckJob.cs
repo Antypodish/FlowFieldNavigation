@@ -3,85 +3,88 @@ using Unity.Collections;
 using Unity.Burst;
 using Unity.Mathematics;
 
-[BurstCompile]
-internal struct AgentLookingForPathCheckJob : IJob
+
+namespace FlowFieldNavigation
 {
-    internal float TileSize;
-    internal int SectorColAmount;
-    internal int SectorMatrixColAmount;
-    internal int SectorTileAmount;
-    internal float2 FieldGridStartPos;
-    [ReadOnly] internal NativeArray<IslandFieldProcessor> IslandFieldProcessors;
-    [ReadOnly] internal NativeArray<PathRoutineData> PathRoutineDataArray;
-    [ReadOnly] internal NativeArray<PathDestinationData> PathDestinationDataArray;
-    [ReadOnly] internal NativeArray<int> AgentFlockIndicies;
-    [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
-    [ReadOnly] internal NativeList<int> ReadyAgentsLookingForPath;
-    [ReadOnly] internal NativeList<PathRequestRecord> ReadyAgentsLookingForPathRequestRecords;
-    [ReadOnly] internal FlockToPathHashMap FlockToPathHashmap;
-    internal NativeArray<int> PathSubscriberCounts;
-    internal NativeList<PathRequest> InitialPathRequests;
-    internal NativeArray<int> AgentNewPathIndicies;
-    internal NativeHashMap<int, int> FlockIndexToPathRequestIndex;
-    internal NativeList<AgentAndPath> AgentIndiciesToSubExistingPath;
-    public void Execute()
+    [BurstCompile]
+    internal struct AgentLookingForPathCheckJob : IJob
     {
-        NativeArray<int> ReadyAgentsLookingForPathAsArray = ReadyAgentsLookingForPath.AsArray();
-        for (int i = ReadyAgentsLookingForPathAsArray.Length -1; i >= 0; i--)
+        internal float TileSize;
+        internal int SectorColAmount;
+        internal int SectorMatrixColAmount;
+        internal int SectorTileAmount;
+        internal float2 FieldGridStartPos;
+        [ReadOnly] internal NativeArray<IslandFieldProcessor> IslandFieldProcessors;
+        [ReadOnly] internal NativeArray<PathRoutineData> PathRoutineDataArray;
+        [ReadOnly] internal NativeArray<PathDestinationData> PathDestinationDataArray;
+        [ReadOnly] internal NativeArray<int> AgentFlockIndicies;
+        [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
+        [ReadOnly] internal NativeList<int> ReadyAgentsLookingForPath;
+        [ReadOnly] internal NativeList<PathRequestRecord> ReadyAgentsLookingForPathRequestRecords;
+        [ReadOnly] internal FlockToPathHashMap FlockToPathHashmap;
+        internal NativeArray<int> PathSubscriberCounts;
+        internal NativeList<PathRequest> InitialPathRequests;
+        internal NativeArray<int> AgentNewPathIndicies;
+        internal NativeHashMap<int, int> FlockIndexToPathRequestIndex;
+        internal NativeList<AgentAndPath> AgentIndiciesToSubExistingPath;
+        public void Execute()
         {
-            int agentIndex = ReadyAgentsLookingForPathAsArray[i];
-            PathRequestRecord requestRecord = ReadyAgentsLookingForPathRequestRecords[i];
-
-            AgentData agentData = AgentDataArray[agentIndex];
-            float2 agentPos2 = new float2(agentData.Position.x, agentData.Position.z);
-            int agentOffset = FlowFieldUtilities.RadiusToOffset(agentData.Radius, TileSize);
-            int2 agentIndex2d = FlowFieldUtilities.PosTo2D(agentPos2, TileSize, FieldGridStartPos);
-
-            IslandFieldProcessor islandFieldProcessor = IslandFieldProcessors[agentOffset];
-            int agentIsland = islandFieldProcessor.GetIsland(agentIndex2d);
-            int agentFlock = AgentFlockIndicies[agentIndex];
-
-            bool existingPathSuccesfull = TryFindingExistingPath(agentIndex, agentFlock, agentOffset, agentIsland, islandFieldProcessor);
-            if (!existingPathSuccesfull)
+            NativeArray<int> ReadyAgentsLookingForPathAsArray = ReadyAgentsLookingForPath.AsArray();
+            for (int i = ReadyAgentsLookingForPathAsArray.Length - 1; i >= 0; i--)
             {
-                if(FlockIndexToPathRequestIndex.TryGetValue(agentFlock, out int pathRequestIndex))
+                int agentIndex = ReadyAgentsLookingForPathAsArray[i];
+                PathRequestRecord requestRecord = ReadyAgentsLookingForPathRequestRecords[i];
+
+                AgentData agentData = AgentDataArray[agentIndex];
+                float2 agentPos2 = new float2(agentData.Position.x, agentData.Position.z);
+                int agentOffset = FlowFieldUtilities.RadiusToOffset(agentData.Radius, TileSize);
+                int2 agentIndex2d = FlowFieldUtilities.PosTo2D(agentPos2, TileSize, FieldGridStartPos);
+
+                IslandFieldProcessor islandFieldProcessor = IslandFieldProcessors[agentOffset];
+                int agentIsland = islandFieldProcessor.GetIsland(agentIndex2d);
+                int agentFlock = AgentFlockIndicies[agentIndex];
+
+                bool existingPathSuccesfull = TryFindingExistingPath(agentIndex, agentFlock, agentOffset, agentIsland, islandFieldProcessor);
+                if (!existingPathSuccesfull)
                 {
-                    AgentNewPathIndicies[agentIndex] = pathRequestIndex;
-                }
-                else
-                {
-                    int newPathRequestIndex = InitialPathRequests.Length;
-                    PathRequest newRequest = new PathRequest(requestRecord);
-                    AgentNewPathIndicies[agentIndex] = newPathRequestIndex;
-                    InitialPathRequests.Add(newRequest);
-                    FlockIndexToPathRequestIndex.Add(agentFlock, newPathRequestIndex);
+                    if (FlockIndexToPathRequestIndex.TryGetValue(agentFlock, out int pathRequestIndex))
+                    {
+                        AgentNewPathIndicies[agentIndex] = pathRequestIndex;
+                    }
+                    else
+                    {
+                        int newPathRequestIndex = InitialPathRequests.Length;
+                        PathRequest newRequest = new PathRequest(requestRecord);
+                        AgentNewPathIndicies[agentIndex] = newPathRequestIndex;
+                        InitialPathRequests.Add(newRequest);
+                        FlockIndexToPathRequestIndex.Add(agentFlock, newPathRequestIndex);
+                    }
                 }
             }
         }
-    }
 
-    bool TryFindingExistingPath(int agentIndex, int agentFlock, int agentOffset, int agentIsland, IslandFieldProcessor islandFieldProcessor)
-    {
-        NativeSlice<int> pathIndicies = FlockToPathHashmap.GetPathIndiciesOfFlock(agentFlock);
-        
-        for(int i = 0; i< pathIndicies.Length; i++)
+        bool TryFindingExistingPath(int agentIndex, int agentFlock, int agentOffset, int agentIsland, IslandFieldProcessor islandFieldProcessor)
         {
-            int pathIndex = pathIndicies[i];
-            PathDestinationData destinationData = PathDestinationDataArray[pathIndex];
-            if (agentOffset != destinationData.Offset) { continue; }
-            int destinationIsland = islandFieldProcessor.GetIsland(destinationData.Destination);
-            if (destinationIsland != agentIsland) { continue; }
-            PathRoutineData routineData = PathRoutineDataArray[pathIndex];
-            if (routineData.PathReconstructionFlag) { continue; }
-            AgentAndPath agentAndPath = new AgentAndPath()
+            NativeSlice<int> pathIndicies = FlockToPathHashmap.GetPathIndiciesOfFlock(agentFlock);
+
+            for (int i = 0; i < pathIndicies.Length; i++)
             {
-                AgentIndex = agentIndex,
-                PathIndex = pathIndex,
-            };
-            AgentIndiciesToSubExistingPath.Add(agentAndPath);
-            return true;
-        }
-        return false;/*
+                int pathIndex = pathIndicies[i];
+                PathDestinationData destinationData = PathDestinationDataArray[pathIndex];
+                if (agentOffset != destinationData.Offset) { continue; }
+                int destinationIsland = islandFieldProcessor.GetIsland(destinationData.Destination);
+                if (destinationIsland != agentIsland) { continue; }
+                PathRoutineData routineData = PathRoutineDataArray[pathIndex];
+                if (routineData.PathReconstructionFlag) { continue; }
+                AgentAndPath agentAndPath = new AgentAndPath()
+                {
+                    AgentIndex = agentIndex,
+                    PathIndex = pathIndex,
+                };
+                AgentIndiciesToSubExistingPath.Add(agentAndPath);
+                return true;
+            }
+            return false;/*
         for (int pathIndex = 0; pathIndex < PathStateArray.Length; pathIndex++)
         {
             if (PathStateArray[pathIndex] == PathState.Removed) { continue; }
@@ -102,7 +105,9 @@ internal struct AgentLookingForPathCheckJob : IJob
             return true;
         }
         return false;*/
+        }
+
     }
+    //Very naive approach O(m*n). Searches all paths for each agent in the list. Make it O(n).
 
 }
-//Very naive approach O(m*n). Searches all paths for each agent in the list. Make it O(n).

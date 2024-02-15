@@ -4,6 +4,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using Unity.Collections;
 using System.Diagnostics;
+using FlowFieldNavigation;
 public class CostEditController
 {
     FlowFieldNavigationManager _navigationManager;

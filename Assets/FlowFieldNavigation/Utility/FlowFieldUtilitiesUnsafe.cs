@@ -1,28 +1,33 @@
 ﻿using Unity.Collections.LowLevel.Unsafe;
 using Unity.Collections;
 
-internal static class FlowFieldUtilitiesUnsafe
+namespace FlowFieldNavigation
 {
-    internal static UnsafeListReadOnly<byte> ToUnsafeListRedonly(NativeArray<byte> array)
+    internal static class FlowFieldUtilitiesUnsafe
     {
-        UnsafeListReadOnly<byte> list;
-        unsafe
+        internal static UnsafeListReadOnly<byte> ToUnsafeListRedonly(NativeArray<byte> array)
         {
-            byte* arrayPtr = (byte*)array.GetUnsafePtr();
-            int arrayLength = array.Length;
-            list = new UnsafeListReadOnly<byte>(arrayPtr, arrayLength);
+            UnsafeListReadOnly<byte> list;
+            unsafe
+            {
+                byte* arrayPtr = (byte*)array.GetUnsafePtr();
+                int arrayLength = array.Length;
+                list = new UnsafeListReadOnly<byte>(arrayPtr, arrayLength);
+            }
+            return list;
         }
-        return list;
-    }
-    internal static UnsafeListReadOnly<T> ToUnsafeListRedonly<T>(NativeArray<T> array) where T : unmanaged
-    {
-        UnsafeListReadOnly<T> list;
-        unsafe
+        internal static UnsafeListReadOnly<T> ToUnsafeListRedonly<T>(NativeArray<T> array) where T : unmanaged
         {
-            T* arrayPtr = (T*)array.GetUnsafePtr();
-            int arrayLength = array.Length;
-            list = new UnsafeListReadOnly<T>(arrayPtr, arrayLength);
+            UnsafeListReadOnly<T> list;
+            unsafe
+            {
+                T* arrayPtr = (T*)array.GetUnsafePtr();
+                int arrayLength = array.Length;
+                list = new UnsafeListReadOnly<T>(arrayPtr, arrayLength);
+            }
+            return list;
         }
-        return list;
     }
+
+
 }

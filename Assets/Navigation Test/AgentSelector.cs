@@ -4,7 +4,7 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UI;
-
+using FlowFieldNavigation;
 public class AgentBoundSelector
 {
     Vector3 _startMousePos;

@@ -3,9 +3,14 @@ using System.Numerics;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
-internal struct DynamicArea
+
+namespace FlowFieldNavigation
 {
-    internal NativeList<IntegrationTile> IntegrationField;
-    internal UnsafeList<FlowData> FlowFieldCalculationBuffer;
-    internal UnsafeList<SectorFlowStart> SectorFlowStartCalculationBuffer;
+    internal struct DynamicArea
+    {
+        internal NativeList<IntegrationTile> IntegrationField;
+        internal UnsafeList<FlowData> FlowFieldCalculationBuffer;
+        internal UnsafeList<SectorFlowStart> SectorFlowStartCalculationBuffer;
+    }
+
 }

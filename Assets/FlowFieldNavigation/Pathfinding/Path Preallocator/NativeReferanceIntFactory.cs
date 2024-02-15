@@ -4,35 +4,41 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Collections;
 using Unity.Jobs;
 
-internal class NativeReferanceIntFactory
+namespace FlowFieldNavigation
 {
-    List<NativeReference<int>> _nativeReferanceContainer;
 
-    internal NativeReferanceIntFactory(int initialSize)
+    internal class NativeReferanceIntFactory
     {
-        _nativeReferanceContainer = new List<NativeReference<int>>(initialSize);
-        for (int i = 0; i < initialSize; i++)
+        List<NativeReference<int>> _nativeReferanceContainer;
+
+        internal NativeReferanceIntFactory(int initialSize)
         {
-            _nativeReferanceContainer.Add(new NativeReference<int>(Allocator.Persistent));
+            _nativeReferanceContainer = new List<NativeReference<int>>(initialSize);
+            for (int i = 0; i < initialSize; i++)
+            {
+                _nativeReferanceContainer.Add(new NativeReference<int>(Allocator.Persistent));
+            }
         }
-    }
-    internal NativeReference<int> GetNativeReferanceInt()
-    {
-        if (_nativeReferanceContainer.Count == 0)
+        internal NativeReference<int> GetNativeReferanceInt()
         {
-            return new NativeReference<int>(Allocator.Persistent);
+            if (_nativeReferanceContainer.Count == 0)
+            {
+                return new NativeReference<int>(Allocator.Persistent);
+            }
+            else
+            {
+                NativeReference<int> nativeReferance = _nativeReferanceContainer[0];
+                _nativeReferanceContainer.RemoveAtSwapBack(0);
+                return nativeReferance;
+            }
         }
-        else
+        internal void SendNativeReferanceInt(NativeReference<int> nativeReferanceInt)
         {
-            NativeReference<int> nativeReferance = _nativeReferanceContainer[0];
-            _nativeReferanceContainer.RemoveAtSwapBack(0);
-            return nativeReferance;
+            nativeReferanceInt.Value = 0;
+            _nativeReferanceContainer.Add(nativeReferanceInt);
         }
+
     }
-    internal void SendNativeReferanceInt(NativeReference<int> nativeReferanceInt)
-    {
-        nativeReferanceInt.Value = 0;
-        _nativeReferanceContainer.Add(nativeReferanceInt);
-    }
+
 
 }

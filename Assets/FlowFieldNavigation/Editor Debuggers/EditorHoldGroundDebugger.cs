@@ -2,24 +2,29 @@
 using Unity.Collections;
 using System.Collections.Generic;
 
-internal class EditorHoldGroundDebugger
+namespace FlowFieldNavigation
 {
-    FlowFieldNavigationManager _navigationManager;
-    internal EditorHoldGroundDebugger(FlowFieldNavigationManager navigationManager)
+    internal class EditorHoldGroundDebugger
     {
-        _navigationManager = navigationManager;
-    }
+        FlowFieldNavigationManager _navigationManager;
+        internal EditorHoldGroundDebugger(FlowFieldNavigationManager navigationManager)
+        {
+            _navigationManager = navigationManager;
+        }
 
-    internal void Debug()
-    {
-        Gizmos.color = Color.yellow;
+        internal void Debug()
+        {
+            Gizmos.color = Color.yellow;
 
-        NativeArray<AgentData> agents = _navigationManager.AgentDataContainer.AgentDataList.AsArray();
+            NativeArray<AgentData> agents = _navigationManager.AgentDataContainer.AgentDataList.AsArray();
 
-        for(int i = 0; i< agents.Length; i++)
-        {            
-            if ((agents[i].Status & AgentStatus.HoldGround) != AgentStatus.HoldGround) { continue; }
-            Gizmos.DrawCube(agents[i].Position, new Vector3(0.2f, 0.2f, 0.2f));
+            for (int i = 0; i < agents.Length; i++)
+            {
+                if ((agents[i].Status & AgentStatus.HoldGround) != AgentStatus.HoldGround) { continue; }
+                Gizmos.DrawCube(agents[i].Position, new Vector3(0.2f, 0.2f, 0.2f));
+            }
         }
     }
+
 }
+

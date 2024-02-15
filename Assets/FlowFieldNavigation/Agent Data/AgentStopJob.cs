@@ -2,20 +2,25 @@
 using Unity.Burst;
 using Unity.Jobs;
 
-[BurstCompile]
-internal struct AgentStopJob : IJob
+namespace FlowFieldNavigation
 {
-    [ReadOnly] internal NativeArray<int> AgentIndiciesToStop;
-    internal NativeArray<AgentData> AgentDataArray;
 
-    public void Execute()
+    [BurstCompile]
+    internal struct AgentStopJob : IJob
     {
-        for (int i = 0; i < AgentIndiciesToStop.Length; i++)
+        [ReadOnly] internal NativeArray<int> AgentIndiciesToStop;
+        internal NativeArray<AgentData> AgentDataArray;
+
+        public void Execute()
         {
-            int agentIndex = AgentIndiciesToStop[i];
-            AgentData agentData = AgentDataArray[agentIndex];
-            agentData.Status = 0;
-            AgentDataArray[agentIndex] = agentData;
+            for (int i = 0; i < AgentIndiciesToStop.Length; i++)
+            {
+                int agentIndex = AgentIndiciesToStop[i];
+                AgentData agentData = AgentDataArray[agentIndex];
+                agentData.Status = 0;
+                AgentDataArray[agentIndex] = agentData;
+            }
         }
     }
+
 }

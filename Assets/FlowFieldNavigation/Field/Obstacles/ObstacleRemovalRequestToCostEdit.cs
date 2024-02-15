@@ -3,33 +3,38 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Mathematics;
 
-[BurstCompile]
-internal struct ObstacleRemovalRequestToCostEdit : IJob
+namespace FlowFieldNavigation
 {
-    internal NativeArray<int>.ReadOnly ObstacleRemovalIndicies;
-    internal NativeList<CostEdit> CostEditOutput;
-    internal NativeList<Obstacle> ObstacleList;
-    internal NativeList<int> RemovedObstacleIndexList;
 
-    public void Execute()
+    [BurstCompile]
+    internal struct ObstacleRemovalRequestToCostEdit : IJob
     {
-        for (int i = 0; i < ObstacleRemovalIndicies.Length; i++)
+        internal NativeArray<int>.ReadOnly ObstacleRemovalIndicies;
+        internal NativeList<CostEdit> CostEditOutput;
+        internal NativeList<Obstacle> ObstacleList;
+        internal NativeList<int> RemovedObstacleIndexList;
+
+        public void Execute()
         {
-            int indexToRemove = ObstacleRemovalIndicies[i];
-            if (indexToRemove < 0 || indexToRemove >= ObstacleList.Length) { continue; }
-            Obstacle obstacleToRemove = ObstacleList[indexToRemove];
-            if (obstacleToRemove.State == ObstacleState.Removed) { continue; }
-            obstacleToRemove.State = ObstacleState.Removed;
-            ObstacleList[indexToRemove] = obstacleToRemove;
-            RemovedObstacleIndexList.Add(indexToRemove);
-            CostEdit removeEdit = new CostEdit()
+            for (int i = 0; i < ObstacleRemovalIndicies.Length; i++)
             {
-                BotLeftBound = obstacleToRemove.BotLeftBound,
-                TopRightBound = obstacleToRemove.TopRightBound,
-                EditType = CostEditType.Clear,
-            };
-            CostEditOutput.Add(removeEdit);
+                int indexToRemove = ObstacleRemovalIndicies[i];
+                if (indexToRemove < 0 || indexToRemove >= ObstacleList.Length) { continue; }
+                Obstacle obstacleToRemove = ObstacleList[indexToRemove];
+                if (obstacleToRemove.State == ObstacleState.Removed) { continue; }
+                obstacleToRemove.State = ObstacleState.Removed;
+                ObstacleList[indexToRemove] = obstacleToRemove;
+                RemovedObstacleIndexList.Add(indexToRemove);
+                CostEdit removeEdit = new CostEdit()
+                {
+                    BotLeftBound = obstacleToRemove.BotLeftBound,
+                    TopRightBound = obstacleToRemove.TopRightBound,
+                    EditType = CostEditType.Clear,
+                };
+                CostEditOutput.Add(removeEdit);
+            }
         }
     }
-}
 
+
+}

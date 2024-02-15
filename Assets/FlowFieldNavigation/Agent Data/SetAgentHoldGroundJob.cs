@@ -2,20 +2,25 @@
 using Unity.Burst;
 using Unity.Jobs;
 
-[BurstCompile]
-internal struct SetAgentHoldGroundJob : IJob
+namespace FlowFieldNavigation
 {
-    [ReadOnly] internal NativeArray<int> AgentIndiciesToHoldGround;
-    internal NativeArray<AgentData> AgentDataArray;
 
-    public void Execute()
+    [BurstCompile]
+    internal struct SetAgentHoldGroundJob : IJob
     {
-        for(int i = 0; i < AgentIndiciesToHoldGround.Length; i++)
+        [ReadOnly] internal NativeArray<int> AgentIndiciesToHoldGround;
+        internal NativeArray<AgentData> AgentDataArray;
+
+        public void Execute()
         {
-            int agentIndex = AgentIndiciesToHoldGround[i];
-            AgentData agentData = AgentDataArray[agentIndex];
-            agentData.Status = AgentStatus.HoldGround;
-            AgentDataArray[agentIndex] = agentData;
+            for (int i = 0; i < AgentIndiciesToHoldGround.Length; i++)
+            {
+                int agentIndex = AgentIndiciesToHoldGround[i];
+                AgentData agentData = AgentDataArray[agentIndex];
+                agentData.Status = AgentStatus.HoldGround;
+                AgentDataArray[agentIndex] = agentData;
+            }
         }
     }
+
 }

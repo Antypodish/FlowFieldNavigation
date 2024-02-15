@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-
+using FlowFieldNavigation;
 public class WalkabilityData
 {
     public float TileSize;

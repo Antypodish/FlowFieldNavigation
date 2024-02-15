@@ -1,20 +1,24 @@
 ﻿using Unity.Collections;
 using UnityEngine;
 
-internal class EditorAgentRadiusDebugger
+namespace FlowFieldNavigation
 {
-    FlowFieldNavigationManager _navigationManager;
-    internal EditorAgentRadiusDebugger(FlowFieldNavigationManager navigationManager)
+    internal class EditorAgentRadiusDebugger
     {
-        _navigationManager = navigationManager;
-    }
-    internal void DebugSeperationRadius()
-    {
-        Gizmos.color = Color.white;
-        NativeArray<AgentData> agents = _navigationManager.AgentDataContainer.AgentDataList.AsArray();
-        for(int i = 0; i < agents.Length; i++)
+        FlowFieldNavigationManager _navigationManager;
+        internal EditorAgentRadiusDebugger(FlowFieldNavigationManager navigationManager)
         {
-            Gizmos.DrawWireSphere(agents[i].Position, agents[i].Radius);
+            _navigationManager = navigationManager;
+        }
+        internal void DebugSeperationRadius()
+        {
+            Gizmos.color = Color.white;
+            NativeArray<AgentData> agents = _navigationManager.AgentDataContainer.AgentDataList.AsArray();
+            for (int i = 0; i < agents.Length; i++)
+            {
+                Gizmos.DrawWireSphere(agents[i].Position, agents[i].Radius);
+            }
         }
     }
+
 }

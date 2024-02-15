@@ -3,15 +3,20 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Mathematics;
 
-[BurstCompile]
-internal struct PortalNodeToPosJob : IJobParallelFor
+namespace FlowFieldNavigation
 {
-    internal float2 FieldGridStartPos;
-    internal float TileSize;
-    [ReadOnly] internal NativeArray<PortalNode> Nodes;
-    [WriteOnly] internal NativeArray<float2> Positions;
-    public void Execute(int index)
+    [BurstCompile]
+    internal struct PortalNodeToPosJob : IJobParallelFor
     {
-        Positions[index] = Nodes[index].GetPosition2(TileSize, FieldGridStartPos);
+        internal float2 FieldGridStartPos;
+        internal float TileSize;
+        [ReadOnly] internal NativeArray<PortalNode> Nodes;
+        [WriteOnly] internal NativeArray<float2> Positions;
+        public void Execute(int index)
+        {
+            Positions[index] = Nodes[index].GetPosition2(TileSize, FieldGridStartPos);
+        }
     }
+
+
 }

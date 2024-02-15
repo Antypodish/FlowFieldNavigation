@@ -3,73 +3,79 @@ using Unity.Jobs;
 using UnityEngine;
 using Unity.Mathematics;
 using System.Collections.Generic;
-internal class TileDebugMeshBuilder
+
+namespace FlowFieldNavigation
 {
-    FlowFieldNavigationManager _navigationManager;
-    List<Mesh> _debugMeshes;
-    bool _isCreated;
-    internal TileDebugMeshBuilder(FlowFieldNavigationManager navigationManager)
+    internal class TileDebugMeshBuilder
     {
-        _navigationManager = navigationManager;
-        _debugMeshes = new List<Mesh>();
-        _isCreated = false;
-    }
-    internal List<Mesh> GetDebugMesh()
-    {
-        if (!_isCreated) { Create(); }
-        return _debugMeshes;
-    }
-
-    void Create()
-    {
-        _isCreated = true;
-        int fieldColAmount = FlowFieldUtilities.FieldColAmount;
-        int fieldRowAmount = FlowFieldUtilities.FieldRowAmount;
-        const int maxRowEachMesh = 100;
-        const int maxColEachMesh = 100;
-        for(int r = 0; r < fieldRowAmount; r+=maxRowEachMesh)
+        FlowFieldNavigationManager _navigationManager;
+        List<Mesh> _debugMeshes;
+        bool _isCreated;
+        internal TileDebugMeshBuilder(FlowFieldNavigationManager navigationManager)
         {
-            for (int c = 0; c < fieldColAmount; c += maxColEachMesh)
-            {
-                int2 startIndex = new int2(c, r);
-                int2 endIndex = new int2(math.min(c + maxColEachMesh - 1, fieldColAmount - 1), math.min(r + maxRowEachMesh - 1, fieldRowAmount - 1));
-                int meshColAmount = endIndex.x - startIndex.x + 2;
-                int meshRowAmount = endIndex.y - startIndex.y + 2;
+            _navigationManager = navigationManager;
+            _debugMeshes = new List<Mesh>();
+            _isCreated = false;
+        }
+        internal List<Mesh> GetDebugMesh()
+        {
+            if (!_isCreated) { Create(); }
+            return _debugMeshes;
+        }
 
-                NativeArray<Vector3> verts = new NativeArray<Vector3>(meshColAmount * meshRowAmount, Allocator.Persistent);
-                NativeArray<int> trigs = new NativeArray<int>((meshColAmount - 1) * (meshRowAmount - 1) * 4, Allocator.Persistent);
-                TileWireMeshBuildJob tileMeshCalculation = new TileWireMeshBuildJob()
+        void Create()
+        {
+            _isCreated = true;
+            int fieldColAmount = FlowFieldUtilities.FieldColAmount;
+            int fieldRowAmount = FlowFieldUtilities.FieldRowAmount;
+            const int maxRowEachMesh = 100;
+            const int maxColEachMesh = 100;
+            for (int r = 0; r < fieldRowAmount; r += maxRowEachMesh)
+            {
+                for (int c = 0; c < fieldColAmount; c += maxColEachMesh)
                 {
-                    TileSize = FlowFieldUtilities.TileSize,
-                    StartFieldIndex = startIndex,
-                    MeshStartPos = FlowFieldUtilities.IndexToStartPos(startIndex, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition),
-                    TriangleSpatialHashGrid = _navigationManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
-                    HeightMeshVerts = _navigationManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray(),
-                    MeshColCount = meshColAmount,
-                    MeshRowCount = meshRowAmount,
-                    Verts = verts,
-                    Trigs = trigs,
-                };
-                tileMeshCalculation.Schedule().Complete();
-                if (verts.Length >= 3)
-                {
-                    Mesh mesh = CreateMesh(verts, trigs);
-                    _debugMeshes.Add(mesh);
-                    verts.Dispose();
-                    trigs.Dispose();
+                    int2 startIndex = new int2(c, r);
+                    int2 endIndex = new int2(math.min(c + maxColEachMesh - 1, fieldColAmount - 1), math.min(r + maxRowEachMesh - 1, fieldRowAmount - 1));
+                    int meshColAmount = endIndex.x - startIndex.x + 2;
+                    int meshRowAmount = endIndex.y - startIndex.y + 2;
+
+                    NativeArray<Vector3> verts = new NativeArray<Vector3>(meshColAmount * meshRowAmount, Allocator.Persistent);
+                    NativeArray<int> trigs = new NativeArray<int>((meshColAmount - 1) * (meshRowAmount - 1) * 4, Allocator.Persistent);
+                    TileWireMeshBuildJob tileMeshCalculation = new TileWireMeshBuildJob()
+                    {
+                        TileSize = FlowFieldUtilities.TileSize,
+                        StartFieldIndex = startIndex,
+                        MeshStartPos = FlowFieldUtilities.IndexToStartPos(startIndex, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition),
+                        TriangleSpatialHashGrid = _navigationManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
+                        HeightMeshVerts = _navigationManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray(),
+                        MeshColCount = meshColAmount,
+                        MeshRowCount = meshRowAmount,
+                        Verts = verts,
+                        Trigs = trigs,
+                    };
+                    tileMeshCalculation.Schedule().Complete();
+                    if (verts.Length >= 3)
+                    {
+                        Mesh mesh = CreateMesh(verts, trigs);
+                        _debugMeshes.Add(mesh);
+                        verts.Dispose();
+                        trigs.Dispose();
+                    }
                 }
             }
         }
+
+        Mesh CreateMesh(NativeArray<Vector3> verts, NativeArray<int> trigs)
+        {
+            Mesh mesh = new Mesh();
+            mesh.Clear();
+            mesh.vertices = verts.ToArray();
+            mesh.triangles = new int[0];
+            mesh.RecalculateNormals();
+            mesh.SetIndices(trigs.ToArray(), MeshTopology.Lines, 0);
+            return mesh;
+        }
     }
 
-    Mesh CreateMesh(NativeArray<Vector3> verts, NativeArray<int> trigs)
-    {
-        Mesh mesh = new Mesh();
-        mesh.Clear();
-        mesh.vertices = verts.ToArray();
-        mesh.triangles = new int[0];
-        mesh.RecalculateNormals();
-        mesh.SetIndices(trigs.ToArray(), MeshTopology.Lines, 0);
-        return mesh;
-    }
+
 }

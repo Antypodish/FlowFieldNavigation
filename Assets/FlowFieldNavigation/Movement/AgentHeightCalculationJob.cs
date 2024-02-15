@@ -4,74 +4,78 @@ using Unity.Collections;
 using Unity.Mathematics;
 using System.Numerics;
 
-[BurstCompile]
-internal struct AgentHeightCalculationJob : IJobParallelFor
+namespace FlowFieldNavigation
 {
-    [ReadOnly] internal TriangleSpatialHashGrid TriangleSpatialHashGrid;
-    [ReadOnly] internal NativeArray<float3> Verticies;
-    [ReadOnly] internal NativeArray<AgentMovementData> AgentMovementDataArray;
-    internal NativeArray<float3> AgentPositionChangeArray;
-    public void Execute(int index)
+    [BurstCompile]
+    internal struct AgentHeightCalculationJob : IJobParallelFor
     {
-        AgentMovementData agentData = AgentMovementDataArray[index];
-        float3 agentPos3 = agentData.Position;
-        float currentHeight = agentPos3.y;
-        float2 agentPos2 = new float2(agentPos3.x, agentPos3.z);
-        float desiredHeight = float.MinValue;
-        for(int i = 0; i < TriangleSpatialHashGrid.GetGridCount(); i++)
+        [ReadOnly] internal TriangleSpatialHashGrid TriangleSpatialHashGrid;
+        [ReadOnly] internal NativeArray<float3> Verticies;
+        [ReadOnly] internal NativeArray<AgentMovementData> AgentMovementDataArray;
+        internal NativeArray<float3> AgentPositionChangeArray;
+        public void Execute(int index)
         {
-            bool succesfull = TriangleSpatialHashGrid.TryGetIterator(agentPos2, i, out TriangleSpatialHashGridIterator triangleGridIterator);
-            if (!succesfull) { desiredHeight = 0; break; }
-            while (triangleGridIterator.HasNext())
+            AgentMovementData agentData = AgentMovementDataArray[index];
+            float3 agentPos3 = agentData.Position;
+            float currentHeight = agentPos3.y;
+            float2 agentPos2 = new float2(agentPos3.x, agentPos3.z);
+            float desiredHeight = float.MinValue;
+            for (int i = 0; i < TriangleSpatialHashGrid.GetGridCount(); i++)
             {
-                NativeSlice<int> triangles = triangleGridIterator.GetNextRow();
-                for(int j = 0; j < triangles.Length; j += 3)
+                bool succesfull = TriangleSpatialHashGrid.TryGetIterator(agentPos2, i, out TriangleSpatialHashGridIterator triangleGridIterator);
+                if (!succesfull) { desiredHeight = 0; break; }
+                while (triangleGridIterator.HasNext())
                 {
-                    int v1Index = triangles[j];
-                    int v2Index = triangles[j + 1];
-                    int v3Index = triangles[j + 2];
-                    float3 v13d = Verticies[v1Index];
-                    float3 v23d = Verticies[v2Index];
-                    float3 v33d = Verticies[v3Index];
-                    float2 v1 = new float2(v13d.x, v13d.z);
-                    float2 v2 = new float2(v23d.x, v23d.z);
-                    float2 v3 = new float2(v33d.x, v33d.z);
+                    NativeSlice<int> triangles = triangleGridIterator.GetNextRow();
+                    for (int j = 0; j < triangles.Length; j += 3)
+                    {
+                        int v1Index = triangles[j];
+                        int v2Index = triangles[j + 1];
+                        int v3Index = triangles[j + 2];
+                        float3 v13d = Verticies[v1Index];
+                        float3 v23d = Verticies[v2Index];
+                        float3 v33d = Verticies[v3Index];
+                        float2 v1 = new float2(v13d.x, v13d.z);
+                        float2 v2 = new float2(v23d.x, v23d.z);
+                        float2 v3 = new float2(v33d.x, v33d.z);
 
-                    BarycentricCoordinates barCords = GetBarycentricCoordinatesForEachVectorInTheOrderUVW(v1, v2, v3, agentPos2);
-                    if (barCords.u < 0 || barCords.w < 0 || barCords.v < 0) { continue; }
-                    float newHeight = v13d.y * barCords.u + v23d.y * barCords.v + v33d.y * barCords.w + agentData.LandOffset;
-                    desiredHeight = math.select(desiredHeight, newHeight, newHeight > desiredHeight);
+                        BarycentricCoordinates barCords = GetBarycentricCoordinatesForEachVectorInTheOrderUVW(v1, v2, v3, agentPos2);
+                        if (barCords.u < 0 || barCords.w < 0 || barCords.v < 0) { continue; }
+                        float newHeight = v13d.y * barCords.u + v23d.y * barCords.v + v33d.y * barCords.w + agentData.LandOffset;
+                        desiredHeight = math.select(desiredHeight, newHeight, newHeight > desiredHeight);
+                    }
                 }
             }
+            desiredHeight = math.select(desiredHeight, currentHeight, desiredHeight == float.MinValue);
+            float3 agentPositionChange = AgentPositionChangeArray[index];
+            agentPositionChange.y = desiredHeight - currentHeight;
+            AgentPositionChangeArray[index] = agentPositionChange;
         }
-        desiredHeight = math.select(desiredHeight, currentHeight, desiredHeight == float.MinValue);
-        float3 agentPositionChange = AgentPositionChangeArray[index];
-        agentPositionChange.y = desiredHeight - currentHeight;
-        AgentPositionChangeArray[index] = agentPositionChange;
-    }
-    BarycentricCoordinates GetBarycentricCoordinatesForEachVectorInTheOrderUVW(float2 a, float2 b, float2 c, float2 p)
-    {
-        float2 v0 = b - a, v1 = c - a, v2 = p - a;
-        float d00 = math.dot(v0, v0);
-        float d01 = math.dot(v0, v1);
-        float d11 = math.dot(v1, v1);
-        float d20 = math.dot(v2, v0);
-        float d21 = math.dot(v2, v1);
-        float denom = d00 * d11 - d01 * d01;
-        float v = (d11 * d20 - d01 * d21) / denom;
-        float w = (d00 * d21 - d01 * d20) / denom;
-        float u = 1.0f - v - w;
-        return new BarycentricCoordinates()
+        BarycentricCoordinates GetBarycentricCoordinatesForEachVectorInTheOrderUVW(float2 a, float2 b, float2 c, float2 p)
         {
-            v = v,
-            u = u,
-            w = w,
-        };
+            float2 v0 = b - a, v1 = c - a, v2 = p - a;
+            float d00 = math.dot(v0, v0);
+            float d01 = math.dot(v0, v1);
+            float d11 = math.dot(v1, v1);
+            float d20 = math.dot(v2, v0);
+            float d21 = math.dot(v2, v1);
+            float denom = d00 * d11 - d01 * d01;
+            float v = (d11 * d20 - d01 * d21) / denom;
+            float w = (d00 * d21 - d01 * d20) / denom;
+            float u = 1.0f - v - w;
+            return new BarycentricCoordinates()
+            {
+                v = v,
+                u = u,
+                w = w,
+            };
+        }
     }
-}
-public struct BarycentricCoordinates
-{
-    internal float u;
-    internal float v;
-    internal float w;
+    public struct BarycentricCoordinates
+    {
+        internal float u;
+        internal float v;
+        internal float w;
+    }
+
 }

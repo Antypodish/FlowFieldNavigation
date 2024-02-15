@@ -1,11 +1,17 @@
-﻿internal struct AStarTile
-{
-    internal bool Enqueued;
-    internal float IntegratedCost;
+﻿
 
-    internal AStarTile(float integratedCost, bool enqueued)
+namespace FlowFieldNavigation
+{
+    internal struct AStarTile
     {
-        Enqueued = enqueued;
-        IntegratedCost = integratedCost;
+        internal bool Enqueued;
+        internal float IntegratedCost;
+
+        internal AStarTile(float integratedCost, bool enqueued)
+        {
+            Enqueued = enqueued;
+            IntegratedCost = integratedCost;
+        }
     }
+
 }

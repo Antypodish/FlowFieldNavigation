@@ -3,35 +3,41 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 
-internal class TargetSectorCostArrayFactory
+
+namespace FlowFieldNavigation
 {
-    List<UnsafeList<DijkstraTile>> _targetSectorCostAllocations;
-    int _sectorTileAmount;
-    internal TargetSectorCostArrayFactory(int sectorTileAmount)
+    internal class TargetSectorCostArrayFactory
     {
-        _targetSectorCostAllocations = new List<UnsafeList<DijkstraTile>>();
-        _sectorTileAmount = sectorTileAmount;
-    }
-    internal UnsafeList<DijkstraTile> GetTargetSecorCosts()
-    {
-        if (_targetSectorCostAllocations.Count == 0)
+        List<UnsafeList<DijkstraTile>> _targetSectorCostAllocations;
+        int _sectorTileAmount;
+        internal TargetSectorCostArrayFactory(int sectorTileAmount)
         {
-            UnsafeList<DijkstraTile> targetSectorCostArray = new UnsafeList<DijkstraTile>(_sectorTileAmount, Allocator.Persistent, NativeArrayOptions.ClearMemory);
-            targetSectorCostArray.Length = _sectorTileAmount;
-            return targetSectorCostArray;
+            _targetSectorCostAllocations = new List<UnsafeList<DijkstraTile>>();
+            _sectorTileAmount = sectorTileAmount;
         }
-        int index = _targetSectorCostAllocations.Count - 1;
-        UnsafeList<DijkstraTile> targetSectorCosts = _targetSectorCostAllocations[index];
-        _targetSectorCostAllocations.RemoveAtSwapBack(index);
-        return targetSectorCosts;
-    }
-    internal void SendTargetSectorCosts(UnsafeList<DijkstraTile> targetSectorCosts)
-    {
-        UnsafeListCleaningJob<DijkstraTile> cleaning = new UnsafeListCleaningJob<DijkstraTile>()
+        internal UnsafeList<DijkstraTile> GetTargetSecorCosts()
         {
-            List = targetSectorCosts,
-        };
-        cleaning.Schedule().Complete();
-        _targetSectorCostAllocations.Add(targetSectorCosts);
+            if (_targetSectorCostAllocations.Count == 0)
+            {
+                UnsafeList<DijkstraTile> targetSectorCostArray = new UnsafeList<DijkstraTile>(_sectorTileAmount, Allocator.Persistent, NativeArrayOptions.ClearMemory);
+                targetSectorCostArray.Length = _sectorTileAmount;
+                return targetSectorCostArray;
+            }
+            int index = _targetSectorCostAllocations.Count - 1;
+            UnsafeList<DijkstraTile> targetSectorCosts = _targetSectorCostAllocations[index];
+            _targetSectorCostAllocations.RemoveAtSwapBack(index);
+            return targetSectorCosts;
+        }
+        internal void SendTargetSectorCosts(UnsafeList<DijkstraTile> targetSectorCosts)
+        {
+            UnsafeListCleaningJob<DijkstraTile> cleaning = new UnsafeListCleaningJob<DijkstraTile>()
+            {
+                List = targetSectorCosts,
+            };
+            cleaning.Schedule().Complete();
+            _targetSectorCostAllocations.Add(targetSectorCosts);
+        }
     }
+
+
 }

@@ -1,5 +1,11 @@
-﻿internal struct AgentAndPath
+﻿
+
+namespace FlowFieldNavigation
 {
-    internal int AgentIndex;
-    internal int PathIndex;
+    internal struct AgentAndPath
+    {
+        internal int AgentIndex;
+        internal int PathIndex;
+    }
+
 }

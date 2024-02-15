@@ -1,9 +1,15 @@
-﻿internal struct Sector
-{
-    internal int Size;
+﻿
 
-    internal Sector(Index2 startIndex, int size)
+namespace FlowFieldNavigation
+{
+    internal struct Sector
     {
-        Size = size;
+        internal int Size;
+
+        internal Sector(Index2 startIndex, int size)
+        {
+            Size = size;
+        }
     }
+
 }

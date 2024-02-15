@@ -2,17 +2,22 @@
 using Unity.Burst;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
-[BurstCompile]
-internal struct UnsafeListCopyJob<T> : IJob where T : unmanaged
+
+namespace FlowFieldNavigation
 {
-    internal UnsafeList<T> Source;
-    internal UnsafeList<T> Destination;
-    public void Execute()
+    [BurstCompile]
+    internal struct UnsafeListCopyJob<T> : IJob where T : unmanaged
     {
-        int minLenght = math.min(Source.Length, Destination.Length);
-        for(int i = 0; i < minLenght; i++)
+        internal UnsafeList<T> Source;
+        internal UnsafeList<T> Destination;
+        public void Execute()
         {
-            Destination[i] = Source[i];
+            int minLenght = math.min(Source.Length, Destination.Length);
+            for (int i = 0; i < minLenght; i++)
+            {
+                Destination[i] = Source[i];
+            }
         }
     }
+
 }

@@ -3,50 +3,54 @@ using Unity.Collections;
 using Unity.Mathematics;
 using Unity.Burst;
 
-[BurstCompile]
-internal struct AgentRemovalLookingForPathListCleanupJob : IJob
+namespace FlowFieldNavigation
 {
-    [ReadOnly] internal NativeArray<int> AgentRemovalMarks;
-    internal NativeList<int> AgentsLookingForPath;
-    internal NativeList<PathRequestRecord> AgentsLookingForPathRecords;
-    public void Execute()
+
+    [BurstCompile]
+    internal struct AgentRemovalLookingForPathListCleanupJob : IJob
     {
-        for(int i = AgentsLookingForPath.Length - 1; i >= 0; i--)
+        [ReadOnly] internal NativeArray<int> AgentRemovalMarks;
+        internal NativeList<int> AgentsLookingForPath;
+        internal NativeList<PathRequestRecord> AgentsLookingForPathRecords;
+        public void Execute()
         {
-            int agentIndex = AgentsLookingForPath[i];
-            int removalMark = AgentRemovalMarks[agentIndex];
-            if(removalMark == -1) { continue; }
-
-            if(removalMark == -2)
+            for (int i = AgentsLookingForPath.Length - 1; i >= 0; i--)
             {
-                AgentsLookingForPath.RemoveAtSwapBack(i);
-                AgentsLookingForPathRecords.RemoveAtSwapBack(i);
-                continue;
-            }
+                int agentIndex = AgentsLookingForPath[i];
+                int removalMark = AgentRemovalMarks[agentIndex];
+                if (removalMark == -1) { continue; }
 
-
-            PathRequestRecord record = AgentsLookingForPathRecords[i];
-            if(record.Type == DestinationType.DynamicDestination)
-            {
-                int targetAgent = record.TargetAgent;
-                int targetAgentRemovalMark = AgentRemovalMarks[targetAgent];
-                if(targetAgentRemovalMark == -2)
+                if (removalMark == -2)
                 {
                     AgentsLookingForPath.RemoveAtSwapBack(i);
                     AgentsLookingForPathRecords.RemoveAtSwapBack(i);
                     continue;
                 }
-                if(targetAgentRemovalMark >= 0)
-                {
-                    record.TargetAgent = targetAgentRemovalMark;
-                    AgentsLookingForPathRecords[i] = record;
-                }
-            }
 
-            if (removalMark >= 0)
-            {
-                AgentsLookingForPath[i] = removalMark;
-                continue;
+
+                PathRequestRecord record = AgentsLookingForPathRecords[i];
+                if (record.Type == DestinationType.DynamicDestination)
+                {
+                    int targetAgent = record.TargetAgent;
+                    int targetAgentRemovalMark = AgentRemovalMarks[targetAgent];
+                    if (targetAgentRemovalMark == -2)
+                    {
+                        AgentsLookingForPath.RemoveAtSwapBack(i);
+                        AgentsLookingForPathRecords.RemoveAtSwapBack(i);
+                        continue;
+                    }
+                    if (targetAgentRemovalMark >= 0)
+                    {
+                        record.TargetAgent = targetAgentRemovalMark;
+                        AgentsLookingForPathRecords[i] = record;
+                    }
+                }
+
+                if (removalMark >= 0)
+                {
+                    AgentsLookingForPath[i] = removalMark;
+                    continue;
+                }
             }
         }
     }

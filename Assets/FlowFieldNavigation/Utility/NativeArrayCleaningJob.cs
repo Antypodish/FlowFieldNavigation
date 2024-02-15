@@ -2,16 +2,22 @@
 using Unity.Collections;
 using Unity.Jobs;
 
-[BurstCompile]
-internal struct NativeArrayCleaningJob<T> : IJob where T : unmanaged
+
+namespace FlowFieldNavigation
 {
-    internal NativeArray<T> Array;
-    public void Execute()
+    [BurstCompile]
+    internal struct NativeArrayCleaningJob<T> : IJob where T : unmanaged
     {
-        T defaultValue = default(T);
-        for(int i = 0; i < Array.Length; i++)
+        internal NativeArray<T> Array;
+        public void Execute()
         {
-            Array[i] = defaultValue;
+            T defaultValue = default(T);
+            for (int i = 0; i < Array.Length; i++)
+            {
+                Array[i] = defaultValue;
+            }
         }
     }
+
+
 }

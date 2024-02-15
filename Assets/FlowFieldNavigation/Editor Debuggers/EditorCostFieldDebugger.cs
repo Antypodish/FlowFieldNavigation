@@ -7,22 +7,27 @@ using UnityEditor;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 using System.Diagnostics;
-internal class EditorCostFieldDebugger
-{
-    CostFieldDebugMeshBuilder _costFieldDebugMeshContainer;
 
-    internal EditorCostFieldDebugger(FlowFieldNavigationManager navigationManager)
+namespace FlowFieldNavigation
+{
+    internal class EditorCostFieldDebugger
     {
-        _costFieldDebugMeshContainer = new CostFieldDebugMeshBuilder(navigationManager);
-    }
-    internal void DebugCostFieldWithMesh(int offset)
-    {
-        List<Mesh> debugMesh = _costFieldDebugMeshContainer.GetDebugMesh(offset);
-        Gizmos.color = new Color(1,0,0,0.5f);
-        for(int i = 0; i < debugMesh.Count; i++)
+        CostFieldDebugMeshBuilder _costFieldDebugMeshContainer;
+
+        internal EditorCostFieldDebugger(FlowFieldNavigationManager navigationManager)
         {
-            Gizmos.DrawMesh(debugMesh[i]);
+            _costFieldDebugMeshContainer = new CostFieldDebugMeshBuilder(navigationManager);
+        }
+        internal void DebugCostFieldWithMesh(int offset)
+        {
+            List<Mesh> debugMesh = _costFieldDebugMeshContainer.GetDebugMesh(offset);
+            Gizmos.color = new Color(1, 0, 0, 0.5f);
+            for (int i = 0; i < debugMesh.Count; i++)
+            {
+                Gizmos.DrawMesh(debugMesh[i]);
+            }
         }
     }
+
 }
 #endif

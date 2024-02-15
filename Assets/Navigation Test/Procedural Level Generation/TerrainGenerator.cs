@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using Unity.Collections;
 using UnityEngine;
 using System.Diagnostics;
+using FlowFieldNavigation;
 public class TerrainGenerator : MonoBehaviour
 {
     [SerializeField] MeshCollider _fieldMeshCollider;

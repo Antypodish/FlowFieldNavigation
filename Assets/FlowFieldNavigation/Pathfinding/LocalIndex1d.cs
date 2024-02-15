@@ -1,11 +1,15 @@
-﻿internal struct LocalIndex1d
+﻿namespace FlowFieldNavigation
 {
-    internal int index;
-    internal int sector;
-
-    internal LocalIndex1d(int localIndex, int sectorIndex)
+    internal struct LocalIndex1d
     {
-        index = localIndex;
-        sector = sectorIndex;
+        internal int index;
+        internal int sector;
+
+        internal LocalIndex1d(int localIndex, int sectorIndex)
+        {
+            index = localIndex;
+            sector = sectorIndex;
+        }
     }
+
 }

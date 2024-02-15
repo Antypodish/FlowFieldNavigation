@@ -2,15 +2,20 @@
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 
-[BurstCompile]
-internal struct UnsafeListResetJob<T> : IJob where T : unmanaged
+
+namespace FlowFieldNavigation
 {
-    internal UnsafeList<T> List;
-    public void Execute()
+    [BurstCompile]
+    internal struct UnsafeListResetJob<T> : IJob where T : unmanaged
     {
-        for(int i = 0; i < List.Length; i++)
+        internal UnsafeList<T> List;
+        public void Execute()
         {
-            List[i] = default(T);
+            for (int i = 0; i < List.Length; i++)
+            {
+                List[i] = default(T);
+            }
         }
     }
+
 }

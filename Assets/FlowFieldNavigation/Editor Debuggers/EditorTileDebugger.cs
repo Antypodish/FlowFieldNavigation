@@ -1,20 +1,26 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using System.Diagnostics;
-internal class EditorTileDebugger
+
+namespace FlowFieldNavigation
 {
-    TileDebugMeshBuilder _tileDebugMeshContainer;
-    internal EditorTileDebugger(FlowFieldNavigationManager navigationManager)
+    internal class EditorTileDebugger
     {
-        _tileDebugMeshContainer = new TileDebugMeshBuilder(navigationManager);
-    }
-    public void Debug()
-    {
-        List<Mesh> debugMeshes = _tileDebugMeshContainer.GetDebugMesh();
-        Gizmos.color = Color.black;
-        for(int i = 0; i < debugMeshes.Count; i++)
+        TileDebugMeshBuilder _tileDebugMeshContainer;
+        internal EditorTileDebugger(FlowFieldNavigationManager navigationManager)
         {
-            Gizmos.DrawMesh(debugMeshes[i]);
+            _tileDebugMeshContainer = new TileDebugMeshBuilder(navigationManager);
+        }
+        public void Debug()
+        {
+            List<Mesh> debugMeshes = _tileDebugMeshContainer.GetDebugMesh();
+            Gizmos.color = Color.black;
+            for (int i = 0; i < debugMeshes.Count; i++)
+            {
+                Gizmos.DrawMesh(debugMeshes[i]);
+            }
         }
     }
+
+
 }

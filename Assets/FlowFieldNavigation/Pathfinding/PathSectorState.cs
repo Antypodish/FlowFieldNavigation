@@ -1,9 +1,15 @@
 ﻿using System;
-[Flags]
-internal enum PathSectorState : byte
+
+namespace FlowFieldNavigation
 {
-    Included = 1,
-    Source = 2,
-    FlowCalculated = 4,
-    IntegrationCalculated = 8,
+    [Flags]
+    internal enum PathSectorState : byte
+    {
+        Included = 1,
+        Source = 2,
+        FlowCalculated = 4,
+        IntegrationCalculated = 8,
+    }
+
+
 }

@@ -1,24 +1,30 @@
 ﻿using Unity.Collections;
 using UnityEngine;
 
-internal class EditorAgentDirectionDebugger
+namespace FlowFieldNavigation
 {
-    FlowFieldNavigationManager _navigationManager;
-    internal EditorAgentDirectionDebugger(FlowFieldNavigationManager navigationManager)
+    internal class EditorAgentDirectionDebugger
     {
-        _navigationManager = navigationManager;
-    }
-
-    internal void Debug()
-    {
-        Gizmos.color = Color.white;
-        NativeArray<AgentData> agentData = _navigationManager.AgentDataContainer.AgentDataList.AsArray();
-        for(int i = 0; i < agentData.Length; i++)
+        FlowFieldNavigationManager _navigationManager;
+        internal EditorAgentDirectionDebugger(FlowFieldNavigationManager navigationManager)
         {
-            Vector3 pos = agentData[i].Position;
-            pos.y = 2f;
-            Vector3 agentDirection = agentData[i].DirectionWithHeigth;
-            Gizmos.DrawLine(pos, pos + agentDirection);
+            _navigationManager = navigationManager;
+        }
+
+        internal void Debug()
+        {
+            Gizmos.color = Color.white;
+            NativeArray<AgentData> agentData = _navigationManager.AgentDataContainer.AgentDataList.AsArray();
+            for (int i = 0; i < agentData.Length; i++)
+            {
+                Vector3 pos = agentData[i].Position;
+                pos.y = 2f;
+                Vector3 agentDirection = agentData[i].DirectionWithHeigth;
+                Gizmos.DrawLine(pos, pos + agentDirection);
+            }
         }
     }
+
+
+
 }

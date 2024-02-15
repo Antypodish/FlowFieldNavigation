@@ -1,7 +1,12 @@
 ﻿using Unity.Collections.LowLevel.Unsafe;
 
-internal struct PathLocationData
+
+namespace FlowFieldNavigation
 {
-    internal UnsafeList<int> SectorToPicked;
-    internal UnsafeList<SectorFlowStart> DynamicAreaPickedSectorFlowStarts;
+    internal struct PathLocationData
+    {
+        internal UnsafeList<int> SectorToPicked;
+        internal UnsafeList<SectorFlowStart> DynamicAreaPickedSectorFlowStarts;
+    }
+
 }

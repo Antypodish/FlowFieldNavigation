@@ -2,19 +2,25 @@
 using Unity.Collections;
 using Unity.Jobs;
 
-[BurstCompile]
-internal struct PortalTraversalDataArrayCleaningJob : IJob
+
+namespace FlowFieldNavigation
 {
-    internal NativeArray<PortalTraversalData> Array;
-    public void Execute()
+    [BurstCompile]
+    internal struct PortalTraversalDataArrayCleaningJob : IJob
     {
-        for(int i = 0; i < Array.Length; i++)
+        internal NativeArray<PortalTraversalData> Array;
+        public void Execute()
         {
-            Array[i] = new PortalTraversalData()
+            for (int i = 0; i < Array.Length; i++)
             {
-                NextIndex = -1,
-                DistanceFromTarget = float.MaxValue,
-            };
+                Array[i] = new PortalTraversalData()
+                {
+                    NextIndex = -1,
+                    DistanceFromTarget = float.MaxValue,
+                };
+            }
         }
     }
+
+
 }

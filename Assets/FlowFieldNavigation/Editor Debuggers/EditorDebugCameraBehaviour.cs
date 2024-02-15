@@ -4,17 +4,22 @@ using UnityEngine;
 using UnityEngine.Rendering.Universal;
 using UnityEditor;
 using Unity.Mathematics;
-public class EditorDebugCameraBehaviour : MonoBehaviour
+
+namespace FlowFieldNavigation
 {
-    [SerializeField] Camera _cameraToOverlay;
-    void Start()
+    public class EditorDebugCameraBehaviour : MonoBehaviour
     {
-        Camera cameraOfThisObject = gameObject.GetComponent<Camera>();
-        if(cameraOfThisObject == null) { return; }
-        _cameraToOverlay.GetComponent<UniversalAdditionalCameraData>().cameraStack.Add(cameraOfThisObject);
+        [SerializeField] Camera _cameraToOverlay;
+        void Start()
+        {
+            Camera cameraOfThisObject = gameObject.GetComponent<Camera>();
+            if (cameraOfThisObject == null) { return; }
+            _cameraToOverlay.GetComponent<UniversalAdditionalCameraData>().cameraStack.Add(cameraOfThisObject);
+        }
+
+        void Update()
+        {
+        }
     }
 
-    void Update()
-    {
-    }
 }

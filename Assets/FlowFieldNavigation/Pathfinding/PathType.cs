@@ -1,6 +1,12 @@
-﻿internal enum DestinationType : byte
+﻿
+
+namespace FlowFieldNavigation
 {
-    None = 0,
-    StaticDestination = 1,
-    DynamicDestination = 2,
-};
+    internal enum DestinationType : byte
+    {
+        None = 0,
+        StaticDestination = 1,
+        DynamicDestination = 2,
+    };
+
+}

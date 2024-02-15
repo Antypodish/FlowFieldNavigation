@@ -2,48 +2,54 @@
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Jobs;
-internal class IntegrationFieldFactory
-{
-    List<NativeList<IntegrationTile>> _integrationFieldContainer;
 
-    internal IntegrationFieldFactory(int initialSize)
+namespace FlowFieldNavigation
+{
+    internal class IntegrationFieldFactory
     {
-        _integrationFieldContainer = new List<NativeList<IntegrationTile>>(initialSize);
-        for (int i = 0; i < initialSize; i++)
+        List<NativeList<IntegrationTile>> _integrationFieldContainer;
+
+        internal IntegrationFieldFactory(int initialSize)
         {
-            _integrationFieldContainer.Add(new NativeList<IntegrationTile>(Allocator.Persistent));
-        }
-    }
-    internal NativeList<IntegrationTile> GetIntegrationField(int length)
-    {
-        if (_integrationFieldContainer.Count == 0)
-        {
-            NativeList<IntegrationTile> field = new NativeList<IntegrationTile>(length, Allocator.Persistent);
-            field.Length = length;
-            IntegrationFieldResetJob resetJob = new IntegrationFieldResetJob()
+            _integrationFieldContainer = new List<NativeList<IntegrationTile>>(initialSize);
+            for (int i = 0; i < initialSize; i++)
             {
-                StartIndex = 0,
-                IntegrationField = field.AsArray(),
-            };
-            resetJob.Schedule().Complete();
-            return field;
+                _integrationFieldContainer.Add(new NativeList<IntegrationTile>(Allocator.Persistent));
+            }
         }
-        else
+        internal NativeList<IntegrationTile> GetIntegrationField(int length)
         {
-            NativeList<IntegrationTile> field = _integrationFieldContainer[0];
-            field.Length = length;
-            IntegrationFieldResetJob resetJob = new IntegrationFieldResetJob()
+            if (_integrationFieldContainer.Count == 0)
             {
-                StartIndex = 0,
-                IntegrationField = field.AsArray(),
-            };
-            resetJob.Schedule().Complete();
-            _integrationFieldContainer.RemoveAtSwapBack(0);
-            return field;
+                NativeList<IntegrationTile> field = new NativeList<IntegrationTile>(length, Allocator.Persistent);
+                field.Length = length;
+                IntegrationFieldResetJob resetJob = new IntegrationFieldResetJob()
+                {
+                    StartIndex = 0,
+                    IntegrationField = field.AsArray(),
+                };
+                resetJob.Schedule().Complete();
+                return field;
+            }
+            else
+            {
+                NativeList<IntegrationTile> field = _integrationFieldContainer[0];
+                field.Length = length;
+                IntegrationFieldResetJob resetJob = new IntegrationFieldResetJob()
+                {
+                    StartIndex = 0,
+                    IntegrationField = field.AsArray(),
+                };
+                resetJob.Schedule().Complete();
+                _integrationFieldContainer.RemoveAtSwapBack(0);
+                return field;
+            }
+        }
+        internal void SendIntegrationField(NativeList<IntegrationTile> integrationField)
+        {
+            _integrationFieldContainer.Add(integrationField);
         }
     }
-    internal void SendIntegrationField(NativeList<IntegrationTile> integrationField)
-    {
-        _integrationFieldContainer.Add(integrationField);
-    }
+
+
 }

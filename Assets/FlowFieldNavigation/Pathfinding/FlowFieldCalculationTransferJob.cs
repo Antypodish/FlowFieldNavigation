@@ -3,23 +3,29 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Burst;
 
-[BurstCompile]
-internal struct FlowFieldCalculationTransferJob : IJob
+
+namespace FlowFieldNavigation
 {
-    [WriteOnly] internal UnsafeList<FlowData> FlowField;
-    internal FlowFieldCalculationBufferParent CalculationBufferParent;
-    public void Execute()
+    [BurstCompile]
+    internal struct FlowFieldCalculationTransferJob : IJob
     {
-        UnsafeList<FlowFieldCalculationBuffer> calculationBuffers = CalculationBufferParent.BufferParent;
-        for(int i = 0; i < calculationBuffers.Length; i++)
+        [WriteOnly] internal UnsafeList<FlowData> FlowField;
+        internal FlowFieldCalculationBufferParent CalculationBufferParent;
+        public void Execute()
         {
-            FlowFieldCalculationBuffer calculationBuffer = calculationBuffers[i];
-            int flowStartIndex = calculationBuffer.FlowFieldStartIndex;
-            UnsafeList<FlowData> buffer = calculationBuffer.Buffer;
-            for(int j = 0; j < buffer.Length; j++)
+            UnsafeList<FlowFieldCalculationBuffer> calculationBuffers = CalculationBufferParent.BufferParent;
+            for (int i = 0; i < calculationBuffers.Length; i++)
             {
-                FlowField[flowStartIndex + j] = buffer[j];
+                FlowFieldCalculationBuffer calculationBuffer = calculationBuffers[i];
+                int flowStartIndex = calculationBuffer.FlowFieldStartIndex;
+                UnsafeList<FlowData> buffer = calculationBuffer.Buffer;
+                for (int j = 0; j < buffer.Length; j++)
+                {
+                    FlowField[flowStartIndex + j] = buffer[j];
+                }
             }
         }
     }
+
+
 }

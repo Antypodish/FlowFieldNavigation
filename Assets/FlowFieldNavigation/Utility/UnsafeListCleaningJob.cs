@@ -3,16 +3,21 @@ using Unity.Burst;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 
-[BurstCompile]
-internal struct UnsafeListCleaningJob<T> : IJob where T : unmanaged
+namespace FlowFieldNavigation
 {
-    internal UnsafeList<T> List;
-    public void Execute()
+    [BurstCompile]
+    internal struct UnsafeListCleaningJob<T> : IJob where T : unmanaged
     {
-        T defaultValue = default(T);
-        for (int i = 0; i < List.Length; i++)
+        internal UnsafeList<T> List;
+        public void Execute()
         {
-            List[i] = defaultValue;
+            T defaultValue = default(T);
+            for (int i = 0; i < List.Length; i++)
+            {
+                List[i] = defaultValue;
+            }
         }
     }
+
 }
+

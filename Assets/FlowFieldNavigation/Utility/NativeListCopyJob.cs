@@ -2,18 +2,23 @@
 using Unity.Collections;
 using Unity.Burst;
 
-[BurstCompile]
-internal struct NativeListCopyJob<T> : IJob where T : unmanaged
+namespace FlowFieldNavigation
 {
-    [WriteOnly] internal NativeList<T> Destination;
-    [ReadOnly] internal NativeList<T> Source;
-    public void Execute()
+
+    [BurstCompile]
+    internal struct NativeListCopyJob<T> : IJob where T : unmanaged
     {
-        int length = Source.Length;
-        Destination.Length = length;
-        for(int i = 0; i < length; i++)
+        [WriteOnly] internal NativeList<T> Destination;
+        [ReadOnly] internal NativeList<T> Source;
+        public void Execute()
         {
-            Destination[i] = Source[i];
+            int length = Source.Length;
+            Destination.Length = length;
+            for (int i = 0; i < length; i++)
+            {
+                Destination[i] = Source[i];
+            }
         }
     }
+
 }

@@ -3,22 +3,27 @@ using Unity.Burst;
 using Unity.Collections;
 
 
-[BurstCompile]
-internal struct DynamicPathRequestSelfTargetingFixJob : IJob
+namespace FlowFieldNavigation
 {
-    internal NativeArray<int> AgentNewPathIndicies;
-    [ReadOnly] internal NativeArray<PathRequest> InitialPathRequests;
-    public void Execute()
+    [BurstCompile]
+    internal struct DynamicPathRequestSelfTargetingFixJob : IJob
     {
-        for (int i = 0; i < AgentNewPathIndicies.Length; i++)
+        internal NativeArray<int> AgentNewPathIndicies;
+        [ReadOnly] internal NativeArray<PathRequest> InitialPathRequests;
+        public void Execute()
         {
-            int requestIndex = AgentNewPathIndicies[i];
-            if (requestIndex == -1) { continue; }
-            PathRequest request = InitialPathRequests[requestIndex];
-            if (request.Type == DestinationType.DynamicDestination && request.TargetAgentIndex == i)
+            for (int i = 0; i < AgentNewPathIndicies.Length; i++)
             {
-                AgentNewPathIndicies[i] = -1;
+                int requestIndex = AgentNewPathIndicies[i];
+                if (requestIndex == -1) { continue; }
+                PathRequest request = InitialPathRequests[requestIndex];
+                if (request.Type == DestinationType.DynamicDestination && request.TargetAgentIndex == i)
+                {
+                    AgentNewPathIndicies[i] = -1;
+                }
             }
         }
     }
+
+
 }

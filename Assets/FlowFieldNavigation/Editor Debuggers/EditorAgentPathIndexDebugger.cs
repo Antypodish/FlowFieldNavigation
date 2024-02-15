@@ -2,19 +2,24 @@
 using Unity.Collections;
 using UnityEngine;
 using Unity.Mathematics;
-internal class EditorAgentPathIndexDebugger
+
+namespace FlowFieldNavigation
 {
-    FlowFieldNavigationManager _navigationManager;
-
-    public EditorAgentPathIndexDebugger(FlowFieldNavigationManager navigationManager)
+    internal class EditorAgentPathIndexDebugger
     {
-        _navigationManager = navigationManager;
+        FlowFieldNavigationManager _navigationManager;
+
+        public EditorAgentPathIndexDebugger(FlowFieldNavigationManager navigationManager)
+        {
+            _navigationManager = navigationManager;
+        }
+
+        public void Debug(FlowFieldAgent agent)
+        {
+            if (agent == null) { return; }
+            if (agent.AgentDataIndex == -1) { return; }
+            UnityEngine.Debug.Log(_navigationManager.AgentDataContainer.AgentCurPathIndicies[agent.AgentDataIndex]);
+        }
     }
 
-    public void Debug(FlowFieldAgent agent)
-    {
-        if(agent == null) { return; }
-        if(agent.AgentDataIndex == -1) { return; }
-        UnityEngine.Debug.Log(_navigationManager.AgentDataContainer.AgentCurPathIndicies[agent.AgentDataIndex]);
-    }
 }

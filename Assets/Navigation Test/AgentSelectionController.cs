@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-
+using FlowFieldNavigation;
 public class AgentSelectionController : MonoBehaviour
 {
     List<FlowFieldAgent> _selectedAgents = new List<FlowFieldAgent>();

@@ -1,11 +1,17 @@
-﻿internal struct IntegrationTile
-{
-    internal float Cost;
-    internal IntegrationMark Mark;
+﻿
 
-    internal IntegrationTile(float cost, IntegrationMark mark)
+namespace FlowFieldNavigation
+{
+    internal struct IntegrationTile
     {
-        Cost = cost;
-        Mark = mark;
+        internal float Cost;
+        internal IntegrationMark Mark;
+
+        internal IntegrationTile(float cost, IntegrationMark mark)
+        {
+            Cost = cost;
+            Mark = mark;
+        }
     }
+
 }

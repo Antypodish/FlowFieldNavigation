@@ -1,14 +1,19 @@
 ﻿using Unity.Mathematics;
-internal struct PathRequestRecord
-{
-    internal float2 Destination;
-    internal int TargetAgent;
-    internal DestinationType Type;
 
-    public PathRequestRecord(PathRequest pathRequest)
+namespace FlowFieldNavigation
+{
+    internal struct PathRequestRecord
     {
-        Destination = pathRequest.Destination;
-        Type = pathRequest.Type;
-        TargetAgent = pathRequest.TargetAgentIndex;
+        internal float2 Destination;
+        internal int TargetAgent;
+        internal DestinationType Type;
+
+        public PathRequestRecord(PathRequest pathRequest)
+        {
+            Destination = pathRequest.Destination;
+            Type = pathRequest.Type;
+            TargetAgent = pathRequest.TargetAgentIndex;
+        }
     }
+
 }

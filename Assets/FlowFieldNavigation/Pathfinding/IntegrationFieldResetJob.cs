@@ -8,17 +8,23 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 
-[BurstCompile]
-internal struct IntegrationFieldResetJob : IJob
+namespace FlowFieldNavigation
 {
-    internal int StartIndex;
-    internal NativeArray<IntegrationTile> IntegrationField;
 
-    public void Execute()
+    [BurstCompile]
+    internal struct IntegrationFieldResetJob : IJob
     {
-        for(int i = StartIndex; i < IntegrationField.Length; i++)
+        internal int StartIndex;
+        internal NativeArray<IntegrationTile> IntegrationField;
+
+        public void Execute()
         {
-            IntegrationField[i] = new IntegrationTile(float.MaxValue, IntegrationMark.None);
+            for (int i = StartIndex; i < IntegrationField.Length; i++)
+            {
+                IntegrationField[i] = new IntegrationTile(float.MaxValue, IntegrationMark.None);
+            }
         }
     }
+
+
 }

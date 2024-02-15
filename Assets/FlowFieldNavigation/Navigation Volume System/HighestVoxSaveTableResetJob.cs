@@ -2,19 +2,25 @@
 using Unity.Burst;
 using Unity.Jobs;
 using Unity.Mathematics;
-[BurstCompile]
-internal struct HighestVoxSaveTableResetJob : IJob
+
+namespace FlowFieldNavigation
 {
-    [WriteOnly] internal NativeArray<HeightTile> Table;
-    public void Execute()
+    [BurstCompile]
+    internal struct HighestVoxSaveTableResetJob : IJob
     {
-        for(int i = 0; i < Table.Length; i++)
+        [WriteOnly] internal NativeArray<HeightTile> Table;
+        public void Execute()
         {
-            Table[i] = new HeightTile()
+            for (int i = 0; i < Table.Length; i++)
             {
-                StackCount = 0,
-                VoxIndex = new int3(int.MinValue, int.MinValue, int.MinValue),
-            };
+                Table[i] = new HeightTile()
+                {
+                    StackCount = 0,
+                    VoxIndex = new int3(int.MinValue, int.MinValue, int.MinValue),
+                };
+            }
         }
     }
+
+
 }

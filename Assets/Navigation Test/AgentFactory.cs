@@ -1,7 +1,7 @@
 ﻿using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
-
+using FlowFieldNavigation;
 public class AgentFactory
 {
     public GameObject AgentPrefab;

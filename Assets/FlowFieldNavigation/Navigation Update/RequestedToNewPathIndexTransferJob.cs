@@ -2,18 +2,24 @@
 using Unity.Jobs;
 using Unity.Burst;
 
-[BurstCompile]
-internal struct RequestedToNewPathIndexTransferJob : IJob
+namespace FlowFieldNavigation
 {
-    internal NativeArray<int> AgentRequestedPathIndicies;
-    internal NativeArray<int> AgentNewPathIndicies;
-    public void Execute()
+
+    [BurstCompile]
+    internal struct RequestedToNewPathIndexTransferJob : IJob
     {
-        int length = AgentRequestedPathIndicies.Length;
-        for (int i = 0; i < length; i++)
+        internal NativeArray<int> AgentRequestedPathIndicies;
+        internal NativeArray<int> AgentNewPathIndicies;
+        public void Execute()
         {
-            AgentNewPathIndicies[i] = AgentRequestedPathIndicies[i];
-            AgentRequestedPathIndicies[i] = -1;
+            int length = AgentRequestedPathIndicies.Length;
+            for (int i = 0; i < length; i++)
+            {
+                AgentNewPathIndicies[i] = AgentRequestedPathIndicies[i];
+                AgentRequestedPathIndicies[i] = -1;
+            }
         }
     }
+
+
 }

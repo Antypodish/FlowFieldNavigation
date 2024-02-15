@@ -4,25 +4,31 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Burst;
 using Unity.Mathematics;
 
-[BurstCompile]
-internal struct PathRoutineDataResetJob : IJob
+namespace FlowFieldNavigation
 {
-    internal NativeArray<PathRoutineData> PathOrganizationDataArray;
 
-    public void Execute()
+    [BurstCompile]
+    internal struct PathRoutineDataResetJob : IJob
     {
-        for(int i = 0; i < PathOrganizationDataArray.Length; i++)
+        internal NativeArray<PathRoutineData> PathOrganizationDataArray;
+
+        public void Execute()
         {
-            PathOrganizationDataArray[i] = new PathRoutineData()
+            for (int i = 0; i < PathOrganizationDataArray.Length; i++)
             {
-                DestinationState = 0,
-                FlowRequestSourceCount = 0,
-                FlowRequestSourceStart = 0,
-                PathAdditionSourceCount = 0,
-                PathAdditionSourceStart = 0,
-                PathReconstructionFlag = false,
-                Task = 0,
-            };
+                PathOrganizationDataArray[i] = new PathRoutineData()
+                {
+                    DestinationState = 0,
+                    FlowRequestSourceCount = 0,
+                    FlowRequestSourceStart = 0,
+                    PathAdditionSourceCount = 0,
+                    PathAdditionSourceStart = 0,
+                    PathReconstructionFlag = false,
+                    Task = 0,
+                };
+            }
         }
     }
+
+
 }

@@ -1,61 +1,66 @@
 ﻿using Unity.Collections;
 using Unity.Mathematics;
 using Unity.Jobs;
-internal class PortalHeightBuilder
+
+namespace FlowFieldNavigation
 {
-    FlowFieldNavigationManager _navigationManager;
-    NativeList<float> _heights;
-    bool _isCreated;
-    uint _lastFieldState;
-    int _lastOffset;
 
-    internal PortalHeightBuilder(FlowFieldNavigationManager navigationManager)
+    internal class PortalHeightBuilder
     {
-        _navigationManager = navigationManager;
-        _isCreated = false;
-        _heights = new NativeList<float>(Allocator.Persistent);
-        _lastFieldState = 0;
-        _lastOffset = 0;
-    }
-    internal NativeArray<float> GetPortalHeights(int offset)
-    {
-        uint curFieldState = _navigationManager.GetFieldState();
-        if (!_isCreated || _lastOffset != offset || _lastFieldState != curFieldState)
+        FlowFieldNavigationManager _navigationManager;
+        NativeList<float> _heights;
+        bool _isCreated;
+        uint _lastFieldState;
+        int _lastOffset;
+
+        internal PortalHeightBuilder(FlowFieldNavigationManager navigationManager)
         {
-            _lastOffset = offset;
-            _lastFieldState = curFieldState;
-            Create(offset);
+            _navigationManager = navigationManager;
+            _isCreated = false;
+            _heights = new NativeList<float>(Allocator.Persistent);
+            _lastFieldState = 0;
+            _lastOffset = 0;
         }
-        return _heights.AsArray();
-    }
-
-    void Create(int offset)
-    {
-        _isCreated = true;
-        _heights.Clear();
-
-        float tileSize = FlowFieldUtilities.TileSize;
-        float2 fieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition;
-        NativeArray<PortalNode> portalNodes = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(offset).PortalNodes;
-        NativeArray<float2> portalPositions = new NativeArray<float2>(portalNodes.Length, Allocator.TempJob);
-        _heights.Length = portalNodes.Length;
-
-        PortalNodeToPosJob portaltopos = new PortalNodeToPosJob()
+        internal NativeArray<float> GetPortalHeights(int offset)
         {
-            FieldGridStartPos = fieldGridStartPos,
-            TileSize = tileSize,
-            Nodes = portalNodes,
-            Positions = portalPositions,
-        };
-        portaltopos.Schedule(portalNodes.Length, 64).Complete();
+            uint curFieldState = _navigationManager.GetFieldState();
+            if (!_isCreated || _lastOffset != offset || _lastFieldState != curFieldState)
+            {
+                _lastOffset = offset;
+                _lastFieldState = curFieldState;
+                Create(offset);
+            }
+            return _heights.AsArray();
+        }
 
-        PointHeightCalculationJob pointHeight = new PointHeightCalculationJob()
+        void Create(int offset)
         {
-            TriangleSpatialHashGrid = _navigationManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
-            HeightMeshVerts = _navigationManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray(),
-            Heights = _heights.AsArray(),
-            Points = portalPositions,
-        };
-        pointHeight.Schedule(portalNodes.Length, 64).Complete();
+            _isCreated = true;
+            _heights.Clear();
+
+            float tileSize = FlowFieldUtilities.TileSize;
+            float2 fieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition;
+            NativeArray<PortalNode> portalNodes = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(offset).PortalNodes;
+            NativeArray<float2> portalPositions = new NativeArray<float2>(portalNodes.Length, Allocator.TempJob);
+            _heights.Length = portalNodes.Length;
+
+            PortalNodeToPosJob portaltopos = new PortalNodeToPosJob()
+            {
+                FieldGridStartPos = fieldGridStartPos,
+                TileSize = tileSize,
+                Nodes = portalNodes,
+                Positions = portalPositions,
+            };
+            portaltopos.Schedule(portalNodes.Length, 64).Complete();
+
+            PointHeightCalculationJob pointHeight = new PointHeightCalculationJob()
+            {
+                TriangleSpatialHashGrid = _navigationManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
+                HeightMeshVerts = _navigationManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray(),
+                Heights = _heights.AsArray(),
+                Points = portalPositions,
+            };
+            pointHeight.Schedule(portalNodes.Length, 64).Complete();
+        }
     }
 }
