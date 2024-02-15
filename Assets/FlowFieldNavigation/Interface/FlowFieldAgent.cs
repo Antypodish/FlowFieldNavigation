@@ -64,4 +64,8 @@ public class FlowFieldAgent : MonoBehaviour
         if(_navigationManager == null) { return Vector3.zero; }
         return _navigationManager.Interface.GetCurrentDirection(this);
     }
+    private void OnDestroy()
+    {
+        RequestUnsubscription();
+    }
 }

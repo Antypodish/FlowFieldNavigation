@@ -43,7 +43,9 @@ public class TerrainGenerator : MonoBehaviour
 
             for (int i = 0; i < obstacleBehaviors.Length; i++)
             {
-                Destroy(obstacleBehaviors[i].gameObject);
+                FlowFieldStaticObstacle obstacle = obstacleBehaviors[i];
+                if (!obstacle.CanBeDisposed) { continue; }
+                Destroy(obstacle.gameObject);
             }
         }
 

@@ -159,7 +159,7 @@ public class AgentSelectionController : MonoBehaviour
             for(int i = _selectedAgents.Count - 1; i >= 0; i--)
             {
                 FlowFieldAgent agent = _selectedAgents[i];
-                _navigationManager.Interface.RequestUnsubscription(agent);
+                //_navigationManager.Interface.RequestUnsubscription(agent);
                 _selectedAgents[i] = _selectedAgents[_selectedAgents.Count - 1];
                 _selectedAgents.RemoveAt(_selectedAgents.Count - 1);
                 Destroy(agent.gameObject);

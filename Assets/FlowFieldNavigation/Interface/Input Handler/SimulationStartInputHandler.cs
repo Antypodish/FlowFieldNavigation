@@ -14,6 +14,12 @@ internal class SimulationStartInputHandler
         float2 fieldEndPos = math.select(simStartParam.FieldEndPositionXZ, surfaceEndPos, simStartParam.FieldEndPositionXZ == new Vector2(float.MaxValue, float.MaxValue));
         GetRowAndColAmount(fieldStartPos, fieldEndPos, simStartParam.TileSize, out int colAmount, out int rowAmount);
 
+        FlowFieldStaticObstacle[] staticObstacleBehaviours = simStartParam.StaticObstacles;
+        for(int i = 0; i < staticObstacleBehaviours.Length; i++)
+        {
+            staticObstacleBehaviours[i].CanBeDisposed = true;
+        }
+
         return new SimulationInputs()
         {
             BaseAgentSpatialGridSize = simStartParam.BaseAgentSpatialGridSize,
