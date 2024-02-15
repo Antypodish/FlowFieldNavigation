@@ -36,7 +36,9 @@ internal class NavigationUpdater
 
             for (int i = 0; i < agentAddRequest.Count; i++)
             {
-                _navigationManager.AgentDataContainer.Subscribe(agentAddRequest[i]);
+                FlowFieldAgent agent = agentAddRequest[i];
+                if (agent == null) { continue; }
+                _navigationManager.AgentDataContainer.Subscribe(agent);
             }
             _navigationManager.AgentStatChangeSystem.SetAgentsHoldGround(agentsToHoldGround.AsArray());
             _navigationManager.AgentStatChangeSystem.SetAgentsStopped(agentsToStop.AsArray());
