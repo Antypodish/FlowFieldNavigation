@@ -137,6 +137,7 @@ namespace FlowFieldNavigation
             _currentPathSourceCount.Value = 0;
 
             NativeArray<AgentData> agentDataArray = _navigationManager.AgentDataContainer.AgentDataList.AsArray();
+            NativeArray<float> agentRadii = _navigationManager.AgentDataContainer.AgentRadii.AsArray();
             NativeArray<int> agentNewPathIndicies = _navigationManager.AgentDataContainer.AgentNewPathIndicies.AsArray();
             NativeArray<int> agentCurPathIndicies = _navigationManager.AgentDataContainer.AgentCurPathIndicies.AsArray();
             NativeArray<int> agentFlockIndexArray = _navigationManager.AgentDataContainer.AgentFlockIndicies.AsArray();
@@ -297,7 +298,7 @@ namespace FlowFieldNavigation
                 SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
                 FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
                 SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
-                AgentDataArray = agentDataArray,
+                AgentRadii = agentRadii,
                 AgentPositions = agentPositions,
                 AgentNewPathIndicies = agentNewPathIndicies,
                 CostFields = costFieldCosts,
@@ -336,7 +337,7 @@ namespace FlowFieldNavigation
                     FlockSlices = _hashMapFlockSlices,
                     PathIndicies = _hashMapPathIndicies,
                 },
-                AgentDataArray = agentDataArray,
+                AgentRadii = agentRadii,
                 AgentPositions = agentPositions,
                 AgentFlockIndicies = agentFlockIndexArray,
                 ReadyAgentsLookingForPath = _readyAgentsLookingForPath,
@@ -366,7 +367,7 @@ namespace FlowFieldNavigation
             PathRequestOffsetDerivationJob offsetDerivation = new PathRequestOffsetDerivationJob()
             {
                 TileSize = FlowFieldUtilities.TileSize,
-                AgentDataArray = agentDataArray,
+                AgentRadii = agentRadii,
                 AgentPositions = agentPositions,
                 InitialPathRequests = requestedPaths,
                 DerivedPathRequests = _offsetDerivedPathRequests,
@@ -379,7 +380,7 @@ namespace FlowFieldNavigation
             PathRequestIslandDerivationJob islandDerivation = new PathRequestIslandDerivationJob()
             {
                 TileSize = FlowFieldUtilities.TileSize,
-                AgentDataArray = agentDataArray,
+                AgentRadii = agentRadii,
                 AgentPositions = agentPositions,
                 DerivedPathRequests = _offsetDerivedPathRequests,
                 FinalPathRequests = _finalPathRequests,

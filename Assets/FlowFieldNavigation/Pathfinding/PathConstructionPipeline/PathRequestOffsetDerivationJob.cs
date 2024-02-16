@@ -11,7 +11,7 @@ namespace FlowFieldNavigation
     {
         internal float TileSize;
 
-        [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
+        [ReadOnly] internal NativeArray<float> AgentRadii;
         [ReadOnly] internal NativeArray<float3> AgentPositions;
         internal NativeArray<int> NewAgentPathIndicies;
         internal NativeList<PathRequest> InitialPathRequests;
@@ -40,7 +40,7 @@ namespace FlowFieldNavigation
                 int requestIndex = NewAgentPathIndicies[i];
                 if (requestIndex == -1) { continue; }
 
-                float agentRadius = AgentDataArray[i].Radius;
+                float agentRadius = AgentRadii[i];
                 int offset = FlowFieldUtilities.RadiusToOffset(agentRadius, TileSize);
                 PathRequest request = InitialPathRequests[requestIndex];
                 ushort offsetMask = (ushort)(1 << offset);
@@ -72,7 +72,7 @@ namespace FlowFieldNavigation
                 int requestIndex = NewAgentPathIndicies[i];
                 if (requestIndex == -1) { continue; }
 
-                float agentRadius = AgentDataArray[i].Radius;
+                float agentRadius = AgentRadii[i];
                 int offset = FlowFieldUtilities.RadiusToOffset(agentRadius, TileSize);
 
                 PathRequest request = InitialPathRequests[requestIndex];

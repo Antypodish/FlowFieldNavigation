@@ -13,7 +13,7 @@ namespace FlowFieldNavigation
     {
         internal float TileSize;
 
-        [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
+        [ReadOnly] internal NativeArray<float> AgentRadii;
         [ReadOnly] internal NativeArray<float3> AgentPositions;
         internal NativeArray<int> NewAgentPathIndicies;
         internal NativeList<OffsetDerivedPathRequest> DerivedPathRequests;
@@ -32,14 +32,13 @@ namespace FlowFieldNavigation
 
             //SET ISLAND DERIVATIONS FOR EACH REQUEST
             int finalPathRequestCount = 0;
-            for (int i = 0; i < AgentDataArray.Length; i++)
+            for (int i = 0; i < AgentRadii.Length; i++)
             {
                 int pathRequestIndex = NewAgentPathIndicies[i];
                 if (pathRequestIndex == -1) { continue; }
 
-                AgentData agentData = AgentDataArray[i];
                 float3 agentpos3 = AgentPositions[i];
-                float agentRadius = agentData.Radius;
+                float agentRadius = AgentRadii[i];
                 float2 agentPos = new float2(agentpos3.x, agentpos3.z);
                 int offset = FlowFieldUtilities.RadiusToOffset(agentRadius, TileSize);
                 int island = IslandFieldProcesorsPerOffset[offset].GetIsland(agentPos);
@@ -74,14 +73,13 @@ namespace FlowFieldNavigation
 
             //POINT AGENTS TO FINAL PATH REQUESTS
             int totalSourceCount = 0;
-            for (int i = 0; i < AgentDataArray.Length; i++)
+            for (int i = 0; i < AgentRadii.Length; i++)
             {
                 int pathRequestIndex = NewAgentPathIndicies[i];
                 if (pathRequestIndex == -1) { continue; }
 
-                AgentData agentData = AgentDataArray[i];
                 float3 agentpos3 = AgentPositions[i];
-                float agentRadius = agentData.Radius;
+                float agentRadius = AgentRadii[i];
                 float2 agentPos = new float2(agentpos3.x, agentpos3.z);
                 int offset = FlowFieldUtilities.RadiusToOffset(agentRadius, TileSize);
                 int island = IslandFieldProcesorsPerOffset[offset].GetIsland(agentPos);

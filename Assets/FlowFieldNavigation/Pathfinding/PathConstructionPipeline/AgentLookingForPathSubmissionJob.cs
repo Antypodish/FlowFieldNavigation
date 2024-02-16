@@ -15,7 +15,7 @@ namespace FlowFieldNavigation
         internal int SectorMatrixColAmount;
         internal int SectorTileAmount;
         internal float2 FieldGridStartPos;
-        [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
+        [ReadOnly] internal NativeArray<float> AgentRadii;
         [ReadOnly] internal NativeArray<float3> AgentPositions;
         [ReadOnly] internal NativeArray<UnsafeListReadOnly<byte>> CostFields;
         [ReadOnly] internal NativeList<PathRequest> InitialPathRequests;
@@ -38,10 +38,9 @@ namespace FlowFieldNavigation
                     AgentsLookingForPathRequestRecords.RemoveAtSwapBack(i);
                     continue;
                 }
-                AgentData agentData = AgentDataArray[agentIndex];
                 float3 agentpos3 = AgentPositions[agentIndex];
                 float2 agentPos2 = new float2(agentpos3.x, agentpos3.z);
-                int agentOffset = FlowFieldUtilities.RadiusToOffset(agentData.Radius, TileSize);
+                int agentOffset = FlowFieldUtilities.RadiusToOffset(AgentRadii[agentIndex], TileSize);
                 int2 agentIndex2d = FlowFieldUtilities.PosTo2D(agentPos2, TileSize, FieldGridStartPos);
                 LocalIndex1d agentLocal = FlowFieldUtilities.GetLocal1D(agentIndex2d, SectorColAmount, SectorMatrixColAmount);
                 byte agentIndexCost = CostFields[agentOffset][agentLocal.sector * SectorTileAmount + agentLocal.index];
@@ -61,10 +60,9 @@ namespace FlowFieldNavigation
                 int newPathIndex = AgentNewPathIndicies[index];
                 if (newPathIndex == -1) { continue; }
 
-                AgentData agentData = AgentDataArray[index];
                 float3 agentpos3 = AgentPositions[index];
                 float2 agentPos2 = new float2(agentpos3.x, agentpos3.z);
-                int agentOffset = FlowFieldUtilities.RadiusToOffset(agentData.Radius, TileSize);
+                int agentOffset = FlowFieldUtilities.RadiusToOffset(AgentRadii[index], TileSize);
                 int2 agentIndex = FlowFieldUtilities.PosTo2D(agentPos2, TileSize, FieldGridStartPos);
                 LocalIndex1d agentLocal = FlowFieldUtilities.GetLocal1D(agentIndex, SectorColAmount, SectorMatrixColAmount);
                 byte agentIndexCost = CostFields[agentOffset][agentLocal.sector * SectorTileAmount + agentLocal.index];

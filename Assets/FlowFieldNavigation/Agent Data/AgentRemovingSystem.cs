@@ -21,6 +21,7 @@ namespace FlowFieldNavigation
             List<FlowFieldAgent> agents = _navigationManager.AgentDataContainer.Agents;
             TransformAccessArray agentTransforms = _navigationManager.AgentDataContainer.AgentTransforms;
             NativeList<AgentData> agentDataList = _navigationManager.AgentDataContainer.AgentDataList;
+            NativeList<float> agentRadii = _navigationManager.AgentDataContainer.AgentRadii;
             NativeList<bool> agentDestinationReachedArray = _navigationManager.AgentDataContainer.AgentDestinationReachedArray;
             NativeList<int> agentFlockIndicies = _navigationManager.AgentDataContainer.AgentFlockIndicies;
             NativeList<int> agentRequestedPathIndicies = _navigationManager.AgentDataContainer.AgentRequestedPathIndicies;
@@ -61,6 +62,7 @@ namespace FlowFieldNavigation
             {
                 AgentCurPathIndicies = agentCurPathIndicies,
                 AgentDataList = agentDataList,
+                AgentRadii = agentRadii,
                 AgentDestinationReachedArray = agentDestinationReachedArray,
                 AgentFlockIndicies = agentFlockIndicies,
                 AgentIndiciesToRemove = agentIndiciesToRemove,

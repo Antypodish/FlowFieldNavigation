@@ -14,11 +14,11 @@ namespace FlowFieldNavigation
         internal void DebugSeperationRadius()
         {
             Gizmos.color = Color.white;
-            NativeArray<AgentData> agents = _navigationManager.AgentDataContainer.AgentDataList.AsArray();
+            NativeArray<float> agentRadii = _navigationManager.AgentDataContainer.AgentRadii.AsArray();
             TransformAccessArray transforms = _navigationManager.AgentDataContainer.AgentTransforms;
-            for (int i = 0; i < agents.Length; i++)
+            for (int i = 0; i < agentRadii.Length; i++)
             {
-                Gizmos.DrawWireSphere(transforms[i].position, agents[i].Radius);
+                Gizmos.DrawWireSphere(transforms[i].position, agentRadii[i]);
             }
         }
     }

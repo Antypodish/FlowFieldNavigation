@@ -22,6 +22,7 @@ namespace FlowFieldNavigation
         [ReadOnly] internal NativeArray<int> AgentFlockIndexArray;
         [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
         [ReadOnly] internal NativeArray<float3> AgentPositions;
+        [ReadOnly] internal NativeArray<float> AgentRadii;
         internal NativeArray<AgentMovementData> AgentMovementDataArray;
         internal NativeArray<UnsafeList<HashTile>> AgentHashGridArray;
         [WriteOnly] internal NativeArray<int> NormalToHashed;
@@ -56,10 +57,10 @@ namespace FlowFieldNavigation
         {
             for (int i = 0; i < AgentDataArray.Length; i++)
             {
-                AgentData agentData = AgentDataArray[i];
                 float3 agentpos3 = AgentPositions[i];
                 float2 pos = new float2(agentpos3.x, agentpos3.z);
-                int hashGridIndex = (int)math.floor(agentData.Radius * 2 / BaseSpatialGridSize);
+                float agentRadius = AgentRadii[i];
+                int hashGridIndex = (int)math.floor(agentRadius * 2 / BaseSpatialGridSize);
                 float tileSize = hashGridIndex * BaseSpatialGridSize + BaseSpatialGridSize;
                 int gridColAmount = (int)math.ceil(fieldHorizontalSize / tileSize);
                 int2 hashTileIndex2 = FlowFieldUtilities.PosTo2D(pos, tileSize, FieldGridStartPos);
@@ -92,8 +93,9 @@ namespace FlowFieldNavigation
             {
                 AgentData agentData = AgentDataArray[i];
                 float3 agentpos3 = AgentPositions[i];
+                float agentRadius = AgentRadii[i];
                 float2 pos = new float2(agentpos3.x, agentpos3.z);
-                int hashGridIndex = (int)math.floor(agentData.Radius * 2 / BaseSpatialGridSize);
+                int hashGridIndex = (int)math.floor(agentRadius * 2 / BaseSpatialGridSize);
                 float tileSize = hashGridIndex * BaseSpatialGridSize + BaseSpatialGridSize;
                 int gridColAmount = (int)math.ceil(fieldHorizontalSize / tileSize);
                 int2 hashTileIndex2 = FlowFieldUtilities.PosTo2D(pos, tileSize, FieldGridStartPos);
@@ -107,7 +109,7 @@ namespace FlowFieldNavigation
                 AgentMovementDataArray[agentDataIndex] = new AgentMovementData()
                 {
                     Position = agentpos3,
-                    Radius = agentData.Radius,
+                    Radius = agentRadius,
                     DesiredDirection = agentData.DesiredDirection,
                     AlignmentMultiplierPercentage = 1f,
                     CurrentDirection = agentData.Direction,

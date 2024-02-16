@@ -70,6 +70,7 @@ namespace FlowFieldNavigation
         internal void ScheduleRoutine(NativeArray<UnsafeListReadOnly<byte>> costFieldCosts, NativeArray<float3> agentPositions, JobHandle dependency)
         {
             NativeArray<AgentData> agentDataArray = _agentDataContainer.AgentDataList.AsArray();
+            NativeArray<float> agentRadii = _agentDataContainer.AgentRadii.AsArray();
             NativeArray<int> agentCurPathIndexArray = _agentDataContainer.AgentCurPathIndicies.AsArray();
             NativeArray<PathLocationData> exposedPathLocationDataArray = _navigationManager.PathDataContainer.ExposedPathLocationData.AsArray();
             NativeArray<PathFlowData> exposedPathFlowDataArray = _navigationManager.PathDataContainer.ExposedPathFlowData.AsArray();
@@ -102,6 +103,7 @@ namespace FlowFieldNavigation
                 MinAgentSize = FlowFieldUtilities.MinAgentSize,
                 FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
                 AgentDataArray = agentDataArray,
+                AgentRadii = agentRadii,
                 AgentPositions = agentPositions,
                 AgentFlockIndexArray = agentFlockIndexArray,
                 AgentHashGridArray = HashGridArray,

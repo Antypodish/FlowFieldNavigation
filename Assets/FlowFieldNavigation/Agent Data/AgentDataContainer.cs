@@ -19,6 +19,7 @@ namespace FlowFieldNavigation
         internal List<FlowFieldAgent> Agents;
         internal TransformAccessArray AgentTransforms;
         internal NativeList<AgentData> AgentDataList;
+        internal NativeList<float> AgentRadii;
         internal NativeList<bool> AgentDestinationReachedArray;
         internal NativeList<int> AgentFlockIndicies;
         internal NativeList<int> AgentRequestedPathIndicies;
@@ -35,6 +36,7 @@ namespace FlowFieldNavigation
             AgentRequestedPathIndicies = new NativeList<int>(0, Allocator.Persistent);
             AgentFlockIndicies = new NativeList<int>(Allocator.Persistent);
             AgentDestinationReachedArray = new NativeList<bool>(Allocator.Persistent);
+            AgentRadii = new NativeList<float>(Allocator.Persistent);
         }
         public void DisposeAll()
         {
@@ -52,6 +54,7 @@ namespace FlowFieldNavigation
             AgentRequestedPathIndicies.Dispose();
             AgentNewPathIndicies.Dispose();
             AgentCurPathIndicies.Dispose();
+            AgentRadii.Dispose();
         }
         public void Subscribe(FlowFieldAgent agent)
         {
@@ -63,10 +66,10 @@ namespace FlowFieldNavigation
                 Status = 0,
                 Destination = Vector2.zero,
                 Direction = Vector2.zero,
-                Radius = Mathf.Min(agent.Radius, FlowFieldUtilities.MaxAgentSize),
                 LandOffset = agent.LandOffset,
             };
             Agents.Add(agent);
+            AgentRadii.Add(Mathf.Min(agent.Radius, FlowFieldUtilities.MaxAgentSize));
             AgentTransforms.Add(agent.transform);
             AgentDataList.Add(data);
             AgentNewPathIndicies.Add(-1);
