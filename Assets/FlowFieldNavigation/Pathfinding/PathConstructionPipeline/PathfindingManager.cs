@@ -44,6 +44,7 @@ namespace FlowFieldNavigation
         NativeList<FlockSlice> _hashMapFlockSlices;
         NativeList<int> _hashMapPathIndicies;
         NativeList<UnsafeListReadOnly<byte>> _costFieldCosts;
+        NativeList<PathRequest> _requestedPaths;
         List<JobHandle> _pathfindingTaskOrganizationHandle;
         internal PathfindingManager(FlowFieldNavigationManager navigationManager)
         {
@@ -79,6 +80,7 @@ namespace FlowFieldNavigation
             _hashMapPathIndicies = new NativeList<int>(Allocator.Persistent);
             _agentPositions = new NativeList<float3>(Allocator.Persistent);
             _costFieldCosts = new NativeList<UnsafeListReadOnly<byte>>(Allocator.Persistent);
+            _requestedPaths = new NativeList<PathRequest>(Allocator.Persistent);
         }
         internal void DisposeAll()
         {
@@ -111,17 +113,19 @@ namespace FlowFieldNavigation
             _losIntegrationScheduler.DisposeAll();
             _dynamicAreaScheduler.DisposeAll();
             _agentPositions.Dispose();
+            _requestedPaths.Dispose();
             _portalTravesalScheduler = null;
             _requestedSectorCalculationScheduler = null;
             _additionPortalTraversalScheduler = null;
             _losIntegrationScheduler = null;
             _dynamicAreaScheduler = null;
         }
-        internal void ShcedulePathRequestEvalutaion(NativeList<PathRequest> requestedPaths,
+        internal void ShcedulePathRequestEvalutaion(NativeArray<PathRequest> inputPathRequests,
             NativeArray<SectorBitArray>.ReadOnly editedSectorBitArray,
-            JobHandle islandFieldHandleAsDependency)
+            JobHandle systemDependency)
         {
             //RESET CONTAINERS
+            _requestedPaths.Clear();
             _sourcePositions.Clear();
             _offsetDerivedPathRequests.Clear();
             _finalPathRequests.Clear();
@@ -140,6 +144,7 @@ namespace FlowFieldNavigation
             _currentPathSourceCount.Value = 0;
 
             TransformAccessArray agentTransforms = _navigationManager.AgentDataContainer.AgentTransforms;
+            NativeArray<int> agentRequestedPathIndicies = _navigationManager.AgentDataContainer.AgentRequestedPathIndicies.AsArray();
             NativeArray<float> agentRadii = _navigationManager.AgentDataContainer.AgentRadii.AsArray();
             NativeArray<int> agentNewPathIndicies = _navigationManager.AgentDataContainer.AgentNewPathIndicies.AsArray();
             NativeArray<int> agentCurPathIndicies = _navigationManager.AgentDataContainer.AgentCurPathIndicies.AsArray();
@@ -170,8 +175,25 @@ namespace FlowFieldNavigation
                 MinYIncluding = FlowFieldUtilities.FieldMinYIncluding,
                 PositionOutput = _agentPositions.AsArray(),
             };
-            JobHandle agentPathfindingPositionGetHandle = agentPathfindingPositionGet.Schedule(agentTransforms);
-            islandFieldHandleAsDependency = JobHandle.CombineDependencies(islandFieldHandleAsDependency, agentPathfindingPositionGetHandle);
+            agentPathfindingPositionGet.Schedule(agentTransforms).Complete();
+
+            //Copy requested paths for parallel usage
+            _requestedPaths.Length = inputPathRequests.Length;
+            NativeArray<PathRequest> requestedPathsAsArray = _requestedPaths.AsArray();
+            NativeArrayCopyJob<PathRequest> requestCopyForParallelUse = new NativeArrayCopyJob<PathRequest>()
+            {
+                Source = inputPathRequests,
+                Destination = requestedPathsAsArray,
+            };
+            requestCopyForParallelUse.Schedule().Complete();
+
+            //TRANSFER REQUESTED PATHS TO NEW PATHS
+            RequestedToNewPathIndexTransferJob copyRequestedPathIndexToNewPathIndex = new RequestedToNewPathIndexTransferJob()
+            {
+                AgentRequestedPathIndicies = agentRequestedPathIndicies,
+                AgentNewPathIndicies = agentNewPathIndicies,
+            };
+            copyRequestedPathIndexToNewPathIndex.Schedule().Complete();
 
             //Get cost field costs
             UnsafeListReadOnly<byte>[] costFielCosts = _navigationManager.GetAllCostFieldCostsAsUnsafeListReadonly();
@@ -184,20 +206,20 @@ namespace FlowFieldNavigation
             //Submit flocks from requests
             FlockIndexSubmissionJob flockSubmission = new FlockIndexSubmissionJob()
             {
-                InitialPathRequestCount = requestedPaths.Length,
+                InitialPathRequestCount = requestedPathsAsArray.Length,
                 AgentFlockIndexArray = agentFlockIndexArray,
                 AgentNewPathIndexArray = agentNewPathIndicies,
-                InitialPathRequests = requestedPaths.AsArray(),
+                InitialPathRequests = requestedPathsAsArray,
                 FlockList = flockList,
                 UnusedFlockIndexList = unusedFlockIndexList,
             };
-            flockSubmission.Schedule().Complete();
+            flockSubmission.Schedule(systemDependency).Complete();
 
             //Self targeting fix
             DynamicPathRequestSelfTargetingFixJob selfTargetingFix = new DynamicPathRequestSelfTargetingFixJob()
             {
                 AgentNewPathIndicies = agentNewPathIndicies,
-                InitialPathRequests = requestedPaths.AsArray(),
+                InitialPathRequests = requestedPathsAsArray,
             };
             JobHandle selfTargetingFixHandle = selfTargetingFix.Schedule();
             if (FlowFieldUtilities.DebugMode) { selfTargetingFixHandle.Complete(); }
@@ -216,7 +238,7 @@ namespace FlowFieldNavigation
             {
                 PathOrganizationDataArray = pathRoutineDataArray,
             };
-            JobHandle routineDataResetHandle = routineDataReset.Schedule(islandFieldHandleAsDependency);
+            JobHandle routineDataResetHandle = routineDataReset.Schedule(systemDependency);
             if (FlowFieldUtilities.DebugMode) { routineDataResetHandle.Complete(); }
 
             //Set agent indicies to start moving
@@ -279,7 +301,7 @@ namespace FlowFieldNavigation
                 AgentCurPathIndicies = agentCurPathIndicies,
                 AgentNewPathIndicies = agentNewPathIndicies,
                 AgentPositions = _agentPositions.AsArray(),
-                PathRequests = requestedPaths,
+                PathRequests = _requestedPaths,
                 PathStateArray = pathStateArray,
                 PathDestinationDataArray = pathDestinationDataArray,
                 PathRoutineDataArray = pathRoutineDataArray,
@@ -332,7 +354,7 @@ namespace FlowFieldNavigation
                 AgentsLookingForPath = AgentsLookingForPath,
                 AgentsLookingForPathRequestRecords = AgentsLookingForPathRecords,
                 ReadyAgentsLookingForPathRequestRecords = _readyAgentsLookingForPathRecords,
-                InitialPathRequests = requestedPaths,
+                InitialPathRequests = _requestedPaths,
                 ReadyAgentsLookingForPath = _readyAgentsLookingForPath,
             };
             JobHandle agentLookingForPathSubmissionHandle = agentLookingForPathSubmission.Schedule(agentsToUnsubCurPathSubmissionHandle);
@@ -369,7 +391,7 @@ namespace FlowFieldNavigation
                 AgentFlockIndicies = agentFlockIndexArray,
                 ReadyAgentsLookingForPath = _readyAgentsLookingForPath,
                 ReadyAgentsLookingForPathRequestRecords = _readyAgentsLookingForPathRecords,
-                InitialPathRequests = requestedPaths,
+                InitialPathRequests = _requestedPaths,
                 IslandFieldProcessors = _islandFieldProcessors,
                 PathDestinationDataArray = pathDestinationDataArray,
                 PathRoutineDataArray = pathRoutineDataArray,
@@ -396,7 +418,7 @@ namespace FlowFieldNavigation
                 TileSize = FlowFieldUtilities.TileSize,
                 AgentRadii = agentRadii,
                 AgentPositions = _agentPositions.AsArray(),
-                InitialPathRequests = requestedPaths,
+                InitialPathRequests = _requestedPaths,
                 DerivedPathRequests = _offsetDerivedPathRequests,
                 NewAgentPathIndicies = agentNewPathIndicies,
             };
@@ -464,8 +486,6 @@ namespace FlowFieldNavigation
             };
             JobHandle sourceSubmitHandle = sourceSubmit.Schedule(JobHandle.CombineDependencies(combinedExpansionHanlde, islandDerivationHandle));
             if (FlowFieldUtilities.DebugMode) { sourceSubmitHandle.Complete(); }
-
-            agentPathfindingPositionGetHandle.Complete();
             _pathfindingTaskOrganizationHandle.Add(sourceSubmitHandle);
         }
         void CompletePathEvaluation()

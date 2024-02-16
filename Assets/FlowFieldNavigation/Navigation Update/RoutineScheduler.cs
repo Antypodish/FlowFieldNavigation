@@ -19,8 +19,6 @@ namespace FlowFieldNavigation
         List<JobHandle> _islandReconfigHandle;
 
         uint _fieldState;
-        internal NativeList<PathRequest> CurrentRequestedPaths;
-
         NativeList<SectorBitArray> EditedSectorBitArray;
         NativeList<CostEdit> NewCostEditRequests;
         internal RoutineScheduler(FlowFieldNavigationManager navigationManager)
@@ -29,7 +27,6 @@ namespace FlowFieldNavigation
             _movementManager = navigationManager.MovementManager;
             _pathfindingManager = navigationManager.PathfindingManager;
             _costEditHandle = new List<JobHandle>();
-            CurrentRequestedPaths = new NativeList<PathRequest>(Allocator.Persistent);
             _islandReconfigHandle = new List<JobHandle>();
             EditedSectorBitArray = new NativeList<SectorBitArray>(Allocator.Persistent);
             NewCostEditRequests = new NativeList<CostEdit>(Allocator.Persistent);
@@ -39,7 +36,6 @@ namespace FlowFieldNavigation
         {
             _costEditHandle = null;
             _islandReconfigHandle = null;
-            CurrentRequestedPaths.Dispose();
             EditedSectorBitArray.Dispose();
             NewCostEditRequests.Dispose();
 
@@ -62,25 +58,7 @@ namespace FlowFieldNavigation
             JobHandle costEditHandle = ScheduleCostEditRequests();
             JobHandle islandFieldReconfigHandle = ScheduleIslandFieldReconfig(costEditHandle);
 
-            //COPY REQUESTED TO SCHEDULING SYSTEM
-            NativeListCopyJob<PathRequest> copyJob = new NativeListCopyJob<PathRequest>()
-            {
-                Source = newPaths,
-                Destination = CurrentRequestedPaths,
-            };
-            JobHandle copyHandle = copyJob.Schedule();
-
-            //TRANSFER REQUESTED PATHS TO NEW PATHS
-            RequestedToNewPathIndexTransferJob reqToNewTransfer = new RequestedToNewPathIndexTransferJob()
-            {
-                AgentRequestedPathIndicies = _navigationManager.AgentDataContainer.AgentRequestedPathIndicies.AsArray(),
-                AgentNewPathIndicies = _navigationManager.AgentDataContainer.AgentNewPathIndicies.AsArray(),
-            };
-            JobHandle transferHandle = reqToNewTransfer.Schedule();
-
-            JobHandle.CombineDependencies(transferHandle, copyHandle).Complete();
-
-            _pathfindingManager.ShcedulePathRequestEvalutaion(CurrentRequestedPaths, EditedSectorBitArray.AsArray().AsReadOnly(), islandFieldReconfigHandle);
+            _pathfindingManager.ShcedulePathRequestEvalutaion(newPaths.AsArray(), EditedSectorBitArray.AsArray().AsReadOnly(), islandFieldReconfigHandle);
             _movementManager.ScheduleRoutine(costEditHandle);
         }
         internal void TryCompletePredecessorJobs()
@@ -119,7 +97,6 @@ namespace FlowFieldNavigation
             _movementManager.SendRoutineResults(deltaTime);
             _pathfindingManager.TransferNewPathsToCurPaths();
 
-            CurrentRequestedPaths.Clear();
             EditedSectorBitArray.Clear();
             NewCostEditRequests.Clear();
         }
