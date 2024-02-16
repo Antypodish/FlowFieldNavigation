@@ -52,9 +52,9 @@ namespace FlowFieldNavigation
         {
             return _costFieldProducer.SectorDirections;
         }
-        internal NativeArray<IslandFieldProcessor> GetAllIslandFieldProcessors()
+        internal NativeArray<IslandFieldProcessor> GetAllIslandFieldProcessors(Allocator allocator)
         {
-            return _fieldGraphProducer.GetAllIslandFieldProcessors();
+            return _fieldGraphProducer.GetAllIslandFieldProcessors(allocator);
         }
         internal UnsafeListReadOnly<byte>[] GetAllCostFieldCostsAsUnsafeListReadonly()
         {

@@ -13,7 +13,7 @@ namespace FlowFieldNavigation
 
         FlowFieldNavigationManager _navigationManager;
         MovementManager _movementManager;
-        PathConstructionPipeline _pathConstructionPipeline;
+        PathfindingManager _pathfindingManager;
 
         List<JobHandle> _costEditHandle;
         List<JobHandle> _islandReconfigHandle;
@@ -31,7 +31,7 @@ namespace FlowFieldNavigation
         {
             _navigationManager = navigationManager;
             _movementManager = navigationManager.MovementManager;
-            _pathConstructionPipeline = navigationManager.PathConstructionPipeline;
+            _pathfindingManager = navigationManager.PathfindingManager;
             _costEditHandle = new List<JobHandle>();
             CurrentRequestedPaths = new NativeList<PathRequest>(Allocator.Persistent);
             _islandReconfigHandle = new List<JobHandle>();
@@ -52,14 +52,12 @@ namespace FlowFieldNavigation
             _costFieldCosts.Dispose();
 
             _movementManager.DisposeAll();
-            _pathConstructionPipeline.DisposeAll();
+            _pathfindingManager.DisposeAll();
             _movementManager = null;
-            _pathConstructionPipeline = null;
+            _pathfindingManager = null;
         }
         internal void Schedule(NativeList<PathRequest> newPaths, NativeArray<CostEdit>.ReadOnly costEditRequests)
         {
-            NativeArray<IslandFieldProcessor> islandFieldProcessors = _navigationManager.FieldDataContainer.GetAllIslandFieldProcessors();
-
             //COPY OBSTACLE REQUESTS
             ReadOnlyNativeArrayToNativeListCopyJob<CostEdit> obstacleRequestCopy = new ReadOnlyNativeArrayToNativeListCopyJob<CostEdit>()
             {
@@ -84,17 +82,24 @@ namespace FlowFieldNavigation
             TransformAccessArray agentTransforms = _navigationManager.AgentDataContainer.AgentTransforms;
             _agentPositionsForMovement.Length = agentTransforms.length;
             _agentPositionsForPathfinding.Length = agentTransforms.length;
-
-            AgentPositionGetJob agentPositionGet = new AgentPositionGetJob()
+            AgentPositionGetJob agentMovementPositionGet = new AgentPositionGetJob()
             {
                 MaxXExcluding = FlowFieldUtilities.FieldMaxXExcluding,
                 MaxYExcluding = FlowFieldUtilities.FieldMaxYExcluding,
                 MinXIncluding = FlowFieldUtilities.FieldMinXIncluding,
                 MinYIncluding = FlowFieldUtilities.FieldMinYIncluding,
-                PositionOutput1 = _agentPositionsForMovement.AsArray(),
-                PositionOutput2 = _agentPositionsForPathfinding.AsArray(),
+                PositionOutput = _agentPositionsForMovement.AsArray(),
             };
-            JobHandle agentPositionGetHandle = agentPositionGet.Schedule(agentTransforms);
+            JobHandle agentMovementPositionGetHandle = agentMovementPositionGet.Schedule(agentTransforms);
+            AgentPositionGetJob agentPathfindingPositionGet = new AgentPositionGetJob()
+            {
+                MaxXExcluding = FlowFieldUtilities.FieldMaxXExcluding,
+                MaxYExcluding = FlowFieldUtilities.FieldMaxYExcluding,
+                MinXIncluding = FlowFieldUtilities.FieldMinXIncluding,
+                MinYIncluding = FlowFieldUtilities.FieldMinYIncluding,
+                PositionOutput = _agentPositionsForPathfinding.AsArray(),
+            };
+            JobHandle agentPathfindingPositionGetHandle = agentPathfindingPositionGet.Schedule(agentTransforms);
 
             //COPY REQUESTED TO SCHEDULING SYSTEM
             NativeListCopyJob<PathRequest> copyJob = new NativeListCopyJob<PathRequest>()
@@ -112,9 +117,10 @@ namespace FlowFieldNavigation
             };
             JobHandle transferHandle = reqToNewTransfer.Schedule();
 
-            JobHandle.CombineDependencies(transferHandle, copyHandle, agentPositionGetHandle).Complete();
+            JobHandle.CombineDependencies(transferHandle, copyHandle).Complete();
+            JobHandle.CombineDependencies(agentPathfindingPositionGetHandle, agentMovementPositionGetHandle).Complete();
 
-            _pathConstructionPipeline.ShcedulePathRequestEvalutaion(CurrentRequestedPaths, _costFieldCosts.AsArray(), EditedSectorBitArray.AsArray().AsReadOnly(), islandFieldProcessors, _agentPositionsForPathfinding.AsArray(), islandFieldReconfigHandle);
+            _pathfindingManager.ShcedulePathRequestEvalutaion(CurrentRequestedPaths, _costFieldCosts.AsArray(), EditedSectorBitArray.AsArray().AsReadOnly(), _agentPositionsForPathfinding.AsArray(), islandFieldReconfigHandle);
             _movementManager.ScheduleRoutine(_costFieldCosts.AsArray(), _agentPositionsForMovement.AsArray(), costEditHandle);
         }
         internal void TryCompletePredecessorJobs()
@@ -130,7 +136,7 @@ namespace FlowFieldNavigation
                 _fieldState++;
             }
 
-            _pathConstructionPipeline.TryComplete();
+            _pathfindingManager.TryComplete();
         }
         internal void ForceCompleteAll(float deltaTime)
         {
@@ -149,9 +155,9 @@ namespace FlowFieldNavigation
             }
 
             _movementManager.ForceCompleteRoutine();
-            _pathConstructionPipeline.ForceComplete();
+            _pathfindingManager.ForceComplete();
             _movementManager.SendRoutineResults(deltaTime);
-            _pathConstructionPipeline.TransferNewPathsToCurPaths();
+            _pathfindingManager.TransferNewPathsToCurPaths();
 
             CurrentRequestedPaths.Clear();
             EditedSectorBitArray.Clear();

@@ -7,7 +7,7 @@ using System.Diagnostics;
 
 namespace FlowFieldNavigation
 {
-    internal class PathConstructionPipeline
+    internal class PathfindingManager
     {
         internal NativeList<int> AgentsLookingForPath;
         internal NativeList<PathRequestRecord> AgentsLookingForPathRecords;
@@ -42,7 +42,7 @@ namespace FlowFieldNavigation
         NativeList<FlockSlice> _hashMapFlockSlices;
         NativeList<int> _hashMapPathIndicies;
         List<JobHandle> _pathfindingTaskOrganizationHandle;
-        internal PathConstructionPipeline(FlowFieldNavigationManager navigationManager)
+        internal PathfindingManager(FlowFieldNavigationManager navigationManager)
         {
             _navigationManager = navigationManager;
             _pathContainer = navigationManager.PathDataContainer;
@@ -114,7 +114,6 @@ namespace FlowFieldNavigation
         internal void ShcedulePathRequestEvalutaion(NativeList<PathRequest> requestedPaths,
             NativeArray<UnsafeListReadOnly<byte>> costFieldCosts,
             NativeArray<SectorBitArray>.ReadOnly editedSectorBitArray,
-            NativeArray<IslandFieldProcessor> islandFieldProcessors,
             NativeArray<float3> agentPositions,
             JobHandle islandFieldHandleAsDependency)
         {
@@ -136,14 +135,13 @@ namespace FlowFieldNavigation
             _pathRequestSourceCount.Value = 0;
             _currentPathSourceCount.Value = 0;
 
-            NativeArray<AgentData> agentDataArray = _navigationManager.AgentDataContainer.AgentDataList.AsArray();
             NativeArray<float> agentRadii = _navigationManager.AgentDataContainer.AgentRadii.AsArray();
             NativeArray<int> agentNewPathIndicies = _navigationManager.AgentDataContainer.AgentNewPathIndicies.AsArray();
             NativeArray<int> agentCurPathIndicies = _navigationManager.AgentDataContainer.AgentCurPathIndicies.AsArray();
             NativeArray<int> agentFlockIndexArray = _navigationManager.AgentDataContainer.AgentFlockIndicies.AsArray();
             NativeList<int> unusedFlockIndexList = _navigationManager.FlockDataContainer.UnusedFlockIndexList;
             NativeList<Flock> flockList = _navigationManager.FlockDataContainer.FlockList;
-            _islandFieldProcessors = islandFieldProcessors;
+            _islandFieldProcessors = _navigationManager.FieldDataContainer.GetAllIslandFieldProcessors(Allocator.Persistent);
             NativeArray<UnsafeList<DijkstraTile>> targetSectorIntegrations = _pathContainer.TargetSectorIntegrationList.AsArray();
             NativeArray<PathLocationData> pathLocationDataArray = _pathContainer.PathLocationDataList.AsArray();
             NativeArray<PathFlowData> pathFlowDataArray = _pathContainer.PathFlowDataList.AsArray();
@@ -176,7 +174,7 @@ namespace FlowFieldNavigation
             if (FlowFieldUtilities.DebugMode) { selfTargetingFixHandle.Complete(); }
 
             //Agent task cleaning
-            _agentPathTaskList.Length = agentDataArray.Length;
+            _agentPathTaskList.Length = agentRadii.Length;
             NativeArrayCleaningJob<PathTask> agentTaskCleaning = new NativeArrayCleaningJob<PathTask>()
             {
                 Array = _agentPathTaskList.AsArray(),
@@ -343,7 +341,7 @@ namespace FlowFieldNavigation
                 ReadyAgentsLookingForPath = _readyAgentsLookingForPath,
                 ReadyAgentsLookingForPathRequestRecords = _readyAgentsLookingForPathRecords,
                 InitialPathRequests = requestedPaths,
-                IslandFieldProcessors = islandFieldProcessors,
+                IslandFieldProcessors = _islandFieldProcessors,
                 PathDestinationDataArray = pathDestinationDataArray,
                 PathRoutineDataArray = pathRoutineDataArray,
                 PathSubscriberCounts = pathSubscriberCountArray,

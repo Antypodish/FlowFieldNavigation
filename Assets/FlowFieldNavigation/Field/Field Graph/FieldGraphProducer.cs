@@ -50,9 +50,9 @@ namespace FlowFieldNavigation
             }
             return newarray;
         }
-        internal NativeArray<IslandFieldProcessor> GetAllIslandFieldProcessors()
+        internal NativeArray<IslandFieldProcessor> GetAllIslandFieldProcessors(Allocator allocator)
         {
-            NativeArray<IslandFieldProcessor> islandFieldProcessors = new NativeArray<IslandFieldProcessor>(_fieldGraphs.Length, Allocator.Persistent);
+            NativeArray<IslandFieldProcessor> islandFieldProcessors = new NativeArray<IslandFieldProcessor>(_fieldGraphs.Length, allocator);
             for (int i = 0; i < _fieldGraphs.Length; i++)
             {
                 islandFieldProcessors[i] = _fieldGraphs[i].GetIslandFieldProcessor();

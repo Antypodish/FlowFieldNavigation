@@ -12,8 +12,7 @@ namespace FlowFieldNavigation
         internal float MinYIncluding;
         internal float MaxXExcluding;
         internal float MaxYExcluding;
-        internal NativeArray<float3> PositionOutput1;
-        internal NativeArray<float3> PositionOutput2;
+        internal NativeArray<float3> PositionOutput;
         public void Execute(int index, TransformAccess transform)
         {
             float3 pos = transform.position;
@@ -23,8 +22,7 @@ namespace FlowFieldNavigation
             pos.z = math.select(pos.z, MaxYExcluding - 1, pos.z >= MaxYExcluding);
             transform.position = pos;
 
-            PositionOutput1[index] = pos;
-            PositionOutput2[index] = pos;
+            PositionOutput[index] = pos;
         }
     }
 }

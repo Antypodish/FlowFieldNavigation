@@ -32,8 +32,8 @@ namespace FlowFieldNavigation
             NativeArray<PathState> pathStates = _navigationManager.PathDataContainer.ExposedPathStateList.AsArray();
             NativeArray<PathDestinationData> pathDestinationArray = _navigationManager.PathDataContainer.PathDestinationDataList.AsArray();
             NativeArray<PathRequest> pathRequests = _navigationManager.RequestAccumulator.PathRequests.AsArray();
-            NativeList<int> agentsLookingForPath = _navigationManager.PathConstructionPipeline.AgentsLookingForPath;
-            NativeList<PathRequestRecord> agentsLookingForPathRecords = _navigationManager.PathConstructionPipeline.AgentsLookingForPathRecords;
+            NativeList<int> agentsLookingForPath = _navigationManager.PathfindingManager.AgentsLookingForPath;
+            NativeList<PathRequestRecord> agentsLookingForPathRecords = _navigationManager.PathfindingManager.AgentsLookingForPathRecords;
 
             _agentRemovalMarks.Length = agents.Count;
 

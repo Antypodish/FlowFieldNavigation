@@ -15,7 +15,7 @@ namespace FlowFieldNavigation
         internal AgentDataContainer AgentDataContainer;
         internal FlockDataContainer FlockDataContainer;
         internal RequestAccumulator RequestAccumulator;
-        internal PathConstructionPipeline PathConstructionPipeline;
+        internal PathfindingManager PathfindingManager;
         internal MovementManager MovementManager;
 
         internal AgentRemovingSystem AgentRemovingSystem;
@@ -96,7 +96,7 @@ namespace FlowFieldNavigation
             AgentStatChangeSystem = new AgentStatChangeSystem(this);
             PathDataContainer = new PathDataContainer(this);
             RequestAccumulator = new RequestAccumulator(this);
-            PathConstructionPipeline = new PathConstructionPipeline(this);
+            PathfindingManager = new PathfindingManager(this);
             MovementManager = new MovementManager(AgentDataContainer, this);
             _navigationUpdater = new NavigationUpdater(this, RequestAccumulator);
             FlockDataContainer = new FlockDataContainer();
