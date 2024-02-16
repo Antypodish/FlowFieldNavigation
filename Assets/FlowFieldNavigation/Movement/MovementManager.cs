@@ -22,6 +22,7 @@ namespace FlowFieldNavigation
         internal NativeArray<UnsafeList<HashTile>> HashGridArray;
         internal NativeList<float> PathReachDistances;
 
+        NativeList<float3> _agentPositions;
         JobHandle _routineHandle;
         internal MovementManager(AgentDataContainer agentDataContainer, FlowFieldNavigationManager navigationManager)
         {
@@ -30,8 +31,9 @@ namespace FlowFieldNavigation
             AgentMovementDataList = new NativeList<AgentMovementData>(_agentDataContainer.Agents.Count, Allocator.Persistent);
             RoutineResults = new NativeList<RoutineResult>(Allocator.Persistent);
             AgentPositionChangeBuffer = new NativeList<float3>(Allocator.Persistent);
-            _routineHandle = new JobHandle();
+            _agentPositions = new NativeList<float3>(Allocator.Persistent);
 
+            _routineHandle = new JobHandle();
             //SPATIAL HASH GRID INSTANTIATION
             int gridAmount = (int)math.ceil(FlowFieldUtilities.MaxAgentSize / FlowFieldUtilities.BaseAgentSpatialGridSize);
             HashGridArray = new NativeArray<UnsafeList<HashTile>>(gridAmount, Allocator.Persistent);
@@ -67,8 +69,9 @@ namespace FlowFieldNavigation
             HashGridArray.Dispose();
             PathReachDistances.Dispose();
         }
-        internal void ScheduleRoutine(NativeArray<UnsafeListReadOnly<byte>> costFieldCosts, NativeArray<float3> agentPositions, JobHandle dependency)
+        internal void ScheduleRoutine(NativeArray<UnsafeListReadOnly<byte>> costFieldCosts, JobHandle dependency)
         {
+            TransformAccessArray agentTransforms = _navigationManager.AgentDataContainer.AgentTransforms;
             NativeArray<AgentData> agentDataArray = _agentDataContainer.AgentDataList.AsArray();
             NativeArray<float> agentRadii = _agentDataContainer.AgentRadii.AsArray();
             NativeArray<int> agentCurPathIndexArray = _agentDataContainer.AgentCurPathIndicies.AsArray();
@@ -92,6 +95,19 @@ namespace FlowFieldNavigation
             NormalToHashed.Length = agentDataArray.Length;
             HashedToNormal.Length = agentDataArray.Length;
 
+            //Copying agent positions from transforms
+            _agentPositions.Length = agentTransforms.length;
+            AgentPositionGetJob agentMovementPositionGet = new AgentPositionGetJob()
+            {
+                MaxXExcluding = FlowFieldUtilities.FieldMaxXExcluding,
+                MaxYExcluding = FlowFieldUtilities.FieldMaxYExcluding,
+                MinXIncluding = FlowFieldUtilities.FieldMinXIncluding,
+                MinYIncluding = FlowFieldUtilities.FieldMinYIncluding,
+                PositionOutput = _agentPositions.AsArray(),
+            };
+            JobHandle agentMovementPositionGetHandle = agentMovementPositionGet.Schedule(agentTransforms);
+            dependency = JobHandle.CombineDependencies(agentMovementPositionGetHandle, dependency);
+
             //SPATIAL HASHING
             AgentDataSpatialHasherJob spatialHasher = new AgentDataSpatialHasherJob()
             {
@@ -104,7 +120,7 @@ namespace FlowFieldNavigation
                 FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
                 AgentDataArray = agentDataArray,
                 AgentRadii = agentRadii,
-                AgentPositions = agentPositions,
+                AgentPositions = _agentPositions.AsArray(),
                 AgentFlockIndexArray = agentFlockIndexArray,
                 AgentHashGridArray = HashGridArray,
                 AgentMovementDataArray = AgentMovementDataList.AsArray(),
@@ -297,6 +313,7 @@ namespace FlowFieldNavigation
             JobHandle stoppingHandle = stoppingJob.Schedule(agentDataArray.Length, 64, destinationReachedCounterHandle);
 
             if (FlowFieldUtilities.DebugMode) { stoppingHandle.Complete(); }
+            agentMovementPositionGetHandle.Complete();
             _routineHandle = stoppingHandle;
         }
         internal void ForceCompleteRoutine()

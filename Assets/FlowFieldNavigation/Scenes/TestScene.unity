@@ -1223,6 +1223,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
         type: 3}
+      propertyPath: _debuggingEnabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
       propertyPath: _navigationManager
       value: 
       objectReference: {fileID: 1328932016}
