@@ -17,6 +17,7 @@ namespace FlowFieldNavigation
         internal RequestAccumulator RequestAccumulator;
         internal PathfindingManager PathfindingManager;
         internal MovementManager MovementManager;
+        internal CostFieldEditManager FieldEditManager;
 
         internal AgentRemovingSystem AgentRemovingSystem;
         internal AgentStatChangeSystem AgentStatChangeSystem;
@@ -29,7 +30,7 @@ namespace FlowFieldNavigation
         {
             if (!SimulationStarted) { return; }
             _navigationUpdater.IntermediateUpdate();
-            _navigationUpdater.RoutineUpdate();
+            _navigationUpdater.RoutineFixedUpdate();
         }
         void FixedUpdate()
         {
@@ -98,6 +99,7 @@ namespace FlowFieldNavigation
             RequestAccumulator = new RequestAccumulator(this);
             PathfindingManager = new PathfindingManager(this);
             MovementManager = new MovementManager(AgentDataContainer, this);
+            FieldEditManager = new CostFieldEditManager(this);
             _navigationUpdater = new NavigationUpdater(this, RequestAccumulator);
             FlockDataContainer = new FlockDataContainer();
         }
@@ -115,10 +117,6 @@ namespace FlowFieldNavigation
             FlockDataContainer.DisposeAll();
             RequestAccumulator.DisposeAll();
             _navigationUpdater.DisposeAll();
-        }
-        internal uint GetFieldState()
-        {
-            return _navigationUpdater.GetFieldState();
         }
         internal NativeArray<UnsafeList<HashTile>> GetSpatialHashGridArray()
         {

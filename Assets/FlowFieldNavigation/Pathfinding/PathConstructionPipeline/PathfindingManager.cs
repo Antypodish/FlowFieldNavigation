@@ -163,8 +163,6 @@ namespace FlowFieldNavigation
             NativeArray<int> pathFlockIndexArray = _pathContainer.PathFlockIndicies.AsArray();
             NativeArray<int> pathSubscriberCountArray = _pathContainer.PathSubscriberCounts.AsArray();
 
-
-
             //Copy agent positions from transforms
             _agentPositions.Length = agentTransforms.length;
             AgentPositionGetJob agentPathfindingPositionGet = new AgentPositionGetJob()

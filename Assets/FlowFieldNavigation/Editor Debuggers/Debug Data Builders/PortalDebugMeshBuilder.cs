@@ -28,7 +28,7 @@ namespace FlowFieldNavigation
         }
         internal List<Mesh> GetDebugMeshes(int offset)
         {
-            uint curFieldState = _navigationManager.GetFieldState();
+            uint curFieldState = _navigationManager.FieldEditManager.FieldState;
             if (!_isCreated || _lastOffset != offset || _lastFieldState != curFieldState)
             {
                 _lastOffset = offset;

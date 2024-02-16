@@ -51,7 +51,7 @@ namespace FlowFieldNavigation
             islandFieldReconfigHandle = ScheduleIslandFieldReconfig(costEditHandle);
 
         }
-        internal void TryCompletePredecessorJobs()
+        internal void TryComplete()
         {
             //ISLAND REC
             if (_islandReconfigHandle.Count != 0)

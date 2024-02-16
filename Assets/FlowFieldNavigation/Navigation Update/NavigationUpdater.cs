@@ -11,8 +11,10 @@ namespace FlowFieldNavigation
     internal class NavigationUpdater
     {
         FlowFieldNavigationManager _navigationManager;
-        RoutineScheduler _scheduler;
         RequestAccumulator _requestAccumulator;
+        PathfindingManager _pathfindingManager;
+        MovementManager _movementManager;
+        CostFieldEditManager _fieldEditManager;
 
         float _timePassedSinceLastUpdate;
         const float _updateFrequency = 0.02f;
@@ -20,14 +22,25 @@ namespace FlowFieldNavigation
         {
             _navigationManager = navigationManager;
             _requestAccumulator = requestAccumulator;
-            _scheduler = new RoutineScheduler(navigationManager);
+            _pathfindingManager = navigationManager.PathfindingManager;
+            _movementManager = navigationManager.MovementManager;
+            _fieldEditManager = navigationManager.FieldEditManager;
         }
-        internal void RoutineUpdate()
+        internal void IntermediateUpdate()
+        {
+            _fieldEditManager.TryComplete();
+            _pathfindingManager.TryComplete();
+        }
+        internal void RoutineFixedUpdate()
         {
             int updateCount = SetTimerAndGetUpdateCount();
             for (int j = 0; j < updateCount; j++)
             {
-                _scheduler.ForceCompleteAll(_updateFrequency);
+                _fieldEditManager.ForceComplete();
+                _movementManager.ForceCompleteRoutine();
+                _pathfindingManager.ForceComplete();
+                _movementManager.SendRoutineResults(_updateFrequency);
+                _pathfindingManager.TransferNewPathsToCurPaths();
                 List<FlowFieldAgent> agentAddRequest = _requestAccumulator.AgentAddRequest;
                 NativeList<int> agentIndiciesToRemove = _requestAccumulator.AgentIndiciesToRemove;
                 NativeList<PathRequest> pathRequests = _requestAccumulator.PathRequests;
@@ -48,7 +61,9 @@ namespace FlowFieldNavigation
                 _navigationManager.AgentRemovingSystem.RemoveAgents(agentIndiciesToRemove.AsArray());
                 _navigationManager.PathDataContainer.Update();
 
-                _scheduler.Schedule(pathRequests, costEditRequests.AsArray().AsReadOnly());
+                _fieldEditManager.Schedule(costEditRequests.AsArray().AsReadOnly(), out JobHandle costEditHandle, out JobHandle islandFieldReconfigHandle);
+                _pathfindingManager.ShcedulePathRequestEvalutaion(pathRequests.AsArray(), _fieldEditManager.EditedSectorBitArraysForEachField, islandFieldReconfigHandle);
+                _movementManager.ScheduleRoutine(costEditHandle);
 
                 pathRequests.Clear();
                 costEditRequests.Clear();
@@ -71,17 +86,11 @@ namespace FlowFieldNavigation
             }
             return updateCount;
         }
-        internal uint GetFieldState()
-        {
-            return _scheduler.FieldState;
-        }
-        internal void IntermediateUpdate()
-        {
-            _scheduler.TryCompletePredecessorJobs();
-        }
         internal void DisposeAll()
         {
-            _scheduler.DisposeAll();
+            _fieldEditManager.DisposeAll();
+            _pathfindingManager.DisposeAll();
+            _movementManager.DisposeAll();
         }
     }
 
