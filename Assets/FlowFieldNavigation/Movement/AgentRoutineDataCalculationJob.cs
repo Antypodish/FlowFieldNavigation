@@ -87,12 +87,12 @@ namespace FlowFieldNavigation
             else if (GetSectorDynamicFlowStartIfExists(pathLocationData.DynamicAreaPickedSectorFlowStarts, agentSector1d, out int dynamicSectorFlowStart))
             {
                 FlowData flowData = pathFlowData.DynamicAreaFlowField[dynamicSectorFlowStart + local1d];
-                flow = math.select(0f, flowData.GetFlow(TileSize), flowData.IsValid());
+                flow = math.select(data.DesiredDirection, flowData.GetFlow(TileSize), flowData.IsValid());
             }
             else
             {
                 FlowData flowData = pathFlowData.FlowField[agentSectorFlowStart + local1d];
-                flow = math.select(0f, flowData.GetFlow(TileSize), flowData.IsValid());
+                flow = math.select(data.DesiredDirection, flowData.GetFlow(TileSize), flowData.IsValid());
             }
 
 

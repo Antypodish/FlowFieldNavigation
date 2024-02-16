@@ -12,6 +12,7 @@ namespace FlowFieldNavigation
     {
         internal uint FieldState { get { return _fieldState; } }
         internal NativeArray<SectorBitArray>.ReadOnly EditedSectorBitArraysForEachField { get { return _editedSectorBitArray.AsArray().AsReadOnly(); } }
+
         FlowFieldNavigationManager _navigationManager;
 
         List<JobHandle> _costEditHandle;
@@ -36,7 +37,17 @@ namespace FlowFieldNavigation
             _editedSectorBitArray.Dispose();
             _newCostEditRequests.Dispose();
         }
-        internal void Schedule(NativeArray<CostEdit>.ReadOnly costEditRequests, out JobHandle costEditHandle, out JobHandle islandFieldReconfigHandle)
+        internal JobHandle GetCurrentCostFieldEditHandle()
+        {
+            if (_costEditHandle.Count == 0) { return new JobHandle(); }
+            return _costEditHandle[0];
+        }
+        internal JobHandle GetCurrentIslandFieldReconfigHandle()
+        {
+            if (_islandReconfigHandle.Count == 0) { return new JobHandle(); }
+            return _islandReconfigHandle[0];
+        }
+        internal void Schedule(NativeArray<CostEdit>.ReadOnly costEditRequests)
         {
             //COPY OBSTACLE REQUESTS
             ReadOnlyNativeArrayToNativeListCopyJob<CostEdit> obstacleRequestCopy = new ReadOnlyNativeArrayToNativeListCopyJob<CostEdit>()
@@ -47,8 +58,8 @@ namespace FlowFieldNavigation
             obstacleRequestCopy.Schedule().Complete();
 
             //SCHEDULE COST EDITS
-            costEditHandle = ScheduleCostEditRequests();
-            islandFieldReconfigHandle = ScheduleIslandFieldReconfig(costEditHandle);
+            JobHandle costEditHandle = ScheduleCostEditRequests();
+            ScheduleIslandFieldReconfig(costEditHandle);
 
         }
         internal void TryComplete()

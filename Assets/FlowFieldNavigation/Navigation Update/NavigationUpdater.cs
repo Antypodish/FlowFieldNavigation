@@ -18,6 +18,8 @@ namespace FlowFieldNavigation
 
         float _timePassedSinceLastUpdate;
         const float _updateFrequency = 0.02f;
+        const int _smallUpdateCountForTriggeringBigUpdate = 3;
+        int _smallUpdateCount = 1;
         internal NavigationUpdater(FlowFieldNavigationManager navigationManager, RequestAccumulator requestAccumulator)
         {
             _navigationManager = navigationManager;
@@ -36,43 +38,63 @@ namespace FlowFieldNavigation
             int updateCount = SetTimerAndGetUpdateCount();
             for (int j = 0; j < updateCount; j++)
             {
-                _fieldEditManager.ForceComplete();
-                _movementManager.ForceCompleteRoutine();
-                _pathfindingManager.ForceComplete();
-                _movementManager.SendRoutineResults(_updateFrequency);
-                _pathfindingManager.TransferNewPathsToCurPaths();
-                List<FlowFieldAgent> agentAddRequest = _requestAccumulator.AgentAddRequest;
-                NativeList<int> agentIndiciesToRemove = _requestAccumulator.AgentIndiciesToRemove;
-                NativeList<PathRequest> pathRequests = _requestAccumulator.PathRequests;
-                NativeList<CostEdit> costEditRequests = _requestAccumulator.CostEditRequests;
-                NativeList<int> agentsToHoldGround = _requestAccumulator.AgentIndiciesToSetHoldGround;
-                NativeList<int> agentsToStop = _requestAccumulator.AgentIndiciesToStop;
-                NativeList<SetSpeedReq> setSpeedRequests = _requestAccumulator.SetSpeedRequests;
-
-                for (int i = 0; i < agentAddRequest.Count; i++)
+                if(_smallUpdateCount % _smallUpdateCountForTriggeringBigUpdate == 0)
                 {
-                    FlowFieldAgent agent = agentAddRequest[i];
-                    if (agent == null) { continue; }
-                    _navigationManager.AgentDataContainer.Subscribe(agent);
+                    BigUpdate();
+                    _smallUpdateCount = 1;
                 }
-                _navigationManager.AgentStatChangeSystem.SetAgentsHoldGround(agentsToHoldGround.AsArray());
-                _navigationManager.AgentStatChangeSystem.SetAgentsStopped(agentsToStop.AsArray());
-                _navigationManager.AgentStatChangeSystem.SetAgentSpeed(setSpeedRequests.AsArray());
-                _navigationManager.AgentRemovingSystem.RemoveAgents(agentIndiciesToRemove.AsArray());
-                _navigationManager.PathDataContainer.Update();
-
-                _fieldEditManager.Schedule(costEditRequests.AsArray().AsReadOnly(), out JobHandle costEditHandle, out JobHandle islandFieldReconfigHandle);
-                _pathfindingManager.ShcedulePathRequestEvalutaion(pathRequests.AsArray(), _fieldEditManager.EditedSectorBitArraysForEachField, islandFieldReconfigHandle);
-                _movementManager.ScheduleRoutine(costEditHandle);
-
-                pathRequests.Clear();
-                costEditRequests.Clear();
-                agentAddRequest.Clear();
-                agentIndiciesToRemove.Clear();
-                agentsToHoldGround.Clear();
-                agentsToStop.Clear();
-                setSpeedRequests.Clear();
+                else
+                {
+                    SmallUpdate();
+                    _smallUpdateCount++;
+                }
             }
+        }
+        void SmallUpdate()
+        {
+            _movementManager.ForceCompleteRoutine();
+            _movementManager.SendRoutineResults(_updateFrequency);
+            _movementManager.ScheduleRoutine(_fieldEditManager.GetCurrentCostFieldEditHandle());
+        }
+        void BigUpdate()
+        {
+            _fieldEditManager.ForceComplete();
+            _movementManager.ForceCompleteRoutine();
+            _pathfindingManager.ForceComplete();
+            _movementManager.SendRoutineResults(_updateFrequency);
+            _pathfindingManager.TransferNewPathsToCurPaths();
+            List<FlowFieldAgent> agentAddRequest = _requestAccumulator.AgentAddRequest;
+            NativeList<int> agentIndiciesToRemove = _requestAccumulator.AgentIndiciesToRemove;
+            NativeList<PathRequest> pathRequests = _requestAccumulator.PathRequests;
+            NativeList<CostEdit> costEditRequests = _requestAccumulator.CostEditRequests;
+            NativeList<int> agentsToHoldGround = _requestAccumulator.AgentIndiciesToSetHoldGround;
+            NativeList<int> agentsToStop = _requestAccumulator.AgentIndiciesToStop;
+            NativeList<SetSpeedReq> setSpeedRequests = _requestAccumulator.SetSpeedRequests;
+
+            for (int i = 0; i < agentAddRequest.Count; i++)
+            {
+                FlowFieldAgent agent = agentAddRequest[i];
+                if (agent == null) { continue; }
+                _navigationManager.AgentDataContainer.Subscribe(agent);
+            }
+            _navigationManager.AgentStatChangeSystem.SetAgentsHoldGround(agentsToHoldGround.AsArray());
+            _navigationManager.AgentStatChangeSystem.SetAgentsStopped(agentsToStop.AsArray());
+            _navigationManager.AgentStatChangeSystem.SetAgentSpeed(setSpeedRequests.AsArray());
+            _navigationManager.AgentRemovingSystem.RemoveAgents(agentIndiciesToRemove.AsArray());
+            _navigationManager.PathDataContainer.Update();
+
+            NativeArray<IslandFieldProcessor> islandFieldProcessors = _navigationManager.FieldDataContainer.GetAllIslandFieldProcessors(Allocator.Persistent);
+            _fieldEditManager.Schedule(costEditRequests.AsArray().AsReadOnly());
+            _pathfindingManager.ShcedulePathRequestEvalutaion(pathRequests.AsArray(), islandFieldProcessors, _fieldEditManager.EditedSectorBitArraysForEachField, _fieldEditManager.GetCurrentIslandFieldReconfigHandle());
+            _movementManager.ScheduleRoutine(_fieldEditManager.GetCurrentCostFieldEditHandle());
+
+            pathRequests.Clear();
+            costEditRequests.Clear();
+            agentAddRequest.Clear();
+            agentIndiciesToRemove.Clear();
+            agentsToHoldGround.Clear();
+            agentsToStop.Clear();
+            setSpeedRequests.Clear();
         }
         int SetTimerAndGetUpdateCount()
         {

@@ -121,6 +121,7 @@ namespace FlowFieldNavigation
             _dynamicAreaScheduler = null;
         }
         internal void ShcedulePathRequestEvalutaion(NativeArray<PathRequest> inputPathRequests,
+            NativeArray<IslandFieldProcessor> islandFieldProcessors,
             NativeArray<SectorBitArray>.ReadOnly editedSectorBitArray,
             JobHandle systemDependency)
         {
@@ -151,7 +152,7 @@ namespace FlowFieldNavigation
             NativeArray<int> agentFlockIndexArray = _navigationManager.AgentDataContainer.AgentFlockIndicies.AsArray();
             NativeList<int> unusedFlockIndexList = _navigationManager.FlockDataContainer.UnusedFlockIndexList;
             NativeList<Flock> flockList = _navigationManager.FlockDataContainer.FlockList;
-            _islandFieldProcessors = _navigationManager.FieldDataContainer.GetAllIslandFieldProcessors(Allocator.Persistent);
+            _islandFieldProcessors = islandFieldProcessors;
             NativeArray<UnsafeList<DijkstraTile>> targetSectorIntegrations = _pathContainer.TargetSectorIntegrationList.AsArray();
             NativeArray<PathLocationData> pathLocationDataArray = _pathContainer.PathLocationDataList.AsArray();
             NativeArray<PathFlowData> pathFlowDataArray = _pathContainer.PathFlowDataList.AsArray();
