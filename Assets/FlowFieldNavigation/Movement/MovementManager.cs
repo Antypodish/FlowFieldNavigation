@@ -22,6 +22,7 @@ namespace FlowFieldNavigation
         internal NativeArray<UnsafeList<HashTile>> HashGridArray;
         internal NativeList<float> PathReachDistances;
 
+        NativeList<UnsafeListReadOnly<byte>> _costFieldCosts;
         NativeList<float3> _agentPositions;
         JobHandle _routineHandle;
         internal MovementManager(AgentDataContainer agentDataContainer, FlowFieldNavigationManager navigationManager)
@@ -32,6 +33,7 @@ namespace FlowFieldNavigation
             RoutineResults = new NativeList<RoutineResult>(Allocator.Persistent);
             AgentPositionChangeBuffer = new NativeList<float3>(Allocator.Persistent);
             _agentPositions = new NativeList<float3>(Allocator.Persistent);
+            _costFieldCosts = new NativeList<UnsafeListReadOnly<byte>>(Allocator.Persistent);
 
             _routineHandle = new JobHandle();
             //SPATIAL HASH GRID INSTANTIATION
@@ -69,7 +71,7 @@ namespace FlowFieldNavigation
             HashGridArray.Dispose();
             PathReachDistances.Dispose();
         }
-        internal void ScheduleRoutine(NativeArray<UnsafeListReadOnly<byte>> costFieldCosts, JobHandle dependency)
+        internal void ScheduleRoutine(JobHandle dependency)
         {
             TransformAccessArray agentTransforms = _navigationManager.AgentDataContainer.AgentTransforms;
             NativeArray<AgentData> agentDataArray = _agentDataContainer.AgentDataList.AsArray();
@@ -107,6 +109,14 @@ namespace FlowFieldNavigation
             };
             JobHandle agentMovementPositionGetHandle = agentMovementPositionGet.Schedule(agentTransforms);
             dependency = JobHandle.CombineDependencies(agentMovementPositionGetHandle, dependency);
+
+            //Get cost field costs
+            UnsafeListReadOnly<byte>[] costFielCosts = _navigationManager.GetAllCostFieldCostsAsUnsafeListReadonly();
+            _costFieldCosts.Length = costFielCosts.Length;
+            for (int i = 0; i < costFielCosts.Length; i++)
+            {
+                _costFieldCosts[i] = costFielCosts[i];
+            }
 
             //SPATIAL HASHING
             AgentDataSpatialHasherJob spatialHasher = new AgentDataSpatialHasherJob()
@@ -192,7 +202,7 @@ namespace FlowFieldNavigation
                     RawAgentMovementDataArray = AgentMovementDataList.AsArray(),
                     FieldGridStartPosition = FlowFieldUtilities.FieldGridStartPosition,
                 },
-                CostFieldEachOffset = costFieldCosts,
+                CostFieldEachOffset = _costFieldCosts.AsArray(),
             };
             JobHandle avoidanceHandle = avoidanceJob.Schedule(agentDataArray.Length, 64, heightCalculationHandle);
 
@@ -246,7 +256,7 @@ namespace FlowFieldNavigation
                 SectorMatrixTileAmont = FlowFieldUtilities.SectorMatrixTileAmount,
                 AgentMovementData = AgentMovementDataList.AsArray(),
                 AgentPositionChangeBuffer = AgentPositionChangeBuffer.AsArray(),
-                CostFieldEachOffset = costFieldCosts,
+                CostFieldEachOffset = _costFieldCosts.AsArray(),
             };
             JobHandle wallCollisionHandle = wallCollision.Schedule(wallCollision.AgentMovementData.Length, 64, tensionHandle);
 
@@ -263,7 +273,7 @@ namespace FlowFieldNavigation
                 TileSize = FlowFieldUtilities.TileSize,
                 FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
                 AgentMovementDataArray = AgentMovementDataList.AsArray(),
-                CostFieldPerOffset = costFieldCosts,
+                CostFieldPerOffset = _costFieldCosts.AsArray(),
                 RoutineResultArray = RoutineResults.AsArray(),
             };
             JobHandle wallDetectionHandle = wallDetection.Schedule(agentDataArray.Length, 64, wallCollisionHandle);

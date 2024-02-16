@@ -21,11 +21,8 @@ namespace FlowFieldNavigation
         uint _fieldState;
         internal NativeList<PathRequest> CurrentRequestedPaths;
 
-        NativeList<UnsafeListReadOnly<byte>> _costFieldCosts;
         NativeList<SectorBitArray> EditedSectorBitArray;
         NativeList<CostEdit> NewCostEditRequests;
-
-        NativeList<float3> _agentPositionsForPathfinding;
         internal RoutineScheduler(FlowFieldNavigationManager navigationManager)
         {
             _navigationManager = navigationManager;
@@ -34,10 +31,8 @@ namespace FlowFieldNavigation
             _costEditHandle = new List<JobHandle>();
             CurrentRequestedPaths = new NativeList<PathRequest>(Allocator.Persistent);
             _islandReconfigHandle = new List<JobHandle>();
-            _costFieldCosts = new NativeList<UnsafeListReadOnly<byte>>(Allocator.Persistent);
             EditedSectorBitArray = new NativeList<SectorBitArray>(Allocator.Persistent);
             NewCostEditRequests = new NativeList<CostEdit>(Allocator.Persistent);
-            _agentPositionsForPathfinding = new NativeList<float3>(Allocator.Persistent);
             _fieldState = 0;
         }
         internal void DisposeAll()
@@ -47,7 +42,6 @@ namespace FlowFieldNavigation
             CurrentRequestedPaths.Dispose();
             EditedSectorBitArray.Dispose();
             NewCostEditRequests.Dispose();
-            _costFieldCosts.Dispose();
 
             _movementManager.DisposeAll();
             _pathfindingManager.DisposeAll();
@@ -63,14 +57,6 @@ namespace FlowFieldNavigation
                 Destination = NewCostEditRequests,
             };
             obstacleRequestCopy.Schedule().Complete();
-
-            //REFRESH COST FIELD COSTS
-            UnsafeListReadOnly<byte>[] costFielCosts = _navigationManager.GetAllCostFieldCostsAsUnsafeListReadonly();
-            _costFieldCosts.Length = costFielCosts.Length;
-            for (int i = 0; i < costFielCosts.Length; i++)
-            {
-                _costFieldCosts[i] = costFielCosts[i];
-            }
 
             //SCHEDULE COST EDITS
             JobHandle costEditHandle = ScheduleCostEditRequests();
@@ -94,8 +80,8 @@ namespace FlowFieldNavigation
 
             JobHandle.CombineDependencies(transferHandle, copyHandle).Complete();
 
-            _pathfindingManager.ShcedulePathRequestEvalutaion(CurrentRequestedPaths, _costFieldCosts.AsArray(), EditedSectorBitArray.AsArray().AsReadOnly(), islandFieldReconfigHandle);
-            _movementManager.ScheduleRoutine(_costFieldCosts.AsArray(), costEditHandle);
+            _pathfindingManager.ShcedulePathRequestEvalutaion(CurrentRequestedPaths, EditedSectorBitArray.AsArray().AsReadOnly(), islandFieldReconfigHandle);
+            _movementManager.ScheduleRoutine(costEditHandle);
         }
         internal void TryCompletePredecessorJobs()
         {

@@ -43,6 +43,7 @@ namespace FlowFieldNavigation
         NativeHashMap<int, int> _flockIndexToPathRequestIndex;
         NativeList<FlockSlice> _hashMapFlockSlices;
         NativeList<int> _hashMapPathIndicies;
+        NativeList<UnsafeListReadOnly<byte>> _costFieldCosts;
         List<JobHandle> _pathfindingTaskOrganizationHandle;
         internal PathfindingManager(FlowFieldNavigationManager navigationManager)
         {
@@ -77,6 +78,7 @@ namespace FlowFieldNavigation
             _hashMapFlockSlices = new NativeList<FlockSlice>(Allocator.Persistent);
             _hashMapPathIndicies = new NativeList<int>(Allocator.Persistent);
             _agentPositions = new NativeList<float3>(Allocator.Persistent);
+            _costFieldCosts = new NativeList<UnsafeListReadOnly<byte>>(Allocator.Persistent);
         }
         internal void DisposeAll()
         {
@@ -116,7 +118,6 @@ namespace FlowFieldNavigation
             _dynamicAreaScheduler = null;
         }
         internal void ShcedulePathRequestEvalutaion(NativeList<PathRequest> requestedPaths,
-            NativeArray<UnsafeListReadOnly<byte>> costFieldCosts,
             NativeArray<SectorBitArray>.ReadOnly editedSectorBitArray,
             JobHandle islandFieldHandleAsDependency)
         {
@@ -171,6 +172,14 @@ namespace FlowFieldNavigation
             };
             JobHandle agentPathfindingPositionGetHandle = agentPathfindingPositionGet.Schedule(agentTransforms);
             islandFieldHandleAsDependency = JobHandle.CombineDependencies(islandFieldHandleAsDependency, agentPathfindingPositionGetHandle);
+
+            //Get cost field costs
+            UnsafeListReadOnly<byte>[] costFielCosts = _navigationManager.GetAllCostFieldCostsAsUnsafeListReadonly();
+            _costFieldCosts.Length = costFielCosts.Length;
+            for (int i = 0; i < costFielCosts.Length; i++)
+            {
+                _costFieldCosts[i] = costFielCosts[i];
+            }
 
             //Submit flocks from requests
             FlockIndexSubmissionJob flockSubmission = new FlockIndexSubmissionJob()
@@ -258,7 +267,7 @@ namespace FlowFieldNavigation
                 PathLocationDataArray = pathLocationDataArray,
                 PathOrganizationDataArray = pathRoutineDataArray,
                 IslandFieldProcessors = _islandFieldProcessors,
-                CostFields = costFieldCosts,
+                CostFields = _costFieldCosts.AsArray(),
             };
             JobHandle routineDataCalculationHandle = routineDataCalculation.Schedule(pathRoutineDataArray.Length, 64, sectorEditCheckHandle);
             if (FlowFieldUtilities.DebugMode) { routineDataCalculationHandle.Complete(); _pathConstructionTester.RoutineDataCalculationTest(routineDataCalculation); }
@@ -319,7 +328,7 @@ namespace FlowFieldNavigation
                 AgentRadii = agentRadii,
                 AgentPositions = _agentPositions.AsArray(),
                 AgentNewPathIndicies = agentNewPathIndicies,
-                CostFields = costFieldCosts,
+                CostFields = _costFieldCosts.AsArray(),
                 AgentsLookingForPath = AgentsLookingForPath,
                 AgentsLookingForPathRequestRecords = AgentsLookingForPathRecords,
                 ReadyAgentsLookingForPathRequestRecords = _readyAgentsLookingForPathRecords,
@@ -431,7 +440,7 @@ namespace FlowFieldNavigation
                     FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
                     FinalPathRequests = _finalPathRequests,
                     IslandFieldProcessors = _islandFieldProcessors,
-                    CostFields = costFieldCosts,
+                    CostFields = _costFieldCosts.AsArray(),
                 };
                 JobHandle destinationExpansionHandle = destinationExpansion.Schedule(islandDerivationHandle);
                 handles[i] = destinationExpansionHandle;
