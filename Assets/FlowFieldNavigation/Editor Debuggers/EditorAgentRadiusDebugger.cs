@@ -1,5 +1,6 @@
 ﻿using Unity.Collections;
 using UnityEngine;
+using UnityEngine.Jobs;
 
 namespace FlowFieldNavigation
 {
@@ -14,9 +15,10 @@ namespace FlowFieldNavigation
         {
             Gizmos.color = Color.white;
             NativeArray<AgentData> agents = _navigationManager.AgentDataContainer.AgentDataList.AsArray();
+            TransformAccessArray transforms = _navigationManager.AgentDataContainer.AgentTransforms;
             for (int i = 0; i < agents.Length; i++)
             {
-                Gizmos.DrawWireSphere(agents[i].Position, agents[i].Radius);
+                Gizmos.DrawWireSphere(transforms[i].position, agents[i].Radius);
             }
         }
     }

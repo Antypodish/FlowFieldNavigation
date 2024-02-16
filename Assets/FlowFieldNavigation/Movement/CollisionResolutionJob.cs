@@ -14,6 +14,7 @@ namespace FlowFieldNavigation
         public void Execute(int index)
         {
             AgentMovementData agentData = AgentSpatialHashGrid.RawAgentMovementDataArray[index];
+            bool agentStopped = agentData.Status == 0;
             bool hasForeignInFront = RoutineResultArray[index].HasForeignInFront;
             float2 agentPos2 = new float2(agentData.Position.x, agentData.Position.z);
             float2 totalResolution = 0;
@@ -54,7 +55,7 @@ namespace FlowFieldNavigation
             float totalResolutionLen = math.length(totalResolution);
 
             //Enable if you want speed to be considered while calculating maxResolutionLength. More realistic, but increased overlapping.
-            //maxResolutionLength = math.select(agentData.Speed * 0.02f, maxResolutionLength, maxResolutionLength < agentData.Speed * 0.016f);
+            maxResolutionLength = math.select(agentData.Speed * 0.02f, maxResolutionLength, maxResolutionLength < agentData.Speed * 0.016f || !agentStopped);
             totalResolution = math.select(totalResolution, totalResolution / totalResolutionLen * maxResolutionLength, totalResolutionLen > maxResolutionLength);
             AgentPositionChangeBuffer[index] += new float3(totalResolution.x, 0f, totalResolution.y);
         }
