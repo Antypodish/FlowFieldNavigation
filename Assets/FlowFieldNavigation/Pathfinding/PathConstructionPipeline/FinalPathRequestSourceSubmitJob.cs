@@ -9,9 +9,9 @@ namespace FlowFieldNavigation
     [BurstCompile]
     internal struct FinalPathRequestSourceSubmitJob : IJob
     {
+        [ReadOnly] internal NativeArray<float3> AgentPositions;
         [ReadOnly] internal NativeArray<int> AgentNewPathIndicies;
         [ReadOnly] internal NativeArray<int> AgentCurPathIndicies;
-        [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
         [ReadOnly] internal NativeReference<int> PathRequestSourceCount;
         [ReadOnly] internal NativeReference<int> CurrentPathSourceCount;
         [ReadOnly] internal NativeArray<PathTask> AgentTasks;
@@ -63,7 +63,7 @@ namespace FlowFieldNavigation
             }
 
             //SUBMIT SOURCES
-            for (int i = 0; i < AgentDataArray.Length; i++)
+            for (int i = 0; i < AgentPositions.Length; i++)
             {
                 int newPathIndex = AgentNewPathIndicies[i];
                 int curPathIndex = AgentCurPathIndicies[i];
@@ -71,7 +71,7 @@ namespace FlowFieldNavigation
                 if (newPathIndex != -1)
                 {
                     FinalPathRequest req = FinalPathRequests[newPathIndex];
-                    float3 agentPos3 = AgentDataArray[i].Position;
+                    float3 agentPos3 = AgentPositions[i];
                     float2 agentPos = new float2(agentPos3.x, agentPos3.z);
                     Sources[req.SourcePositionStartIndex + req.SourceCount] = agentPos;
                     req.SourceCount = req.SourceCount + 1;
@@ -85,7 +85,7 @@ namespace FlowFieldNavigation
                     bool agentPathAdditionRequested = (agentTask & PathTask.PathAdditionRequest) == PathTask.PathAdditionRequest;
                     if (agentFlowRequested)
                     {
-                        float3 agentPos3 = AgentDataArray[i].Position;
+                        float3 agentPos3 = AgentPositions[i];
                         float2 agentPos = new float2(agentPos3.x, agentPos3.z);
                         Sources[curRoutineData.FlowRequestSourceStart + curRoutineData.FlowRequestSourceCount] = agentPos;
                         curRoutineData.FlowRequestSourceCount++;
@@ -93,7 +93,7 @@ namespace FlowFieldNavigation
                     }
                     if (agentPathAdditionRequested)
                     {
-                        float3 agentPos3 = AgentDataArray[i].Position;
+                        float3 agentPos3 = AgentPositions[i];
                         float2 agentPos = new float2(agentPos3.x, agentPos3.z);
                         Sources[curRoutineData.PathAdditionSourceStart + curRoutineData.PathAdditionSourceCount] = agentPos;
                         curRoutineData.PathAdditionSourceCount++;

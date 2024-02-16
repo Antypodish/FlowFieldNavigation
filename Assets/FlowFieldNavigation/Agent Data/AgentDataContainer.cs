@@ -64,7 +64,6 @@ namespace FlowFieldNavigation
                 Destination = Vector2.zero,
                 Direction = Vector2.zero,
                 Radius = Mathf.Min(agent.Radius, FlowFieldUtilities.MaxAgentSize),
-                Position = agent.transform.position,
                 LandOffset = agent.LandOffset,
             };
             Agents.Add(agent);

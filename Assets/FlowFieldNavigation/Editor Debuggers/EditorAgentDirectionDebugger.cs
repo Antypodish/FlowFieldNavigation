@@ -1,6 +1,6 @@
 ﻿using Unity.Collections;
 using UnityEngine;
-
+using UnityEngine.Jobs;
 namespace FlowFieldNavigation
 {
     internal class EditorAgentDirectionDebugger
@@ -15,9 +15,10 @@ namespace FlowFieldNavigation
         {
             Gizmos.color = Color.white;
             NativeArray<AgentData> agentData = _navigationManager.AgentDataContainer.AgentDataList.AsArray();
+            TransformAccessArray transforms = _navigationManager.AgentDataContainer.AgentTransforms;
             for (int i = 0; i < agentData.Length; i++)
             {
-                Vector3 pos = agentData[i].Position;
+                Vector3 pos = transforms[i].position;
                 pos.y = 2f;
                 Vector3 agentDirection = agentData[i].DirectionWithHeigth;
                 Gizmos.DrawLine(pos, pos + agentDirection);

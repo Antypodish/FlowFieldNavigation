@@ -12,6 +12,7 @@ namespace FlowFieldNavigation
         internal float TileSize;
 
         [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
+        [ReadOnly] internal NativeArray<float3> AgentPositions;
         internal NativeArray<int> NewAgentPathIndicies;
         internal NativeList<PathRequest> InitialPathRequests;
         internal NativeList<OffsetDerivedPathRequest> DerivedPathRequests;
@@ -25,7 +26,7 @@ namespace FlowFieldNavigation
                 PathRequest request = InitialPathRequests[i];
                 if (request.Type == DestinationType.DynamicDestination)
                 {
-                    float3 targetAgentPos = AgentDataArray[request.TargetAgentIndex].Position;
+                    float3 targetAgentPos = AgentPositions[request.TargetAgentIndex];
                     float2 targetAgentPos2 = new float2(targetAgentPos.x, targetAgentPos.z);
                     request.Destination = targetAgentPos2;
                     InitialPathRequests[i] = request;

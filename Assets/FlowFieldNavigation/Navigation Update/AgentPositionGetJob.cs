@@ -6,13 +6,14 @@ using Unity.Mathematics;
 namespace FlowFieldNavigation
 {
     [BurstCompile]
-    internal struct AgentDataSetPositionJob : IJobParallelForTransform
+    internal struct AgentPositionGetJob : IJobParallelForTransform
     {
         internal float MinXIncluding;
         internal float MinYIncluding;
         internal float MaxXExcluding;
         internal float MaxYExcluding;
-        internal NativeArray<AgentData> AgentDataArray;
+        internal NativeArray<float3> PositionOutput1;
+        internal NativeArray<float3> PositionOutput2;
         public void Execute(int index, TransformAccess transform)
         {
             float3 pos = transform.position;
@@ -22,11 +23,9 @@ namespace FlowFieldNavigation
             pos.z = math.select(pos.z, MaxYExcluding - 1, pos.z >= MaxYExcluding);
             transform.position = pos;
 
-            AgentData data = AgentDataArray[index];
-            data.Position = pos;
-            AgentDataArray[index] = data;
+            PositionOutput1[index] = pos;
+            PositionOutput2[index] = pos;
         }
     }
-
-
 }
+

@@ -16,6 +16,7 @@ namespace FlowFieldNavigation
         internal int SectorTileAmount;
         internal float2 FieldGridStartPos;
         [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
+        [ReadOnly] internal NativeArray<float3> AgentPositions;
         [ReadOnly] internal NativeArray<UnsafeListReadOnly<byte>> CostFields;
         [ReadOnly] internal NativeList<PathRequest> InitialPathRequests;
         internal NativeArray<int> AgentNewPathIndicies;
@@ -38,7 +39,8 @@ namespace FlowFieldNavigation
                     continue;
                 }
                 AgentData agentData = AgentDataArray[agentIndex];
-                float2 agentPos2 = new float2(agentData.Position.x, agentData.Position.z);
+                float3 agentpos3 = AgentPositions[agentIndex];
+                float2 agentPos2 = new float2(agentpos3.x, agentpos3.z);
                 int agentOffset = FlowFieldUtilities.RadiusToOffset(agentData.Radius, TileSize);
                 int2 agentIndex2d = FlowFieldUtilities.PosTo2D(agentPos2, TileSize, FieldGridStartPos);
                 LocalIndex1d agentLocal = FlowFieldUtilities.GetLocal1D(agentIndex2d, SectorColAmount, SectorMatrixColAmount);
@@ -60,7 +62,8 @@ namespace FlowFieldNavigation
                 if (newPathIndex == -1) { continue; }
 
                 AgentData agentData = AgentDataArray[index];
-                float2 agentPos2 = new float2(agentData.Position.x, agentData.Position.z);
+                float3 agentpos3 = AgentPositions[index];
+                float2 agentPos2 = new float2(agentpos3.x, agentpos3.z);
                 int agentOffset = FlowFieldUtilities.RadiusToOffset(agentData.Radius, TileSize);
                 int2 agentIndex = FlowFieldUtilities.PosTo2D(agentPos2, TileSize, FieldGridStartPos);
                 LocalIndex1d agentLocal = FlowFieldUtilities.GetLocal1D(agentIndex, SectorColAmount, SectorMatrixColAmount);

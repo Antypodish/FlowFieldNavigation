@@ -19,6 +19,7 @@ namespace FlowFieldNavigation
         [ReadOnly] internal NativeArray<PathDestinationData> PathDestinationDataArray;
         [ReadOnly] internal NativeArray<int> AgentFlockIndicies;
         [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
+        [ReadOnly] internal NativeArray<float3> AgentPositions;
         [ReadOnly] internal NativeList<int> ReadyAgentsLookingForPath;
         [ReadOnly] internal NativeList<PathRequestRecord> ReadyAgentsLookingForPathRequestRecords;
         [ReadOnly] internal FlockToPathHashMap FlockToPathHashmap;
@@ -36,7 +37,8 @@ namespace FlowFieldNavigation
                 PathRequestRecord requestRecord = ReadyAgentsLookingForPathRequestRecords[i];
 
                 AgentData agentData = AgentDataArray[agentIndex];
-                float2 agentPos2 = new float2(agentData.Position.x, agentData.Position.z);
+                float3 agentpos3 = AgentPositions[agentIndex];
+                float2 agentPos2 = new float2(agentpos3.x, agentpos3.z);
                 int agentOffset = FlowFieldUtilities.RadiusToOffset(agentData.Radius, TileSize);
                 int2 agentIndex2d = FlowFieldUtilities.PosTo2D(agentPos2, TileSize, FieldGridStartPos);
 

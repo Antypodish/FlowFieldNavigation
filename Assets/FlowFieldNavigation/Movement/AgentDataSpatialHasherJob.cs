@@ -21,6 +21,7 @@ namespace FlowFieldNavigation
 
         [ReadOnly] internal NativeArray<int> AgentFlockIndexArray;
         [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
+        [ReadOnly] internal NativeArray<float3> AgentPositions;
         internal NativeArray<AgentMovementData> AgentMovementDataArray;
         internal NativeArray<UnsafeList<HashTile>> AgentHashGridArray;
         [WriteOnly] internal NativeArray<int> NormalToHashed;
@@ -56,7 +57,8 @@ namespace FlowFieldNavigation
             for (int i = 0; i < AgentDataArray.Length; i++)
             {
                 AgentData agentData = AgentDataArray[i];
-                float2 pos = new float2(agentData.Position.x, agentData.Position.z);
+                float3 agentpos3 = AgentPositions[i];
+                float2 pos = new float2(agentpos3.x, agentpos3.z);
                 int hashGridIndex = (int)math.floor(agentData.Radius * 2 / BaseSpatialGridSize);
                 float tileSize = hashGridIndex * BaseSpatialGridSize + BaseSpatialGridSize;
                 int gridColAmount = (int)math.ceil(fieldHorizontalSize / tileSize);
@@ -89,7 +91,8 @@ namespace FlowFieldNavigation
             for (int i = 0; i < AgentDataArray.Length; i++)
             {
                 AgentData agentData = AgentDataArray[i];
-                float2 pos = new float2(agentData.Position.x, agentData.Position.z);
+                float3 agentpos3 = AgentPositions[i];
+                float2 pos = new float2(agentpos3.x, agentpos3.z);
                 int hashGridIndex = (int)math.floor(agentData.Radius * 2 / BaseSpatialGridSize);
                 float tileSize = hashGridIndex * BaseSpatialGridSize + BaseSpatialGridSize;
                 int gridColAmount = (int)math.ceil(fieldHorizontalSize / tileSize);
@@ -103,7 +106,7 @@ namespace FlowFieldNavigation
 
                 AgentMovementDataArray[agentDataIndex] = new AgentMovementData()
                 {
-                    Position = agentData.Position,
+                    Position = agentpos3,
                     Radius = agentData.Radius,
                     DesiredDirection = agentData.DesiredDirection,
                     AlignmentMultiplierPercentage = 1f,

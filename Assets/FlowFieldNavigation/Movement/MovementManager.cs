@@ -67,7 +67,7 @@ namespace FlowFieldNavigation
             HashGridArray.Dispose();
             PathReachDistances.Dispose();
         }
-        internal void ScheduleRoutine(NativeArray<UnsafeListReadOnly<byte>> costFieldCosts, JobHandle dependency)
+        internal void ScheduleRoutine(NativeArray<UnsafeListReadOnly<byte>> costFieldCosts, NativeArray<float3> agentPositions, JobHandle dependency)
         {
             NativeArray<AgentData> agentDataArray = _agentDataContainer.AgentDataList.AsArray();
             NativeArray<int> agentCurPathIndexArray = _agentDataContainer.AgentCurPathIndicies.AsArray();
@@ -102,6 +102,7 @@ namespace FlowFieldNavigation
                 MinAgentSize = FlowFieldUtilities.MinAgentSize,
                 FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
                 AgentDataArray = agentDataArray,
+                AgentPositions = agentPositions,
                 AgentFlockIndexArray = agentFlockIndexArray,
                 AgentHashGridArray = HashGridArray,
                 AgentMovementDataArray = AgentMovementDataList.AsArray(),

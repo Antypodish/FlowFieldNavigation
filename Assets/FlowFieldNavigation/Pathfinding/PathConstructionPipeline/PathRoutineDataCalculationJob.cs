@@ -26,7 +26,7 @@ namespace FlowFieldNavigation
         [ReadOnly] internal NativeArray<PathLocationData> PathLocationDataArray;
         [ReadOnly] internal NativeArray<PathFlowData> PathFlowDataArray;
         [ReadOnly] internal NativeArray<PathState> PathStateArray;
-        [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
+        [ReadOnly] internal NativeArray<float3> AgentPositions;
         [ReadOnly] internal NativeArray<IslandFieldProcessor> IslandFieldProcessors;
         [ReadOnly] internal NativeArray<UnsafeListReadOnly<byte>> CostFields;
         internal NativeArray<PathDestinationData> PathDestinationDataArray;
@@ -49,7 +49,7 @@ namespace FlowFieldNavigation
                 IslandFieldProcessor islandFieldProcessor = IslandFieldProcessors[destinationData.Offset];
 
                 //Get targets
-                float3 targetAgentPos = AgentDataArray[destinationData.TargetAgentIndex].Position;
+                float3 targetAgentPos = AgentPositions[destinationData.TargetAgentIndex];
                 float2 targetAgentPos2 = new float2(targetAgentPos.x, targetAgentPos.z);
 
                 //Clamp destination to bounds

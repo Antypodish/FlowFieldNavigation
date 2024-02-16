@@ -14,6 +14,7 @@ namespace FlowFieldNavigation
         internal float TileSize;
 
         [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
+        [ReadOnly] internal NativeArray<float3> AgentPositions;
         internal NativeArray<int> NewAgentPathIndicies;
         internal NativeList<OffsetDerivedPathRequest> DerivedPathRequests;
         internal NativeList<FinalPathRequest> FinalPathRequests;
@@ -37,8 +38,9 @@ namespace FlowFieldNavigation
                 if (pathRequestIndex == -1) { continue; }
 
                 AgentData agentData = AgentDataArray[i];
+                float3 agentpos3 = AgentPositions[i];
                 float agentRadius = agentData.Radius;
-                float2 agentPos = new float2(agentData.Position.x, agentData.Position.z);
+                float2 agentPos = new float2(agentpos3.x, agentpos3.z);
                 int offset = FlowFieldUtilities.RadiusToOffset(agentRadius, TileSize);
                 int island = IslandFieldProcesorsPerOffset[offset].GetIsland(agentPos);
                 UnsafeList<int> pointedRequestIslands = islandFieldsOfDerivedPathRequests[pathRequestIndex];
@@ -78,8 +80,9 @@ namespace FlowFieldNavigation
                 if (pathRequestIndex == -1) { continue; }
 
                 AgentData agentData = AgentDataArray[i];
+                float3 agentpos3 = AgentPositions[i];
                 float agentRadius = agentData.Radius;
-                float2 agentPos = new float2(agentData.Position.x, agentData.Position.z);
+                float2 agentPos = new float2(agentpos3.x, agentpos3.z);
                 int offset = FlowFieldUtilities.RadiusToOffset(agentRadius, TileSize);
                 int island = IslandFieldProcesorsPerOffset[offset].GetIsland(agentPos);
 

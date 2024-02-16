@@ -24,6 +24,9 @@ namespace FlowFieldNavigation
         NativeList<UnsafeListReadOnly<byte>> _costFieldCosts;
         NativeList<SectorBitArray> EditedSectorBitArray;
         NativeList<CostEdit> NewCostEditRequests;
+
+        NativeList<float3> _agentPositionsForPathfinding;
+        NativeList<float3> _agentPositionsForMovement;
         internal RoutineScheduler(FlowFieldNavigationManager navigationManager)
         {
             _navigationManager = navigationManager;
@@ -35,6 +38,8 @@ namespace FlowFieldNavigation
             _costFieldCosts = new NativeList<UnsafeListReadOnly<byte>>(Allocator.Persistent);
             EditedSectorBitArray = new NativeList<SectorBitArray>(Allocator.Persistent);
             NewCostEditRequests = new NativeList<CostEdit>(Allocator.Persistent);
+            _agentPositionsForMovement = new NativeList<float3>(Allocator.Persistent);
+            _agentPositionsForPathfinding = new NativeList<float3>(Allocator.Persistent);
             _fieldState = 0;
         }
         internal void DisposeAll()
@@ -75,19 +80,21 @@ namespace FlowFieldNavigation
             JobHandle costEditHandle = ScheduleCostEditRequests();
             JobHandle islandFieldReconfigHandle = ScheduleIslandFieldReconfig(costEditHandle);
 
-            //SET POSITIONS OF AGENT DATA
-            NativeArray<AgentData> agentData = _navigationManager.AgentDataContainer.AgentDataList.AsArray();
-
+            //GET AGENT POSITIONS
             TransformAccessArray agentTransforms = _navigationManager.AgentDataContainer.AgentTransforms;
-            AgentDataSetPositionJob posSetJob = new AgentDataSetPositionJob()
+            _agentPositionsForMovement.Length = agentTransforms.length;
+            _agentPositionsForPathfinding.Length = agentTransforms.length;
+
+            AgentPositionGetJob agentPositionGet = new AgentPositionGetJob()
             {
                 MaxXExcluding = FlowFieldUtilities.FieldMaxXExcluding,
                 MaxYExcluding = FlowFieldUtilities.FieldMaxYExcluding,
                 MinXIncluding = FlowFieldUtilities.FieldMinXIncluding,
                 MinYIncluding = FlowFieldUtilities.FieldMinYIncluding,
-                AgentDataArray = agentData,
+                PositionOutput1 = _agentPositionsForMovement.AsArray(),
+                PositionOutput2 = _agentPositionsForPathfinding.AsArray(),
             };
-            JobHandle posSetHandle = posSetJob.Schedule(agentTransforms);
+            JobHandle agentPositionGetHandle = agentPositionGet.Schedule(agentTransforms);
 
             //COPY REQUESTED TO SCHEDULING SYSTEM
             NativeListCopyJob<PathRequest> copyJob = new NativeListCopyJob<PathRequest>()
@@ -105,11 +112,10 @@ namespace FlowFieldNavigation
             };
             JobHandle transferHandle = reqToNewTransfer.Schedule();
 
-            JobHandle.CombineDependencies(transferHandle, copyHandle, posSetHandle).Complete();
+            JobHandle.CombineDependencies(transferHandle, copyHandle, agentPositionGetHandle).Complete();
 
-
-            _pathConstructionPipeline.ShcedulePathRequestEvalutaion(CurrentRequestedPaths, _costFieldCosts.AsArray(), EditedSectorBitArray.AsArray().AsReadOnly(), islandFieldProcessors, islandFieldReconfigHandle);
-            _movementManager.ScheduleRoutine(_costFieldCosts.AsArray(), costEditHandle);
+            _pathConstructionPipeline.ShcedulePathRequestEvalutaion(CurrentRequestedPaths, _costFieldCosts.AsArray(), EditedSectorBitArray.AsArray().AsReadOnly(), islandFieldProcessors, _agentPositionsForPathfinding.AsArray(), islandFieldReconfigHandle);
+            _movementManager.ScheduleRoutine(_costFieldCosts.AsArray(), _agentPositionsForMovement.AsArray(), costEditHandle);
         }
         internal void TryCompletePredecessorJobs()
         {

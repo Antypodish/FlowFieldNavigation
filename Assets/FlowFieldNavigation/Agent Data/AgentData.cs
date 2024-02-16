@@ -14,7 +14,6 @@ namespace FlowFieldNavigation
         public float2 DesiredDirection;
         public float3 DirectionWithHeigth;
         public float2 Seperation;
-        public float3 Position;
         public float LandOffset;
         public float Radius;
 

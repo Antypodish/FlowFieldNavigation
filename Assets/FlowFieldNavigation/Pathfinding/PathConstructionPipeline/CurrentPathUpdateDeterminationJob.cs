@@ -18,16 +18,16 @@ namespace FlowFieldNavigation
         [ReadOnly] internal NativeArray<PathFlowData> PathFlowDataArray;
         [ReadOnly] internal NativeArray<int> AgentNewPathIndicies;
         [ReadOnly] internal NativeArray<int> AgentCurrentPathIndicies;
-        [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
+        [ReadOnly] internal NativeArray<float3> AgentPositions;
         [WriteOnly] internal NativeReference<int> CurrentPathSourceCount;
         internal NativeArray<PathRoutineData> PathRoutineDataArray;
         internal NativeArray<PathTask> AgentPathTasks;
         public void Execute()
         {
             int curPathSourceCount = 0;
-            for (int i = 0; i < AgentDataArray.Length; i++)
+            for (int i = 0; i < AgentPositions.Length; i++)
             {
-                float3 agentPosition3d = AgentDataArray[i].Position;
+                float3 agentPosition3d = AgentPositions[i];
                 float2 agentPosition2d = new float2(agentPosition3d.x, agentPosition3d.z);
                 int newPathIndex = AgentNewPathIndicies[i];
                 int curPathIndex = AgentCurrentPathIndicies[i];

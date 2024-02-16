@@ -8,7 +8,7 @@ namespace FlowFieldNavigation
     [BurstCompile]
     internal struct CurrentPathReconstructionDeterminationJob : IJob
     {
-        [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
+        [ReadOnly] internal NativeArray<float3> AgentPositions;
         [ReadOnly] internal NativeArray<PathState> PathStateArray;
         [ReadOnly] internal NativeArray<PathDestinationData> PathDestinationDataArray;
         [ReadOnly] internal NativeArray<int> PathFlockIndexArray;
@@ -37,7 +37,7 @@ namespace FlowFieldNavigation
                 if (curDestinationData.DestinationType == DestinationType.DynamicDestination)
                 {
                     PathRequest reconReq = new PathRequest(curDestinationData.TargetAgentIndex);
-                    float3 targetAgentPos = AgentDataArray[reconReq.TargetAgentIndex].Position;
+                    float3 targetAgentPos = AgentPositions[reconReq.TargetAgentIndex];
                     float2 targetAgentPos2 = new float2(targetAgentPos.x, targetAgentPos.z);
                     reconReq.Destination = targetAgentPos2;
                     reconReq.FlockIndex = pathFlockIndex;
