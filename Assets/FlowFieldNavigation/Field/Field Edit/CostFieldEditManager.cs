@@ -49,6 +49,8 @@ namespace FlowFieldNavigation
         }
         internal void Schedule(NativeArray<CostEdit>.ReadOnly costEditRequests)
         {
+            _editedSectorBitArray.Clear();
+            _newCostEditRequests.Clear();
             //COPY OBSTACLE REQUESTS
             ReadOnlyNativeArrayToNativeListCopyJob<CostEdit> obstacleRequestCopy = new ReadOnlyNativeArrayToNativeListCopyJob<CostEdit>()
             {
@@ -90,8 +92,6 @@ namespace FlowFieldNavigation
                 _islandReconfigHandle.RemoveAtSwapBack(0);
                 _fieldState++;
             }
-            _editedSectorBitArray.Clear();
-            _newCostEditRequests.Clear();
         }
         JobHandle ScheduleCostEditRequests()
         {

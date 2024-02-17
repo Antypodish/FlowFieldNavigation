@@ -76,16 +76,18 @@ namespace FlowFieldNavigation
         }
         internal void Update()
         {
-            int cnt = 0;
+            const int maxDeallocationPerFrame = 10;
+            int deallcoated = 0;
             for (int i = 0; i < PathfindingInternalDataList.Count; i++)
             {
                 PathfindingInternalData internalData = PathfindingInternalDataList[i];
                 PathState pathState = ExposedPathStateList[i];
                 if (pathState == PathState.Removed) { continue; }
                 int subsciriber = PathSubscriberCounts[i];
-                cnt++;
                 if (subsciriber == 0)
                 {
+                    if(deallcoated <= maxDeallocationPerFrame) { break; }
+                    deallcoated++;
                     PathLocationData locationData = PathLocationDataList[i];
                     PathFlowData flowData = PathFlowDataList[i];
                     UnsafeList<PathSectorState> sectorStateTable = PathSectorStateTableList[i];
@@ -127,7 +129,6 @@ namespace FlowFieldNavigation
                     _preallocator.SendPreallocationsBack(ref preallocations, internalData.ActivePortalList, flowData.FlowField, internalData.IntegrationField, destinationData.Offset);
                 }
             }
-            //UnityEngine.Debug.Log(cnt);
             _preallocator.CheckForDeallocations();
         }
         internal void ExposeBuffers(NativeArray<int> destinationUpdatedPathIndicies, NativeArray<int> newPathIndicies, NativeArray<int> expandedPathIndicies)
