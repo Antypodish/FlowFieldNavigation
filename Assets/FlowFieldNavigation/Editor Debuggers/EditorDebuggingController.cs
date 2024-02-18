@@ -39,6 +39,8 @@ namespace FlowFieldNavigation
         [SerializeField] bool _debugFlowField;
         [SerializeField] bool _debugDynamicAreaIntegration;
         [SerializeField] bool _debugDynamicAreaFlow;
+        [SerializeField] int _pathIndexToDebugSubscribers;
+        [SerializeField] bool _debugSubscribersOfPath;
         [Header("Agent Debugger")]
         [SerializeField] bool _debugAgentDirections;
         [SerializeField] bool _debugAgentsHoldingGround;
@@ -114,7 +116,9 @@ namespace FlowFieldNavigation
             if (_debugAgentsHoldingGround) { _holdGroundDebugger.Debug(); }
             if (_debugAgentSeperationRadius) { _agentRadiusDebugger.DebugSeperationRadius(); }
             if (_debugAvoidanceDirections) { _avoidanceDirectionDebugger.Debug(); }
-            if (_debugSpatialHashGrid) { _spatialHashGridDebugger.Debug(_gridIndex); }/*
+            if (_debugSpatialHashGrid) { _spatialHashGridDebugger.Debug(_gridIndex); }
+            if (_debugSubscribersOfPath) { _pathDebugger.DebugAgentsSubscribedToPath(_pathIndexToDebugSubscribers); }
+            /*
             if (_debugVolumeBounds) { _navVolDebugger.DebugVolumeBoundaries(); }
             if (_debugSectorBounds) { _navVolDebugger.DebugVolumeSectorBounds(); }
             if (_debugDetectedSectors) { _navVolDebugger.DebugVolumeDetectedSectors(); }

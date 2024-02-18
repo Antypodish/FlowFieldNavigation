@@ -86,7 +86,7 @@ namespace FlowFieldNavigation
                 int subsciriber = PathSubscriberCounts[i];
                 if (subsciriber == 0)
                 {
-                    if(deallcoated <= maxDeallocationPerFrame) { break; }
+                    if(deallcoated >= maxDeallocationPerFrame) { break; }
                     deallcoated++;
                     PathLocationData locationData = PathLocationDataList[i];
                     PathFlowData flowData = PathFlowDataList[i];

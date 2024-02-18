@@ -48,6 +48,10 @@ namespace FlowFieldNavigation
         {
             return _fieldGraphProducer.GetAllFieldGraphs();
         }
+        internal CostField[] GetAllCostFields()
+        {
+            return _costFieldProducer.GetAllCostFields();
+        }
         internal NativeArray<SectorDirectionData> GetSectorDirections()
         {
             return _costFieldProducer.SectorDirections;

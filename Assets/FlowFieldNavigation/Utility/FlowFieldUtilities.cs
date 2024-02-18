@@ -150,13 +150,13 @@ namespace FlowFieldNavigation
             int2 p22d = new int2(portalNode.Portal2.Index.C, portalNode.Portal2.Index.R);
             int2 sector2d = new int2(sectorIndex % sectorMatrixColAmount, sectorIndex / sectorMatrixColAmount);//(15,17)
 
-            int2 p1Secpr2d = p12d / sectorColAmount;//(14,6)
+            int2 p1Secpr2d = p12d / sectorColAmount;
 
             int2 picked2d = math.select(p22d, p12d, sector2d.Equals(p1Secpr2d));//(150,68)
             int2 sectorStart = new int2(sector2d.x * sectorColAmount, sector2d.y * sectorColAmount);//(150,70)
-            int2 local2d = picked2d - sectorStart;//(0,-2)
+            int2 local2d = picked2d - sectorStart;
 
-            return local2d.y * sectorColAmount + local2d.x;//-20
+            return local2d.y * sectorColAmount + local2d.x;
         }
         internal static int GetCommonSector(PortalNode node1, PortalNode node2, int sectorColAmount, int sectorMatrixColAmount)
         {

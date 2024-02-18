@@ -58,11 +58,7 @@ namespace FlowFieldNavigation
                 Destination = _newCostEditRequests,
             };
             obstacleRequestCopy.Schedule().Complete();
-
-            //SCHEDULE COST EDITS
-            JobHandle costEditHandle = ScheduleCostEditRequests();
-            ScheduleIslandFieldReconfig(costEditHandle);
-
+            ApplyFieldEdits();
         }
         internal void TryComplete()
         {
@@ -93,6 +89,105 @@ namespace FlowFieldNavigation
                 _fieldState++;
             }
         }
+        void ApplyFieldEdits()
+        {
+            if (_newCostEditRequests.Length == 0) { return; }
+            FieldGraph[] fieldGraphs = _navigationManager.FieldDataContainer.GetAllFieldGraphs();
+            CostField[] costFields = _navigationManager.FieldDataContainer.GetAllCostFields();
+            JobHandle combinedCostStampApplyHandle = new JobHandle();
+            JobHandle combinedCostEditHandle = new JobHandle();
+            JobHandle combinedIslandFieldReconfigHandle = new JobHandle();
+            for (int i = 0; i < fieldGraphs.Length; i++)
+            {
+                CostField costField = costFields[i];
+                FieldGraph fieldGraph = fieldGraphs[i];
+
+                //Obstacle copy
+                NativeListCopyJob<CostEdit> newObstaclesTransfer = new NativeListCopyJob<CostEdit>()
+                {
+                    Source = _newCostEditRequests,
+                    Destination = fieldGraph.NewCostEdits,
+                };
+                JobHandle newObstacleTransferHandle = newObstaclesTransfer.Schedule();
+
+                //Cost stamp apply
+                CostStampApplyJob costStampApply = new CostStampApplyJob()
+                {
+                    SectorColAmount = FlowFieldUtilities.SectorColAmount,
+                    SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+                    FieldColAmount = FlowFieldUtilities.FieldColAmount,
+                    FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
+                    Offset = costField.Offset,
+                    Costs = costField.Costs,
+                    CostStamps = costField.StampCounts,
+                    BaseCosts = costField.BaseCosts,
+                    NewCostEdits = fieldGraph.NewCostEdits,
+                };
+                JobHandle costStampApplyHandle = costStampApply.Schedule(newObstacleTransferHandle);
+                if (FlowFieldUtilities.DebugMode) { costStampApplyHandle.Complete(); }
+                combinedCostStampApplyHandle = JobHandle.CombineDependencies(costStampApplyHandle, combinedCostStampApplyHandle);
+
+                //Field edit
+                CostFieldEditJob costEditJob = new CostFieldEditJob()
+                {
+                    SectorColAmount = FlowFieldUtilities.SectorColAmount,
+                    SectorRowAmount = FlowFieldUtilities.SectorRowAmount,
+                    SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+                    SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
+                    FieldColAmount = FlowFieldUtilities.FieldColAmount,
+                    FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
+                    SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
+                    Offset = costField.Offset,
+                    SectorNodes = fieldGraph.SectorNodes,
+                    SecToWinPtrs = fieldGraph.SecToWinPtrs,
+                    EditedSectorBits = fieldGraph.EditedSectorMarks,
+                    EditedSectorIndicies = fieldGraph.EditedSectorList,
+                    WinToSecPtrs = fieldGraph.WinToSecPtrs,
+                    Costs = costField.Costs,
+                    CostStamps = costField.StampCounts,
+                    BaseCosts = costField.BaseCosts,
+                    EditedWindowIndicies = fieldGraph.EditedWinodwList,
+                    EditedWindowMarks = fieldGraph.EditedWindowMarks,
+                    IntegratedCosts = fieldGraph.SectorIntegrationField,
+                    IslandFields = fieldGraph.IslandFields,
+                    Islands = fieldGraph.IslandDataList.AsArray(),
+                    NewCostEdits = fieldGraph.NewCostEdits,
+                    PorPtrs = fieldGraph.PorToPorPtrs,
+                    PortalNodes = fieldGraph.PortalNodes,
+                    PortalPerWindow = fieldGraph.PortalPerWindow,
+                    WindowNodes = fieldGraph.WindowNodes,
+                };
+                JobHandle editHandle = costEditJob.Schedule(costStampApplyHandle);
+                if (FlowFieldUtilities.DebugMode) { editHandle.Complete(); }
+                combinedCostEditHandle = JobHandle.CombineDependencies(combinedCostEditHandle, editHandle);
+                _editedSectorBitArray.Add(costEditJob.EditedSectorBits);
+
+                //Island Field Reconfig
+                IslandReconfigurationJob islandReconfig = new IslandReconfigurationJob()
+                {
+                    Offset = costField.Offset,
+                    SectorColAmount = FlowFieldUtilities.SectorColAmount,
+                    SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+                    SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
+                    SectorNodes = fieldGraph.SectorNodes,
+                    SecToWinPtrs = fieldGraph.SecToWinPtrs,
+                    EditedSectorIndicies = fieldGraph.EditedSectorList,
+                    PortalEdges = fieldGraph.PorToPorPtrs,
+                    CostsL = costField.Costs,
+                    IslandFields = fieldGraph.IslandFields,
+                    Islands = fieldGraph.IslandDataList,
+                    PortalNodes = fieldGraph.PortalNodes,
+                    WindowNodes = fieldGraph.WindowNodes,
+                };
+                JobHandle islandFieldReconfigHandle = islandReconfig.Schedule(editHandle);
+                if (FlowFieldUtilities.DebugMode) { islandFieldReconfigHandle.Complete(); }
+                combinedIslandFieldReconfigHandle = JobHandle.CombineDependencies(combinedIslandFieldReconfigHandle, islandFieldReconfigHandle);
+            }
+            combinedCostStampApplyHandle.Complete();
+            _costEditHandle.Add(combinedCostEditHandle);
+            _islandReconfigHandle.Add(combinedIslandFieldReconfigHandle);
+        }
+        /*
         JobHandle ScheduleCostEditRequests()
         {
             if (_newCostEditRequests.Length == 0) { return new JobHandle(); }
@@ -184,6 +279,6 @@ namespace FlowFieldNavigation
             if (FlowFieldUtilities.DebugMode) { combinedHandles.Complete(); }
             _islandReconfigHandle.Add(combinedHandles);
             return combinedHandles;
-        }
+        }*/
     }
 }

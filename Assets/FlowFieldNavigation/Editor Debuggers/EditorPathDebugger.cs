@@ -7,10 +7,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Analytics;
-using System.Diagnostics;
-using Unity.Jobs;
-using static UnityEditor.PlayerSettings;
+using UnityEngine.Jobs;
 
 namespace FlowFieldNavigation
 {
@@ -537,6 +534,20 @@ namespace FlowFieldNavigation
                     u = u,
                     w = w,
                 };
+            }
+        }
+
+        internal void DebugAgentsSubscribedToPath(int pathIndex)
+        {
+            if(pathIndex >= _navigationManager.PathDataContainer.ExposedPathStateList.Length) { return; }
+            NativeArray<int> agentCurPathIndicies = _navigationManager.AgentDataContainer.AgentCurPathIndicies.AsArray();
+            TransformAccessArray agentTransforms = _navigationManager.AgentDataContainer.AgentTransforms;
+            for(int i = 0; i< agentCurPathIndicies.Length; i++)
+            {
+                if (agentCurPathIndicies[i] == pathIndex)
+                {
+                    Gizmos.DrawCube(agentTransforms[i].position, new Vector3(0.5f, 0.5f, 0.5f));
+                }
             }
         }
     }

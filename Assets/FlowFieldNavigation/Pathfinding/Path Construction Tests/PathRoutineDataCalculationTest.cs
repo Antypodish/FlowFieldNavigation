@@ -25,6 +25,11 @@ namespace FlowFieldNavigation
         [ReadOnly] public NativeArray<PathDestinationData> PathDestinationData;
         [ReadOnly] public NativeArray<PathRoutineData> PathRoutineData;
 
+        [WriteOnly] internal NativeList<int> PathBotReconstructedAndUpdatedIndicies;
+        [WriteOnly] internal NativeList<int> RemovedPathUpdatedOrReconstructedIndicies;
+        [WriteOnly] internal NativeList<int> DestinationOnInvalidIslandButNotReconstructedIndicies;
+        [WriteOnly] internal NativeList<int> DestinationOnUnwalkableButNotReconstructedIndicies;
+        [WriteOnly] internal NativeList<int> DestinationOutsideFieldBoundsIndicies;
         [WriteOnly] public NativeReference<bool> PathBotReconstructedAndUpdated;
         [WriteOnly] public NativeReference<bool> RemovedPathUpdatedOrReconstructed;
         [WriteOnly] public NativeReference<bool> DestinationOnInvalidIslandButNotReconstructed;
@@ -42,18 +47,18 @@ namespace FlowFieldNavigation
                 bool isReconstructed = (routineData.Task & PathTask.Reconstruct) == PathTask.Reconstruct;
                 bool isDestinationStateChanged = routineData.DestinationState != DynamicDestinationState.None;
 
-                if (isRemoved && (isReconstructed || isDestinationStateChanged)) { RemovedPathUpdatedOrReconstructed.Value = true; }
+                if (isRemoved && (isReconstructed || isDestinationStateChanged)) { RemovedPathUpdatedOrReconstructed.Value = true; RemovedPathUpdatedOrReconstructedIndicies.Add(i); }
                 if (isRemoved) { continue; }
 
-                if (isReconstructed && isDestinationStateChanged) { PathBotReconstructedAndUpdated.Value = true; }
+                if (isReconstructed && isDestinationStateChanged) { PathBotReconstructedAndUpdated.Value = true; PathBotReconstructedAndUpdatedIndicies.Add(i); }
 
                 float2 destination = destinationData.Destination;
                 bool destinationWithinBunds = destination.x >= FieldMinXIncluding && destination.x < FieldMaxXExcluding && destination.y >= FieldMinYIncluding && destination.y < FieldMaxYExcluding;
-                if (!destinationWithinBunds) { DestinationOutsideFieldBounds.Value = true; continue; }
+                if (!destinationWithinBunds) { DestinationOutsideFieldBounds.Value = true; DestinationOutsideFieldBoundsIndicies.Add(i); }
 
                 IslandFieldProcessor islandFieldProcessor = IslandFieldProcessors[destinationData.Offset];
                 int destinationIsland = islandFieldProcessor.GetIsland(destinationData.Destination);
-                if (destinationIsland == int.MaxValue && !isReconstructed) { DestinationOnInvalidIslandButNotReconstructed.Value = true; }
+                if (destinationIsland == int.MaxValue && !isReconstructed) { DestinationOnInvalidIslandButNotReconstructed.Value = true;  DestinationOnInvalidIslandButNotReconstructedIndicies.Add(i); }
 
                 UnsafeListReadOnly<byte> costs = CostFields[destinationData.Offset];
                 int2 destinationIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, TileSize, FieldGridStartPos);
@@ -62,6 +67,7 @@ namespace FlowFieldNavigation
                 if (cost == byte.MaxValue && !isReconstructed)
                 {
                     DestinationOnUnwalkableButNotReconstructed.Value = true;
+                    DestinationOnUnwalkableButNotReconstructedIndicies.Add(i);
                 }
             }
         }

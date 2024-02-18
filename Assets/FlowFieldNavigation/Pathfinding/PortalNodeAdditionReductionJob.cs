@@ -3,9 +3,6 @@ using Unity.Collections;
 using Unity.Mathematics;
 using Unity.Jobs;
 using Unity.Burst;
-using System;
-using static UnityEngine.GraphicsBuffer;
-using System.IO;
 
 namespace FlowFieldNavigation
 {
@@ -272,6 +269,7 @@ namespace FlowFieldNavigation
         }
         float GetGCostBetweenTargetAndTargetNeighbour(int targetNeighbourIndex)
         {
+            //Sometimes portal local index at sector becomes negative. IDK why. Needs to be fixed. Occurs veeeeery rarely.
             int portalLocalIndexAtSector = FlowFieldUtilities.GetLocal1dInSector(PortalNodes[targetNeighbourIndex], _targetSectorIndex1d, SectorMatrixColAmount, SectorColAmount);
             return TargetSectorCosts[portalLocalIndexAtSector].IntegratedCost;
         }

@@ -11,7 +11,7 @@ namespace FlowFieldNavigation
         [ReadOnly] internal NativeArray<SectorBitArray> PathSectorIDArray;
         [ReadOnly] internal NativeArray<PathDestinationData> PathDestinationDataArray;
         [ReadOnly] internal NativeArray<PathState> PathStateArray;
-        internal NativeArray<SectorBitArray>.ReadOnly FieldEditSectorIDArray;
+        [ReadOnly] internal NativeArray<SectorBitArray>.ReadOnly FieldEditSectorIDArray;
         internal NativeArray<PathRoutineData> PathRoutineDataArray;
         public void Execute(int index)
         {
