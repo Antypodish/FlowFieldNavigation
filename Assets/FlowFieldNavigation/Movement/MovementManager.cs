@@ -147,12 +147,10 @@ namespace FlowFieldNavigation
             JobHandle spatialHasherHandle = spatialHasher.Schedule(positionChangeResetHandle);
 
             //FILL AGENT MOVEMENT DATA ARRAY
-            float sectorSize = FlowFieldUtilities.SectorColAmount * FlowFieldUtilities.TileSize;
-            int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
             AgentRoutineDataCalculationJob routineDataCalcJob = new AgentRoutineDataCalculationJob()
             {
-                SectorMatrixColAmount = sectorMatrixColAmount,
-                SectorSize = sectorSize,
+                SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+                SectorSize = FlowFieldUtilities.SectorColAmount * FlowFieldUtilities.TileSize,
                 AgentCurPathIndicies = agentCurPathIndexArray,
                 AgentDataArray = agentDataArray,
                 ExposedPathDestinationArray = exposedPathDestinationArray,
@@ -167,16 +165,6 @@ namespace FlowFieldNavigation
                 FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
             };
             JobHandle movDataHandle = routineDataCalcJob.Schedule(routineDataCalcJob.AgentMovementData.Length, 64, spatialHasherHandle);
-
-            //Height Calculation
-            AgentHeightCalculationJob heightCalculation = new AgentHeightCalculationJob()
-            {
-                TriangleSpatialHashGrid = _navigationManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
-                AgentMovementDataArray = AgentMovementDataList.AsArray(),
-                AgentPositionChangeArray = AgentPositionChangeBuffer.AsArray(),
-                Verticies = _navigationManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray(),
-            };
-            JobHandle heightCalculationHandle = heightCalculation.Schedule(agentDataArray.Length, 32, movDataHandle);
 
             //SCHEDULE LOCAL AVODANCE JOB
             LocalAvoidanceJob avoidanceJob = new LocalAvoidanceJob()
@@ -211,26 +199,64 @@ namespace FlowFieldNavigation
                 },
                 CostFieldEachOffset = _costFieldCosts.AsArray(),
             };
-            JobHandle avoidanceHandle = avoidanceJob.Schedule(agentDataArray.Length, 64, heightCalculationHandle);
+            JobHandle avoidanceHandle = avoidanceJob.Schedule(agentDataArray.Length, 64, movDataHandle);
 
 
             //SCHEDULE AGENT COLLISION JOB
-            CollisionResolutionJob colResJob = new CollisionResolutionJob()
+            JobHandle lastIterationHandle = avoidanceHandle;
+            for(int i = 0; i < 6; i++)
             {
-                AgentSpatialHashGrid = new AgentSpatialHashGrid()
+                CollisionResolutionJob colResJob = new CollisionResolutionJob()
                 {
-                    BaseSpatialGridSize = FlowFieldUtilities.BaseAgentSpatialGridSize,
-                    FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
-                    FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
-                    AgentHashGridArray = HashGridArray,
-                    RawAgentMovementDataArray = AgentMovementDataList.AsArray(),
-                    FieldGridStartPosition = FlowFieldUtilities.FieldGridStartPosition,
-                },
-                RoutineResultArray = RoutineResults.AsArray(),
-                AgentPositionChangeBuffer = AgentPositionChangeBuffer.AsArray(),
+                    AgentSpatialHashGrid = new AgentSpatialHashGrid()
+                    {
+                        BaseSpatialGridSize = FlowFieldUtilities.BaseAgentSpatialGridSize,
+                        FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
+                        FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
+                        AgentHashGridArray = HashGridArray,
+                        RawAgentMovementDataArray = AgentMovementDataList.AsArray(),
+                        FieldGridStartPosition = FlowFieldUtilities.FieldGridStartPosition,
+                    },
+                    RoutineResultArray = RoutineResults.AsArray(),
+                    AgentPositionChangeBuffer = AgentPositionChangeBuffer.AsArray(),
+                };
+                JobHandle colResHandle = colResJob.Schedule(agentDataArray.Length, 4, lastIterationHandle);
+
+                //SCHEDULE WALL COLLISION JOB
+                AgentWallCollisionJob wallCollision = new AgentWallCollisionJob()
+                {
+                    SectorColAmount = FlowFieldUtilities.SectorColAmount,
+                    SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+                    SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
+                    TileSize = FlowFieldUtilities.TileSize,
+                    FieldColAmount = FlowFieldUtilities.FieldColAmount,
+                    FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
+                    SectorRowAmount = FlowFieldUtilities.SectorRowAmount,
+                    HalfTileSize = FlowFieldUtilities.TileSize / 2,
+                    FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
+                    SectorMatrixTileAmont = FlowFieldUtilities.SectorMatrixTileAmount,
+                    AgentMovementData = AgentMovementDataList.AsArray(),
+                    AgentPositionChangeBuffer = AgentPositionChangeBuffer.AsArray(),
+                    CostFieldEachOffset = _costFieldCosts.AsArray(),
+                };
+                JobHandle wallCollisionHandle = wallCollision.Schedule(wallCollision.AgentMovementData.Length, 64, colResHandle);
+
+                AgentPosChangeToPosJob positionChangeToPos = new AgentPosChangeToPosJob()
+                {
+                    AgentMovementDataArrayRaw = AgentMovementDataList.AsArray(),
+                    PositionChanges = AgentPositionChangeBuffer.AsArray(),
+                };
+                JobHandle positionChangeToPositionHandle = positionChangeToPos.Schedule(wallCollisionHandle);
+                lastIterationHandle = positionChangeToPositionHandle;
+            }
+            CollisionFinalPositionChangeJob finalPosChangeJob = new CollisionFinalPositionChangeJob()
+            {
+                AgentInitialPositionsNormal = _agentPositions.AsArray(),
+                FinalPositionChanges = AgentPositionChangeBuffer.AsArray(),
+                AgentMovementDataArrayHashed = AgentMovementDataList.AsArray(),
+                NormalToHashed = NormalToHashed.AsArray(),
             };
-            avoidanceHandle.Complete();
-            JobHandle colResHandle = colResJob.Schedule(agentDataArray.Length, 4, avoidanceHandle);
+            JobHandle finalPosChangeHandle = finalPosChangeJob.Schedule(lastIterationHandle);
 
             //SCHEDULE TENSON RES JOB
             TensionResolver tensionResJob = new TensionResolver()
@@ -247,26 +273,18 @@ namespace FlowFieldNavigation
                 RoutineResultArray = RoutineResults.AsArray(),
                 SeperationRangeAddition = FlowFieldBoidUtilities.SeperationRangeAddition,
             };
-            JobHandle tensionHandle = tensionResJob.Schedule(colResHandle);
+            JobHandle tensionHandle = tensionResJob.Schedule(finalPosChangeHandle);
 
-            //SCHEDULE WALL COLLISION JOB
-            AgentWallCollisionJob wallCollision = new AgentWallCollisionJob()
+
+            //Height Calculation
+            AgentHeightCalculationJob heightCalculation = new AgentHeightCalculationJob()
             {
-                SectorColAmount = FlowFieldUtilities.SectorColAmount,
-                SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
-                SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
-                TileSize = FlowFieldUtilities.TileSize,
-                FieldColAmount = FlowFieldUtilities.FieldColAmount,
-                FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
-                SectorRowAmount = FlowFieldUtilities.SectorRowAmount,
-                HalfTileSize = FlowFieldUtilities.TileSize / 2,
-                FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
-                SectorMatrixTileAmont = FlowFieldUtilities.SectorMatrixTileAmount,
-                AgentMovementData = AgentMovementDataList.AsArray(),
-                AgentPositionChangeBuffer = AgentPositionChangeBuffer.AsArray(),
-                CostFieldEachOffset = _costFieldCosts.AsArray(),
+                TriangleSpatialHashGrid = _navigationManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid(),
+                AgentMovementDataArray = AgentMovementDataList.AsArray(),
+                AgentPositionChangeArray = AgentPositionChangeBuffer.AsArray(),
+                Verticies = _navigationManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray(),
             };
-            JobHandle wallCollisionHandle = wallCollision.Schedule(wallCollision.AgentMovementData.Length, 64, tensionHandle);
+            JobHandle heightCalculationHandle = heightCalculation.Schedule(agentDataArray.Length, 32, tensionHandle);
 
             //Avoidance wall detection
             AvoidanceWallDetectionJob wallDetection = new AvoidanceWallDetectionJob()
@@ -284,7 +302,7 @@ namespace FlowFieldNavigation
                 CostFieldPerOffset = _costFieldCosts.AsArray(),
                 RoutineResultArray = RoutineResults.AsArray(),
             };
-            JobHandle wallDetectionHandle = wallDetection.Schedule(agentDataArray.Length, 64, wallCollisionHandle);
+            JobHandle wallDetectionHandle = wallDetection.Schedule(agentDataArray.Length, 64, heightCalculationHandle);
 
             AgentDirectionHeightCalculationJob directionHeightJob = new AgentDirectionHeightCalculationJob()
             {

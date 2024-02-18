@@ -92,15 +92,15 @@ namespace FlowFieldNavigation
                 int agentOffset = FlowFieldUtilities.RadiusToOffset(agent.Radius, TileSize);
                 float2 alignment = GetAlignment(agentPos2, agent.DesiredDirection, agent.CurrentDirection, index, agent.FlockIndex, agent.Radius, agentOffset, agent.AlignmentMultiplierPercentage);
                 newDirectionToSteer += alignment;
-            }
+            }/*
             if (!HasStatusFlag(AgentStatus.Moving, agent.Status))
             {
                 float2 stoppedSeperation = GetStoppedSeperationForce(agentPos2, agent.CurrentDirection, agent.Radius, index);
                 newDirectionToSteer = math.select(stoppedSeperation, agent.CurrentDirection, stoppedSeperation.Equals(0));
-            }
+            }*/
 
             //GET SEEK
-            float2 seek = GetSeek(agent.CurrentDirection, newDirectionToSteer, agent.Status);
+            float2 seek = GetSeek(agent.CurrentDirection, newDirectionToSteer);
 
             //COMBINE FORCES
             if (HasStatusFlag(AgentStatus.Moving, agent.Status))
@@ -115,11 +115,11 @@ namespace FlowFieldNavigation
             RoutineResultArray[index] = newRoutineResult;
         }
 
-        float2 GetSeek(float2 currentDirection, float2 desiredDirection, AgentStatus agentStatus)
+        float2 GetSeek(float2 currentDirection, float2 desiredDirection)
         {
             float2 steeringToSeek = desiredDirection - currentDirection;
             float steeringToSeekLen = math.length(steeringToSeek);
-            float seekmultiplier = math.select(SeekMultiplier, 0.05f, agentStatus == 0);
+            float seekmultiplier = SeekMultiplier;
             return math.select(steeringToSeek / steeringToSeekLen, 0f, steeringToSeekLen == 0) * math.select(seekmultiplier, steeringToSeekLen, steeringToSeekLen < seekmultiplier);
         }
         float2 GetAlignment(float2 agentPos, float2 desiredDirection, float2 currentDirection, int agentIndex, int agentFlockIndex, float radius, int offset, float alignmentMultiplierPercentage)

@@ -47,9 +47,8 @@ namespace FlowFieldNavigation
                 }
             }
             desiredHeight = math.select(desiredHeight, currentHeight, desiredHeight == float.MinValue);
-            float3 agentPositionChange = AgentPositionChangeArray[index];
-            agentPositionChange.y = desiredHeight - currentHeight;
-            AgentPositionChangeArray[index] = agentPositionChange;
+            float3 positionChange = new float3(0, desiredHeight - currentHeight, 0);
+            AgentPositionChangeArray[index] += positionChange;
         }
         BarycentricCoordinates GetBarycentricCoordinatesForEachVectorInTheOrderUVW(float2 a, float2 b, float2 c, float2 p)
         {
