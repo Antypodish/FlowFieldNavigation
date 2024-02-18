@@ -22,6 +22,7 @@ public class TerrainGenerator : MonoBehaviour
     public int RowAmount;
     public int ColumnAmount;
     public bool RandomHeights;
+    public bool DisableObstacles;
     public bool DisableTerrainGeneration;
 
     ObstacleGenerator obsGenerator;
@@ -33,13 +34,15 @@ public class TerrainGenerator : MonoBehaviour
             WalkabilityData = new WalkabilityData(TileSize, RowAmount, ColumnAmount, _unwalkabilityResolution, _simulationState);
 
             NativeArray<float> vertexHeights = GenerateMesh();
-
-            obsGenerator = new ObstacleGenerator(this, WalkabilityData, _obstacleMat);
-            obsGenerator.CreateMesh(vertexHeights);
+            if (!DisableObstacles)
+            {
+                obsGenerator = new ObstacleGenerator(this, WalkabilityData, _obstacleMat);
+                obsGenerator.CreateMesh(vertexHeights);
+            }
             FlowFieldStaticObstacle[] obstacleBehaviors = FindObjectsByType<FlowFieldStaticObstacle>(FindObjectsSortMode.None);
             FlowFieldSurface[] flowFieldSurfaces = FindObjectsByType<FlowFieldSurface>(FindObjectsSortMode.None);
 
-            SimulationStartParametersStandard simParam = new SimulationStartParametersStandard(flowFieldSurfaces, obstacleBehaviors, 3f, 0.25f, 0.5f, 0.1f, 1f, 0.1f, 30);
+            SimulationStartParametersStandard simParam = new SimulationStartParametersStandard(flowFieldSurfaces, obstacleBehaviors, 1f, 0.25f, 0.5f, 0.1f, 1f, 0.1f, 30);
             _navigationManager.Interface.StartSimulation(simParam);
 
             for (int i = 0; i < obstacleBehaviors.Length; i++)

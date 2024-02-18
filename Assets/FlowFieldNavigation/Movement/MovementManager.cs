@@ -118,6 +118,13 @@ namespace FlowFieldNavigation
                 _costFieldCosts[i] = costFielCosts[i];
             }
 
+            //Reset position changes
+            AgentPositionChangeResetJob positionChangeReset = new AgentPositionChangeResetJob()
+            {
+                PositionChanges = AgentPositionChangeBuffer.AsArray(),
+            };
+            JobHandle positionChangeResetHandle = positionChangeReset.Schedule(dependency);
+
             //SPATIAL HASHING
             AgentDataSpatialHasherJob spatialHasher = new AgentDataSpatialHasherJob()
             {
@@ -137,7 +144,7 @@ namespace FlowFieldNavigation
                 NormalToHashed = NormalToHashed.AsArray(),
                 HashedToNormal = HashedToNormal.AsArray(),
             };
-            JobHandle spatialHasherHandle = spatialHasher.Schedule(dependency);
+            JobHandle spatialHasherHandle = spatialHasher.Schedule(positionChangeResetHandle);
 
             //FILL AGENT MOVEMENT DATA ARRAY
             float sectorSize = FlowFieldUtilities.SectorColAmount * FlowFieldUtilities.TileSize;
@@ -222,6 +229,7 @@ namespace FlowFieldNavigation
                 RoutineResultArray = RoutineResults.AsArray(),
                 AgentPositionChangeBuffer = AgentPositionChangeBuffer.AsArray(),
             };
+            avoidanceHandle.Complete();
             JobHandle colResHandle = colResJob.Schedule(agentDataArray.Length, 4, avoidanceHandle);
 
             //SCHEDULE TENSON RES JOB
