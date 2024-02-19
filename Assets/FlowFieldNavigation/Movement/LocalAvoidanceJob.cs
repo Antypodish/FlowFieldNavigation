@@ -76,18 +76,18 @@ namespace FlowFieldNavigation
                     newRoutineResult.NewAvoidance = 0;
                 }
             }
-
+            /*
             //GET MOVING AVOIDANCE
             float2 movingAvoidance = GetMovingAvoidance(agentPos2, agent.CurrentDirection, index, agent.Radius, ref newRoutineResult.NewMovingAvoidance, agent.PathId);
             if (!movingAvoidance.Equals(0))
             {
                 newDirectionToSteer = movingAvoidance;
-            }
+            }*/
             //GET SEPERATION
             float2 seperation = GetSeperation(agentPos2, agent.CurrentDirection, agent.Radius, index, newRoutineResult.NewAvoidance, agent.PathId, out newRoutineResult.HasForeignInFront);
 
             //GET ALIGNMENT
-            if (newRoutineResult.NewAvoidance == 0 && movingAvoidance.Equals(0))
+            if (newRoutineResult.NewAvoidance == 0)
             {
                 int agentOffset = FlowFieldUtilities.RadiusToOffset(agent.Radius, TileSize);
                 float2 alignment = GetAlignment(agentPos2, agent.DesiredDirection, agent.CurrentDirection, index, agent.FlockIndex, agent.Radius, agentOffset, agent.AlignmentMultiplierPercentage);

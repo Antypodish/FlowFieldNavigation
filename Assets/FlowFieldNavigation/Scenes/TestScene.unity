@@ -1234,7 +1234,7 @@ PrefabInstance:
     - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
         type: 3}
       propertyPath: _debuggingEnabled
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
         type: 3}
@@ -1258,7 +1258,17 @@ PrefabInstance:
       objectReference: {fileID: 1632713465}
     - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
         type: 3}
+      propertyPath: _debugAvoidanceDirections
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
       propertyPath: _debugAgentSeperationRadius
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6271735691019985205, guid: 36909ba34dc9cc34aa509e8036cbe263,
+        type: 3}
+      propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7535577792338288069, guid: 36909ba34dc9cc34aa509e8036cbe263,

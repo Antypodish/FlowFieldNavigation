@@ -75,7 +75,8 @@ namespace FlowFieldNavigation
             if(agentMoving && mateStopped) { return 0.1f; }
             if(agentAvoiding && !mateAvoiding) { return 0f; }
             if (!agentAvoiding && mateAvoiding) { return 1f; }
-            if (hasForeignAgentInFront) { return 0.2f; }
+            if (hasForeignAgentInFront && mateInFront) { return 0.45f; }
+            if(hasForeignAgentInFront && !mateInFront) { return 0.5f; }
             return math.select(0.4f, 0.5f, mateInFront);
         }
     }
