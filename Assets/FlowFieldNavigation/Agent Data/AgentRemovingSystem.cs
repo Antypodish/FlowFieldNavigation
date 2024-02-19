@@ -109,6 +109,7 @@ namespace FlowFieldNavigation
 
             AgentRemovalPathCleanupJob pathCleanup = new AgentRemovalPathCleanupJob()
             {
+                AgentDataArray = agentDataList.AsArray(),
                 AgentCurPathIndicies = agentCurPathIndicies.AsArray(),
                 AgentRemovalMarks = _agentRemovalMarks.AsArray(),
                 PathStates = pathStates,

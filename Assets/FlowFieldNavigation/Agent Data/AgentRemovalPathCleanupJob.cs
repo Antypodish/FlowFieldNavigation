@@ -10,6 +10,7 @@ namespace FlowFieldNavigation
     {
         [ReadOnly] internal NativeArray<int> AgentRemovalMarks;
         [ReadOnly] internal NativeArray<PathState> PathStates;
+        internal NativeArray<AgentData> AgentDataArray;
         internal NativeArray<PathDestinationData> PathDestinationDataArray;
         internal NativeArray<int> PathSubscriberCounts;
         internal NativeArray<int> AgentCurPathIndicies;
@@ -40,7 +41,13 @@ namespace FlowFieldNavigation
                 int curPathIndex = AgentCurPathIndicies[agentIndex];
                 if (curPathIndex == -1) { continue; }
                 int curPathSubscriberCount = PathSubscriberCounts[curPathIndex];
-                if (curPathSubscriberCount == 0) { AgentCurPathIndicies[agentIndex] = -1; }
+                if (curPathSubscriberCount == 0)
+                {
+                    AgentCurPathIndicies[agentIndex] = -1;
+                    AgentData agent = AgentDataArray[agentIndex];
+                    agent.Status = 0;
+                    AgentDataArray[agentIndex] = agent;
+                }
             }
         }
     }
