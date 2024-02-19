@@ -40,7 +40,7 @@ namespace FlowFieldNavigation
                         float overlapping = desiredDistance - distance;
                         if (overlapping <= 0) { continue; }
                         bool mateInFront = math.dot(agentData.CurrentDirection, matePos2 - agentPos2) > 0;
-                        float resoltionMultiplier = GetMultiplier(agentData.Status, mateStatus, mateInFront, hasForeignInFront);
+                        float resoltionMultiplier = GetMultiplier(agentData.Status, mateStatus, agentData.Avoidance, mateData.Avoidance, mateInFront, hasForeignInFront);
                         if (resoltionMultiplier == 0f) { continue; }
                         resoltionMultiplier *= overlapping;
 
@@ -58,7 +58,7 @@ namespace FlowFieldNavigation
             totalResolution = math.select(totalResolution, totalResolution / totalResolutionLen * maxResolutionLength, totalResolutionLen > maxResolutionLength);
             AgentPositionChangeBuffer[index] += new float3(totalResolution.x, 0f, totalResolution.y);
         }
-        float GetMultiplier(AgentStatus agentStatus, AgentStatus mateStatus, bool mateInFront, bool hasForeignAgentInFront)
+        float GetMultiplier(AgentStatus agentStatus, AgentStatus mateStatus, AvoidanceStatus agentAvoidance, AvoidanceStatus mateAvoidance, bool mateInFront, bool hasForeignAgentInFront)
         {
             bool agentMoving = (agentStatus & AgentStatus.Moving) == AgentStatus.Moving;
             bool agentHoldGround = (agentStatus & AgentStatus.HoldGround) == AgentStatus.HoldGround;
@@ -66,12 +66,15 @@ namespace FlowFieldNavigation
             bool mateMoving = (mateStatus & AgentStatus.Moving) == AgentStatus.Moving;
             bool mateHoldGround = (mateStatus & AgentStatus.HoldGround) == AgentStatus.HoldGround;
             bool mateStopped = mateStatus == 0;
-
+            bool agentAvoiding = agentAvoidance != 0;
+            bool mateAvoiding = mateAvoidance != 0;
             if ((agentStopped && mateStopped) || (agentHoldGround && mateHoldGround)) { return 0.5f; }
             if(mateHoldGround && !agentHoldGround) { return 1; }
             if (agentHoldGround && !mateHoldGround) { return 0; }
             if(mateMoving && agentStopped) { return 0.9f; }
             if(agentMoving && mateStopped) { return 0.1f; }
+            if(agentAvoiding && !mateAvoiding) { return 0f; }
+            if (!agentAvoiding && mateAvoiding) { return 1f; }
             if (hasForeignAgentInFront) { return 0.2f; }
             return math.select(0.4f, 0.5f, mateInFront);
         }
