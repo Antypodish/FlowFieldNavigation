@@ -474,7 +474,7 @@ PrefabInstance:
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
       propertyPath: DisableObstacles
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1284591848226207637, guid: f04ffee1160a8494782072c6bf5424ca,
         type: 3}
@@ -1264,7 +1264,7 @@ PrefabInstance:
     - target: {fileID: 5797102840990353135, guid: 36909ba34dc9cc34aa509e8036cbe263,
         type: 3}
       propertyPath: _debugAgentSeperationRadius
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6271735691019985205, guid: 36909ba34dc9cc34aa509e8036cbe263,
         type: 3}
@@ -1299,6 +1299,12 @@ PrefabInstance:
       propertyPath: _pathfindingManager
       value: 
       objectReference: {fileID: 1328932016}
+    - target: {fileID: 5836007236481813446, guid: f55c253bbe9585643ad7034e78074555,
+        type: 3}
+      propertyPath: _agentPrefab
+      value: 
+      objectReference: {fileID: 2010554042057534779, guid: 5b8107cfe6c808547b1890d4dca1b9f7,
+        type: 3}
     - target: {fileID: 5836007236481813446, guid: f55c253bbe9585643ad7034e78074555,
         type: 3}
       propertyPath: _navigationManager
