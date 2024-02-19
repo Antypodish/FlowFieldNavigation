@@ -17,12 +17,6 @@ namespace FlowFieldNavigation
         [SerializeField] internal float Speed;
         [SerializeField] internal float LandOffset;
 
-        [HideInInspector] public Transform Transform;
-
-        private void Start()
-        {
-            Transform = transform;
-        }
         public int GetPathIndex()
         {
             return _navigationManager.Interface.GetPathIndex(AgentDataIndex);
@@ -68,6 +62,10 @@ namespace FlowFieldNavigation
             return _navigationManager.Interface.GetCurrentDirection(this);
         }
         private void OnDestroy()
+        {
+            RequestUnsubscription();
+        }
+        private void OnDisable()
         {
             RequestUnsubscription();
         }
