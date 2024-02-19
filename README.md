@@ -1,6 +1,7 @@
 # FlowFieldNavigation
 My navigation system based on Flow Field pathfinding and boid-like local avoidance techniques
 Some games using these techniques include: Supreme Commander 2, Age of Empires 4
+VERY IMPORTANT NOTE! System only works on Unity 2022 at the moment due to the changes on packages such as Unit.Collections.
 
 Aim of the project:
 - Supporting high agent counts (Tens of thousands, if not hundereds of thousands)
