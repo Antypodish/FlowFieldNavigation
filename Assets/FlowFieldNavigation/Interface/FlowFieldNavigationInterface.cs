@@ -109,10 +109,15 @@ namespace FlowFieldNavigation
 
             return _navigationManager.AgentDataContainer.AgentDataList[agentDataIndex].DirectionWithHeigth;
         }
-        public bool IsClearBetweenImmediate(Vector3 startPos, Vector3 endPos, int fieldIndex, float stopDistance = 0f)
+        public bool IsClearBetweenImmediate(Vector3 startPos, Vector3 endPos, int fieldIndex, float stopDistanceFromEnd = 0f)
         {
             if (!_navigationManager.SimulationStarted) { return false; }
-            return _navigationManager.FieldImmediateQueryManager.IsClearBettween(startPos, endPos, fieldIndex, stopDistance);
+            return _navigationManager.FieldImmediateQueryManager.IsClearBetween(startPos, endPos, fieldIndex, stopDistanceFromEnd);
+        }
+        public NativeArray<bool> IsClearBetweenImmediate(NativeArray<LineCastData> lineCasts, int fieldIndex, Allocator allocator)
+        {
+            if (!_navigationManager.SimulationStarted) { return new NativeArray<bool>(0, allocator); }
+            return _navigationManager.FieldImmediateQueryManager.IsClearBetween(lineCasts, fieldIndex, allocator);
         }
         public int GetPathIndex(int agentIndex)
         {

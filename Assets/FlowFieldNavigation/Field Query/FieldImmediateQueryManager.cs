@@ -3,6 +3,7 @@ using Unity.Mathematics;
 using Unity.Jobs;
 using Unity.Burst;
 using System;
+using System.Diagnostics;
 
 namespace FlowFieldNavigation
 {
@@ -15,8 +16,9 @@ namespace FlowFieldNavigation
             _navManager = navManager;
         }
         
-        internal bool IsClearBettween(float3 start3, float3 end3, int fieldIndex, float stopDistance = 0f)
+        internal bool IsClearBetween(float3 start3, float3 end3, int fieldIndex, float stopDistanceFromEnd = 0f)
         {
+            stopDistanceFromEnd = math.max(0, stopDistanceFromEnd);
             float tileSize = FlowFieldUtilities.TileSize;
             float2 fieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition;
             int sectorColAmount = FlowFieldUtilities.SectorColAmount;
@@ -26,13 +28,13 @@ namespace FlowFieldNavigation
 
             float2 start = new float2(start3.x, start3.z);
             float2 end = new float2(end3.x, end3.z);
-            float2 startToEnd = end - start;
-            float startToEndLength = math.length(startToEnd);
-            if (startToEndLength <= stopDistance) { return true; }
-            float2 startToEndNormalized = math.select(startToEnd / startToEndLength, 0f, startToEndLength == 0); ;
-            end = start + startToEndNormalized * stopDistance;
+            float2 endToStart = start - end;
+            float endToStartLength = math.length(endToStart);
+            if (endToStartLength <= stopDistanceFromEnd) { return true; }
+            float2 endToStartNormalized = math.select(endToStart / endToStartLength, 0f, endToStartLength == 0); ;
+            end = end + endToStartNormalized * stopDistanceFromEnd;
             ClipLineIfNecessary(ref start, ref end);
-            return LineCast(start, end);
+            return !LineCast(start, end);
 
             void ClipLineIfNecessary(ref float2 p1, ref float2 p2)
             {
@@ -82,9 +84,9 @@ namespace FlowFieldNavigation
                 return false;
             }
         }
-        internal NativeBitArray IsClearBetwen(NativeArray<LineCastData> linesToCast, int fieldIndex, Allocator allocator)
+        internal NativeArray<bool> IsClearBetween(NativeArray<LineCastData> linesToCast, int fieldIndex, Allocator allocator)
         {
-            NativeBitArray returnBits = new NativeBitArray(linesToCast.Length, allocator);
+            NativeArray<bool> returnFlags = new NativeArray<bool>(linesToCast.Length, allocator);
             LineCastJob lineCast = new LineCastJob()
             {
                 SectorColAmount = FlowFieldUtilities.SectorColAmount,
@@ -94,10 +96,10 @@ namespace FlowFieldNavigation
                 TileSize = FlowFieldUtilities.TileSize,
                 CostField = _navManager.FieldDataContainer.GetCostFieldWithOffset(fieldIndex).Costs,
                 LinesToCast = linesToCast,
-                ResultBits = returnBits,
+                ResultFlags = returnFlags,
             };
-            lineCast.Schedule(linesToCast.Length, 64).Complete();
-            return returnBits;
+            lineCast.Schedule(linesToCast.Length, 1).Complete();
+            return returnFlags;
         }
     }
 }

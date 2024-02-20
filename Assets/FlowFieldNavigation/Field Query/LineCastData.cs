@@ -2,10 +2,10 @@
 
 namespace FlowFieldNavigation
 {
-    internal struct LineCastData
+    public struct LineCastData
     {
-        internal float2 StartPoint;
-        internal float2 EndPoint;
-        internal float MinDistance;
+        public float2 StartPoint;
+        public float2 EndPoint;
+        public float MinDistance;
     }
 }

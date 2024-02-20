@@ -2,6 +2,9 @@
 using UnityEngine;
 using UnityEngine.UI;
 using FlowFieldNavigation;
+using Unity.Mathematics;
+using System.Diagnostics;
+using Unity.Collections;
 public class AgentSelectionController : MonoBehaviour
 {
     List<FlowFieldAgent> _selectedAgents = new List<FlowFieldAgent>();
@@ -37,7 +40,7 @@ public class AgentSelectionController : MonoBehaviour
         float upperLimit = 350;
         for (int i = 0; i < _agentsToCreate; i++)
         {
-            _allAgents.Add(_agentFactory.AddAgent(new Vector3(Random.Range(lowerLimit, upperLimit), 10, Random.Range(lowerLimit, upperLimit))));
+            _allAgents.Add(_agentFactory.AddAgent(new Vector3(UnityEngine.Random.Range(lowerLimit, upperLimit), 10, UnityEngine.Random.Range(lowerLimit, upperLimit))));
         }
         _agentsToCreate= 0;
 

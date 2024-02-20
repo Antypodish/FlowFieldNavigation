@@ -15,19 +15,20 @@ namespace FlowFieldNavigation
         internal int SectorTileAmount;
         [ReadOnly] internal NativeArray<byte> CostField;
         [ReadOnly] internal NativeArray<LineCastData> LinesToCast;
-        [WriteOnly] internal NativeBitArray ResultBits;
+        [WriteOnly] internal NativeArray<bool> ResultFlags;
         public void Execute(int index)
         {
             LineCastData lineCastData = LinesToCast[index];
+            lineCastData.MinDistance = math.max(0, lineCastData.MinDistance);
             float2 start = lineCastData.StartPoint;
             float2 end = lineCastData.EndPoint;
-            float2 startToEnd = end - start;
-            float startToEndLength = math.length(startToEnd);
-            if(startToEndLength <= lineCastData.MinDistance) { ResultBits.Set(index, true); return; }
-            float2 startToEndNormalized = math.select(startToEnd / startToEndLength, 0f, startToEndLength == 0); ;
-            end = start + startToEndNormalized * lineCastData.MinDistance;
+            float2 endToStart = start - end;
+            float endToStartLength = math.length(endToStart);
+            if(endToStartLength <= lineCastData.MinDistance) { ResultFlags[index] = true; return; }
+            float2 startToEndNormalized = math.select(endToStart / endToStartLength, 0f, endToStartLength == 0); ;
+            end = end + startToEndNormalized * lineCastData.MinDistance;
             ClipLineIfNecessary(ref start, ref end);
-            ResultBits.Set(index, LineCast(start, end));
+            ResultFlags[index] = !LineCast(start, end);
         }
 
         void ClipLineIfNecessary(ref float2 p1, ref float2 p2)
