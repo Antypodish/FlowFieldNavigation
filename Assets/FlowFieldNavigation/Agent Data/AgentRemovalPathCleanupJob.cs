@@ -45,7 +45,7 @@ namespace FlowFieldNavigation
                 {
                     AgentCurPathIndicies[agentIndex] = -1;
                     AgentData agent = AgentDataArray[agentIndex];
-                    agent.Status = 0;
+                    agent.ClearStatusBit(AgentStatus.Moving);
                     AgentDataArray[agentIndex] = agent;
                 }
             }
