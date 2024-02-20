@@ -109,15 +109,15 @@ namespace FlowFieldNavigation
 
             return _navigationManager.AgentDataContainer.AgentDataList[agentDataIndex].DirectionWithHeigth;
         }
+        public bool IsClearBetweenImmediate(Vector3 startPos, Vector3 endPos, int fieldIndex, float stopDistance = 0f)
+        {
+            if (!_navigationManager.SimulationStarted) { return false; }
+            return _navigationManager.FieldImmediateQueryManager.IsClearBettween(startPos, endPos, fieldIndex, stopDistance);
+        }
         public int GetPathIndex(int agentIndex)
         {
             if (!_navigationManager.SimulationStarted) { return -1; }
             return _navigationManager.AgentDataContainer.AgentCurPathIndicies[agentIndex];
-        }
-        public List<FlowFieldAgent> GetAllAgents()
-        {
-            if (!_navigationManager.SimulationStarted) { return null; }
-            return _navigationManager.AgentDataContainer.Agents;
         }
         public int GetAgentCount()
         {

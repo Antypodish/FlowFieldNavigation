@@ -5,6 +5,7 @@ using FlowFieldNavigation;
 public class AgentSelectionController : MonoBehaviour
 {
     List<FlowFieldAgent> _selectedAgents = new List<FlowFieldAgent>();
+    List<FlowFieldAgent> _allAgents = new List<FlowFieldAgent>();
     [HideInInspector] public FlowFieldAgent DebuggableAgent;
 
     [SerializeField] int _startingAgentCount;
@@ -36,7 +37,7 @@ public class AgentSelectionController : MonoBehaviour
         float upperLimit = 350;
         for (int i = 0; i < _agentsToCreate; i++)
         {
-            _agentFactory.AddAgent(new Vector3(Random.Range(lowerLimit, upperLimit), 10, Random.Range(lowerLimit, upperLimit)));
+            _allAgents.Add(_agentFactory.AddAgent(new Vector3(Random.Range(lowerLimit, upperLimit), 10, Random.Range(lowerLimit, upperLimit))));
         }
         _agentsToCreate= 0;
 
@@ -107,7 +108,7 @@ public class AgentSelectionController : MonoBehaviour
             else if (Input.GetMouseButtonUp(0))
             {
                 DeselectAllAgents();
-                _agentSelector.GetAgentsInBox(Input.mousePosition, Camera.main, _navigationManager.Interface.GetAllAgents(), _selectedAgents);
+                _agentSelector.GetAgentsInBox(Input.mousePosition, Camera.main, _allAgents, _selectedAgents);
                 SetMaterialOfAgents(_selectedAgents, _selectedAgentMaterial);
                 if(_selectedAgents.Count > 0)
                 {
@@ -123,7 +124,7 @@ public class AgentSelectionController : MonoBehaviour
                 RaycastHit hit;
                 if (Physics.Raycast(ray, out hit, 1000, 8))
                 {
-                    _agentFactory.AddAgent(hit.point);
+                    _allAgents.Add(_agentFactory.AddAgent(hit.point));
                 }
             }
         }
@@ -162,6 +163,8 @@ public class AgentSelectionController : MonoBehaviour
                 //_navigationManager.Interface.RequestUnsubscription(agent);
                 _selectedAgents[i] = _selectedAgents[_selectedAgents.Count - 1];
                 _selectedAgents.RemoveAt(_selectedAgents.Count - 1);
+                _allAgents[i] = _allAgents[_allAgents.Count - 1];
+                _allAgents.RemoveAt(_allAgents.Count - 1);
                 Destroy(agent.gameObject);
             }
         }
