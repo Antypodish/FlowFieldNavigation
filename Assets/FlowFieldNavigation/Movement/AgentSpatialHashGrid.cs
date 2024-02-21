@@ -11,6 +11,7 @@ namespace FlowFieldNavigation
         internal float FieldHorizontalSize;
         internal float FieldVerticalSize;
         internal float2 FieldGridStartPosition;
+        internal NativeArray<int2> HashGridColAndRowAmounts;
         internal NativeArray<AgentMovementData> RawAgentMovementDataArray;
         internal NativeArray<UnsafeList<HashTile>> AgentHashGridArray;
         internal int GetGridCount() => AgentHashGridArray.Length;
@@ -25,8 +26,9 @@ namespace FlowFieldNavigation
             int2 topright = startingTileIndex + new int2(offset, offset);
             botleft.x = math.select(botleft.x, 0, botleft.x < 0);
             botleft.y = math.select(botleft.y, 0, botleft.y < 0);
-            int gridRowAmount = (int)math.ceil(FieldVerticalSize / tileSize);
-            int gridColAmount = (int)math.ceil(FieldHorizontalSize / tileSize);
+            int2 gridColAndRowAmount = HashGridColAndRowAmounts[hashGridIndex];
+            int gridRowAmount = gridColAndRowAmount.y;
+            int gridColAmount = gridColAndRowAmount.x;
             topright.x = math.select(topright.x, gridColAmount - 1, topright.x >= gridColAmount);
             topright.y = math.select(topright.y, gridRowAmount - 1, topright.y >= gridRowAmount);
             int botleft1d = botleft.y * gridColAmount + botleft.x;

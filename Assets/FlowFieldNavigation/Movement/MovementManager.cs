@@ -22,6 +22,7 @@ namespace FlowFieldNavigation
         internal NativeArray<UnsafeList<HashTile>> HashGridArray;
         internal NativeList<float> PathReachDistances;
 
+        NativeArray<int2> _hashGridColAndRowAmounts;
         NativeList<UnsafeListReadOnly<byte>> _costFieldCosts;
         NativeList<float3> _agentPositions;
         JobHandle _routineHandle;
@@ -34,11 +35,11 @@ namespace FlowFieldNavigation
             AgentPositionChangeBuffer = new NativeList<float3>(Allocator.Persistent);
             _agentPositions = new NativeList<float3>(Allocator.Persistent);
             _costFieldCosts = new NativeList<UnsafeListReadOnly<byte>>(Allocator.Persistent);
-
             _routineHandle = new JobHandle();
             //SPATIAL HASH GRID INSTANTIATION
             int gridAmount = (int)math.ceil(FlowFieldUtilities.MaxAgentSize / FlowFieldUtilities.BaseAgentSpatialGridSize);
             HashGridArray = new NativeArray<UnsafeList<HashTile>>(gridAmount, Allocator.Persistent);
+            _hashGridColAndRowAmounts = new NativeArray<int2>(HashGridArray.Length, Allocator.Persistent);
             for (int i = 0; i < HashGridArray.Length; i++)
             {
                 float fieldHorizontalSize = FlowFieldUtilities.FieldColAmount * FlowFieldUtilities.TileSize;
@@ -51,6 +52,7 @@ namespace FlowFieldNavigation
                 UnsafeList<HashTile> grid = new UnsafeList<HashTile>(gridSize, Allocator.Persistent);
                 grid.Length = gridSize;
                 HashGridArray[i] = grid;
+                _hashGridColAndRowAmounts[i] = new int2(gridColAmount, gridRowAmount);
             }
             NormalToHashed = new NativeList<int>(Allocator.Persistent);
             HashedToNormal = new NativeList<int>(Allocator.Persistent);
@@ -193,6 +195,7 @@ namespace FlowFieldNavigation
                     BaseSpatialGridSize = FlowFieldUtilities.BaseAgentSpatialGridSize,
                     FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
                     FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
+                    HashGridColAndRowAmounts = _hashGridColAndRowAmounts,
                     AgentHashGridArray = HashGridArray,
                     RawAgentMovementDataArray = AgentMovementDataList.AsArray(),
                     FieldGridStartPosition = FlowFieldUtilities.FieldGridStartPosition,
@@ -213,6 +216,7 @@ namespace FlowFieldNavigation
                         BaseSpatialGridSize = FlowFieldUtilities.BaseAgentSpatialGridSize,
                         FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
                         FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
+                        HashGridColAndRowAmounts = _hashGridColAndRowAmounts,
                         AgentHashGridArray = HashGridArray,
                         RawAgentMovementDataArray = AgentMovementDataList.AsArray(),
                         FieldGridStartPosition = FlowFieldUtilities.FieldGridStartPosition,
@@ -266,6 +270,7 @@ namespace FlowFieldNavigation
                     BaseSpatialGridSize = FlowFieldUtilities.BaseAgentSpatialGridSize,
                     FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
                     FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
+                    HashGridColAndRowAmounts = _hashGridColAndRowAmounts,
                     AgentHashGridArray = HashGridArray,
                     RawAgentMovementDataArray = AgentMovementDataList.AsArray(),
                     FieldGridStartPosition = FlowFieldUtilities.FieldGridStartPosition,
@@ -323,6 +328,7 @@ namespace FlowFieldNavigation
                     BaseSpatialGridSize = FlowFieldUtilities.BaseAgentSpatialGridSize,
                     FieldHorizontalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldColAmount,
                     FieldVerticalSize = FlowFieldUtilities.TileSize * FlowFieldUtilities.FieldRowAmount,
+                    HashGridColAndRowAmounts = _hashGridColAndRowAmounts,
                     AgentHashGridArray = HashGridArray,
                     RawAgentMovementDataArray = AgentMovementDataList.AsArray(),
                     FieldGridStartPosition = FlowFieldUtilities.FieldGridStartPosition,
