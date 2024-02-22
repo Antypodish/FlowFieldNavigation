@@ -15,6 +15,7 @@ namespace FlowFieldNavigation
         internal NativeList<AgentData> AgentDataList;
         internal NativeList<float> AgentRadii;
         internal NativeList<bool> AgentDestinationReachedArray;
+        internal NativeList<bool> AgentUseNavigationMovementFlags;
         internal NativeList<int> AgentFlockIndicies;
         internal NativeList<int> AgentRequestedPathIndicies;
         internal NativeList<int> AgentNewPathIndicies;
@@ -60,6 +61,7 @@ namespace FlowFieldNavigation
                 AgentNewPathIndicies[indexToShiftTowards] = AgentNewPathIndicies[indexToShiftFrom];
                 AgentCurPathIndicies[indexToShiftTowards] = AgentCurPathIndicies[indexToShiftFrom];
                 AgentRadii[indexToShiftTowards] = AgentRadii[indexToShiftFrom];
+                AgentUseNavigationMovementFlags[indexToShiftTowards] = AgentUseNavigationMovementFlags[indexToShiftFrom];
             }
             AgentDataList.Length = lengthAfterRemoval;
             AgentDestinationReachedArray.Length = lengthAfterRemoval;
@@ -68,6 +70,7 @@ namespace FlowFieldNavigation
             AgentNewPathIndicies.Length = lengthAfterRemoval;
             AgentCurPathIndicies.Length = lengthAfterRemoval;
             AgentRadii.Length = lengthAfterRemoval;
+            AgentUseNavigationMovementFlags.Length = lengthAfterRemoval;
         }
     }
     internal struct IndexShiftingPair

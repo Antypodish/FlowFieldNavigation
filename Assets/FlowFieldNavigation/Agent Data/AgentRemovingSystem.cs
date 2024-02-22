@@ -23,6 +23,7 @@ namespace FlowFieldNavigation
             NativeList<AgentData> agentDataList = _navigationManager.AgentDataContainer.AgentDataList;
             NativeList<float> agentRadii = _navigationManager.AgentDataContainer.AgentRadii;
             NativeList<bool> agentDestinationReachedArray = _navigationManager.AgentDataContainer.AgentDestinationReachedArray;
+            NativeList<bool> agentUseNavigationMovementFlags = _navigationManager.AgentDataContainer.AgentUseNavigationMovementFlags;
             NativeList<int> agentFlockIndicies = _navigationManager.AgentDataContainer.AgentFlockIndicies;
             NativeList<int> agentRequestedPathIndicies = _navigationManager.AgentDataContainer.AgentRequestedPathIndicies;
             NativeList<int> agentNewPathIndicies = _navigationManager.AgentDataContainer.AgentNewPathIndicies;
@@ -60,6 +61,7 @@ namespace FlowFieldNavigation
             NativeReference<int> lengthAfterRemoval = new NativeReference<int>(0, Allocator.TempJob);
             AgentRemovalIndexShiftingJob agentRemovalIndexShifting = new AgentRemovalIndexShiftingJob()
             {
+                AgentUseNavigationMovementFlags = agentUseNavigationMovementFlags,
                 AgentCurPathIndicies = agentCurPathIndicies,
                 AgentDataList = agentDataList,
                 AgentRadii = agentRadii,

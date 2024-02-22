@@ -20,6 +20,7 @@ namespace FlowFieldNavigation
         internal TransformAccessArray AgentTransforms;
         internal NativeList<AgentData> AgentDataList;
         internal NativeList<float> AgentRadii;
+        internal NativeList<bool> AgentUseNavigationMovementFlags;
         internal NativeList<bool> AgentDestinationReachedArray;
         internal NativeList<int> AgentFlockIndicies;
         internal NativeList<int> AgentRequestedPathIndicies;
@@ -36,6 +37,7 @@ namespace FlowFieldNavigation
             AgentRequestedPathIndicies = new NativeList<int>(0, Allocator.Persistent);
             AgentFlockIndicies = new NativeList<int>(Allocator.Persistent);
             AgentDestinationReachedArray = new NativeList<bool>(Allocator.Persistent);
+            AgentUseNavigationMovementFlags = new NativeList<bool>(Allocator.Persistent);
             AgentRadii = new NativeList<float>(Allocator.Persistent);
         }
         public void DisposeAll()
@@ -55,6 +57,7 @@ namespace FlowFieldNavigation
             AgentNewPathIndicies.Dispose();
             AgentCurPathIndicies.Dispose();
             AgentRadii.Dispose();
+            AgentUseNavigationMovementFlags.Dispose();
         }
         public void Subscribe(FlowFieldAgent agent)
         {
@@ -77,6 +80,7 @@ namespace FlowFieldNavigation
             AgentRequestedPathIndicies.Add(-1);
             AgentFlockIndicies.Add(0);
             AgentDestinationReachedArray.Add(false);
+            AgentUseNavigationMovementFlags.Add(true);
         }
         public void SetRequestedPathIndiciesOf(List<FlowFieldAgent> agents, int newPathIndex)
         {
