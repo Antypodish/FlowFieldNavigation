@@ -39,6 +39,7 @@ namespace FlowFieldNavigation
             AgentDestinationReachedArray = new NativeList<bool>(Allocator.Persistent);
             AgentUseNavigationMovementFlags = new NativeList<bool>(Allocator.Persistent);
             AgentRadii = new NativeList<float>(Allocator.Persistent);
+            AgentUseNavigationMovementFlags = new NativeList<bool>(Allocator.Persistent);
         }
         public void DisposeAll()
         {

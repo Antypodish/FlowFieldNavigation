@@ -124,6 +124,20 @@ namespace FlowFieldNavigation
             if (!_navigationManager.SimulationStarted) { return -1; }
             return _navigationManager.AgentDataContainer.AgentCurPathIndicies[agentIndex];
         }
+        public void SetUseNavigationMovementFlag(FlowFieldAgent agent, bool set)
+        {
+            if (!_navigationManager.SimulationStarted) { return; }
+            int agentDataIndex = agent.AgentDataIndex;
+            if (agentDataIndex == -1) { return; }
+            _navigationManager.AgentDataContainer.AgentUseNavigationMovementFlags[agentDataIndex] = set;
+        }
+        public bool GetUseNavigationMovementFlag(FlowFieldAgent agent)
+        {
+            if (!_navigationManager.SimulationStarted) { return false; }
+            int agentDataIndex = agent.AgentDataIndex;
+            if (agentDataIndex == -1) { return false; }
+            return _navigationManager.AgentDataContainer.AgentUseNavigationMovementFlags[agentDataIndex];
+        }
         public int GetAgentCount()
         {
             if (!_navigationManager.SimulationStarted) { return 0; }

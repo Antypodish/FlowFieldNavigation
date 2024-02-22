@@ -368,9 +368,11 @@ namespace FlowFieldNavigation
             NativeList<bool> agentDestinationReachArray = _navigationManager.AgentDataContainer.AgentDestinationReachedArray;
             NativeList<int> agentCurPathIndicies = _navigationManager.AgentDataContainer.AgentCurPathIndicies;
             NativeList<AgentData> agentDataArray = _navigationManager.AgentDataContainer.AgentDataList;
+            NativeArray<bool> agentUseNavigationMovementFlags = _agentDataContainer.AgentUseNavigationMovementFlags.AsArray();
 
             AgentPositionChangeSendJob posSendJob = new AgentPositionChangeSendJob()
             {
+                AgentUseNavigationMovementFlags = agentUseNavigationMovementFlags,
                 AgentPositionChangeBuffer = AgentPositionChangeBuffer.AsArray(),
                 NormalToHashed = NormalToHashed.AsArray(),
             };
@@ -391,6 +393,7 @@ namespace FlowFieldNavigation
             AgentMovementUpdateJob movJob = new AgentMovementUpdateJob()
             {
                 DeltaTime = deltaTime,
+                AgentUseNavigationMovementFlags = agentUseNavigationMovementFlags,
                 AgentDataArray = agentDataArray.AsArray(),
             };
             movJob.Schedule(agentTransforms).Complete();

@@ -13,10 +13,12 @@ namespace FlowFieldNavigation
     internal struct AgentMovementUpdateJob : IJobParallelForTransform
     {
         internal float DeltaTime;
+        [ReadOnly] internal NativeArray<bool> AgentUseNavigationMovementFlags;
         [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
 
         public void Execute(int index, TransformAccess transform)
         {
+            if (!AgentUseNavigationMovementFlags[index]) { return; }
             AgentData data = AgentDataArray[index];
             float speed = data.Speed;
             if ((data.Status & AgentStatus.Moving) != AgentStatus.Moving) { speed = 0f; }

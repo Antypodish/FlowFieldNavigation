@@ -61,6 +61,16 @@ namespace FlowFieldNavigation
             if (_navigationManager == null) { return Vector3.zero; }
             return _navigationManager.Interface.GetCurrentDirection(this);
         }
+        public void SetUseNavigationMovementFlag(bool set)
+        {
+            if(_navigationManager == null) { return; }
+            _navigationManager.Interface.SetUseNavigationMovementFlag(this, set);
+        }
+        public bool GetUseNavigationMovementFlag()
+        {
+            if (_navigationManager == null) { return false; }
+            return _navigationManager.Interface.GetUseNavigationMovementFlag(this);
+        }
         private void OnDestroy()
         {
             RequestUnsubscription();
