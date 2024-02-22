@@ -38,6 +38,10 @@ public class AgentSelectionController : MonoBehaviour
         _navigationDebugger.AgentToDebug = DebuggableAgent;
         float lowerLimit = 150;
         float upperLimit = 350;
+        for(int i = _allAgents.Count - 1; i >= 0; i--)
+        {
+            if (_allAgents[i] == null) { _allAgents.RemoveAtSwapBack(i); }
+        }
         for (int i = 0; i < _agentsToCreate; i++)
         {
             _allAgents.Add(_agentFactory.AddAgent(new Vector3(UnityEngine.Random.Range(lowerLimit, upperLimit), 10, UnityEngine.Random.Range(lowerLimit, upperLimit))));
@@ -163,11 +167,7 @@ public class AgentSelectionController : MonoBehaviour
             for(int i = _selectedAgents.Count - 1; i >= 0; i--)
             {
                 FlowFieldAgent agent = _selectedAgents[i];
-                //_navigationManager.Interface.RequestUnsubscription(agent);
-                _selectedAgents[i] = _selectedAgents[_selectedAgents.Count - 1];
-                _selectedAgents.RemoveAt(_selectedAgents.Count - 1);
-                _allAgents[i] = _allAgents[_allAgents.Count - 1];
-                _allAgents.RemoveAt(_allAgents.Count - 1);
+                _selectedAgents.RemoveAtSwapBack(i);
                 Destroy(agent.gameObject);
             }
         }
