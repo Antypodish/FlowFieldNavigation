@@ -13,6 +13,12 @@ using UnityEngine.UIElements;
 using System;
 public class testjob : MonoBehaviour
 {
+    private void Update()
+    {/*
+        int i = -0b_10000000_00000000_00000000_00000000;
+        UnityEngine.Debug.Log(Convert.ToString(i, 2));*/
+    }
+    /*
     GameObject towardsObject;
     [SerializeField] float2 Current;
     [SerializeField] float CircularSpeed;
@@ -78,5 +84,5 @@ public class testjob : MonoBehaviour
     bool IsLeft(float2 operand, float2 referance)
     {
         return math.dot(referance, new float2(-operand.y, operand.x)) < 0;
-    }
+    }*/
 }
