@@ -3,6 +3,7 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
+using UnityEngine;
 
 
 namespace FlowFieldNavigation
@@ -10,6 +11,7 @@ namespace FlowFieldNavigation
     [BurstCompile]
     internal struct AgentRoutineDataCalculationJob : IJobParallelFor
     {
+        internal float DeltaTime;
         internal float TileSize;
         internal int FieldColAmount;
         internal int SectorColAmount;
@@ -98,7 +100,8 @@ namespace FlowFieldNavigation
 
 
             //FLOW CALCULATION
-            flow = math.select(GetSmoothFlow(data.DesiredDirection, flow, data.Speed), flow, math.dot(data.DesiredDirection, flow) < 0.7f);
+            //flow = math.select(GetSmoothFlow(data.DesiredDirection, flow, data.Speed), flow, math.dot(data.DesiredDirection, flow) < 0.7f);
+            flow = GetSmoothFlow(data.DesiredDirection, flow, data.Speed);
             data.DesiredDirection = flow;
             data.PathId = agentCurPathIndex;
             data.Destination = pathDestination;
@@ -106,10 +109,11 @@ namespace FlowFieldNavigation
         }
         float2 GetSmoothFlow(float2 currentDirection, float2 desiredDirection, float speed)
         {
-            float2 steeringToSeek = desiredDirection - currentDirection;
-            float steeringToSeekLen = math.length(steeringToSeek);
-            float2 steeringForce = math.select(steeringToSeek / steeringToSeekLen, 0f, steeringToSeekLen == 0) * math.select(speed / 100, steeringToSeekLen, steeringToSeekLen < speed / 100);
-            return math.normalizesafe(currentDirection + steeringForce);
+            currentDirection = math.normalizesafe(currentDirection);
+            desiredDirection = math.normalizesafe(desiredDirection);
+            currentDirection = math.select(currentDirection, desiredDirection, math.dot(currentDirection, desiredDirection) <= 0.001f);
+            Vector3 slerped = Vector3.Slerp(new Vector3(currentDirection.x, 0f, currentDirection.y), new Vector3(desiredDirection.x, 0f, desiredDirection.y), DeltaTime * 3);
+            return new float2(slerped.x, slerped.z);
         }
         bool GetSectorDynamicFlowStartIfExists(UnsafeList<SectorFlowStart> dynamicFlowSectosStarts, int agentSectorIndex, out int sectorFlowStart)
         {
@@ -125,6 +129,7 @@ namespace FlowFieldNavigation
             sectorFlowStart = 0;
             return false;
         }
+
     }
 
 }

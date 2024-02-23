@@ -54,7 +54,7 @@ namespace FlowFieldNavigation
         {
             _movementManager.ForceCompleteRoutine();
             _movementManager.SendRoutineResults(_updateFrequency);
-            _movementManager.ScheduleRoutine(_fieldEditManager.GetCurrentCostFieldEditHandle());
+            _movementManager.ScheduleRoutine(_updateFrequency, _fieldEditManager.GetCurrentCostFieldEditHandle());
         }
         void BigUpdate()
         {
@@ -86,7 +86,7 @@ namespace FlowFieldNavigation
             NativeArray<IslandFieldProcessor> islandFieldProcessors = _navigationManager.FieldDataContainer.GetAllIslandFieldProcessors(Allocator.Persistent);
             _fieldEditManager.Schedule(costEditRequests.AsArray().AsReadOnly());
             _pathfindingManager.ShcedulePathRequestEvalutaion(pathRequests.AsArray(), islandFieldProcessors, _fieldEditManager.EditedSectorBitArraysForEachField, _fieldEditManager.GetCurrentIslandFieldReconfigHandle());
-            _movementManager.ScheduleRoutine(_fieldEditManager.GetCurrentCostFieldEditHandle());
+            _movementManager.ScheduleRoutine(_updateFrequency, _fieldEditManager.GetCurrentCostFieldEditHandle());
 
             pathRequests.Clear();
             costEditRequests.Clear();

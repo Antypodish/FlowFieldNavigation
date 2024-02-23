@@ -73,7 +73,7 @@ namespace FlowFieldNavigation
             HashGridArray.Dispose();
             PathReachDistances.Dispose();
         }
-        internal void ScheduleRoutine(JobHandle dependency)
+        internal void ScheduleRoutine(float deltaTime, JobHandle dependency)
         {
             TransformAccessArray agentTransforms = _navigationManager.AgentDataContainer.AgentTransforms;
             NativeArray<AgentData> agentDataArray = _agentDataContainer.AgentDataList.AsArray();
@@ -151,6 +151,7 @@ namespace FlowFieldNavigation
             //FILL AGENT MOVEMENT DATA ARRAY
             AgentRoutineDataCalculationJob routineDataCalcJob = new AgentRoutineDataCalculationJob()
             {
+                DeltaTime = deltaTime,
                 SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
                 SectorSize = FlowFieldUtilities.SectorColAmount * FlowFieldUtilities.TileSize,
                 AgentCurPathIndicies = agentCurPathIndexArray,
