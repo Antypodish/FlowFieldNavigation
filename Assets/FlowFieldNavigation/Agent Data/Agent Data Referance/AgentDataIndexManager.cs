@@ -7,23 +7,31 @@ namespace FlowFieldNavigation
     internal class AgentDataIndexManager
     {
         internal NativeList<AgentDataReferance> AgentDataReferances;
-
+        internal NativeList<int> RemovedAgentDataReferances;
         internal AgentDataIndexManager()
         {
             AgentDataReferances = new NativeList<AgentDataReferance>(Allocator.Persistent);
+            RemovedAgentDataReferances = new NativeList<int>(Allocator.Persistent);
         }
 
         internal int CreateAgentReferance()
         {
-            AgentDataReferances.Add(new AgentDataReferance());
-            return AgentDataReferances.Length - 1;
+            if (RemovedAgentDataReferances.IsEmpty)
+            {
+                AgentDataReferances.Add(new AgentDataReferance());
+                return AgentDataReferances.Length - 1;
+            }
+            else
+            {
+                int indexToCreate = RemovedAgentDataReferances[0];
+                RemovedAgentDataReferances.RemoveAtSwapBack(0);
+                return indexToCreate;
+            }
         }
         internal int AgentReferanceToAgentDataIndex(AgentReferance agentReferance)
         {
             int referanceIndex = agentReferance.GetIndexNonchecked();
-            //UnityEngine.Debug.Log("ref index: " +referanceIndex);
             int dataIndex = AgentDataReferances[referanceIndex].GetIndexNonchecked();
-            //UnityEngine.Debug.Log("data index: " + dataIndex);
             return dataIndex;
         }
     }

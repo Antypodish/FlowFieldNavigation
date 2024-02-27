@@ -80,7 +80,7 @@ namespace FlowFieldNavigation
             for (int i = 0; i < agents.Count; i++)
             {
                 FlowFieldAgent agent = agents[i];
-                if (!agent.AgentReferance.IsInstantiated()) { continue; }
+                if (!agent.AgentReferance.IsValid()) { continue; }
                 int agentDataIndex = _navigationManager.AgentReferanceManager.AgentReferanceToAgentDataIndex(agent.AgentReferance);
                 reqPathIndicies[agentDataIndex] = newPathIndex;
             }

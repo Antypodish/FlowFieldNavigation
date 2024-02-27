@@ -11,6 +11,7 @@ namespace FlowFieldNavigation
         [ReadOnly] internal NativeArray<int> AgentReferanceIndicies;
         [ReadOnly] internal NativeArray<AgentDataReferance> AgentReferances;
         [WriteOnly] internal NativeList<int> AgentDataIndicies;
+        [WriteOnly] internal NativeList<int> RemovedAgentReferanceIndicies;
         public void Execute()
         {
             for(int i = 0; i < AgentReferanceIndicies.Length; i++)
@@ -18,6 +19,8 @@ namespace FlowFieldNavigation
                 int agentReferanceIndex = AgentReferanceIndicies[i];
                 AgentDataReferance referance = AgentReferances[agentReferanceIndex];
                 AgentDataIndicies.Add(referance.GetIndexNonchecked());
+
+                RemovedAgentReferanceIndicies.Add(agentReferanceIndex);
             }
         }
     }

@@ -38,6 +38,7 @@ namespace FlowFieldNavigation
             NativeList<int> agentsLookingForPath = _navigationManager.PathfindingManager.AgentsLookingForPath;
             NativeList<PathRequestRecord> agentsLookingForPathRecords = _navigationManager.PathfindingManager.AgentsLookingForPathRecords;
             NativeArray<AgentDataReferance> agentReferances = _navigationManager.AgentReferanceManager.AgentDataReferances.AsArray();
+            NativeList<int> removedAgentReferanceIndicies = _navigationManager.AgentReferanceManager.RemovedAgentDataReferances;
             NativeList<int> agentReferanceIndiciesPerAgent = _navigationManager.AgentDataContainer.AgentReferanceIndicies;
             _agentRemovalMarks.Length = agentDataList.Length;
 
@@ -46,6 +47,7 @@ namespace FlowFieldNavigation
                 AgentDataIndicies = _agentDataIndiciesToRemove,
                 AgentReferanceIndicies = agentReferanceIndiciesToRemove,
                 AgentReferances = agentReferances,
+                RemovedAgentReferanceIndicies = removedAgentReferanceIndicies,
             };
             agentDataIndiciesToRemoveJob.Schedule().Complete();
 

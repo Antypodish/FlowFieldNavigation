@@ -37,5 +37,4 @@ namespace FlowFieldNavigation
         Moving = 1,
         HoldGround = 2,
     }
-
 }

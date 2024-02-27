@@ -1,5 +1,5 @@
 ﻿using Unity.Mathematics;
-
+using Unity.Burst;
 namespace FlowFieldNavigation
 {
     internal static class FlowFieldUtilities

@@ -17,7 +17,7 @@
         {
             return (int)_index - 1;
         }
-        internal bool IsInstantiated()
+        internal bool IsValid()
         {
             return _index != 0;
         }
