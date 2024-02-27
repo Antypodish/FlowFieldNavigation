@@ -23,17 +23,6 @@ namespace FlowFieldNavigation
             new Color(1,1,1),
         };
         }
-        internal void OnEnable()
-        {
-            Gizmos.color = Color.white;
-            List<FlowFieldAgent> agents = _navigationManager.AgentDataContainer.Agents;
-            for (int i = 0; i < agents.Count; i++)
-            {
-                FlowFieldAgent agent = agents[i];
-                int colorIndex = i % _colors.Length;
-                agent.GetComponentInChildren<MeshRenderer>().material.color = _colors[colorIndex];
-            }
-        }
     }
 
 }

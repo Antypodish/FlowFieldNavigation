@@ -475,7 +475,7 @@ namespace FlowFieldNavigation
             int pathIndex = agent.GetPathIndex();
             if (pathIndex == -1) { return; }
 
-            PathDestinationData destinationData = _navigationManager.PathDataContainer.PathDestinationDataList[_navigationManager.Interface.GetPathIndex(agent.AgentDataIndex)];
+            PathDestinationData destinationData = _navigationManager.PathDataContainer.PathDestinationDataList[_navigationManager.Interface.GetPathIndex(agent)];
             NativeArray<float3> heightMeshVerticies = _navigationManager.FieldDataContainer.HeightMeshGenerator.Verticies.AsArray();
             TriangleSpatialHashGrid spatialHashGrid = _navigationManager.FieldDataContainer.HeightMeshGenerator.GetTriangleSpatialHashGrid();
             Vector2 destination = destinationData.Destination;

@@ -10,9 +10,9 @@ namespace FlowFieldNavigation
     {
         FlowFieldNavigationManager _navigationManager;
 
-        internal List<FlowFieldAgent> Agents;
         internal TransformAccessArray AgentTransforms;
         internal NativeList<AgentData> AgentDataList;
+        internal NativeList<int> AgentReferanceIndicies;
         internal NativeList<float> AgentRadii;
         internal NativeList<bool> AgentUseNavigationMovementFlags;
         internal NativeList<bool> AgentDestinationReachedArray;
@@ -23,7 +23,6 @@ namespace FlowFieldNavigation
         public AgentDataContainer(FlowFieldNavigationManager navigationManager)
         {
             _navigationManager = navigationManager;
-            Agents = new List<FlowFieldAgent>();
             AgentTransforms = new TransformAccessArray(0);
             AgentDataList = new NativeList<AgentData>(Allocator.Persistent);
             AgentNewPathIndicies = new NativeList<int>(0, Allocator.Persistent);
@@ -34,16 +33,10 @@ namespace FlowFieldNavigation
             AgentUseNavigationMovementFlags = new NativeList<bool>(Allocator.Persistent);
             AgentRadii = new NativeList<float>(Allocator.Persistent);
             AgentUseNavigationMovementFlags = new NativeList<bool>(Allocator.Persistent);
+            AgentReferanceIndicies = new NativeList<int>(Allocator.Persistent);
         }
         public void DisposeAll()
         {
-            for (int i = 0; i < Agents.Count; i++)
-            {
-                Agents[i].AgentDataIndex = -1;
-            }
-            Agents.Clear();
-            Agents.TrimExcess();
-            Agents = null;
             AgentTransforms.Dispose();
             AgentDataList.Dispose();
             AgentDestinationReachedArray.Dispose();
@@ -53,10 +46,14 @@ namespace FlowFieldNavigation
             AgentCurPathIndicies.Dispose();
             AgentRadii.Dispose();
             AgentUseNavigationMovementFlags.Dispose();
+            AgentReferanceIndicies.Dispose();
         }
         public void Subscribe(FlowFieldAgent agent)
         {
-            agent.AgentDataIndex = Agents.Count;
+            int agentDataIndex = AgentDataList.Length;
+            int agentReferanceIndex = _navigationManager.AgentReferanceManager.CreateAgentReferance();
+            _navigationManager.AgentReferanceManager.AgentDataReferances[agentReferanceIndex] = new AgentIndexReferance(agentDataIndex);
+            agent.AgentReferance = new AgentIndexReferance(agentReferanceIndex);
             agent._navigationManager = _navigationManager;
             AgentData data = new AgentData()
             {
@@ -66,7 +63,7 @@ namespace FlowFieldNavigation
                 Direction = Vector2.zero,
                 LandOffset = agent.LandOffset,
             };
-            Agents.Add(agent);
+            AgentReferanceIndicies.Add(agentReferanceIndex);
             AgentRadii.Add(Mathf.Min(agent.Radius, FlowFieldUtilities.MaxAgentSize));
             AgentTransforms.Add(agent.transform);
             AgentDataList.Add(data);
@@ -83,8 +80,9 @@ namespace FlowFieldNavigation
             for (int i = 0; i < agents.Count; i++)
             {
                 FlowFieldAgent agent = agents[i];
-                if (agent.AgentDataIndex == -1) { continue; }
-                reqPathIndicies[agent.AgentDataIndex] = newPathIndex;
+                if (!agent.AgentReferance.IsInstantiated()) { continue; }
+                int agentDataIndex = _navigationManager.AgentReferanceManager.AgentReferanceToAgentDataIndex(agent.AgentReferance);
+                reqPathIndicies[agentDataIndex] = newPathIndex;
             }
         }
     }

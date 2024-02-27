@@ -37,7 +37,7 @@ namespace FlowFieldNavigation
         {
             if (!_navigationManager.SimulationStarted) { return; }
             if (agents.Count == 0) { return; }
-            if (targetAgent.AgentDataIndex == -1) { SetDestination(agents, targetAgent.transform.position); return; }
+            if (!targetAgent.AgentReferance.IsInstantiated()) { SetDestination(agents, targetAgent.transform.position); return; }
             _navigationManager.RequestAccumulator.RequestPath(agents, targetAgent);
         }
         public void SetObstacle(NativeArray<ObstacleRequest> obstacleRequests, NativeList<int> outputListToAddObstacleIndicies)
@@ -53,61 +53,37 @@ namespace FlowFieldNavigation
         public void RequestSubscription(FlowFieldAgent agent)
         {
             if (!_navigationManager.SimulationStarted) { return; }
-            if (agent.AgentDataIndex != -1) { return; }
+            if (agent.AgentReferance.IsInstantiated()) { return; }
             _navigationManager.RequestAccumulator.RequestAgentAddition(agent);
         }
         public void RequestUnsubscription(FlowFieldAgent agent)
         {
             if (!_navigationManager.SimulationStarted) { return; }
-            int agentDataIndex = agent.AgentDataIndex;
-            if (agentDataIndex == -1) { return; }
-            agent.AgentDataIndex = -1;
-            _navigationManager.RequestAccumulator.RequestAgentRemoval(agentDataIndex);
+            AgentIndexReferance agentReferance = agent.AgentReferance;
+            if (!agentReferance.IsInstantiated()) { return; }
+            agent.AgentReferance = new AgentIndexReferance();
+            _navigationManager.RequestAccumulator.RequestAgentRemoval(agentReferance);
         }
         public void SetHoldGround(FlowFieldAgent agent)
         {
             if (!_navigationManager.SimulationStarted) { return; }
-            int agentDataIndex = agent.AgentDataIndex;
-            if (agent.AgentDataIndex == -1) { return; }
-            _navigationManager.RequestAccumulator.RequestHoldGround(agentDataIndex);
+            AgentIndexReferance agentReferance = agent.AgentReferance;
+            if (!agentReferance.IsInstantiated()) { return; }
+            _navigationManager.RequestAccumulator.RequestHoldGround(agentReferance);
         }
         public void SetStopped(FlowFieldAgent agent)
         {
             if (!_navigationManager.SimulationStarted) { return; }
-            int agentDataIndex = agent.AgentDataIndex;
-            if (agent.AgentDataIndex == -1) { return; }
-            _navigationManager.RequestAccumulator.RequestStop(agentDataIndex);
+            AgentIndexReferance agentReferance = agent.AgentReferance;
+            if (!agentReferance.IsInstantiated()) { return; }
+            _navigationManager.RequestAccumulator.RequestStop(agentReferance);
         }
         public void SetSpeed(FlowFieldAgent agent, float speed)
         {
             if (!_navigationManager.SimulationStarted) { return; }
-            int agentDataIndex = agent.AgentDataIndex;
-            if (agent.AgentDataIndex == -1) { return; }
-            _navigationManager.RequestAccumulator.RequestSetSpeed(agentDataIndex, speed);
-        }
-        public float GetSpeed(FlowFieldAgent agent)
-        {
-            if (!_navigationManager.SimulationStarted) { return 0; }
-            int agentDataIndex = agent.AgentDataIndex;
-            if (agent.AgentDataIndex == -1) { return 0; }
-
-            return _navigationManager.AgentDataContainer.AgentDataList[agentDataIndex].Speed;
-        }
-        public AgentStatus GetStatus(FlowFieldAgent agent)
-        {
-            if (!_navigationManager.SimulationStarted) { return 0; }
-            int agentDataIndex = agent.AgentDataIndex;
-            if (agent.AgentDataIndex == -1) { return 0; }
-
-            return _navigationManager.AgentDataContainer.AgentDataList[agentDataIndex].Status;
-        }
-        public Vector3 GetCurrentDirection(FlowFieldAgent agent)
-        {
-            if (!_navigationManager.SimulationStarted) { return Vector3.zero; }
-            int agentDataIndex = agent.AgentDataIndex;
-            if (agent.AgentDataIndex == -1) { return Vector3.zero; }
-
-            return _navigationManager.AgentDataContainer.AgentDataList[agentDataIndex].DirectionWithHeigth;
+            AgentIndexReferance agentReferance = agent.AgentReferance;
+            if (!agentReferance.IsInstantiated()) { return; }
+            _navigationManager.RequestAccumulator.RequestSetSpeed(agentReferance, speed);
         }
         public bool IsClearBetweenImmediate(Vector3 startPos, Vector3 endPos, int fieldIndex, float stopDistanceFromEnd = 0f)
         {
@@ -119,29 +95,34 @@ namespace FlowFieldNavigation
             if (!_navigationManager.SimulationStarted) { return new NativeArray<bool>(0, allocator); }
             return _navigationManager.FieldImmediateQueryManager.IsClearBetween(lineCasts, fieldIndex, allocator);
         }
-        public int GetPathIndex(int agentIndex)
+        public int GetPathIndex(FlowFieldAgent agent)
         {
             if (!_navigationManager.SimulationStarted) { return -1; }
-            return _navigationManager.AgentDataContainer.AgentCurPathIndicies[agentIndex];
+            AgentIndexReferance agentReferance = agent.AgentReferance;
+            if (!agentReferance.IsInstantiated()) { return - 1; }
+            int agentDataIndex = _navigationManager.AgentReferanceManager.AgentReferanceToAgentDataIndex(agentReferance);
+            return _navigationManager.AgentDataContainer.AgentCurPathIndicies[agentDataIndex];
         }
         public void SetUseNavigationMovementFlag(FlowFieldAgent agent, bool set)
         {
             if (!_navigationManager.SimulationStarted) { return; }
-            int agentDataIndex = agent.AgentDataIndex;
-            if (agentDataIndex == -1) { return; }
+            AgentIndexReferance agentReferance = agent.AgentReferance;
+            if (!agentReferance.IsInstantiated()) { return; }
+            int agentDataIndex = _navigationManager.AgentReferanceManager.AgentDataReferances[agentReferance.GetIndexNonchecked()].GetIndexNonchecked();
             _navigationManager.AgentDataContainer.AgentUseNavigationMovementFlags[agentDataIndex] = set;
         }
         public bool GetUseNavigationMovementFlag(FlowFieldAgent agent)
         {
             if (!_navigationManager.SimulationStarted) { return false; }
-            int agentDataIndex = agent.AgentDataIndex;
-            if (agentDataIndex == -1) { return false; }
+            AgentIndexReferance agentReferance = agent.AgentReferance;
+            if (!agentReferance.IsInstantiated()) { return false; }
+            int agentDataIndex = _navigationManager.AgentReferanceManager.AgentDataReferances[agentReferance.GetIndexNonchecked()].GetIndexNonchecked();
             return _navigationManager.AgentDataContainer.AgentUseNavigationMovementFlags[agentDataIndex];
         }
         public int GetAgentCount()
         {
             if (!_navigationManager.SimulationStarted) { return 0; }
-            return _navigationManager.AgentDataContainer.Agents.Count;
+            return _navigationManager.AgentDataContainer.AgentDataList.Length;
         }
 
     }

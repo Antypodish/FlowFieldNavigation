@@ -11,7 +11,7 @@ namespace FlowFieldNavigation
         FlowFieldNavigationManager _navigationManager;
 
         internal List<FlowFieldAgent> AgentAddRequest;
-        internal NativeList<int> AgentIndiciesToRemove;
+        internal NativeList<int> AgentReferanceIndiciesToRemove;
         internal NativeList<PathRequest> PathRequests;
         internal NativeList<CostEdit> CostEditRequests;
         internal NativeList<int> AgentIndiciesToSetHoldGround;
@@ -21,7 +21,7 @@ namespace FlowFieldNavigation
         {
             _navigationManager = navigationManager;
             AgentAddRequest = new List<FlowFieldAgent>();
-            AgentIndiciesToRemove = new NativeList<int>(Allocator.Persistent);
+            AgentReferanceIndiciesToRemove = new NativeList<int>(Allocator.Persistent);
             PathRequests = new NativeList<PathRequest>(Allocator.Persistent);
             CostEditRequests = new NativeList<CostEdit>(Allocator.Persistent);
             AgentIndiciesToSetHoldGround = new NativeList<int>(Allocator.Persistent);
@@ -32,9 +32,9 @@ namespace FlowFieldNavigation
         {
             AgentAddRequest.Add(agent);
         }
-        internal void RequestAgentRemoval(int agentIndex)
+        internal void RequestAgentRemoval(AgentIndexReferance agentReferance)
         {
-            AgentIndiciesToRemove.Add(agentIndex);
+            AgentReferanceIndiciesToRemove.Add(agentReferance.GetIndexNonchecked());
         }
         internal void RequestPath(List<FlowFieldAgent> agents, Vector3 target)
         {
@@ -46,25 +46,28 @@ namespace FlowFieldNavigation
         internal void RequestPath(List<FlowFieldAgent> agents, FlowFieldAgent targetAgent)
         {
             int newPathIndex = PathRequests.Length;
-            int targetAgentIndex = targetAgent.AgentDataIndex;
+            int targetAgentIndex = _navigationManager.AgentReferanceManager.AgentReferanceToAgentDataIndex(targetAgent.AgentReferance);
             PathRequest request = new PathRequest(targetAgentIndex);
             PathRequests.Add(request);
             _navigationManager.AgentDataContainer.SetRequestedPathIndiciesOf(agents, newPathIndex);
         }
-        internal void RequestHoldGround(int agentIndex)
+        internal void RequestHoldGround(AgentIndexReferance agentReferance)
         {
-            AgentIndiciesToSetHoldGround.Add(agentIndex);
+            int agentDataIndex = _navigationManager.AgentReferanceManager.AgentDataReferances[agentReferance.GetIndexNonchecked()].GetIndexNonchecked();
+            AgentIndiciesToSetHoldGround.Add(agentDataIndex);
         }
-        internal void RequestStop(int agentIndex)
+        internal void RequestStop(AgentIndexReferance agentReferance)
         {
-            AgentIndiciesToStop.Add(agentIndex);
+            int agentDataIndex = _navigationManager.AgentReferanceManager.AgentDataReferances[agentReferance.GetIndexNonchecked()].GetIndexNonchecked();
+            AgentIndiciesToStop.Add(agentDataIndex);
         }
-        internal void RequestSetSpeed(int agentIndex, float speed)
+        internal void RequestSetSpeed(AgentIndexReferance agentReferance, float speed)
         {
+            int agentDataIndex = _navigationManager.AgentReferanceManager.AgentDataReferances[agentReferance.GetIndexNonchecked()].GetIndexNonchecked();
             SetSpeedReq setSpeedReq = new SetSpeedReq()
             {
                 NewSpeed = speed,
-                AgentIndex = agentIndex,
+                AgentIndex = agentDataIndex,
             };
             SetSpeedRequests.Add(setSpeedReq);
         }

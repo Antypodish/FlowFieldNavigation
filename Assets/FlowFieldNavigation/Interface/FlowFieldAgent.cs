@@ -8,28 +8,17 @@ using UnityEngine;
 
 namespace FlowFieldNavigation
 {
-
     public class FlowFieldAgent : MonoBehaviour
     {
         internal FlowFieldNavigationManager _navigationManager;
-        internal int AgentDataIndex = -1;   //-1 means not subscribed yet
+        internal AgentIndexReferance AgentReferance;
         [SerializeField] internal float Radius;
         [SerializeField] internal float Speed;
         [SerializeField] internal float LandOffset;
 
         public int GetPathIndex()
         {
-            return _navigationManager.Interface.GetPathIndex(AgentDataIndex);
-        }
-        public float GetSpeed()
-        {
-            if (_navigationManager == null) { return 0; }
-            return _navigationManager.Interface.GetSpeed(this);
-        }
-        public AgentStatus GetStatus()
-        {
-            if (_navigationManager == null) { return 0; }
-            return _navigationManager.Interface.GetStatus(this);
+            return _navigationManager.Interface.GetPathIndex(this);
         }
         public void RequestSubscription()
         {
@@ -56,20 +45,10 @@ namespace FlowFieldNavigation
             if (_navigationManager == null) { return; }
             _navigationManager.Interface.SetSpeed(this, speed);
         }
-        public Vector3 GetCurrentDirection()
-        {
-            if (_navigationManager == null) { return Vector3.zero; }
-            return _navigationManager.Interface.GetCurrentDirection(this);
-        }
         public void SetUseNavigationMovementFlag(bool set)
         {
             if(_navigationManager == null) { return; }
             _navigationManager.Interface.SetUseNavigationMovementFlag(this, set);
-        }
-        public bool GetUseNavigationMovementFlag()
-        {
-            if (_navigationManager == null) { return false; }
-            return _navigationManager.Interface.GetUseNavigationMovementFlag(this);
         }
         private void OnDestroy()
         {

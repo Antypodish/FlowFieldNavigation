@@ -2,19 +2,24 @@
 {
     internal struct AgentIndexReferance
     {
-        ushort _bucketIndex;
-        ushort _localIndex;
-        internal AgentIndexReferance(short bucketIndex, short localIndex)
+        uint _index;
+        internal AgentIndexReferance(int agentDataIndexIndex)
         {
-            _bucketIndex = (ushort)(bucketIndex + 1);
-            _localIndex = (ushort)(localIndex + 1);
+            _index = (uint)(agentDataIndexIndex + 1);
         }
-        internal bool TryGetIndex(out int bucketIndex, out int localIndex)
+        internal bool TryGetIndex(out int index)
         {
-            bool succesfull = _bucketIndex != 0;
-            bucketIndex = _bucketIndex;
-            localIndex = _localIndex;
+            bool succesfull = _index != 0;
+            index = (int)_index - 1;
             return succesfull;
+        }
+        internal int GetIndexNonchecked()
+        {
+            return (int)_index - 1;
+        }
+        internal bool IsInstantiated()
+        {
+            return _index != 0;
         }
     }
 }

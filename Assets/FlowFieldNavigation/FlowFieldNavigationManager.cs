@@ -19,7 +19,7 @@ namespace FlowFieldNavigation
         internal MovementManager MovementManager;
         internal CostFieldEditManager FieldEditManager;
         internal FieldImmediateQueryManager FieldImmediateQueryManager;
-
+        internal AgentDataIndexManager AgentReferanceManager;
         internal AgentRemovingSystem AgentRemovingSystem;
         internal AgentStatChangeSystem AgentStatChangeSystem;
         NavigationUpdater _navigationUpdater;
@@ -104,6 +104,7 @@ namespace FlowFieldNavigation
             _navigationUpdater = new NavigationUpdater(this, RequestAccumulator);
             FlockDataContainer = new FlockDataContainer();
             FieldImmediateQueryManager = new FieldImmediateQueryManager(this);
+            AgentReferanceManager = new AgentDataIndexManager();
         }
         public void StopSimulation()
         {

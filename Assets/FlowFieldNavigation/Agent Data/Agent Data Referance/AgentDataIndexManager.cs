@@ -6,7 +6,25 @@ namespace FlowFieldNavigation
 {
     internal class AgentDataIndexManager
     {
-        const short _maxBucketSize = 512;
-        const short _maxBucketCount = short.MaxValue;
+        internal NativeList<AgentIndexReferance> AgentDataReferances;
+
+        internal AgentDataIndexManager()
+        {
+            AgentDataReferances = new NativeList<AgentIndexReferance>(Allocator.Persistent);
+        }
+
+        internal int CreateAgentReferance()
+        {
+            AgentDataReferances.Add(new AgentIndexReferance());
+            return AgentDataReferances.Length - 1;
+        }
+        internal int AgentReferanceToAgentDataIndex(AgentIndexReferance agentReferance)
+        {
+            int referanceIndex = agentReferance.GetIndexNonchecked();
+            //UnityEngine.Debug.Log("ref index: " +referanceIndex);
+            int dataIndex = AgentDataReferances[referanceIndex].GetIndexNonchecked();
+            //UnityEngine.Debug.Log("data index: " + dataIndex);
+            return dataIndex;
+        }
     }
 }

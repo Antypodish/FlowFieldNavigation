@@ -64,7 +64,7 @@ namespace FlowFieldNavigation
             _movementManager.SendRoutineResults(_updateFrequency);
             _pathfindingManager.TransferNewPathsToCurPaths();
             List<FlowFieldAgent> agentAddRequest = _requestAccumulator.AgentAddRequest;
-            NativeList<int> agentIndiciesToRemove = _requestAccumulator.AgentIndiciesToRemove;
+            NativeList<int> agentReferanceIndiciesToRemove = _requestAccumulator.AgentReferanceIndiciesToRemove;
             NativeList<PathRequest> pathRequests = _requestAccumulator.PathRequests;
             NativeList<CostEdit> costEditRequests = _requestAccumulator.CostEditRequests;
             NativeList<int> agentsToHoldGround = _requestAccumulator.AgentIndiciesToSetHoldGround;
@@ -80,7 +80,7 @@ namespace FlowFieldNavigation
             _navigationManager.AgentStatChangeSystem.SetAgentsHoldGround(agentsToHoldGround.AsArray());
             _navigationManager.AgentStatChangeSystem.SetAgentsStopped(agentsToStop.AsArray());
             _navigationManager.AgentStatChangeSystem.SetAgentSpeed(setSpeedRequests.AsArray());
-            _navigationManager.AgentRemovingSystem.RemoveAgents(agentIndiciesToRemove.AsArray());
+            _navigationManager.AgentRemovingSystem.RemoveAgents(agentReferanceIndiciesToRemove.AsArray());
             _navigationManager.PathDataContainer.Update();
 
             NativeArray<IslandFieldProcessor> islandFieldProcessors = _navigationManager.FieldDataContainer.GetAllIslandFieldProcessors(Allocator.Persistent);
@@ -91,7 +91,7 @@ namespace FlowFieldNavigation
             pathRequests.Clear();
             costEditRequests.Clear();
             agentAddRequest.Clear();
-            agentIndiciesToRemove.Clear();
+            agentReferanceIndiciesToRemove.Clear();
             agentsToHoldGround.Clear();
             agentsToStop.Clear();
             setSpeedRequests.Clear();

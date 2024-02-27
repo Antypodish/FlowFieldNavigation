@@ -46,8 +46,10 @@ namespace FlowFieldNavigation
                 FieldGridStartPosition = FlowFieldUtilities.FieldGridStartPosition,
             };
 
-            int agentIndex = agent.AgentDataIndex;
-            int hashedIndex = normalToHashed[agentIndex];
+            AgentIndexReferance agentReferance = agent.AgentReferance;
+            if (!agentReferance.IsInstantiated()) { return; }
+            int agentDataIndex = _navigationManager.AgentReferanceManager.AgentReferanceToAgentDataIndex(agentReferance);
+            int hashedIndex = normalToHashed[agentDataIndex];
             AgentMovementData agentMovData = movData[hashedIndex];
             float2 agentPos = new float2(agentMovData.Position.x, agentMovData.Position.z);
             SpatialHashGridIterator gridIterator = spatialHashGrid.GetIterator(agentPos, agentMovData.Radius, gridIndex);

@@ -17,8 +17,10 @@ namespace FlowFieldNavigation
         public void Debug(FlowFieldAgent agent)
         {
             if (agent == null) { return; }
-            if (agent.AgentDataIndex == -1) { return; }
-            UnityEngine.Debug.Log(_navigationManager.AgentDataContainer.AgentCurPathIndicies[agent.AgentDataIndex]);
+            AgentIndexReferance agentReferance = agent.AgentReferance;
+            if (!agentReferance.IsInstantiated()) { return; }
+            int agentDataIndex = _navigationManager.AgentReferanceManager.AgentReferanceToAgentDataIndex(agentReferance);
+            UnityEngine.Debug.Log(_navigationManager.AgentDataContainer.AgentCurPathIndicies[agentDataIndex]);
         }
     }
 

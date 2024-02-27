@@ -30,7 +30,7 @@ namespace FlowFieldNavigation
         {
             _agentDataContainer = agentDataContainer;
             _navigationManager = navigationManager;
-            AgentMovementDataList = new NativeList<AgentMovementData>(_agentDataContainer.Agents.Count, Allocator.Persistent);
+            AgentMovementDataList = new NativeList<AgentMovementData>(_agentDataContainer.AgentDataList.Length, Allocator.Persistent);
             RoutineResults = new NativeList<RoutineResult>(Allocator.Persistent);
             AgentPositionChangeBuffer = new NativeList<float3>(Allocator.Persistent);
             _agentPositions = new NativeList<float3>(Allocator.Persistent);

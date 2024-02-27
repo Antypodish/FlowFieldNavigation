@@ -20,7 +20,8 @@ namespace FlowFieldNavigation
         internal NativeList<int> AgentRequestedPathIndicies;
         internal NativeList<int> AgentNewPathIndicies;
         internal NativeList<int> AgentCurPathIndicies;
-
+        internal NativeList<int> AgentReferanceIndiciesPerAgent;
+        internal NativeArray<AgentIndexReferance> AgentReferances;
         internal NativeList<int> RemovedAgentMarks;
         internal NativeList<IndexShiftingPair> IndexShiftingPairs;
         [WriteOnly] internal NativeReference<int> LengthAfterRemoval;
@@ -29,7 +30,6 @@ namespace FlowFieldNavigation
             int agentsLength = AgentDataList.Length;
             int lengthAfterRemoval = AgentDataList.Length - AgentIndiciesToRemove.Length;
             LengthAfterRemoval.Value = lengthAfterRemoval;
-
             int toRemoveAgentListPointer = 0;
             for (int agentListPointer = lengthAfterRemoval; agentListPointer < agentsLength; agentListPointer++)
             {
@@ -53,6 +53,8 @@ namespace FlowFieldNavigation
                 };
                 IndexShiftingPairs.Add(shiftPair);
                 RemovedAgentMarks[indexToShiftFrom] = indexToShiftTowards;
+                int referanceIndexOfSavedAgent = AgentReferanceIndiciesPerAgent[indexToShiftFrom];
+                AgentReferances[referanceIndexOfSavedAgent] = new AgentIndexReferance(indexToShiftTowards);
 
                 AgentDataList[indexToShiftTowards] = AgentDataList[indexToShiftFrom];
                 AgentDestinationReachedArray[indexToShiftTowards] = AgentDestinationReachedArray[indexToShiftFrom];
@@ -62,6 +64,7 @@ namespace FlowFieldNavigation
                 AgentCurPathIndicies[indexToShiftTowards] = AgentCurPathIndicies[indexToShiftFrom];
                 AgentRadii[indexToShiftTowards] = AgentRadii[indexToShiftFrom];
                 AgentUseNavigationMovementFlags[indexToShiftTowards] = AgentUseNavigationMovementFlags[indexToShiftFrom];
+                AgentReferanceIndiciesPerAgent[indexToShiftTowards] = AgentReferanceIndiciesPerAgent[indexToShiftFrom];
             }
             AgentDataList.Length = lengthAfterRemoval;
             AgentDestinationReachedArray.Length = lengthAfterRemoval;
@@ -71,6 +74,7 @@ namespace FlowFieldNavigation
             AgentCurPathIndicies.Length = lengthAfterRemoval;
             AgentRadii.Length = lengthAfterRemoval;
             AgentUseNavigationMovementFlags.Length = lengthAfterRemoval;
+            AgentReferanceIndiciesPerAgent.Length = lengthAfterRemoval;
         }
     }
     internal struct IndexShiftingPair

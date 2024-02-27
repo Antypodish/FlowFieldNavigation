@@ -10,15 +10,17 @@ namespace FlowFieldNavigation
     {
         FlowFieldNavigationManager _navigationManager;
         NativeList<int> _agentRemovalMarks;//(index == -1:nothing)(index == -2:removed)(index >= 0: index redirection which means it can be used as new index)
+        NativeList<int> _agentDataIndiciesToRemove;
         public AgentRemovingSystem(FlowFieldNavigationManager navigationManager)
         {
             _navigationManager = navigationManager;
             _agentRemovalMarks = new NativeList<int>(Allocator.Persistent);
+            _agentDataIndiciesToRemove = new NativeList<int>(Allocator.Persistent);
         }
-        internal void RemoveAgents(NativeArray<int> agentIndiciesToRemove)
+        internal void RemoveAgents(NativeArray<int> agentReferanceIndiciesToRemove)
         {
-            if (agentIndiciesToRemove.Length == 0) { return; }
-            List<FlowFieldAgent> agents = _navigationManager.AgentDataContainer.Agents;
+            if (agentReferanceIndiciesToRemove.Length == 0) { return; }
+            _agentDataIndiciesToRemove.Clear();
             TransformAccessArray agentTransforms = _navigationManager.AgentDataContainer.AgentTransforms;
             NativeList<AgentData> agentDataList = _navigationManager.AgentDataContainer.AgentDataList;
             NativeList<float> agentRadii = _navigationManager.AgentDataContainer.AgentRadii;
@@ -35,14 +37,23 @@ namespace FlowFieldNavigation
             NativeArray<PathRequest> pathRequests = _navigationManager.RequestAccumulator.PathRequests.AsArray();
             NativeList<int> agentsLookingForPath = _navigationManager.PathfindingManager.AgentsLookingForPath;
             NativeList<PathRequestRecord> agentsLookingForPathRecords = _navigationManager.PathfindingManager.AgentsLookingForPathRecords;
+            NativeArray<AgentIndexReferance> agentReferances = _navigationManager.AgentReferanceManager.AgentDataReferances.AsArray();
+            NativeList<int> agentReferanceIndiciesPerAgent = _navigationManager.AgentDataContainer.AgentReferanceIndicies;
+            _agentRemovalMarks.Length = agentDataList.Length;
 
-            _agentRemovalMarks.Length = agents.Count;
+            AgentReferanceIndexToAgentDataIndexJob agentDataIndiciesToRemoveJob = new AgentReferanceIndexToAgentDataIndexJob()
+            {
+                AgentDataIndicies = _agentDataIndiciesToRemove,
+                AgentReferanceIndicies = agentReferanceIndiciesToRemove,
+                AgentReferances = agentReferances,
+            };
+            agentDataIndiciesToRemoveJob.Schedule().Complete();
 
             AgentRemovalMarkJob agentMark = new AgentRemovalMarkJob()
             {
                 CurAgentCount = agentDataList.Length,
                 AgentRemovalMarks = _agentRemovalMarks,
-                RemovedAgentIndicies = agentIndiciesToRemove,
+                RemovedAgentIndicies = _agentDataIndiciesToRemove.AsArray(),
             };
             JobHandle agentMarkHandle = agentMark.Schedule();
 
@@ -53,7 +64,7 @@ namespace FlowFieldNavigation
                 AgentRequestedPathIndicies = agentRequestedPathIndicies,
                 FlockList = flockList.AsArray(),
                 PathSubscriberCounts = pathSubscriberCounts.AsArray(),
-                RemovedAgentIndicies = agentIndiciesToRemove,
+                RemovedAgentIndicies = _agentDataIndiciesToRemove.AsArray(),
             };
             JobHandle agentDependencyUnsubHandle = agentDependencyUnsub.Schedule(agentMarkHandle);
 
@@ -61,13 +72,15 @@ namespace FlowFieldNavigation
             NativeReference<int> lengthAfterRemoval = new NativeReference<int>(0, Allocator.TempJob);
             AgentRemovalIndexShiftingJob agentRemovalIndexShifting = new AgentRemovalIndexShiftingJob()
             {
+                AgentReferances = agentReferances,
+                AgentReferanceIndiciesPerAgent = agentReferanceIndiciesPerAgent,
                 AgentUseNavigationMovementFlags = agentUseNavigationMovementFlags,
                 AgentCurPathIndicies = agentCurPathIndicies,
                 AgentDataList = agentDataList,
                 AgentRadii = agentRadii,
                 AgentDestinationReachedArray = agentDestinationReachedArray,
                 AgentFlockIndicies = agentFlockIndicies,
-                AgentIndiciesToRemove = agentIndiciesToRemove,
+                AgentIndiciesToRemove = _agentDataIndiciesToRemove.AsArray(),
                 AgentNewPathIndicies = agentNewPathIndicies,
                 AgentRequestedPathIndicies = agentRequestedPathIndicies,
                 RemovedAgentMarks = _agentRemovalMarks,
@@ -76,18 +89,12 @@ namespace FlowFieldNavigation
             };
             JobHandle agentRemovalIndexShiftingHandle = agentRemovalIndexShifting.Schedule(agentDependencyUnsubHandle);
             agentRemovalIndexShiftingHandle.Complete();
-
             for (int i = 0; i < indexShiftingPairs.Length; i++)
             {
                 IndexShiftingPair pair = indexShiftingPairs[i];
-                FlowFieldAgent agentBehaviour = agents[pair.Source];
-                agentBehaviour.AgentDataIndex = pair.Destination;
-                agents[pair.Destination] = agentBehaviour;
-
                 agentTransforms[pair.Destination] = agentTransforms[pair.Source];
             }
-            int removedAgentCount = agentIndiciesToRemove.Length;
-            agents.RemoveRange(lengthAfterRemoval.Value, removedAgentCount);
+            int removedAgentCount = _agentDataIndiciesToRemove.Length;
             for (int i = 0; i < removedAgentCount; i++)
             {
                 agentTransforms.RemoveAtSwapBack(lengthAfterRemoval.Value);
