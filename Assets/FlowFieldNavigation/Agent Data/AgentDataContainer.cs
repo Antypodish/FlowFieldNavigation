@@ -52,8 +52,8 @@ namespace FlowFieldNavigation
         {
             int agentDataIndex = AgentDataList.Length;
             int agentReferanceIndex = _navigationManager.AgentReferanceManager.CreateAgentReferance();
-            _navigationManager.AgentReferanceManager.AgentDataReferances[agentReferanceIndex] = new AgentIndexReferance(agentDataIndex);
-            agent.AgentReferance = new AgentIndexReferance(agentReferanceIndex);
+            _navigationManager.AgentReferanceManager.AgentDataReferances[agentReferanceIndex] = new AgentDataReferance(agentDataIndex);
+            agent.AgentReferance = new AgentReferance(agentReferanceIndex);
             agent._navigationManager = _navigationManager;
             AgentData data = new AgentData()
             {

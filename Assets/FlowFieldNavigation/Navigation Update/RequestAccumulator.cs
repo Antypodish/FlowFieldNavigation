@@ -32,7 +32,7 @@ namespace FlowFieldNavigation
         {
             AgentAddRequest.Add(agent);
         }
-        internal void RequestAgentRemoval(AgentIndexReferance agentReferance)
+        internal void RequestAgentRemoval(AgentReferance agentReferance)
         {
             AgentReferanceIndiciesToRemove.Add(agentReferance.GetIndexNonchecked());
         }
@@ -51,17 +51,17 @@ namespace FlowFieldNavigation
             PathRequests.Add(request);
             _navigationManager.AgentDataContainer.SetRequestedPathIndiciesOf(agents, newPathIndex);
         }
-        internal void RequestHoldGround(AgentIndexReferance agentReferance)
+        internal void RequestHoldGround(AgentReferance agentReferance)
         {
             int agentDataIndex = _navigationManager.AgentReferanceManager.AgentDataReferances[agentReferance.GetIndexNonchecked()].GetIndexNonchecked();
             AgentIndiciesToSetHoldGround.Add(agentDataIndex);
         }
-        internal void RequestStop(AgentIndexReferance agentReferance)
+        internal void RequestStop(AgentReferance agentReferance)
         {
             int agentDataIndex = _navigationManager.AgentReferanceManager.AgentDataReferances[agentReferance.GetIndexNonchecked()].GetIndexNonchecked();
             AgentIndiciesToStop.Add(agentDataIndex);
         }
-        internal void RequestSetSpeed(AgentIndexReferance agentReferance, float speed)
+        internal void RequestSetSpeed(AgentReferance agentReferance, float speed)
         {
             int agentDataIndex = _navigationManager.AgentReferanceManager.AgentDataReferances[agentReferance.GetIndexNonchecked()].GetIndexNonchecked();
             SetSpeedReq setSpeedReq = new SetSpeedReq()

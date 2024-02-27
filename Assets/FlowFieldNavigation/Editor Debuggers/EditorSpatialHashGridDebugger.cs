@@ -46,7 +46,7 @@ namespace FlowFieldNavigation
                 FieldGridStartPosition = FlowFieldUtilities.FieldGridStartPosition,
             };
 
-            AgentIndexReferance agentReferance = agent.AgentReferance;
+            AgentReferance agentReferance = agent.AgentReferance;
             if (!agentReferance.IsInstantiated()) { return; }
             int agentDataIndex = _navigationManager.AgentReferanceManager.AgentReferanceToAgentDataIndex(agentReferance);
             int hashedIndex = normalToHashed[agentDataIndex];

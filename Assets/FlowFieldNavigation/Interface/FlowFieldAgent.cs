@@ -11,7 +11,7 @@ namespace FlowFieldNavigation
     public class FlowFieldAgent : MonoBehaviour
     {
         internal FlowFieldNavigationManager _navigationManager;
-        internal AgentIndexReferance AgentReferance;
+        internal AgentReferance AgentReferance;
         [SerializeField] internal float Radius;
         [SerializeField] internal float Speed;
         [SerializeField] internal float LandOffset;

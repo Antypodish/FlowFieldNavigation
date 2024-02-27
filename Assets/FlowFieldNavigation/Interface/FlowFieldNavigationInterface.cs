@@ -59,29 +59,29 @@ namespace FlowFieldNavigation
         public void RequestUnsubscription(FlowFieldAgent agent)
         {
             if (!_navigationManager.SimulationStarted) { return; }
-            AgentIndexReferance agentReferance = agent.AgentReferance;
+            AgentReferance agentReferance = agent.AgentReferance;
             if (!agentReferance.IsInstantiated()) { return; }
-            agent.AgentReferance = new AgentIndexReferance();
+            agent.AgentReferance = new AgentReferance();
             _navigationManager.RequestAccumulator.RequestAgentRemoval(agentReferance);
         }
         public void SetHoldGround(FlowFieldAgent agent)
         {
             if (!_navigationManager.SimulationStarted) { return; }
-            AgentIndexReferance agentReferance = agent.AgentReferance;
+            AgentReferance agentReferance = agent.AgentReferance;
             if (!agentReferance.IsInstantiated()) { return; }
             _navigationManager.RequestAccumulator.RequestHoldGround(agentReferance);
         }
         public void SetStopped(FlowFieldAgent agent)
         {
             if (!_navigationManager.SimulationStarted) { return; }
-            AgentIndexReferance agentReferance = agent.AgentReferance;
+            AgentReferance agentReferance = agent.AgentReferance;
             if (!agentReferance.IsInstantiated()) { return; }
             _navigationManager.RequestAccumulator.RequestStop(agentReferance);
         }
         public void SetSpeed(FlowFieldAgent agent, float speed)
         {
             if (!_navigationManager.SimulationStarted) { return; }
-            AgentIndexReferance agentReferance = agent.AgentReferance;
+            AgentReferance agentReferance = agent.AgentReferance;
             if (!agentReferance.IsInstantiated()) { return; }
             _navigationManager.RequestAccumulator.RequestSetSpeed(agentReferance, speed);
         }
@@ -98,7 +98,7 @@ namespace FlowFieldNavigation
         public int GetPathIndex(FlowFieldAgent agent)
         {
             if (!_navigationManager.SimulationStarted) { return -1; }
-            AgentIndexReferance agentReferance = agent.AgentReferance;
+            AgentReferance agentReferance = agent.AgentReferance;
             if (!agentReferance.IsInstantiated()) { return - 1; }
             int agentDataIndex = _navigationManager.AgentReferanceManager.AgentReferanceToAgentDataIndex(agentReferance);
             return _navigationManager.AgentDataContainer.AgentCurPathIndicies[agentDataIndex];
@@ -106,7 +106,7 @@ namespace FlowFieldNavigation
         public void SetUseNavigationMovementFlag(FlowFieldAgent agent, bool set)
         {
             if (!_navigationManager.SimulationStarted) { return; }
-            AgentIndexReferance agentReferance = agent.AgentReferance;
+            AgentReferance agentReferance = agent.AgentReferance;
             if (!agentReferance.IsInstantiated()) { return; }
             int agentDataIndex = _navigationManager.AgentReferanceManager.AgentDataReferances[agentReferance.GetIndexNonchecked()].GetIndexNonchecked();
             _navigationManager.AgentDataContainer.AgentUseNavigationMovementFlags[agentDataIndex] = set;
@@ -114,7 +114,7 @@ namespace FlowFieldNavigation
         public bool GetUseNavigationMovementFlag(FlowFieldAgent agent)
         {
             if (!_navigationManager.SimulationStarted) { return false; }
-            AgentIndexReferance agentReferance = agent.AgentReferance;
+            AgentReferance agentReferance = agent.AgentReferance;
             if (!agentReferance.IsInstantiated()) { return false; }
             int agentDataIndex = _navigationManager.AgentReferanceManager.AgentDataReferances[agentReferance.GetIndexNonchecked()].GetIndexNonchecked();
             return _navigationManager.AgentDataContainer.AgentUseNavigationMovementFlags[agentDataIndex];

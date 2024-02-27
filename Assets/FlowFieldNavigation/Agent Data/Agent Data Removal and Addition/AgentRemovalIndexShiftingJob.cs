@@ -21,7 +21,7 @@ namespace FlowFieldNavigation
         internal NativeList<int> AgentNewPathIndicies;
         internal NativeList<int> AgentCurPathIndicies;
         internal NativeList<int> AgentReferanceIndiciesPerAgent;
-        internal NativeArray<AgentIndexReferance> AgentReferances;
+        internal NativeArray<AgentDataReferance> AgentReferances;
         internal NativeList<int> RemovedAgentMarks;
         internal NativeList<IndexShiftingPair> IndexShiftingPairs;
         [WriteOnly] internal NativeReference<int> LengthAfterRemoval;
@@ -54,7 +54,7 @@ namespace FlowFieldNavigation
                 IndexShiftingPairs.Add(shiftPair);
                 RemovedAgentMarks[indexToShiftFrom] = indexToShiftTowards;
                 int referanceIndexOfSavedAgent = AgentReferanceIndiciesPerAgent[indexToShiftFrom];
-                AgentReferances[referanceIndexOfSavedAgent] = new AgentIndexReferance(indexToShiftTowards);
+                AgentReferances[referanceIndexOfSavedAgent] = new AgentDataReferance(indexToShiftTowards);
 
                 AgentDataList[indexToShiftTowards] = AgentDataList[indexToShiftFrom];
                 AgentDestinationReachedArray[indexToShiftTowards] = AgentDestinationReachedArray[indexToShiftFrom];

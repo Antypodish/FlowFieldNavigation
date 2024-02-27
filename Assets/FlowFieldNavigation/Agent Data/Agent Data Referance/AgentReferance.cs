@@ -1,9 +1,9 @@
 ﻿namespace FlowFieldNavigation
 {
-    internal struct AgentIndexReferance
+    internal struct AgentReferance
     {
         uint _index;
-        internal AgentIndexReferance(int agentDataIndexIndex)
+        internal AgentReferance(int agentDataIndexIndex)
         {
             _index = (uint)(agentDataIndexIndex + 1);
         }
