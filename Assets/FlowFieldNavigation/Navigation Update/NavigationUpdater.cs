@@ -73,11 +73,9 @@ namespace FlowFieldNavigation
             NativeList<int> agentsToStop = _requestAccumulator.AgentIndiciesToStop;
             NativeList<SetSpeedReq> setSpeedRequests = _requestAccumulator.SetSpeedRequests;
 
-            _navigationManager.AgentStatChangeSystem.SetAgentsHoldGround(agentsToHoldGround.AsArray());
-            _navigationManager.AgentStatChangeSystem.SetAgentsStopped(agentsToStop.AsArray());
-            _navigationManager.AgentStatChangeSystem.SetAgentSpeed(setSpeedRequests.AsArray());
-            _navigationManager.AgentAdditionSystem.AddAgents(subReqAgentDataRefIndicies, subReqAgentInputs, subReqAgentTransforms);
+            _navigationManager.AgentAdditionSystem.AddAgents(subReqAgentDataRefIndicies.AsArray(), subReqAgentInputs.AsArray(), subReqAgentTransforms);
             _navigationManager.AgentRemovingSystem.RemoveAgents(agentReferanceIndiciesToRemove.AsArray());
+            //_navigationManager.AgentDataWriteSystem.WriteData();
             _navigationManager.PathDataContainer.Update();
 
             NativeArray<IslandFieldProcessor> islandFieldProcessors = _navigationManager.FieldDataContainer.GetAllIslandFieldProcessors(Allocator.Persistent);

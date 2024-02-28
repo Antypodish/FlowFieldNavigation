@@ -4,16 +4,19 @@ using Unity.Burst;
 using Unity.Jobs;
 namespace FlowFieldNavigation
 {
-    internal class AgentDataIndexManager
+    internal class AgentDataReferanceManager
     {
         internal NativeList<AgentDataReferance> AgentDataReferances;
+        internal NativeList<int> AgentDataReferanceWriteIndicies;
         internal NativeList<AgentDataReferanceState> AgentDataRefStates;
         internal NativeList<int> RemovedAgentDataReferances;
-        internal AgentDataIndexManager()
+
+        internal AgentDataReferanceManager()
         {
             AgentDataReferances = new NativeList<AgentDataReferance>(Allocator.Persistent);
             RemovedAgentDataReferances = new NativeList<int>(Allocator.Persistent);
             AgentDataRefStates = new NativeList<AgentDataReferanceState>(Allocator.Persistent);
+            AgentDataReferanceWriteIndicies = new NativeList<int>(Allocator.Persistent);
         }
 
         internal int CreateAgentReferance()
@@ -22,6 +25,7 @@ namespace FlowFieldNavigation
             {
                 AgentDataReferances.Add(new AgentDataReferance());
                 AgentDataRefStates.Add(AgentDataReferanceState.BeingAdded);
+                AgentDataReferanceWriteIndicies.Add(-1);
                 return AgentDataReferances.Length - 1;
             }
             else
@@ -29,6 +33,7 @@ namespace FlowFieldNavigation
                 int indexToCreate = RemovedAgentDataReferances[0];
                 RemovedAgentDataReferances.RemoveAtSwapBack(0);
                 AgentDataRefStates[indexToCreate] = AgentDataReferanceState.BeingAdded;
+                AgentDataReferanceWriteIndicies[indexToCreate] = -1;
                 return indexToCreate;
             }
         }

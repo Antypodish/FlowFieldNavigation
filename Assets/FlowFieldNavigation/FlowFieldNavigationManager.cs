@@ -19,10 +19,10 @@ namespace FlowFieldNavigation
         internal MovementManager MovementManager;
         internal CostFieldEditManager FieldEditManager;
         internal FieldImmediateQueryManager FieldImmediateQueryManager;
-        internal AgentDataIndexManager AgentReferanceManager;
+        internal AgentDataReferanceManager AgentReferanceManager;
         internal AgentAdditionSystem AgentAdditionSystem;
         internal AgentRemovingSystem AgentRemovingSystem;
-        internal AgentStatChangeSystem AgentStatChangeSystem;
+        internal AgentDataWriteSystem AgentDataWriteSystem;
         NavigationUpdater _navigationUpdater;
         void Awake()
         {
@@ -96,7 +96,7 @@ namespace FlowFieldNavigation
                 startInputs.MaxWalkableHeight);
             AgentDataContainer = new AgentDataContainer(this);
             AgentRemovingSystem = new AgentRemovingSystem(this);
-            AgentStatChangeSystem = new AgentStatChangeSystem(this);
+            AgentDataWriteSystem = new AgentDataWriteSystem(this);
             PathDataContainer = new PathDataContainer(this);
             RequestAccumulator = new RequestAccumulator(this);
             PathfindingManager = new PathfindingManager(this);
@@ -105,7 +105,7 @@ namespace FlowFieldNavigation
             _navigationUpdater = new NavigationUpdater(this, RequestAccumulator);
             FlockDataContainer = new FlockDataContainer();
             FieldImmediateQueryManager = new FieldImmediateQueryManager(this);
-            AgentReferanceManager = new AgentDataIndexManager();
+            AgentReferanceManager = new AgentDataReferanceManager();
             AgentAdditionSystem = new AgentAdditionSystem(this);
         }
         public void StopSimulation()

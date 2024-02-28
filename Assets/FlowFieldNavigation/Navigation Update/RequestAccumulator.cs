@@ -20,7 +20,7 @@ namespace FlowFieldNavigation
         internal NativeList<int> AgentIndiciesToSetHoldGround;
         internal NativeList<int> AgentIndiciesToStop;
         internal NativeList<SetSpeedReq> SetSpeedRequests;
-
+        internal NativeList<AgentDataWrite> AgentDataWrites;
         internal RequestAccumulator(FlowFieldNavigationManager navigationManager)
         {
             _navigationManager = navigationManager;
@@ -33,6 +33,7 @@ namespace FlowFieldNavigation
             SubReqAgentDataRefIndicies = new NativeList<int>(Allocator.Persistent);
             SubReqAgentInputs = new NativeList<AgentInput>(Allocator.Persistent);
             SubReqAgentTransforms = new List<Transform>();
+            AgentDataWrites = new NativeList<AgentDataWrite>(Allocator.Persistent);
         }
         internal void RequestAgentAddition(AgentInput agentInput, Transform agentTransform, int agentDataReferanceIndex)
         {
@@ -52,14 +53,14 @@ namespace FlowFieldNavigation
             }
             AgentReferanceIndiciesToRemove.Add(agentDataReferanceIndex);
         }
-        internal void RequestPath(NativeList<AgentReferance> sourceAgentReferances, Vector3 target)
+        internal void RequestPath(NativeArray<AgentReferance> sourceAgentReferances, Vector3 target)
         {
             int newPathIndex = PathRequests.Length;
             float2 target2d = new float2(target.x, target.z);
             PathRequests.Add(new PathRequest(target2d));
             SetAgentRequestedPaths(sourceAgentReferances, newPathIndex);
         }
-        internal void RequestPath(NativeList<AgentReferance> sourceAgentReferances, AgentReferance targetAgentRef)
+        internal void RequestPath(NativeArray<AgentReferance> sourceAgentReferances, AgentReferance targetAgentRef)
         {
             int newPathIndex = PathRequests.Length;
             int targetAgentIndex = _navigationManager.AgentReferanceManager.AgentDataReferanceIndexToAgentDataIndex(targetAgentRef.GetIndexNonchecked());
@@ -125,27 +126,14 @@ namespace FlowFieldNavigation
             CostEditRequests.Dispose();
         }
 
-        void SetAgentRequestedPaths(NativeList<AgentReferance> sourceAgentReferances, int requestedPathIndex)
+        void SetAgentRequestedPaths(NativeArray<AgentReferance> sourceAgentRefs, int requestedPathIndex)
         {
             NativeArray<AgentDataReferance> agentDataReferances = _navigationManager.AgentReferanceManager.AgentDataReferances.AsArray();
             NativeArray<int> agentRequestedPathIndicies = _navigationManager.AgentDataContainer.AgentRequestedPathIndicies.AsArray();
 
-            if (sourceAgentReferances.Length > 2500)
+            for (int i = 0; i < sourceAgentRefs.Length; i++)
             {
-                AgentRequestedPathSetJob reqPathSet = new AgentRequestedPathSetJob()
-                {
-                    RequestedPathIndex = requestedPathIndex,
-                    AgentDataReferances = agentDataReferances,
-                    SourceAgentReferances = sourceAgentReferances.AsArray(),
-                    AgentRequestedPathIndicies = agentRequestedPathIndicies,
-                };
-                reqPathSet.Schedule().Complete();
-                return;
-            }
-
-            for (int i = 0; i < sourceAgentReferances.Length; i++)
-            {
-                AgentReferance sourceAgentReferance = sourceAgentReferances[i];
+                AgentReferance sourceAgentReferance = sourceAgentRefs[i];
                 AgentDataReferance agentDataReferance = agentDataReferances[sourceAgentReferance.GetIndexNonchecked()];
                 int agentDataIndex = agentDataReferance.GetIndexNonchecked();
                 agentRequestedPathIndicies[agentDataIndex] = requestedPathIndex;

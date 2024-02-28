@@ -34,7 +34,7 @@ namespace FlowFieldNavigation
             if (agents.Count == 0) { return; }
             GetAgentReferances(agents, _extracedAgentReferances);
             if(_extracedAgentReferances.Length == 0) { return; }
-            _navigationManager.RequestAccumulator.RequestPath(_extracedAgentReferances, target);
+            _navigationManager.RequestAccumulator.RequestPath(_extracedAgentReferances.AsArray(), target);
         }
         public void SetDestination(List<FlowFieldAgent> agents, FlowFieldAgent targetAgent)
         {
@@ -42,7 +42,7 @@ namespace FlowFieldNavigation
             GetAgentReferances(agents, _extracedAgentReferances);
             AgentReferance targetAgentRef = targetAgent.AgentReferance;
             if (_extracedAgentReferances.Length == 0 || !targetAgentRef.IsValid()) { return; }
-            _navigationManager.RequestAccumulator.RequestPath(_extracedAgentReferances, targetAgentRef);
+            _navigationManager.RequestAccumulator.RequestPath(_extracedAgentReferances.AsArray(), targetAgentRef);
         }
         public void SetObstacle(NativeArray<ObstacleRequest> obstacleRequests, NativeList<int> outputListToAddObstacleIndicies)
         {

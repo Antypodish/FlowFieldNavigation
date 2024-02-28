@@ -3,14 +3,33 @@ using Unity.Jobs;
 
 namespace FlowFieldNavigation
 {
-    internal class AgentStatChangeSystem
+    internal class AgentDataWriteSystem
     {
         FlowFieldNavigationManager _navigationManager;
-        internal AgentStatChangeSystem(FlowFieldNavigationManager navigationManager)
+        internal AgentDataWriteSystem(FlowFieldNavigationManager navigationManager)
         {
             _navigationManager = navigationManager;
         }
+        public void WriteData()
+        {
+            NativeList<AgentDataWrite> agentDataWrites = _navigationManager.RequestAccumulator.AgentDataWrites;
+            NativeArray<AgentDataReferanceState> agentDataReferanceState = _navigationManager.AgentReferanceManager.AgentDataRefStates.AsArray();
+            NativeArray<AgentDataReferance> agentDataReferances = _navigationManager.AgentReferanceManager.AgentDataReferances.AsArray();
+            NativeArray<int> agentDataReferancesWriteIndicies = _navigationManager.AgentReferanceManager.AgentDataReferanceWriteIndicies.AsArray();
+            NativeArray<int> agentNewPathIndicies = _navigationManager.AgentDataContainer.AgentNewPathIndicies.AsArray();
+            AgentDataWriteTransferJob writeTransferJob = new AgentDataWriteTransferJob()
+            {
+                AgentDataWrites = agentDataWrites.AsArray(),
+                AgentDataReferanceStates = agentDataReferanceState,
+                AgentDataReferances = agentDataReferances,
+                AgentDataReferanceWriteIndicies = agentDataReferancesWriteIndicies,
+                AgentNewPathIndicies = agentNewPathIndicies,
+                
+            };
+            writeTransferJob.Schedule().Complete();
 
+            agentDataWrites.Clear();
+        }
         public void SetAgentsHoldGround(NativeArray<int> agentIndiciesToHoldGround)
         {
             SetAgentHoldGroundJob holdGroundJob = new SetAgentHoldGroundJob()
