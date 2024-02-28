@@ -57,6 +57,7 @@ namespace FlowFieldNavigation
                 LandOffset = LandOffset,
                 Speed = Speed,
                 Radius = Radius,
+                RequestedPathIndex = -1,
             };
         }
         private void OnDestroy()

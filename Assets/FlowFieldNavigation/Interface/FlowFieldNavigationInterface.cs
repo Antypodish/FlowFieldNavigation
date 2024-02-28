@@ -2,7 +2,6 @@
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Collections;
 using UnityEngine;
-using static Codice.Client.Common.WebApi.WebApiEndpoints;
 
 namespace FlowFieldNavigation
 {
@@ -10,10 +9,12 @@ namespace FlowFieldNavigation
     {
         FlowFieldNavigationManager _navigationManager;
         SimulationStartInputHandler _simStartInputHandler;
+        NativeList<AgentReferance> _extracedAgentReferances;
         public FlowFieldNavigationInterface(FlowFieldNavigationManager navigationManager)
         {
             _navigationManager = navigationManager;
             _simStartInputHandler = new SimulationStartInputHandler();
+            _extracedAgentReferances = new NativeList<AgentReferance>(Allocator.Persistent);
         }
 
         public void StartSimulation(SimulationStartParametersStandard startParameters)
@@ -30,15 +31,18 @@ namespace FlowFieldNavigation
         public void SetDestination(List<FlowFieldAgent> agents, Vector3 target)
         {
             if (!_navigationManager.SimulationStarted) { return; }
-            if (agents.Count == 0) { UnityEngine.Debug.Log("Agent list passed is empty"); return; }
-            _navigationManager.RequestAccumulator.RequestPath(agents, target);
+            if (agents.Count == 0) { return; }
+            GetAgentReferances(agents, _extracedAgentReferances);
+            if(_extracedAgentReferances.Length == 0) { return; }
+            _navigationManager.RequestAccumulator.RequestPath(_extracedAgentReferances, target);
         }
         public void SetDestination(List<FlowFieldAgent> agents, FlowFieldAgent targetAgent)
         {
-            if (!_navigationManager.SimulationStarted) { return; }
-            if (agents.Count == 0) { return; }
-            if (!targetAgent.AgentReferance.IsValid()) { SetDestination(agents, targetAgent.transform.position); return; }
-            _navigationManager.RequestAccumulator.RequestPath(agents, targetAgent);
+            if (!_navigationManager.SimulationStarted || agents.Count == 0 || targetAgent == null) { return; }
+            GetAgentReferances(agents, _extracedAgentReferances);
+            AgentReferance targetAgentRef = targetAgent.AgentReferance;
+            if (_extracedAgentReferances.Length == 0 || !targetAgentRef.IsValid()) { return; }
+            _navigationManager.RequestAccumulator.RequestPath(_extracedAgentReferances, targetAgentRef);
         }
         public void SetObstacle(NativeArray<ObstacleRequest> obstacleRequests, NativeList<int> outputListToAddObstacleIndicies)
         {
@@ -130,6 +134,21 @@ namespace FlowFieldNavigation
             return _navigationManager.AgentDataContainer.AgentDataList.Length;
         }
 
+
+        void GetAgentReferances(List<FlowFieldAgent> agents, NativeList<AgentReferance> outputListToAddAgentReferances)
+        {
+            outputListToAddAgentReferances.Clear();
+            for(int i = 0; i < agents.Count; i++)
+            {
+                FlowFieldAgent agent = agents[i];
+                if(agent == null) { continue; }
+                AgentReferance referance = agent.AgentReferance;
+                if (referance.IsValid())
+                {
+                    outputListToAddAgentReferances.Add(referance);
+                }
+            }
+        }
     }
     public struct SimulationStartParametersStandard
     {

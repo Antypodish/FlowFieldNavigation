@@ -7,5 +7,6 @@ namespace FlowFieldNavigation
         internal float Speed;
         internal float LandOffset;
         internal float Radius;
+        internal int RequestedPathIndex;
     }
 }

@@ -192,7 +192,7 @@ public class AgentSelectionController : MonoBehaviour
             FlowFieldAgent agent = hit.collider.gameObject.GetComponent<FlowFieldAgent>();
             if (agent == null)
             {
-                    Vector3 destination = hit.point;
+                Vector3 destination = hit.point;
                 _navigationManager.Interface.SetDestination(agents, destination);
                 return;
             }
