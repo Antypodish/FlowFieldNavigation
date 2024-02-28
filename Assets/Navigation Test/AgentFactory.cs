@@ -19,6 +19,12 @@ public class AgentFactory
         FlowFieldAgent flowFieldAgentComponent = obj.GetComponent<FlowFieldAgent>();
         obj.transform.position = position;
         _navigationManager.Interface.RequestSubscription(flowFieldAgentComponent);
+        _navigationManager.Interface.RequestUnsubscription(flowFieldAgentComponent);
+        _navigationManager.Interface.RequestSubscription(flowFieldAgentComponent);
+        _navigationManager.Interface.RequestUnsubscription(flowFieldAgentComponent);
+        _navigationManager.Interface.RequestSubscription(flowFieldAgentComponent);
+        _navigationManager.Interface.RequestUnsubscription(flowFieldAgentComponent);
+        _navigationManager.Interface.RequestSubscription(flowFieldAgentComponent);
         return flowFieldAgentComponent;
     }
 }
