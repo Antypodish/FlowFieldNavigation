@@ -54,7 +54,10 @@ namespace FlowFieldNavigation
         {
             if (!_navigationManager.SimulationStarted) { return; }
             if (agent.AgentReferance.IsValid()) { return; }
-            _navigationManager.RequestAccumulator.RequestAgentAddition(agent);
+            int newAgentDataReferanceIndex = _navigationManager.AgentReferanceManager.CreateAgentReferance();
+            agent._navigationManager = _navigationManager;
+            agent.AgentReferance = new AgentReferance(newAgentDataReferanceIndex);
+            _navigationManager.RequestAccumulator.RequestAgentAddition(agent, newAgentDataReferanceIndex);
         }
         public void RequestUnsubscription(FlowFieldAgent agent)
         {
@@ -100,7 +103,7 @@ namespace FlowFieldNavigation
             if (!_navigationManager.SimulationStarted) { return -1; }
             AgentReferance agentReferance = agent.AgentReferance;
             if (!agentReferance.IsValid()) { return - 1; }
-            int agentDataIndex = _navigationManager.AgentReferanceManager.AgentReferanceToAgentDataIndex(agentReferance);
+            int agentDataIndex = _navigationManager.AgentReferanceManager.AgentDataReferanceIndexToAgentDataIndex(agentReferance.GetIndexNonchecked());
             return _navigationManager.AgentDataContainer.AgentCurPathIndicies[agentDataIndex];
         }
         public void SetUseNavigationMovementFlag(FlowFieldAgent agent, bool set)
@@ -108,7 +111,7 @@ namespace FlowFieldNavigation
             if (!_navigationManager.SimulationStarted) { return; }
             AgentReferance agentReferance = agent.AgentReferance;
             if (!agentReferance.IsValid()) { return; }
-            int agentDataIndex = _navigationManager.AgentReferanceManager.AgentReferanceToAgentDataIndex(agentReferance);
+            int agentDataIndex = _navigationManager.AgentReferanceManager.AgentDataReferanceIndexToAgentDataIndex(agentReferance.GetIndexNonchecked());
             _navigationManager.AgentDataContainer.AgentUseNavigationMovementFlags[agentDataIndex] = set;
         }
         public bool GetUseNavigationMovementFlag(FlowFieldAgent agent)
@@ -116,7 +119,7 @@ namespace FlowFieldNavigation
             if (!_navigationManager.SimulationStarted) { return false; }
             AgentReferance agentReferance = agent.AgentReferance;
             if (!agentReferance.IsValid()) { return false; }
-            int agentDataIndex = _navigationManager.AgentReferanceManager.AgentReferanceToAgentDataIndex(agentReferance);
+            int agentDataIndex = _navigationManager.AgentReferanceManager.AgentDataReferanceIndexToAgentDataIndex(agentReferance.GetIndexNonchecked());
             return _navigationManager.AgentDataContainer.AgentUseNavigationMovementFlags[agentDataIndex];
         }
         public int GetAgentCount()

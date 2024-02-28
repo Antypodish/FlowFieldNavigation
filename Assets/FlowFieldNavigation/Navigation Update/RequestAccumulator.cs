@@ -3,6 +3,7 @@ using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
+using static Codice.Client.Common.WebApi.WebApiEndpoints;
 
 namespace FlowFieldNavigation
 {
@@ -11,6 +12,7 @@ namespace FlowFieldNavigation
         FlowFieldNavigationManager _navigationManager;
 
         internal List<FlowFieldAgent> AgentAddRequest;
+        internal NativeList<int> SubscriptionRequestedAgentDataReferanceIndicies;
         internal NativeList<int> AgentReferanceIndiciesToRemove;
         internal NativeList<PathRequest> PathRequests;
         internal NativeList<CostEdit> CostEditRequests;
@@ -27,14 +29,23 @@ namespace FlowFieldNavigation
             AgentIndiciesToSetHoldGround = new NativeList<int>(Allocator.Persistent);
             AgentIndiciesToStop = new NativeList<int>(Allocator.Persistent);
             SetSpeedRequests = new NativeList<SetSpeedReq>(Allocator.Persistent);
+            SubscriptionRequestedAgentDataReferanceIndicies = new NativeList<int>(Allocator.Persistent);
         }
-        internal void RequestAgentAddition(FlowFieldAgent agent)
+        internal void RequestAgentAddition(FlowFieldAgent agent, int agentDataReferanceIndex)
         {
+            SubscriptionRequestedAgentDataReferanceIndicies.Add(agentDataReferanceIndex);
             AgentAddRequest.Add(agent);
         }
         internal void RequestAgentRemoval(AgentReferance agentReferance)
         {
-            AgentReferanceIndiciesToRemove.Add(agentReferance.GetIndexNonchecked());
+            int agentDataReferanceIndex = agentReferance.GetIndexNonchecked();
+            AgentDataReferanceState dataRefState = _navigationManager.AgentReferanceManager.AgentDataRefStates[agentDataReferanceIndex];
+            if(dataRefState == AgentDataReferanceState.BeingAdded)
+            {
+                _navigationManager.AgentReferanceManager.AgentDataRefStates[agentDataReferanceIndex] = AgentDataReferanceState.Removed;
+                return;
+            }
+            AgentReferanceIndiciesToRemove.Add(agentDataReferanceIndex);
         }
         internal void RequestPath(List<FlowFieldAgent> agents, Vector3 target)
         {
@@ -46,7 +57,7 @@ namespace FlowFieldNavigation
         internal void RequestPath(List<FlowFieldAgent> agents, FlowFieldAgent targetAgent)
         {
             int newPathIndex = PathRequests.Length;
-            int targetAgentIndex = _navigationManager.AgentReferanceManager.AgentReferanceToAgentDataIndex(targetAgent.AgentReferance);
+            int targetAgentIndex = _navigationManager.AgentReferanceManager.AgentDataReferanceIndexToAgentDataIndex(targetAgent.AgentReferance.GetIndexNonchecked());
             PathRequest request = new PathRequest(targetAgentIndex);
             PathRequests.Add(request);
             _navigationManager.AgentDataContainer.SetRequestedPathIndiciesOf(agents, newPathIndex);

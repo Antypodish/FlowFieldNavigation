@@ -19,7 +19,7 @@ namespace FlowFieldNavigation
             if (agent == null) { return; }
             AgentReferance agentReferance = agent.AgentReferance;
             if (!agentReferance.IsValid()) { return; }
-            int agentDataIndex = _navigationManager.AgentReferanceManager.AgentReferanceToAgentDataIndex(agentReferance);
+            int agentDataIndex = _navigationManager.AgentReferanceManager.AgentDataReferanceIndexToAgentDataIndex(agent.AgentReferance.GetIndexNonchecked());
             UnityEngine.Debug.Log(_navigationManager.AgentDataContainer.AgentCurPathIndicies[agentDataIndex]);
         }
     }

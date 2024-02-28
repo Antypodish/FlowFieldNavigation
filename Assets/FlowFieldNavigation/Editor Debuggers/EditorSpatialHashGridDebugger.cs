@@ -48,7 +48,7 @@ namespace FlowFieldNavigation
 
             AgentReferance agentReferance = agent.AgentReferance;
             if (!agentReferance.IsValid()) { return; }
-            int agentDataIndex = _navigationManager.AgentReferanceManager.AgentReferanceToAgentDataIndex(agentReferance);
+            int agentDataIndex = _navigationManager.AgentReferanceManager.AgentDataReferanceIndexToAgentDataIndex(agentReferance.GetIndexNonchecked());
             int hashedIndex = normalToHashed[agentDataIndex];
             AgentMovementData agentMovData = movData[hashedIndex];
             float2 agentPos = new float2(agentMovData.Position.x, agentMovData.Position.z);

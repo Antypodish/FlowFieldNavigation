@@ -64,6 +64,7 @@ namespace FlowFieldNavigation
             _movementManager.SendRoutineResults(_updateFrequency);
             _pathfindingManager.TransferNewPathsToCurPaths();
             List<FlowFieldAgent> agentAddRequest = _requestAccumulator.AgentAddRequest;
+            NativeList<int> subReqAgentDataRefIndicies = _requestAccumulator.SubscriptionRequestedAgentDataReferanceIndicies;
             NativeList<int> agentReferanceIndiciesToRemove = _requestAccumulator.AgentReferanceIndiciesToRemove;
             NativeList<PathRequest> pathRequests = _requestAccumulator.PathRequests;
             NativeList<CostEdit> costEditRequests = _requestAccumulator.CostEditRequests;
@@ -71,15 +72,10 @@ namespace FlowFieldNavigation
             NativeList<int> agentsToStop = _requestAccumulator.AgentIndiciesToStop;
             NativeList<SetSpeedReq> setSpeedRequests = _requestAccumulator.SetSpeedRequests;
 
-            for (int i = 0; i < agentAddRequest.Count; i++)
-            {
-                FlowFieldAgent agent = agentAddRequest[i];
-                if (agent == null) { continue; }
-                _navigationManager.AgentDataContainer.Subscribe(agent);
-            }
             _navigationManager.AgentStatChangeSystem.SetAgentsHoldGround(agentsToHoldGround.AsArray());
             _navigationManager.AgentStatChangeSystem.SetAgentsStopped(agentsToStop.AsArray());
             _navigationManager.AgentStatChangeSystem.SetAgentSpeed(setSpeedRequests.AsArray());
+            _navigationManager.AgentAdditionSystem.AddAgents(agentAddRequest, subReqAgentDataRefIndicies);
             _navigationManager.AgentRemovingSystem.RemoveAgents(agentReferanceIndiciesToRemove.AsArray());
             _navigationManager.PathDataContainer.Update();
 
@@ -91,6 +87,7 @@ namespace FlowFieldNavigation
             pathRequests.Clear();
             costEditRequests.Clear();
             agentAddRequest.Clear();
+            subReqAgentDataRefIndicies.Clear();
             agentReferanceIndiciesToRemove.Clear();
             agentsToHoldGround.Clear();
             agentsToStop.Clear();

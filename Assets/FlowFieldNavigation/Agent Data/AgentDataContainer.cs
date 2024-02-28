@@ -48,13 +48,9 @@ namespace FlowFieldNavigation
             AgentUseNavigationMovementFlags.Dispose();
             AgentReferanceIndicies.Dispose();
         }
-        public void Subscribe(FlowFieldAgent agent)
+        public int Subscribe(FlowFieldAgent agent)
         {
             int agentDataIndex = AgentDataList.Length;
-            int agentReferanceIndex = _navigationManager.AgentReferanceManager.CreateAgentReferance();
-            _navigationManager.AgentReferanceManager.AgentDataReferances[agentReferanceIndex] = new AgentDataReferance(agentDataIndex);
-            agent.AgentReferance = new AgentReferance(agentReferanceIndex);
-            agent._navigationManager = _navigationManager;
             AgentData data = new AgentData()
             {
                 Speed = agent.Speed,
@@ -63,7 +59,6 @@ namespace FlowFieldNavigation
                 Direction = Vector2.zero,
                 LandOffset = agent.LandOffset,
             };
-            AgentReferanceIndicies.Add(agentReferanceIndex);
             AgentRadii.Add(Mathf.Min(agent.Radius, FlowFieldUtilities.MaxAgentSize));
             AgentTransforms.Add(agent.transform);
             AgentDataList.Add(data);
@@ -73,6 +68,7 @@ namespace FlowFieldNavigation
             AgentFlockIndicies.Add(0);
             AgentDestinationReachedArray.Add(false);
             AgentUseNavigationMovementFlags.Add(true);
+            return agentDataIndex;
         }
         public void SetRequestedPathIndiciesOf(List<FlowFieldAgent> agents, int newPathIndex)
         {
@@ -81,7 +77,7 @@ namespace FlowFieldNavigation
             {
                 FlowFieldAgent agent = agents[i];
                 if (!agent.AgentReferance.IsValid()) { continue; }
-                int agentDataIndex = _navigationManager.AgentReferanceManager.AgentReferanceToAgentDataIndex(agent.AgentReferance);
+                int agentDataIndex = _navigationManager.AgentReferanceManager.AgentDataReferanceIndexToAgentDataIndex(agent.AgentReferance.GetIndexNonchecked());
                 reqPathIndicies[agentDataIndex] = newPathIndex;
             }
         }
