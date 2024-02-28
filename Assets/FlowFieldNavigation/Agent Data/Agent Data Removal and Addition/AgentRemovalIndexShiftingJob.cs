@@ -17,7 +17,6 @@ namespace FlowFieldNavigation
         internal NativeList<bool> AgentDestinationReachedArray;
         internal NativeList<bool> AgentUseNavigationMovementFlags;
         internal NativeList<int> AgentFlockIndicies;
-        internal NativeList<int> AgentRequestedPathIndicies;
         internal NativeList<int> AgentNewPathIndicies;
         internal NativeList<int> AgentCurPathIndicies;
         internal NativeList<int> AgentReferanceIndiciesPerAgent;
@@ -59,7 +58,6 @@ namespace FlowFieldNavigation
                 AgentDataList[indexToShiftTowards] = AgentDataList[indexToShiftFrom];
                 AgentDestinationReachedArray[indexToShiftTowards] = AgentDestinationReachedArray[indexToShiftFrom];
                 AgentFlockIndicies[indexToShiftTowards] = AgentFlockIndicies[indexToShiftFrom];
-                AgentRequestedPathIndicies[indexToShiftTowards] = AgentRequestedPathIndicies[indexToShiftFrom];
                 AgentNewPathIndicies[indexToShiftTowards] = AgentNewPathIndicies[indexToShiftFrom];
                 AgentCurPathIndicies[indexToShiftTowards] = AgentCurPathIndicies[indexToShiftFrom];
                 AgentRadii[indexToShiftTowards] = AgentRadii[indexToShiftFrom];
@@ -69,7 +67,6 @@ namespace FlowFieldNavigation
             AgentDataList.Length = lengthAfterRemoval;
             AgentDestinationReachedArray.Length = lengthAfterRemoval;
             AgentFlockIndicies.Length = lengthAfterRemoval;
-            AgentRequestedPathIndicies.Length = lengthAfterRemoval;
             AgentNewPathIndicies.Length = lengthAfterRemoval;
             AgentCurPathIndicies.Length = lengthAfterRemoval;
             AgentRadii.Length = lengthAfterRemoval;

@@ -27,7 +27,6 @@ namespace FlowFieldNavigation
             NativeList<bool> agentDestinationReachedArray = _navigationManager.AgentDataContainer.AgentDestinationReachedArray;
             NativeList<bool> agentUseNavigationMovementFlags = _navigationManager.AgentDataContainer.AgentUseNavigationMovementFlags;
             NativeList<int> agentFlockIndicies = _navigationManager.AgentDataContainer.AgentFlockIndicies;
-            NativeList<int> agentRequestedPathIndicies = _navigationManager.AgentDataContainer.AgentRequestedPathIndicies;
             NativeList<int> agentNewPathIndicies = _navigationManager.AgentDataContainer.AgentNewPathIndicies;
             NativeList<int> agentCurPathIndicies = _navigationManager.AgentDataContainer.AgentCurPathIndicies;
             NativeList<Flock> flockList = _navigationManager.FlockDataContainer.FlockList;
@@ -63,7 +62,6 @@ namespace FlowFieldNavigation
             {
                 AgentCurPathIndicies = agentCurPathIndicies,
                 AgentFlockIndicies = agentFlockIndicies,
-                AgentRequestedPathIndicies = agentRequestedPathIndicies,
                 FlockList = flockList.AsArray(),
                 PathSubscriberCounts = pathSubscriberCounts.AsArray(),
                 RemovedAgentIndicies = _agentDataIndiciesToRemove.AsArray(),
@@ -84,7 +82,6 @@ namespace FlowFieldNavigation
                 AgentFlockIndicies = agentFlockIndicies,
                 AgentIndiciesToRemove = _agentDataIndiciesToRemove.AsArray(),
                 AgentNewPathIndicies = agentNewPathIndicies,
-                AgentRequestedPathIndicies = agentRequestedPathIndicies,
                 RemovedAgentMarks = _agentRemovalMarks,
                 IndexShiftingPairs = indexShiftingPairs,
                 LengthAfterRemoval = lengthAfterRemoval,
@@ -105,7 +102,7 @@ namespace FlowFieldNavigation
             AgentRemovalPathRequestCleanupJob pathRequestCleanup = new AgentRemovalPathRequestCleanupJob()
             {
                 AgentRemovalMarks = _agentRemovalMarks.AsArray(),
-                AgentRequestedPathIndicies = agentRequestedPathIndicies,
+                AgentNewPathIndicies = agentNewPathIndicies,
                 PathRequests = pathRequests,
             };
             JobHandle pathRequestCleanupHandle = pathRequestCleanup.Schedule();

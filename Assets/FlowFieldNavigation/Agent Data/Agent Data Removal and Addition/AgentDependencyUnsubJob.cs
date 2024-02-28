@@ -11,7 +11,6 @@ namespace FlowFieldNavigation
     internal struct AgentDependencyUnsubJob : IJob
     {
         [ReadOnly] internal NativeArray<int> RemovedAgentIndicies;
-        [WriteOnly] internal NativeList<int> AgentRequestedPathIndicies;
         internal NativeArray<int> PathSubscriberCounts;
         internal NativeArray<Flock> FlockList;
         internal NativeList<int> AgentFlockIndicies;
@@ -30,9 +29,6 @@ namespace FlowFieldNavigation
                     AgentCurPathIndicies[agentIndex] = -1;
                     PathSubscriberCounts[curPathIndex]--;
                 }
-
-                //Unsub new path
-                AgentRequestedPathIndicies[agentIndex] = -1;
 
                 //Unsub flock
                 int flockIndex = AgentFlockIndicies[agentIndex];

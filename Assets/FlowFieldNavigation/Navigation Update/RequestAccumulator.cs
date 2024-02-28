@@ -46,11 +46,8 @@ namespace FlowFieldNavigation
         {
             int agentDataReferanceIndex = agentReferance.GetIndexNonchecked();
             AgentDataReferanceState dataRefState = _navigationManager.AgentReferanceManager.AgentDataRefStates[agentDataReferanceIndex];
-            if(dataRefState == AgentDataReferanceState.BeingAdded)
-            {
-                _navigationManager.AgentReferanceManager.AgentDataRefStates[agentDataReferanceIndex] = AgentDataReferanceState.Removed;
-                return;
-            }
+            _navigationManager.AgentReferanceManager.AgentDataRefStates[agentDataReferanceIndex] = AgentDataReferanceState.Removed;
+            if (dataRefState == AgentDataReferanceState.BeingAdded) { return; }
             AgentReferanceIndiciesToRemove.Add(agentDataReferanceIndex);
         }
         internal void RequestPath(NativeArray<AgentReferance> sourceAgentReferances, Vector3 target)
@@ -126,17 +123,34 @@ namespace FlowFieldNavigation
             CostEditRequests.Dispose();
         }
 
+
         void SetAgentRequestedPaths(NativeArray<AgentReferance> sourceAgentRefs, int requestedPathIndex)
         {
-            NativeArray<AgentDataReferance> agentDataReferances = _navigationManager.AgentReferanceManager.AgentDataReferances.AsArray();
-            NativeArray<int> agentRequestedPathIndicies = _navigationManager.AgentDataContainer.AgentRequestedPathIndicies.AsArray();
+            NativeArray<int> agentDataRefWriteIndicies = _navigationManager.AgentReferanceManager.AgentDataReferanceWriteIndicies.AsArray();
 
+            SetAgentDataWrites(sourceAgentRefs);
             for (int i = 0; i < sourceAgentRefs.Length; i++)
             {
-                AgentReferance sourceAgentReferance = sourceAgentRefs[i];
-                AgentDataReferance agentDataReferance = agentDataReferances[sourceAgentReferance.GetIndexNonchecked()];
-                int agentDataIndex = agentDataReferance.GetIndexNonchecked();
-                agentRequestedPathIndicies[agentDataIndex] = requestedPathIndex;
+                AgentReferance sourceAgentRef = sourceAgentRefs[i];
+                int agentDataRefIndex = sourceAgentRef.GetIndexNonchecked();
+                int writeIndex = agentDataRefWriteIndicies[agentDataRefIndex];
+                AgentDataWrite dataWrite = AgentDataWrites[writeIndex];
+                dataWrite.SetReqPathIndex(requestedPathIndex);
+                AgentDataWrites[writeIndex] = dataWrite;
+            }
+        }
+        void SetAgentDataWrites(NativeArray<AgentReferance> agentReferances)
+        {
+            NativeArray<int> agentDataRefWriteIndicies = _navigationManager.AgentReferanceManager.AgentDataReferanceWriteIndicies.AsArray();
+            for (int i = 0; i < agentReferances.Length; i++)
+            {
+                int agentDataRefIndex = agentReferances[i].GetIndexNonchecked();
+                if (agentDataRefWriteIndicies[agentDataRefIndex] == -1)
+                {
+                    AgentDataWrite dataWrite = new AgentDataWrite(agentDataRefIndex);
+                    AgentDataWrites.Add(dataWrite);
+                    agentDataRefWriteIndicies[agentDataRefIndex] = AgentDataWrites.Length - 1;
+                }
             }
         }
     }

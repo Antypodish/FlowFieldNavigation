@@ -38,7 +38,6 @@ namespace FlowFieldNavigation
                 AgentFlockIndicies = agentDataContainer.AgentFlockIndicies,
                 AgentNewPathIndicies = agentDataContainer.AgentNewPathIndicies,
                 AgentRadii = agentDataContainer.AgentRadii,
-                AgentRequestedPathIndicies = agentDataContainer.AgentRequestedPathIndicies,
                 AgentUseNavigationMovementFlags = agentDataContainer.AgentUseNavigationMovementFlags,
                 SubReqAgentDataRefIndiciesValidityFlags = _subReqAgentDataRefIndiciesValidityFlags.AsArray(),
             };

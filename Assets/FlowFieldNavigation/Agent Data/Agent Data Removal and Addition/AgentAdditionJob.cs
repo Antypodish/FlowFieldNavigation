@@ -20,7 +20,6 @@ namespace FlowFieldNavigation
         internal NativeList<bool> AgentUseNavigationMovementFlags;
         internal NativeList<bool> AgentDestinationReachedArray;
         internal NativeList<int> AgentFlockIndicies;
-        internal NativeList<int> AgentRequestedPathIndicies;
         internal NativeList<int> AgentNewPathIndicies;
         internal NativeList<int> AgentCurPathIndicies;
 
@@ -51,7 +50,6 @@ namespace FlowFieldNavigation
                 AgentDataList.Add(data);
                 AgentNewPathIndicies.Add(-1);
                 AgentCurPathIndicies.Add(-1);
-                AgentRequestedPathIndicies.Add(-1);
                 AgentFlockIndicies.Add(0);
                 AgentDestinationReachedArray.Add(false);
                 AgentUseNavigationMovementFlags.Add(true);

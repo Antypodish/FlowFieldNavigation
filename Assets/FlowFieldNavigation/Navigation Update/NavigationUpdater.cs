@@ -74,8 +74,8 @@ namespace FlowFieldNavigation
             NativeList<SetSpeedReq> setSpeedRequests = _requestAccumulator.SetSpeedRequests;
 
             _navigationManager.AgentAdditionSystem.AddAgents(subReqAgentDataRefIndicies.AsArray(), subReqAgentInputs.AsArray(), subReqAgentTransforms);
+            _navigationManager.AgentDataWriteSystem.WriteData();
             _navigationManager.AgentRemovingSystem.RemoveAgents(agentReferanceIndiciesToRemove.AsArray());
-            //_navigationManager.AgentDataWriteSystem.WriteData();
             _navigationManager.PathDataContainer.Update();
 
             NativeArray<IslandFieldProcessor> islandFieldProcessors = _navigationManager.FieldDataContainer.GetAllIslandFieldProcessors(Allocator.Persistent);

@@ -9,7 +9,7 @@ namespace FlowFieldNavigation
     internal struct AgentRemovalPathRequestCleanupJob : IJob
     {
         [ReadOnly] internal NativeArray<int> AgentRemovalMarks;
-        internal NativeList<int> AgentRequestedPathIndicies;
+        internal NativeList<int> AgentNewPathIndicies;
         internal NativeArray<PathRequest> PathRequests;
         public void Execute()
         {
@@ -34,12 +34,12 @@ namespace FlowFieldNavigation
                 }
             }
 
-            for (int agentIndex = 0; agentIndex < AgentRequestedPathIndicies.Length; agentIndex++)
+            for (int agentIndex = 0; agentIndex < AgentNewPathIndicies.Length; agentIndex++)
             {
-                int requestedPathIndex = AgentRequestedPathIndicies[agentIndex];
+                int requestedPathIndex = AgentNewPathIndicies[agentIndex];
                 if (requestedPathIndex == -1) { continue; }
                 PathRequest request = PathRequests[requestedPathIndex];
-                if (request.Type == DestinationType.None) { AgentRequestedPathIndicies[agentIndex] = -1; }
+                if (request.Type == DestinationType.None) { AgentNewPathIndicies[agentIndex] = -1; }
             }
         }
     }

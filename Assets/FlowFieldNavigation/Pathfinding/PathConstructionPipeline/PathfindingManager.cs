@@ -145,7 +145,6 @@ namespace FlowFieldNavigation
             _currentPathSourceCount.Value = 0;
 
             TransformAccessArray agentTransforms = _navigationManager.AgentDataContainer.AgentTransforms;
-            NativeArray<int> agentRequestedPathIndicies = _navigationManager.AgentDataContainer.AgentRequestedPathIndicies.AsArray();
             NativeArray<float> agentRadii = _navigationManager.AgentDataContainer.AgentRadii.AsArray();
             NativeArray<int> agentNewPathIndicies = _navigationManager.AgentDataContainer.AgentNewPathIndicies.AsArray();
             NativeArray<int> agentCurPathIndicies = _navigationManager.AgentDataContainer.AgentCurPathIndicies.AsArray();
@@ -185,14 +184,6 @@ namespace FlowFieldNavigation
                 Destination = requestedPathsAsArray,
             };
             requestCopyForParallelUse.Schedule().Complete();
-
-            //TRANSFER REQUESTED PATHS TO NEW PATHS
-            RequestedToNewPathIndexTransferJob copyRequestedPathIndexToNewPathIndex = new RequestedToNewPathIndexTransferJob()
-            {
-                AgentRequestedPathIndicies = agentRequestedPathIndicies,
-                AgentNewPathIndicies = agentNewPathIndicies,
-            };
-            copyRequestedPathIndexToNewPathIndex.Schedule().Complete();
 
             //Get cost field costs
             UnsafeListReadOnly<byte>[] costFielCosts = _navigationManager.GetAllCostFieldCostsAsUnsafeListReadonly();
