@@ -50,6 +50,15 @@ namespace FlowFieldNavigation
             if(_navigationManager == null) { return; }
             _navigationManager.Interface.SetUseNavigationMovementFlag(this, set);
         }
+        internal AgentInput GetAgentInput()
+        {
+            return new AgentInput()
+            {
+                LandOffset = LandOffset,
+                Speed = Speed,
+                Radius = Radius,
+            };
+        }
         private void OnDestroy()
         {
             RequestUnsubscription();

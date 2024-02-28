@@ -48,19 +48,19 @@ namespace FlowFieldNavigation
             AgentUseNavigationMovementFlags.Dispose();
             AgentReferanceIndicies.Dispose();
         }
-        public int Subscribe(FlowFieldAgent agent)
+        public int Subscribe(AgentInput agentInput, Transform agentTransform)
         {
             int agentDataIndex = AgentDataList.Length;
             AgentData data = new AgentData()
             {
-                Speed = agent.Speed,
+                Speed = agentInput.Speed,
                 Status = 0,
                 Destination = Vector2.zero,
                 Direction = Vector2.zero,
-                LandOffset = agent.LandOffset,
+                LandOffset = agentInput.LandOffset,
             };
-            AgentRadii.Add(Mathf.Min(agent.Radius, FlowFieldUtilities.MaxAgentSize));
-            AgentTransforms.Add(agent.transform);
+            AgentRadii.Add(Mathf.Min(agentInput.Radius, FlowFieldUtilities.MaxAgentSize));
+            AgentTransforms.Add(agentTransform);
             AgentDataList.Add(data);
             AgentNewPathIndicies.Add(-1);
             AgentCurPathIndicies.Add(-1);

@@ -57,7 +57,9 @@ namespace FlowFieldNavigation
             int newAgentDataReferanceIndex = _navigationManager.AgentReferanceManager.CreateAgentReferance();
             agent._navigationManager = _navigationManager;
             agent.AgentReferance = new AgentReferance(newAgentDataReferanceIndex);
-            _navigationManager.RequestAccumulator.RequestAgentAddition(agent, newAgentDataReferanceIndex);
+            AgentInput agentInput = agent.GetAgentInput();
+            Transform agentTransform = agent.transform;
+            _navigationManager.RequestAccumulator.RequestAgentAddition(agentInput, agentTransform, newAgentDataReferanceIndex);
         }
         public void RequestUnsubscription(FlowFieldAgent agent)
         {

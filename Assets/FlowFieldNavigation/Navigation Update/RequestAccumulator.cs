@@ -11,8 +11,9 @@ namespace FlowFieldNavigation
     {
         FlowFieldNavigationManager _navigationManager;
 
-        internal List<FlowFieldAgent> AgentAddRequest;
-        internal NativeList<int> SubscriptionRequestedAgentDataReferanceIndicies;
+        internal NativeList<AgentInput> SubReqAgentInputs;
+        internal List<Transform> SubReqAgentTransforms;
+        internal NativeList<int> SubReqAgentDataRefIndicies;
         internal NativeList<int> AgentReferanceIndiciesToRemove;
         internal NativeList<PathRequest> PathRequests;
         internal NativeList<CostEdit> CostEditRequests;
@@ -22,19 +23,21 @@ namespace FlowFieldNavigation
         internal RequestAccumulator(FlowFieldNavigationManager navigationManager)
         {
             _navigationManager = navigationManager;
-            AgentAddRequest = new List<FlowFieldAgent>();
             AgentReferanceIndiciesToRemove = new NativeList<int>(Allocator.Persistent);
             PathRequests = new NativeList<PathRequest>(Allocator.Persistent);
             CostEditRequests = new NativeList<CostEdit>(Allocator.Persistent);
             AgentIndiciesToSetHoldGround = new NativeList<int>(Allocator.Persistent);
             AgentIndiciesToStop = new NativeList<int>(Allocator.Persistent);
             SetSpeedRequests = new NativeList<SetSpeedReq>(Allocator.Persistent);
-            SubscriptionRequestedAgentDataReferanceIndicies = new NativeList<int>(Allocator.Persistent);
+            SubReqAgentDataRefIndicies = new NativeList<int>(Allocator.Persistent);
+            SubReqAgentInputs = new NativeList<AgentInput>(Allocator.Persistent);
+            SubReqAgentTransforms = new List<Transform>();
         }
-        internal void RequestAgentAddition(FlowFieldAgent agent, int agentDataReferanceIndex)
+        internal void RequestAgentAddition(AgentInput agentInput, Transform agentTransform, int agentDataReferanceIndex)
         {
-            SubscriptionRequestedAgentDataReferanceIndicies.Add(agentDataReferanceIndex);
-            AgentAddRequest.Add(agent);
+            SubReqAgentDataRefIndicies.Add(agentDataReferanceIndex);
+            SubReqAgentInputs.Add(agentInput);
+            SubReqAgentTransforms.Add(agentTransform);
         }
         internal void RequestAgentRemoval(AgentReferance agentReferance)
         {
@@ -116,9 +119,6 @@ namespace FlowFieldNavigation
         }
         internal void DisposeAll()
         {
-            AgentAddRequest.Clear();
-            AgentAddRequest.TrimExcess();
-            AgentAddRequest = null;
             PathRequests.Dispose();
             CostEditRequests.Dispose();
         }

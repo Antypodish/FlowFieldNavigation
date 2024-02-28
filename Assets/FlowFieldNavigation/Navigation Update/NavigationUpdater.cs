@@ -63,8 +63,9 @@ namespace FlowFieldNavigation
             _pathfindingManager.ForceComplete();
             _movementManager.SendRoutineResults(_updateFrequency);
             _pathfindingManager.TransferNewPathsToCurPaths();
-            List<FlowFieldAgent> agentAddRequest = _requestAccumulator.AgentAddRequest;
-            NativeList<int> subReqAgentDataRefIndicies = _requestAccumulator.SubscriptionRequestedAgentDataReferanceIndicies;
+            NativeList<int> subReqAgentDataRefIndicies = _requestAccumulator.SubReqAgentDataRefIndicies;
+            NativeList<AgentInput> subReqAgentInputs = _requestAccumulator.SubReqAgentInputs;
+            List<Transform> subReqAgentTransforms = _requestAccumulator.SubReqAgentTransforms;
             NativeList<int> agentReferanceIndiciesToRemove = _requestAccumulator.AgentReferanceIndiciesToRemove;
             NativeList<PathRequest> pathRequests = _requestAccumulator.PathRequests;
             NativeList<CostEdit> costEditRequests = _requestAccumulator.CostEditRequests;
@@ -75,7 +76,7 @@ namespace FlowFieldNavigation
             _navigationManager.AgentStatChangeSystem.SetAgentsHoldGround(agentsToHoldGround.AsArray());
             _navigationManager.AgentStatChangeSystem.SetAgentsStopped(agentsToStop.AsArray());
             _navigationManager.AgentStatChangeSystem.SetAgentSpeed(setSpeedRequests.AsArray());
-            _navigationManager.AgentAdditionSystem.AddAgents(agentAddRequest, subReqAgentDataRefIndicies);
+            _navigationManager.AgentAdditionSystem.AddAgents(subReqAgentDataRefIndicies, subReqAgentInputs, subReqAgentTransforms);
             _navigationManager.AgentRemovingSystem.RemoveAgents(agentReferanceIndiciesToRemove.AsArray());
             _navigationManager.PathDataContainer.Update();
 
@@ -86,8 +87,9 @@ namespace FlowFieldNavigation
 
             pathRequests.Clear();
             costEditRequests.Clear();
-            agentAddRequest.Clear();
             subReqAgentDataRefIndicies.Clear();
+            subReqAgentInputs.Clear();
+            subReqAgentTransforms.Clear();
             agentReferanceIndiciesToRemove.Clear();
             agentsToHoldGround.Clear();
             agentsToStop.Clear();
