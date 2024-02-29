@@ -7,15 +7,14 @@ using System.Diagnostics;
 using FlowFieldNavigation;
 public class CostEditController
 {
+    GameObject ObstaclePrefab;
     FlowFieldNavigationManager _navigationManager;
-    float2 halfSize = new float2(1.5f, 1.5f);
     List<GameObject> obstacles;
-    NativeList<int> _obstacleKeys;
-    public CostEditController(FlowFieldNavigationManager navigationManager)
+    public CostEditController(FlowFieldNavigationManager navigationManager, GameObject obstaclePrefab)
     {
         _navigationManager = navigationManager;
         obstacles = new List<GameObject>();
-        _obstacleKeys = new NativeList<int>(Allocator.Persistent);
+        ObstaclePrefab = obstaclePrefab;
     }
     public void SetObstacle()
     {
@@ -24,23 +23,10 @@ public class CostEditController
         if (Physics.Raycast(ray, out hit, int.MaxValue, 8))
         {
             Vector3 pos = hit.point;
-            float2 editPos = new float2(pos.x, pos.z);
-            NativeArray<ObstacleRequest> obstacleRequestsTemp = new NativeArray<ObstacleRequest>(1, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
-            for(int i = 0; i < obstacleRequestsTemp.Length; i++)
-            {
-                obstacleRequestsTemp[i] = new ObstacleRequest()
-                {
-                    Position = editPos,
-                    HalfSize = halfSize,
-                };
-            }
-            _navigationManager.Interface.SetObstacle(obstacleRequestsTemp, _obstacleKeys);
-            obstacleRequestsTemp.Dispose();
-            GameObject obstacleCube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            obstacleCube.transform.localScale = new Vector3(halfSize.x, 0f, halfSize.y) * 2 + new Vector3(0, 1f, 0);
-            obstacleCube.transform.position = pos;
-
-            obstacles.Add(obstacleCube);
+            GameObject obstacleObject = GameObject.Instantiate(ObstaclePrefab);
+            obstacleObject.transform.position = pos;
+            _navigationManager.Interface.SetObstacle(obstacleObject.GetComponent<FlowFieldDynamicObstacle>());
+            obstacles.Add(obstacleObject);
         }
     }
 }

@@ -81,36 +81,16 @@ namespace FlowFieldNavigation
             AgentDataWrites[agentDataWriteIndex] = dataWrite;
         }
 
-        internal void HandleObstacleRequest(NativeArray<ObstacleRequest> obstacleRequests, NativeList<int> outputListToAddObstacleIndicies)
+        internal int HandleObstacleRequestAndGetIndex(ObstacleRequest obstacleRequest)
         {
-            ObstacleRequestToCostEdit obstacleToEdit = new ObstacleRequestToCostEdit()
-            {
-                TileSize = FlowFieldUtilities.TileSize,
-                FieldColAmount = FlowFieldUtilities.FieldColAmount,
-                FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
-                FieldMaxXExcluding = FlowFieldUtilities.FieldMaxXExcluding,
-                FieldMaxYExcluding = FlowFieldUtilities.FieldMaxYExcluding,
-                FieldMinXIncluding = FlowFieldUtilities.FieldMinXIncluding,
-                FieldMinYIncluding = FlowFieldUtilities.FieldMinYIncluding,
-                FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
-                CostEditOutput = CostEditRequests,
-                ObstacleRequests = obstacleRequests,
-                NewObstacleKeyListToAdd = outputListToAddObstacleIndicies,
-                ObstacleList = _navigationManager.FieldDataContainer.ObstacleContainer.ObstacleList,
-                RemovedObstacleIndexList = _navigationManager.FieldDataContainer.ObstacleContainer.RemovedIndexList,
-            };
-            obstacleToEdit.Schedule().Complete();
+            (int obstacleIndex, CostEdit costEdit) = _navigationManager.FieldDataContainer.ObstacleContainer.AddObstacleAndGetIndexAndCostEdit(obstacleRequest);
+            CostEditRequests.Add(costEdit);
+            return obstacleIndex;
         }
-        internal void HandleObstacleRemovalRequest(NativeArray<int>.ReadOnly obstacleIndiciesToRemove)
+        internal void HandleObstacleRemovalRequest(int obstacleIndex)
         {
-            ObstacleRemovalRequestToCostEdit obstacleToEdit = new ObstacleRemovalRequestToCostEdit()
-            {
-                CostEditOutput = CostEditRequests,
-                ObstacleRemovalIndicies = obstacleIndiciesToRemove,
-                ObstacleList = _navigationManager.FieldDataContainer.ObstacleContainer.ObstacleList,
-                RemovedObstacleIndexList = _navigationManager.FieldDataContainer.ObstacleContainer.RemovedIndexList,
-            };
-            obstacleToEdit.Schedule().Complete();
+            CostEdit removalCostEdit = _navigationManager.FieldDataContainer.ObstacleContainer.RemoveObstacleAndGetCostEdit(obstacleIndex);
+            CostEditRequests.Add(removalCostEdit);
         }
         internal void DisposeAll()
         {

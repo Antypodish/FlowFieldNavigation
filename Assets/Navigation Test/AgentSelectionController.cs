@@ -13,6 +13,7 @@ public class AgentSelectionController : MonoBehaviour
 
     [SerializeField] int _startingAgentCount;
     [SerializeField] GameObject _agentPrefab;
+    [SerializeField] GameObject _obstaclePrefab;
     [SerializeField] FlowFieldNavigationManager _navigationManager;
     [SerializeField] EditorDebuggingController _navigationDebugger;
     [SerializeField] Material _normalAgentMaterial;
@@ -30,7 +31,7 @@ public class AgentSelectionController : MonoBehaviour
         _agentsToCreate = _startingAgentCount;
         _agentSelector = new AgentBoundSelector(_selectionBox);
         _agentFactory = new AgentFactory(_agentPrefab, _navigationManager);
-        _costEditController = new CostEditController(_navigationManager);
+        _costEditController = new CostEditController(_navigationManager, _obstaclePrefab);
         _state = ControllerState.SingleSelection;
     }
     private void Update()

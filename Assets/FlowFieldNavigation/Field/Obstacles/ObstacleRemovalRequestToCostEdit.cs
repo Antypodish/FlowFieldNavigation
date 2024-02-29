@@ -13,7 +13,7 @@ namespace FlowFieldNavigation
         internal NativeList<CostEdit> CostEditOutput;
         internal NativeList<Obstacle> ObstacleList;
         internal NativeList<int> RemovedObstacleIndexList;
-
+         
         public void Execute()
         {
             for (int i = 0; i < ObstacleRemovalIndicies.Length; i++)

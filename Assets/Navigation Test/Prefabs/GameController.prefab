@@ -47,7 +47,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 373c38d5727487d4d85850cc47469165, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _pathfindingManager: {fileID: 0}
+  _navigationManager: {fileID: 0}
   _agentSelectionController: {fileID: 5836007236481813446}
   _debugUIDoc: {fileID: 5836007236481813447}
 --- !u!114 &5836007236481813447
@@ -79,12 +79,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41f44e5c3e18bed4e98a5c39ad784199, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SelectedAgents: []
   DebuggableAgent: {fileID: 0}
   _startingAgentCount: 0
   _agentPrefab: {fileID: 2010554042057534779, guid: 5b8107cfe6c808547b1890d4dca1b9f7,
     type: 3}
-  _pathfindingManager: {fileID: 0}
+  _obstaclePrefab: {fileID: 813683435721029052, guid: 4dfa1958dc602ed48881738b25770cb3,
+    type: 3}
+  _navigationManager: {fileID: 0}
   _navigationDebugger: {fileID: 0}
   _normalAgentMaterial: {fileID: 2100000, guid: 3aa0b16bbf3d8244a9db1a9369ce06d2,
     type: 2}

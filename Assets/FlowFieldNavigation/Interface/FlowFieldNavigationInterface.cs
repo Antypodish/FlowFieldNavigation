@@ -44,15 +44,20 @@ namespace FlowFieldNavigation
             if (_extracedAgentReferances.Length == 0 || !targetAgentRef.IsValid()) { return; }
             _navigationManager.RequestAccumulator.RequestPath(_extracedAgentReferances.AsArray(), targetAgentRef);
         }
-        public void SetObstacle(NativeArray<ObstacleRequest> obstacleRequests, NativeList<int> outputListToAddObstacleIndicies)
+        public void SetObstacle(FlowFieldDynamicObstacle dynamicObstacle)
         {
             if (!_navigationManager.SimulationStarted) { return; }
-            _navigationManager.RequestAccumulator.HandleObstacleRequest(obstacleRequests, outputListToAddObstacleIndicies);
+            if(dynamicObstacle.ObstacleIndex != -1) { return; }
+            dynamicObstacle._navManager = _navigationManager;
+            dynamicObstacle.ObstacleIndex = _navigationManager.RequestAccumulator.HandleObstacleRequestAndGetIndex(dynamicObstacle.GetObstacleRequest());
         }
-        public void RemoveObstacle(NativeArray<int>.ReadOnly obstaclesToRemove)
+        public void RemoveObstacle(FlowFieldDynamicObstacle dynamicObstacle)
         {
             if (!_navigationManager.SimulationStarted) { return; }
-            _navigationManager.RequestAccumulator.HandleObstacleRemovalRequest(obstaclesToRemove);
+            int obstacleIndex = dynamicObstacle.ObstacleIndex;
+            if (obstacleIndex == -1) { return; }
+            dynamicObstacle.ObstacleIndex = -1;
+            _navigationManager.RequestAccumulator.HandleObstacleRemovalRequest(obstacleIndex);
         }
         public void RequestSubscription(FlowFieldAgent agent)
         {

@@ -14,8 +14,4 @@ using System;
 using UnityEngine.Jobs;
 public class testjob : MonoBehaviour
 {
-    private void Update()
-    {
-
-    }
 }
