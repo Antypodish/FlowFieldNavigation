@@ -69,9 +69,6 @@ namespace FlowFieldNavigation
             NativeList<int> agentReferanceIndiciesToRemove = _requestAccumulator.AgentReferanceIndiciesToRemove;
             NativeList<PathRequest> pathRequests = _requestAccumulator.PathRequests;
             NativeList<CostEdit> costEditRequests = _requestAccumulator.CostEditRequests;
-            NativeList<int> agentsToHoldGround = _requestAccumulator.AgentIndiciesToSetHoldGround;
-            NativeList<int> agentsToStop = _requestAccumulator.AgentIndiciesToStop;
-            NativeList<SetSpeedReq> setSpeedRequests = _requestAccumulator.SetSpeedRequests;
 
             _navigationManager.AgentAdditionSystem.AddAgents(subReqAgentDataRefIndicies.AsArray(), subReqAgentInputs.AsArray(), subReqAgentTransforms);
             _navigationManager.AgentDataWriteSystem.WriteData();
@@ -89,9 +86,6 @@ namespace FlowFieldNavigation
             subReqAgentInputs.Clear();
             subReqAgentTransforms.Clear();
             agentReferanceIndiciesToRemove.Clear();
-            agentsToHoldGround.Clear();
-            agentsToStop.Clear();
-            setSpeedRequests.Clear();
         }
         int SetTimerAndGetUpdateCount()
         {

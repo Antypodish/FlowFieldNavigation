@@ -17,9 +17,6 @@ namespace FlowFieldNavigation
         internal NativeList<int> AgentReferanceIndiciesToRemove;
         internal NativeList<PathRequest> PathRequests;
         internal NativeList<CostEdit> CostEditRequests;
-        internal NativeList<int> AgentIndiciesToSetHoldGround;
-        internal NativeList<int> AgentIndiciesToStop;
-        internal NativeList<SetSpeedReq> SetSpeedRequests;
         internal NativeList<AgentDataWrite> AgentDataWrites;
         internal RequestAccumulator(FlowFieldNavigationManager navigationManager)
         {
@@ -27,9 +24,6 @@ namespace FlowFieldNavigation
             AgentReferanceIndiciesToRemove = new NativeList<int>(Allocator.Persistent);
             PathRequests = new NativeList<PathRequest>(Allocator.Persistent);
             CostEditRequests = new NativeList<CostEdit>(Allocator.Persistent);
-            AgentIndiciesToSetHoldGround = new NativeList<int>(Allocator.Persistent);
-            AgentIndiciesToStop = new NativeList<int>(Allocator.Persistent);
-            SetSpeedRequests = new NativeList<SetSpeedReq>(Allocator.Persistent);
             SubReqAgentDataRefIndicies = new NativeList<int>(Allocator.Persistent);
             SubReqAgentInputs = new NativeList<AgentInput>(Allocator.Persistent);
             SubReqAgentTransforms = new List<Transform>();
@@ -67,23 +61,24 @@ namespace FlowFieldNavigation
         }
         internal void RequestHoldGround(AgentReferance agentReferance)
         {
-            int agentDataIndex = _navigationManager.AgentReferanceManager.AgentDataReferances[agentReferance.GetIndexNonchecked()].GetIndexNonchecked();
-            AgentIndiciesToSetHoldGround.Add(agentDataIndex);
+            int agentDataWriteIndex = SetAgentDataWriteAndGetIndex(agentReferance);
+            AgentDataWrite dataWrite = AgentDataWrites[agentDataWriteIndex];
+            dataWrite.SetAgentHoldGround();
+            AgentDataWrites[agentDataWriteIndex] = dataWrite;
         }
         internal void RequestStop(AgentReferance agentReferance)
         {
-            int agentDataIndex = _navigationManager.AgentReferanceManager.AgentDataReferances[agentReferance.GetIndexNonchecked()].GetIndexNonchecked();
-            AgentIndiciesToStop.Add(agentDataIndex);
+            int agentDataWriteIndex = SetAgentDataWriteAndGetIndex(agentReferance);
+            AgentDataWrite dataWrite = AgentDataWrites[agentDataWriteIndex];
+            dataWrite.SetAgentStopped();
+            AgentDataWrites[agentDataWriteIndex] = dataWrite;
         }
         internal void RequestSetSpeed(AgentReferance agentReferance, float speed)
         {
-            int agentDataIndex = _navigationManager.AgentReferanceManager.AgentDataReferances[agentReferance.GetIndexNonchecked()].GetIndexNonchecked();
-            SetSpeedReq setSpeedReq = new SetSpeedReq()
-            {
-                NewSpeed = speed,
-                AgentIndex = agentDataIndex,
-            };
-            SetSpeedRequests.Add(setSpeedReq);
+            int agentDataWriteIndex = SetAgentDataWriteAndGetIndex(agentReferance);
+            AgentDataWrite dataWrite = AgentDataWrites[agentDataWriteIndex];
+            dataWrite.SetSpeed(speed);
+            AgentDataWrites[agentDataWriteIndex] = dataWrite;
         }
 
         internal void HandleObstacleRequest(NativeArray<ObstacleRequest> obstacleRequests, NativeList<int> outputListToAddObstacleIndicies)
@@ -152,6 +147,17 @@ namespace FlowFieldNavigation
                     agentDataRefWriteIndicies[agentDataRefIndex] = AgentDataWrites.Length - 1;
                 }
             }
+        }
+        int SetAgentDataWriteAndGetIndex(AgentReferance agentReferance)
+        {
+            int agentDataRefIndex = agentReferance.GetIndexNonchecked();
+            if (_navigationManager.AgentReferanceManager.AgentDataReferanceWriteIndicies[agentDataRefIndex] == -1)
+            {
+                AgentDataWrite dataWrite = new AgentDataWrite(agentDataRefIndex);
+                AgentDataWrites.Add(dataWrite);
+                _navigationManager.AgentReferanceManager.AgentDataReferanceWriteIndicies[agentDataRefIndex] = AgentDataWrites.Length - 1;
+            }
+            return _navigationManager.AgentReferanceManager.AgentDataReferanceWriteIndicies[agentDataRefIndex];
         }
     }
     internal struct SetSpeedReq

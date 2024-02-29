@@ -13,6 +13,7 @@ namespace FlowFieldNavigation
         [ReadOnly] internal NativeArray<AgentDataReferanceState> AgentDataReferanceStates;
         internal NativeArray<int> AgentDataReferanceWriteIndicies;
         internal NativeArray<int> AgentNewPathIndicies;
+        internal NativeArray<AgentData> AgentDataArray;
         public void Execute()
         {
             for(int i = 0; i < AgentDataWrites.Length; i++)
@@ -23,10 +24,20 @@ namespace FlowFieldNavigation
                 if (AgentDataReferanceStates[dataWriteOutput.AgentDataReferanceIndex] == AgentDataReferanceState.Removed) { continue; }
                 AgentDataReferance dataRef = AgentDataReferances[dataWriteOutput.AgentDataReferanceIndex];
                 int dataIndex = dataRef.GetIndexNonchecked();
+                AgentData agentData = AgentDataArray[dataIndex];
                 if((dataWriteOutput.WriteFlags & AgentDataWriteFlags.ReqPathIndexWritten) == AgentDataWriteFlags.ReqPathIndexWritten)
                 {
                     AgentNewPathIndicies[dataIndex] = dataWriteOutput.ReqPathIndex;
                 }
+                if((dataWriteOutput.WriteFlags & AgentDataWriteFlags.StatusWritten) == AgentDataWriteFlags.StatusWritten)
+                {
+                    agentData.Status = dataWriteOutput.AgentStatus;
+                }
+                if ((dataWriteOutput.WriteFlags & AgentDataWriteFlags.SpeedWritten) == AgentDataWriteFlags.SpeedWritten)
+                {
+                    agentData.Speed = dataWriteOutput.Speed;
+                }
+                AgentDataArray[dataIndex] = agentData;
             }
         }
     }

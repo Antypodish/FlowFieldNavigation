@@ -17,6 +17,8 @@ namespace FlowFieldNavigation
             NativeArray<AgentDataReferance> agentDataReferances = _navigationManager.AgentReferanceManager.AgentDataReferances.AsArray();
             NativeArray<int> agentDataReferancesWriteIndicies = _navigationManager.AgentReferanceManager.AgentDataReferanceWriteIndicies.AsArray();
             NativeArray<int> agentNewPathIndicies = _navigationManager.AgentDataContainer.AgentNewPathIndicies.AsArray();
+            NativeArray<AgentData> agentDataArray = _navigationManager.AgentDataContainer.AgentDataList.AsArray();
+
             AgentDataWriteTransferJob writeTransferJob = new AgentDataWriteTransferJob()
             {
                 AgentDataWrites = agentDataWrites.AsArray(),
@@ -24,7 +26,7 @@ namespace FlowFieldNavigation
                 AgentDataReferances = agentDataReferances,
                 AgentDataReferanceWriteIndicies = agentDataReferancesWriteIndicies,
                 AgentNewPathIndicies = agentNewPathIndicies,
-                
+                AgentDataArray = agentDataArray,
             };
             writeTransferJob.Schedule().Complete();
 
