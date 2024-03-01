@@ -42,6 +42,21 @@ namespace FlowFieldNavigation
             int dataIndex = AgentDataReferances[agentDataReferanceIndex].GetIndexNonchecked();
             return dataIndex;
         }
+        internal bool TryAgentDataReferanceIndexToAgentDataIndex(int agentDataReferanceIndex, out int agentDataIndex)
+        {
+            if (AgentDataRefStates[agentDataReferanceIndex] == AgentDataReferanceState.BeingAdded)
+            {
+                agentDataIndex = -1;
+                return false;
+            }
+            agentDataIndex = AgentDataReferances[agentDataReferanceIndex].GetIndexNonchecked();
+            return true;
+        }
+        internal AgentDataReferance GetAgentDataRefWithState(int agentDataRefIndex, out AgentDataReferanceState state)
+        {
+            state = AgentDataRefStates[agentDataRefIndex];
+            return AgentDataReferances[agentDataRefIndex];
+        }
     }
     internal enum AgentDataReferanceState : byte
     {

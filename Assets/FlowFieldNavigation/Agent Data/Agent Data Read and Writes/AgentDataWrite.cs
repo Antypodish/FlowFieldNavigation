@@ -43,6 +43,21 @@
             _speed = speed;
             _writeFlags |= AgentDataWriteFlags.SpeedWritten;
         }
+        internal bool GetStatusIfWritten(out AgentStatus status)
+        {
+            status = _agentStatus;
+            return (_writeFlags & AgentDataWriteFlags.StatusWritten) == AgentDataWriteFlags.StatusWritten;
+        }
+        internal bool GetSpeedIfWritten(out float speed)
+        {
+            speed = _speed;
+            return (_writeFlags & AgentDataWriteFlags.SpeedWritten) == AgentDataWriteFlags.SpeedWritten;
+        }
+        internal bool GetNavMovementFlagIfWritten(out bool navMovementFlag)
+        {
+            navMovementFlag = _navigationMovementFlag;
+            return (_writeFlags & AgentDataWriteFlags.NavigationMovementFlagWritten) == AgentDataWriteFlags.NavigationMovementFlagWritten;
+        }
         internal AgentDataWriteOutput GetOutput()
         {
             return new AgentDataWriteOutput()

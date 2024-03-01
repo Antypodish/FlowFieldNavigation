@@ -23,6 +23,7 @@ namespace FlowFieldNavigation
         internal AgentAdditionSystem AgentAdditionSystem;
         internal AgentRemovingSystem AgentRemovingSystem;
         internal AgentDataWriteSystem AgentDataWriteSystem;
+        internal AgentDataReadSystem AgentDataReadSystem;
         NavigationUpdater _navigationUpdater;
         void Awake()
         {
@@ -107,6 +108,7 @@ namespace FlowFieldNavigation
             FieldImmediateQueryManager = new FieldImmediateQueryManager(this);
             AgentReferanceManager = new AgentDataReferanceManager();
             AgentAdditionSystem = new AgentAdditionSystem(this);
+            AgentDataReadSystem = new AgentDataReadSystem(this);
         }
         public void StopSimulation()
         {
