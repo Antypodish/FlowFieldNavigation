@@ -6,12 +6,16 @@ namespace FlowFieldNavigation
     internal class ObstacleContainer
     {
         internal NativeList<Obstacle> ObstacleList;
+        internal NativeList<ObstacleState> ObstacleStates;
+        internal NativeList<float2x4> ObstacleCorners;
         internal NativeList<int> RemovedIndexList;
 
         internal ObstacleContainer()
         {
             ObstacleList = new NativeList<Obstacle>(Allocator.Persistent);
             RemovedIndexList = new NativeList<int>(Allocator.Persistent);
+            ObstacleStates = new NativeList<ObstacleState>(Allocator.Persistent);
+            ObstacleCorners = new NativeList<float2x4>(Allocator.Persistent);
         }
 
         internal (int obstacleIndex, CostEdit costEdit) AddObstacleAndGetIndexAndCostEdit(ObstacleRequest obstacleRequest)
@@ -31,6 +35,8 @@ namespace FlowFieldNavigation
 
             float2 botLeft = pos2d - halfSize;
             float2 topRight = pos2d + halfSize;
+            float2 topLeft = pos2d + new float2(-halfSize.x, halfSize.y);
+            float2 botRight = pos2d + new float2(halfSize.x, -halfSize.y);
             int2 botLeftBound = FlowFieldUtilities.PosTo2D(botLeft, tileSize, fieldGridStartPos);
             int2 toprightBound = FlowFieldUtilities.PosTo2D(topRight, tileSize, fieldGridStartPos);
             botLeftBound.x = math.select(botLeftBound.x, 0, botLeftBound.x < 0);
@@ -42,7 +48,6 @@ namespace FlowFieldNavigation
             {
                 BotLeftBound = botLeftBound,
                 TopRightBound = toprightBound,
-                State = ObstacleState.Live,
             };
 
             CostEdit newCostEdit = new CostEdit()
@@ -52,25 +57,36 @@ namespace FlowFieldNavigation
                 EditType = CostEditType.Set,
             };
 
+            float2x4 corners = new float2x4()
+            {
+                c0 = botLeft,
+                c1 = topLeft,
+                c2 = topRight,
+                c3 = botRight,
+            };
+
             int newObstacleIndex;
             if (RemovedIndexList.IsEmpty)
             {
                 newObstacleIndex = ObstacleList.Length;
                 ObstacleList.Add(newObstacle);
+                ObstacleStates.Add(ObstacleState.Live);
+                ObstacleCorners.Add(corners);
             }
             else
             {
                 newObstacleIndex = RemovedIndexList[0];
                 RemovedIndexList.RemoveAtSwapBack(0);
                 ObstacleList[newObstacleIndex] = newObstacle;
+                ObstacleStates[newObstacleIndex] = ObstacleState.Live;
+                ObstacleCorners[newObstacleIndex] = corners;
             }
             return (newObstacleIndex, newCostEdit);
         }
         internal CostEdit RemoveObstacleAndGetCostEdit(int obstacleIndex)
         {
             Obstacle obstacleToRemove = ObstacleList[obstacleIndex];
-            obstacleToRemove.State = ObstacleState.Removed;
-            ObstacleList[obstacleIndex] = obstacleToRemove;
+            ObstacleStates[obstacleIndex] = ObstacleState.Removed;
             RemovedIndexList.Add(obstacleIndex);
             return new CostEdit()
             {
@@ -85,5 +101,9 @@ namespace FlowFieldNavigation
             RemovedIndexList.Dispose();
         }
     }
-
+}
+internal enum ObstacleState : byte
+{
+    Live,
+    Removed,
 }

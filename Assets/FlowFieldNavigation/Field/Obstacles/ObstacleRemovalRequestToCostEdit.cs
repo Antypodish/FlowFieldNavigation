@@ -12,6 +12,7 @@ namespace FlowFieldNavigation
         internal NativeArray<int>.ReadOnly ObstacleRemovalIndicies;
         internal NativeList<CostEdit> CostEditOutput;
         internal NativeList<Obstacle> ObstacleList;
+        internal NativeList<ObstacleState> ObstacleStates;
         internal NativeList<int> RemovedObstacleIndexList;
          
         public void Execute()
@@ -20,10 +21,10 @@ namespace FlowFieldNavigation
             {
                 int indexToRemove = ObstacleRemovalIndicies[i];
                 if (indexToRemove < 0 || indexToRemove >= ObstacleList.Length) { continue; }
+                ObstacleState obstacleState = ObstacleStates[indexToRemove];
+                if (obstacleState == ObstacleState.Removed) { continue; }
+                ObstacleStates[indexToRemove] = ObstacleState.Removed;
                 Obstacle obstacleToRemove = ObstacleList[indexToRemove];
-                if (obstacleToRemove.State == ObstacleState.Removed) { continue; }
-                obstacleToRemove.State = ObstacleState.Removed;
-                ObstacleList[indexToRemove] = obstacleToRemove;
                 RemovedObstacleIndexList.Add(indexToRemove);
                 CostEdit removeEdit = new CostEdit()
                 {

@@ -24,6 +24,7 @@ namespace FlowFieldNavigation
         internal NativeList<int> NewObstacleKeyListToAdd;
 
         internal NativeList<Obstacle> ObstacleList;
+        internal NativeList<ObstacleState> ObstacleStates;
         internal NativeList<int> RemovedObstacleIndexList;
 
         public void Execute()
@@ -48,7 +49,6 @@ namespace FlowFieldNavigation
                 {
                     BotLeftBound = botLeftBound,
                     TopRightBound = toprightBound,
-                    State = ObstacleState.Live,
                 };
 
                 CostEdit newCostEdit = new CostEdit()
@@ -63,12 +63,14 @@ namespace FlowFieldNavigation
                 {
                     newObstacleIndex = ObstacleList.Length;
                     ObstacleList.Add(newObstacle);
+                    ObstacleStates.Add(ObstacleState.Live);
                 }
                 else
                 {
                     newObstacleIndex = RemovedObstacleIndexList[0];
                     RemovedObstacleIndexList.RemoveAtSwapBack(0);
                     ObstacleList[newObstacleIndex] = newObstacle;
+                    ObstacleStates[newObstacleIndex] = ObstacleState.Live;
                 }
 
                 CostEditOutput.Add(newCostEdit);
