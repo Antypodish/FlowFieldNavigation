@@ -269,7 +269,6 @@ namespace FlowFieldNavigation
         }
         float GetGCostBetweenTargetAndTargetNeighbour(int targetNeighbourIndex)
         {
-            //Sometimes portal local index at sector becomes negative. IDK why. Needs to be fixed. Occurs veeeeery rarely.
             int portalLocalIndexAtSector = FlowFieldUtilities.GetLocal1dInSector(PortalNodes[targetNeighbourIndex], _targetSectorIndex1d, SectorMatrixColAmount, SectorColAmount);
             return TargetSectorCosts[portalLocalIndexAtSector].IntegratedCost;
         }
