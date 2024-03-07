@@ -35,13 +35,17 @@ namespace FlowFieldNavigation
             PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
             UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathInfo.PathIndex];
             PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathInfo.PathIndex];
+            PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
             portalTraversalData.PathAdditionSequenceBorderStartIndex.Value = portalTraversalData.PortalSequenceBorders.Length - 1;
             portalTraversalData.NewPickedSectorStartIndex.Value = internalData.PickedSectorList.Length;
 
             FieldGraph pickedFieldGraph = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
-
-            PortalAdditionReductionJob reductionJob = new PortalAdditionReductionJob()
+            CostField costField = _navigationManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset);
+            NewPortalReductionJob reductionJob = new NewPortalReductionJob()
             {
+                FieldColAmount = FlowFieldUtilities.FieldColAmount,
+                FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
+                SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
                 TargetIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition),
                 FieldTileSize = FlowFieldUtilities.TileSize,
                 SectorColAmount = FlowFieldUtilities.SectorColAmount,
@@ -62,6 +66,11 @@ namespace FlowFieldNavigation
                 IslandFields = pickedFieldGraph.IslandFields,
                 SectorStateTable = sectorStateTable,
                 DijkstraStartIndicies = portalTraversalData.DiskstraStartIndicies,
+                SectorToPicked = locationData.SectorToPicked,
+                Costs = costField.Costs,
+                LocalDirections = _navigationManager.FieldDataContainer.GetSectorDirections(),
+                FlowFieldLength = internalData.FlowFieldLength,
+                TargetNeighbourPortalIndicies = portalTraversalData.TargetSectorPortalIndexList,
             };
 
             PortalAdditionTraversalJob travJob = new PortalAdditionTraversalJob()

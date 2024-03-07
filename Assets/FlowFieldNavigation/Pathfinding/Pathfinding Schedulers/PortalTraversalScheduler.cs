@@ -41,7 +41,7 @@ namespace FlowFieldNavigation
             CostField pickedCostField = _navigationManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset);
             FieldGraph pickedFieldGraph = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
 
-            PortalReductionJob reductionJob = new PortalReductionJob()
+            NewPortalReductionJob reductionJob = new NewPortalReductionJob()
             {
                 TargetIndex = destinationIndex,
                 FieldColAmount = FlowFieldUtilities.FieldColAmount,
@@ -69,6 +69,8 @@ namespace FlowFieldNavigation
                 AStarTraverseIndexList = portalTraversalData.AStartTraverseIndexList,
                 IslandFields = pickedFieldGraph.IslandFields,
                 SectorStateTable = sectorStateTable,
+                DijkstraStartIndicies = portalTraversalData.DiskstraStartIndicies,
+                FlowFieldLength = pathInternalData.FlowFieldLength,
             };
 
             //TRAVERSAL
