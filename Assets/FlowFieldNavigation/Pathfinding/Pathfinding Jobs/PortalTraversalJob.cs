@@ -11,9 +11,6 @@ namespace FlowFieldNavigation
     internal struct PortalTraversalJob : IJob
     {
         internal int2 TargetIndex;
-        internal int FieldColAmount;
-        internal int FieldRowAmount;
-        internal float FieldTileSize;
         internal int SectorColAmount;
         internal int SectorMatrixColAmount;
 
@@ -27,9 +24,7 @@ namespace FlowFieldNavigation
         internal NativeReference<int> FlowFieldLength;
         internal NativeList<int> SourcePortals;
 
-        [ReadOnly] internal NativeSlice<float2> SourcePositions;
         [ReadOnly] internal NativeArray<SectorNode> SectorNodes;
-        [ReadOnly] internal NativeArray<int> SecToWinPtrs;
         [ReadOnly] internal NativeArray<WindowNode> WindowNodes;
         [ReadOnly] internal NativeArray<int> WinToSecPtrs;
         [ReadOnly] internal NativeArray<PortalNode> PortalNodes;
@@ -43,7 +38,6 @@ namespace FlowFieldNavigation
             //TARGET DATA
             int2 targetSectorIndex2d = new int2(TargetIndex.x / SectorColAmount, TargetIndex.y / SectorColAmount);
             _targetSectorIndex1d = targetSectorIndex2d.y * SectorMatrixColAmount + targetSectorIndex2d.x;
-            int2 _targetSectorStartIndex2d = targetSectorIndex2d * SectorColAmount;
             if (TargetNeighbourPortalIndicies.Length == 0)
             {
                 AddTargetSector();
@@ -55,12 +49,12 @@ namespace FlowFieldNavigation
             NativeArray<int> sourcePortalsAsArray = SourcePortals.AsArray();
             for (int i = 0; i < sourcePortalsAsArray.Length; i++)
             {
-                PickPortalSequenceFromFastMarching(sourcePortalsAsArray[i]);
+                PickPortalSequenceFromDijkstra(sourcePortalsAsArray[i]);
             }
             PickSectorsFromPortalSequence();
             AddTargetSector();
         }
-        void PickPortalSequenceFromFastMarching(int sourcePortal)
+        void PickPortalSequenceFromDijkstra(int sourcePortal)
         {
             //NOTE: NextIndex of portalTraversalData is used as:
             //1. NextIndex in portalTraversalDataArray

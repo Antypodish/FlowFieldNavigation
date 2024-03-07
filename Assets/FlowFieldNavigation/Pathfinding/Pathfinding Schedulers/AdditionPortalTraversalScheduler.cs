@@ -73,7 +73,7 @@ namespace FlowFieldNavigation
                 TargetNeighbourPortalIndicies = portalTraversalData.TargetSectorPortalIndexList,
             };
 
-            PortalAdditionTraversalJob travJob = new PortalAdditionTraversalJob()
+            NewPortalTraversalJob travJob = new NewPortalTraversalJob()
             {
                 SectorColAmount = FlowFieldUtilities.SectorColAmount,
                 SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
@@ -92,12 +92,13 @@ namespace FlowFieldNavigation
                 FlowFieldLength = internalData.FlowFieldLength,
                 PortalTraversalDataArray = portalTraversalData.PortalTraversalDataArray,
                 SourcePortalIndexList = portalTraversalData.SourcePortalIndexList,
-                IslandFields = pickedFieldGraph.IslandFields,
                 SectorStateTable = sectorStateTable,
                 DijkstraStartIndicies = portalTraversalData.DiskstraStartIndicies,
                 AddedPortalSequenceBorderStartIndex = portalTraversalData.PortalSequenceBorders.Length,
                 SectorWithinLOSState = internalData.SectorWithinLOSState,
                 NewPickedSectorStartIndex = portalTraversalData.NewPickedSectorStartIndex,
+                SectorToPicked = locationData.SectorToPicked,
+                TargetNeighbourPortalIndicies = portalTraversalData.TargetSectorPortalIndexList,
             };
 
             JobHandle reductHandle = reductionJob.Schedule();

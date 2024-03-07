@@ -1,4 +1,5 @@
-﻿using Unity.Collections;
+﻿using Codice.Client.BaseCommands.Download;
+using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -40,6 +41,8 @@ namespace FlowFieldNavigation
             int2 destinationIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition);
             CostField pickedCostField = _navigationManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset);
             FieldGraph pickedFieldGraph = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
+            portalTraversalData.PathAdditionSequenceBorderStartIndex.Value = 0;
+            portalTraversalData.NewPickedSectorStartIndex.Value = pathInternalData.PickedSectorList.Length;
 
             NewPortalReductionJob reductionJob = new NewPortalReductionJob()
             {
@@ -74,21 +77,23 @@ namespace FlowFieldNavigation
             };
 
             //TRAVERSAL
-            PortalTraversalJob traversalJob = new PortalTraversalJob()
+            NewPortalTraversalJob traversalJob = new NewPortalTraversalJob()
             {
-                TargetIndex = destinationIndex,
-                FieldColAmount = FlowFieldUtilities.FieldColAmount,
-                FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
-                FieldTileSize = FlowFieldUtilities.TileSize,
+                Target = destinationIndex,
                 SectorColAmount = FlowFieldUtilities.SectorColAmount,
                 SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+                SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
+                SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
+                LOSRange = FlowFieldUtilities.LOSRange,
+                DijkstraStartIndicies = portalTraversalData.DiskstraStartIndicies,
+                SectorWithinLOSState = pathInternalData.SectorWithinLOSState,
+                NewPickedSectorStartIndex = portalTraversalData.NewPickedSectorStartIndex,
+                AddedPortalSequenceBorderStartIndex = portalTraversalData.PathAdditionSequenceBorderStartIndex.Value,
                 PickedToSector = pathInternalData.PickedSectorList,
                 PortalSequenceBorders = portalTraversalData.PortalSequenceBorders,
                 PortalNodes = pickedFieldGraph.PortalNodes,
-                SecToWinPtrs = pickedFieldGraph.SecToWinPtrs,
                 WindowNodes = pickedFieldGraph.WindowNodes,
                 WinToSecPtrs = pickedFieldGraph.WinToSecPtrs,
-                SourcePositions = sources,
                 PorPtrs = pickedFieldGraph.PorToPorPtrs,
                 SectorNodes = pickedFieldGraph.SectorNodes,
                 PortalSequence = portalTraversalData.PortalSequence,
@@ -97,7 +102,7 @@ namespace FlowFieldNavigation
                 PortalTraversalDataArray = portalTraversalData.PortalTraversalDataArray,
                 TargetNeighbourPortalIndicies = portalTraversalData.TargetSectorPortalIndexList,
                 SectorStateTable = sectorStateTable,
-                SourcePortals = portalTraversalData.SourcePortalIndexList,
+                SourcePortalIndexList = portalTraversalData.SourcePortalIndexList,                
             };
 
             JobHandle reductHandle = reductionJob.Schedule();
