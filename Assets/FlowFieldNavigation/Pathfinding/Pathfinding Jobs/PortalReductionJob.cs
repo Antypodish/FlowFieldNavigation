@@ -27,7 +27,6 @@ namespace FlowFieldNavigation
         internal UnsafeList<PathSectorState> SectorStateTable;
         internal NativeList<int> PickedToSector;
         internal UnsafeList<DijkstraTile> TargetSectorCosts;
-        internal NativeReference<int> FlowFieldLength;
 
         [ReadOnly] internal NativeSlice<float2> SourcePositions;
         [ReadOnly] internal NativeArray<SectorNode> SectorNodes;
@@ -73,7 +72,6 @@ namespace FlowFieldNavigation
 
             if (TargetNeighbourPortalIndicies.Length == 0)
             {
-                AddTargetSector();
                 return;
             }
 
@@ -383,17 +381,6 @@ namespace FlowFieldNavigation
                 }
             }
             return int.MaxValue;
-        }
-        void AddTargetSector()
-        {
-            int sectorTileAmount = SectorColAmount * SectorColAmount;
-            if (SectorToPicked[_targetSectorIndex1d] == 0)
-            {
-                SectorToPicked[_targetSectorIndex1d] = PickedToSector.Length * sectorTileAmount + 1;
-                PickedToSector.Add(_targetSectorIndex1d);
-                SectorStateTable[_targetSectorIndex1d] |= PathSectorState.Included;
-            }
-            FlowFieldLength.Value = PickedToSector.Length * sectorTileAmount + 1;
         }
         //HELPERS
         int GetPortalLocalIndexAtSector(PortalNode portalNode, int sectorIndex, int sectorStartIndex)

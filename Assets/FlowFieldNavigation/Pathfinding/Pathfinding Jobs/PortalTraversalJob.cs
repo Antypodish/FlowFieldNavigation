@@ -40,14 +40,15 @@ namespace FlowFieldNavigation
         int _targetSectorIndex1d;
         public void Execute()
         {
-            if (TargetNeighbourPortalIndicies.Length == 0)
-            {
-                return;
-            }
             //TARGET DATA
             int2 targetSectorIndex2d = new int2(TargetIndex.x / SectorColAmount, TargetIndex.y / SectorColAmount);
             _targetSectorIndex1d = targetSectorIndex2d.y * SectorMatrixColAmount + targetSectorIndex2d.x;
             int2 _targetSectorStartIndex2d = targetSectorIndex2d * SectorColAmount;
+            if (TargetNeighbourPortalIndicies.Length == 0)
+            {
+                AddTargetSector();
+                return;
+            }
             //START GRAPH WALKER
             PortalSequenceBorders.Add(0);
             RunDijkstra();

@@ -63,7 +63,6 @@ namespace FlowFieldNavigation
                 Costs = pickedCostField.Costs,
                 LocalDirections = _navigationManager.FieldDataContainer.GetSectorDirections(),
                 SectorToPicked = locationData.SectorToPicked,
-                FlowFieldLength = pathInternalData.FlowFieldLength,
                 PortalTraversalDataArray = portalTraversalData.PortalTraversalDataArray,
                 SourcePortalIndexList = portalTraversalData.SourcePortalIndexList,
                 TargetNeighbourPortalIndicies = portalTraversalData.TargetSectorPortalIndexList,
