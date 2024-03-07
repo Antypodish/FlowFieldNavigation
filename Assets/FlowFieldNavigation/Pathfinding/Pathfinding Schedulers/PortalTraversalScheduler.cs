@@ -44,7 +44,7 @@ namespace FlowFieldNavigation
             portalTraversalData.PathAdditionSequenceBorderStartIndex.Value = 0;
             portalTraversalData.NewPickedSectorStartIndex.Value = pathInternalData.PickedSectorList.Length;
 
-            NewPortalReductionJob reductionJob = new NewPortalReductionJob()
+            PortalReductionJob reductionJob = new PortalReductionJob()
             {
                 TargetIndex = destinationIndex,
                 FieldColAmount = FlowFieldUtilities.FieldColAmount,
@@ -77,7 +77,7 @@ namespace FlowFieldNavigation
             };
 
             //TRAVERSAL
-            NewPortalTraversalJob traversalJob = new NewPortalTraversalJob()
+            PortalTraversalJob traversalJob = new PortalTraversalJob()
             {
                 Target = destinationIndex,
                 SectorColAmount = FlowFieldUtilities.SectorColAmount,
