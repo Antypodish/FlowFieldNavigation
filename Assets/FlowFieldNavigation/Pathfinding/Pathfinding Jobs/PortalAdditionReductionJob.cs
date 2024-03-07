@@ -7,7 +7,7 @@ using Unity.Burst;
 namespace FlowFieldNavigation
 {
     [BurstCompile]
-    internal partial struct PortalNodeAdditionReductionJob : IJob
+    internal partial struct PortalAdditionReductionJob : IJob
     {
         internal int2 TargetIndex;
         internal float FieldTileSize;

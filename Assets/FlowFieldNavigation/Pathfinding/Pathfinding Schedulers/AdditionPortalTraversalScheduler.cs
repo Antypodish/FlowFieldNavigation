@@ -40,7 +40,7 @@ namespace FlowFieldNavigation
 
             FieldGraph pickedFieldGraph = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
 
-            PortalNodeAdditionReductionJob reductionJob = new PortalNodeAdditionReductionJob()
+            PortalAdditionReductionJob reductionJob = new PortalAdditionReductionJob()
             {
                 TargetIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition),
                 FieldTileSize = FlowFieldUtilities.TileSize,
@@ -64,7 +64,7 @@ namespace FlowFieldNavigation
                 DijkstraStartIndicies = portalTraversalData.DiskstraStartIndicies,
             };
 
-            PortalNodeAdditionTraversalJob travJob = new PortalNodeAdditionTraversalJob()
+            PortalAdditionTraversalJob travJob = new PortalAdditionTraversalJob()
             {
                 SectorColAmount = FlowFieldUtilities.SectorColAmount,
                 SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,

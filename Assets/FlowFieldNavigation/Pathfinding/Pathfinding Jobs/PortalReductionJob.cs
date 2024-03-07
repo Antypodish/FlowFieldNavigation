@@ -10,7 +10,7 @@ namespace FlowFieldNavigation
 {
 
     [BurstCompile]
-    internal struct PortalTraversalReductionJob : IJob
+    internal struct PortalReductionJob : IJob
     {
         internal int2 TargetIndex;
         internal int FieldColAmount;
