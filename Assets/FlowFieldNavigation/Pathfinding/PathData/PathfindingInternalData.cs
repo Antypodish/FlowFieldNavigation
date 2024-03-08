@@ -14,7 +14,7 @@ namespace FlowFieldNavigation
         internal NativeReference<int> FlowFieldLength;
         internal NativeQueue<int> PortalTraversalQueue;
         internal NativeList<UnsafeList<ActiveWaveFront>> ActivePortalList;
-        internal NativeList<int> NotActivePortalList;
+        internal NativeList<NotActivePortalRecord> NotActivePortalList;
         internal NativeList<int> SectorFlowStartIndiciesToCalculateIntegration;
         internal NativeList<int> SectorFlowStartIndiciesToCalculateFlow;
         internal NativeReference<SectorsWihinLOSArgument> SectorWithinLOSState;

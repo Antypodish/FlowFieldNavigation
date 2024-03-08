@@ -61,7 +61,7 @@ namespace FlowFieldNavigation
                 SectorStateTable = _sectorStateTableFactory.GetSectorStateTable(),
                 SectorStartIndexListToCalculateFlow = _nativeIntListFactory.GetNativeIntList(),
                 SectorStartIndexListToCalculateIntegration = _nativeIntListFactory.GetNativeIntList(),
-                NotActivePortalList = _nativeIntListFactory.GetNativeIntList(),
+                NotActivePortalList = new NativeList<NotActivePortalRecord>(Allocator.Persistent),
                 NewPickedSectorStartIndex = _nativeReferanceIntFactory.GetNativeReferanceInt(),
                 PathAdditionSequenceBorderStartIndex = _nativeReferanceIntFactory.GetNativeReferanceInt(),
                 FlowFieldLength = _nativeReferanceIntFactory.GetNativeReferanceInt(),
@@ -91,7 +91,7 @@ namespace FlowFieldNavigation
             _integrationFieldFactory.SendIntegrationField(integrationField);
             _nativeIntListFactory.SendNativeIntList(preallocations.SectorStartIndexListToCalculateIntegration);
             _nativeIntListFactory.SendNativeIntList(preallocations.SectorStartIndexListToCalculateFlow);
-            _nativeIntListFactory.SendNativeIntList(preallocations.NotActivePortalList);
+            preallocations.NotActivePortalList.Dispose();
             _nativeReferanceIntFactory.SendNativeReferanceInt(preallocations.FlowFieldLength);
             _nativeReferanceIntFactory.SendNativeReferanceInt(preallocations.NewPickedSectorStartIndex);
             _nativeReferanceIntFactory.SendNativeReferanceInt(preallocations.PathAdditionSequenceBorderStartIndex);

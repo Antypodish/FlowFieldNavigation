@@ -19,7 +19,7 @@ namespace FlowFieldNavigation
         internal UnsafeList<PathSectorState> SectorStateTable;
         internal NativeList<int> SectorStartIndexListToCalculateIntegration;
         internal NativeList<int> SectorStartIndexListToCalculateFlow;
-        internal NativeList<int> NotActivePortalList;
+        internal NativeList<NotActivePortalRecord> NotActivePortalList;
         internal NativeReference<int> FlowFieldLength;
         internal NativeReference<int> NewPickedSectorStartIndex;
         internal NativeReference<int> PathAdditionSequenceBorderStartIndex;

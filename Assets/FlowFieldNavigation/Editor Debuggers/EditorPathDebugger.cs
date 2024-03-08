@@ -31,6 +31,7 @@ namespace FlowFieldNavigation
             if (_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
             int pathIndex = agent.GetPathIndex();
             if (pathIndex == -1) { return; }
+            Gizmos.color = Color.white;
 
             int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
             int sectorColAmount = FlowFieldUtilities.SectorColAmount;
@@ -50,30 +51,38 @@ namespace FlowFieldNavigation
                     p1 = botLeftCorner3d + new Vector3(0, 0, tileSize * sectorColAmount);
                     p2 = botLeftCorner3d + new Vector3(tileSize * sectorColAmount, 0, tileSize * sectorColAmount);
                     p3 = (p1 + p2) / 2 + new Vector3(0, 0, 1f);
+                    Gizmos.DrawLine(p1, p2);
+                    Gizmos.DrawLine(p2, p3);
+                    Gizmos.DrawLine(p3, p1);
                 }
                 if ((overlapping & OverlappingDirection.E) == OverlappingDirection.E)
                 {
                     p1 = botLeftCorner3d + new Vector3(tileSize * sectorColAmount, 0, tileSize * sectorColAmount);
                     p2 = botLeftCorner3d + new Vector3(tileSize * sectorColAmount, 0, 0);
                     p3 = (p1 + p2) / 2 + new Vector3(1, 0, 0f);
+                    Gizmos.DrawLine(p1, p2);
+                    Gizmos.DrawLine(p2, p3);
+                    Gizmos.DrawLine(p3, p1);
                 }
                 if ((overlapping & OverlappingDirection.S) == OverlappingDirection.S)
                 {
                     p1 = botLeftCorner3d;
                     p2 = botLeftCorner3d + new Vector3(tileSize * sectorColAmount, 0, 0);
                     p3 = (p1 + p2) / 2 + new Vector3(0, 0, -1f);
+                    Gizmos.DrawLine(p1, p2);
+                    Gizmos.DrawLine(p2, p3);
+                    Gizmos.DrawLine(p3, p1);
                 }
                 if ((overlapping & OverlappingDirection.W) == OverlappingDirection.W)
                 {
                     p1 = botLeftCorner3d + new Vector3(0, 0, tileSize * sectorColAmount);
                     p2 = botLeftCorner3d;
                     p3 = (p1 + p2) / 2 + new Vector3(-1, 0, 0f);
+                    Gizmos.DrawLine(p1, p2);
+                    Gizmos.DrawLine(p2, p3);
+                    Gizmos.DrawLine(p3, p1);
                 }
 
-                Gizmos.color = Color.white;
-                Gizmos.DrawLine(p1, p2);
-                Gizmos.DrawLine(p2, p3);
-                Gizmos.DrawLine(p3, p1);
             }
         }
         internal void DebugDynamicAreaIntegration(FlowFieldAgent agent, NativeArray<float> tileCenterHeights)
