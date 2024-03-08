@@ -1,4 +1,6 @@
-﻿using Unity.Jobs;
+﻿using Unity.Collections.LowLevel.Unsafe;
+using Unity.Jobs;
+using static PlasticGui.Configuration.OAuth.GetOauthProviders;
 
 
 namespace FlowFieldNavigation
@@ -21,10 +23,11 @@ namespace FlowFieldNavigation
             PathLocationData locationData = _pathContainer.PathLocationDataList[reqInfo.PathIndex];
             PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[reqInfo.PathIndex];
             SectorBitArray sectorBitArray = _pathContainer.PathSectorBitArrays[reqInfo.PathIndex];
+            UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[reqInfo.PathIndex];
             FieldGraph pickedFieldGraph = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
 
             //ACTIVE WAVE FRONT SUBMISSION
-            ActivePortalSubmitJob submitJob = new ActivePortalSubmitJob()
+            NewActivePortalSubmitJob submitJob = new NewActivePortalSubmitJob()
             {
                 SectorColAmount = FlowFieldUtilities.SectorColAmount,
                 SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
@@ -33,6 +36,7 @@ namespace FlowFieldNavigation
                 SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
                 FieldColAmount = FlowFieldUtilities.FieldColAmount,
                 TargetIndex2D = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition),
+                SequenceBorderListStartIndex = portalTraversalData.PathAdditionSequenceBorderStartIndex.Value,
 
                 PortalEdges = pickedFieldGraph.PorToPorPtrs,
                 SectorToPicked = locationData.SectorToPicked,
@@ -44,6 +48,8 @@ namespace FlowFieldNavigation
                 WindowNodes = pickedFieldGraph.WindowNodes,
                 ActiveWaveFrontListArray = internalData.ActivePortalList.AsArray(),
                 NotActivatedPortals = internalData.NotActivePortalList,
+                SectorStateTable = sectorStateTable,
+                NewSectorStartIndex = portalTraversalData.NewPickedSectorStartIndex,
                 SectorBitArray = sectorBitArray,
             };
             JobHandle submitHandle = submitJob.Schedule();

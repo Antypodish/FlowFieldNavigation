@@ -47,6 +47,7 @@ namespace FlowFieldNavigation
                 AddTargetSector();
                 return;
             }
+
             bool isPathNew = PortalSequenceBorders.Length == 0;
             if(PortalSequenceBorders.Length == 0) { PortalSequenceBorders.Add(0); }
             RunDijkstra(isPathNew);

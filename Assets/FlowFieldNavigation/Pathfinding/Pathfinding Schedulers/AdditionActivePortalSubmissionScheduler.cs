@@ -29,7 +29,7 @@ namespace FlowFieldNavigation
             _pathContainer.ResizeActiveWaveFrontList(newSecorCount, internalData.ActivePortalList);
 
             //ACTIVE WAVE FRONT SUBMISSION
-            AdditionalActivePortalSubmitJob submitJob = new AdditionalActivePortalSubmitJob()
+            NewActivePortalSubmitJob submitJob = new NewActivePortalSubmitJob()
             {
                 SectorColAmount = FlowFieldUtilities.SectorColAmount,
                 SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,

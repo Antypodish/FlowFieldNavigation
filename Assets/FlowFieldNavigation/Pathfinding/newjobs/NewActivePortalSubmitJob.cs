@@ -49,13 +49,15 @@ namespace FlowFieldNavigation
                 //HANDLE PORTALS EXCEPT TARGET NEIGHBOUR
                 for (int j = start; j < end - 1; j++)
                 {
-                    AddCommonSectorsBetweenPortalsToTheWaveFront(j, j + 1);
+                    bool succesfull = AddCommonSectorsBetweenPortalsToTheWaveFront(j, j + 1);
+                    if (!succesfull) { NotActivatedPortals.Add(j); }
                 }
                 ActivePortal endPortal = PortalSequence[end - 1];
                 //HANDLE MERGING PORTAL
                 if (!endPortal.IsTargetNeighbour())
                 {
-                    AddCommonSectorsBetweenPortalsToTheWaveFront(end - 1, endPortal.NextIndex);
+                    bool succesfull = AddCommonSectorsBetweenPortalsToTheWaveFront(end - 1, endPortal.NextIndex);
+                    if (!succesfull) { NotActivatedPortals.Add(end - 1); }
                 }
                 //HANDLE TARGET NEIGBOUR POINTING TOWARDS TARGET
                 else
@@ -105,7 +107,8 @@ namespace FlowFieldNavigation
                 ActivePortal portal1 = PortalSequence[seqIndex1];
                 if (!portal1.IsTargetNeighbour())
                 {
-                    AddCommonSectorsBetweenPortalsToTheWaveFront(seqIndex1, portal1.NextIndex);
+                    bool succesfull = AddCommonSectorsBetweenPortalsToTheWaveFront(seqIndex1, portal1.NextIndex);
+                    if (succesfull) { NotActivatedPortals.RemoveAtSwapBack(i); }
                 }
                 else
                 {
@@ -162,7 +165,7 @@ namespace FlowFieldNavigation
                 ActiveWaveFrontListArray[targetPickedSectorIndex] = targetActivePortals;
             }
         }
-        void AddCommonSectorsBetweenPortalsToTheWaveFront(int curPortalSequenceIndex, int nextPortalSequenceIndex)
+        bool AddCommonSectorsBetweenPortalsToTheWaveFront(int curPortalSequenceIndex, int nextPortalSequenceIndex)
         {
             ActivePortal curPortal = PortalSequence[curPortalSequenceIndex];
             ActivePortal nextPortal = PortalSequence[nextPortalSequenceIndex];
@@ -192,7 +195,7 @@ namespace FlowFieldNavigation
                 PathSectorState sectorState = SectorStateTable[curSec1Index];
                 sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
                 SectorStateTable[curSec1Index] = sectorState;
-
+                return true;
             }
             else if (!sector2Common && sector2Included)
             {
@@ -205,6 +208,7 @@ namespace FlowFieldNavigation
                 PathSectorState sectorState = SectorStateTable[curSec2Index];
                 sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
                 SectorStateTable[curSec2Index] = sectorState;
+                return true;
             }
             else if (sector1Common && sector2Common && sector1Included && sector2Included)
             {
@@ -239,11 +243,9 @@ namespace FlowFieldNavigation
                     sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
                     SectorStateTable[sector1d] = sectorState;
                 }
+                return true;
             }
-            else
-            {
-                NotActivatedPortals.Add(curPortalSequenceIndex);
-            }
+            return false;
         }
         int GetIndexOfPortalAtSector(PortalNode portalNode, int sectorIndex)
         {
