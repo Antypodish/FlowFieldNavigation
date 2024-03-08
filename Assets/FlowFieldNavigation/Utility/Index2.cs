@@ -1,4 +1,4 @@
-﻿
+﻿using Unity.Mathematics;
 
 namespace FlowFieldNavigation
 {
@@ -21,13 +21,9 @@ namespace FlowFieldNavigation
         {
             return index1.R != index2.R || index1.C != index2.C;
         }
-        internal static int ToIndex(Index2 index2, int colAmount)
+        public static implicit operator int2(Index2 index)
         {
-            return index2.R * colAmount + index2.C;
-        }
-        internal static Index2 ToIndex2(int index, int colAmount)
-        {
-            return new Index2(index / colAmount, index % colAmount);
+            return new int2(index.C, index.R);
         }
         public override string ToString()
         {

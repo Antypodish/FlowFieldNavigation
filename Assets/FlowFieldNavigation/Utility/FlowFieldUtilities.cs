@@ -88,6 +88,11 @@ namespace FlowFieldNavigation
             int2 sector2d = index / sectorColAmount;
             return sector2d.y * sectorMatrixColAmount + sector2d.x;
         }
+        internal static int GetSector1D(int index, int fieldColAmount, int sectorColAmount, int sectorMatrixColAmount)
+        {
+            int2 sector2d = FlowFieldUtilities.To2D(index, fieldColAmount) / sectorColAmount;
+            return sector2d.y * sectorMatrixColAmount + sector2d.x;
+        }
         internal static int2 GetLocal2D(int2 index, int2 sectorStartIndex)
         {
             return index - sectorStartIndex;

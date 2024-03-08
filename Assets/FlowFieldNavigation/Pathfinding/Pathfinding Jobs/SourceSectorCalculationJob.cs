@@ -13,6 +13,7 @@ namespace FlowFieldNavigation
     internal struct SourceSectorCalculationJob : IJob
     {
         internal float SectorSize;
+        internal int FieldColAmount;
         internal int SectorColAmount;
         internal int SectorTileAmount;
         internal int SectorMatrixColAmount;
@@ -74,10 +75,7 @@ namespace FlowFieldNavigation
                     else
                     {
                         ActivePortal nextPortalSequenceNode = PortalSequence[portalSequenceNextIndex];
-                        PortalNode curNode = PortalNodes[curPortalSequenceNode.Index];
-                        PortalNode nextNode = PortalNodes[nextPortalSequenceNode.Index];
-                        FlowFieldUtilities.GetSectors(curNode, SectorColAmount, SectorMatrixColAmount, out int curSec1, out int curSec2);
-                        FlowFieldUtilities.GetSectors(nextNode, SectorColAmount, SectorMatrixColAmount, out int nextSec1, out int nextSec2);
+                        (int curSec1, int curSec2, int nextSec1, int nextSec2) = GetSectorsOfPortals(curPortalSequenceNode, nextPortalSequenceNode);
 
                         bool curSec1Common = curSec1 == nextSec1 || curSec1 == nextSec2;
                         bool curSec2Common = curSec2 == nextSec1 || curSec2 == nextSec2;
@@ -145,6 +143,14 @@ namespace FlowFieldNavigation
                 if (withinColRange && withinRowRange) { return true; }
             }
             return false;
+        }
+        (int p1Sec1, int p1Sec2, int p2Sec1, int p2Sec2) GetSectorsOfPortals(ActivePortal portal1, ActivePortal portal2)
+        {
+            int p1Sec1 = FlowFieldUtilities.GetSector1D(portal1.FieldIndex1, FieldColAmount, SectorColAmount, SectorMatrixColAmount);
+            int p1Sec2 = FlowFieldUtilities.GetSector1D(portal1.FieldIndex2, FieldColAmount, SectorColAmount, SectorMatrixColAmount);
+            int p2Sec1 = FlowFieldUtilities.GetSector1D(portal2.FieldIndex1, FieldColAmount, SectorColAmount, SectorMatrixColAmount);
+            int p2Sec2 = FlowFieldUtilities.GetSector1D(portal2.FieldIndex2, FieldColAmount, SectorColAmount, SectorMatrixColAmount);
+            return (p1Sec1, p1Sec2, p2Sec1, p2Sec2);
         }
     }
 

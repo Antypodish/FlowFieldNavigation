@@ -197,6 +197,9 @@ namespace FlowFieldNavigation
             int pathIndex = agent.GetPathIndex();
             if (pathIndex == -1) { return; }
 
+            float tileSize = FlowFieldUtilities.TileSize;
+            int fieldColAmount = FlowFieldUtilities.FieldColAmount;
+            float2 fieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition;
             PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathIndex];
             PathDestinationData destinationData = _navigationManager.PathDataContainer.PathDestinationDataList[pathIndex];
             FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
@@ -213,15 +216,21 @@ namespace FlowFieldNavigation
                 int nextNodeIndex = porSeq[start].NextIndex;
                 while (nextNodeIndex != -1)
                 {
-                    int curPortalIndex = porSeq[curNodeIndex].Index;
-                    int nextPortalIndex = porSeq[nextNodeIndex].Index;
+                    ActivePortal curActivePortal = porSeq[curNodeIndex];
+                    ActivePortal nextActivePortal = porSeq[nextNodeIndex];
 
-                    //DRAW
-                    PortalNode firstportalNode = portalNodes[curPortalIndex];
-                    PortalNode secondportalNode = portalNodes[nextPortalIndex];
-                    if (firstportalNode.Portal1.Index.R == 0) { continue; }
-                    Vector3 secondPorPos = secondportalNode.GetPosition(_tileSize, FlowFieldUtilities.FieldGridStartPosition) + new Vector3(0, portalHeights[nextPortalIndex], 0);
-                    Vector3 firstPorPos = firstportalNode.GetPosition(_tileSize, FlowFieldUtilities.FieldGridStartPosition) + new Vector3(0, portalHeights[curNodeIndex], 0);
+                    int2 curActivePortalFieldIndex1 = FlowFieldUtilities.To2D(curActivePortal.FieldIndex1, fieldColAmount);
+                    int2 curActivePortalFieldIndex2 = FlowFieldUtilities.To2D(curActivePortal.FieldIndex2, fieldColAmount);
+                    int2 nextActivePortalFieldIndex1 = FlowFieldUtilities.To2D(nextActivePortal.FieldIndex1, fieldColAmount);
+                    int2 nextActivePortalFieldIndex2 = FlowFieldUtilities.To2D(nextActivePortal.FieldIndex2, fieldColAmount);
+                    Vector2 curActivePortalPos1 = FlowFieldUtilities.IndexToPos(curActivePortalFieldIndex1, tileSize, fieldGridStartPos);
+                    Vector2 curActivePortalPos2 = FlowFieldUtilities.IndexToPos(curActivePortalFieldIndex2, tileSize, fieldGridStartPos);
+                    Vector2 nextActivePortalPos1 = FlowFieldUtilities.IndexToPos(nextActivePortalFieldIndex1, tileSize, fieldGridStartPos);
+                    Vector2 nextActivePortalPos2 = FlowFieldUtilities.IndexToPos(nextActivePortalFieldIndex2, tileSize, fieldGridStartPos);
+                    Vector2 curAvtivePortalAvgPos = (curActivePortalPos1 + curActivePortalPos2) / 2;
+                    Vector2 nextAvtivePortalAvgPos = (nextActivePortalPos1 + nextActivePortalPos2) / 2;
+                    Vector3 firstPorPos = new Vector3(curAvtivePortalAvgPos.x, 1f, curAvtivePortalAvgPos.y);
+                    Vector3 secondPorPos = new Vector3(nextAvtivePortalAvgPos.x, 1f, nextAvtivePortalAvgPos.y);
 
                     Gizmos.DrawLine(firstPorPos, secondPorPos);
                     //Gizmos.DrawLine(secondPorPos, secondPorPos + rightArrow3);

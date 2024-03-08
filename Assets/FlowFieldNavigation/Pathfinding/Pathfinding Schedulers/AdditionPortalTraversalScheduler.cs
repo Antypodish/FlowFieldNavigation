@@ -75,6 +75,7 @@ namespace FlowFieldNavigation
 
             PortalTraversalJob travJob = new PortalTraversalJob()
             {
+                FieldColAmount  = FlowFieldUtilities.FieldColAmount,
                 SectorColAmount = FlowFieldUtilities.SectorColAmount,
                 SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
                 SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,

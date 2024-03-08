@@ -37,6 +37,7 @@ namespace FlowFieldNavigation
             //SOURCE SECTOR CALCULATION
             SourceSectorCalculationJob sectorCalcJob = new SourceSectorCalculationJob()
             {
+                FieldColAmount = FlowFieldUtilities.FieldColAmount,
                 SectorColAmount = FlowFieldUtilities.SectorColAmount,
                 SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
                 SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,

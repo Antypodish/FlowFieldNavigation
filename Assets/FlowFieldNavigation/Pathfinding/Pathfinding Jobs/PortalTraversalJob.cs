@@ -11,6 +11,7 @@ namespace FlowFieldNavigation
     internal struct PortalTraversalJob : IJob
     {
         internal int2 Target;
+        internal int FieldColAmount;
         internal int SectorColAmount;
         internal int AddedPortalSequenceBorderStartIndex;
         internal int SectorMatrixColAmount;
@@ -234,33 +235,25 @@ namespace FlowFieldNavigation
                 int end = PortalSequenceBorders[i + 1];
                 for (int j = start; j < end - 1; j++)
                 {
-                    int portalIndex1 = PortalSequence[j].Index;
-                    int portalIndex2 = PortalSequence[j + 1].Index;
-                    PickSectorsBetweenportals(portalIndex1, portalIndex2);
+                    PickSectorsBetweenportals(PortalSequence[j], PortalSequence[j + 1]);
                 }
                 ActivePortal lastActivePortalInBorder = PortalSequence[end - 1];
                 if (lastActivePortalInBorder.NextIndex != -1)
                 {
-                    int portalIndex1 = lastActivePortalInBorder.Index;
-                    int portalIndex2 = PortalSequence[lastActivePortalInBorder.NextIndex].Index;
-                    PickSectorsBetweenportals(portalIndex1, portalIndex2);
+                    PickSectorsBetweenportals(lastActivePortalInBorder, PortalSequence[lastActivePortalInBorder.NextIndex]);
                 }
             }
         }
 
 
 
-        void PickSectorsBetweenportals(int portalIndex1, int portalIndex2)
+        void PickSectorsBetweenportals(ActivePortal portal1, ActivePortal portal2)
         {
             int sectorTileAmount = SectorColAmount * SectorColAmount;
-            int windowIndex1 = PortalNodes[portalIndex1].WinPtr;
-            int windowIndex2 = PortalNodes[portalIndex2].WinPtr;
-            WindowNode winNode1 = WindowNodes[windowIndex1];
-            WindowNode winNode2 = WindowNodes[windowIndex2];
-            int win1Sec1Index = WinToSecPtrs[winNode1.WinToSecPtr];
-            int win1Sec2Index = WinToSecPtrs[winNode1.WinToSecPtr + 1];
-            int win2Sec1Index = WinToSecPtrs[winNode2.WinToSecPtr];
-            int win2Sec2Index = WinToSecPtrs[winNode2.WinToSecPtr + 1];
+            int win1Sec1Index = FlowFieldUtilities.GetSector1D(portal1.FieldIndex1, FieldColAmount, SectorColAmount, SectorMatrixColAmount);
+            int win1Sec2Index = FlowFieldUtilities.GetSector1D(portal1.FieldIndex2, FieldColAmount, SectorColAmount, SectorMatrixColAmount);
+            int win2Sec1Index = FlowFieldUtilities.GetSector1D(portal2.FieldIndex1, FieldColAmount, SectorColAmount, SectorMatrixColAmount);
+            int win2Sec2Index = FlowFieldUtilities.GetSector1D(portal2.FieldIndex2, FieldColAmount, SectorColAmount, SectorMatrixColAmount);
             bool sector1Included = (SectorStateTable[win1Sec1Index] & PathSectorState.Included) == PathSectorState.Included;
             bool sector2Included = (SectorStateTable[win1Sec2Index] & PathSectorState.Included) == PathSectorState.Included;
             if ((win1Sec1Index == win2Sec1Index || win1Sec1Index == win2Sec2Index) && !sector1Included)
@@ -293,9 +286,11 @@ namespace FlowFieldNavigation
             sourceData.NextIndex = PortalSequence.Length;
             PortalTraversalDataArray[sourcePortal] = sourceData;
 
+            PortalNode sourcePortalNode = PortalNodes[sourcePortal];
             ActivePortal sourceActivePortal = new ActivePortal()
             {
-                Index = sourcePortal,
+                FieldIndex1 = FlowFieldUtilities.To1D(sourcePortalNode.Portal1.Index, FieldColAmount),
+                FieldIndex2 = FlowFieldUtilities.To1D(sourcePortalNode.Portal2.Index, FieldColAmount),
                 Distance = sourceData.DistanceFromTarget,
                 NextIndex = PortalSequence.Length + 1,
             };
@@ -324,9 +319,11 @@ namespace FlowFieldNavigation
                     break;
                 }
                 //PUSH ACTIVE PORTAL
+                PortalNode curPortalNode = PortalNodes[curIndex];
                 ActivePortal curActivePortal = new ActivePortal()
                 {
-                    Index = curIndex,
+                    FieldIndex1 = FlowFieldUtilities.To1D(curPortalNode.Portal1.Index, FieldColAmount),
+                    FieldIndex2 = FlowFieldUtilities.To1D(curPortalNode.Portal2.Index, FieldColAmount),
                     Distance = curData.DistanceFromTarget,
                     NextIndex = math.select(PortalSequence.Length + 1, -1, curData.NextIndex == -1),
                 };
