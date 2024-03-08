@@ -24,6 +24,7 @@ namespace FlowFieldNavigation
             PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathInfo.PathIndex];
             UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathInfo.PathIndex];
             SectorBitArray sectorBitArray = _pathContainer.PathSectorBitArrays[pathInfo.PathIndex];
+            NativeArray<OverlappingDirection> sectorOverlappingDirectionTable = _pathContainer.SectorOverlappingDirectionTableList[pathInfo.PathIndex];
             FieldGraph pickedFieldGraph = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
             int newSecorCount = internalData.PickedSectorList.Length - internalData.ActivePortalList.Length;
             _pathContainer.ResizeActiveWaveFrontList(newSecorCount, internalData.ActivePortalList);
@@ -53,6 +54,7 @@ namespace FlowFieldNavigation
                 SectorStateTable = sectorStateTable,
                 NewSectorStartIndex = portalTraversalData.NewPickedSectorStartIndex,
                 SectorBitArray = sectorBitArray,
+                SectorOverlappingDirectionTable = sectorOverlappingDirectionTable,
             };
             JobHandle submitHandle = submitJob.Schedule();
             pathInfo.Handle = submitHandle;

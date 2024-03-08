@@ -3,6 +3,7 @@ using Unity.Jobs;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Burst;
 using Unity.Mathematics;
+using System;
 
 namespace FlowFieldNavigation
 {
@@ -32,6 +33,7 @@ namespace FlowFieldNavigation
         internal NativeArray<UnsafeList<ActiveWaveFront>> ActiveWaveFrontListArray;
         internal NativeList<int> NotActivatedPortals;
         internal UnsafeList<PathSectorState> SectorStateTable;
+        internal NativeArray<OverlappingDirection> SectorOverlappingDirectionTable;
 
         public void Execute()
         {
@@ -78,6 +80,7 @@ namespace FlowFieldNavigation
                         PathSectorState sectorState = SectorStateTable[endSector1];
                         sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
                         SectorStateTable[endSector1] = sectorState;
+                        SubmitOverlappingSectors(endSector1, targetSector1d);
                     }
                     else if (targetSector1d != endSector2 && SectorToPicked[endSector2] != 0)
                     {
@@ -91,6 +94,7 @@ namespace FlowFieldNavigation
                         PathSectorState sectorState = SectorStateTable[endSector2];
                         sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
                         SectorStateTable[endSector2] = sectorState;
+                        SubmitOverlappingSectors(endSector2, targetSector1d);
                     }
                     else
                     {
@@ -125,6 +129,7 @@ namespace FlowFieldNavigation
                         PathSectorState sectorState = SectorStateTable[endSector1];
                         sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
                         SectorStateTable[endSector1] = sectorState;
+                        SubmitOverlappingSectors(endSector1, targetSector1d);
                         NotActivatedPortals.RemoveAtSwapBack(i);
                     }
                     else if (targetSector1d != endSector2 && SectorToPicked[endSector2] != 0)
@@ -139,6 +144,7 @@ namespace FlowFieldNavigation
                         PathSectorState sectorState = SectorStateTable[endSector2];
                         sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
                         SectorStateTable[endSector2] = sectorState;
+                        SubmitOverlappingSectors(endSector2, targetSector1d);
                         NotActivatedPortals.RemoveAtSwapBack(i);
                     }
                 }
@@ -184,9 +190,10 @@ namespace FlowFieldNavigation
                 PathSectorState sectorState = SectorStateTable[curSec1Index];
                 sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
                 SectorStateTable[curSec1Index] = sectorState;
+                SubmitOverlappingSectors(curSec1Index, curSec2Index);
                 succesfull = true;
             }
-            if ((!sector2Common && sector2Included) || (bothIncluded && bothCommon))
+            else if ((!sector2Common && sector2Included) || (bothIncluded && bothCommon))
             {
                 int pickedSectorIndex = (SectorToPicked[curSec2Index] - 1) / SectorTileAmount;
                 UnsafeList<ActiveWaveFront> activePortals = ActiveWaveFrontListArray[pickedSectorIndex];
@@ -197,6 +204,7 @@ namespace FlowFieldNavigation
                 PathSectorState sectorState = SectorStateTable[curSec2Index];
                 sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
                 SectorStateTable[curSec2Index] = sectorState;
+                SubmitOverlappingSectors(curSec2Index, curSec1Index);
                 succesfull = true;
             }
             return succesfull;
@@ -235,6 +243,36 @@ namespace FlowFieldNavigation
             int p2Sec2 = FlowFieldUtilities.GetSector1D(portal2.FieldIndex2, FieldColAmount, SectorColAmount, SectorMatrixColAmount);
             return (p1Sec1, p1Sec2, p2Sec1, p2Sec2);
         }
+        void SubmitOverlappingSectors(int sourceSector, int targetSector)
+        {
+            int difference = targetSector - sourceSector;
+            OverlappingDirection overlapping;
+            switch (difference)
+            {
+                case 1:
+                    overlapping = OverlappingDirection.E;
+                    break;
+                case > 1:
+                    overlapping = OverlappingDirection.N;
+                    break;
+                case -1:
+                    overlapping = OverlappingDirection.W;
+                    break;
+                default:
+                    overlapping = OverlappingDirection.S;
+                    break;
+            }
+            SectorOverlappingDirectionTable[sourceSector] |= overlapping;
+        }
+    }
+    [Flags]
+    enum OverlappingDirection : byte
+    {
+        None = 0,
+        N = 1,
+        E = 2,
+        S = 4,
+        W = 8,
     }
     [BurstCompile]
     internal struct ActiveWaveFront

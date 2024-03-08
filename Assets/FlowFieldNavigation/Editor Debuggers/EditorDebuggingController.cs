@@ -35,6 +35,7 @@ namespace FlowFieldNavigation
         [SerializeField] bool _debugPortalTargetNeighbours;
         [SerializeField] bool _debugPortalSequence;
         [SerializeField] bool _debugPickedSectors;
+        [SerializeField] bool _debugOverlappingSectors;
         [SerializeField] bool _debugIntegrationField;
         [SerializeField] bool _debugFlowField;
         [SerializeField] bool _debugDynamicAreaIntegration;
@@ -137,6 +138,7 @@ namespace FlowFieldNavigation
                 if (_debugDynamicAreaIntegration) { _pathDebugger.DebugDynamicAreaIntegration(AgentToDebug, _tileCenterHeightBuilder.GetTileCenterHeights()); }
                 if (_debugDynamicAreaFlow) { _pathDebugger.DebugDynamicAreaFlow(AgentToDebug, _tileCenterHeightBuilder.GetTileCenterHeights()); }
                 if (_debugPickedSectors) { _pathDebugger.DebugPickedSectors(AgentToDebug, _sectorCornerHeightBuilder.GetSectorCornerHeights()); }
+                if (_debugOverlappingSectors) { _pathDebugger.DebugOverlappingSectors(AgentToDebug); }
             }
 
         }

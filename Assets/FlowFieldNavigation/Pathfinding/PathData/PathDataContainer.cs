@@ -26,6 +26,7 @@ namespace FlowFieldNavigation
         internal List<PathPortalTraversalData> PathPortalTraversalDataList;
         internal NativeList<int> PathFlockIndicies;
         internal NativeList<int> PathSubscriberCounts;
+        internal List<NativeArray<OverlappingDirection>> SectorOverlappingDirectionTableList;
         Stack<int> _removedPathIndicies;
 
         FieldDataContainer _fieldProducer;
@@ -54,6 +55,7 @@ namespace FlowFieldNavigation
             ExposedPathFlockIndicies = new NativeList<int>(Allocator.Persistent);
             ExposedPathReachDistanceCheckRanges = new NativeList<float>(Allocator.Persistent);
             ExposedPathAgentStopFlagList = new NativeList<bool>(Allocator.Persistent);
+            SectorOverlappingDirectionTableList = new List<NativeArray<OverlappingDirection>>();
         }
         internal void DisposeAll()
         {
@@ -95,6 +97,8 @@ namespace FlowFieldNavigation
                     UnsafeList<DijkstraTile> targetSectorIntegration = TargetSectorIntegrationList[i];
                     PathDestinationData destinationData = PathDestinationDataList[i];
                     SectorBitArray sectorBitArray = PathSectorBitArrays[i];
+                    NativeArray<OverlappingDirection> sectorOverlappingDirections = SectorOverlappingDirectionTableList[i];
+                    sectorOverlappingDirections.Dispose();
                     flowData.Dispose();
                     ExposedPathStateList[i] = PathState.Removed;
                     _removedPathIndicies.Push(i);
@@ -209,6 +213,8 @@ namespace FlowFieldNavigation
                 PathAdditionSequenceBorderStartIndex = preallocations.PathAdditionSequenceBorderStartIndex,
                 DiskstraStartIndicies = preallocations.DijkstraStartIndicies,
             };
+
+            NativeArray<OverlappingDirection> sectorOverlappingDirections = new NativeArray<OverlappingDirection>(FlowFieldUtilities.SectorMatrixTileAmount, Allocator.Persistent);
             if (PathfindingInternalDataList.Count == pathIndex)
             {
                 PathfindingInternalDataList.Add(internalData);
@@ -222,6 +228,7 @@ namespace FlowFieldNavigation
                 PathSectorBitArrays.Add(preallocations.SectorBitArray);
                 PathSubscriberCounts.Add(request.SourceCount);
                 PathFlockIndicies.Add(request.FlockIndex);
+                SectorOverlappingDirectionTableList.Add(sectorOverlappingDirections);
             }
             else
             {
@@ -236,6 +243,7 @@ namespace FlowFieldNavigation
                 PathSectorBitArrays[pathIndex] = preallocations.SectorBitArray;
                 PathSubscriberCounts[pathIndex] = request.SourceCount;
                 PathFlockIndicies[pathIndex] = request.FlockIndex;
+                SectorOverlappingDirectionTableList[pathIndex] = sectorOverlappingDirections;
             }
 
             return pathIndex;

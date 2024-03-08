@@ -25,6 +25,57 @@ namespace FlowFieldNavigation
             _fieldProducer = navigationManager.FieldDataContainer;
             _tileSize = FlowFieldUtilities.TileSize;
         }
+        internal void DebugOverlappingSectors(FlowFieldAgent agent)
+        {
+            if (_pathContainer == null) { return; }
+            if (_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
+            int pathIndex = agent.GetPathIndex();
+            if (pathIndex == -1) { return; }
+
+            int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
+            int sectorColAmount = FlowFieldUtilities.SectorColAmount;
+            float tileSize = FlowFieldUtilities.TileSize;
+            float2 fieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition;
+            NativeArray<OverlappingDirection> sectorOverlappingDirectionTable = _pathContainer.SectorOverlappingDirectionTableList[pathIndex];
+            for(int i = 0; i < sectorOverlappingDirectionTable.Length; i++)
+            {
+                OverlappingDirection overlapping = sectorOverlappingDirectionTable[i];
+                Vector2 botLeftCorner = FlowFieldUtilities.GetSectorStartPos(i, sectorMatrixColAmount, sectorColAmount, tileSize, fieldGridStartPos);
+                Vector3 botLeftCorner3d = new Vector3(botLeftCorner.x, 0.2f, botLeftCorner.y);
+                Vector3 p1 = Vector3.zero;
+                Vector3 p2 = Vector3.zero;
+                Vector3 p3 = Vector3.zero;
+                if((overlapping & OverlappingDirection.N) == OverlappingDirection.N)
+                {
+                    p1 = botLeftCorner3d + new Vector3(0, 0, tileSize * sectorColAmount);
+                    p2 = botLeftCorner3d + new Vector3(tileSize * sectorColAmount, 0, tileSize * sectorColAmount);
+                    p3 = (p1 + p2) / 2 + new Vector3(0, 0, 1f);
+                }
+                if ((overlapping & OverlappingDirection.E) == OverlappingDirection.E)
+                {
+                    p1 = botLeftCorner3d + new Vector3(tileSize * sectorColAmount, 0, tileSize * sectorColAmount);
+                    p2 = botLeftCorner3d + new Vector3(tileSize * sectorColAmount, 0, 0);
+                    p3 = (p1 + p2) / 2 + new Vector3(1, 0, 0f);
+                }
+                if ((overlapping & OverlappingDirection.S) == OverlappingDirection.S)
+                {
+                    p1 = botLeftCorner3d;
+                    p2 = botLeftCorner3d + new Vector3(tileSize * sectorColAmount, 0, 0);
+                    p3 = (p1 + p2) / 2 + new Vector3(0, 0, -1f);
+                }
+                if ((overlapping & OverlappingDirection.W) == OverlappingDirection.W)
+                {
+                    p1 = botLeftCorner3d + new Vector3(0, 0, tileSize * sectorColAmount);
+                    p2 = botLeftCorner3d;
+                    p3 = (p1 + p2) / 2 + new Vector3(-1, 0, 0f);
+                }
+
+                Gizmos.color = Color.white;
+                Gizmos.DrawLine(p1, p2);
+                Gizmos.DrawLine(p2, p3);
+                Gizmos.DrawLine(p3, p1);
+            }
+        }
         internal void DebugDynamicAreaIntegration(FlowFieldAgent agent, NativeArray<float> tileCenterHeights)
         {
             if (_pathContainer == null) { return; }

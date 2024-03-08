@@ -1,7 +1,6 @@
 ﻿using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
-using static PlasticGui.Configuration.OAuth.GetOauthProviders;
-
+using Unity.Collections;
 
 namespace FlowFieldNavigation
 {
@@ -24,6 +23,7 @@ namespace FlowFieldNavigation
             PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[reqInfo.PathIndex];
             SectorBitArray sectorBitArray = _pathContainer.PathSectorBitArrays[reqInfo.PathIndex];
             UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[reqInfo.PathIndex];
+            NativeArray<OverlappingDirection> sectorOverlappingDirectionTable = _pathContainer.SectorOverlappingDirectionTableList[reqInfo.PathIndex];
             FieldGraph pickedFieldGraph = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
 
             //ACTIVE WAVE FRONT SUBMISSION
@@ -51,6 +51,7 @@ namespace FlowFieldNavigation
                 SectorStateTable = sectorStateTable,
                 NewSectorStartIndex = portalTraversalData.NewPickedSectorStartIndex,
                 SectorBitArray = sectorBitArray,
+                SectorOverlappingDirectionTable = sectorOverlappingDirectionTable,
             };
             JobHandle submitHandle = submitJob.Schedule();
 
