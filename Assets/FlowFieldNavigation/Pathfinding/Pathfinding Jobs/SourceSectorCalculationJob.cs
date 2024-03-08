@@ -22,11 +22,9 @@ namespace FlowFieldNavigation
         internal int2 TargetIndex;
         internal float2 FieldGridStartPos;
         [ReadOnly] internal NativeSlice<float2> Sources;
-        [ReadOnly] internal NativeArray<ActivePortal> PortalSequence;
         [ReadOnly] internal UnsafeList<int> SectorToPickedTable;
         [ReadOnly] internal NativeArray<int> PickedToSectorTable;
-        [ReadOnly] internal NativeArray<UnsafeList<ActiveWaveFront>> ActiveWaveFrontListArray;
-        [ReadOnly] internal NativeArray<PortalNode> PortalNodes;
+        [ReadOnly] internal NativeArray<OverlappingDirection> SectorOverlappingDirectionTable;
 
         internal NativeList<int> SectorFlowStartIndiciesToCalculateIntegration;
         internal NativeList<int> SectorFlowStartIndiciesToCalculateFlow;
@@ -56,48 +54,47 @@ namespace FlowFieldNavigation
                     int flowStartIndex = SectorToPickedTable[sector1d];
                     SectorFlowStartIndiciesToCalculateFlow.Add(flowStartIndex);
                 }
-                int pickedSectorIndex = (SectorToPickedTable[sector1d] - 1) / SectorTileAmount;
-                UnsafeList<ActiveWaveFront> waveFronts = ActiveWaveFrontListArray[pickedSectorIndex];
-                for (int j = 0; j < waveFronts.Length; j++)
-                {
-                    ActiveWaveFront front = waveFronts[j];
-                    if (front.IsTarget()) { continue; }
-                    int portalSequenceCurIndex = front.PortalSequenceIndex;
-                    ActivePortal curPortalSequenceNode = PortalSequence[portalSequenceCurIndex];
-                    int portalSequenceNextIndex = curPortalSequenceNode.NextIndex;
-                    if (portalSequenceNextIndex == -1)
-                    {
-                        int commonSector = targetSector1d;
-                        if ((SectorStateTable[commonSector] & PathSectorState.IntegrationCalculated) == PathSectorState.IntegrationCalculated) { continue; }
-                        SectorStateTable[commonSector] |= PathSectorState.IntegrationCalculated;
-                        SectorFlowStartIndiciesToCalculateIntegration.Add(SectorToPickedTable[commonSector]);
-                    }
-                    else
-                    {
-                        ActivePortal nextPortalSequenceNode = PortalSequence[portalSequenceNextIndex];
-                        (int curSec1, int curSec2, int nextSec1, int nextSec2) = GetSectorsOfPortals(curPortalSequenceNode, nextPortalSequenceNode);
 
-                        bool curSec1Common = curSec1 == nextSec1 || curSec1 == nextSec2;
-                        bool curSec2Common = curSec2 == nextSec1 || curSec2 == nextSec2;
-                        if (!curSec1Common && !curSec2Common) { continue; }
-                        if (curSec1Common && curSec2Common)
-                        {
-                            if ((SectorStateTable[curSec1] & PathSectorState.IntegrationCalculated) != PathSectorState.IntegrationCalculated)
-                            {
-                                SectorStateTable[curSec1] |= PathSectorState.IntegrationCalculated;
-                                SectorFlowStartIndiciesToCalculateIntegration.Add(SectorToPickedTable[curSec1]);
-                            }
-                            if ((SectorStateTable[curSec2] & PathSectorState.IntegrationCalculated) != PathSectorState.IntegrationCalculated)
-                            {
-                                SectorStateTable[curSec2] |= PathSectorState.IntegrationCalculated;
-                                SectorFlowStartIndiciesToCalculateIntegration.Add(SectorToPickedTable[curSec2]);
-                            }
-                            continue;
-                        }
-                        int commonSector = curSec1Common ? curSec1 : curSec2;
-                        if ((SectorStateTable[commonSector] & PathSectorState.IntegrationCalculated) == PathSectorState.IntegrationCalculated) { continue; }
-                        SectorStateTable[commonSector] |= PathSectorState.IntegrationCalculated;
-                        SectorFlowStartIndiciesToCalculateIntegration.Add(SectorToPickedTable[commonSector]);
+                //Handle overlapping sectors
+                OverlappingDirection sectorOverlappingDirections = SectorOverlappingDirectionTable[sector1d];
+                if((sectorOverlappingDirections & OverlappingDirection.N) == OverlappingDirection.N)
+                {
+                    int overlappingSector = sector1d + SectorMatrixColAmount;
+                    PathSectorState overlappingSectorState = SectorStateTable[overlappingSector];
+                    if((overlappingSectorState & PathSectorState.IntegrationCalculated) != PathSectorState.IntegrationCalculated)
+                    {
+                        SectorStateTable[overlappingSector] = overlappingSectorState | PathSectorState.IntegrationCalculated;
+                        SectorFlowStartIndiciesToCalculateIntegration.Add(SectorToPickedTable[overlappingSector]);
+                    }
+                }
+                if ((sectorOverlappingDirections & OverlappingDirection.E) == OverlappingDirection.E)
+                {
+                    int overlappingSector = sector1d + 1;
+                    PathSectorState overlappingSectorState = SectorStateTable[overlappingSector];
+                    if ((overlappingSectorState & PathSectorState.IntegrationCalculated) != PathSectorState.IntegrationCalculated)
+                    {
+                        SectorStateTable[overlappingSector] = overlappingSectorState | PathSectorState.IntegrationCalculated;
+                        SectorFlowStartIndiciesToCalculateIntegration.Add(SectorToPickedTable[overlappingSector]);
+                    }
+                }
+                if ((sectorOverlappingDirections & OverlappingDirection.S) == OverlappingDirection.S)
+                {
+                    int overlappingSector = sector1d - SectorMatrixColAmount;
+                    PathSectorState overlappingSectorState = SectorStateTable[overlappingSector];
+                    if ((overlappingSectorState & PathSectorState.IntegrationCalculated) != PathSectorState.IntegrationCalculated)
+                    {
+                        SectorStateTable[overlappingSector] = overlappingSectorState | PathSectorState.IntegrationCalculated;
+                        SectorFlowStartIndiciesToCalculateIntegration.Add(SectorToPickedTable[overlappingSector]);
+                    }
+                }
+                if ((sectorOverlappingDirections & OverlappingDirection.W) == OverlappingDirection.W)
+                {
+                    int overlappingSector = sector1d - 1;
+                    PathSectorState overlappingSectorState = SectorStateTable[overlappingSector];
+                    if ((overlappingSectorState & PathSectorState.IntegrationCalculated) != PathSectorState.IntegrationCalculated)
+                    {
+                        SectorStateTable[overlappingSector] = overlappingSectorState | PathSectorState.IntegrationCalculated;
+                        SectorFlowStartIndiciesToCalculateIntegration.Add(SectorToPickedTable[overlappingSector]);
                     }
                 }
             }
@@ -143,14 +140,6 @@ namespace FlowFieldNavigation
                 if (withinColRange && withinRowRange) { return true; }
             }
             return false;
-        }
-        (int p1Sec1, int p1Sec2, int p2Sec1, int p2Sec2) GetSectorsOfPortals(ActivePortal portal1, ActivePortal portal2)
-        {
-            int p1Sec1 = FlowFieldUtilities.GetSector1D(portal1.FieldIndex1, FieldColAmount, SectorColAmount, SectorMatrixColAmount);
-            int p1Sec2 = FlowFieldUtilities.GetSector1D(portal1.FieldIndex2, FieldColAmount, SectorColAmount, SectorMatrixColAmount);
-            int p2Sec1 = FlowFieldUtilities.GetSector1D(portal2.FieldIndex1, FieldColAmount, SectorColAmount, SectorMatrixColAmount);
-            int p2Sec2 = FlowFieldUtilities.GetSector1D(portal2.FieldIndex2, FieldColAmount, SectorColAmount, SectorMatrixColAmount);
-            return (p1Sec1, p1Sec2, p2Sec1, p2Sec2);
         }
     }
 

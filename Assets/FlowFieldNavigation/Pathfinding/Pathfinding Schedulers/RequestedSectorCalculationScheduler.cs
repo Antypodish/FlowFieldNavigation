@@ -31,9 +31,8 @@ namespace FlowFieldNavigation
             PathfindingInternalData pathInternalData = _pathContainer.PathfindingInternalDataList[pathInfo.PathIndex];
             PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
             PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
-            PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathInfo.PathIndex];
             UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathInfo.PathIndex];
-            FieldGraph pickedFieldGraph = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
+            NativeArray<OverlappingDirection> sectorOverlappingDirectionTable = _pathContainer.SectorOverlappingDirectionTableList[pathInfo.PathIndex];
             //SOURCE SECTOR CALCULATION
             SourceSectorCalculationJob sectorCalcJob = new SourceSectorCalculationJob()
             {
@@ -49,9 +48,7 @@ namespace FlowFieldNavigation
                 SectorStateTable = sectorStateTable,
                 SectorToPickedTable = locationData.SectorToPicked,
                 Sources = sources,
-                PortalSequence = portalTraversalData.PortalSequence.AsArray(),
-                ActiveWaveFrontListArray = pathInternalData.ActivePortalList.AsArray(),
-                PortalNodes = pickedFieldGraph.PortalNodes,
+                SectorOverlappingDirectionTable = sectorOverlappingDirectionTable,
                 SectorFlowStartIndiciesToCalculateIntegration = pathInternalData.SectorFlowStartIndiciesToCalculateIntegration,
                 SectorFlowStartIndiciesToCalculateFlow = pathInternalData.SectorFlowStartIndiciesToCalculateFlow,
                 PickedToSectorTable = pathInternalData.PickedSectorList.AsArray(),
