@@ -27,7 +27,7 @@ namespace FlowFieldNavigation
             FieldGraph pickedFieldGraph = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
 
             //ACTIVE WAVE FRONT SUBMISSION
-            NewActivePortalSubmitJob submitJob = new NewActivePortalSubmitJob()
+            ActivePortalSubmitJob submitJob = new ActivePortalSubmitJob()
             {
                 SectorColAmount = FlowFieldUtilities.SectorColAmount,
                 SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,

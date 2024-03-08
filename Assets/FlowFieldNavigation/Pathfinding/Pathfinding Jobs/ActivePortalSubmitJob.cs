@@ -7,7 +7,7 @@ using Unity.Mathematics;
 namespace FlowFieldNavigation
 {
     [BurstCompile]
-    internal struct NewActivePortalSubmitJob:IJob
+    internal struct ActivePortalSubmitJob:IJob
     {
         internal int SequenceBorderListStartIndex;
         internal int2 TargetIndex2D;
@@ -182,9 +182,13 @@ namespace FlowFieldNavigation
 
             bool sector1Common = (curSec1Index == nextSec1Index || curSec1Index == nextSec2Index);
             bool sector2Common = (curSec2Index == nextSec1Index || curSec2Index == nextSec2Index);
+            bool bothCommon = sector1Common && sector2Common;
             bool sector1Included = SectorToPicked[curSec1Index] != 0;
             bool sector2Included = SectorToPicked[curSec2Index] != 0;
-            if (!sector1Common && sector1Included)
+            bool bothIncluded = sector1Included && sector2Included;
+
+            bool succesfull = false;
+            if ((!sector1Common && sector1Included) || (bothIncluded && bothCommon))
             {
                 int pickedSectorIndex = (SectorToPicked[curSec1Index] - 1) / SectorTileAmount;
                 UnsafeList<ActiveWaveFront> activePortals = ActiveWaveFrontListArray[pickedSectorIndex];
@@ -195,9 +199,9 @@ namespace FlowFieldNavigation
                 PathSectorState sectorState = SectorStateTable[curSec1Index];
                 sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
                 SectorStateTable[curSec1Index] = sectorState;
-                return true;
+                succesfull = true;
             }
-            else if (!sector2Common && sector2Included)
+            if ((!sector2Common && sector2Included) || (bothIncluded && bothCommon))
             {
                 int pickedSectorIndex = (SectorToPicked[curSec2Index] - 1) / SectorTileAmount;
                 UnsafeList<ActiveWaveFront> activePortals = ActiveWaveFrontListArray[pickedSectorIndex];
@@ -208,44 +212,9 @@ namespace FlowFieldNavigation
                 PathSectorState sectorState = SectorStateTable[curSec2Index];
                 sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
                 SectorStateTable[curSec2Index] = sectorState;
-                return true;
+                succesfull = true;
             }
-            else if (sector1Common && sector2Common && sector1Included && sector2Included)
-            {
-                PortalNode node1 = PortalNodes[curPortalIndex];
-                Portal n1p1 = node1.Portal1;
-                Portal n1p2 = node1.Portal2;
-                if (!IsConnected(n1p1, nextPortalIndex))
-                {
-                    int2 n1p1index = new int2(n1p1.Index.C, n1p1.Index.R);
-                    int sector1d = FlowFieldUtilities.GetSector1D(n1p1index, SectorColAmount, SectorMatrixColAmount);
-                    int pickedSectorIndex = (SectorToPicked[sector1d] - 1) / SectorTileAmount;
-                    UnsafeList<ActiveWaveFront> activePortals = ActiveWaveFrontListArray[pickedSectorIndex];
-                    int activeLocalIndex = GetIndexOfPortalAtSector(PortalNodes[curPortalIndex], sector1d);
-                    ActiveWaveFront newActiveWaveFront = new ActiveWaveFront(activeLocalIndex, curPortal.Distance, curPortalSequenceIndex);
-                    activePortals.Add(newActiveWaveFront);
-                    ActiveWaveFrontListArray[pickedSectorIndex] = activePortals;
-                    PathSectorState sectorState = SectorStateTable[sector1d];
-                    sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
-                    SectorStateTable[sector1d] = sectorState;
-                }
-                else
-                {
-                    int2 n1p2index = new int2(n1p2.Index.C, n1p2.Index.R);
-                    int sector1d = FlowFieldUtilities.GetSector1D(n1p2index, SectorColAmount, SectorMatrixColAmount);
-                    int pickedSectorIndex = (SectorToPicked[sector1d] - 1) / SectorTileAmount;
-                    UnsafeList<ActiveWaveFront> activePortals = ActiveWaveFrontListArray[pickedSectorIndex];
-                    int activeLocalIndex = GetIndexOfPortalAtSector(PortalNodes[curPortalIndex], sector1d);
-                    ActiveWaveFront newActiveWaveFront = new ActiveWaveFront(activeLocalIndex, curPortal.Distance, curPortalSequenceIndex);
-                    activePortals.Add(newActiveWaveFront);
-                    ActiveWaveFrontListArray[pickedSectorIndex] = activePortals;
-                    PathSectorState sectorState = SectorStateTable[sector1d];
-                    sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
-                    SectorStateTable[sector1d] = sectorState;
-                }
-                return true;
-            }
-            return false;
+            return succesfull;
         }
         int GetIndexOfPortalAtSector(PortalNode portalNode, int sectorIndex)
         {
@@ -263,18 +232,6 @@ namespace FlowFieldNavigation
 
             int2 pickedIndexLocal2d = FlowFieldUtilities.GetLocal2D(pickedIndex2d, pickedSectorStart2d);
             return FlowFieldUtilities.To1D(pickedIndexLocal2d, SectorColAmount);
-        }
-        bool IsConnected(Portal portal, int portalNodeIndex)
-        {
-            //BRANCHLESS :)))
-            int porEdgeStart = portal.PorToPorPtr;
-            int porEdgeCount = portal.PorToPorCnt;
-            bool connected = false;
-            for (int i = porEdgeStart; i < porEdgeStart + porEdgeCount; i++)
-            {
-                connected = connected || PortalEdges[i].Index == portalNodeIndex;
-            }
-            return connected;
         }
         bool ActiveWaveFrontExists(ActiveWaveFront front, UnsafeList<ActiveWaveFront> list)
         {
