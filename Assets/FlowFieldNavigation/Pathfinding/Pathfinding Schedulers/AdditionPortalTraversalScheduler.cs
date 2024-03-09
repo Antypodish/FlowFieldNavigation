@@ -2,6 +2,7 @@
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
+using System.Diagnostics;
 
 
 namespace FlowFieldNavigation
@@ -41,6 +42,7 @@ namespace FlowFieldNavigation
 
             FieldGraph pickedFieldGraph = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
             CostField costField = _navigationManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset);
+            
             PortalReductionJob reductionJob = new PortalReductionJob()
             {
                 FieldColAmount = FlowFieldUtilities.FieldColAmount,
@@ -101,7 +103,6 @@ namespace FlowFieldNavigation
                 SectorToPicked = locationData.SectorToPicked,
                 TargetNeighbourPortalIndicies = portalTraversalData.TargetSectorPortalIndexList,
             };
-
             JobHandle reductHandle = reductionJob.Schedule();
             JobHandle travHandle = travJob.Schedule(reductHandle);
 
