@@ -58,11 +58,6 @@ namespace FlowFieldNavigation
                 SetTargetNeighbourPortalDataAndAddToList();
             }
 
-            if (TargetNeighbourPortalIndicies.Length == 0)
-            {
-                return;
-            }
-
             DoubleFloatUnsafeHeap<int> walkerHeap = new DoubleFloatUnsafeHeap<int>(10, Allocator.Temp);
             SourcePortalIndexList.Clear();
             SetSourcePortalIndicies();
@@ -101,64 +96,58 @@ namespace FlowFieldNavigation
         }
         int RunReductionAStar(int sourcePortalIndex, DoubleFloatUnsafeHeap<int> traversalHeap)
         {
-            NativeArray<PortalNode> portalNodes = PortalNodes;
-            NativeArray<PortalTraversalData> portalTraversalDataArray = PortalTraversalDataArray;
-            PortalTraversalData curData = PortalTraversalDataArray[sourcePortalIndex];
-            if (curData.HasMark(PortalTraversalMark.AStarPicked) || curData.HasMark(PortalTraversalMark.DijkstraTraversed))
+            //Handle initial portal
+            PortalTraversalData sourceData = PortalTraversalDataArray[sourcePortalIndex];
+            if (sourceData.HasMark(PortalTraversalMark.AStarPicked) || sourceData.HasMark(PortalTraversalMark.DijkstraTraversed))
             {
                 return -1;
             }
+            sourceData.Mark |= PortalTraversalMark.AStarPicked | PortalTraversalMark.AStarTraversed | PortalTraversalMark.AStarExtracted | PortalTraversalMark.Reduced;
+            sourceData.OriginIndex = -1;
+            PortalTraversalDataArray[sourcePortalIndex] = sourceData;
+            AStarTraverseIndexList.Add(sourcePortalIndex);
+            PortalNode sourceNode = PortalNodes[sourcePortalIndex];
+            int sourcePor1P2pIdx = sourceNode.Portal1.PorToPorPtr;
+            int sourcePor2P2pIdx = sourceNode.Portal2.PorToPorPtr;
+            int sourcePor1P2pCnt = sourceNode.Portal1.PorToPorCnt;
+            int sourcePor2P2pCnt = sourceNode.Portal2.PorToPorCnt;
+            NativeSlice<PortalToPortal> neighbourIndicies1 = new NativeSlice<PortalToPortal>(PorPtrs, sourcePor1P2pIdx, sourcePor1P2pCnt);
+            NativeSlice<PortalToPortal> neighbourIndicies2 = new NativeSlice<PortalToPortal>(PorPtrs, sourcePor2P2pIdx, sourcePor2P2pCnt);
+            TraverseNeighbours(sourceData, ref traversalHeap, sourcePortalIndex, neighbourIndicies1);
+            TraverseNeighbours(sourceData, ref traversalHeap, sourcePortalIndex, neighbourIndicies2);
 
-            //Set initial portal
-            curData.Mark |= PortalTraversalMark.AStarPicked | PortalTraversalMark.AStarTraversed | PortalTraversalMark.AStarExtracted | PortalTraversalMark.Reduced;
-            curData.OriginIndex = -1;
-            PortalTraversalDataArray[sourcePortalIndex] = curData;
-
-            //NODE DATA
-            int curNodeIndex = sourcePortalIndex;
-            PortalNode curNode = PortalNodes[curNodeIndex];
-            int por1P2pIdx = curNode.Portal1.PorToPorPtr;
-            int por2P2pIdx = curNode.Portal2.PorToPorPtr;
-            int por1P2pCnt = curNode.Portal1.PorToPorCnt;
-            int por2P2pCnt = curNode.Portal2.PorToPorCnt;
-
-            //HANDLE NEIGHBOURS
-            AStarTraverseIndexList.Add(curNodeIndex);
-            NativeSlice<PortalToPortal> neighbourIndicies1 = new NativeSlice<PortalToPortal>(PorPtrs, por1P2pIdx, por1P2pCnt);
-            NativeSlice<PortalToPortal> neighbourIndicies2 = new NativeSlice<PortalToPortal>(PorPtrs, por2P2pIdx, por2P2pCnt);
-            TraverseNeighbours(curData, ref traversalHeap, curNodeIndex, neighbourIndicies1);
-            TraverseNeighbours(curData, ref traversalHeap, curNodeIndex, neighbourIndicies2);
-            SetNextNode();
-
+            //Handle remaining portals
+            int curPortalIndex;
+            PortalTraversalData curData;
+            SetNextNode(ref traversalHeap, out curPortalIndex, out curData);
             while (!(IsGoal(curData.DistanceFromTarget) || ShouldMerge(curData.Mark)))
             {
+                PortalNode curNode = PortalNodes[curPortalIndex];
+                int por1P2pIdx = curNode.Portal1.PorToPorPtr;
+                int por2P2pIdx = curNode.Portal2.PorToPorPtr;
+                int por1P2pCnt = curNode.Portal1.PorToPorCnt;
+                int por2P2pCnt = curNode.Portal2.PorToPorCnt;
                 neighbourIndicies1 = new NativeSlice<PortalToPortal>(PorPtrs, por1P2pIdx, por1P2pCnt);
                 neighbourIndicies2 = new NativeSlice<PortalToPortal>(PorPtrs, por2P2pIdx, por2P2pCnt);
-                TraverseNeighbours(curData, ref traversalHeap, curNodeIndex, neighbourIndicies1);
-                TraverseNeighbours(curData, ref traversalHeap, curNodeIndex, neighbourIndicies2);
-                SetNextNode();
+                TraverseNeighbours(curData, ref traversalHeap, curPortalIndex, neighbourIndicies1);
+                TraverseNeighbours(curData, ref traversalHeap, curPortalIndex, neighbourIndicies2);
+                SetNextNode(ref traversalHeap, out curPortalIndex, out curData);
             }
-            return curNodeIndex;
-            void SetNextNode()
+            return curPortalIndex;
+        }
+        void SetNextNode(ref DoubleFloatUnsafeHeap<int> traversalHeap, out int curPortalIndex, out PortalTraversalData curData)
+        {
+            int nextMinIndex = traversalHeap.ExtractMin();
+            PortalTraversalData nextMinTraversalData = PortalTraversalDataArray[nextMinIndex];
+            while (nextMinTraversalData.HasMark(PortalTraversalMark.AStarExtracted))
             {
-                if (traversalHeap.IsEmpty) { return; }
-                int nextMinIndex = traversalHeap.ExtractMin();
-                PortalTraversalData nextMinTraversalData = portalTraversalDataArray[nextMinIndex];
-                while (nextMinTraversalData.HasMark(PortalTraversalMark.AStarExtracted))
-                {
-                    nextMinIndex = traversalHeap.ExtractMin();
-                    nextMinTraversalData = portalTraversalDataArray[nextMinIndex];
-                }
-                nextMinTraversalData.Mark |= PortalTraversalMark.AStarExtracted;
-                curData = nextMinTraversalData;
-                portalTraversalDataArray[nextMinIndex] = curData;
-                curNodeIndex = nextMinIndex;
-                curNode = portalNodes[curNodeIndex];
-                por1P2pIdx = curNode.Portal1.PorToPorPtr;
-                por2P2pIdx = curNode.Portal2.PorToPorPtr;
-                por1P2pCnt = curNode.Portal1.PorToPorCnt;
-                por2P2pCnt = curNode.Portal2.PorToPorCnt;
+                nextMinIndex = traversalHeap.ExtractMin();
+                nextMinTraversalData = PortalTraversalDataArray[nextMinIndex];
             }
+            nextMinTraversalData.Mark |= PortalTraversalMark.AStarExtracted;
+            PortalTraversalDataArray[nextMinIndex] = nextMinTraversalData;
+            curPortalIndex = nextMinIndex;
+            curData = nextMinTraversalData;
         }
         void TraverseNeighbours(PortalTraversalData curData, ref DoubleFloatUnsafeHeap<int> traversalHeap, int curNodeIndex, NativeSlice<PortalToPortal> neihgbourIndicies)
         {

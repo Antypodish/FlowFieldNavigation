@@ -43,11 +43,6 @@ namespace FlowFieldNavigation
             //TARGET DATA
             int2 targetSectorIndex2d = new int2(Target.x / SectorColAmount, Target.y / SectorColAmount);
             _targetSectorIndex1d = targetSectorIndex2d.y * SectorMatrixColAmount + targetSectorIndex2d.x;
-            if (TargetNeighbourPortalIndicies.Length == 0)
-            {
-                AddTargetSector();
-                return;
-            }
 
             bool isPathNew = PortalSequenceBorders.Length == 0;
             if(PortalSequenceBorders.Length == 0) { PortalSequenceBorders.Add(0); }
