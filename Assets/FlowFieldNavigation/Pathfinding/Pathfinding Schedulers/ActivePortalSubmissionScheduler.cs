@@ -46,7 +46,7 @@ namespace FlowFieldNavigation
                 WinToSecPtrs = pickedFieldGraph.WinToSecPtrs,
                 PortalNodes = pickedFieldGraph.PortalNodes,
                 WindowNodes = pickedFieldGraph.WindowNodes,
-                ActiveWaveFrontListArray = internalData.ActivePortalList.AsArray(),
+                ActiveWaveFrontListArray = internalData.ActiveWaveFronts.AsArray(),
                 NotActivatedPortals = internalData.NotActivePortalList,
                 SectorStateTable = sectorStateTable,
                 NewSectorStartIndex = portalTraversalData.NewPickedSectorStartIndex,

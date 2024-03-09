@@ -79,7 +79,7 @@ namespace FlowFieldNavigation
                 IntegrationFieldJob intJob = new IntegrationFieldJob()
                 {
                     SectorIndex = sectorIndex,
-                    StartIndicies = pathInternalData.ActivePortalList[(sectorStart - 1) / FlowFieldUtilities.SectorTileAmount],
+                    StartIndicies = pathInternalData.ActiveWaveFronts[(sectorStart - 1) / FlowFieldUtilities.SectorTileAmount],
                     Costs = new NativeSlice<byte>(pickedCostField.Costs, sectorIndex * FlowFieldUtilities.SectorTileAmount, FlowFieldUtilities.SectorTileAmount),
                     IntegrationField = integrationSector,
                     SectorToPicked = locationData.SectorToPicked,

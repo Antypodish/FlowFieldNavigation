@@ -17,6 +17,17 @@ namespace FlowFieldNavigation
         FlowFieldNavigationManager _navigationManager;
         FieldDataContainer _fieldProducer;
         float _tileSize;
+        Color[] _colorArray = new Color[]
+        {
+            new Color(0,0,0),
+            new Color(1,0,0),
+            new Color(0,1,0),
+            new Color(1,1,0),
+            new Color(0,0,1),
+            new Color(1,0,1),
+            new Color(0,1,1),
+            new Color(1,1,1),
+        };
 
         internal EditorPathDebugger(FlowFieldNavigationManager navigationManager)
         {
@@ -265,13 +276,14 @@ namespace FlowFieldNavigation
             FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
             NativeList<ActivePortal> porSeq = portalTraversalData.PortalSequence;
             NativeList<int> portSeqBorders = portalTraversalData.PortalSequenceBorders;
-            Gizmos.color = Color.white;
+
             if (porSeq.Length == 0) { return; }
 
             for(int i = 0; i < portSeqBorders.Length - 1; i++)
             {
                 int seqStart = portSeqBorders[i];
                 int seqEnd = portSeqBorders[i + 1];
+                Gizmos.color = _colorArray[i % _colorArray.Length];
                 for(int j = seqStart; j < seqEnd - 1; j++)
                 {
                     ActivePortal curActivePortal = porSeq[j];
@@ -292,6 +304,33 @@ namespace FlowFieldNavigation
                     Gizmos.DrawLine(firstPorPos, secondPorPos);
                 }
             }
+        }
+        internal void DebugActiveWaveFronts(FlowFieldAgent agent)
+        {
+            if (_pathContainer == null) { return; }
+            if (_pathContainer.PathfindingInternalDataList.Count == 0) { return; }
+            int pathIndex = agent.GetPathIndex();
+            if (pathIndex == -1) { return; }
+
+            PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathIndex];
+            NativeList<int> pickedSectors = internalData.PickedSectorList;
+            NativeList<UnsafeList<ActiveWaveFront>> activeWaveFronts = internalData.ActiveWaveFronts;
+
+            Gizmos.color = Color.red;
+            for(int i = 0; i < pickedSectors.Length; i++)
+            {
+                int sector = pickedSectors[i];
+                UnsafeList<ActiveWaveFront> waveFronts = activeWaveFronts[i];
+                for(int j = 0; j < waveFronts.Length; j++)
+                {
+                    ActiveWaveFront front = waveFronts[j];
+                    int2 general2d = FlowFieldUtilities.GetGeneral2d(front.LocalIndex, sector, FlowFieldUtilities.SectorMatrixColAmount, FlowFieldUtilities.SectorColAmount);
+                    Vector2 pos = FlowFieldUtilities.IndexToPos(general2d, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition);
+                    Vector3 pos3 = new Vector3(pos.x, 0f, pos.y);
+                    Gizmos.DrawCube(pos3, new Vector3(0.5f, 0.5f, 0.5f));
+                }
+            }
+
         }
         internal void DebugPickedSectors(FlowFieldAgent agent, NativeArray<float> sectorCornerHeights)
         {

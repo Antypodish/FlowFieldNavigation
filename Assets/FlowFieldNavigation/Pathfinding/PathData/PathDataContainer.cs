@@ -130,7 +130,7 @@ namespace FlowFieldNavigation
                         SectorBitArray = sectorBitArray,
                         DijkstraStartIndicies = portalTraversalData.DiskstraStartIndicies,
                     };
-                    _preallocator.SendPreallocationsBack(ref preallocations, internalData.ActivePortalList, flowData.FlowField, internalData.IntegrationField, destinationData.Offset);
+                    _preallocator.SendPreallocationsBack(ref preallocations, internalData.ActiveWaveFronts, flowData.FlowField, internalData.IntegrationField, destinationData.Offset);
                 }
             }
             _preallocator.CheckForDeallocations();
@@ -255,7 +255,7 @@ namespace FlowFieldNavigation
             pathFlowData.FlowField = _preallocator.GetFlowField(internalData.FlowFieldLength.Value);
             pathFlowData.LOSMap = new UnsafeLOSBitmap(internalData.FlowFieldLength.Value, Allocator.Persistent, NativeArrayOptions.ClearMemory);
             internalData.IntegrationField = _preallocator.GetIntegrationField(internalData.FlowFieldLength.Value);
-            internalData.ActivePortalList = _preallocator.GetActiveWaveFrontListPersistent(internalData.PickedSectorList.Length);
+            internalData.ActiveWaveFronts = _preallocator.GetActiveWaveFrontListPersistent(internalData.PickedSectorList.Length);
             PathfindingInternalDataList[pathIndex] = internalData;
             PathFlowDataList[pathIndex] = pathFlowData;
         }

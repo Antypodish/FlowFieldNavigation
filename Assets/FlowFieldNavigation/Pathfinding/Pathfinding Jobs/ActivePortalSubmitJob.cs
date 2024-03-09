@@ -48,7 +48,7 @@ namespace FlowFieldNavigation
             {
                 int start = PortalSequenceBorders[i];
                 int end = PortalSequenceBorders[i + 1];
-                //HANDLE PORTALS EXCEPT TARGET NEIGHBOUR
+
                 for (int j = start; j < end - 1; j++)
                 {
                     bool succesfull = AddCommonSectorsBetweenPortalsToTheWaveFront(j, j + 1);
