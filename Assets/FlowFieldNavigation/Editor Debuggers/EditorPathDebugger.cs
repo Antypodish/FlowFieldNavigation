@@ -263,21 +263,19 @@ namespace FlowFieldNavigation
             PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathIndex];
             PathDestinationData destinationData = _navigationManager.PathDataContainer.PathDestinationDataList[pathIndex];
             FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
-            NativeArray<PortalNode> portalNodes = fg.PortalNodes;
             NativeList<ActivePortal> porSeq = portalTraversalData.PortalSequence;
             NativeList<int> portSeqBorders = portalTraversalData.PortalSequenceBorders;
             Gizmos.color = Color.white;
             if (porSeq.Length == 0) { return; }
 
-            for (int i = 0; i < portSeqBorders.Length - 1; i++)
+            for(int i = 0; i < portSeqBorders.Length - 1; i++)
             {
-                int start = portSeqBorders[i];
-                int curNodeIndex = start;
-                int nextNodeIndex = porSeq[start].NextIndex;
-                while (nextNodeIndex != -1)
+                int seqStart = portSeqBorders[i];
+                int seqEnd = portSeqBorders[i + 1];
+                for(int j = seqStart; j < seqEnd - 1; j++)
                 {
-                    ActivePortal curActivePortal = porSeq[curNodeIndex];
-                    ActivePortal nextActivePortal = porSeq[nextNodeIndex];
+                    ActivePortal curActivePortal = porSeq[j];
+                    ActivePortal nextActivePortal = porSeq[j + 1];
 
                     int2 curActivePortalFieldIndex1 = FlowFieldUtilities.To2D(curActivePortal.FieldIndex1, fieldColAmount);
                     int2 curActivePortalFieldIndex2 = FlowFieldUtilities.To2D(curActivePortal.FieldIndex2, fieldColAmount);
@@ -291,13 +289,7 @@ namespace FlowFieldNavigation
                     Vector2 nextAvtivePortalAvgPos = (nextActivePortalPos1 + nextActivePortalPos2) / 2;
                     Vector3 firstPorPos = new Vector3(curAvtivePortalAvgPos.x, 1f, curAvtivePortalAvgPos.y);
                     Vector3 secondPorPos = new Vector3(nextAvtivePortalAvgPos.x, 1f, nextAvtivePortalAvgPos.y);
-
                     Gizmos.DrawLine(firstPorPos, secondPorPos);
-                    //Gizmos.DrawLine(secondPorPos, secondPorPos + rightArrow3);
-                    //Gizmos.DrawLine(secondPorPos, secondPorPos + leftArrow3);
-
-                    curNodeIndex = nextNodeIndex;
-                    nextNodeIndex = porSeq[nextNodeIndex].NextIndex;
                 }
             }
         }

@@ -55,7 +55,7 @@ namespace FlowFieldNavigation
             NativeArray<int> sourcePortalsAsArray = SourcePortalIndexList.AsArray();
             for (int i = 0; i < sourcePortalsAsArray.Length; i++)
             {
-                PickPortalSequenceFromDijkstra(sourcePortalsAsArray[i]);
+                PickPortalSequence(sourcePortalsAsArray[i]);
             }
             PickSectorsFromPortalSequence();
 
@@ -237,16 +237,8 @@ namespace FlowFieldNavigation
                 {
                     PickSectorsBetweenportals(PortalSequence[j], PortalSequence[j + 1]);
                 }
-                ActivePortal lastActivePortalInBorder = PortalSequence[end - 1];
-                if (lastActivePortalInBorder.NextIndex != -1)
-                {
-                    PickSectorsBetweenportals(lastActivePortalInBorder, PortalSequence[lastActivePortalInBorder.NextIndex]);
-                }
             }
         }
-
-
-
         void PickSectorsBetweenportals(ActivePortal portal1, ActivePortal portal2)
         {
             int sectorTileAmount = SectorColAmount * SectorColAmount;
@@ -270,72 +262,45 @@ namespace FlowFieldNavigation
 
             }
         }
-        void PickPortalSequenceFromDijkstra(int sourcePortal)
+        void PickPortalSequence(int sourcePortalIndex)
         {
-            //NOTE: NextIndex of portalTraversalData is used as:
-            //1. NextIndex in portalTraversalDataArray
-            //2. PortalSequence of corresponding portalTraversalData
-            //For memory optimization reasons :/
-
-            PortalTraversalData sourceData = PortalTraversalDataArray[sourcePortal];
-
-            if (sourceData.HasMark(PortalTraversalMark.DijkstraPicked)) { return; }
-
-            int nextDataIndex = sourceData.NextIndex;
-            sourceData.Mark |= PortalTraversalMark.DijkstraPicked;
-            sourceData.NextIndex = PortalSequence.Length;
-            PortalTraversalDataArray[sourcePortal] = sourceData;
-
-            PortalNode sourcePortalNode = PortalNodes[sourcePortal];
-            ActivePortal sourceActivePortal = new ActivePortal()
+            int curPortalIndex = sourcePortalIndex;
+            while(curPortalIndex != -1)
             {
-                FieldIndex1 = FlowFieldUtilities.To1D(sourcePortalNode.Portal1.Index, FieldColAmount),
-                FieldIndex2 = FlowFieldUtilities.To1D(sourcePortalNode.Portal2.Index, FieldColAmount),
-                Distance = sourceData.DistanceFromTarget,
-                NextIndex = PortalSequence.Length + 1,
-            };
+                PortalTraversalData curPortalData = PortalTraversalDataArray[curPortalIndex];
+                bool curPortalDijkstraPicked = curPortalData.HasMark(PortalTraversalMark.DijkstraPicked);
+                bool curPortalTargetNeighbour = curPortalData.HasMark(PortalTraversalMark.TargetNeighbour);
 
-            //IF SOURCE IS TARGET NEIGHBOUR
-            if (nextDataIndex == -1)
-            {
-                sourceActivePortal.NextIndex = -1;
-                PortalSequence.Add(sourceActivePortal);
-                PortalSequenceBorders.Add(PortalSequence.Length);
-                return;
-            }
-
-            //IF SOURCE IS NOT TARGET NEIGHBOUR
-            PortalSequence.Add(sourceActivePortal);
-            int curIndex = nextDataIndex;
-
-            while (curIndex != -1)
-            {
-                PortalTraversalData curData = PortalTraversalDataArray[curIndex];
-                if (curData.HasMark(PortalTraversalMark.DijkstraPicked))
-                {
-                    ActivePortal previousNode = PortalSequence[PortalSequence.Length - 1];
-                    previousNode.NextIndex = curData.NextIndex;
-                    PortalSequence[PortalSequence.Length - 1] = previousNode;
-                    break;
-                }
-                //PUSH ACTIVE PORTAL
-                PortalNode curPortalNode = PortalNodes[curIndex];
+                PortalNode curPortalNode = PortalNodes[curPortalIndex];
                 ActivePortal curActivePortal = new ActivePortal()
                 {
                     FieldIndex1 = FlowFieldUtilities.To1D(curPortalNode.Portal1.Index, FieldColAmount),
                     FieldIndex2 = FlowFieldUtilities.To1D(curPortalNode.Portal2.Index, FieldColAmount),
-                    Distance = curData.DistanceFromTarget,
-                    NextIndex = math.select(PortalSequence.Length + 1, -1, curData.NextIndex == -1),
+                    Distance = curPortalData.DistanceFromTarget,
                 };
                 PortalSequence.Add(curActivePortal);
 
-                //MARK OR STOP
-                int curDataIndex = curData.NextIndex;
-                curData.Mark |= PortalTraversalMark.DijkstraPicked;
-                curData.NextIndex = PortalSequence.Length - 1;
-                PortalTraversalDataArray[curIndex] = curData;
-
-                curIndex = curDataIndex;
+                curPortalData.Mark |= PortalTraversalMark.DijkstraPicked;
+                PortalTraversalDataArray[curPortalIndex] = curPortalData;
+                if (curPortalDijkstraPicked)
+                {
+                    curPortalIndex = -1;
+                }
+                else if (curPortalTargetNeighbour)
+                {
+                    ActivePortal targetActivePortal = new ActivePortal()
+                    {
+                        FieldIndex1 = FlowFieldUtilities.To1D(Target, FieldColAmount),
+                        FieldIndex2 = FlowFieldUtilities.To1D(Target, FieldColAmount),
+                        Distance = 0,
+                    };
+                    PortalSequence.Add(targetActivePortal);
+                    curPortalIndex = -1;
+                }
+                else
+                {
+                    curPortalIndex = curPortalData.NextIndex;
+                }
             }
             PortalSequenceBorders.Add(PortalSequence.Length);
         }

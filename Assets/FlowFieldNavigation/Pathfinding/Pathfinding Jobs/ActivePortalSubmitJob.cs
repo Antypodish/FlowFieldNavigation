@@ -54,103 +54,14 @@ namespace FlowFieldNavigation
                     bool succesfull = AddCommonSectorsBetweenPortalsToTheWaveFront(j, j + 1);
                     if (!succesfull) { NotActivatedPortals.Add(new NotActivePortalRecord(j, j+1)); }
                 }
-                ActivePortal endPortal = PortalSequence[end - 1];
-                //HANDLE MERGING PORTAL
-                if (!endPortal.IsTargetNeighbour())
-                {
-                    bool succesfull = AddCommonSectorsBetweenPortalsToTheWaveFront(end - 1, endPortal.NextIndex);
-                    if (!succesfull) { NotActivatedPortals.Add(new NotActivePortalRecord(end - 1, endPortal.NextIndex)); }
-                }
-                //HANDLE TARGET NEIGBOUR POINTING TOWARDS TARGET
-                else
-                {
-                    int endSector1 = FlowFieldUtilities.GetSector1D(endPortal.FieldIndex1, FieldColAmount, SectorColAmount, SectorMatrixColAmount);
-                    int endSector2 = FlowFieldUtilities.GetSector1D(endPortal.FieldIndex2, FieldColAmount, SectorColAmount, SectorMatrixColAmount);
-                    int2 targetSector2d = FlowFieldUtilities.GetSector2D(TargetIndex2D, SectorColAmount);
-                    int targetSector1d = FlowFieldUtilities.To1D(targetSector2d, SectorMatrixColAmount);
-                    if (targetSector1d != endSector1 && SectorToPicked[endSector1] != 0)
-                    {
-                        int pickedSectorIndex = (SectorToPicked[endSector1] - 1) / SectorTileAmount;
-                        UnsafeList<ActiveWaveFront> activePortals = ActiveWaveFrontListArray[pickedSectorIndex];
-                        int activeLocalIndex = PickIndexAtSectorAsLocalIndex(endPortal.FieldIndex1, endPortal.FieldIndex2, endSector1);
-                        ActiveWaveFront newActiveWaveFront = new ActiveWaveFront(activeLocalIndex, endPortal.Distance);
-                        if (ActiveWaveFrontExists(newActiveWaveFront, activePortals)) { continue; }
-                        activePortals.Add(newActiveWaveFront);
-                        ActiveWaveFrontListArray[pickedSectorIndex] = activePortals;
-                        PathSectorState sectorState = SectorStateTable[endSector1];
-                        sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
-                        SectorStateTable[endSector1] = sectorState;
-                        SubmitOverlappingSectors(endSector1, targetSector1d);
-                    }
-                    else if (targetSector1d != endSector2 && SectorToPicked[endSector2] != 0)
-                    {
-                        int pickedSectorIndex = (SectorToPicked[endSector2] - 1) / SectorTileAmount;
-                        UnsafeList<ActiveWaveFront> activePortals = ActiveWaveFrontListArray[pickedSectorIndex];
-                        int activeLocalIndex = PickIndexAtSectorAsLocalIndex(endPortal.FieldIndex1, endPortal.FieldIndex2, endSector2);
-                        ActiveWaveFront newActiveWaveFront = new ActiveWaveFront(activeLocalIndex, endPortal.Distance);
-                        if (ActiveWaveFrontExists(newActiveWaveFront, activePortals)) { continue; }
-                        activePortals.Add(newActiveWaveFront);
-                        ActiveWaveFrontListArray[pickedSectorIndex] = activePortals;
-                        PathSectorState sectorState = SectorStateTable[endSector2];
-                        sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
-                        SectorStateTable[endSector2] = sectorState;
-                        SubmitOverlappingSectors(endSector2, targetSector1d);
-                    }
-                    else
-                    {
-                        NotActivatedPortals.Add(new NotActivePortalRecord(end - 1, endPortal.NextIndex));
-                    }
-                }
             }
             for (int i = NotActivatedPortals.Length - 1; i >= 0; i--)
             {
                 NotActivePortalRecord record = NotActivatedPortals[i];
                 int curActivePortalIndex = record.CurSequenceIndex;
                 int nextActivePortalIndex = record.NextSequenceIndex;
-                ActivePortal endPortal = PortalSequence[curActivePortalIndex];
-                if (!endPortal.IsTargetNeighbour())
-                {
-                    bool succesfull = AddCommonSectorsBetweenPortalsToTheWaveFront(curActivePortalIndex, nextActivePortalIndex);
-                    if (succesfull) { NotActivatedPortals.RemoveAtSwapBack(i); }
-                }
-                else
-                {
-                    int endSector1 = FlowFieldUtilities.GetSector1D(endPortal.FieldIndex1, FieldColAmount, SectorColAmount, SectorMatrixColAmount);
-                    int endSector2 = FlowFieldUtilities.GetSector1D(endPortal.FieldIndex2, FieldColAmount, SectorColAmount, SectorMatrixColAmount);
-                    int2 targetSector2d = FlowFieldUtilities.GetSector2D(TargetIndex2D, SectorColAmount);
-                    int targetSector1d = FlowFieldUtilities.To1D(targetSector2d, SectorMatrixColAmount);
-                    if (targetSector1d != endSector1 && SectorToPicked[endSector1] != 0)
-                    {
-                        int pickedSectorIndex = (SectorToPicked[endSector1] - 1) / SectorTileAmount;
-                        UnsafeList<ActiveWaveFront> activePortals = ActiveWaveFrontListArray[pickedSectorIndex];
-                        int activeLocalIndex = PickIndexAtSectorAsLocalIndex(endPortal.FieldIndex1, endPortal.FieldIndex2, endSector1);
-                        ActiveWaveFront newActiveWaveFront = new ActiveWaveFront(activeLocalIndex, endPortal.Distance);
-                        if (ActiveWaveFrontExists(newActiveWaveFront, activePortals)) { continue; }
-                        activePortals.Add(newActiveWaveFront);
-                        ActiveWaveFrontListArray[pickedSectorIndex] = activePortals;
-                        PathSectorState sectorState = SectorStateTable[endSector1];
-                        sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
-                        SectorStateTable[endSector1] = sectorState;
-                        SubmitOverlappingSectors(endSector1, targetSector1d);
-                        NotActivatedPortals.RemoveAtSwapBack(i);
-                    }
-                    else if (targetSector1d != endSector2 && SectorToPicked[endSector2] != 0)
-                    {
-                        int pickedSectorIndex = (SectorToPicked[endSector2] - 1) / SectorTileAmount;
-                        UnsafeList<ActiveWaveFront> activePortals = ActiveWaveFrontListArray[pickedSectorIndex];
-                        int activeLocalIndex = PickIndexAtSectorAsLocalIndex(endPortal.FieldIndex1, endPortal.FieldIndex2, endSector2);
-                        ActiveWaveFront newActiveWaveFront = new ActiveWaveFront(activeLocalIndex, endPortal.Distance);
-                        if (ActiveWaveFrontExists(newActiveWaveFront, activePortals)) { continue; }
-                        activePortals.Add(newActiveWaveFront);
-                        ActiveWaveFrontListArray[pickedSectorIndex] = activePortals;
-                        PathSectorState sectorState = SectorStateTable[endSector2];
-                        sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
-                        SectorStateTable[endSector2] = sectorState;
-                        SubmitOverlappingSectors(endSector2, targetSector1d);
-                        NotActivatedPortals.RemoveAtSwapBack(i);
-                    }
-                }
-
+                bool succesfull = AddCommonSectorsBetweenPortalsToTheWaveFront(curActivePortalIndex, nextActivePortalIndex);
+                if (succesfull) { NotActivatedPortals.RemoveAtSwapBack(i); }
             }
             
             int2 targetSectorIndex2d = FlowFieldUtilities.GetSector2D(TargetIndex2D, SectorColAmount);
