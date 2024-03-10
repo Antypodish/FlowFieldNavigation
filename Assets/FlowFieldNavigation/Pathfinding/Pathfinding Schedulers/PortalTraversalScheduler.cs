@@ -104,6 +104,7 @@ namespace FlowFieldNavigation
             };
 
             JobHandle reductHandle = reductionJob.Schedule();
+            reductHandle.Complete();
             JobHandle travHandle = traversalJob.Schedule(reductHandle);
             if (FlowFieldUtilities.DebugMode) { travHandle.Complete(); }
 

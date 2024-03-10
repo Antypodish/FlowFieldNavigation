@@ -3,6 +3,7 @@ using Unity.Collections;
 using Unity.Burst;
 using Unity.Mathematics;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.XR;
 
 namespace FlowFieldNavigation
 {
@@ -42,6 +43,7 @@ namespace FlowFieldNavigation
         internal NativeList<int> DijkstraStartIndicies;
 
         int _targetSectorIndex1d;
+        bool _targetSectorSubmitted;
         public void Execute()
         {
             DijkstraStartIndicies.Clear();
@@ -49,15 +51,6 @@ namespace FlowFieldNavigation
             //TARGET DATA
             int2 targetSectorIndex2d = new int2(TargetIndex.x / SectorColAmount, TargetIndex.y / SectorColAmount);
             _targetSectorIndex1d = targetSectorIndex2d.y * SectorMatrixColAmount + targetSectorIndex2d.x;
-            int targetGeneralIndex1d = TargetIndex.y * FieldColAmount + TargetIndex.x;
-            if (PickedToSector.Length == 0)
-            {
-                SetIntegratedCosts(targetGeneralIndex1d);
-                PortalTraversalData destinationData = PortalTraversalDataArray[PortalTraversalDataArray.Length - 1];
-                destinationData.DistanceFromTarget = 0;
-                PortalTraversalDataArray[PortalTraversalDataArray.Length - 1] = destinationData;
-                SetTargetNeighbourPortalDataAndAddToList();
-            }
 
             SingleFloatUnsafeHeap<int> walkerHeap = new SingleFloatUnsafeHeap<int>(10, Allocator.Temp);
             SetSourcePortalIndicies();
@@ -112,6 +105,7 @@ namespace FlowFieldNavigation
             int sourcePor2P2pIdx = sourceNode.Portal2.PorToPorPtr;
             int sourcePor1P2pCnt = sourceNode.Portal1.PorToPorCnt;
             int sourcePor2P2pCnt = sourceNode.Portal2.PorToPorCnt;
+            SubmitIfGoalSector(sourceNode.Portal1.Index, sourceNode.Portal2.Index, sourcePortalIndex, ref sourceData);
             TraverseNeighbours(sourceData, aStarTraversedIndicies, ref traversalHeap, sourcePortalIndex, sourcePor1P2pIdx, sourcePor1P2pCnt);
             TraverseNeighbours(sourceData, aStarTraversedIndicies, ref traversalHeap, sourcePortalIndex, sourcePor2P2pIdx, sourcePor2P2pCnt);
 
@@ -126,6 +120,7 @@ namespace FlowFieldNavigation
                 int por2P2pIdx = curNode.Portal2.PorToPorPtr;
                 int por1P2pCnt = curNode.Portal1.PorToPorCnt;
                 int por2P2pCnt = curNode.Portal2.PorToPorCnt;
+                SubmitIfGoalSector(curNode.Portal1.Index, curNode.Portal2.Index, curPortalIndex, ref curData);
                 TraverseNeighbours(curData, aStarTraversedIndicies, ref traversalHeap, curPortalIndex, por1P2pIdx, por1P2pCnt);
                 TraverseNeighbours(curData, aStarTraversedIndicies, ref traversalHeap, curPortalIndex, por2P2pIdx, por2P2pCnt);
                 SetNextNode(ref traversalHeap, out curPortalIndex, out curData);
@@ -154,6 +149,7 @@ namespace FlowFieldNavigation
                 PortalToPortal neighbourConnection = PorPtrs[i];
                 PortalNode portalNode = PortalNodes[neighbourConnection.Index];
                 PortalTraversalData traversalData = PortalTraversalDataArray[neighbourConnection.Index];
+
                 if (traversalData.HasMark(PortalTraversalMark.AStarTraversed))
                 {
                     float newGCost = curData.GCost + neighbourConnection.Distance;
@@ -258,6 +254,21 @@ namespace FlowFieldNavigation
                 }
             }
             return int.MaxValue;
+        }
+        void SubmitIfGoalSector(int2 portalFieldIndex1, int2 portalFieldIndex2, int curPortalIndex, ref PortalTraversalData curTravData)
+        {
+            int sector1 = FlowFieldUtilities.GetSector1D(portalFieldIndex1, SectorColAmount, SectorMatrixColAmount);
+            int sector2 = FlowFieldUtilities.GetSector1D(portalFieldIndex2, SectorColAmount, SectorMatrixColAmount);
+            if((sector1 == _targetSectorIndex1d || sector2 == _targetSectorIndex1d) && !_targetSectorSubmitted)
+            {
+                _targetSectorSubmitted = true;
+                SetIntegratedCosts(FlowFieldUtilities.To1D(TargetIndex, FieldColAmount));
+                PortalTraversalData destinationData = PortalTraversalDataArray[PortalTraversalDataArray.Length - 1];
+                destinationData.DistanceFromTarget = 0;
+                PortalTraversalDataArray[PortalTraversalDataArray.Length - 1] = destinationData;
+                SetTargetNeighbourPortalDataAndAddToList();
+                curTravData = PortalTraversalDataArray[curPortalIndex];
+            }
         }
         void SetSourcePortalIndicies()
         {
