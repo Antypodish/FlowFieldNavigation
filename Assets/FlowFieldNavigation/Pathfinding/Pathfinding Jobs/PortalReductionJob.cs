@@ -21,7 +21,6 @@ namespace FlowFieldNavigation
         internal NativeArray<PortalTraversalData> PortalTraversalDataArray;
 
         internal UnsafeList<PathSectorState> SectorStateTable;
-        internal UnsafeList<int> SectorToPicked;
         internal NativeList<int> PickedToSector;
         internal UnsafeList<DijkstraTile> TargetSectorCosts;
         internal NativeReference<int> FlowFieldLength;
@@ -45,6 +44,7 @@ namespace FlowFieldNavigation
         public void Execute()
         {
             DijkstraStartIndicies.Clear();
+            SourcePortalIndexList.Clear();
             //TARGET DATA
             int2 targetSectorIndex2d = new int2(TargetIndex.x / SectorColAmount, TargetIndex.y / SectorColAmount);
             _targetSectorIndex1d = targetSectorIndex2d.y * SectorMatrixColAmount + targetSectorIndex2d.x;
@@ -59,7 +59,6 @@ namespace FlowFieldNavigation
             }
 
             SingleFloatUnsafeHeap<int> walkerHeap = new SingleFloatUnsafeHeap<int>(10, Allocator.Temp);
-            SourcePortalIndexList.Clear();
             SetSourcePortalIndicies();
             NativeArray<int> sourcePortalsAsArray = SourcePortalIndexList.AsArray();
             NativeList<int> aStarTraversedIndicies = new NativeList<int>(Allocator.Temp);
@@ -119,7 +118,7 @@ namespace FlowFieldNavigation
             int curPortalIndex;
             PortalTraversalData curData;
             SetNextNode(ref traversalHeap, out curPortalIndex, out curData);
-            while (!(IsGoal(curData.DistanceFromTarget) || ShouldMerge(curData.Mark)))
+            while (!(curData.IsGoal() || ShouldMerge(curData.Mark)))
             {
                 PortalNode curNode = PortalNodes[curPortalIndex];
                 int por1P2pIdx = curNode.Portal1.PorToPorPtr;
@@ -221,10 +220,6 @@ namespace FlowFieldNavigation
                 }
             }
         }
-        bool IsGoal(float distanceToDestination)
-        {
-            return distanceToDestination == 0;
-        }
         bool ShouldMerge(PortalTraversalMark traversalMarks)
         {
             return (traversalMarks & PortalTraversalMark.AStarPicked) == PortalTraversalMark.AStarPicked;
@@ -282,7 +277,6 @@ namespace FlowFieldNavigation
                 PathSectorState sectorState = SectorStateTable[sourceSectorIndexFlat];
                 if ((sectorState & PathSectorState.Included) != PathSectorState.Included)
                 {
-                    SectorToPicked[sourceSectorIndexFlat] = PickedToSector.Length * sectorTileAmount + 1;
                     PickedToSector.Add(sourceSectorIndexFlat);
                     SectorStateTable[sourceSectorIndexFlat] |= PathSectorState.Included | PathSectorState.Source;
                     SetSectorPortalIndicies(sourceSectorIndexFlat, SourcePortalIndexList, targetIsland);

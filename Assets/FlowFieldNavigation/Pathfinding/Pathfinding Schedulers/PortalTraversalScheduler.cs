@@ -35,7 +35,6 @@ namespace FlowFieldNavigation
         {
             PathfindingInternalData pathInternalData = _navigationManager.PathDataContainer.PathfindingInternalDataList[reqInfo.PathIndex];
             PathDestinationData destinationData = _pathContainer.PathDestinationDataList[reqInfo.PathIndex];
-            PathLocationData locationData = _pathContainer.PathLocationDataList[reqInfo.PathIndex];
             PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[reqInfo.PathIndex];
             UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[reqInfo.PathIndex];
             int2 destinationIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition);
@@ -65,7 +64,6 @@ namespace FlowFieldNavigation
                 SectorNodes = pickedFieldGraph.SectorNodes,
                 Costs = pickedCostField.Costs,
                 LocalDirections = _navigationManager.FieldDataContainer.GetSectorDirections(),
-                SectorToPicked = locationData.SectorToPicked,
                 PortalTraversalDataArray = portalTraversalData.PortalTraversalDataArray,
                 SourcePortalIndexList = portalTraversalData.SourcePortalIndexList,
                 TargetNeighbourPortalIndicies = portalTraversalData.TargetSectorPortalIndexList,
@@ -97,7 +95,6 @@ namespace FlowFieldNavigation
                 PorPtrs = pickedFieldGraph.PorToPorPtrs,
                 SectorNodes = pickedFieldGraph.SectorNodes,
                 PortalSequence = portalTraversalData.PortalSequence,
-                SectorToPicked = locationData.SectorToPicked,
                 FlowFieldLength = pathInternalData.FlowFieldLength,
                 PortalTraversalDataArray = portalTraversalData.PortalTraversalDataArray,
                 TargetNeighbourPortalIndicies = portalTraversalData.TargetSectorPortalIndexList,

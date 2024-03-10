@@ -24,7 +24,6 @@ namespace FlowFieldNavigation
         internal UnsafeList<PathSectorState> SectorStateTable;
         internal NativeList<int> PickedToSector;
         internal NativeReference<int> FlowFieldLength;
-        internal UnsafeList<int> SectorToPicked;
 
         [ReadOnly] internal NativeArray<SectorNode> SectorNodes;
         [ReadOnly] internal NativeArray<WindowNode> WindowNodes;
@@ -33,9 +32,9 @@ namespace FlowFieldNavigation
         [ReadOnly] internal NativeArray<PortalToPortal> PorPtrs;
         [ReadOnly] internal NativeReference<int> NewPickedSectorStartIndex;
 
-        internal NativeList<int> SourcePortalIndexList;
-        internal NativeList<int> DijkstraStartIndicies;
-        internal NativeList<int> TargetNeighbourPortalIndicies;
+        [ReadOnly] internal NativeList<int> SourcePortalIndexList;
+        [ReadOnly] internal NativeList<int> DijkstraStartIndicies;
+        [ReadOnly] internal NativeList<int> TargetNeighbourPortalIndicies;
         internal NativeReference<SectorsWihinLOSArgument> SectorWithinLOSState;
         int _targetSectorIndex1d;
         public void Execute()
@@ -213,9 +212,8 @@ namespace FlowFieldNavigation
         void AddTargetSector()
         {
             int sectorTileAmount = SectorColAmount * SectorColAmount;
-            if (SectorToPicked[_targetSectorIndex1d] == 0)
+            if ((SectorStateTable[_targetSectorIndex1d] & PathSectorState.Included) != PathSectorState.Included)
             {
-                SectorToPicked[_targetSectorIndex1d] = PickedToSector.Length * sectorTileAmount + 1;
                 PickedToSector.Add(_targetSectorIndex1d);
                 SectorStateTable[_targetSectorIndex1d] |= PathSectorState.Included;
             }
@@ -245,13 +243,11 @@ namespace FlowFieldNavigation
             bool sector2Included = (SectorStateTable[win1Sec2Index] & PathSectorState.Included) == PathSectorState.Included;
             if ((win1Sec1Index == win2Sec1Index || win1Sec1Index == win2Sec2Index) && !sector1Included)
             {
-                SectorToPicked[win1Sec1Index] = PickedToSector.Length * sectorTileAmount + 1;
                 PickedToSector.Add(win1Sec1Index);
                 SectorStateTable[win1Sec1Index] |= PathSectorState.Included;
             }
             if ((win1Sec2Index == win2Sec1Index || win1Sec2Index == win2Sec2Index) && !sector2Included)
             {
-                SectorToPicked[win1Sec2Index] = PickedToSector.Length * sectorTileAmount + 1;
                 PickedToSector.Add(win1Sec2Index);
                 SectorStateTable[win1Sec2Index] |= PathSectorState.Included;
 

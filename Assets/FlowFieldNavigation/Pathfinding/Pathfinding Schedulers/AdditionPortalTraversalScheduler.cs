@@ -36,7 +36,6 @@ namespace FlowFieldNavigation
             PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
             UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathInfo.PathIndex];
             PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathInfo.PathIndex];
-            PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
             portalTraversalData.PathAdditionSequenceBorderStartIndex.Value = portalTraversalData.PortalSequenceBorders.Length - 1;
             portalTraversalData.NewPickedSectorStartIndex.Value = internalData.PickedSectorList.Length;
 
@@ -67,7 +66,6 @@ namespace FlowFieldNavigation
                 IslandFields = pickedFieldGraph.IslandFields,
                 SectorStateTable = sectorStateTable,
                 DijkstraStartIndicies = portalTraversalData.DiskstraStartIndicies,
-                SectorToPicked = locationData.SectorToPicked,
                 Costs = costField.Costs,
                 LocalDirections = _navigationManager.FieldDataContainer.GetSectorDirections(),
                 FlowFieldLength = internalData.FlowFieldLength,
@@ -99,7 +97,6 @@ namespace FlowFieldNavigation
                 AddedPortalSequenceBorderStartIndex = portalTraversalData.PortalSequenceBorders.Length,
                 SectorWithinLOSState = internalData.SectorWithinLOSState,
                 NewPickedSectorStartIndex = portalTraversalData.NewPickedSectorStartIndex,
-                SectorToPicked = locationData.SectorToPicked,
                 TargetNeighbourPortalIndicies = portalTraversalData.TargetSectorPortalIndexList,
             };
             JobHandle reductHandle = reductionJob.Schedule();

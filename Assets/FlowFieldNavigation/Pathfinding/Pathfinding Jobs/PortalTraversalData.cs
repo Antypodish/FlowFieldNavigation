@@ -1,4 +1,5 @@
 ﻿using Unity.Burst;
+using Unity.VisualScripting.YamlDotNet.Core;
 
 namespace FlowFieldNavigation
 {
@@ -21,6 +22,10 @@ namespace FlowFieldNavigation
             FCost = 0;
             DistanceFromTarget = float.MaxValue;
             Mark = 0;
+        }
+        internal bool IsGoal()
+        {
+            return DistanceFromTarget == 0 && (Mark & PortalTraversalMark.TargetNeighbour) != PortalTraversalMark.TargetNeighbour;
         }
         internal bool HasMark(PortalTraversalMark mark)
         {
