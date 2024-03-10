@@ -107,6 +107,13 @@ namespace FlowFieldNavigation
             int2 local2d = index - sectorStartIndex;
             return local2d.y * sectorColAmount + local2d.x;
         }
+        internal static int GetLocal1D(int2 index, int sectorColAmount)
+        {
+            int2 sectorIndex = new int2(index.x / sectorColAmount, index.y / sectorColAmount);
+            int2 sectorStartIndex = new int2(sectorIndex.x * sectorColAmount, sectorIndex.y * sectorColAmount);
+            int2 local2d = index - sectorStartIndex;
+            return local2d.y * sectorColAmount + local2d.x;
+        }
         internal static LocalIndex1d GetLocal1D(int2 general2d, int sectorColAmount, int sectorMatrixColAmount)
         {//1000,995
             int2 sector2d = general2d / sectorColAmount;//100,99

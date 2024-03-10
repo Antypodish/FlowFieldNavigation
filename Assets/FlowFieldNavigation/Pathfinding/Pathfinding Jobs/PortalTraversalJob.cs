@@ -41,10 +41,9 @@ namespace FlowFieldNavigation
             //TARGET DATA
             int2 targetSectorIndex2d = new int2(Target.x / SectorColAmount, Target.y / SectorColAmount);
             _targetSectorIndex1d = targetSectorIndex2d.y * SectorMatrixColAmount + targetSectorIndex2d.x;
-
-            bool isPathNew = PortalSequenceBorders.Length == 0;
             if(PortalSequenceBorders.Length == 0) { PortalSequenceBorders.Add(0); }
-            RunDijkstra(isPathNew);
+
+            RunDijkstra();
             NativeArray<int> sourcePortalsAsArray = SourcePortalIndexList.AsArray();
             for (int i = 0; i < sourcePortalsAsArray.Length; i++)
             {
@@ -63,7 +62,7 @@ namespace FlowFieldNavigation
             }
             AddTargetSector();
         }
-        void RunDijkstra(bool isPathNew)
+        void RunDijkstra()
         {
             SingleFloatUnsafeHeap<int> travHeap = new SingleFloatUnsafeHeap<int>(0, Allocator.Temp);
             NativeArray<PortalTraversalData> portalTraversalDataArray = PortalTraversalDataArray;
