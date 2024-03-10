@@ -44,6 +44,7 @@ namespace FlowFieldNavigation
             
             PortalReductionJob reductionJob = new PortalReductionJob()
             {
+                TileSize = FlowFieldUtilities.TileSize,
                 FieldColAmount = FlowFieldUtilities.FieldColAmount,
                 FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
                 SectorTileAmount = FlowFieldUtilities.SectorTileAmount,

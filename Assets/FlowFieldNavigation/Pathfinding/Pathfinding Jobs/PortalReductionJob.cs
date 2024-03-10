@@ -10,6 +10,7 @@ namespace FlowFieldNavigation
     internal struct PortalReductionJob : IJob
     {
         internal int2 TargetIndex;
+        internal float TileSize;
         internal int FieldColAmount;
         internal int FieldRowAmount;
         internal float FieldTileSize;
@@ -226,14 +227,9 @@ namespace FlowFieldNavigation
         }
         float GetHCost(Index2 nodePos)
         {
-            int2 newNodePos = new int2(nodePos.C, nodePos.R);
+            int2 newNodePos = nodePos;
             int2 targetPos = TargetIndex;
-
-            int xDif = math.abs(newNodePos.x - targetPos.x);
-            int yDif = math.abs(newNodePos.y - targetPos.y);
-            int smallOne = math.min(xDif, yDif);
-            int bigOne = math.max(xDif, yDif);
-            return (bigOne - smallOne) * 1f + smallOne * 1.4f;
+            return math.distance(newNodePos * new float2(TileSize, TileSize), targetPos * new float2(TileSize, TileSize));
         }
         internal int GetIsland(int2 general2d)
         {

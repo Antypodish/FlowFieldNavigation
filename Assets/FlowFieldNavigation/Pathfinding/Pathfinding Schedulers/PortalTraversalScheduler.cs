@@ -3,10 +3,10 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
+using System.Diagnostics;
 
 namespace FlowFieldNavigation
 {
-
     internal class PortalTraversalScheduler
     {
         FlowFieldNavigationManager _navigationManager;
@@ -45,6 +45,7 @@ namespace FlowFieldNavigation
 
             PortalReductionJob reductionJob = new PortalReductionJob()
             {
+                TileSize = FlowFieldUtilities.TileSize,
                 TargetIndex = destinationIndex,
                 FieldColAmount = FlowFieldUtilities.FieldColAmount,
                 FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
