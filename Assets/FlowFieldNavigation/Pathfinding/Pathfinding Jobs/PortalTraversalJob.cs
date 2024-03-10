@@ -34,7 +34,6 @@ namespace FlowFieldNavigation
 
         [ReadOnly] internal NativeList<int> SourcePortalIndexList;
         [ReadOnly] internal NativeList<int> DijkstraStartIndicies;
-        [ReadOnly] internal NativeList<int> TargetNeighbourPortalIndicies;
         internal NativeReference<SectorsWihinLOSArgument> SectorWithinLOSState;
         int _targetSectorIndex1d;
         public void Execute()
@@ -71,32 +70,12 @@ namespace FlowFieldNavigation
             NativeArray<PortalNode> portalNodes = PortalNodes;
             NativeArray<PortalToPortal> porPtrs = PorPtrs;
 
-            if (isPathNew)
+            for (int i = 0; i < DijkstraStartIndicies.Length; i++)
             {
-                for (int i = 0; i < TargetNeighbourPortalIndicies.Length; i++)
-                {
-                    int index = TargetNeighbourPortalIndicies[i];
-                    PortalTraversalData targetNeighbour = PortalTraversalDataArray[index];
-                    targetNeighbour.Mark |= PortalTraversalMark.DijkstraTraversed;
-                    targetNeighbour.DistanceFromTarget++;
-                    PortalTraversalDataArray[index] = targetNeighbour;
-                }
-
-                for (int i = 0; i < TargetNeighbourPortalIndicies.Length; i++)
-                {
-                    int index = TargetNeighbourPortalIndicies[i];
-                    float distanceFromTarget = portalTraversalDataArray[index].DistanceFromTarget;
-                    EnqueueNeighbours(index, distanceFromTarget);
-                }
-            }
-            else
-            {
-                for (int i = 0; i < DijkstraStartIndicies.Length; i++)
-                {
-                    int index = DijkstraStartIndicies[i];
-                    float distanceFromTarget = portalTraversalDataArray[index].DistanceFromTarget;
-                    EnqueueNeighbours(index, distanceFromTarget);
-                }
+                int index = DijkstraStartIndicies[i];
+                PortalTraversalData portalData = PortalTraversalDataArray[index];
+                portalData.Mark |= PortalTraversalMark.DijkstraTraversed;
+                EnqueueNeighbours(index, portalData.DistanceFromTarget);
             }
 
             int curIndex = GetNextIndex();

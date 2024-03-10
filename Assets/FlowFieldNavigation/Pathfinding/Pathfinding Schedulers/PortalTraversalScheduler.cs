@@ -67,11 +67,9 @@ namespace FlowFieldNavigation
                 LocalDirections = _navigationManager.FieldDataContainer.GetSectorDirections(),
                 PortalTraversalDataArray = portalTraversalData.PortalTraversalDataArray,
                 SourcePortalIndexList = portalTraversalData.SourcePortalIndexList,
-                TargetNeighbourPortalIndicies = portalTraversalData.TargetSectorPortalIndexList,
                 IslandFields = pickedFieldGraph.IslandFields,
                 SectorStateTable = sectorStateTable,
                 DijkstraStartIndicies = portalTraversalData.DiskstraStartIndicies,
-                FlowFieldLength = pathInternalData.FlowFieldLength,
             };
 
             //TRAVERSAL
@@ -98,7 +96,6 @@ namespace FlowFieldNavigation
                 PortalSequence = portalTraversalData.PortalSequence,
                 FlowFieldLength = pathInternalData.FlowFieldLength,
                 PortalTraversalDataArray = portalTraversalData.PortalTraversalDataArray,
-                TargetNeighbourPortalIndicies = portalTraversalData.TargetSectorPortalIndexList,
                 SectorStateTable = sectorStateTable,
                 SourcePortalIndexList = portalTraversalData.SourcePortalIndexList,                
             };

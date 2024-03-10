@@ -69,8 +69,6 @@ namespace FlowFieldNavigation
                 DijkstraStartIndicies = portalTraversalData.DiskstraStartIndicies,
                 Costs = costField.Costs,
                 LocalDirections = _navigationManager.FieldDataContainer.GetSectorDirections(),
-                FlowFieldLength = internalData.FlowFieldLength,
-                TargetNeighbourPortalIndicies = portalTraversalData.TargetSectorPortalIndexList,
             };
 
             PortalTraversalJob travJob = new PortalTraversalJob()
@@ -98,7 +96,6 @@ namespace FlowFieldNavigation
                 AddedPortalSequenceBorderStartIndex = portalTraversalData.PortalSequenceBorders.Length,
                 SectorWithinLOSState = internalData.SectorWithinLOSState,
                 NewPickedSectorStartIndex = portalTraversalData.NewPickedSectorStartIndex,
-                TargetNeighbourPortalIndicies = portalTraversalData.TargetSectorPortalIndexList,
             };
             JobHandle reductHandle = reductionJob.Schedule();
             JobHandle travHandle = travJob.Schedule(reductHandle);
