@@ -152,7 +152,7 @@ namespace FlowFieldNavigation
             NativeList<int> unusedFlockIndexList = _navigationManager.FlockDataContainer.UnusedFlockIndexList;
             NativeList<Flock> flockList = _navigationManager.FlockDataContainer.FlockList;
             _islandFieldProcessors = islandFieldProcessors;
-            NativeArray<UnsafeList<DijkstraTile>> targetSectorIntegrations = _pathContainer.TargetSectorIntegrationList.AsArray();
+            NativeArray<UnsafeList<float>> targetSectorIntegrations = _pathContainer.TargetSectorIntegrationList.AsArray();
             NativeArray<PathLocationData> pathLocationDataArray = _pathContainer.PathLocationDataList.AsArray();
             NativeArray<PathFlowData> pathFlowDataArray = _pathContainer.PathFlowDataList.AsArray();
             NativeArray<PathState> pathStateArray = _pathContainer.ExposedPathStateList.AsArray();

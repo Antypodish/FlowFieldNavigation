@@ -46,12 +46,14 @@ namespace FlowFieldNavigation
         }
         internal PreallocationPack GetPreallocations(int offset)
         {
+            UnsafeList<float> targetSectorCosts = new UnsafeList<float>(FlowFieldUtilities.SectorTileAmount, Allocator.Persistent);
+            targetSectorCosts.Length = FlowFieldUtilities.SectorTileAmount;
             return new PreallocationPack()
             {
                 PortalTraversalDataArray = _porTravDataArrayFactory.GetPortalTraversalDataArray(offset),
                 PortalSequence = _portalSequenceFactory.GetPortalSequenceList(),
                 PortalSequenceBorders = _portalSequenceFactory.GetPathRequestBorders(),
-                TargetSectorCosts = _targetSectorCostsArrayFactory.GetTargetSecorCosts(),
+                TargetSectorCosts = targetSectorCosts,
                 SectorToPicked = _sectorTransformationFactory.GetSectorToPickedArray(),
                 PickedToSector = _sectorTransformationFactory.GetPickedToSectorList(),
                 SourcePortalIndexList = _nativeIntListFactory.GetNativeIntList(),
@@ -78,7 +80,7 @@ namespace FlowFieldNavigation
         {
             _porTravDataArrayFactory.SendPortalTraversalDataArray(preallocations.PortalTraversalDataArray, offset);
             _portalSequenceFactory.SendPortalSequences(preallocations.PortalSequence, preallocations.PortalSequenceBorders);
-            _targetSectorCostsArrayFactory.SendTargetSectorCosts(preallocations.TargetSectorCosts);
+            preallocations.TargetSectorCosts.Dispose();
             _sectorTransformationFactory.SendSectorTransformationsBack(preallocations.SectorToPicked, preallocations.PickedToSector);
             _nativeIntListFactory.SendNativeIntList(preallocations.TargetSectorPortalIndexList);
             _nativeIntListFactory.SendNativeIntList(preallocations.SourcePortalIndexList);

@@ -22,7 +22,7 @@ namespace FlowFieldNavigation
         internal float FieldMaxXExcluding;
         internal float FieldMaxYExcluding;
         internal float2 FieldGridStartPos;
-        [ReadOnly] internal NativeArray<UnsafeList<DijkstraTile>> TargetSectorIntegrations;
+        [ReadOnly] internal NativeArray<UnsafeList<float>> TargetSectorIntegrations;
         [ReadOnly] internal NativeArray<PathLocationData> PathLocationDataArray;
         [ReadOnly] internal NativeArray<PathFlowData> PathFlowDataArray;
         [ReadOnly] internal NativeArray<PathState> PathStateArray;
@@ -40,7 +40,7 @@ namespace FlowFieldNavigation
             {
                 return;
             }
-            UnsafeList<DijkstraTile> targetSectorIntegration = TargetSectorIntegrations[index];
+            UnsafeList<float> targetSectorIntegration = TargetSectorIntegrations[index];
             PathDestinationData destinationData = PathDestinationDataArray[index];
             if (destinationData.DestinationType == DestinationType.DynamicDestination)
             {
@@ -79,8 +79,7 @@ namespace FlowFieldNavigation
                 }
                 int oldSector = FlowFieldUtilities.GetSector1D(oldDestinationIndex, SectorColAmount, SectorMatrixColAmount);
                 bool outOfReach = oldSector != newDestinationLocal.sector;
-                DijkstraTile targetTile = targetSectorIntegration[newDestinationLocal.index];
-                outOfReach = outOfReach || targetTile.IntegratedCost == float.MaxValue;
+                outOfReach = outOfReach || targetSectorIntegration[newDestinationLocal.index] == float.MaxValue;
 
                 //Output
                 DynamicDestinationState destinationState = oldDestinationIndex.Equals(newDestinationIndex) ? DynamicDestinationState.None : DynamicDestinationState.Moved;

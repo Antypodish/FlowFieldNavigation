@@ -24,8 +24,7 @@ namespace FlowFieldNavigation
 
         internal UnsafeList<PathSectorState> SectorStateTable;
         internal NativeList<int> PickedToSector;
-        internal UnsafeList<DijkstraTile> TargetSectorCosts;
-        internal UnsafeList<float> TargetSectorCostsNew;
+        internal UnsafeList<float> TargetSectorCosts;
 
         [ReadOnly] internal NativeSlice<float2> SourcePositions;
         [ReadOnly] internal NativeArray<SectorNode> SectorNodes;
@@ -271,8 +270,8 @@ namespace FlowFieldNavigation
             int sector2 = FlowFieldUtilities.GetSector1D(portalFieldIndex2, SectorColAmount, SectorMatrixColAmount);
             if((sector1 == _targetSectorIndex1d || sector2 == _targetSectorIndex1d) && !_targetSectorSubmitted)
             {
-                _targetSectorSubmitted = true;
-                SetIntegratedCosts(FlowFieldUtilities.To1D(TargetIndex, FieldColAmount));
+                _targetSectorSubmitted = true; 
+                SetTargetSectorCosts();
                 PortalTraversalData destinationData = PortalTraversalDataArray[PortalTraversalDataArray.Length - 1];
                 destinationData.DistanceFromTarget = 0;
                 PortalTraversalDataArray[PortalTraversalDataArray.Length - 1] = destinationData;
@@ -336,7 +335,7 @@ namespace FlowFieldNavigation
                 {
                     int portalNodeIndex = j;
                     int portalLocalIndexAtSector = FlowFieldUtilities.GetLocal1dInSector(PortalNodes[portalNodeIndex], _targetSectorIndex1d, SectorMatrixColAmount, SectorColAmount);
-                    float integratedCost = TargetSectorCosts[portalLocalIndexAtSector].IntegratedCost;
+                    float integratedCost = TargetSectorCosts[portalLocalIndexAtSector];
                     if (integratedCost == float.MaxValue) { continue; }
                     PortalTraversalData portalData = PortalTraversalDataArray[portalNodeIndex];
                     portalData.DistanceFromTarget = integratedCost;
@@ -350,21 +349,20 @@ namespace FlowFieldNavigation
         {
             int sectorColAmount = SectorColAmount;
             int sectorTileAmount = SectorTileAmount;
-            UnsafeList<float> targetSectorCostsNew = TargetSectorCostsNew;
+            UnsafeList<float> targetSectorCostsNew = TargetSectorCosts;
             NativeSlice<byte> costs = new NativeSlice<byte>(Costs, _targetSectorIndex1d * SectorTileAmount, SectorTileAmount);
             NativeBitArray isBlocked = new NativeBitArray(SectorTileAmount, Allocator.Temp);
-            for(int i = 0; i < TargetSectorCostsNew.Length; i++)
+            for(int i = 0; i < TargetSectorCosts.Length; i++)
             {
-                TargetSectorCostsNew[i] = float.MaxValue;
+                TargetSectorCosts[i] = float.MaxValue;
                 isBlocked.Set(i, costs[i] == byte.MaxValue);
             }
-
             NativeQueue<int> fastMarchingQueue = new NativeQueue<int>(Allocator.Temp);
             int4 directions_N_E_S_W;
             int4 directions_NE_SE_SW_NW;
             bool4 isBlocked_N_E_S_W;
             int targetLocal1d = FlowFieldUtilities.GetLocal1D(TargetIndex, SectorColAmount);
-            TargetSectorCostsNew[targetLocal1d] = 0;
+            TargetSectorCosts[targetLocal1d] = 0;
             isBlocked.Set(targetLocal1d, true);
             SetNeighbourData(targetLocal1d);
             EnqueueNeighbours();
@@ -372,7 +370,7 @@ namespace FlowFieldNavigation
             {
                 int curIndex = fastMarchingQueue.Dequeue();
                 SetNeighbourData(curIndex);
-                TargetSectorCostsNew[curIndex] = GetCost();
+                TargetSectorCosts[curIndex] = GetCost();
                 EnqueueNeighbours();
             }
 
@@ -397,9 +395,9 @@ namespace FlowFieldNavigation
                 directions_NE_SE_SW_NW += curIndex;
                 bool4 overflow_N_E_S_W = new bool4()
                 {
-                    x = directions_N_E_S_W.x > sectorTileAmount,
+                    x = directions_N_E_S_W.x >= sectorTileAmount,
                     y = (directions_N_E_S_W.y % sectorColAmount) == 0,
-                    z = directions_N_E_S_W.z < sectorTileAmount,
+                    z = directions_N_E_S_W.z < 0,
                     w = (curIndex % sectorColAmount) == 0,
                 };
                 bool4 overflow_NE_SE_SW_NW = new bool4()
@@ -411,7 +409,6 @@ namespace FlowFieldNavigation
                 };
                 directions_N_E_S_W = math.select(directions_N_E_S_W, curIndex, overflow_N_E_S_W);
                 directions_NE_SE_SW_NW = math.select(directions_NE_SE_SW_NW, curIndex, overflow_NE_SE_SW_NW);
-
                 isBlocked_N_E_S_W = new bool4()
                 {
                     x = isBlocked.IsSet(directions_N_E_S_W.x),
@@ -463,107 +460,6 @@ namespace FlowFieldNavigation
                     fastMarchingQueue.Enqueue(directions_N_E_S_W.w);
                     isBlocked.Set(directions_N_E_S_W.w, true);
                 }
-            }
-        }
-        void SetIntegratedCosts(int targetIndex)
-        {
-            NativeQueue<int> aStarQueue = new NativeQueue<int>(Allocator.Temp);
-            CalculateIntegratedCosts(TargetSectorCosts, aStarQueue, SectorNodes[_targetSectorIndex1d].Sector, targetIndex);
-        }
-        void CalculateIntegratedCosts(UnsafeList<DijkstraTile> integratedCosts, NativeQueue<int> aStarQueue, Sector sector, int targetIndexFlat)
-        {
-            //DATA
-            int2 targetIndex2d = FlowFieldUtilities.To2D(targetIndexFlat, FieldColAmount);
-            NativeSlice<byte> costs = new NativeSlice<byte>(Costs, _targetSectorIndex1d * SectorTileAmount, SectorTileAmount);
-
-            //CODE
-
-            Reset();
-            int targetLocalIndex = FlowFieldUtilities.GetLocal1D(targetIndex2d, SectorColAmount, SectorMatrixColAmount).index;
-            DijkstraTile targetTile = integratedCosts[targetLocalIndex];
-            targetTile.IntegratedCost = 0f;
-            targetTile.IsAvailable = false;
-            integratedCosts[targetLocalIndex] = targetTile;
-            Enqueue(LocalDirections[targetLocalIndex]);
-            while (!aStarQueue.IsEmpty())
-            {
-                int localindex = aStarQueue.Dequeue();
-                DijkstraTile tile = integratedCosts[localindex];
-                tile.IntegratedCost = GetCost(LocalDirections[localindex]);
-                integratedCosts[localindex] = tile;
-                Enqueue(LocalDirections[localindex]);
-            }
-
-            //HELPERS
-
-            void Reset()
-            {
-                for (int i = 0; i < integratedCosts.Length; i++)
-                {
-                    byte cost = costs[i];
-                    if (cost == byte.MaxValue)
-                    {
-                        integratedCosts[i] = new DijkstraTile(cost, float.MaxValue, false);
-                        continue;
-                    }
-                    integratedCosts[i] = new DijkstraTile(cost, float.MaxValue, true);
-                }
-            }
-            void Enqueue(SectorDirectionData localDirections)
-            {
-                int n = localDirections.N;
-                int e = localDirections.E;
-                int s = localDirections.S;
-                int w = localDirections.W;
-                if (integratedCosts[n].IsAvailable)
-                {
-                    aStarQueue.Enqueue(n);
-                    DijkstraTile tile = integratedCosts[n];
-                    tile.IsAvailable = false;
-                    integratedCosts[n] = tile;
-                }
-                if (integratedCosts[e].IsAvailable)
-                {
-                    aStarQueue.Enqueue(e);
-                    DijkstraTile tile = integratedCosts[e];
-                    tile.IsAvailable = false;
-                    integratedCosts[e] = tile;
-                }
-                if (integratedCosts[s].IsAvailable)
-                {
-                    aStarQueue.Enqueue(s);
-                    DijkstraTile tile = integratedCosts[s];
-                    tile.IsAvailable = false;
-                    integratedCosts[s] = tile;
-                }
-                if (integratedCosts[w].IsAvailable)
-                {
-                    aStarQueue.Enqueue(w);
-                    DijkstraTile tile = integratedCosts[w];
-                    tile.IsAvailable = false;
-                    integratedCosts[w] = tile;
-                }
-            }
-            float GetCost(SectorDirectionData localDirections)
-            {
-                float costToReturn = float.MaxValue;
-                float nCost = integratedCosts[localDirections.N].IntegratedCost + 1f;
-                float neCost = integratedCosts[localDirections.NE].IntegratedCost + 1.4f;
-                float eCost = integratedCosts[localDirections.E].IntegratedCost + 1f;
-                float seCost = integratedCosts[localDirections.SE].IntegratedCost + 1.4f;
-                float sCost = integratedCosts[localDirections.S].IntegratedCost + 1f;
-                float swCost = integratedCosts[localDirections.SW].IntegratedCost + 1.4f;
-                float wCost = integratedCosts[localDirections.W].IntegratedCost + 1f;
-                float nwCost = integratedCosts[localDirections.NW].IntegratedCost + 1.4f;
-                if (nCost < costToReturn) { costToReturn = nCost; }
-                if (neCost < costToReturn) { costToReturn = neCost; }
-                if (eCost < costToReturn) { costToReturn = eCost; }
-                if (seCost < costToReturn) { costToReturn = seCost; }
-                if (sCost < costToReturn) { costToReturn = sCost; }
-                if (swCost < costToReturn) { costToReturn = swCost; }
-                if (wCost < costToReturn) { costToReturn = wCost; }
-                if (nwCost < costToReturn) { costToReturn = nwCost; }
-                return costToReturn;
             }
         }
     }

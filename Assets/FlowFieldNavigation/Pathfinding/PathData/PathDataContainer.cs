@@ -20,7 +20,7 @@ namespace FlowFieldNavigation
         internal NativeList<PathFlowData> PathFlowDataList;
         internal NativeList<UnsafeList<PathSectorState>> PathSectorStateTableList;
         internal NativeList<PathDestinationData> PathDestinationDataList;
-        internal NativeList<UnsafeList<DijkstraTile>> TargetSectorIntegrationList;
+        internal NativeList<UnsafeList<float>> TargetSectorIntegrationList;
         internal NativeList<PathRoutineData> PathRoutineDataList;
         internal NativeList<SectorBitArray> PathSectorBitArrays;
         internal List<PathPortalTraversalData> PathPortalTraversalDataList;
@@ -44,7 +44,7 @@ namespace FlowFieldNavigation
             PathPortalTraversalDataList = new List<PathPortalTraversalData>();
             PathDestinationDataList = new NativeList<PathDestinationData>(Allocator.Persistent);
             ExposedPathStateList = new NativeList<PathState>(Allocator.Persistent);
-            TargetSectorIntegrationList = new NativeList<UnsafeList<DijkstraTile>>(Allocator.Persistent);
+            TargetSectorIntegrationList = new NativeList<UnsafeList<float>>(Allocator.Persistent);
             PathRoutineDataList = new NativeList<PathRoutineData>(Allocator.Persistent);
             PathSectorBitArrays = new NativeList<SectorBitArray>(Allocator.Persistent);
 
@@ -94,7 +94,7 @@ namespace FlowFieldNavigation
                     PathFlowData flowData = PathFlowDataList[i];
                     UnsafeList<PathSectorState> sectorStateTable = PathSectorStateTableList[i];
                     PathPortalTraversalData portalTraversalData = PathPortalTraversalDataList[i];
-                    UnsafeList<DijkstraTile> targetSectorIntegration = TargetSectorIntegrationList[i];
+                    UnsafeList<float> targetSectorIntegration = TargetSectorIntegrationList[i];
                     PathDestinationData destinationData = PathDestinationDataList[i];
                     SectorBitArray sectorBitArray = PathSectorBitArrays[i];
                     NativeArray<OverlappingDirection> sectorOverlappingDirections = SectorOverlappingDirectionTableList[i];
