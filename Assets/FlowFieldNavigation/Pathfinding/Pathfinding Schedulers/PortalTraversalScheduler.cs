@@ -69,7 +69,6 @@ namespace FlowFieldNavigation
                 PortalTraversalDataArray = portalTraversalData.PortalTraversalDataArray,
                 SourcePortalIndexList = portalTraversalData.SourcePortalIndexList,
                 TargetNeighbourPortalIndicies = portalTraversalData.TargetSectorPortalIndexList,
-                AStarTraverseIndexList = portalTraversalData.AStartTraverseIndexList,
                 IslandFields = pickedFieldGraph.IslandFields,
                 SectorStateTable = sectorStateTable,
                 DijkstraStartIndicies = portalTraversalData.DiskstraStartIndicies,

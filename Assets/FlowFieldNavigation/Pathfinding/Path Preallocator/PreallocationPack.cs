@@ -13,7 +13,6 @@ namespace FlowFieldNavigation
         internal UnsafeList<int> SectorToPicked;
         internal NativeList<int> PickedToSector;
         internal NativeQueue<int> PortalTraversalFastMarchingQueue;
-        internal NativeList<int> AStartTraverseIndexList;
         internal NativeList<int> TargetSectorPortalIndexList;
         internal NativeList<int> SourcePortalIndexList;
         internal UnsafeList<PathSectorState> SectorStateTable;

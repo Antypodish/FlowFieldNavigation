@@ -54,7 +54,6 @@ namespace FlowFieldNavigation
                 TargetSectorCosts = _targetSectorCostsArrayFactory.GetTargetSecorCosts(),
                 SectorToPicked = _sectorTransformationFactory.GetSectorToPickedArray(),
                 PickedToSector = _sectorTransformationFactory.GetPickedToSectorList(),
-                AStartTraverseIndexList = _nativeIntListFactory.GetNativeIntList(),
                 SourcePortalIndexList = _nativeIntListFactory.GetNativeIntList(),
                 TargetSectorPortalIndexList = _nativeIntListFactory.GetNativeIntList(),
                 PortalTraversalFastMarchingQueue = _nativeIntQueueFactory.GetNativeIntQueue(),
@@ -83,7 +82,6 @@ namespace FlowFieldNavigation
             _sectorTransformationFactory.SendSectorTransformationsBack(preallocations.SectorToPicked, preallocations.PickedToSector);
             _nativeIntListFactory.SendNativeIntList(preallocations.TargetSectorPortalIndexList);
             _nativeIntListFactory.SendNativeIntList(preallocations.SourcePortalIndexList);
-            _nativeIntListFactory.SendNativeIntList(preallocations.AStartTraverseIndexList);
             _nativeIntQueueFactory.SendNativeIntQueue(preallocations.PortalTraversalFastMarchingQueue);
             _activeWaveFrontListFactory.SendActiveWaveFrontList(activeWaveFrontList);
             _sectorStateTableFactory.SendSectorStateTable(preallocations.SectorStateTable);
