@@ -70,6 +70,7 @@ namespace FlowFieldNavigation
                 IslandFields = pickedFieldGraph.IslandFields,
                 SectorStateTable = sectorStateTable,
                 DijkstraStartIndicies = portalTraversalData.DiskstraStartIndicies,
+                DestinationTraversalDataList = portalTraversalData.GoalDataList,
             };
 
             //TRAVERSAL
@@ -99,11 +100,34 @@ namespace FlowFieldNavigation
                 SectorStateTable = sectorStateTable,
                 SourcePortalIndexList = portalTraversalData.SourcePortalIndexList,                
             };
-
             JobHandle reductHandle = reductionJob.Schedule();
-            reductHandle.Complete();
-            JobHandle travHandle = traversalJob.Schedule(reductHandle);
+            JobHandle travHandle = traversalJob.Schedule(reductHandle); 
             if (FlowFieldUtilities.DebugMode) { travHandle.Complete(); }
+            /*
+            for(int i = 0; i < portalTraversalData.PortalTraversalDataArray.Length; i++)
+            {
+                PortalTraversalData data = portalTraversalData.PortalTraversalDataArray[i];
+                if (data.HasMark(PortalTraversalMark.Reduced))
+                {
+                    data.Reset();
+                    portalTraversalData.PortalTraversalDataArray[i] = data;
+                }
+            }
+            for (int i = 0; i < portalTraversalData.PortalTraversalDataArray.Length; i++)
+            {
+                PortalTraversalData data = portalTraversalData.PortalTraversalDataArray[i];
+                bool r1 = data.NextIndex == -1;
+                bool r2 = data.OriginIndex == 0;
+                bool r3 = data.GCost == 0;
+                bool r4 = data.HCost == 0;
+                bool r5 = data.FCost == 0;
+                bool r6 = data.DistanceFromTarget == float.MaxValue;
+                bool r7 = data.Mark == 0;
+                if (!(r1 && r2 && r3 && r4 && r5 && r6 && r7))
+                {
+                    UnityEngine.Debug.Log("next index: " + data.NextIndex + "\norigin index: " + data.OriginIndex + "\ngcost: " + data.GCost + "\nhcost: " + data.HCost + "\nfcost: " + data.FCost + "\ndistancefromtarget: " + data.DistanceFromTarget + "\nmark: " + data.Mark);
+                }
+            }*/
 
             reqInfo.Handle = travHandle;
             ScheduledPortalTraversals.Add(reqInfo);

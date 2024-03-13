@@ -12,13 +12,20 @@ using UnityEditor;
 using UnityEngine.UIElements;
 using System;
 using UnityEngine.Jobs;
-public class testjob : MonoBehaviour
-{
-    private void Start()
-    {
 
-    }
-    private void Update()
+namespace Assets
+{
+
+    public class test : MonoBehaviour
     {
+        [SerializeField] int size;
+        private void Start()
+        {
+            
+        }
+        private void Update()
+        {
+        }
     }
 }
+

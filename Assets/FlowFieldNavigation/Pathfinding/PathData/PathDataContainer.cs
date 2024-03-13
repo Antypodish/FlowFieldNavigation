@@ -100,6 +100,7 @@ namespace FlowFieldNavigation
                     NativeArray<OverlappingDirection> sectorOverlappingDirections = SectorOverlappingDirectionTableList[i];
                     sectorOverlappingDirections.Dispose();
                     flowData.Dispose();
+                    portalTraversalData.GoalDataList.Dispose();
                     ExposedPathStateList[i] = PathState.Removed;
                     _removedPathIndicies.Push(i);
                     PreallocationPack preallocations = new PreallocationPack()
@@ -210,6 +211,7 @@ namespace FlowFieldNavigation
                 NewPickedSectorStartIndex = preallocations.NewPickedSectorStartIndex,
                 PathAdditionSequenceBorderStartIndex = preallocations.PathAdditionSequenceBorderStartIndex,
                 DiskstraStartIndicies = preallocations.DijkstraStartIndicies,
+                GoalDataList = new NativeList<PortalTraversalData>(Allocator.Persistent),
             };
 
             NativeArray<OverlappingDirection> sectorOverlappingDirections = new NativeArray<OverlappingDirection>(FlowFieldUtilities.SectorMatrixTileAmount, Allocator.Persistent);
