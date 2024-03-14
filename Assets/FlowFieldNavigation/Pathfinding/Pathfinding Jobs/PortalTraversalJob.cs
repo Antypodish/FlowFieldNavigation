@@ -238,7 +238,7 @@ namespace FlowFieldNavigation
             {
                 PortalTraversalData curPortalData = PortalTraversalDataArray[curPortalIndex];
                 bool curPortalDijkstraPicked = curPortalData.HasMark(PortalTraversalMark.DijkstraPicked);
-                bool curPortalTargetNeighbour = curPortalData.HasMark(PortalTraversalMark.TargetNeighbour);
+                bool curPortalTargetNeighbour = curPortalData.HasMark(PortalTraversalMark.GoalNeighbour);
 
                 PortalNode curPortalNode = PortalNodes[curPortalIndex];
                 ActivePortal curActivePortal = new ActivePortal()

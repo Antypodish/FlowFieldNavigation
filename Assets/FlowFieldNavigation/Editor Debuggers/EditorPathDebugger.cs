@@ -250,7 +250,7 @@ namespace FlowFieldNavigation
             {
                 PortalTraversalData travData = portalTraversalDataArray[i];
                 PortalNode node = portalNodes[i];
-                if (travData.HasMark(PortalTraversalMark.TargetNeighbour))
+                if (travData.HasMark(PortalTraversalMark.GoalNeighbour))
                 {
                     Gizmos.color = Color.magenta;
                     Vector3 portalPos = node.GetPosition(tileSize, FlowFieldUtilities.FieldGridStartPosition);

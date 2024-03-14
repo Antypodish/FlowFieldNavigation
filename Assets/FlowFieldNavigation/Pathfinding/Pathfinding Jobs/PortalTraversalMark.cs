@@ -11,7 +11,7 @@ namespace FlowFieldNavigation
         DijkstraTraversed = 8,
         DijkstraPicked = 16,
         DijstraExtracted = 32,
-        TargetNeighbour = 64,
+        GoalNeighbour = 64,
         Reduced = 128,
     }
 

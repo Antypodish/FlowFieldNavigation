@@ -25,7 +25,7 @@ namespace FlowFieldNavigation
         }
         internal bool IsGoal()
         {
-            return DistanceFromTarget == 0 && (Mark & PortalTraversalMark.TargetNeighbour) != PortalTraversalMark.TargetNeighbour;
+            return DistanceFromTarget == 0 && (Mark & PortalTraversalMark.GoalNeighbour) != PortalTraversalMark.GoalNeighbour;
         }
         internal bool HasMark(PortalTraversalMark mark)
         {
