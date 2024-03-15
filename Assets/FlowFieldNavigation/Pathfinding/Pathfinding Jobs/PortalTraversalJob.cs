@@ -22,7 +22,7 @@ namespace FlowFieldNavigation
         internal NativeList<ActivePortal> PortalSequence;
         internal NativeList<int> PortalSequenceBorders;
         internal UnsafeList<PathSectorState> SectorStateTable;
-        internal NativeList<int> PickedToSector;
+        internal NativeList<int> PickedSectorIndicies;
         internal NativeReference<int> FlowFieldLength;
 
         [ReadOnly] internal NativeArray<SectorNode> SectorNodes;
@@ -52,8 +52,8 @@ namespace FlowFieldNavigation
             PickSectorsFromPortalSequence();
 
             int newAddedSectorStart = NewPickedSectorStartIndex.Value;
-            int newAddedSectorCount = PickedToSector.Length - newAddedSectorStart;
-            NativeSlice<int> newAddedSectors = new NativeSlice<int>(PickedToSector.AsArray(), newAddedSectorStart, newAddedSectorCount);
+            int newAddedSectorCount = PickedSectorIndicies.Length - newAddedSectorStart;
+            NativeSlice<int> newAddedSectors = new NativeSlice<int>(PickedSectorIndicies.AsArray(), newAddedSectorStart, newAddedSectorCount);
             if (ContainsSectorsWithinLOSRange(newAddedSectors))
             {
                 SectorsWihinLOSArgument argument = SectorWithinLOSState.Value;
@@ -192,10 +192,10 @@ namespace FlowFieldNavigation
             int sectorTileAmount = SectorColAmount * SectorColAmount;
             if ((SectorStateTable[_targetSectorIndex1d] & PathSectorState.Included) != PathSectorState.Included)
             {
-                PickedToSector.Add(_targetSectorIndex1d);
+                PickedSectorIndicies.Add(_targetSectorIndex1d);
                 SectorStateTable[_targetSectorIndex1d] |= PathSectorState.Included;
             }
-            FlowFieldLength.Value = PickedToSector.Length * sectorTileAmount + 1;
+            FlowFieldLength.Value = PickedSectorIndicies.Length * sectorTileAmount + 1;
         }
         void PickSectorsFromPortalSequence()
         {
@@ -221,12 +221,12 @@ namespace FlowFieldNavigation
             bool sector2Included = (SectorStateTable[win1Sec2Index] & PathSectorState.Included) == PathSectorState.Included;
             if ((win1Sec1Index == win2Sec1Index || win1Sec1Index == win2Sec2Index) && !sector1Included)
             {
-                PickedToSector.Add(win1Sec1Index);
+                PickedSectorIndicies.Add(win1Sec1Index);
                 SectorStateTable[win1Sec1Index] |= PathSectorState.Included;
             }
             if ((win1Sec2Index == win2Sec1Index || win1Sec2Index == win2Sec2Index) && !sector2Included)
             {
-                PickedToSector.Add(win1Sec2Index);
+                PickedSectorIndicies.Add(win1Sec2Index);
                 SectorStateTable[win1Sec2Index] |= PathSectorState.Included;
 
             }
