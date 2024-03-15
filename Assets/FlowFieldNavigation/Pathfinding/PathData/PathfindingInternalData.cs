@@ -13,7 +13,7 @@ namespace FlowFieldNavigation
         internal NativeList<IntegrationTile> IntegrationField;
         internal NativeReference<int> FlowFieldLength;
         internal NativeQueue<int> PortalTraversalQueue;
-        internal NativeList<UnsafeList<ActiveWaveFront>> ActiveWaveFronts;
+        internal NativeParallelMultiHashMap<int, ActiveWaveFront> SectorToWaveFrontsMap;
         internal NativeList<NotActivePortalRecord> NotActivePortalList;
         internal NativeList<int> SectorFlowStartIndiciesToCalculateIntegration;
         internal NativeList<int> SectorFlowStartIndiciesToCalculateFlow;
@@ -23,8 +23,6 @@ namespace FlowFieldNavigation
     internal enum PathState : byte
     {
         Clean = 0,
-        ToBeUpdated = 1,
-        ToBeDisposed = 2,
         Removed,
     }
     internal enum SectorsWihinLOSArgument : byte

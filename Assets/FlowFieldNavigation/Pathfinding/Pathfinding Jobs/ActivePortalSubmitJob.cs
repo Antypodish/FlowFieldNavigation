@@ -30,7 +30,7 @@ namespace FlowFieldNavigation
         [ReadOnly] internal NativeReference<int> NewSectorStartIndex;
 
         internal SectorBitArray SectorBitArray;
-        internal NativeArray<UnsafeList<ActiveWaveFront>> ActiveWaveFrontListArray;
+        internal NativeParallelMultiHashMap<int, ActiveWaveFront> SectorToWaveFrontsMap;
         internal NativeList<NotActivePortalRecord> NotActivatedPortals;
         internal UnsafeList<PathSectorState> SectorStateTable;
         internal NativeArray<OverlappingDirection> SectorOverlappingDirectionTable;
@@ -63,20 +63,6 @@ namespace FlowFieldNavigation
                 bool succesfull = AddCommonSectorsBetweenPortalsToTheWaveFront(curActivePortalIndex, nextActivePortalIndex);
                 if (succesfull) { NotActivatedPortals.RemoveAtSwapBack(i); }
             }
-            
-            int2 targetSectorIndex2d = FlowFieldUtilities.GetSector2D(TargetIndex2D, SectorColAmount);
-            int targetSectorIndex1d = FlowFieldUtilities.To1D(targetSectorIndex2d, SectorMatrixColAmount);
-            int targetPickedSectorIndex = (SectorToPicked[targetSectorIndex1d] - 1) / SectorTileAmount;
-            int2 targetSectorStartIndex2d = FlowFieldUtilities.GetSectorStartIndex(targetSectorIndex2d, SectorColAmount);
-            int2 targetLocalIndex2d = FlowFieldUtilities.GetLocal2D(TargetIndex2D, targetSectorStartIndex2d);
-            int targetLocalIndex1d = FlowFieldUtilities.To1D(targetLocalIndex2d, SectorColAmount);
-            ActiveWaveFront targetFront = new ActiveWaveFront(targetLocalIndex1d, 0f);
-            UnsafeList<ActiveWaveFront> targetActivePortals = ActiveWaveFrontListArray[targetPickedSectorIndex];
-            if (!ActiveWaveFrontExists(targetFront, targetActivePortals))
-            {
-                targetActivePortals.Add(targetFront);
-                ActiveWaveFrontListArray[targetPickedSectorIndex] = targetActivePortals;
-            }
         }
         bool AddCommonSectorsBetweenPortalsToTheWaveFront(int curPortalSequenceIndex, int nextPortalSequenceIndex)
         {
@@ -94,12 +80,9 @@ namespace FlowFieldNavigation
             bool succesfull = false;
             if ((!sector1Common && sector1Included) || (bothIncluded && bothCommon))
             {
-                int pickedSectorIndex = (SectorToPicked[curSec1Index] - 1) / SectorTileAmount;
-                UnsafeList<ActiveWaveFront> activePortals = ActiveWaveFrontListArray[pickedSectorIndex];
                 int activeLocalIndex = PickIndexAtSectorAsLocalIndex(curPortal.FieldIndex1, curPortal.FieldIndex2, curSec1Index);
-                ActiveWaveFront newActiveWaveFront = new ActiveWaveFront(activeLocalIndex, curPortal.Distance);
-                activePortals.Add(newActiveWaveFront);
-                ActiveWaveFrontListArray[pickedSectorIndex] = activePortals;
+                ActiveWaveFront newActiveWaveFront = new ActiveWaveFront(activeLocalIndex, curPortal.Distance); 
+                SectorToWaveFrontsMap.Add(curSec1Index, newActiveWaveFront);
                 PathSectorState sectorState = SectorStateTable[curSec1Index];
                 sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
                 SectorStateTable[curSec1Index] = sectorState;
@@ -108,12 +91,9 @@ namespace FlowFieldNavigation
             }
             if ((!sector2Common && sector2Included) || (bothIncluded && bothCommon))
             {
-                int pickedSectorIndex = (SectorToPicked[curSec2Index] - 1) / SectorTileAmount;
-                UnsafeList<ActiveWaveFront> activePortals = ActiveWaveFrontListArray[pickedSectorIndex];
                 int activeLocalIndex = PickIndexAtSectorAsLocalIndex(curPortal.FieldIndex1, curPortal.FieldIndex2, curSec2Index);
                 ActiveWaveFront newActiveWaveFront = new ActiveWaveFront(activeLocalIndex, curPortal.Distance);
-                activePortals.Add(newActiveWaveFront);
-                ActiveWaveFrontListArray[pickedSectorIndex] = activePortals;
+                SectorToWaveFrontsMap.Add(curSec2Index, newActiveWaveFront);
                 PathSectorState sectorState = SectorStateTable[curSec2Index];
                 sectorState = ~((~sectorState) | PathSectorState.IntegrationCalculated | PathSectorState.FlowCalculated);
                 SectorStateTable[curSec2Index] = sectorState;
@@ -138,15 +118,6 @@ namespace FlowFieldNavigation
 
             int2 pickedIndexLocal2d = FlowFieldUtilities.GetLocal2D(pickedIndex2d, pickedSectorStart2d);
             return FlowFieldUtilities.To1D(pickedIndexLocal2d, SectorColAmount);
-        }
-        bool ActiveWaveFrontExists(ActiveWaveFront front, UnsafeList<ActiveWaveFront> list)
-        {
-            for (int i = 0; i < list.Length; i++)
-            {
-                ActiveWaveFront curFront = list[i];
-                if (curFront.LocalIndex == front.LocalIndex) { return true; }
-            }
-            return false;
         }
         (int p1Sec1, int p1Sec2, int p2Sec1, int p2Sec2) GetSectorsOfPortals(ActivePortal portal1, ActivePortal portal2)
         {

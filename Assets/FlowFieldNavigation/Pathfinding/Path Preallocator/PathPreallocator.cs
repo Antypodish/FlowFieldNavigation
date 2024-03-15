@@ -76,7 +76,7 @@ namespace FlowFieldNavigation
                 DijkstraStartIndicies = _nativeIntListFactory.GetNativeIntList(),
             };
         }
-        internal void SendPreallocationsBack(ref PreallocationPack preallocations, NativeList<UnsafeList<ActiveWaveFront>> activeWaveFrontList, UnsafeList<FlowData> flowField, NativeList<IntegrationTile> integrationField, int offset)
+        internal void SendPreallocationsBack(ref PreallocationPack preallocations, UnsafeList<FlowData> flowField, NativeList<IntegrationTile> integrationField, int offset)
         {
             _porTravDataArrayFactory.SendPortalTraversalDataArray(preallocations.PortalTraversalDataArray, offset);
             _portalSequenceFactory.SendPortalSequences(preallocations.PortalSequence, preallocations.PortalSequenceBorders);
@@ -85,7 +85,6 @@ namespace FlowFieldNavigation
             _nativeIntListFactory.SendNativeIntList(preallocations.TargetSectorPortalIndexList);
             _nativeIntListFactory.SendNativeIntList(preallocations.SourcePortalIndexList);
             _nativeIntQueueFactory.SendNativeIntQueue(preallocations.PortalTraversalFastMarchingQueue);
-            _activeWaveFrontListFactory.SendActiveWaveFrontList(activeWaveFrontList);
             _sectorStateTableFactory.SendSectorStateTable(preallocations.SectorStateTable);
             _flowFieldFactory.SendFlowField(flowField);
             _integrationFieldFactory.SendIntegrationField(integrationField);
@@ -104,10 +103,6 @@ namespace FlowFieldNavigation
             _sectorBitArrayFactory.SendSectorBitArray(preallocations.SectorBitArray);
             _nativeIntListFactory.SendNativeIntList(preallocations.DijkstraStartIndicies);
         }
-        internal NativeList<UnsafeList<ActiveWaveFront>> GetActiveWaveFrontListPersistent(int count)
-        {
-            return _activeWaveFrontListFactory.GetActiveWaveFrontListPersistent(count);
-        }
         internal UnsafeList<FlowData> GetFlowField(int length)
         {
             return _flowFieldFactory.GetFlowfield(length);
@@ -115,14 +110,6 @@ namespace FlowFieldNavigation
         internal NativeList<IntegrationTile> GetIntegrationField(int length)
         {
             return _integrationFieldFactory.GetIntegrationField(length);
-        }
-        internal void AddToActiveWaveFrontList(int count, NativeList<UnsafeList<ActiveWaveFront>> destinationList)
-        {
-            _activeWaveFrontListFactory.AddActiveWaveFrontList(count, destinationList);
-        }
-        internal void DisposeAllPreallocations()
-        {
-
         }
     }
 

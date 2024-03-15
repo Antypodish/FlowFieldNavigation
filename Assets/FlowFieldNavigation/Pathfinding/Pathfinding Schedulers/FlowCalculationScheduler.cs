@@ -79,7 +79,8 @@ namespace FlowFieldNavigation
                 IntegrationFieldJob intJob = new IntegrationFieldJob()
                 {
                     SectorIndex = sectorIndex,
-                    StartIndicies = pathInternalData.ActiveWaveFronts[(sectorStart - 1) / FlowFieldUtilities.SectorTileAmount],
+                    TargetIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition),
+                    SectorToWaveFrontsMap = pathInternalData.SectorToWaveFrontsMap,
                     Costs = new NativeSlice<byte>(pickedCostField.Costs, sectorIndex * FlowFieldUtilities.SectorTileAmount, FlowFieldUtilities.SectorTileAmount),
                     IntegrationField = integrationSector,
                     SectorToPicked = locationData.SectorToPicked,

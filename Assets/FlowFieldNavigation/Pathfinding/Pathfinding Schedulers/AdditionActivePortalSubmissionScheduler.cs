@@ -26,8 +26,6 @@ namespace FlowFieldNavigation
             SectorBitArray sectorBitArray = _pathContainer.PathSectorBitArrays[pathInfo.PathIndex];
             NativeArray<OverlappingDirection> sectorOverlappingDirectionTable = _pathContainer.SectorOverlappingDirectionTableList[pathInfo.PathIndex];
             FieldGraph pickedFieldGraph = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
-            int newSecorCount = internalData.PickedSectorList.Length - internalData.ActiveWaveFronts.Length;
-            _pathContainer.ResizeActiveWaveFrontList(newSecorCount, internalData.ActiveWaveFronts);
 
             //ACTIVE WAVE FRONT SUBMISSION
             ActivePortalSubmitJob submitJob = new ActivePortalSubmitJob()
@@ -49,7 +47,7 @@ namespace FlowFieldNavigation
                 WinToSecPtrs = pickedFieldGraph.WinToSecPtrs,
                 PortalNodes = pickedFieldGraph.PortalNodes,
                 WindowNodes = pickedFieldGraph.WindowNodes,
-                ActiveWaveFrontListArray = internalData.ActiveWaveFronts.AsArray(),
+                SectorToWaveFrontsMap = internalData.SectorToWaveFrontsMap,
                 NotActivatedPortals = internalData.NotActivePortalList,
                 SectorStateTable = sectorStateTable,
                 NewSectorStartIndex = portalTraversalData.NewPickedSectorStartIndex,

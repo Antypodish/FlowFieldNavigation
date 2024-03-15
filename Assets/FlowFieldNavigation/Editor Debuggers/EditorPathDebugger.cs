@@ -313,18 +313,16 @@ namespace FlowFieldNavigation
             if (pathIndex == -1) { return; }
 
             PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathIndex];
-            NativeList<int> pickedSectors = internalData.PickedSectorList;
-            NativeList<UnsafeList<ActiveWaveFront>> activeWaveFronts = internalData.ActiveWaveFronts;
-
+            NativeArray<int> keys = internalData.SectorToWaveFrontsMap.GetKeyArray(Allocator.Temp);
             Gizmos.color = Color.red;
-            for(int i = 0; i < pickedSectors.Length; i++)
+            for (int i = 0; i <keys.Length; i++)
             {
-                int sector = pickedSectors[i];
-                UnsafeList<ActiveWaveFront> waveFronts = activeWaveFronts[i];
-                for(int j = 0; j < waveFronts.Length; j++)
+                int key = keys[i];
+                NativeParallelMultiHashMap<int, ActiveWaveFront>.Enumerator enumerator = internalData.SectorToWaveFrontsMap.GetValuesForKey(key);
+                while (enumerator.MoveNext())
                 {
-                    ActiveWaveFront front = waveFronts[j];
-                    int2 general2d = FlowFieldUtilities.GetGeneral2d(front.LocalIndex, sector, FlowFieldUtilities.SectorMatrixColAmount, FlowFieldUtilities.SectorColAmount);
+                    ActiveWaveFront front = enumerator.Current;
+                    int2 general2d = FlowFieldUtilities.GetGeneral2d(front.LocalIndex, key, FlowFieldUtilities.SectorMatrixColAmount, FlowFieldUtilities.SectorColAmount);
                     Vector2 pos = FlowFieldUtilities.IndexToPos(general2d, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition);
                     Vector3 pos3 = new Vector3(pos.x, 0f, pos.y);
                     Gizmos.DrawCube(pos3, new Vector3(0.5f, 0.5f, 0.5f));

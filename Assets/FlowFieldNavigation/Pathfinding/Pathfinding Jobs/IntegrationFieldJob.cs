@@ -3,6 +3,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
+using UnityEngine;
 
 namespace FlowFieldNavigation
 {
@@ -10,13 +11,14 @@ namespace FlowFieldNavigation
     [BurstCompile]
     internal struct IntegrationFieldJob : IJob
     {
+        internal int2 TargetIndex;
         internal int SectorIndex;
         internal int FieldColAmount;
         internal int FieldRowAmount;
         internal int SectorColAmount;
         internal int SectorMatrixColAmount;
         [NativeDisableContainerSafetyRestriction] internal NativeSlice<IntegrationTile> IntegrationField;
-        [ReadOnly] internal UnsafeList<ActiveWaveFront> StartIndicies;
+        [ReadOnly] internal NativeParallelMultiHashMap<int, ActiveWaveFront> SectorToWaveFrontsMap;
         [ReadOnly] internal UnsafeList<int> SectorToPicked;
         [ReadOnly] internal NativeSlice<byte> Costs;
         public void Execute()
@@ -60,10 +62,22 @@ namespace FlowFieldNavigation
             bool wAvailable;
             ///////////////////////////////////////////////
             //CODE
-
-            for (int i = 0; i < StartIndicies.Length; i++)
+            int targetSector1d = FlowFieldUtilities.GetSector1D(TargetIndex, sectorColAmount, SectorMatrixColAmount);
+            if(SectorIndex == targetSector1d)
             {
-                ActiveWaveFront front = StartIndicies[i];
+                int targetLocal1d = FlowFieldUtilities.GetLocal1D(TargetIndex, sectorColAmount);
+                IntegrationTile startTile = integrationField[targetLocal1d];
+                startTile.Cost = 0f;
+                integrationField[targetLocal1d] = startTile;
+                SetLookupTable(targetLocal1d);
+                Enqueue();
+            }
+
+            NativeParallelMultiHashMap<int, ActiveWaveFront>.Enumerator enumerator = SectorToWaveFrontsMap.GetValuesForKey(SectorIndex);
+
+            while (enumerator.MoveNext())
+            {
+                ActiveWaveFront front = enumerator.Current;
                 IntegrationTile startTile = integrationField[front.LocalIndex];
                 integrationField[front.LocalIndex] = new IntegrationTile()
                 {
@@ -71,13 +85,13 @@ namespace FlowFieldNavigation
                     Mark = startTile.Mark,
                 };
             }
-            for (int i = 0; i < StartIndicies.Length; i++)
+            enumerator.Reset();
+            while (enumerator.MoveNext())
             {
-                int index = StartIndicies[i].LocalIndex;
+                int index = enumerator.Current.LocalIndex;
                 SetLookupTable(index);
                 Enqueue();
             }
-            StartIndicies.Clear();
             while (!integrationQueue.IsEmpty())
             {
                 LocalIndex1d cur = integrationQueue.Dequeue();

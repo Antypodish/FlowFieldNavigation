@@ -101,6 +101,7 @@ namespace FlowFieldNavigation
                     sectorOverlappingDirections.Dispose();
                     flowData.Dispose();
                     portalTraversalData.GoalDataList.Dispose();
+                    internalData.SectorToWaveFrontsMap.Dispose();
                     ExposedPathStateList[i] = PathState.Removed;
                     _removedPathIndicies.Push(i);
                     PreallocationPack preallocations = new PreallocationPack()
@@ -130,7 +131,7 @@ namespace FlowFieldNavigation
                         SectorBitArray = sectorBitArray,
                         DijkstraStartIndicies = portalTraversalData.DiskstraStartIndicies,
                     };
-                    _preallocator.SendPreallocationsBack(ref preallocations, internalData.ActiveWaveFronts, flowData.FlowField, internalData.IntegrationField, destinationData.Offset);
+                    _preallocator.SendPreallocationsBack(ref preallocations, flowData.FlowField, internalData.IntegrationField, destinationData.Offset);
                 }
             }
             _preallocator.CheckForDeallocations();
@@ -173,6 +174,7 @@ namespace FlowFieldNavigation
                 SectorFlowStartIndiciesToCalculateIntegration = preallocations.SectorStartIndexListToCalculateIntegration,
                 SectorFlowStartIndiciesToCalculateFlow = preallocations.SectorStartIndexListToCalculateFlow,
                 SectorWithinLOSState = preallocations.SectorsWithinLOSState,
+                SectorToWaveFrontsMap = new NativeParallelMultiHashMap<int, ActiveWaveFront>(0, Allocator.Persistent),
                 DynamicArea = new DynamicArea()
                 {
                     FlowFieldCalculationBuffer = preallocations.DynamicAreaFlowFieldCalculationBuffer,
@@ -255,13 +257,8 @@ namespace FlowFieldNavigation
             pathFlowData.FlowField = _preallocator.GetFlowField(internalData.FlowFieldLength.Value);
             pathFlowData.LOSMap = new UnsafeLOSBitmap(internalData.FlowFieldLength.Value, Allocator.Persistent, NativeArrayOptions.ClearMemory);
             internalData.IntegrationField = _preallocator.GetIntegrationField(internalData.FlowFieldLength.Value);
-            internalData.ActiveWaveFronts = _preallocator.GetActiveWaveFrontListPersistent(internalData.PickedSectorList.Length);
             PathfindingInternalDataList[pathIndex] = internalData;
             PathFlowDataList[pathIndex] = pathFlowData;
-        }
-        internal void ResizeActiveWaveFrontList(int newLength, NativeList<UnsafeList<ActiveWaveFront>> activeWaveFrontList)
-        {
-            _preallocator.AddToActiveWaveFrontList(newLength, activeWaveFrontList);
         }
         internal bool IsLOSCalculated(int pathIndex)
         {
