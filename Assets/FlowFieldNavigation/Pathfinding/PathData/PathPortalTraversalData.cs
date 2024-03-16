@@ -13,8 +13,9 @@ namespace FlowFieldNavigation
         internal NativeList<int> SourcePortalIndexList;
         internal NativeReference<int> PathAdditionSequenceBorderStartIndex;
         internal NativeReference<int> NewPickedSectorStartIndex;
-        internal NativeArray<DijkstraTile> TargetSectorCosts;
         internal NativeList<int> DiskstraStartIndicies;
+        internal NativeList<int> NewReducedPortalIndicies;
+        internal NativeList<PortalTraversalDataRecord> PortalDataRecords;
     }
 
 

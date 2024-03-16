@@ -23,10 +23,6 @@ namespace FlowFieldNavigation
             DistanceFromTarget = float.MaxValue;
             Mark = 0;
         }
-        internal bool IsGoal()
-        {
-            return DistanceFromTarget == 0 && (Mark & PortalTraversalMark.GoalNeighbour) != PortalTraversalMark.GoalNeighbour;
-        }
         internal bool HasMark(PortalTraversalMark mark)
         {
             return (Mark & mark) == mark;

@@ -24,6 +24,8 @@ namespace FlowFieldNavigation
         internal UnsafeList<PathSectorState> SectorStateTable;
         internal NativeList<int> PickedSectorIndicies;
         internal NativeReference<int> FlowFieldLength;
+        internal NativeList<PortalTraversalDataRecord> PortalDataRecords;
+        internal NativeReference<SectorsWihinLOSArgument> SectorWithinLOSState;
 
         [ReadOnly] internal NativeArray<SectorNode> SectorNodes;
         [ReadOnly] internal NativeArray<WindowNode> WindowNodes;
@@ -34,7 +36,7 @@ namespace FlowFieldNavigation
 
         [ReadOnly] internal NativeList<int> SourcePortalIndexList;
         [ReadOnly] internal NativeList<int> DijkstraStartIndicies;
-        internal NativeReference<SectorsWihinLOSArgument> SectorWithinLOSState;
+        [ReadOnly] internal NativeList<int> NewReducedPortalIndicies;
         int _targetSectorIndex1d;
         public void Execute()
         {
@@ -61,6 +63,34 @@ namespace FlowFieldNavigation
                 SectorWithinLOSState.Value = argument;
             }
             AddTargetSector();
+            SubmitPortalDataRecords();
+            ResetPortalDataArray();
+        }
+        void SubmitPortalDataRecords()
+        {
+            for(int i = 0; i < NewReducedPortalIndicies.Length; i++)
+            {
+                int portalIndex = NewReducedPortalIndicies[i];
+                PortalTraversalData portalData = PortalTraversalDataArray[portalIndex];
+                PortalTraversalDataRecord record = new PortalTraversalDataRecord()
+                {
+                    PortalIndex = portalIndex,
+                    DistanceFromTarget = portalData.DistanceFromTarget,
+                    Mark = portalData.Mark,
+                    NextIndex = portalData.NextIndex,
+                };
+                PortalDataRecords.Add(record);
+            }
+        }
+        void ResetPortalDataArray()
+        {
+            for(int i = 0; i < PortalDataRecords.Length; i++)
+            {
+                int portalIndex = PortalDataRecords[i].PortalIndex;
+                PortalTraversalData portalData = PortalTraversalDataArray[portalIndex];
+                portalData.Reset();
+                PortalTraversalDataArray[portalIndex] = portalData;
+            }
         }
         void RunDijkstra()
         {
@@ -74,6 +104,7 @@ namespace FlowFieldNavigation
                 int index = DijkstraStartIndicies[i];
                 PortalTraversalData portalData = PortalTraversalDataArray[index];
                 portalData.Mark |= PortalTraversalMark.DijkstraTraversed;
+                portalTraversalDataArray[index] = portalData;
                 EnqueueNeighbours(index, portalData.DistanceFromTarget);
             }
 

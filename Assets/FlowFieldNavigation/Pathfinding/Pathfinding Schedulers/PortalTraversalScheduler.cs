@@ -71,6 +71,8 @@ namespace FlowFieldNavigation
                 SectorStateTable = sectorStateTable,
                 DijkstraStartIndicies = portalTraversalData.DiskstraStartIndicies,
                 GoalTraversalDataList = portalTraversalData.GoalDataList,
+                NewReducedNodeIndicies = portalTraversalData.NewReducedPortalIndicies,
+                PortalDataRecords = portalTraversalData.PortalDataRecords.AsArray(),
             };
 
             //TRAVERSAL
@@ -98,12 +100,38 @@ namespace FlowFieldNavigation
                 FlowFieldLength = pathInternalData.FlowFieldLength,
                 PortalTraversalDataArray = portalTraversalData.PortalTraversalDataArray,
                 SectorStateTable = sectorStateTable,
-                SourcePortalIndexList = portalTraversalData.SourcePortalIndexList,                
+                SourcePortalIndexList = portalTraversalData.SourcePortalIndexList,
+                NewReducedPortalIndicies = portalTraversalData.NewReducedPortalIndicies,
+                PortalDataRecords = portalTraversalData.PortalDataRecords,
             };
             JobHandle reductHandle = reductionJob.Schedule();
             JobHandle travHandle = traversalJob.Schedule(reductHandle); 
             if (FlowFieldUtilities.DebugMode) { travHandle.Complete(); }
 
+
+            NativeArray<PortalTraversalData> copied = new NativeArray<PortalTraversalData>(portalTraversalData.PortalTraversalDataArray, Allocator.Temp);
+            for (int i = 0; i < copied.Length; i++)
+            {
+                PortalTraversalData data = copied[i];
+                if (data.HasMark(PortalTraversalMark.Reduced))
+                {
+                    data.Reset();
+                    copied[i] = data;
+                }
+            }
+            for (int i = 0; i < copied.Length; i++)
+            {
+                string debstr = "";
+                PortalTraversalData data = copied[i];
+                if (data.OriginIndex != 0) { debstr += " OriginIndex |"; }
+                if (data.NextIndex != -1) { debstr += " NextIndex |"; }
+                if (data.FCost != 0) { debstr += " FCost |"; }
+                if (data.GCost != 0) { debstr += " GCost |"; }
+                if (data.HCost != 0) { debstr += " HCost |"; }
+                if (data.DistanceFromTarget != float.MaxValue) { debstr += " DistanceFromTarget |"; }
+                if (data.Mark != 0) { debstr += " Mark |"; }
+                if (debstr.Length != 0) { UnityEngine.Debug.Log(debstr); }
+            }
             reqInfo.Handle = travHandle;
             ScheduledPortalTraversals.Add(reqInfo);
         }

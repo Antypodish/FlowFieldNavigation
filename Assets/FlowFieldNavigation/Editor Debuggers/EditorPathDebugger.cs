@@ -218,7 +218,7 @@ namespace FlowFieldNavigation
                     Vector3 portalPos = node.GetPosition(tileSize, FlowFieldUtilities.FieldGridStartPosition);
                     portalPos.y = portalHeights[i];
                     Vector3 labelPos = portalPos + new Vector3(0, 3, 0);
-                    Handles.Label(labelPos, "d: " + travData.DistanceFromTarget.ToString());
+                    Handles.Label(labelPos, i + " : " + travData.DistanceFromTarget.ToString());
                     Gizmos.DrawSphere(portalPos, 0.25f);
                 }
                 else if (travData.HasMark(PortalTraversalMark.Reduced))
@@ -227,7 +227,7 @@ namespace FlowFieldNavigation
                     Vector3 portalPos = node.GetPosition(tileSize, FlowFieldUtilities.FieldGridStartPosition);
                     portalPos.y = portalHeights[i];
                     Vector3 labelPos = portalPos + new Vector3(0, 3, 0);
-                    Handles.Label(labelPos, "d: " + travData.DistanceFromTarget.ToString());
+                    Handles.Label(labelPos, i + " : " + travData.DistanceFromTarget.ToString());
                     Gizmos.DrawSphere(portalPos, 0.25f);
                 }
             }
