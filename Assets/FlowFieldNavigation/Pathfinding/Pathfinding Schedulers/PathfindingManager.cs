@@ -22,6 +22,7 @@ namespace FlowFieldNavigation
         LOSIntegrationScheduler _losIntegrationScheduler;
         DynamicAreaScheduler _dynamicAreaScheduler;
         PathConstructionTester _pathConstructionTester;
+        PortalTraversalDataProvider _porTravDataProvider;
         NativeList<float3> _agentPositions;
         NativeList<float2> _sourcePositions;
         NativeList<OffsetDerivedPathRequest> _offsetDerivedPathRequests;
@@ -50,10 +51,11 @@ namespace FlowFieldNavigation
         {
             _navigationManager = navigationManager;
             _pathContainer = navigationManager.PathDataContainer;
+            _porTravDataProvider = new PortalTraversalDataProvider(navigationManager);
             _losIntegrationScheduler = new LOSIntegrationScheduler(navigationManager);
             _requestedSectorCalculationScheduler = new RequestedSectorCalculationScheduler(navigationManager, _losIntegrationScheduler);
-            _portalTravesalScheduler = new PortalTraversalScheduler(navigationManager, _requestedSectorCalculationScheduler);
-            _additionPortalTraversalScheduler = new AdditionPortalTraversalScheduler(navigationManager, _requestedSectorCalculationScheduler);
+            _portalTravesalScheduler = new PortalTraversalScheduler(navigationManager, _requestedSectorCalculationScheduler, _porTravDataProvider);
+            _additionPortalTraversalScheduler = new AdditionPortalTraversalScheduler(navigationManager, _requestedSectorCalculationScheduler, _porTravDataProvider);
             _dynamicAreaScheduler = new DynamicAreaScheduler(navigationManager);
             _sourcePositions = new NativeList<float2>(Allocator.Persistent);
             _pathfindingTaskOrganizationHandle = new List<JobHandle>(1);

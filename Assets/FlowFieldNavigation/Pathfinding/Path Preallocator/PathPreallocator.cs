@@ -44,13 +44,12 @@ namespace FlowFieldNavigation
             _porTravDataArrayFactory.CheckForCleaningHandles();
             _sectorTransformationFactory.CheckForCleaningHandles();
         }
-        internal PreallocationPack GetPreallocations(int offset)
+        internal PreallocationPack GetPreallocations()
         {
             UnsafeList<float> targetSectorCosts = new UnsafeList<float>(FlowFieldUtilities.SectorTileAmount, Allocator.Persistent);
             targetSectorCosts.Length = FlowFieldUtilities.SectorTileAmount;
             return new PreallocationPack()
             {
-                PortalTraversalDataArray = _porTravDataArrayFactory.GetPortalTraversalDataArray(offset),
                 PortalSequence = _portalSequenceFactory.GetPortalSequenceList(),
                 PortalSequenceBorders = _portalSequenceFactory.GetPathRequestBorders(),
                 TargetSectorCosts = targetSectorCosts,
@@ -78,7 +77,6 @@ namespace FlowFieldNavigation
         }
         internal void SendPreallocationsBack(ref PreallocationPack preallocations, UnsafeList<FlowData> flowField, NativeList<IntegrationTile> integrationField, int offset)
         {
-            _porTravDataArrayFactory.SendPortalTraversalDataArray(preallocations.PortalTraversalDataArray, offset);
             _portalSequenceFactory.SendPortalSequences(preallocations.PortalSequence, preallocations.PortalSequenceBorders);
             preallocations.TargetSectorCosts.Dispose();
             _sectorTransformationFactory.SendSectorTransformationsBack(preallocations.SectorToPicked, preallocations.PickedToSector);

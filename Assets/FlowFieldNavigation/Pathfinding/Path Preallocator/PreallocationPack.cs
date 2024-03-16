@@ -8,7 +8,6 @@ namespace FlowFieldNavigation
     {
         internal NativeList<ActivePortal> PortalSequence;
         internal NativeList<int> PortalSequenceBorders;
-        internal NativeArray<PortalTraversalData> PortalTraversalDataArray;
         internal UnsafeList<float> TargetSectorCosts;
         internal UnsafeList<int> SectorToPicked;
         internal NativeList<int> PickedToSector;

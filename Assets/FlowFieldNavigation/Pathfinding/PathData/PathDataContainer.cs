@@ -112,7 +112,6 @@ namespace FlowFieldNavigation
                         PickedToSector = internalData.PickedSectorList,
                         PortalSequence = portalTraversalData.PortalSequence,
                         PortalSequenceBorders = portalTraversalData.PortalSequenceBorders,
-                        PortalTraversalDataArray = portalTraversalData.PortalTraversalDataArray,
                         TargetSectorCosts = targetSectorIntegration,
                         SourcePortalIndexList = portalTraversalData.SourcePortalIndexList,
                         TargetSectorPortalIndexList = portalTraversalData.TargetSectorPortalIndexList,
@@ -161,7 +160,7 @@ namespace FlowFieldNavigation
         }
         internal int CreatePath(FinalPathRequest request)
         {
-            PreallocationPack preallocations = _preallocator.GetPreallocations(request.Offset);
+            PreallocationPack preallocations = _preallocator.GetPreallocations();
 
             int pathIndex;
             if (_removedPathIndicies.Count != 0) { pathIndex = _removedPathIndicies.Pop(); }
@@ -209,7 +208,6 @@ namespace FlowFieldNavigation
             {
                 PortalSequenceBorders = preallocations.PortalSequenceBorders,
                 PortalSequence = preallocations.PortalSequence,
-                PortalTraversalDataArray = preallocations.PortalTraversalDataArray,
                 SourcePortalIndexList = preallocations.SourcePortalIndexList,
                 TargetSectorPortalIndexList = preallocations.TargetSectorPortalIndexList,
                 NewPickedSectorStartIndex = preallocations.NewPickedSectorStartIndex,

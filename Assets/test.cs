@@ -21,7 +21,6 @@ namespace Assets
         [SerializeField] int size;
         private void Start()
         {
-            
         }
         private void Update()
         {

@@ -13,15 +13,16 @@ namespace FlowFieldNavigation
         PathDataContainer _pathContainer;
         ActivePortalSubmissionScheduler _activePortalSubmissionScheduler;
         RequestedSectorCalculationScheduler _requestedSectorCalculationScheduler;
-
+        PortalTraversalDataProvider _porTravDataProvider;
         NativeList<RequestPipelineInfoWithHandle> ScheduledPortalTraversals;
-        internal PortalTraversalScheduler(FlowFieldNavigationManager navigationManager, RequestedSectorCalculationScheduler requestedSectorCalculationScheduler)
+        internal PortalTraversalScheduler(FlowFieldNavigationManager navManager, RequestedSectorCalculationScheduler reqSecCalcScheduler, PortalTraversalDataProvider porTravDataProvider)
         {
             ScheduledPortalTraversals = new NativeList<RequestPipelineInfoWithHandle>(Allocator.Persistent);
-            _navigationManager = navigationManager;
+            _navigationManager = navManager;
             _pathContainer = _navigationManager.PathDataContainer;
-            _activePortalSubmissionScheduler = new ActivePortalSubmissionScheduler(navigationManager);
-            _requestedSectorCalculationScheduler = requestedSectorCalculationScheduler;
+            _activePortalSubmissionScheduler = new ActivePortalSubmissionScheduler(navManager);
+            _requestedSectorCalculationScheduler = reqSecCalcScheduler;
+            _porTravDataProvider = porTravDataProvider;
         }
         internal void DisposeAll()
         {
@@ -43,6 +44,7 @@ namespace FlowFieldNavigation
             portalTraversalData.PathAdditionSequenceBorderStartIndex.Value = 0;
             portalTraversalData.NewPickedSectorStartIndex.Value = pathInternalData.PickedSectorList.Length;
 
+            NativeArray<PortalTraversalData> porTravDataArray = _porTravDataProvider.GetAvailableData(out JobHandle dependency);
             PortalReductionJob reductionJob = new PortalReductionJob()
             {
                 TileSize = FlowFieldUtilities.TileSize,
@@ -65,7 +67,7 @@ namespace FlowFieldNavigation
                 SectorNodes = pickedFieldGraph.SectorNodes,
                 Costs = pickedCostField.Costs,
                 LocalDirections = _navigationManager.FieldDataContainer.GetSectorDirections(),
-                PortalTraversalDataArray = portalTraversalData.PortalTraversalDataArray,
+                PortalTraversalDataArray = porTravDataArray,
                 SourcePortalIndexList = portalTraversalData.SourcePortalIndexList,
                 IslandFields = pickedFieldGraph.IslandFields,
                 SectorStateTable = sectorStateTable,
@@ -98,40 +100,17 @@ namespace FlowFieldNavigation
                 SectorNodes = pickedFieldGraph.SectorNodes,
                 PortalSequence = portalTraversalData.PortalSequence,
                 FlowFieldLength = pathInternalData.FlowFieldLength,
-                PortalTraversalDataArray = portalTraversalData.PortalTraversalDataArray,
+                PortalTraversalDataArray = porTravDataArray,
                 SectorStateTable = sectorStateTable,
                 SourcePortalIndexList = portalTraversalData.SourcePortalIndexList,
                 NewReducedPortalIndicies = portalTraversalData.NewReducedPortalIndicies,
                 PortalDataRecords = portalTraversalData.PortalDataRecords,
             };
-            JobHandle reductHandle = reductionJob.Schedule();
+            JobHandle reductHandle = reductionJob.Schedule(dependency);
             JobHandle travHandle = traversalJob.Schedule(reductHandle); 
             if (FlowFieldUtilities.DebugMode) { travHandle.Complete(); }
+            _porTravDataProvider.IncerimentPointer(travHandle);
 
-
-            NativeArray<PortalTraversalData> copied = new NativeArray<PortalTraversalData>(portalTraversalData.PortalTraversalDataArray, Allocator.Temp);
-            for (int i = 0; i < copied.Length; i++)
-            {
-                PortalTraversalData data = copied[i];
-                if (data.HasMark(PortalTraversalMark.Reduced))
-                {
-                    data.Reset();
-                    copied[i] = data;
-                }
-            }
-            for (int i = 0; i < copied.Length; i++)
-            {
-                string debstr = "";
-                PortalTraversalData data = copied[i];
-                if (data.OriginIndex != 0) { debstr += " OriginIndex |"; }
-                if (data.NextIndex != -1) { debstr += " NextIndex |"; }
-                if (data.FCost != 0) { debstr += " FCost |"; }
-                if (data.GCost != 0) { debstr += " GCost |"; }
-                if (data.HCost != 0) { debstr += " HCost |"; }
-                if (data.DistanceFromTarget != float.MaxValue) { debstr += " DistanceFromTarget |"; }
-                if (data.Mark != 0) { debstr += " Mark |"; }
-                if (debstr.Length != 0) { UnityEngine.Debug.Log(debstr); }
-            }
             reqInfo.Handle = travHandle;
             ScheduledPortalTraversals.Add(reqInfo);
         }

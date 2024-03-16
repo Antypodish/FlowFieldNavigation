@@ -5,7 +5,6 @@ namespace FlowFieldNavigation
 {
     internal struct PathPortalTraversalData
     {
-        internal NativeArray<PortalTraversalData> PortalTraversalDataArray;
         internal NativeList<PortalTraversalData> GoalDataList;
         internal NativeList<ActivePortal> PortalSequence;
         internal NativeList<int> PortalSequenceBorders;
