@@ -38,7 +38,7 @@ namespace FlowFieldNavigation
             PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
             UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathInfo.PathIndex];
             PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathInfo.PathIndex];
-            portalTraversalData.PathAdditionSequenceBorderStartIndex.Value = portalTraversalData.PortalSequenceBorders.Length;
+            portalTraversalData.PathAdditionSequenceBorderStartIndex.Value = portalTraversalData.PortalSequenceBorders.Length - 1;
             portalTraversalData.NewPickedSectorStartIndex.Value = internalData.PickedSectorList.Length;
 
             FieldGraph pickedFieldGraph = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);

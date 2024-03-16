@@ -230,7 +230,6 @@ namespace FlowFieldNavigation
         }
         void PickSectorsFromPortalSequence()
         {
-            AddedPortalSequenceBorderStartIndex = math.select(AddedPortalSequenceBorderStartIndex - 1, 0, AddedPortalSequenceBorderStartIndex == 0);
             for (int i = AddedPortalSequenceBorderStartIndex; i < PortalSequenceBorders.Length - 1; i++)
             {
                 int start = PortalSequenceBorders[i];
