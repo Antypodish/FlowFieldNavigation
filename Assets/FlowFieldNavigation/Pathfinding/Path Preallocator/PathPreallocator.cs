@@ -101,14 +101,6 @@ namespace FlowFieldNavigation
             _sectorBitArrayFactory.SendSectorBitArray(preallocations.SectorBitArray);
             _nativeIntListFactory.SendNativeIntList(preallocations.DijkstraStartIndicies);
         }
-        internal UnsafeList<FlowData> GetFlowField(int length)
-        {
-            return _flowFieldFactory.GetFlowfield(length);
-        }
-        internal NativeList<IntegrationTile> GetIntegrationField(int length)
-        {
-            return _integrationFieldFactory.GetIntegrationField(length);
-        }
     }
 
 }

@@ -256,9 +256,9 @@ namespace FlowFieldNavigation
         {
             PathfindingInternalData internalData = PathfindingInternalDataList[pathIndex];
             PathFlowData pathFlowData = PathFlowDataList[pathIndex];
-            pathFlowData.FlowField = _preallocator.GetFlowField(internalData.FlowFieldLength.Value);
+            pathFlowData.FlowField = new UnsafeList<FlowData>(0, Allocator.Persistent);
             pathFlowData.LOSMap = new UnsafeLOSBitmap(internalData.FlowFieldLength.Value, Allocator.Persistent, NativeArrayOptions.ClearMemory);
-            internalData.IntegrationField = _preallocator.GetIntegrationField(internalData.FlowFieldLength.Value);
+            internalData.IntegrationField = new NativeList<IntegrationTile>(Allocator.Persistent);
             PathfindingInternalDataList[pathIndex] = internalData;
             PathFlowDataList[pathIndex] = pathFlowData;
         }
