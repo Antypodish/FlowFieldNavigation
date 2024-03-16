@@ -123,8 +123,6 @@ namespace FlowFieldNavigation
                 if (reqInfo.Handle.IsCompleted)
                 {
                     reqInfo.Handle.Complete();
-                    _pathContainer.FinalizePathBuffers(reqInfo.PathIndex);
-
                     //SCHEDULE ACTIVE PORTAL SUBMISSION
                     RequestPipelineInfoWithHandle portalSubmissionReqInfo = _activePortalSubmissionScheduler.ScheduleActivePortalSubmission(reqInfo);
                     PathPipelineInfoWithHandle portalSubmissionPathInfo = portalSubmissionReqInfo.ToPathPipelineInfoWithHandle();
@@ -143,8 +141,6 @@ namespace FlowFieldNavigation
             {
                 RequestPipelineInfoWithHandle reqInfo = ScheduledPortalTraversals[i];
                 reqInfo.Handle.Complete();
-                _pathContainer.FinalizePathBuffers(reqInfo.PathIndex);
-
                 //SCHEDULE ACTIVE PORTAL SUBMISSION
                 RequestPipelineInfoWithHandle portalSubmissionReqInfo = _activePortalSubmissionScheduler.ScheduleActivePortalSubmission(reqInfo);
                 PathPipelineInfoWithHandle portalSubmissionPathInfo = portalSubmissionReqInfo.ToPathPipelineInfoWithHandle();

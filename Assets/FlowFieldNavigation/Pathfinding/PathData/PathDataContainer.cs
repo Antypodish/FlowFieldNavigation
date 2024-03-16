@@ -176,6 +176,7 @@ namespace FlowFieldNavigation
                 SectorFlowStartIndiciesToCalculateFlow = preallocations.SectorStartIndexListToCalculateFlow,
                 SectorWithinLOSState = preallocations.SectorsWithinLOSState,
                 SectorToWaveFrontsMap = new NativeParallelMultiHashMap<int, ActiveWaveFront>(0, Allocator.Persistent),
+                IntegrationField = new NativeList<IntegrationTile>(Allocator.Persistent),
                 DynamicArea = new DynamicArea()
                 {
                     FlowFieldCalculationBuffer = preallocations.DynamicAreaFlowFieldCalculationBuffer,
@@ -201,6 +202,8 @@ namespace FlowFieldNavigation
 
             PathFlowData flowData = new PathFlowData()
             {
+                LOSMap = new UnsafeLOSBitmap(0, Allocator.Persistent, NativeArrayOptions.ClearMemory),
+                FlowField = new UnsafeList<FlowData>(0, Allocator.Persistent),
                 DynamicAreaFlowField = preallocations.DynamicAreaFlowField,
             };
 
@@ -251,16 +254,6 @@ namespace FlowFieldNavigation
             }
 
             return pathIndex;
-        }
-        internal void FinalizePathBuffers(int pathIndex)
-        {
-            PathfindingInternalData internalData = PathfindingInternalDataList[pathIndex];
-            PathFlowData pathFlowData = PathFlowDataList[pathIndex];
-            pathFlowData.FlowField = new UnsafeList<FlowData>(0, Allocator.Persistent);
-            pathFlowData.LOSMap = new UnsafeLOSBitmap(internalData.FlowFieldLength.Value, Allocator.Persistent, NativeArrayOptions.ClearMemory);
-            internalData.IntegrationField = new NativeList<IntegrationTile>(Allocator.Persistent);
-            PathfindingInternalDataList[pathIndex] = internalData;
-            PathFlowDataList[pathIndex] = pathFlowData;
         }
         internal bool IsLOSCalculated(int pathIndex)
         {
