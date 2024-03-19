@@ -111,7 +111,6 @@ namespace FlowFieldNavigation
                         SectorToPicked = locationData.SectorToPicked,
                         PickedToSector = internalData.PickedSectorList,
                         PortalSequence = portalTraversalData.PortalSequence,
-                        PortalSequenceBorders = portalTraversalData.PortalSequenceBorders,
                         TargetSectorCosts = targetSectorIntegration,
                         SourcePortalIndexList = portalTraversalData.SourcePortalIndexList,
                         TargetSectorPortalIndexList = portalTraversalData.TargetSectorPortalIndexList,
@@ -209,7 +208,7 @@ namespace FlowFieldNavigation
 
             PathPortalTraversalData portalTraversalData = new PathPortalTraversalData()
             {
-                PortalSequenceBorders = preallocations.PortalSequenceBorders,
+                PortalSequenceSlices = new NativeList<Slice>(Allocator.Persistent),
                 PortalSequence = preallocations.PortalSequence,
                 SourcePortalIndexList = preallocations.SourcePortalIndexList,
                 TargetSectorPortalIndexList = preallocations.TargetSectorPortalIndexList,

@@ -13,14 +13,14 @@ namespace FlowFieldNavigation
         internal int2 Target;
         internal int FieldColAmount;
         internal int SectorColAmount;
-        internal int AddedPortalSequenceBorderStartIndex;
+        internal int NewPortalSliceStartIndex;
         internal int SectorMatrixColAmount;
         internal int SectorMatrixRowAmount;
         internal int SectorTileAmount;
         internal int LOSRange;
         internal NativeArray<PortalTraversalData> PortalTraversalDataArray;
         internal NativeList<ActivePortal> PortalSequence;
-        internal NativeList<int> PortalSequenceBorders;
+        internal NativeList<Slice> PortalSequenceSlices;
         internal UnsafeList<PathSectorState> SectorStateTable;
         internal NativeList<int> PickedSectorIndicies;
         internal NativeReference<int> FlowFieldLength;
@@ -43,7 +43,6 @@ namespace FlowFieldNavigation
             //TARGET DATA
             int2 targetSectorIndex2d = new int2(Target.x / SectorColAmount, Target.y / SectorColAmount);
             _targetSectorIndex1d = targetSectorIndex2d.y * SectorMatrixColAmount + targetSectorIndex2d.x;
-            if(PortalSequenceBorders.Length == 0) { PortalSequenceBorders.Add(0); }
 
             RunDijkstra();
             NativeArray<int> sourcePortalsAsArray = SourcePortalIndexList.AsArray();
@@ -230,10 +229,11 @@ namespace FlowFieldNavigation
         }
         void PickSectorsFromPortalSequence()
         {
-            for (int i = AddedPortalSequenceBorderStartIndex; i < PortalSequenceBorders.Length - 1; i++)
+            for (int i = NewPortalSliceStartIndex; i < PortalSequenceSlices.Length; i++)
             {
-                int start = PortalSequenceBorders[i];
-                int end = PortalSequenceBorders[i + 1];
+                Slice slice = PortalSequenceSlices[i];
+                int start = slice.Index;
+                int end = start + slice.Count;
                 for (int j = start; j < end - 1; j++)
                 {
                     PickSectorsBetweenportals(PortalSequence[j], PortalSequence[j + 1]);
@@ -263,6 +263,8 @@ namespace FlowFieldNavigation
         }
         void PickPortalSequence(int sourcePortalIndex)
         {
+            int sliceStart = PortalSequence.Length;
+
             int curPortalIndex = sourcePortalIndex;
             while(curPortalIndex != -1)
             {
@@ -301,7 +303,10 @@ namespace FlowFieldNavigation
                     curPortalIndex = curPortalData.NextIndex;
                 }
             }
-            PortalSequenceBorders.Add(PortalSequence.Length);
+
+            int sliceEnd = PortalSequence.Length;
+            int sliceLength = sliceEnd - sliceStart;
+            PortalSequenceSlices.Add(new Slice(sliceStart, sliceLength));
         }
     }
 }

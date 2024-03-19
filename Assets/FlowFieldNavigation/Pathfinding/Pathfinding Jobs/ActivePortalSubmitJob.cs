@@ -10,7 +10,7 @@ namespace FlowFieldNavigation
     [BurstCompile]
     internal struct ActivePortalSubmitJob:IJob
     {
-        internal int SequenceBorderListStartIndex;
+        internal int SequenceSliceListStartIndex;
         internal int2 TargetIndex2D;
         internal int SectorTileAmount;
         internal int SectorColAmount;
@@ -26,7 +26,7 @@ namespace FlowFieldNavigation
         [ReadOnly] internal NativeArray<int> PickedToSector;
         [ReadOnly] internal UnsafeList<int> SectorToPicked;
         [ReadOnly] internal NativeArray<ActivePortal> PortalSequence;
-        [ReadOnly] internal NativeArray<int> PortalSequenceBorders;
+        [ReadOnly] internal NativeArray<Slice> PortalSequenceSlices;
         [ReadOnly] internal NativeReference<int> NewSectorStartIndex;
 
         internal SectorBitArray SectorBitArray;
@@ -44,10 +44,11 @@ namespace FlowFieldNavigation
                 SectorBitArray.SetSector(pickedSector);
             }
 
-            for (int i = SequenceBorderListStartIndex; i < PortalSequenceBorders.Length - 1; i++)
+            for (int i = SequenceSliceListStartIndex; i < PortalSequenceSlices.Length; i++)
             {
-                int start = PortalSequenceBorders[i];
-                int end = PortalSequenceBorders[i + 1];
+                Slice slice = PortalSequenceSlices[i];
+                int start = slice.Index;
+                int end = slice.Index + slice.Count;
 
                 for (int j = start; j < end - 1; j++)
                 {

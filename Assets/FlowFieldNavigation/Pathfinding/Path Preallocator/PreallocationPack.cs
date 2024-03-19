@@ -7,7 +7,6 @@ namespace FlowFieldNavigation
     internal struct PreallocationPack
     {
         internal NativeList<ActivePortal> PortalSequence;
-        internal NativeList<int> PortalSequenceBorders;
         internal UnsafeList<float> TargetSectorCosts;
         internal UnsafeList<int> SectorToPicked;
         internal NativeList<int> PickedToSector;

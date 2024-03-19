@@ -275,14 +275,13 @@ namespace FlowFieldNavigation
             PathDestinationData destinationData = _navigationManager.PathDataContainer.PathDestinationDataList[pathIndex];
             FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
             NativeList<ActivePortal> porSeq = portalTraversalData.PortalSequence;
-            NativeList<int> portSeqBorders = portalTraversalData.PortalSequenceBorders;
+            NativeList<Slice> portSeqSlices = portalTraversalData.PortalSequenceSlices;
 
-            if (porSeq.Length == 0) { return; }
-
-            for(int i = 0; i < portSeqBorders.Length - 1; i++)
+            for(int i = 0; i < portSeqSlices.Length; i++)
             {
-                int seqStart = portSeqBorders[i];
-                int seqEnd = portSeqBorders[i + 1];
+                Slice slice = portSeqSlices[i];
+                int seqStart = slice.Index;
+                int seqEnd = slice.Index + slice.Count;
                 Gizmos.color = _colorArray[i % _colorArray.Length];
                 for(int j = seqStart; j < seqEnd - 1; j++)
                 {

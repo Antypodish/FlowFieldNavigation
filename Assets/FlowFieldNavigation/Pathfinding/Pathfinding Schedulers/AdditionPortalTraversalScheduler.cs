@@ -38,7 +38,7 @@ namespace FlowFieldNavigation
             PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
             UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathInfo.PathIndex];
             PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathInfo.PathIndex];
-            portalTraversalData.PathAdditionSequenceBorderStartIndex.Value = portalTraversalData.PortalSequenceBorders.Length - 1;
+            portalTraversalData.PathAdditionSequenceBorderStartIndex.Value = portalTraversalData.PortalSequenceSlices.Length;
             portalTraversalData.NewPickedSectorStartIndex.Value = internalData.PickedSectorList.Length;
 
             FieldGraph pickedFieldGraph = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
@@ -87,7 +87,7 @@ namespace FlowFieldNavigation
                 LOSRange = FlowFieldUtilities.LOSRange,
                 Target = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition),
                 PickedSectorIndicies = internalData.PickedSectorList,
-                PortalSequenceBorders = portalTraversalData.PortalSequenceBorders,
+                PortalSequenceSlices = portalTraversalData.PortalSequenceSlices,
                 PortalNodes = pickedFieldGraph.PortalNodes,
                 WindowNodes = pickedFieldGraph.WindowNodes,
                 WinToSecPtrs = pickedFieldGraph.WinToSecPtrs,
@@ -99,7 +99,7 @@ namespace FlowFieldNavigation
                 SourcePortalIndexList = portalTraversalData.SourcePortalIndexList,
                 SectorStateTable = sectorStateTable,
                 DijkstraStartIndicies = portalTraversalData.DiskstraStartIndicies,
-                AddedPortalSequenceBorderStartIndex = portalTraversalData.PathAdditionSequenceBorderStartIndex.Value,
+                NewPortalSliceStartIndex = portalTraversalData.PathAdditionSequenceBorderStartIndex.Value,
                 SectorWithinLOSState = internalData.SectorWithinLOSState,
                 NewPickedSectorStartIndex = portalTraversalData.NewPickedSectorStartIndex,
                 NewReducedPortalIndicies = portalTraversalData.NewReducedPortalIndicies,

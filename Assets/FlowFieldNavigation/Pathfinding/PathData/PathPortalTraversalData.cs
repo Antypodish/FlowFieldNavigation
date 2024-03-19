@@ -7,7 +7,7 @@ namespace FlowFieldNavigation
     {
         internal NativeList<PortalTraversalData> GoalDataList;
         internal NativeList<ActivePortal> PortalSequence;
-        internal NativeList<int> PortalSequenceBorders;
+        internal NativeList<Slice> PortalSequenceSlices;
         internal NativeList<int> TargetSectorPortalIndexList;
         internal NativeList<int> SourcePortalIndexList;
         internal NativeReference<int> PathAdditionSequenceBorderStartIndex;

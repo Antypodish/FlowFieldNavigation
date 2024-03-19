@@ -51,7 +51,6 @@ namespace FlowFieldNavigation
             return new PreallocationPack()
             {
                 PortalSequence = _portalSequenceFactory.GetPortalSequenceList(),
-                PortalSequenceBorders = _portalSequenceFactory.GetPathRequestBorders(),
                 TargetSectorCosts = targetSectorCosts,
                 SectorToPicked = _sectorTransformationFactory.GetSectorToPickedArray(),
                 PickedToSector = _sectorTransformationFactory.GetPickedToSectorList(),
@@ -77,7 +76,6 @@ namespace FlowFieldNavigation
         }
         internal void SendPreallocationsBack(ref PreallocationPack preallocations, UnsafeList<FlowData> flowField, NativeList<IntegrationTile> integrationField, int offset)
         {
-            _portalSequenceFactory.SendPortalSequences(preallocations.PortalSequence, preallocations.PortalSequenceBorders);
             preallocations.TargetSectorCosts.Dispose();
             _sectorTransformationFactory.SendSectorTransformationsBack(preallocations.SectorToPicked, preallocations.PickedToSector);
             _nativeIntListFactory.SendNativeIntList(preallocations.TargetSectorPortalIndexList);
