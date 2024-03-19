@@ -47,12 +47,10 @@ namespace FlowFieldNavigation
                 TargetIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition),
                 FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
                 SectorStateTable = sectorStateTable,
-                SectorToPickedTable = locationData.SectorToPicked,
                 Sources = sources,
                 SectorOverlappingDirectionTable = sectorOverlappingDirectionTable,
-                SectorFlowStartIndiciesToCalculateIntegration = pathInternalData.SectorFlowStartIndiciesToCalculateIntegration,
-                SectorFlowStartIndiciesToCalculateFlow = pathInternalData.SectorFlowStartIndiciesToCalculateFlow,
-                PickedToSectorTable = pathInternalData.PickedSectorList.AsArray(),
+                SectorIndiciesToCalculateIntegration = pathInternalData.SectorIndiciesToCalculateIntegration,
+                SectorIndiciesToCalculateFlow = pathInternalData.SectorIndiciesToCalculateFlow,
                 SectorWithinLOSState = pathInternalData.SectorWithinLOSState,
             };
             JobHandle sourceSectorHandle = sectorCalcJob.Schedule(activePortalSubmissionHandle);

@@ -15,8 +15,8 @@ namespace FlowFieldNavigation
         internal NativeQueue<int> PortalTraversalQueue;
         internal NativeParallelMultiHashMap<int, ActiveWaveFront> SectorToWaveFrontsMap;
         internal NativeList<NotActivePortalRecord> NotActivePortalList;
-        internal NativeList<int> SectorFlowStartIndiciesToCalculateIntegration;
-        internal NativeList<int> SectorFlowStartIndiciesToCalculateFlow;
+        internal NativeList<int> SectorIndiciesToCalculateIntegration;
+        internal NativeList<int> SectorIndiciesToCalculateFlow;
         internal NativeReference<SectorsWihinLOSArgument> SectorWithinLOSState;
     }
 

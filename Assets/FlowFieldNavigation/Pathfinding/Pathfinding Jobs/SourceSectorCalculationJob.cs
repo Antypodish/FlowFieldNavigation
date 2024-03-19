@@ -22,22 +22,18 @@ namespace FlowFieldNavigation
         internal int2 TargetIndex;
         internal float2 FieldGridStartPos;
         [ReadOnly] internal NativeSlice<float2> Sources;
-        [ReadOnly] internal UnsafeList<int> SectorToPickedTable;
-        [ReadOnly] internal NativeArray<int> PickedToSectorTable;
         [ReadOnly] internal NativeArray<OverlappingDirection> SectorOverlappingDirectionTable;
 
-        internal NativeList<int> SectorFlowStartIndiciesToCalculateIntegration;
-        internal NativeList<int> SectorFlowStartIndiciesToCalculateFlow;
+        internal NativeList<int> SectorIndiciesToCalculateIntegration;
+        internal NativeList<int> SectorIndiciesToCalculateFlow;
 
         internal UnsafeList<PathSectorState> SectorStateTable;
         internal NativeReference<SectorsWihinLOSArgument> SectorWithinLOSState;
         public void Execute()
         {
-            SectorFlowStartIndiciesToCalculateFlow.Clear();
-            SectorFlowStartIndiciesToCalculateIntegration.Clear();
+            SectorIndiciesToCalculateFlow.Clear();
+            SectorIndiciesToCalculateIntegration.Clear();
 
-
-            int targetSector1d = FlowFieldUtilities.GetSector1D(TargetIndex, SectorColAmount, SectorMatrixColAmount);
             for (int i = 0; i < Sources.Length; i++)
             {
                 float2 pos = Sources[i];
@@ -45,14 +41,12 @@ namespace FlowFieldNavigation
                 if ((SectorStateTable[sector1d] & PathSectorState.IntegrationCalculated) != PathSectorState.IntegrationCalculated)
                 {
                     SectorStateTable[sector1d] |= PathSectorState.IntegrationCalculated;
-                    int flowStartIndex = SectorToPickedTable[sector1d];
-                    SectorFlowStartIndiciesToCalculateIntegration.Add(flowStartIndex);
+                    SectorIndiciesToCalculateIntegration.Add(sector1d);
                 }
                 if ((SectorStateTable[sector1d] & PathSectorState.FlowCalculated) != PathSectorState.FlowCalculated)
                 {
                     SectorStateTable[sector1d] |= PathSectorState.FlowCalculated;
-                    int flowStartIndex = SectorToPickedTable[sector1d];
-                    SectorFlowStartIndiciesToCalculateFlow.Add(flowStartIndex);
+                    SectorIndiciesToCalculateFlow.Add(sector1d);
                 }
 
                 //Handle overlapping sectors
@@ -64,7 +58,7 @@ namespace FlowFieldNavigation
                     if((overlappingSectorState & PathSectorState.IntegrationCalculated) != PathSectorState.IntegrationCalculated)
                     {
                         SectorStateTable[overlappingSector] = overlappingSectorState | PathSectorState.IntegrationCalculated;
-                        SectorFlowStartIndiciesToCalculateIntegration.Add(SectorToPickedTable[overlappingSector]);
+                        SectorIndiciesToCalculateIntegration.Add(overlappingSector);
                     }
                 }
                 if ((sectorOverlappingDirections & OverlappingDirection.E) == OverlappingDirection.E)
@@ -74,7 +68,7 @@ namespace FlowFieldNavigation
                     if ((overlappingSectorState & PathSectorState.IntegrationCalculated) != PathSectorState.IntegrationCalculated)
                     {
                         SectorStateTable[overlappingSector] = overlappingSectorState | PathSectorState.IntegrationCalculated;
-                        SectorFlowStartIndiciesToCalculateIntegration.Add(SectorToPickedTable[overlappingSector]);
+                        SectorIndiciesToCalculateIntegration.Add(overlappingSector);
                     }
                 }
                 if ((sectorOverlappingDirections & OverlappingDirection.S) == OverlappingDirection.S)
@@ -84,7 +78,7 @@ namespace FlowFieldNavigation
                     if ((overlappingSectorState & PathSectorState.IntegrationCalculated) != PathSectorState.IntegrationCalculated)
                     {
                         SectorStateTable[overlappingSector] = overlappingSectorState | PathSectorState.IntegrationCalculated;
-                        SectorFlowStartIndiciesToCalculateIntegration.Add(SectorToPickedTable[overlappingSector]);
+                        SectorIndiciesToCalculateIntegration.Add(overlappingSector);
                     }
                 }
                 if ((sectorOverlappingDirections & OverlappingDirection.W) == OverlappingDirection.W)
@@ -94,12 +88,12 @@ namespace FlowFieldNavigation
                     if ((overlappingSectorState & PathSectorState.IntegrationCalculated) != PathSectorState.IntegrationCalculated)
                     {
                         SectorStateTable[overlappingSector] = overlappingSectorState | PathSectorState.IntegrationCalculated;
-                        SectorFlowStartIndiciesToCalculateIntegration.Add(SectorToPickedTable[overlappingSector]);
+                        SectorIndiciesToCalculateIntegration.Add(overlappingSector);
                     }
                 }
             }
 
-            if (ContainsSectorsWithinLOSRange(SectorFlowStartIndiciesToCalculateIntegration.AsArray()))
+            if (ContainsSectorsWithinLOSRange(SectorIndiciesToCalculateIntegration.AsArray()))
             {
                 SectorsWihinLOSArgument argument = SectorWithinLOSState.Value;
                 argument |= SectorsWihinLOSArgument.RequestedSectorWithinLOS;
@@ -130,8 +124,7 @@ namespace FlowFieldNavigation
             };
             for (int i = 0; i < integrationRequestedSectors.Length; i++)
             {
-                int sectorFlowStart = integrationRequestedSectors[i];
-                int sector1d = PickedToSectorTable[(sectorFlowStart - 1) / sectorTileAmount];
+                int sector1d = integrationRequestedSectors[i];
                 int sectorCol = sector1d % sectorMatrixColAmount;
                 int sectorRow = sector1d / sectorMatrixColAmount;
 

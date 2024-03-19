@@ -62,12 +62,12 @@ namespace FlowFieldNavigation
 
             //SCHEDULE INTEGRATION FIELDS
             NativeList<JobHandle> intFieldHandles = new NativeList<JobHandle>(Allocator.Temp);
-            NativeArray<int> sectorFlowStartIndiciesToCalculateIntegration = pathInternalData.SectorFlowStartIndiciesToCalculateIntegration.AsArray();
-            NativeArray<int> sectorFlowStartIndiciesToCalculateFlow = pathInternalData.SectorFlowStartIndiciesToCalculateFlow.AsArray();
-            for (int i = 0; i < sectorFlowStartIndiciesToCalculateIntegration.Length; i++)
+            NativeArray<int> sectorIndiciesToCalculateIntegration = pathInternalData.SectorIndiciesToCalculateIntegration.AsArray();
+            NativeArray<int> sectorIndiciesToCalculateFlow = pathInternalData.SectorIndiciesToCalculateFlow.AsArray();
+            for (int i = 0; i < sectorIndiciesToCalculateIntegration.Length; i++)
             {
-                int sectorStart = sectorFlowStartIndiciesToCalculateIntegration[i];
-                int sectorIndex = pathInternalData.PickedSectorList[(sectorStart - 1) / FlowFieldUtilities.SectorTileAmount];
+                int sectorIndex = sectorIndiciesToCalculateIntegration[i];
+                int sectorStart = locationData.SectorToPicked[sectorIndex];
                 NativeSlice<IntegrationTile> integrationSector = new NativeSlice<IntegrationTile>(pathInternalData.IntegrationField.AsArray(), sectorStart, FlowFieldUtilities.SectorTileAmount);
                 IntegrationFieldJob intJob = new IntegrationFieldJob()
                 {
@@ -89,12 +89,13 @@ namespace FlowFieldNavigation
 
             //SCHEDULE FLOW FIELDS
             NativeList<JobHandle> flowfieldHandles = new NativeList<JobHandle>(Allocator.Temp);
-            UnsafeList<FlowFieldCalculationBuffer> bufferParent = new UnsafeList<FlowFieldCalculationBuffer>(sectorFlowStartIndiciesToCalculateFlow.Length, Allocator.Persistent);
-            bufferParent.Length = sectorFlowStartIndiciesToCalculateFlow.Length;
+            UnsafeList<FlowFieldCalculationBuffer> bufferParent = new UnsafeList<FlowFieldCalculationBuffer>(sectorIndiciesToCalculateFlow.Length, Allocator.Persistent);
+            bufferParent.Length = sectorIndiciesToCalculateFlow.Length;
 
-            for (int i = 0; i < sectorFlowStartIndiciesToCalculateFlow.Length; i++)
+            for (int i = 0; i < sectorIndiciesToCalculateFlow.Length; i++)
             {
-                int sectorStart = sectorFlowStartIndiciesToCalculateFlow[i];
+                int sectorIndex = sectorIndiciesToCalculateFlow[i];
+                int sectorStart = locationData.SectorToPicked[sectorIndex];
 
                 UnsafeList<FlowData> flowFieldCalculationBuffer = new UnsafeList<FlowData>(FlowFieldUtilities.SectorTileAmount, Allocator.Persistent, NativeArrayOptions.ClearMemory);
                 flowFieldCalculationBuffer.Length = FlowFieldUtilities.SectorTileAmount;
