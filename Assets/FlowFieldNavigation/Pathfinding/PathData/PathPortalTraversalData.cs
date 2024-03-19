@@ -10,7 +10,7 @@ namespace FlowFieldNavigation
         internal NativeList<Slice> PortalSequenceSlices;
         internal NativeList<int> TargetSectorPortalIndexList;
         internal NativeList<int> SourcePortalIndexList;
-        internal NativeReference<int> PathAdditionSequenceBorderStartIndex;
+        internal NativeReference<int> PathAdditionSequenceSliceStartIndex;
         internal NativeReference<int> NewPickedSectorStartIndex;
         internal NativeList<int> DiskstraStartIndicies;
         internal NativeList<int> NewReducedPortalIndicies;

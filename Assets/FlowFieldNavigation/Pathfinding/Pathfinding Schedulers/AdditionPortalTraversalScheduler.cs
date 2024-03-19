@@ -11,7 +11,7 @@ namespace FlowFieldNavigation
     {
         FlowFieldNavigationManager _navigationManager;
         PathDataContainer _pathContainer;
-        AdditionActivePortalSubmissionScheduler _additionActivePortalSubmissionScheduler;
+        ActivePortalSubmissionScheduler _activePortalSubmissionScheduler;
         RequestedSectorCalculationScheduler _requestedSectorCalculationScheduler;
         PortalTraversalDataProvider _porTravDataProvider;
         NativeList<PathPipelineInfoWithHandle> ScheduledAdditionPortalTraversals;
@@ -21,7 +21,7 @@ namespace FlowFieldNavigation
             ScheduledAdditionPortalTraversals = new NativeList<PathPipelineInfoWithHandle>(Allocator.Persistent);
             _navigationManager = navManager;
             _pathContainer = _navigationManager.PathDataContainer;
-            _additionActivePortalSubmissionScheduler = new AdditionActivePortalSubmissionScheduler(navManager);
+            _activePortalSubmissionScheduler = new ActivePortalSubmissionScheduler(navManager);
             _requestedSectorCalculationScheduler = reqSecCalcScheduler;
             _porTravDataProvider = porTravDataProvider;
         }
@@ -29,7 +29,7 @@ namespace FlowFieldNavigation
         {
             if (ScheduledAdditionPortalTraversals.IsCreated) { ScheduledAdditionPortalTraversals.Dispose(); }
             _requestedSectorCalculationScheduler.DisposeAll();
-            _additionActivePortalSubmissionScheduler = null;
+            _activePortalSubmissionScheduler = null;
             _requestedSectorCalculationScheduler = null;
         }
         internal void SchedulePortalTraversalFor(PathPipelineInfoWithHandle pathInfo, NativeSlice<float2> sources)
@@ -38,7 +38,7 @@ namespace FlowFieldNavigation
             PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
             UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathInfo.PathIndex];
             PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathInfo.PathIndex];
-            portalTraversalData.PathAdditionSequenceBorderStartIndex.Value = portalTraversalData.PortalSequenceSlices.Length;
+            portalTraversalData.PathAdditionSequenceSliceStartIndex.Value = portalTraversalData.PortalSequenceSlices.Length;
             portalTraversalData.NewPickedSectorStartIndex.Value = internalData.PickedSectorList.Length;
 
             FieldGraph pickedFieldGraph = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
@@ -99,7 +99,7 @@ namespace FlowFieldNavigation
                 SourcePortalIndexList = portalTraversalData.SourcePortalIndexList,
                 SectorStateTable = sectorStateTable,
                 DijkstraStartIndicies = portalTraversalData.DiskstraStartIndicies,
-                NewPortalSliceStartIndex = portalTraversalData.PathAdditionSequenceBorderStartIndex.Value,
+                NewPortalSliceStartIndex = portalTraversalData.PathAdditionSequenceSliceStartIndex.Value,
                 SectorWithinLOSState = internalData.SectorWithinLOSState,
                 NewPickedSectorStartIndex = portalTraversalData.NewPickedSectorStartIndex,
                 NewReducedPortalIndicies = portalTraversalData.NewReducedPortalIndicies,
@@ -125,12 +125,12 @@ namespace FlowFieldNavigation
                     ScheduledAdditionPortalTraversals.RemoveAtSwapBack(i);
 
                     //SCHEDULE ADDITION ACTIVE PORTAL SUBMIT JOB
-                    PathPipelineInfoWithHandle _addActivePorSubmitHandle = _additionActivePortalSubmissionScheduler.ScheduleActivePortalSubmission(pathInfo);
+                    pathInfo.Handle = _activePortalSubmissionScheduler.ScheduleActivePortalSubmission(pathInfo.PathIndex);
                     PathRoutineData existingPath = pathRoutineDataList[pathInfo.PathIndex];
                     int flowStart = math.select(existingPath.PathAdditionSourceStart, existingPath.FlowRequestSourceStart, existingPath.FlowRequestSourceCount != 0);
                     int flowCount = existingPath.FlowRequestSourceCount + existingPath.PathAdditionSourceCount;
                     NativeSlice<float2> sourcePositions = new NativeSlice<float2>(sources, flowStart, flowCount);
-                    _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pathInfo, _addActivePorSubmitHandle.Handle, sourcePositions);
+                    _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pathInfo, pathInfo.Handle, sourcePositions);
 
                 }
             }
@@ -145,12 +145,12 @@ namespace FlowFieldNavigation
                 ScheduledAdditionPortalTraversals.RemoveAtSwapBack(i);
 
                 //SCHEDULE ADDITION ACTIVE PORTAL SUBMIT JOB
-                PathPipelineInfoWithHandle _addActivePorSubmitHandle = _additionActivePortalSubmissionScheduler.ScheduleActivePortalSubmission(pathInfo);
+                pathInfo.Handle = _activePortalSubmissionScheduler.ScheduleActivePortalSubmission(pathInfo.PathIndex);
                 PathRoutineData existingPath = pathRoutineDataList[pathInfo.PathIndex];
                 int flowStart = math.select(existingPath.PathAdditionSourceStart, existingPath.FlowRequestSourceStart, existingPath.FlowRequestSourceCount != 0);
                 int flowCount = existingPath.FlowRequestSourceCount + existingPath.PathAdditionSourceCount;
                 NativeSlice<float2> sourcePositions = new NativeSlice<float2>(sources, flowStart, flowCount);
-                _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pathInfo, _addActivePorSubmitHandle.Handle, sourcePositions);
+                _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pathInfo, pathInfo.Handle, sourcePositions);
             }
             ScheduledAdditionPortalTraversals.Clear();
         }

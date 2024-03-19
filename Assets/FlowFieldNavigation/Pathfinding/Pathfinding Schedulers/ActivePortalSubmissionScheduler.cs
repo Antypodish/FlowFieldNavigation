@@ -15,15 +15,15 @@ namespace FlowFieldNavigation
             _pathContainer = navigationManager.PathDataContainer;
         }
 
-        internal RequestPipelineInfoWithHandle ScheduleActivePortalSubmission(RequestPipelineInfoWithHandle reqInfo)
+        internal JobHandle ScheduleActivePortalSubmission(int pathIndex)
         {
-            PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[reqInfo.PathIndex];
-            PathDestinationData destinationData = _pathContainer.PathDestinationDataList[reqInfo.PathIndex];
-            PathLocationData locationData = _pathContainer.PathLocationDataList[reqInfo.PathIndex];
-            PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[reqInfo.PathIndex];
-            SectorBitArray sectorBitArray = _pathContainer.PathSectorBitArrays[reqInfo.PathIndex];
-            UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[reqInfo.PathIndex];
-            NativeArray<OverlappingDirection> sectorOverlappingDirectionTable = _pathContainer.SectorOverlappingDirectionTableList[reqInfo.PathIndex];
+            PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathIndex];
+            PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathIndex];
+            PathLocationData locationData = _pathContainer.PathLocationDataList[pathIndex];
+            PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathIndex];
+            SectorBitArray sectorBitArray = _pathContainer.PathSectorBitArrays[pathIndex];
+            UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathIndex];
+            NativeArray<OverlappingDirection> sectorOverlappingDirectionTable = _pathContainer.SectorOverlappingDirectionTableList[pathIndex];
             FieldGraph pickedFieldGraph = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
 
             //ACTIVE WAVE FRONT SUBMISSION
@@ -36,7 +36,7 @@ namespace FlowFieldNavigation
                 SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
                 FieldColAmount = FlowFieldUtilities.FieldColAmount,
                 TargetIndex2D = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition),
-                SequenceSliceListStartIndex = portalTraversalData.PathAdditionSequenceBorderStartIndex.Value,
+                SequenceSliceListStartIndex = portalTraversalData.PathAdditionSequenceSliceStartIndex.Value,
 
                 PortalEdges = pickedFieldGraph.PorToPorPtrs,
                 SectorToPicked = locationData.SectorToPicked,
@@ -54,11 +54,8 @@ namespace FlowFieldNavigation
                 SectorOverlappingDirectionTable = sectorOverlappingDirectionTable,
             };
             JobHandle submitHandle = submitJob.Schedule();
-
             if (FlowFieldUtilities.DebugMode) { submitHandle.Complete(); }
-
-            reqInfo.Handle = submitHandle;
-            return reqInfo;
+            return submitHandle;
         }
     }
 

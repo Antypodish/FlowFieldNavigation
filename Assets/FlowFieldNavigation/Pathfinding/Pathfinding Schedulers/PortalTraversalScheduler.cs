@@ -41,7 +41,7 @@ namespace FlowFieldNavigation
             int2 destinationIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition);
             CostField pickedCostField = _navigationManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset);
             FieldGraph pickedFieldGraph = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
-            portalTraversalData.PathAdditionSequenceBorderStartIndex.Value = portalTraversalData.PortalSequenceSlices.Length;
+            portalTraversalData.PathAdditionSequenceSliceStartIndex.Value = portalTraversalData.PortalSequenceSlices.Length;
             portalTraversalData.NewPickedSectorStartIndex.Value = pathInternalData.PickedSectorList.Length;
 
             NativeArray<PortalTraversalData> porTravDataArray = _porTravDataProvider.GetAvailableData(out JobHandle dependency);
@@ -90,7 +90,7 @@ namespace FlowFieldNavigation
                 DijkstraStartIndicies = portalTraversalData.DiskstraStartIndicies,
                 SectorWithinLOSState = pathInternalData.SectorWithinLOSState,
                 NewPickedSectorStartIndex = portalTraversalData.NewPickedSectorStartIndex,
-                NewPortalSliceStartIndex = portalTraversalData.PathAdditionSequenceBorderStartIndex.Value,
+                NewPortalSliceStartIndex = portalTraversalData.PathAdditionSequenceSliceStartIndex.Value,
                 PickedSectorIndicies = pathInternalData.PickedSectorList,
                 PortalSequenceSlices = portalTraversalData.PortalSequenceSlices,
                 PortalNodes = pickedFieldGraph.PortalNodes,
@@ -124,8 +124,8 @@ namespace FlowFieldNavigation
                 {
                     reqInfo.Handle.Complete();
                     //SCHEDULE ACTIVE PORTAL SUBMISSION
-                    RequestPipelineInfoWithHandle portalSubmissionReqInfo = _activePortalSubmissionScheduler.ScheduleActivePortalSubmission(reqInfo);
-                    PathPipelineInfoWithHandle portalSubmissionPathInfo = portalSubmissionReqInfo.ToPathPipelineInfoWithHandle();
+                    reqInfo.Handle = _activePortalSubmissionScheduler.ScheduleActivePortalSubmission(reqInfo.PathIndex);
+                    PathPipelineInfoWithHandle portalSubmissionPathInfo = reqInfo.ToPathPipelineInfoWithHandle();
                     //SCHEDULE REQUESTED SECTOR CALCULATION
                     FinalPathRequest pathReq = requestedPaths[reqInfo.RequestIndex];
                     NativeSlice<float2> sourcePositions = new NativeSlice<float2>(sources, pathReq.SourcePositionStartIndex, pathReq.SourceCount);
@@ -142,8 +142,8 @@ namespace FlowFieldNavigation
                 RequestPipelineInfoWithHandle reqInfo = ScheduledPortalTraversals[i];
                 reqInfo.Handle.Complete();
                 //SCHEDULE ACTIVE PORTAL SUBMISSION
-                RequestPipelineInfoWithHandle portalSubmissionReqInfo = _activePortalSubmissionScheduler.ScheduleActivePortalSubmission(reqInfo);
-                PathPipelineInfoWithHandle portalSubmissionPathInfo = portalSubmissionReqInfo.ToPathPipelineInfoWithHandle();
+                reqInfo.Handle = _activePortalSubmissionScheduler.ScheduleActivePortalSubmission(reqInfo.PathIndex);
+                PathPipelineInfoWithHandle portalSubmissionPathInfo = reqInfo.ToPathPipelineInfoWithHandle();
                 //SCHEDULE REQUESTED SECTOR CALCULATION
                 FinalPathRequest pathReq = requestedPaths[reqInfo.RequestIndex];
                 NativeSlice<float2> sourcePositions = new NativeSlice<float2>(sources, pathReq.SourcePositionStartIndex, pathReq.SourceCount);
