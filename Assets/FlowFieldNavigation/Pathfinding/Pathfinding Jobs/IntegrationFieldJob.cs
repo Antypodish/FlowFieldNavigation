@@ -23,16 +23,23 @@ namespace FlowFieldNavigation
         [ReadOnly] internal NativeSlice<byte> Costs;
         public void Execute()
         {
-            Integrate();
-        }
-        void Integrate()
-        {
             //DATA
             NativeSlice<IntegrationTile> integrationField = IntegrationField;
             NativeSlice<byte> costs = Costs;
             NativeQueue<LocalIndex1d> integrationQueue = new NativeQueue<LocalIndex1d>(Allocator.Temp);
             int sectorColAmount = SectorColAmount;
             int sectorTileAmount = sectorColAmount * sectorColAmount;
+
+            //Reset
+            const IntegrationMark markResetMask = IntegrationMark.LOSPass | IntegrationMark.LOSBlock | IntegrationMark.LOSC;
+            for(int i = 0; i < integrationField.Length; i++)
+            {
+                IntegrationTile tile = integrationField[i];
+                tile.Cost = float.MaxValue;
+                tile.Mark &= markResetMask;
+                integrationField[i] = tile;
+            }
+
             ///////////LOOKUP TABLE////////////////
             ///////////////////////////////////////
             int nLocal1d;
@@ -63,7 +70,7 @@ namespace FlowFieldNavigation
             ///////////////////////////////////////////////
             //CODE
             int targetSector1d = FlowFieldUtilities.GetSector1D(TargetIndex, sectorColAmount, SectorMatrixColAmount);
-            if(SectorIndex == targetSector1d)
+            if (SectorIndex == targetSector1d)
             {
                 int targetLocal1d = FlowFieldUtilities.GetLocal1D(TargetIndex, sectorColAmount);
                 IntegrationTile startTile = integrationField[targetLocal1d];

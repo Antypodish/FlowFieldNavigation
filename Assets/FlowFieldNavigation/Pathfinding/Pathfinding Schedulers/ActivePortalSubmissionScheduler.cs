@@ -15,7 +15,7 @@ namespace FlowFieldNavigation
             _pathContainer = navigationManager.PathDataContainer;
         }
 
-        internal JobHandle ScheduleActivePortalSubmission(int pathIndex)
+        internal JobHandle ScheduleActivePortalSubmission(int pathIndex, JobHandle dependency)
         {
             PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathIndex];
             PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathIndex];
@@ -53,7 +53,7 @@ namespace FlowFieldNavigation
                 SectorBitArray = sectorBitArray,
                 SectorOverlappingDirectionTable = sectorOverlappingDirectionTable,
             };
-            JobHandle submitHandle = submitJob.Schedule();
+            JobHandle submitHandle = submitJob.Schedule(dependency);
             if (FlowFieldUtilities.DebugMode) { submitHandle.Complete(); }
             return submitHandle;
         }

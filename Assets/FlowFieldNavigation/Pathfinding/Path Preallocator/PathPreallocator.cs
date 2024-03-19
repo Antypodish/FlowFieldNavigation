@@ -74,7 +74,7 @@ namespace FlowFieldNavigation
                 DijkstraStartIndicies = _nativeIntListFactory.GetNativeIntList(),
             };
         }
-        internal void SendPreallocationsBack(ref PreallocationPack preallocations, UnsafeList<FlowData> flowField, NativeList<IntegrationTile> integrationField, int offset)
+        internal void SendPreallocationsBack(ref PreallocationPack preallocations)
         {
             preallocations.TargetSectorCosts.Dispose();
             _sectorTransformationFactory.SendSectorTransformationsBack(preallocations.SectorToPicked, preallocations.PickedToSector);
@@ -82,8 +82,6 @@ namespace FlowFieldNavigation
             _nativeIntListFactory.SendNativeIntList(preallocations.SourcePortalIndexList);
             _nativeIntQueueFactory.SendNativeIntQueue(preallocations.PortalTraversalFastMarchingQueue);
             _sectorStateTableFactory.SendSectorStateTable(preallocations.SectorStateTable);
-            _flowFieldFactory.SendFlowField(flowField);
-            _integrationFieldFactory.SendIntegrationField(integrationField);
             _nativeIntListFactory.SendNativeIntList(preallocations.SectorStartIndexListToCalculateIntegration);
             _nativeIntListFactory.SendNativeIntList(preallocations.SectorStartIndexListToCalculateFlow);
             preallocations.NotActivePortalList.Dispose();

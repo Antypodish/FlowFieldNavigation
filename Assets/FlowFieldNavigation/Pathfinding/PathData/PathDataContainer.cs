@@ -100,8 +100,10 @@ namespace FlowFieldNavigation
                     NativeArray<OverlappingDirection> sectorOverlappingDirections = SectorOverlappingDirectionTableList[i];
                     sectorOverlappingDirections.Dispose();
                     flowData.Dispose();
+                    flowData.FlowField.Dispose();
                     portalTraversalData.GoalDataList.Dispose();
                     internalData.SectorToWaveFrontsMap.Dispose();
+                    internalData.IntegrationField.Dispose();
                     portalTraversalData.NewReducedPortalIndicies.Dispose();
                     portalTraversalData.PortalDataRecords.Dispose();
                     ExposedPathStateList[i] = PathState.Removed;
@@ -131,7 +133,7 @@ namespace FlowFieldNavigation
                         SectorBitArray = sectorBitArray,
                         DijkstraStartIndicies = portalTraversalData.DiskstraStartIndicies,
                     };
-                    _preallocator.SendPreallocationsBack(ref preallocations, flowData.FlowField, internalData.IntegrationField, destinationData.Offset);
+                    _preallocator.SendPreallocationsBack(ref preallocations);
                 }
             }
             _preallocator.CheckForDeallocations();

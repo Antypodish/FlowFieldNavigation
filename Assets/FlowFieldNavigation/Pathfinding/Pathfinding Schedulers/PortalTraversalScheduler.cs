@@ -124,12 +124,12 @@ namespace FlowFieldNavigation
                 {
                     reqInfo.Handle.Complete();
                     //SCHEDULE ACTIVE PORTAL SUBMISSION
-                    reqInfo.Handle = _activePortalSubmissionScheduler.ScheduleActivePortalSubmission(reqInfo.PathIndex);
+                    reqInfo.Handle = _activePortalSubmissionScheduler.ScheduleActivePortalSubmission(reqInfo.PathIndex, reqInfo.Handle);
                     PathPipelineInfoWithHandle portalSubmissionPathInfo = reqInfo.ToPathPipelineInfoWithHandle();
                     //SCHEDULE REQUESTED SECTOR CALCULATION
                     FinalPathRequest pathReq = requestedPaths[reqInfo.RequestIndex];
                     NativeSlice<float2> sourcePositions = new NativeSlice<float2>(sources, pathReq.SourcePositionStartIndex, pathReq.SourceCount);
-                    _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(portalSubmissionPathInfo, portalSubmissionPathInfo.Handle, sourcePositions);
+                    _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(portalSubmissionPathInfo.PathIndex, portalSubmissionPathInfo.Handle, sourcePositions);
 
                     ScheduledPortalTraversals.RemoveAtSwapBack(i);
                 }
@@ -142,12 +142,12 @@ namespace FlowFieldNavigation
                 RequestPipelineInfoWithHandle reqInfo = ScheduledPortalTraversals[i];
                 reqInfo.Handle.Complete();
                 //SCHEDULE ACTIVE PORTAL SUBMISSION
-                reqInfo.Handle = _activePortalSubmissionScheduler.ScheduleActivePortalSubmission(reqInfo.PathIndex);
+                reqInfo.Handle = _activePortalSubmissionScheduler.ScheduleActivePortalSubmission(reqInfo.PathIndex, reqInfo.Handle);
                 PathPipelineInfoWithHandle portalSubmissionPathInfo = reqInfo.ToPathPipelineInfoWithHandle();
                 //SCHEDULE REQUESTED SECTOR CALCULATION
                 FinalPathRequest pathReq = requestedPaths[reqInfo.RequestIndex];
                 NativeSlice<float2> sourcePositions = new NativeSlice<float2>(sources, pathReq.SourcePositionStartIndex, pathReq.SourceCount);
-                _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(portalSubmissionPathInfo, portalSubmissionPathInfo.Handle, sourcePositions);
+                _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(portalSubmissionPathInfo.PathIndex, portalSubmissionPathInfo.Handle, sourcePositions);
             }
             ScheduledPortalTraversals.Clear();
         }

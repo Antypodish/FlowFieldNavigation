@@ -56,14 +56,7 @@ namespace FlowFieldNavigation
             int curIntegrationFieldLength = pathInternalData.FlowFieldLength.Value;
             if (lastIntegrationFieldLength != curIntegrationFieldLength)
             {
-                pathInternalData.IntegrationField.Resize(curIntegrationFieldLength, NativeArrayOptions.UninitializedMemory);
-                //RESET NEW INT FIELD INDICIES
-                IntegrationFieldResetJob resJob = new IntegrationFieldResetJob()
-                {
-                    StartIndex = lastIntegrationFieldLength,
-                    IntegrationField = pathInternalData.IntegrationField.AsArray(),
-                };
-                resJob.Schedule().Complete();
+                pathInternalData.IntegrationField.Length = curIntegrationFieldLength;
                 _flowFieldResizedPaths.Add(pathInfo.PathIndex);
             }
 

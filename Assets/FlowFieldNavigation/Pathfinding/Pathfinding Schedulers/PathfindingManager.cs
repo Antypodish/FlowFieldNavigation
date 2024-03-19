@@ -523,7 +523,7 @@ namespace FlowFieldNavigation
                 }
                 else if (flowRequested)
                 {
-                    _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pathInfo, new JobHandle(), flowRequestSources);
+                    _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pathInfo.PathIndex, new JobHandle(), flowRequestSources);
                 }
                 else if (destinationMoved)
                 {

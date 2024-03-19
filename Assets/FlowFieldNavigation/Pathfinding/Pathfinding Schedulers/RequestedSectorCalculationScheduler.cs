@@ -26,13 +26,14 @@ namespace FlowFieldNavigation
             if (_flowCalculationScheduler != null) { _flowCalculationScheduler.DisposeAll(); }
             _flowCalculationScheduler = null;
         }
-        internal void ScheduleRequestedSectorCalculation(PathPipelineInfoWithHandle pathInfo, JobHandle activePortalSubmissionHandle, NativeSlice<float2> sources)
+        internal void ScheduleRequestedSectorCalculation(int pathIndex, JobHandle activePortalSubmissionHandle, NativeSlice<float2> sources)
         {
-            PathfindingInternalData pathInternalData = _pathContainer.PathfindingInternalDataList[pathInfo.PathIndex];
-            PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
-            PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
-            UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathInfo.PathIndex];
-            NativeArray<OverlappingDirection> sectorOverlappingDirectionTable = _pathContainer.SectorOverlappingDirectionTableList[pathInfo.PathIndex];
+            PathfindingInternalData pathInternalData = _pathContainer.PathfindingInternalDataList[pathIndex];
+            PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathIndex];
+            PathLocationData locationData = _pathContainer.PathLocationDataList[pathIndex];
+            UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathIndex];
+            NativeArray<OverlappingDirection> sectorOverlappingDirectionTable = _pathContainer.SectorOverlappingDirectionTableList[pathIndex];
+
             //SOURCE SECTOR CALCULATION
             SourceSectorCalculationJob sectorCalcJob = new SourceSectorCalculationJob()
             {
@@ -59,7 +60,7 @@ namespace FlowFieldNavigation
             {
                 sourceSectorHandle.Complete();
             }
-            ScheduledRequestedSectorCalculations.Add(new PathPipelineInfoWithHandle(sourceSectorHandle, pathInfo.PathIndex));
+            ScheduledRequestedSectorCalculations.Add(new PathPipelineInfoWithHandle(sourceSectorHandle, pathIndex));
         }
         internal void TryComplete()
         {

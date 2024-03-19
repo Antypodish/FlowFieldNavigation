@@ -125,12 +125,12 @@ namespace FlowFieldNavigation
                     ScheduledAdditionPortalTraversals.RemoveAtSwapBack(i);
 
                     //SCHEDULE ADDITION ACTIVE PORTAL SUBMIT JOB
-                    pathInfo.Handle = _activePortalSubmissionScheduler.ScheduleActivePortalSubmission(pathInfo.PathIndex);
+                    pathInfo.Handle = _activePortalSubmissionScheduler.ScheduleActivePortalSubmission(pathInfo.PathIndex, pathInfo.Handle);
                     PathRoutineData existingPath = pathRoutineDataList[pathInfo.PathIndex];
                     int flowStart = math.select(existingPath.PathAdditionSourceStart, existingPath.FlowRequestSourceStart, existingPath.FlowRequestSourceCount != 0);
                     int flowCount = existingPath.FlowRequestSourceCount + existingPath.PathAdditionSourceCount;
                     NativeSlice<float2> sourcePositions = new NativeSlice<float2>(sources, flowStart, flowCount);
-                    _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pathInfo, pathInfo.Handle, sourcePositions);
+                    _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pathInfo.PathIndex, pathInfo.Handle, sourcePositions);
 
                 }
             }
@@ -145,12 +145,12 @@ namespace FlowFieldNavigation
                 ScheduledAdditionPortalTraversals.RemoveAtSwapBack(i);
 
                 //SCHEDULE ADDITION ACTIVE PORTAL SUBMIT JOB
-                pathInfo.Handle = _activePortalSubmissionScheduler.ScheduleActivePortalSubmission(pathInfo.PathIndex);
+                pathInfo.Handle = _activePortalSubmissionScheduler.ScheduleActivePortalSubmission(pathInfo.PathIndex, pathInfo.Handle);
                 PathRoutineData existingPath = pathRoutineDataList[pathInfo.PathIndex];
                 int flowStart = math.select(existingPath.PathAdditionSourceStart, existingPath.FlowRequestSourceStart, existingPath.FlowRequestSourceCount != 0);
                 int flowCount = existingPath.FlowRequestSourceCount + existingPath.PathAdditionSourceCount;
                 NativeSlice<float2> sourcePositions = new NativeSlice<float2>(sources, flowStart, flowCount);
-                _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pathInfo, pathInfo.Handle, sourcePositions);
+                _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pathInfo.PathIndex, pathInfo.Handle, sourcePositions);
             }
             ScheduledAdditionPortalTraversals.Clear();
         }
