@@ -41,7 +41,7 @@ namespace FlowFieldNavigation
             JobHandle losHandle = flowHandle;
             bool requestedSectorWithinLOS = (internalData.SectorWithinLOSState.Value & SectorsWihinLOSArgument.RequestedSectorWithinLOS) == SectorsWihinLOSArgument.RequestedSectorWithinLOS;
             bool addedSectorWithinLOS = (internalData.SectorWithinLOSState.Value & SectorsWihinLOSArgument.AddedSectorWithinLOS) == SectorsWihinLOSArgument.AddedSectorWithinLOS;
-            bool losCalculated = _pathContainer.IsLOSCalculated(pathInfo.PathIndex);
+            bool losCalculated = internalData.LOSCalculatedFlag.Value;
             bool destinationMoved = pathInfo.DestinationState == DynamicDestinationState.Moved;
             if (losCalculated && (addedSectorWithinLOS || destinationMoved))
             {
@@ -78,7 +78,7 @@ namespace FlowFieldNavigation
                 losHandle = losjob.Schedule(loscleanHandle);
                 _losCalculatedPaths.Add(pathInfo.PathIndex);
             }
-            else if (requestedSectorWithinLOS)
+            else if (!losCalculated && requestedSectorWithinLOS)
             {
                 LOSIntegrationJob losjob = new LOSIntegrationJob()
                 {
@@ -98,6 +98,7 @@ namespace FlowFieldNavigation
                 };
                 losHandle = losjob.Schedule(flowHandle);
                 _losCalculatedPaths.Add(pathInfo.PathIndex);
+                internalData.LOSCalculatedFlag.Value = true;
             }
             internalData.SectorWithinLOSState.Value = SectorsWihinLOSArgument.None;
 

@@ -106,6 +106,7 @@ namespace FlowFieldNavigation
                     internalData.IntegrationField.Dispose();
                     portalTraversalData.NewReducedPortalIndicies.Dispose();
                     portalTraversalData.PortalDataRecords.Dispose();
+                    internalData.LOSCalculatedFlag.Dispose();
                     ExposedPathStateList[i] = PathState.Removed;
                     _removedPathIndicies.Push(i);
                     PreallocationPack preallocations = new PreallocationPack()
@@ -178,6 +179,7 @@ namespace FlowFieldNavigation
                 SectorWithinLOSState = preallocations.SectorsWithinLOSState,
                 SectorToWaveFrontsMap = new NativeParallelMultiHashMap<int, ActiveWaveFront>(0, Allocator.Persistent),
                 IntegrationField = new NativeList<IntegrationTile>(Allocator.Persistent),
+                LOSCalculatedFlag = new NativeReference<bool>(false, Allocator.Persistent),
                 DynamicArea = new DynamicArea()
                 {
                     FlowFieldCalculationBuffer = preallocations.DynamicAreaFlowFieldCalculationBuffer,
@@ -255,16 +257,6 @@ namespace FlowFieldNavigation
             }
 
             return pathIndex;
-        }
-        internal bool IsLOSCalculated(int pathIndex)
-        {
-            PathfindingInternalData internalData = PathfindingInternalDataList[pathIndex];
-            PathLocationData locationData = PathLocationDataList[pathIndex];
-            PathDestinationData destinationData = PathDestinationDataList[pathIndex];
-            int sectorColAmount = FlowFieldUtilities.SectorColAmount;
-            int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
-            LocalIndex1d local = FlowFieldUtilities.GetLocal1D(FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition), sectorColAmount, sectorMatrixColAmount);
-            return (internalData.IntegrationField[locationData.SectorToPicked[local.sector] + local.index].Mark & IntegrationMark.LOSPass) == IntegrationMark.LOSPass;
         }
     }
 

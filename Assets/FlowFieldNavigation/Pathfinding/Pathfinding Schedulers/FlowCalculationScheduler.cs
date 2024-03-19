@@ -50,6 +50,7 @@ namespace FlowFieldNavigation
             PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
             PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
             CostField pickedCostField = _navigationManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset);
+            int2 targetIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition);
 
             //RESET NEW INT FIELD INDICIES
             int lastIntegrationFieldLength = pathInternalData.IntegrationField.Length;
@@ -61,31 +62,24 @@ namespace FlowFieldNavigation
             }
 
             //SCHEDULE INTEGRATION FIELDS
-            NativeList<JobHandle> intFieldHandles = new NativeList<JobHandle>(Allocator.Temp);
             NativeArray<int> sectorIndiciesToCalculateIntegration = pathInternalData.SectorIndiciesToCalculateIntegration.AsArray();
             NativeArray<int> sectorIndiciesToCalculateFlow = pathInternalData.SectorIndiciesToCalculateFlow.AsArray();
-            for (int i = 0; i < sectorIndiciesToCalculateIntegration.Length; i++)
+
+            IntegrationFieldJob integrationJob = new IntegrationFieldJob()
             {
-                int sectorIndex = sectorIndiciesToCalculateIntegration[i];
-                int sectorStart = locationData.SectorToPicked[sectorIndex];
-                NativeSlice<IntegrationTile> integrationSector = new NativeSlice<IntegrationTile>(pathInternalData.IntegrationField.AsArray(), sectorStart, FlowFieldUtilities.SectorTileAmount);
-                IntegrationFieldJob intJob = new IntegrationFieldJob()
-                {
-                    SectorIndex = sectorIndex,
-                    TargetIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition),
-                    SectorToWaveFrontsMap = pathInternalData.SectorToWaveFrontsMap,
-                    Costs = new NativeSlice<byte>(pickedCostField.Costs, sectorIndex * FlowFieldUtilities.SectorTileAmount, FlowFieldUtilities.SectorTileAmount),
-                    IntegrationField = integrationSector,
-                    SectorToPicked = locationData.SectorToPicked,
-                    SectorColAmount = FlowFieldUtilities.SectorColAmount,
-                    SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
-                    FieldColAmount = FlowFieldUtilities.FieldColAmount,
-                    FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
-                };
-                JobHandle intHandle = intJob.Schedule();
-                intFieldHandles.Add(intHandle);
-            }
-            JobHandle intFieldCombinedHandle = JobHandle.CombineDependencies(intFieldHandles.AsArray());
+                TargetIndex = targetIndex,
+                SectorColAmount = FlowFieldUtilities.SectorColAmount,
+                SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+                SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
+                FieldColAmount = FlowFieldUtilities.FieldColAmount,
+                FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
+                SectorFlowStartTable = locationData.SectorToPicked,
+                SectorIndiciesToCalculateIntegration = sectorIndiciesToCalculateIntegration,
+                CostField = pickedCostField.Costs,
+                IntegrationField = pathInternalData.IntegrationField.AsArray(),
+                SectorToWaveFrontsMap = pathInternalData.SectorToWaveFrontsMap,
+            };
+            JobHandle integrationHandle = integrationJob.Schedule();
 
             //SCHEDULE FLOW FIELDS
             NativeList<JobHandle> flowfieldHandles = new NativeList<JobHandle>(Allocator.Temp);
@@ -118,7 +112,7 @@ namespace FlowFieldNavigation
                     IntegrationField = pathInternalData.IntegrationField.AsArray(),
                     Costs = pickedCostField.Costs,
                 };
-                JobHandle flowHandle = ffJob.Schedule(flowFieldCalculationBuffer.Length, 256, intFieldCombinedHandle);
+                JobHandle flowHandle = ffJob.Schedule(flowFieldCalculationBuffer.Length, 256, integrationHandle);
                 flowfieldHandles.Add(flowHandle);
 
                 //PUT BUFFER PARENT TO THE INDEX

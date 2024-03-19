@@ -1,4 +1,4 @@
-﻿using Unity.Burst;
+using Unity.Burst;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Collections;
 using Unity.Jobs;
@@ -12,22 +12,31 @@ namespace FlowFieldNavigation
     internal struct IntegrationFieldJob : IJob
     {
         internal int2 TargetIndex;
-        internal int SectorIndex;
         internal int FieldColAmount;
         internal int FieldRowAmount;
         internal int SectorColAmount;
         internal int SectorMatrixColAmount;
-        [NativeDisableContainerSafetyRestriction] internal NativeSlice<IntegrationTile> IntegrationField;
+        internal int SectorTileAmount;
+
+        [ReadOnly] internal NativeArray<int> SectorIndiciesToCalculateIntegration;
+        [ReadOnly] internal NativeArray<byte> CostField;
         [ReadOnly] internal NativeParallelMultiHashMap<int, ActiveWaveFront> SectorToWaveFrontsMap;
-        [ReadOnly] internal UnsafeList<int> SectorToPicked;
-        [ReadOnly] internal NativeSlice<byte> Costs;
+        [ReadOnly] internal UnsafeList<int> SectorFlowStartTable;
+
+        internal NativeArray<IntegrationTile> IntegrationField;
         public void Execute()
         {
-            Integrate(IntegrationField);
+            for(int i = 0; i < SectorIndiciesToCalculateIntegration.Length; i++)
+            {
+                int sectorIndex = SectorIndiciesToCalculateIntegration[i];
+                int sectorFlowStart = SectorFlowStartTable[sectorIndex];
+                NativeSlice<IntegrationTile> integrationSectorSlice = new NativeSlice<IntegrationTile>(IntegrationField, sectorFlowStart, SectorTileAmount);
+                NativeSlice<byte> costSectorSlice = new NativeSlice<byte>(CostField, sectorIndex * SectorTileAmount, SectorTileAmount);
+                Integrate(integrationSectorSlice, costSectorSlice, sectorIndex);
+            }
         }
-        void Integrate(NativeSlice<IntegrationTile> integrationFieldSector)
+        void Integrate(NativeSlice<IntegrationTile> integrationFieldSector, NativeSlice<byte> costs, int sectorIndex)
         {
-            NativeSlice<byte> costs = Costs;
             NativeQueue<LocalIndex1d> integrationQueue = new NativeQueue<LocalIndex1d>(Allocator.Temp);
             int sectorColAmount = SectorColAmount;
             int sectorTileAmount = sectorColAmount * sectorColAmount;
@@ -72,7 +81,7 @@ namespace FlowFieldNavigation
             ///////////////////////////////////////////////
             //CODE
             int targetSector1d = FlowFieldUtilities.GetSector1D(TargetIndex, sectorColAmount, SectorMatrixColAmount);
-            if (SectorIndex == targetSector1d)
+            if (sectorIndex == targetSector1d)
             {
                 int targetLocal1d = FlowFieldUtilities.GetLocal1D(TargetIndex, sectorColAmount);
                 IntegrationTile startTile = integrationFieldSector[targetLocal1d];
@@ -82,7 +91,7 @@ namespace FlowFieldNavigation
                 Enqueue();
             }
 
-            NativeParallelMultiHashMap<int, ActiveWaveFront>.Enumerator enumerator = SectorToWaveFrontsMap.GetValuesForKey(SectorIndex);
+            NativeParallelMultiHashMap<int, ActiveWaveFront>.Enumerator enumerator = SectorToWaveFrontsMap.GetValuesForKey(sectorIndex);
 
             while (enumerator.MoveNext())
             {

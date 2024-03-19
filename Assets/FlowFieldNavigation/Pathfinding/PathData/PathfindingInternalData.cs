@@ -18,6 +18,7 @@ namespace FlowFieldNavigation
         internal NativeList<int> SectorIndiciesToCalculateIntegration;
         internal NativeList<int> SectorIndiciesToCalculateFlow;
         internal NativeReference<SectorsWihinLOSArgument> SectorWithinLOSState;
+        internal NativeReference<bool> LOSCalculatedFlag;
     }
 
     internal enum PathState : byte
