@@ -1,4 +1,4 @@
-﻿using Codice.Client.BaseCommands.Download;
+using Codice.Client.BaseCommands.Download;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
@@ -14,10 +14,12 @@ namespace FlowFieldNavigation
         ActivePortalSubmissionScheduler _activePortalSubmissionScheduler;
         RequestedSectorCalculationScheduler _requestedSectorCalculationScheduler;
         PortalTraversalDataProvider _porTravDataProvider;
-        NativeList<RequestPipelineInfoWithHandle> ScheduledPortalTraversals;
+
+        NativeArray<float2> Sources;
+        NativeList<PathPipelineReq> PipelineRequests;
         internal PortalTraversalScheduler(FlowFieldNavigationManager navManager, RequestedSectorCalculationScheduler reqSecCalcScheduler, PortalTraversalDataProvider porTravDataProvider)
         {
-            ScheduledPortalTraversals = new NativeList<RequestPipelineInfoWithHandle>(Allocator.Persistent);
+            PipelineRequests = new NativeList<PathPipelineReq>(Allocator.Persistent);
             _navigationManager = navManager;
             _pathContainer = _navigationManager.PathDataContainer;
             _activePortalSubmissionScheduler = new ActivePortalSubmissionScheduler(navManager);
@@ -26,18 +28,18 @@ namespace FlowFieldNavigation
         }
         internal void DisposeAll()
         {
-            if (ScheduledPortalTraversals.IsCreated) { ScheduledPortalTraversals.Dispose(); }
+            if (PipelineRequests.IsCreated) { PipelineRequests.Dispose(); }
             _requestedSectorCalculationScheduler.DisposeAll();
             _activePortalSubmissionScheduler = null;
             _requestedSectorCalculationScheduler = null;
         }
-
-        internal void SchedulePortalTraversalFor(RequestPipelineInfoWithHandle reqInfo, NativeSlice<float2> sources)
+        internal void SetSources(NativeArray<float2> sources) { Sources = sources; }
+        internal void SchedulePortalTraversalFor(int pathIndex, Slice pathReqSourceSlice, Slice flowReqSourceSlice, DynamicDestinationState dynamicDestinationState)
         {
-            PathfindingInternalData pathInternalData = _navigationManager.PathDataContainer.PathfindingInternalDataList[reqInfo.PathIndex];
-            PathDestinationData destinationData = _pathContainer.PathDestinationDataList[reqInfo.PathIndex];
-            PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[reqInfo.PathIndex];
-            UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[reqInfo.PathIndex];
+            PathfindingInternalData pathInternalData = _navigationManager.PathDataContainer.PathfindingInternalDataList[pathIndex];
+            PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathIndex];
+            PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathIndex];
+            UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathIndex];
             int2 destinationIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition);
             CostField pickedCostField = _navigationManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset);
             FieldGraph pickedFieldGraph = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
@@ -45,6 +47,7 @@ namespace FlowFieldNavigation
             portalTraversalData.NewPickedSectorStartIndex.Value = pathInternalData.PickedSectorList.Length;
 
             NativeArray<PortalTraversalData> porTravDataArray = _porTravDataProvider.GetAvailableData(out JobHandle dependency);
+            NativeSlice<float2> pathRequestSource = new NativeSlice<float2>(Sources, pathReqSourceSlice.Index, pathReqSourceSlice.Count);
             PortalReductionJob reductionJob = new PortalReductionJob()
             {
                 TileSize = FlowFieldUtilities.TileSize,
@@ -57,12 +60,12 @@ namespace FlowFieldNavigation
                 SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
                 FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
                 PickedToSector = pathInternalData.PickedSectorList,
-                TargetSectorCosts = _pathContainer.TargetSectorIntegrationList[reqInfo.PathIndex],
+                TargetSectorCosts = _pathContainer.TargetSectorIntegrationList[pathIndex],
                 PortalNodes = pickedFieldGraph.PortalNodes,
                 SecToWinPtrs = pickedFieldGraph.SecToWinPtrs,
                 WindowNodes = pickedFieldGraph.WindowNodes,
                 WinToSecPtrs = pickedFieldGraph.WinToSecPtrs,
-                SourcePositions = sources,
+                SourcePositions = pathRequestSource,
                 PorPtrs = pickedFieldGraph.PorToPorPtrs,
                 SectorNodes = pickedFieldGraph.SectorNodes,
                 Costs = pickedCostField.Costs,
@@ -107,49 +110,46 @@ namespace FlowFieldNavigation
                 PortalDataRecords = portalTraversalData.PortalDataRecords,
             };
             JobHandle reductHandle = reductionJob.Schedule(dependency);
-            JobHandle travHandle = traversalJob.Schedule(reductHandle); 
+            JobHandle travHandle = traversalJob.Schedule(reductHandle);
             if (FlowFieldUtilities.DebugMode) { travHandle.Complete(); }
             _porTravDataProvider.IncerimentPointer(travHandle);
 
-            reqInfo.Handle = travHandle;
-            ScheduledPortalTraversals.Add(reqInfo);
+            PathPipelineReq pipReq = new PathPipelineReq()
+            {
+                DynamicDestinationState = dynamicDestinationState,
+                FlowReqSourceSlice = flowReqSourceSlice,
+                Handle = travHandle,
+                PathIndex = pathIndex,
+            };
+            PipelineRequests.Add(pipReq);
         }
 
-        internal void TryComplete(NativeList<FinalPathRequest> requestedPaths, NativeArray<float2> sources)
+        internal void TryComplete()
         {
-            for (int i = ScheduledPortalTraversals.Length - 1; i >= 0; i--)
+            for (int i = PipelineRequests.Length - 1; i >= 0; i--)
             {
-                RequestPipelineInfoWithHandle reqInfo = ScheduledPortalTraversals[i];
-                if (reqInfo.Handle.IsCompleted)
+                PathPipelineReq pipReq = PipelineRequests[i];
+                if (pipReq.Handle.IsCompleted)
                 {
-                    reqInfo.Handle.Complete();
-                    //SCHEDULE ACTIVE PORTAL SUBMISSION
-                    reqInfo.Handle = _activePortalSubmissionScheduler.ScheduleActivePortalSubmission(reqInfo.PathIndex, reqInfo.Handle);
-                    PathPipelineInfoWithHandle portalSubmissionPathInfo = reqInfo.ToPathPipelineInfoWithHandle();
-                    //SCHEDULE REQUESTED SECTOR CALCULATION
-                    FinalPathRequest pathReq = requestedPaths[reqInfo.RequestIndex];
-                    NativeSlice<float2> sourcePositions = new NativeSlice<float2>(sources, pathReq.SourcePositionStartIndex, pathReq.SourceCount);
-                    _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(portalSubmissionPathInfo.PathIndex, portalSubmissionPathInfo.Handle, portalSubmissionPathInfo.DestinationState, sourcePositions);
-
-                    ScheduledPortalTraversals.RemoveAtSwapBack(i);
+                    pipReq.Handle.Complete();
+                    pipReq.Handle = _activePortalSubmissionScheduler.ScheduleActivePortalSubmission(pipReq.PathIndex, pipReq.Handle);
+                    NativeSlice<float2> sourcePositions = new NativeSlice<float2>(Sources, pipReq.FlowReqSourceSlice.Index, pipReq.FlowReqSourceSlice.Count);
+                    _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pipReq.PathIndex, pipReq.Handle, pipReq.DynamicDestinationState, sourcePositions);
+                    PipelineRequests.RemoveAtSwapBack(i);
                 }
             }
         }
-        internal void ForceComplete(NativeList<FinalPathRequest> requestedPaths, NativeArray<float2> sources)
+        internal void ForceComplete()
         {
-            for (int i = ScheduledPortalTraversals.Length - 1; i >= 0; i--)
+            for (int i = PipelineRequests.Length - 1; i >= 0; i--)
             {
-                RequestPipelineInfoWithHandle reqInfo = ScheduledPortalTraversals[i];
-                reqInfo.Handle.Complete();
-                //SCHEDULE ACTIVE PORTAL SUBMISSION
-                reqInfo.Handle = _activePortalSubmissionScheduler.ScheduleActivePortalSubmission(reqInfo.PathIndex, reqInfo.Handle);
-                PathPipelineInfoWithHandle portalSubmissionPathInfo = reqInfo.ToPathPipelineInfoWithHandle();
-                //SCHEDULE REQUESTED SECTOR CALCULATION
-                FinalPathRequest pathReq = requestedPaths[reqInfo.RequestIndex];
-                NativeSlice<float2> sourcePositions = new NativeSlice<float2>(sources, pathReq.SourcePositionStartIndex, pathReq.SourceCount);
-                _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(portalSubmissionPathInfo.PathIndex, portalSubmissionPathInfo.Handle, portalSubmissionPathInfo.DestinationState, sourcePositions);
+                PathPipelineReq pipReq = PipelineRequests[i];
+                pipReq.Handle.Complete();
+                pipReq.Handle = _activePortalSubmissionScheduler.ScheduleActivePortalSubmission(pipReq.PathIndex, pipReq.Handle);
+                NativeSlice<float2> sourcePositions = new NativeSlice<float2>(Sources, pipReq.FlowReqSourceSlice.Index, pipReq.FlowReqSourceSlice.Count);
+                _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pipReq.PathIndex, pipReq.Handle, pipReq.DynamicDestinationState, sourcePositions);
             }
-            ScheduledPortalTraversals.Clear();
+            PipelineRequests.Clear();
         }
     }
 
