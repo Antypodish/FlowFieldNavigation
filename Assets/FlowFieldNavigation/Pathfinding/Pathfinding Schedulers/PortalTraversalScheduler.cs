@@ -15,18 +15,15 @@ namespace FlowFieldNavigation
         PortalTraversalDataProvider _porTravDataProvider;
 
         NativeArray<float2> Sources;
-        NativeList<PathPipelineReq> PipelineRequests;
-        internal PortalTraversalScheduler(FlowFieldNavigationManager navManager, RequestedSectorCalculationScheduler reqSecCalcScheduler, PortalTraversalDataProvider porTravDataProvider)
+        internal PortalTraversalScheduler(FlowFieldNavigationManager navManager, RequestedSectorCalculationScheduler reqSecCalcScheduler)
         {
-            PipelineRequests = new NativeList<PathPipelineReq>(Allocator.Persistent);
             _navigationManager = navManager;
             _pathContainer = _navigationManager.PathDataContainer;
             _requestedSectorCalculationScheduler = reqSecCalcScheduler;
-            _porTravDataProvider = porTravDataProvider;
+            _porTravDataProvider = new PortalTraversalDataProvider(navManager);
         }
         internal void DisposeAll()
         {
-            if (PipelineRequests.IsCreated) { PipelineRequests.Dispose(); }
             _requestedSectorCalculationScheduler.DisposeAll();
             _requestedSectorCalculationScheduler = null;
         }
@@ -149,16 +146,6 @@ namespace FlowFieldNavigation
             if (FlowFieldUtilities.DebugMode) { activeFrontSubmissionHandle.Complete(); }
 
             _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pathIndex, activeFrontSubmissionHandle, dynamicDestinationState, flowRequestSource);
-            
-            /*
-            PathPipelineReq pipReq = new PathPipelineReq()
-            {
-                DynamicDestinationState = dynamicDestinationState,
-                FlowReqSourceSlice = flowReqSourceSlice,
-                Handle = activeFrontSubmissionHandle,
-                PathIndex = pathIndex,
-            };
-            PipelineRequests.Add(pipReq);*/
         }
     }
 

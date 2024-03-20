@@ -16,12 +16,8 @@ namespace FlowFieldNavigation
 
         FlowFieldNavigationManager _navigationManager;
         PathDataContainer _pathContainer;
-        RequestedSectorCalculationScheduler _requestedSectorCalculationScheduler;
-        LOSIntegrationScheduler _losIntegrationScheduler;
-        DynamicAreaScheduler _dynamicAreaScheduler;
         PathConstructionTester _pathConstructionTester;
-        PortalTraversalDataProvider _porTravDataProvider;
-        PortalTraversalScheduler _portalTraversalScheduler;
+        PathfindingPipeline _pathfindingPipeline;
         NativeList<float3> _agentPositions;
         NativeList<float2> _sourcePositions;
         NativeList<OffsetDerivedPathRequest> _offsetDerivedPathRequests;
@@ -50,11 +46,8 @@ namespace FlowFieldNavigation
         {
             _navigationManager = navigationManager;
             _pathContainer = navigationManager.PathDataContainer;
-            _porTravDataProvider = new PortalTraversalDataProvider(navigationManager);
-            _losIntegrationScheduler = new LOSIntegrationScheduler(navigationManager);
-            _requestedSectorCalculationScheduler = new RequestedSectorCalculationScheduler(navigationManager, _losIntegrationScheduler);
-            _portalTraversalScheduler = new PortalTraversalScheduler(navigationManager, _requestedSectorCalculationScheduler, _porTravDataProvider);
-            _dynamicAreaScheduler = new DynamicAreaScheduler(navigationManager);
+            _pathfindingPipeline = new PathfindingPipeline(navigationManager);
+
             _sourcePositions = new NativeList<float2>(Allocator.Persistent);
             _pathfindingTaskOrganizationHandle = new List<JobHandle>(1);
             _offsetDerivedPathRequests = new NativeList<OffsetDerivedPathRequest>(Allocator.Persistent);
@@ -107,14 +100,8 @@ namespace FlowFieldNavigation
             _hashMapPathIndicies.Dispose();
             _hashMapFlockSlices.Dispose();
             _readyAgentsLookingForPathRecords.Dispose();
-            _requestedSectorCalculationScheduler.DisposeAll();
-            _losIntegrationScheduler.DisposeAll();
-            _dynamicAreaScheduler.DisposeAll();
             _agentPositions.Dispose();
             _requestedPaths.Dispose();
-            _requestedSectorCalculationScheduler = null;
-            _losIntegrationScheduler = null;
-            _dynamicAreaScheduler = null;
         }
         internal void ShcedulePathRequestEvalutaion(NativeArray<PathRequest> inputPathRequests,
             NativeArray<IslandFieldProcessor> islandFieldProcessors,
@@ -485,7 +472,7 @@ namespace FlowFieldNavigation
             }
 
             //SET PATH INDICIES OF REQUESTED PATHS
-            _portalTraversalScheduler.SetSources(_sourcePositions.AsArray());
+            _pathfindingPipeline.SetSources(_sourcePositions.AsArray());
             for (int i = 0; i < _finalPathRequests.Length; i++)
             {
                 FinalPathRequest currentpath = _finalPathRequests[i];
@@ -493,7 +480,7 @@ namespace FlowFieldNavigation
                 int newPathIndex = _pathContainer.CreatePath(currentpath);
                 Slice pathfindingRequestSlice = new Slice(currentpath.SourcePositionStartIndex, currentpath.SourceCount);
                 Slice flowRequestSlice = pathfindingRequestSlice;
-                _portalTraversalScheduler.SchedulePortalTraversalFor(newPathIndex, pathfindingRequestSlice, flowRequestSlice, DynamicDestinationState.None);
+                _pathfindingPipeline.SchedulePortalTraversalFor(newPathIndex, pathfindingRequestSlice, flowRequestSlice, DynamicDestinationState.None);
                 _newPathIndicies.Add(newPathIndex);
                 currentpath.PathIndex = newPathIndex;
                 _finalPathRequests[i] = currentpath;
@@ -510,29 +497,25 @@ namespace FlowFieldNavigation
                 int flowCount = curPathRoutineData.FlowRequestSourceCount + curPathRoutineData.PathAdditionSourceCount;
                 Slice flowReqSlice = new Slice(flowStart, flowCount);
                 Slice pathAdditionReqSlice = new Slice(curPathRoutineData.PathAdditionSourceStart, curPathRoutineData.PathAdditionSourceCount);
-                NativeSlice<float2> flowRequestSources = new NativeSlice<float2>(_sourcePositions.AsArray(), flowStart, flowCount);
                 PathPipelineInfoWithHandle pathInfo = new PathPipelineInfoWithHandle(new JobHandle(), i, curPathRoutineData.DestinationState);
                 bool pathAdditionRequested = (curPathRoutineData.Task & PathTask.PathAdditionRequest) == PathTask.PathAdditionRequest;
                 bool flowRequested = (curPathRoutineData.Task & PathTask.FlowRequest) == PathTask.FlowRequest;
                 bool destinationMoved = curPathRoutineData.DestinationState == DynamicDestinationState.Moved;
                 if (pathAdditionRequested)
                 {
-                    _portalTraversalScheduler.SchedulePortalTraversalFor(pathInfo.PathIndex, pathAdditionReqSlice, flowReqSlice, pathInfo.DestinationState);
+                    _pathfindingPipeline.SchedulePortalTraversalFor(pathInfo.PathIndex, pathAdditionReqSlice, flowReqSlice, pathInfo.DestinationState);
                     _expandedPathIndicies.Add(pathInfo.PathIndex);
                 }
                 else if (flowRequested)
                 {
-                    _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pathInfo.PathIndex, new JobHandle(), pathInfo.DestinationState, flowRequestSources);
+                    _pathfindingPipeline.ScheduleRequestedSectorCalculation(pathInfo.PathIndex, pathInfo.DestinationState, flowReqSlice);
                 }
                 else if (destinationMoved)
                 {
-                    _dynamicAreaScheduler.ScheduleDynamicArea(pathInfo);
-                    _losIntegrationScheduler.ScheduleLOS(pathInfo);
+                    _pathfindingPipeline.UpdateDestination(pathInfo);
                     _destinationUpdatedPathIndicies.Add(pathInfo.PathIndex);
                 }
             }
-
-            TryComplete();
         }
 
         internal void TryComplete()
@@ -547,7 +530,7 @@ namespace FlowFieldNavigation
             }
             if (_pathfindingTaskOrganizationHandle.Count == 0)
             {
-                _requestedSectorCalculationScheduler.TryComplete();
+                _pathfindingPipeline.TryComplete();
             }
         }
         internal void ForceComplete()
@@ -557,8 +540,7 @@ namespace FlowFieldNavigation
                 CompletePathEvaluation();
                 _pathfindingTaskOrganizationHandle.Clear();
             }
-            _dynamicAreaScheduler.ForceComplete();
-            _requestedSectorCalculationScheduler.ForceComplete();
+            _pathfindingPipeline.ForceComplete();
             _pathContainer.ExposeBuffers(_destinationUpdatedPathIndicies.AsArray(), _newPathIndicies.AsArray(), _expandedPathIndicies.AsArray());
         }
         internal void TransferNewPathsToCurPaths()
