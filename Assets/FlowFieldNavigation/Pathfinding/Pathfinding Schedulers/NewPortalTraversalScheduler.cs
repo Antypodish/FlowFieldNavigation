@@ -139,7 +139,7 @@ namespace FlowFieldNavigation
                 }
             }
         }
-        internal void ForceComplete(NativeList<FinalPathRequest> requestedPaths, NativeArray<float2> sources)
+        internal void ForceComplete()
         {
             for (int i = PipelineRequests.Length - 1; i >= 0; i--)
             {
@@ -148,7 +148,6 @@ namespace FlowFieldNavigation
                 pipReq.Handle = _activePortalSubmissionScheduler.ScheduleActivePortalSubmission(pipReq.PathIndex, pipReq.Handle);
                 NativeSlice<float2> sourcePositions = new NativeSlice<float2>(Sources, pipReq.FlowReqSourceSlice.Index, pipReq.FlowReqSourceSlice.Count);
                 _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pipReq.PathIndex, pipReq.Handle, pipReq.DynamicDestinationState, sourcePositions);
-                PipelineRequests.RemoveAtSwapBack(i);
             }
             PipelineRequests.Clear();
         }
