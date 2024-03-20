@@ -30,7 +30,6 @@ namespace FlowFieldNavigation
         {
             PathfindingInternalData pathInternalData = _pathContainer.PathfindingInternalDataList[pathIndex];
             PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathIndex];
-            PathLocationData locationData = _pathContainer.PathLocationDataList[pathIndex];
             UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathIndex];
             NativeArray<OverlappingDirection> sectorOverlappingDirectionTable = _pathContainer.SectorOverlappingDirectionTableList[pathIndex];
 
