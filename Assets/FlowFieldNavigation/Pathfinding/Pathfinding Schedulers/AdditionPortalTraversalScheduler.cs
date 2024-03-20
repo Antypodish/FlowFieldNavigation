@@ -36,13 +36,14 @@ namespace FlowFieldNavigation
         {
             PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathInfo.PathIndex];
             PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
-            UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathInfo.PathIndex];
             PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathInfo.PathIndex];
+            UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathInfo.PathIndex];
+            int2 destinationIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition);
+            CostField pickedCostField = _navigationManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset);
+            FieldGraph pickedFieldGraph = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
             portalTraversalData.PathAdditionSequenceSliceStartIndex.Value = portalTraversalData.PortalSequenceSlices.Length;
             portalTraversalData.NewPickedSectorStartIndex.Value = internalData.PickedSectorList.Length;
 
-            FieldGraph pickedFieldGraph = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
-            CostField costField = _navigationManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset);
 
             NativeArray<PortalTraversalData> porTravDataArray = _porTravDataProvider.GetAvailableData(out JobHandle dependency);
             PortalReductionJob reductionJob = new PortalReductionJob()
@@ -51,7 +52,7 @@ namespace FlowFieldNavigation
                 FieldColAmount = FlowFieldUtilities.FieldColAmount,
                 FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
                 SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
-                TargetIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition),
+                TargetIndex = destinationIndex,
                 FieldTileSize = FlowFieldUtilities.TileSize,
                 SectorColAmount = FlowFieldUtilities.SectorColAmount,
                 SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
@@ -70,7 +71,7 @@ namespace FlowFieldNavigation
                 IslandFields = pickedFieldGraph.IslandFields,
                 SectorStateTable = sectorStateTable,
                 DijkstraStartIndicies = portalTraversalData.DiskstraStartIndicies,
-                Costs = costField.Costs,
+                Costs = pickedCostField.Costs,
                 LocalDirections = _navigationManager.FieldDataContainer.GetSectorDirections(),
                 GoalTraversalDataList = portalTraversalData.GoalDataList,
                 NewReducedNodeIndicies = portalTraversalData.NewReducedPortalIndicies,
@@ -85,7 +86,7 @@ namespace FlowFieldNavigation
                 SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
                 SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
                 LOSRange = FlowFieldUtilities.LOSRange,
-                Target = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition),
+                Target = destinationIndex,
                 PickedSectorIndicies = internalData.PickedSectorList,
                 PortalSequenceSlices = portalTraversalData.PortalSequenceSlices,
                 PortalNodes = pickedFieldGraph.PortalNodes,
@@ -130,7 +131,7 @@ namespace FlowFieldNavigation
                     int flowStart = math.select(existingPath.PathAdditionSourceStart, existingPath.FlowRequestSourceStart, existingPath.FlowRequestSourceCount != 0);
                     int flowCount = existingPath.FlowRequestSourceCount + existingPath.PathAdditionSourceCount;
                     NativeSlice<float2> sourcePositions = new NativeSlice<float2>(sources, flowStart, flowCount);
-                    _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pathInfo.PathIndex, pathInfo.Handle, sourcePositions);
+                    _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pathInfo.PathIndex, pathInfo.Handle, pathInfo.DestinationState, sourcePositions);
 
                 }
             }
@@ -150,7 +151,7 @@ namespace FlowFieldNavigation
                 int flowStart = math.select(existingPath.PathAdditionSourceStart, existingPath.FlowRequestSourceStart, existingPath.FlowRequestSourceCount != 0);
                 int flowCount = existingPath.FlowRequestSourceCount + existingPath.PathAdditionSourceCount;
                 NativeSlice<float2> sourcePositions = new NativeSlice<float2>(sources, flowStart, flowCount);
-                _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pathInfo.PathIndex, pathInfo.Handle, sourcePositions);
+                _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pathInfo.PathIndex, pathInfo.Handle, pathInfo.DestinationState, sourcePositions);
             }
             ScheduledAdditionPortalTraversals.Clear();
         }
