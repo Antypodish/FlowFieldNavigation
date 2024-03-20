@@ -26,7 +26,7 @@ namespace FlowFieldNavigation
             if (_flowCalculationScheduler != null) { _flowCalculationScheduler.DisposeAll(); }
             _flowCalculationScheduler = null;
         }
-        internal void ScheduleRequestedSectorCalculation(int pathIndex, JobHandle activePortalSubmissionHandle, DynamicDestinationState destinationState, NativeSlice<float2> sources)
+        internal void ScheduleRequestedSectorCalculation(int pathIndex, JobHandle dependency, DynamicDestinationState destinationState, NativeSlice<float2> sources)
         {
             PathfindingInternalData pathInternalData = _pathContainer.PathfindingInternalDataList[pathIndex];
             PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathIndex];
@@ -52,7 +52,7 @@ namespace FlowFieldNavigation
                 SectorIndiciesToCalculateFlow = pathInternalData.SectorIndiciesToCalculateFlow,
                 SectorWithinLOSState = pathInternalData.SectorWithinLOSState,
             };
-            JobHandle sourceSectorHandle = sectorCalcJob.Schedule(activePortalSubmissionHandle);
+            JobHandle sourceSectorHandle = sectorCalcJob.Schedule(dependency);
             if (FlowFieldUtilities.DebugMode)
             {
                 sourceSectorHandle.Complete();

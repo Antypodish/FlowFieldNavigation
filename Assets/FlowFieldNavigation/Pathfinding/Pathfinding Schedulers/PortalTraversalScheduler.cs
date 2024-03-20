@@ -11,7 +11,6 @@ namespace FlowFieldNavigation
     {
         FlowFieldNavigationManager _navigationManager;
         PathDataContainer _pathContainer;
-        ActivePortalSubmissionScheduler _activePortalSubmissionScheduler;
         RequestedSectorCalculationScheduler _requestedSectorCalculationScheduler;
         PortalTraversalDataProvider _porTravDataProvider;
 
@@ -22,7 +21,6 @@ namespace FlowFieldNavigation
             PipelineRequests = new NativeList<PathPipelineReq>(Allocator.Persistent);
             _navigationManager = navManager;
             _pathContainer = _navigationManager.PathDataContainer;
-            _activePortalSubmissionScheduler = new ActivePortalSubmissionScheduler(navManager);
             _requestedSectorCalculationScheduler = reqSecCalcScheduler;
             _porTravDataProvider = porTravDataProvider;
         }
@@ -30,7 +28,6 @@ namespace FlowFieldNavigation
         {
             if (PipelineRequests.IsCreated) { PipelineRequests.Dispose(); }
             _requestedSectorCalculationScheduler.DisposeAll();
-            _activePortalSubmissionScheduler = null;
             _requestedSectorCalculationScheduler = null;
         }
         internal void SetSources(NativeArray<float2> sources) { Sources = sources; }
@@ -39,7 +36,10 @@ namespace FlowFieldNavigation
             PathfindingInternalData pathInternalData = _navigationManager.PathDataContainer.PathfindingInternalDataList[pathIndex];
             PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathIndex];
             PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathIndex];
+            PathLocationData locationData = _pathContainer.PathLocationDataList[pathIndex];
             UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathIndex];
+            NativeArray<OverlappingDirection> sectorOverlappingDirectionTable = _pathContainer.SectorOverlappingDirectionTableList[pathIndex];
+            SectorBitArray sectorBitArray = _pathContainer.PathSectorBitArrays[pathIndex];
             int2 destinationIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition);
             CostField pickedCostField = _navigationManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset);
             FieldGraph pickedFieldGraph = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
@@ -48,6 +48,7 @@ namespace FlowFieldNavigation
 
             NativeArray<PortalTraversalData> porTravDataArray = _porTravDataProvider.GetAvailableData(out JobHandle dependency);
             NativeSlice<float2> pathRequestSource = new NativeSlice<float2>(Sources, pathReqSourceSlice.Index, pathReqSourceSlice.Count);
+            NativeSlice<float2> flowRequestSource = new NativeSlice<float2>(Sources, flowReqSourceSlice.Index, flowReqSourceSlice.Count);
 
             //Graph Reduction
             PortalReductionJob reductionJob = new PortalReductionJob()
@@ -118,9 +119,38 @@ namespace FlowFieldNavigation
             if (FlowFieldUtilities.DebugMode) { travHandle.Complete(); }
 
             //Active wave front submission
-            JobHandle activeFrontSubmissionHandle = _activePortalSubmissionScheduler.ScheduleActivePortalSubmission(pathIndex, travHandle);
+            ActivePortalSubmitJob submitJob = new ActivePortalSubmitJob()
+            {
+                SectorColAmount = FlowFieldUtilities.SectorColAmount,
+                SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+                SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
+                SectorRowAmount = FlowFieldUtilities.SectorRowAmount,
+                SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
+                FieldColAmount = FlowFieldUtilities.FieldColAmount,
+                TargetIndex2D = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition),
+                SequenceSliceListStartIndex = portalTraversalData.PathAdditionSequenceSliceStartIndex.Value,
+
+                PortalEdges = pickedFieldGraph.PorToPorPtrs,
+                SectorToPicked = locationData.SectorToPicked,
+                PickedSectorIndicies = pathInternalData.PickedSectorList,
+                PortalSequence = portalTraversalData.PortalSequence,
+                PortalSequenceSlices = portalTraversalData.PortalSequenceSlices,
+                WinToSecPtrs = pickedFieldGraph.WinToSecPtrs,
+                PortalNodes = pickedFieldGraph.PortalNodes,
+                WindowNodes = pickedFieldGraph.WindowNodes,
+                SectorToWaveFrontsMap = pathInternalData.SectorToWaveFrontsMap,
+                NotActivatedPortals = pathInternalData.NotActivePortalList,
+                SectorStateTable = sectorStateTable,
+                NewSectorStartIndex = portalTraversalData.NewPickedSectorStartIndex,
+                SectorBitArray = sectorBitArray,
+                SectorOverlappingDirectionTable = sectorOverlappingDirectionTable,
+            };
+            JobHandle activeFrontSubmissionHandle = submitJob.Schedule(travHandle);
             if (FlowFieldUtilities.DebugMode) { activeFrontSubmissionHandle.Complete(); }
 
+            _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pathIndex, activeFrontSubmissionHandle, dynamicDestinationState, flowRequestSource);
+            
+            /*
             PathPipelineReq pipReq = new PathPipelineReq()
             {
                 DynamicDestinationState = dynamicDestinationState,
@@ -128,33 +158,7 @@ namespace FlowFieldNavigation
                 Handle = activeFrontSubmissionHandle,
                 PathIndex = pathIndex,
             };
-            PipelineRequests.Add(pipReq);
-        }
-
-        internal void TryComplete()
-        {
-            for (int i = PipelineRequests.Length - 1; i >= 0; i--)
-            {
-                PathPipelineReq pipReq = PipelineRequests[i];
-                if (pipReq.Handle.IsCompleted)
-                {
-                    pipReq.Handle.Complete();
-                    NativeSlice<float2> sourcePositions = new NativeSlice<float2>(Sources, pipReq.FlowReqSourceSlice.Index, pipReq.FlowReqSourceSlice.Count);
-                    _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pipReq.PathIndex, pipReq.Handle, pipReq.DynamicDestinationState, sourcePositions);
-                    PipelineRequests.RemoveAtSwapBack(i);
-                }
-            }
-        }
-        internal void ForceComplete()
-        {
-            for (int i = PipelineRequests.Length - 1; i >= 0; i--)
-            {
-                PathPipelineReq pipReq = PipelineRequests[i];
-                pipReq.Handle.Complete();
-                NativeSlice<float2> sourcePositions = new NativeSlice<float2>(Sources, pipReq.FlowReqSourceSlice.Index, pipReq.FlowReqSourceSlice.Count);
-                _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pipReq.PathIndex, pipReq.Handle, pipReq.DynamicDestinationState, sourcePositions);
-            }
-            PipelineRequests.Clear();
+            PipelineRequests.Add(pipReq);*/
         }
     }
 

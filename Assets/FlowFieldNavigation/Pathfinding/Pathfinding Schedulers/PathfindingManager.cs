@@ -547,7 +547,6 @@ namespace FlowFieldNavigation
             }
             if (_pathfindingTaskOrganizationHandle.Count == 0)
             {
-                _portalTraversalScheduler.TryComplete();
                 _requestedSectorCalculationScheduler.TryComplete();
             }
         }
@@ -559,7 +558,6 @@ namespace FlowFieldNavigation
                 _pathfindingTaskOrganizationHandle.Clear();
             }
             _dynamicAreaScheduler.ForceComplete();
-            _portalTraversalScheduler.ForceComplete();
             _requestedSectorCalculationScheduler.ForceComplete();
             _pathContainer.ExposeBuffers(_destinationUpdatedPathIndicies.AsArray(), _newPathIndicies.AsArray(), _expandedPathIndicies.AsArray());
         }

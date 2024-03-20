@@ -23,9 +23,9 @@ namespace FlowFieldNavigation
         [ReadOnly] internal NativeArray<PortalToPortal> PortalEdges;
         [ReadOnly] internal NativeArray<WindowNode> WindowNodes;
         [ReadOnly] internal NativeArray<int> WinToSecPtrs;
-        [ReadOnly] internal NativeArray<int> PickedToSector;
-        [ReadOnly] internal NativeArray<ActivePortal> PortalSequence;
-        [ReadOnly] internal NativeArray<Slice> PortalSequenceSlices;
+        [ReadOnly] internal NativeList<int> PickedSectorIndicies;
+        [ReadOnly] internal NativeList<ActivePortal> PortalSequence;
+        [ReadOnly] internal NativeList<Slice> PortalSequenceSlices;
         [ReadOnly] internal NativeReference<int> NewSectorStartIndex;
 
         internal UnsafeList<int> SectorToPicked;
@@ -37,22 +37,25 @@ namespace FlowFieldNavigation
 
         public void Execute()
         {
-            for (int i = NewSectorStartIndex.Value; i < PickedToSector.Length; i++)
+            NativeArray<int> PickedSectorIndiciesAsArray = PickedSectorIndicies.AsArray();
+            NativeArray<ActivePortal> PortalSequenceAsArray = PortalSequence.AsArray();
+            NativeArray<Slice> PortalSequenceSlicesAsArray = PortalSequenceSlices.AsArray();
+            for (int i = NewSectorStartIndex.Value; i < PickedSectorIndiciesAsArray.Length; i++)
             {
-                int pickedSector = PickedToSector[i];
+                int pickedSector = PickedSectorIndiciesAsArray[i];
                 SectorToPicked[pickedSector] = i * SectorTileAmount + 1;
                 SectorBitArray.SetSector(pickedSector);
             }
 
-            for (int i = SequenceSliceListStartIndex; i < PortalSequenceSlices.Length; i++)
+            for (int i = SequenceSliceListStartIndex; i < PortalSequenceSlicesAsArray.Length; i++)
             {
-                Slice slice = PortalSequenceSlices[i];
+                Slice slice = PortalSequenceSlicesAsArray[i];
                 int start = slice.Index;
                 int end = slice.Index + slice.Count;
 
                 for (int j = start; j < end - 1; j++)
                 {
-                    bool succesfull = AddCommonSectorsBetweenPortalsToTheWaveFront(j, j + 1);
+                    bool succesfull = AddCommonSectorsBetweenPortalsToTheWaveFront(j, j + 1, PortalSequenceAsArray);
                     if (!succesfull) { NotActivatedPortals.Add(new NotActivePortalRecord(j, j+1)); }
                 }
             }
@@ -61,14 +64,14 @@ namespace FlowFieldNavigation
                 NotActivePortalRecord record = NotActivatedPortals[i];
                 int curActivePortalIndex = record.CurSequenceIndex;
                 int nextActivePortalIndex = record.NextSequenceIndex;
-                bool succesfull = AddCommonSectorsBetweenPortalsToTheWaveFront(curActivePortalIndex, nextActivePortalIndex);
+                bool succesfull = AddCommonSectorsBetweenPortalsToTheWaveFront(curActivePortalIndex, nextActivePortalIndex, PortalSequenceAsArray);
                 if (succesfull) { NotActivatedPortals.RemoveAtSwapBack(i); }
             }
         }
-        bool AddCommonSectorsBetweenPortalsToTheWaveFront(int curPortalSequenceIndex, int nextPortalSequenceIndex)
+        bool AddCommonSectorsBetweenPortalsToTheWaveFront(int curPortalSequenceIndex, int nextPortalSequenceIndex, NativeArray<ActivePortal> portalSequenceAsArray)
         {
-            ActivePortal curPortal = PortalSequence[curPortalSequenceIndex];
-            ActivePortal nextPortal = PortalSequence[nextPortalSequenceIndex];
+            ActivePortal curPortal = portalSequenceAsArray[curPortalSequenceIndex];
+            ActivePortal nextPortal = portalSequenceAsArray[nextPortalSequenceIndex];
             (int curSec1Index, int curSec2Index, int nextSec1Index, int nextSec2Index) = GetSectorsOfPortals(curPortal, nextPortal);
 
             bool sector1Common = (curSec1Index == nextSec1Index || curSec1Index == nextSec2Index);
