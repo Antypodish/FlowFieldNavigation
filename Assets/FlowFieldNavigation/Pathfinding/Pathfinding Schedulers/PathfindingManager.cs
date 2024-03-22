@@ -471,22 +471,25 @@ namespace FlowFieldNavigation
                 _islandFieldProcessors.Dispose();
             }
 
-            //SET PATH INDICIES OF REQUESTED PATHS
+            //Allocate new paths and set their routine data
             _pathfindingPipeline.SetSources(_sourcePositions.AsArray());
             for (int i = 0; i < _finalPathRequests.Length; i++)
             {
                 FinalPathRequest currentpath = _finalPathRequests[i];
                 if (!currentpath.IsValid()) { continue; }
                 int newPathIndex = _pathContainer.CreatePath(currentpath);
-                Slice pathfindingRequestSlice = new Slice(currentpath.SourcePositionStartIndex, currentpath.SourceCount);
-                Slice flowRequestSlice = pathfindingRequestSlice;
-                _pathfindingPipeline.SchedulePortalTraversalFor(newPathIndex, pathfindingRequestSlice, flowRequestSlice, DynamicDestinationState.None);
+                PathRoutineData routineData = _pathContainer.PathRoutineDataList[newPathIndex];
+                routineData.Task |= PathTask.FlowRequest;
+                routineData.Task |= PathTask.PathAdditionRequest;
+                routineData.PathAdditionSourceStart = currentpath.SourcePositionStartIndex;
+                routineData.PathAdditionSourceCount = currentpath.SourceCount;
+                _pathContainer.PathRoutineDataList[newPathIndex] = routineData;
                 _newPathIndicies.Add(newPathIndex);
                 currentpath.PathIndex = newPathIndex;
                 _finalPathRequests[i] = currentpath;
             }
 
-            //SCHEDULE PATH ADDITIONS AND FLOW REQUESTS
+            //Schedule pathfinding according to the routine data
             NativeArray<PathRoutineData> pathRoutineDataArray = _pathContainer.PathRoutineDataList.AsArray();
             for (int i = 0; i < pathRoutineDataArray.Length; i++)
             {
