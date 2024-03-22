@@ -488,37 +488,7 @@ namespace FlowFieldNavigation
                 currentpath.PathIndex = newPathIndex;
                 _finalPathRequests[i] = currentpath;
             }
-
-            //Schedule pathfinding according to the routine data
-            NativeArray<PathRoutineData> pathRoutineDataArray = _pathContainer.PathRoutineDataList.AsArray();
-            for (int i = 0; i < pathRoutineDataArray.Length; i++)
-            {
-                PathRoutineData curPathRoutineData = pathRoutineDataArray[i];
-                if (curPathRoutineData.Task == 0 && curPathRoutineData.DestinationState != DynamicDestinationState.Moved) { continue; }
-
-                int flowStart = math.select(curPathRoutineData.PathAdditionSourceStart, curPathRoutineData.FlowRequestSourceStart, curPathRoutineData.FlowRequestSourceCount != 0);
-                int flowCount = curPathRoutineData.FlowRequestSourceCount + curPathRoutineData.PathAdditionSourceCount;
-                Slice flowReqSlice = new Slice(flowStart, flowCount);
-                Slice pathAdditionReqSlice = new Slice(curPathRoutineData.PathAdditionSourceStart, curPathRoutineData.PathAdditionSourceCount);
-                PathPipelineInfoWithHandle pathInfo = new PathPipelineInfoWithHandle(new JobHandle(), i, curPathRoutineData.DestinationState);
-                bool pathAdditionRequested = (curPathRoutineData.Task & PathTask.PathAdditionRequest) == PathTask.PathAdditionRequest;
-                bool flowRequested = (curPathRoutineData.Task & PathTask.FlowRequest) == PathTask.FlowRequest;
-                bool destinationMoved = curPathRoutineData.DestinationState == DynamicDestinationState.Moved;
-                if (pathAdditionRequested)
-                {
-                    _pathfindingPipeline.SchedulePortalTraversalFor(pathInfo.PathIndex, pathAdditionReqSlice, flowReqSlice, pathInfo.DestinationState);
-                    _expandedPathIndicies.Add(pathInfo.PathIndex);
-                }
-                else if (flowRequested)
-                {
-                    _pathfindingPipeline.ScheduleRequestedSectorCalculation(pathInfo.PathIndex, pathInfo.DestinationState, flowReqSlice);
-                }
-                else if (destinationMoved)
-                {
-                    _pathfindingPipeline.UpdateDestination(pathInfo);
-                    _destinationUpdatedPathIndicies.Add(pathInfo.PathIndex);
-                }
-            }
+            _pathfindingPipeline.Run(_expandedPathIndicies, _destinationUpdatedPathIndicies);
         }
 
         internal void TryComplete()
