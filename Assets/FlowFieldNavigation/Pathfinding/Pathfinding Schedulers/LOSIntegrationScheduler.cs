@@ -27,102 +27,88 @@ namespace FlowFieldNavigation
             if (_transferHandles.IsCreated) { _transferHandles.Dispose(); }
         }
 
-        internal JobHandle ScheduleLOS(int pathIndex, DynamicDestinationState destinationState, JobHandle flowHandle)
+        internal JobHandle ScheduleLOS(NativeArray<LosRequest> losRequestsUnique, JobHandle dependency)
         {
-            PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathIndex];
-            PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathIndex];
-            PathLocationData locationData = _pathContainer.PathLocationDataList[pathIndex];
-            int2 targetIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition);
-            CostField pickedCostField = _navigationManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset);
-
-            JobHandle losHandle = flowHandle;
-            bool requestedSectorWithinLOS = (internalData.SectorWithinLOSState.Value & SectorsWihinLOSArgument.RequestedSectorWithinLOS) == SectorsWihinLOSArgument.RequestedSectorWithinLOS;
-            bool addedSectorWithinLOS = (internalData.SectorWithinLOSState.Value & SectorsWihinLOSArgument.AddedSectorWithinLOS) == SectorsWihinLOSArgument.AddedSectorWithinLOS;
-            bool losCalculated = internalData.LOSCalculatedFlag.Value;
-            bool destinationMoved = destinationState == DynamicDestinationState.Moved;
-            if (losCalculated && (addedSectorWithinLOS || destinationMoved))
+            NativeArray<JobHandle> tempHandleArray = new NativeArray<JobHandle>(losRequestsUnique.Length, Allocator.Temp);
+            for(int i = 0; i < losRequestsUnique.Length; i++)
             {
-                LOSCleanJob losClean = new LOSCleanJob()
+                LosRequest req = losRequestsUnique[i];
+                int pathIndex = req.PathIndex;
+                DynamicDestinationState destinationState = req.DestinationState;
+                PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathIndex];
+                PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathIndex];
+                PathLocationData locationData = _pathContainer.PathLocationDataList[pathIndex];
+                int2 targetIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition);
+                CostField pickedCostField = _navigationManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset);
+
+                JobHandle losHandle = dependency;
+                bool requestedSectorWithinLOS = (internalData.SectorWithinLOSState.Value & SectorsWihinLOSArgument.RequestedSectorWithinLOS) == SectorsWihinLOSArgument.RequestedSectorWithinLOS;
+                bool addedSectorWithinLOS = (internalData.SectorWithinLOSState.Value & SectorsWihinLOSArgument.AddedSectorWithinLOS) == SectorsWihinLOSArgument.AddedSectorWithinLOS;
+                bool losCalculated = internalData.LOSCalculatedFlag.Value;
+                bool destinationMoved = destinationState == DynamicDestinationState.Moved;
+                if (losCalculated && (addedSectorWithinLOS || destinationMoved))
                 {
-                    SectorColAmount = FlowFieldUtilities.SectorColAmount,
-                    SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
-                    SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
-                    SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
-                    LOSRange = FlowFieldUtilities.LOSRange,
-                    Target = targetIndex,
+                    LOSCleanJob losClean = new LOSCleanJob()
+                    {
+                        SectorColAmount = FlowFieldUtilities.SectorColAmount,
+                        SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+                        SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
+                        SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
+                        LOSRange = FlowFieldUtilities.LOSRange,
+                        Target = targetIndex,
 
-                    SectorToPickedTable = locationData.SectorToPicked,
-                    IntegrationField = internalData.IntegrationField.AsArray(),
-                };
-                JobHandle loscleanHandle = losClean.Schedule(flowHandle);
+                        SectorToPickedTable = locationData.SectorToPicked,
+                        IntegrationField = internalData.IntegrationField.AsArray(),
+                    };
+                    JobHandle loscleanHandle = losClean.Schedule(dependency);
 
-                LOSIntegrationJob losjob = new LOSIntegrationJob()
-                {
-                    SectorColAmount = FlowFieldUtilities.SectorColAmount,
-                    SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
-                    SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
-                    SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
-                    FieldColAmount = FlowFieldUtilities.FieldColAmount,
-                    MaxLOSRange = FlowFieldUtilities.LOSRange,
-                    TileSize = FlowFieldUtilities.TileSize,
-                    FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
+                    LOSIntegrationJob losjob = new LOSIntegrationJob()
+                    {
+                        SectorColAmount = FlowFieldUtilities.SectorColAmount,
+                        SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+                        SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
+                        SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
+                        FieldColAmount = FlowFieldUtilities.FieldColAmount,
+                        MaxLOSRange = FlowFieldUtilities.LOSRange,
+                        TileSize = FlowFieldUtilities.TileSize,
+                        FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
 
-                    Costs = pickedCostField.Costs,
-                    SectorToPicked = locationData.SectorToPicked,
-                    IntegrationField = internalData.IntegrationField.AsArray(),
-                    Target = targetIndex,
-                };
-                losHandle = losjob.Schedule(loscleanHandle);
-                _losCalculatedPaths.Add(pathIndex);
-            }
-            else if (!losCalculated && requestedSectorWithinLOS)
-            {
-                LOSIntegrationJob losjob = new LOSIntegrationJob()
-                {
-                    SectorColAmount = FlowFieldUtilities.SectorColAmount,
-                    SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
-                    SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
-                    SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
-                    FieldColAmount = FlowFieldUtilities.FieldColAmount,
-                    MaxLOSRange = FlowFieldUtilities.LOSRange,
-                    TileSize = FlowFieldUtilities.TileSize,
-                    FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
-
-                    Costs = pickedCostField.Costs,
-                    SectorToPicked = locationData.SectorToPicked,
-                    IntegrationField = internalData.IntegrationField.AsArray(),
-                    Target = targetIndex,
-                };
-                losHandle = losjob.Schedule(flowHandle);
-                _losCalculatedPaths.Add(pathIndex);
-                internalData.LOSCalculatedFlag.Value = true;
-            }
-            internalData.SectorWithinLOSState.Value = SectorsWihinLOSArgument.None;
-
-            if (FlowFieldUtilities.DebugMode) { losHandle.Complete(); }
-            return losHandle;
-        }/*
-        internal void TryComplete()
-        {
-            for (int i = ScheduledLOS.Length - 1; i >= 0; i--)
-            {
-                PathPipelineInfoWithHandle flowHandle = ScheduledLOS[i];
-                if (flowHandle.Handle.IsCompleted)
-                {
-                    flowHandle.Handle.Complete();
-                    ScheduledLOS.RemoveAtSwapBack(i);
+                        Costs = pickedCostField.Costs,
+                        SectorToPicked = locationData.SectorToPicked,
+                        IntegrationField = internalData.IntegrationField.AsArray(),
+                        Target = targetIndex,
+                    };
+                    losHandle = losjob.Schedule(loscleanHandle);
+                    _losCalculatedPaths.Add(pathIndex);
                 }
+                else if (!losCalculated && requestedSectorWithinLOS)
+                {
+                    LOSIntegrationJob losjob = new LOSIntegrationJob()
+                    {
+                        SectorColAmount = FlowFieldUtilities.SectorColAmount,
+                        SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+                        SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
+                        SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
+                        FieldColAmount = FlowFieldUtilities.FieldColAmount,
+                        MaxLOSRange = FlowFieldUtilities.LOSRange,
+                        TileSize = FlowFieldUtilities.TileSize,
+                        FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
+
+                        Costs = pickedCostField.Costs,
+                        SectorToPicked = locationData.SectorToPicked,
+                        IntegrationField = internalData.IntegrationField.AsArray(),
+                        Target = targetIndex,
+                    };
+                    losHandle = losjob.Schedule(dependency);
+                    _losCalculatedPaths.Add(pathIndex);
+                    internalData.LOSCalculatedFlag.Value = true;
+                }
+                internalData.SectorWithinLOSState.Value = SectorsWihinLOSArgument.None;
+                if (FlowFieldUtilities.DebugMode) { losHandle.Complete(); }
+                tempHandleArray[i] = losHandle;
             }
+            return JobHandle.CombineDependencies(tempHandleArray);
         }
-        internal void ForceComplete()
-        {
-            for (int i = ScheduledLOS.Length - 1; i >= 0; i--)
-            {
-                PathPipelineInfoWithHandle losHandle = ScheduledLOS[i];
-                losHandle.Handle.Complete();
-            }
-            ScheduledLOS.Clear();
-        }*/
         internal void ScheduleLOSTransfers()
         {
             List<PathfindingInternalData> internalDataList = _pathContainer.PathfindingInternalDataList;
