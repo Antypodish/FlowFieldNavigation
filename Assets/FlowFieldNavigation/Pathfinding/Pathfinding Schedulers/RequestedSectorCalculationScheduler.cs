@@ -10,23 +10,16 @@ namespace FlowFieldNavigation
     {
         FlowFieldNavigationManager _navigationManager;
         PathDataContainer _pathContainer;
-        FlowCalculationScheduler _flowCalculationScheduler;
-        NativeList<PathPipelineInfoWithHandle> ScheduledRequestedSectorCalculations;
 
         internal RequestedSectorCalculationScheduler(FlowFieldNavigationManager navigationManager, LOSIntegrationScheduler losScheduler)
         {
             _navigationManager = navigationManager;
             _pathContainer = navigationManager.PathDataContainer;
-            ScheduledRequestedSectorCalculations = new NativeList<PathPipelineInfoWithHandle>(Allocator.Persistent);
-            _flowCalculationScheduler = new FlowCalculationScheduler(navigationManager, losScheduler);
         }
         internal void DisposeAll()
         {
-            if (ScheduledRequestedSectorCalculations.IsCreated) { ScheduledRequestedSectorCalculations.Dispose(); }
-            if (_flowCalculationScheduler != null) { _flowCalculationScheduler.DisposeAll(); }
-            _flowCalculationScheduler = null;
         }
-        internal void ScheduleRequestedSectorCalculation(int pathIndex, JobHandle dependency, DynamicDestinationState destinationState, NativeSlice<float2> sources)
+        internal JobHandle ScheduleRequestedSectorCalculation(int pathIndex, JobHandle dependency, NativeSlice<float2> sources)
         {
             PathfindingInternalData pathInternalData = _pathContainer.PathfindingInternalDataList[pathIndex];
             PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathIndex];
@@ -57,8 +50,10 @@ namespace FlowFieldNavigation
             {
                 sourceSectorHandle.Complete();
             }
-            ScheduledRequestedSectorCalculations.Add(new PathPipelineInfoWithHandle(sourceSectorHandle, pathIndex, destinationState));
+
+            return sourceSectorHandle;
         }
+        /*
         internal void TryComplete()
         {
             for (int i = ScheduledRequestedSectorCalculations.Length - 1; i >= 0; i--)
@@ -81,7 +76,7 @@ namespace FlowFieldNavigation
             }
             ScheduledRequestedSectorCalculations.Clear();
             _flowCalculationScheduler.ForceComplete();
-        }
+        }*/
     }
 
 

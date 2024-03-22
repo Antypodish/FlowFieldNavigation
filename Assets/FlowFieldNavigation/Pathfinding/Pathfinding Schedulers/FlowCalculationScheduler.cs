@@ -13,7 +13,6 @@ namespace FlowFieldNavigation
         FlowFieldNavigationManager _navigationManager;
         PathDataContainer _pathContainer;
         LOSIntegrationScheduler _losIntegrationScheduler;
-        NativeList<PathPipelineInfoWithHandle> ScheduledFlow;
         NativeList<FlowFieldCalculationBufferParent> _flowFieldCalculationBuffers;
         NativeList<JobHandle> _flowTransferHandles;
         NativeList<int> _flowFieldResizedPaths;
@@ -21,7 +20,6 @@ namespace FlowFieldNavigation
         {
             _navigationManager = navigationManager;
             _pathContainer = navigationManager.PathDataContainer;
-            ScheduledFlow = new NativeList<PathPipelineInfoWithHandle>(Allocator.Persistent);
             _flowFieldCalculationBuffers = new NativeList<FlowFieldCalculationBufferParent>(Allocator.Persistent);
             _flowTransferHandles = new NativeList<JobHandle>(Allocator.Persistent);
             _losIntegrationScheduler = losIntegrationScheduler;
@@ -29,7 +27,6 @@ namespace FlowFieldNavigation
         }
         internal void DisposeAll()
         {
-            if (ScheduledFlow.IsCreated) { ScheduledFlow.Dispose(); }
             if (_flowFieldCalculationBuffers.IsCreated)
             {
                 for (int i = 0; i < _flowFieldCalculationBuffers.Length; i++)
@@ -44,11 +41,11 @@ namespace FlowFieldNavigation
             _losIntegrationScheduler.DisposeAll();
             _losIntegrationScheduler = null;
         }
-        internal void ScheduleFlow(PathPipelineInfoWithHandle pathInfo)
+        internal JobHandle ScheduleFlow(int pathIndex)
         {
-            PathfindingInternalData pathInternalData = _pathContainer.PathfindingInternalDataList[pathInfo.PathIndex];
-            PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
-            PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
+            PathfindingInternalData pathInternalData = _pathContainer.PathfindingInternalDataList[pathIndex];
+            PathLocationData locationData = _pathContainer.PathLocationDataList[pathIndex];
+            PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathIndex];
             CostField pickedCostField = _navigationManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset);
             int2 targetIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition);
 
@@ -58,7 +55,7 @@ namespace FlowFieldNavigation
             if (lastIntegrationFieldLength != curIntegrationFieldLength)
             {
                 pathInternalData.IntegrationField.Length = curIntegrationFieldLength;
-                _flowFieldResizedPaths.Add(pathInfo.PathIndex);
+                _flowFieldResizedPaths.Add(pathIndex);
             }
 
             //SCHEDULE INTEGRATION FIELDS
@@ -126,20 +123,18 @@ namespace FlowFieldNavigation
             //PUSH BUFFER PARENT TO THE LIST
             FlowFieldCalculationBufferParent parent = new FlowFieldCalculationBufferParent()
             {
-                PathIndex = pathInfo.PathIndex,
+                PathIndex = pathIndex,
                 BufferParent = bufferParent,
             };
             _flowFieldCalculationBuffers.Add(parent);
 
             JobHandle flowFieldCombinedHandle = JobHandle.CombineDependencies(flowfieldHandles.AsArray());
-            _losIntegrationScheduler.ScheduleLOS(pathInfo, flowFieldCombinedHandle);
 
             if (FlowFieldUtilities.DebugMode) { flowFieldCombinedHandle.Complete(); }
-            pathInfo.Handle = flowFieldCombinedHandle;
-            ScheduledFlow.Add(pathInfo);
+            return flowFieldCombinedHandle;
         }
         internal void TryComplete()
-        {
+        {/*
             for (int i = ScheduledFlow.Length - 1; i >= 0; i--)
             {
                 PathPipelineInfoWithHandle flowHandle = ScheduledFlow[i];
@@ -149,17 +144,16 @@ namespace FlowFieldNavigation
                     ScheduledFlow.RemoveAtSwapBack(i);
                 }
             }
-            _losIntegrationScheduler.TryComplete();
+            _losIntegrationScheduler.TryComplete();*/
         }
         internal void ForceComplete()
-        {
+        {/*
             for (int i = ScheduledFlow.Length - 1; i >= 0; i--)
             {
                 PathPipelineInfoWithHandle flowHandle = ScheduledFlow[i];
                 flowHandle.Handle.Complete();
             }
-            ScheduledFlow.Clear();
-            _losIntegrationScheduler.ForceComplete();
+            ScheduledFlow.Clear();*/
             RefreshResizedFlowFieldLengths();
             _losIntegrationScheduler.ScheduleLOSTransfers();
             ScheduleFlowTransfers();

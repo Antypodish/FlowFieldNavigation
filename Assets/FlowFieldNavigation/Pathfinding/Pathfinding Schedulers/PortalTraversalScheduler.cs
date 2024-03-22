@@ -28,7 +28,7 @@ namespace FlowFieldNavigation
             _requestedSectorCalculationScheduler = null;
         }
         internal void SetSources(NativeArray<float2> sources) { Sources = sources; }
-        internal void SchedulePortalTraversalFor(int pathIndex, Slice pathReqSourceSlice, Slice flowReqSourceSlice, DynamicDestinationState dynamicDestinationState)
+        internal JobHandle SchedulePortalTraversalFor(int pathIndex, Slice pathReqSourceSlice)
         {
             PathfindingInternalData pathInternalData = _navigationManager.PathDataContainer.PathfindingInternalDataList[pathIndex];
             PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathIndex];
@@ -45,7 +45,6 @@ namespace FlowFieldNavigation
 
             NativeArray<PortalTraversalData> porTravDataArray = _porTravDataProvider.GetAvailableData(out JobHandle dependency);
             NativeSlice<float2> pathRequestSource = new NativeSlice<float2>(Sources, pathReqSourceSlice.Index, pathReqSourceSlice.Count);
-            NativeSlice<float2> flowRequestSource = new NativeSlice<float2>(Sources, flowReqSourceSlice.Index, flowReqSourceSlice.Count);
 
             //Graph Reduction
             PortalReductionJob reductionJob = new PortalReductionJob()
@@ -145,7 +144,7 @@ namespace FlowFieldNavigation
             JobHandle activeFrontSubmissionHandle = submitJob.Schedule(travHandle);
             if (FlowFieldUtilities.DebugMode) { activeFrontSubmissionHandle.Complete(); }
 
-            _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pathIndex, activeFrontSubmissionHandle, dynamicDestinationState, flowRequestSource);
+            return activeFrontSubmissionHandle;
         }
     }
 

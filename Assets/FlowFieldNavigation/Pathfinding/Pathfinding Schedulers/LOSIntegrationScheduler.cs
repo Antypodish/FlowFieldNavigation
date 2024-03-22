@@ -11,7 +11,6 @@ namespace FlowFieldNavigation
         FlowFieldNavigationManager _navigationManager;
         PathDataContainer _pathContainer;
 
-        NativeList<PathPipelineInfoWithHandle> ScheduledLOS;
         NativeList<int> _losCalculatedPaths;
         NativeList<JobHandle> _transferHandles;
 
@@ -19,22 +18,20 @@ namespace FlowFieldNavigation
         {
             _navigationManager = navigationManager;
             _pathContainer = navigationManager.PathDataContainer;
-            ScheduledLOS = new NativeList<PathPipelineInfoWithHandle>(Allocator.Persistent);
             _losCalculatedPaths = new NativeList<int>(Allocator.Persistent);
             _transferHandles = new NativeList<JobHandle>(Allocator.Persistent);
         }
         internal void DisposeAll()
         {
-            if (ScheduledLOS.IsCreated) { ScheduledLOS.Dispose(); }
             if (_losCalculatedPaths.IsCreated) { _losCalculatedPaths.Dispose(); }
             if (_transferHandles.IsCreated) { _transferHandles.Dispose(); }
         }
 
-        internal void ScheduleLOS(PathPipelineInfoWithHandle pathInfo, JobHandle flowHandle = new JobHandle())
+        internal JobHandle ScheduleLOS(int pathIndex, DynamicDestinationState destinationState, JobHandle flowHandle)
         {
-            PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathInfo.PathIndex];
-            PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathInfo.PathIndex];
-            PathLocationData locationData = _pathContainer.PathLocationDataList[pathInfo.PathIndex];
+            PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathIndex];
+            PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathIndex];
+            PathLocationData locationData = _pathContainer.PathLocationDataList[pathIndex];
             int2 targetIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition);
             CostField pickedCostField = _navigationManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset);
 
@@ -42,7 +39,7 @@ namespace FlowFieldNavigation
             bool requestedSectorWithinLOS = (internalData.SectorWithinLOSState.Value & SectorsWihinLOSArgument.RequestedSectorWithinLOS) == SectorsWihinLOSArgument.RequestedSectorWithinLOS;
             bool addedSectorWithinLOS = (internalData.SectorWithinLOSState.Value & SectorsWihinLOSArgument.AddedSectorWithinLOS) == SectorsWihinLOSArgument.AddedSectorWithinLOS;
             bool losCalculated = internalData.LOSCalculatedFlag.Value;
-            bool destinationMoved = pathInfo.DestinationState == DynamicDestinationState.Moved;
+            bool destinationMoved = destinationState == DynamicDestinationState.Moved;
             if (losCalculated && (addedSectorWithinLOS || destinationMoved))
             {
                 LOSCleanJob losClean = new LOSCleanJob()
@@ -76,7 +73,7 @@ namespace FlowFieldNavigation
                     Target = targetIndex,
                 };
                 losHandle = losjob.Schedule(loscleanHandle);
-                _losCalculatedPaths.Add(pathInfo.PathIndex);
+                _losCalculatedPaths.Add(pathIndex);
             }
             else if (!losCalculated && requestedSectorWithinLOS)
             {
@@ -97,15 +94,14 @@ namespace FlowFieldNavigation
                     Target = targetIndex,
                 };
                 losHandle = losjob.Schedule(flowHandle);
-                _losCalculatedPaths.Add(pathInfo.PathIndex);
+                _losCalculatedPaths.Add(pathIndex);
                 internalData.LOSCalculatedFlag.Value = true;
             }
             internalData.SectorWithinLOSState.Value = SectorsWihinLOSArgument.None;
 
             if (FlowFieldUtilities.DebugMode) { losHandle.Complete(); }
-            pathInfo.Handle = losHandle;
-            ScheduledLOS.Add(pathInfo);
-        }
+            return losHandle;
+        }/*
         internal void TryComplete()
         {
             for (int i = ScheduledLOS.Length - 1; i >= 0; i--)
@@ -126,7 +122,7 @@ namespace FlowFieldNavigation
                 losHandle.Handle.Complete();
             }
             ScheduledLOS.Clear();
-        }
+        }*/
         internal void ScheduleLOSTransfers()
         {
             List<PathfindingInternalData> internalDataList = _pathContainer.PathfindingInternalDataList;

@@ -13,8 +13,13 @@ namespace FlowFieldNavigation
         RequestedSectorCalculationScheduler _requestedSectorCalculationScheduler;
         LOSIntegrationScheduler _losIntegrationScheduler;
         DynamicAreaScheduler _dynamicAreaScheduler;
+        FlowCalculationScheduler _flowCalculationScheduler;
         NativeArray<float2> _sources;
-
+        NativeList<PortalTraversalRequest> PorTravRequestedPathList;
+        NativeList<FlowRequest> FlowRequestedPathList;
+        NativeList<LosRequest> LosRequestedPathList;
+        NativeList<int> GoalUpdateRequestedPathList;
+        PathfindingPipelineStateHandle _stateHandle;
         internal PathfindingPipeline(FlowFieldNavigationManager navManager)
         {
             _navManager = navManager;
@@ -22,10 +27,21 @@ namespace FlowFieldNavigation
             _requestedSectorCalculationScheduler = new RequestedSectorCalculationScheduler(navManager, _losIntegrationScheduler);
             _dynamicAreaScheduler = new DynamicAreaScheduler(navManager);
             _portalTraversalScheduler = new PortalTraversalScheduler(navManager, _requestedSectorCalculationScheduler);
+            _flowCalculationScheduler = new FlowCalculationScheduler(navManager, _losIntegrationScheduler);
+            PorTravRequestedPathList = new NativeList<PortalTraversalRequest>(Allocator.Persistent);
+            FlowRequestedPathList = new NativeList<FlowRequest>(Allocator.Persistent);
+            LosRequestedPathList = new NativeList<LosRequest>(Allocator.Persistent);
+            GoalUpdateRequestedPathList = new NativeList<int>(Allocator.Persistent);
         }
-        internal void Run(NativeList<int> expandedPathIndiciesOutput, NativeList<int> destinationUpdatedPathIndicies)
+        internal void Run(NativeArray<float2> sources, NativeList<int> expandedPathIndiciesOutput, NativeList<int> destinationUpdatedPathIndicies)
         {
-            //Schedule pathfinding according to the routine data
+            PorTravRequestedPathList.Clear();
+            FlowRequestedPathList.Clear();
+            LosRequestedPathList.Clear();
+            GoalUpdateRequestedPathList.Clear();
+            _sources = sources;
+
+            //Get scheduling information
             NativeArray<PathRoutineData> pathRoutineDataArray = _navManager.PathDataContainer.PathRoutineDataList.AsArray();
             for (int i = 0; i < pathRoutineDataArray.Length; i++)
             {
@@ -36,55 +52,108 @@ namespace FlowFieldNavigation
                 int flowCount = curPathRoutineData.FlowRequestSourceCount + curPathRoutineData.PathAdditionSourceCount;
                 Slice flowReqSlice = new Slice(flowStart, flowCount);
                 Slice pathAdditionReqSlice = new Slice(curPathRoutineData.PathAdditionSourceStart, curPathRoutineData.PathAdditionSourceCount);
-                PathPipelineInfoWithHandle pathInfo = new PathPipelineInfoWithHandle(new JobHandle(), i, curPathRoutineData.DestinationState);
                 bool pathAdditionRequested = (curPathRoutineData.Task & PathTask.PathAdditionRequest) == PathTask.PathAdditionRequest;
                 bool flowRequested = (curPathRoutineData.Task & PathTask.FlowRequest) == PathTask.FlowRequest;
                 bool destinationMoved = curPathRoutineData.DestinationState == DynamicDestinationState.Moved;
+
                 if (pathAdditionRequested)
                 {
-                    SchedulePortalTraversalFor(pathInfo.PathIndex, pathAdditionReqSlice, flowReqSlice, pathInfo.DestinationState);
-                    expandedPathIndiciesOutput.Add(pathInfo.PathIndex);
+                    PorTravRequestedPathList.Add(new PortalTraversalRequest(i, pathAdditionReqSlice));
+                    expandedPathIndiciesOutput.Add(i);
                 }
-                else if (flowRequested)
+                if (flowRequested || pathAdditionRequested)
                 {
-                    ScheduleRequestedSectorCalculation(pathInfo.PathIndex, pathInfo.DestinationState, flowReqSlice);
+                    FlowRequestedPathList.Add(new FlowRequest(i, flowReqSlice));
                 }
-                else if (destinationMoved)
+                if(pathAdditionRequested || flowRequested || destinationMoved)
                 {
-                    UpdateDestination(pathInfo);
-                    destinationUpdatedPathIndicies.Add(pathInfo.PathIndex);
+                    LosRequestedPathList.Add(new LosRequest(i, curPathRoutineData.DestinationState));
+                }
+                if (destinationMoved)
+                {
+                    GoalUpdateRequestedPathList.Add(i);
+                    destinationUpdatedPathIndicies.Add(i);
                 }
             }
+            NativeList<JobHandle> tempDependancyList = new NativeList<JobHandle>(Allocator.Temp);
+            for(int i = 0; i < PorTravRequestedPathList.Length; i++)
+            {
+                PortalTraversalRequest req = PorTravRequestedPathList[i];
+                JobHandle porTravHandle = _portalTraversalScheduler.SchedulePortalTraversalFor(req.PathIndex, req.SourceSlice);
+                tempDependancyList.Add(porTravHandle);
+            }
+            JobHandle porTravCombinedHandle = JobHandle.CombineDependencies(tempDependancyList.AsArray());
+            tempDependancyList.Clear();
 
-        }
-        internal void SetSources(NativeArray<float2> sources)
-        {
-            _sources = sources;
-            _portalTraversalScheduler.SetSources(sources);
-        }
-        internal void SchedulePortalTraversalFor(int pathIndex, Slice pathfindingRequestSlice, Slice flowRequestSlice, DynamicDestinationState destinationState)
-        {
-            _portalTraversalScheduler.SchedulePortalTraversalFor(pathIndex, pathfindingRequestSlice, flowRequestSlice, destinationState);
-        }
-        internal void ScheduleRequestedSectorCalculation(int pathIndex, DynamicDestinationState destinationState, Slice flowRequesSlice)
-        {
-            NativeSlice<float2> flowRequestSources = new NativeSlice<float2>(_sources, flowRequesSlice.Index, flowRequesSlice.Count);
-            _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(pathIndex, new JobHandle(), destinationState, flowRequestSources);
-        }
-        internal void UpdateDestination(PathPipelineInfoWithHandle pathInfo)
-        {
-            _dynamicAreaScheduler.ScheduleDynamicArea(pathInfo);
-            _losIntegrationScheduler.ScheduleLOS(pathInfo);
-        }
+            for(int i = 0; i < FlowRequestedPathList.Length; i++)
+            {
+                FlowRequest req = FlowRequestedPathList[i];
+                NativeSlice<float2> flowSources = new NativeSlice<float2>(_sources, req.SourceSlice.Index, req.SourceSlice.Count);
+                JobHandle flowHandle = _requestedSectorCalculationScheduler.ScheduleRequestedSectorCalculation(req.PathIndex, porTravCombinedHandle, flowSources);
+                tempDependancyList.Add(flowHandle);
+            }
+            JobHandle flowCombinedHandle = JobHandle.CombineDependencies(tempDependancyList.AsArray());
+            tempDependancyList.Clear();
 
+            _stateHandle = new PathfindingPipelineStateHandle()
+            {
+                Handle = flowCombinedHandle,
+                State = PathfindingPipelineState.Intermediate,
+            };
+        }
         internal void TryComplete()
         {
-            _requestedSectorCalculationScheduler.TryComplete();
+            Complete(false);
         }
         internal void ForceComplete()
         {
-            _dynamicAreaScheduler.ForceComplete();
-            _requestedSectorCalculationScheduler.ForceComplete();
+            Complete(true);
+        }
+
+        void Complete(bool forceComplete)
+        {
+            if (_stateHandle.State == PathfindingPipelineState.Intermediate && (_stateHandle.Handle.IsCompleted || forceComplete))
+            {
+                _stateHandle.Handle.Complete();
+
+                NativeList<JobHandle> tempHandleList = new NativeList<JobHandle>(Allocator.Temp);
+                //Schedule flow
+                for (int i = 0; i < FlowRequestedPathList.Length; i++)
+                {
+                    FlowRequest req = FlowRequestedPathList[i];
+                    JobHandle flowHandle = _flowCalculationScheduler.ScheduleFlow(req.PathIndex);
+                    tempHandleList.Add(flowHandle);
+                }
+                JobHandle combinedFlowHandle = JobHandle.CombineDependencies(tempHandleList.AsArray());
+                tempHandleList.Clear();
+
+                //Schedule los
+                for (int i = 0; i < LosRequestedPathList.Length; i++)
+                {
+                    LosRequest req = LosRequestedPathList[i];
+                    JobHandle handle = _losIntegrationScheduler.ScheduleLOS(req.PathIndex, req.DestinationState, combinedFlowHandle);
+                    tempHandleList.Add(handle);
+                }
+
+                //Schedule dynamic area
+                for (int i = 0; i < GoalUpdateRequestedPathList.Length; i++)
+                {
+                    int pathIndex = GoalUpdateRequestedPathList[i];
+                    JobHandle dynamicAreaHandle = _dynamicAreaScheduler.ScheduleDynamicArea(pathIndex);
+                    tempHandleList.Add(dynamicAreaHandle);
+                }
+                JobHandle combinedFinalHandle = JobHandle.CombineDependencies(tempHandleList.AsArray());
+
+                _stateHandle.State = PathfindingPipelineState.Final;
+                _stateHandle.Handle = combinedFinalHandle;
+            }
+            if(_stateHandle.State == PathfindingPipelineState.Final && (_stateHandle.Handle.IsCompleted || forceComplete))
+            {
+                _stateHandle.Handle.Complete();
+                _dynamicAreaScheduler.ForceComplete(GoalUpdateRequestedPathList);
+                _flowCalculationScheduler.ForceComplete();
+            }
+
         }
     }
 }

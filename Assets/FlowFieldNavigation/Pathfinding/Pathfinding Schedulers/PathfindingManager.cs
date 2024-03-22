@@ -472,7 +472,6 @@ namespace FlowFieldNavigation
             }
 
             //Allocate new paths and set their routine data
-            _pathfindingPipeline.SetSources(_sourcePositions.AsArray());
             for (int i = 0; i < _finalPathRequests.Length; i++)
             {
                 FinalPathRequest currentpath = _finalPathRequests[i];
@@ -488,7 +487,7 @@ namespace FlowFieldNavigation
                 currentpath.PathIndex = newPathIndex;
                 _finalPathRequests[i] = currentpath;
             }
-            _pathfindingPipeline.Run(_expandedPathIndicies, _destinationUpdatedPathIndicies);
+            _pathfindingPipeline.Run(_sourcePositions.AsArray(), _expandedPathIndicies, _destinationUpdatedPathIndicies);
         }
 
         internal void TryComplete()
