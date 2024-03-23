@@ -107,6 +107,7 @@ namespace FlowFieldNavigation
                     portalTraversalData.NewReducedPortalIndicies.Dispose();
                     portalTraversalData.PortalDataRecords.Dispose();
                     internalData.LOSCalculatedFlag.Dispose();
+                    internalData.FlowFieldCalculationBuffer.Dispose();
                     ExposedPathStateList[i] = PathState.Removed;
                     _removedPathIndicies.Push(i);
                     PreallocationPack preallocations = new PreallocationPack()
@@ -180,6 +181,7 @@ namespace FlowFieldNavigation
                 SectorToWaveFrontsMap = new NativeParallelMultiHashMap<int, ActiveWaveFront>(0, Allocator.Persistent),
                 IntegrationField = new NativeList<IntegrationTile>(Allocator.Persistent),
                 LOSCalculatedFlag = new NativeReference<bool>(false, Allocator.Persistent),
+                FlowFieldCalculationBuffer = new NativeList<FlowData>(Allocator.Persistent),
                 DynamicArea = new DynamicArea()
                 {
                     FlowFieldCalculationBuffer = preallocations.DynamicAreaFlowFieldCalculationBuffer,

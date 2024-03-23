@@ -13,30 +13,17 @@ namespace FlowFieldNavigation
         FlowFieldNavigationManager _navigationManager;
         PathDataContainer _pathContainer;
         LOSIntegrationScheduler _losIntegrationScheduler;
-        NativeList<FlowFieldCalculationBufferParent> _flowFieldCalculationBuffers;
-        NativeList<JobHandle> _flowTransferHandles;
+
         NativeList<int> _flowFieldResizedPaths;
         internal FlowCalculationScheduler(FlowFieldNavigationManager navigationManager, LOSIntegrationScheduler losIntegrationScheduler)
         {
             _navigationManager = navigationManager;
             _pathContainer = navigationManager.PathDataContainer;
-            _flowFieldCalculationBuffers = new NativeList<FlowFieldCalculationBufferParent>(Allocator.Persistent);
-            _flowTransferHandles = new NativeList<JobHandle>(Allocator.Persistent);
             _losIntegrationScheduler = losIntegrationScheduler;
             _flowFieldResizedPaths = new NativeList<int>(Allocator.Persistent);
         }
         internal void DisposeAll()
         {
-            if (_flowFieldCalculationBuffers.IsCreated)
-            {
-                for (int i = 0; i < _flowFieldCalculationBuffers.Length; i++)
-                {
-                    FlowFieldCalculationBufferParent bufferParent = _flowFieldCalculationBuffers[i];
-                    bufferParent.BufferParent.Dispose();
-                }
-                _flowFieldCalculationBuffers.Dispose();
-            }
-            if (_flowTransferHandles.IsCreated) { _flowTransferHandles.Dispose(); }
             if (_flowFieldResizedPaths.IsCreated) { _flowFieldResizedPaths.Dispose(); }
             _losIntegrationScheduler.DisposeAll();
             _losIntegrationScheduler = null;
@@ -83,108 +70,67 @@ namespace FlowFieldNavigation
                 };
                 JobHandle integrationHandle = integrationJob.Schedule();
 
-                //SCHEDULE FLOW FIELDS
-                NativeList<JobHandle> flowfieldHandles = new NativeList<JobHandle>(Allocator.Temp);
-                UnsafeList<FlowFieldCalculationBuffer> bufferParent = new UnsafeList<FlowFieldCalculationBuffer>(sectorIndiciesToCalculateFlow.Length, Allocator.Persistent);
-                bufferParent.Length = sectorIndiciesToCalculateFlow.Length;
-
-                for (int j = 0; j < sectorIndiciesToCalculateFlow.Length; j++)
+                NewFlowFieldJob flowFieldJob = new NewFlowFieldJob()
                 {
-                    int sectorIndex = sectorIndiciesToCalculateFlow[j];
-                    int sectorStart = locationData.SectorToPicked[sectorIndex];
-
-                    UnsafeList<FlowData> flowFieldCalculationBuffer = new UnsafeList<FlowData>(FlowFieldUtilities.SectorTileAmount, Allocator.Persistent, NativeArrayOptions.ClearMemory);
-                    flowFieldCalculationBuffer.Length = FlowFieldUtilities.SectorTileAmount;
-                    FlowFieldJob ffJob = new FlowFieldJob()
-                    {
-                        TileSize = FlowFieldUtilities.TileSize,
-                        SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
-                        SectorColAmount = FlowFieldUtilities.SectorColAmount,
-                        SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
-                        SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
-                        SectorMatrixTileAmount = FlowFieldUtilities.SectorMatrixTileAmount,
-                        SectorStartIndex = sectorStart,
-                        FieldTileAmount = FlowFieldUtilities.FieldTileAmount,
-                        FieldColAmount = FlowFieldUtilities.FieldColAmount,
-                        SectorRowAmount = FlowFieldUtilities.SectorRowAmount,
-                        FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
-                        SectorToPicked = locationData.SectorToPicked,
-                        PickedToSector = pathInternalData.PickedSectorList.AsArray(),
-                        FlowFieldCalculationBuffer = flowFieldCalculationBuffer,
-                        IntegrationField = pathInternalData.IntegrationField.AsArray(),
-                        Costs = pickedCostField.Costs,
-                    };
-                    JobHandle flowHandle = ffJob.Schedule(flowFieldCalculationBuffer.Length, 256, integrationHandle);
-                    flowfieldHandles.Add(flowHandle);
-
-                    //PUT BUFFER PARENT TO THE INDEX
-                    bufferParent[j] = new FlowFieldCalculationBuffer()
-                    {
-                        FlowFieldStartIndex = sectorStart,
-                        Buffer = flowFieldCalculationBuffer,
-                    };
-                }
-
-                //PUSH BUFFER PARENT TO THE LIST
-                FlowFieldCalculationBufferParent parent = new FlowFieldCalculationBufferParent()
-                {
-                    PathIndex = pathIndex,
-                    BufferParent = bufferParent,
+                    SectorColAmount = FlowFieldUtilities.SectorColAmount,
+                    SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+                    SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
+                    SectorMatrixTileAmount = FlowFieldUtilities.SectorMatrixTileAmount,
+                    SectorRowAmount = FlowFieldUtilities.SectorRowAmount,
+                    SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
+                    TileSize = FlowFieldUtilities.TileSize,
+                    FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
+                    FieldColAmount = FlowFieldUtilities.FieldColAmount,
+                    FieldTileAmount = FlowFieldUtilities.FieldTileAmount,
+                    SectorIndiciesToCalculateFlow = sectorIndiciesToCalculateFlow,
+                    SectorToPicked = locationData.SectorToPicked,
+                    PickedToSector = pathInternalData.PickedSectorList.AsArray(),
+                    Costs = pickedCostField.Costs,
+                    IntegrationField = pathInternalData.IntegrationField.AsArray(),
+                    FlowFieldCalculationBuffer = pathInternalData.FlowFieldCalculationBuffer,
                 };
-                _flowFieldCalculationBuffers.Add(parent);
+                JobHandle flowFieldHandle = flowFieldJob.Schedule(integrationHandle);
 
-                JobHandle flowFieldCombinedHandle = JobHandle.CombineDependencies(flowfieldHandles.AsArray());
-                if (FlowFieldUtilities.DebugMode) { flowFieldCombinedHandle.Complete(); }
-                tempHandleArray[i] = flowFieldCombinedHandle;
+                if (FlowFieldUtilities.DebugMode) { flowFieldHandle.Complete(); }
+                tempHandleArray[i] = flowFieldHandle;
             }
             return JobHandle.CombineDependencies(tempHandleArray);
         }
-        internal void ForceComplete()
+        internal void ForceComplete(NativeArray<FlowRequest> flowRequests)
         {
             RefreshResizedFlowFieldLengths();
             _losIntegrationScheduler.ScheduleLOSTransfers();
-            ScheduleFlowTransfers();
+            ScheduleFlowTransfers(flowRequests);
             _losIntegrationScheduler.CompleteLOSTransfers();
-            CompleteFlowTransfers();
-            DisposeFlowFieldCalculationBuffers();
         }
-        void ScheduleFlowTransfers()
+        void ScheduleFlowTransfers(NativeArray<FlowRequest> flowRequests)
         {
-            NativeList<PathFlowData> flowDataList = _pathContainer.PathFlowDataList;
-            for (int i = 0; i < _flowFieldCalculationBuffers.Length; i++)
+            int sectorTileAmount = FlowFieldUtilities.SectorTileAmount;
+            for(int i = 0; i< flowRequests.Length; i++)
             {
-                FlowFieldCalculationBufferParent parent = _flowFieldCalculationBuffers[i];
-                int pathIndex = parent.PathIndex;
-
-                FlowFieldCalculationTransferJob transferJob = new FlowFieldCalculationTransferJob()
+                FlowRequest req = flowRequests[i];
+                PathfindingInternalData pathInternalData = _pathContainer.PathfindingInternalDataList[req.PathIndex];
+                PathLocationData pathLocationData = _pathContainer.PathLocationDataList[req.PathIndex];
+                PathFlowData pathFlowData = _pathContainer.PathFlowDataList[req.PathIndex];
+                NativeArray<int> flowCalculatedSectorIndicies = pathInternalData.SectorIndiciesToCalculateFlow.AsArray();
+                UnsafeList<int> sectorToPicked = pathLocationData.SectorToPicked;
+                NativeArray<FlowData> calculationBuffer = pathInternalData.FlowFieldCalculationBuffer.AsArray();
+                for(int j = 0; j < flowCalculatedSectorIndicies.Length; j++)
                 {
-                    CalculationBufferParent = parent,
-                    FlowField = flowDataList[pathIndex].FlowField,
-                };
-                _flowTransferHandles.Add(transferJob.Schedule());
-            }
-        }
-        void CompleteFlowTransfers()
-        {
-            for (int i = 0; i < _flowTransferHandles.Length; i++)
-            {
-                _flowTransferHandles[i].Complete();
-            }
-        }
-        void DisposeFlowFieldCalculationBuffers()
-        {
-            for (int i = 0; i < _flowFieldCalculationBuffers.Length; i++)
-            {
-                FlowFieldCalculationBufferParent calculationBufferParent = _flowFieldCalculationBuffers[i];
-                UnsafeList<FlowFieldCalculationBuffer> bufferParent = calculationBufferParent.BufferParent;
-                for (int j = 0; j < bufferParent.Length; j++)
-                {
-                    UnsafeList<FlowData> buffer = bufferParent[j].Buffer;
-                    buffer.Dispose();
+                    int sectorIndex = flowCalculatedSectorIndicies[j];
+                    int sectorFlowStartIndex = sectorToPicked[sectorIndex];
+                    NativeSlice<FlowData> fromSlice = new NativeSlice<FlowData>(calculationBuffer, j * sectorTileAmount, sectorTileAmount);
+                    Transfer(fromSlice, pathFlowData.FlowField, sectorFlowStartIndex);
                 }
-                bufferParent.Dispose();
             }
-            _flowFieldCalculationBuffers.Clear();
+
+            void Transfer(NativeSlice<FlowData> fromSlice, UnsafeList<FlowData> toList, int listStartIndex)
+            {
+                for(int i = 0; i < fromSlice.Length; i++)
+                {
+                    toList[listStartIndex + i] = fromSlice[i];
+                }
+            }
         }
         void RefreshResizedFlowFieldLengths()
         {

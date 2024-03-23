@@ -114,7 +114,7 @@ namespace FlowFieldNavigation
             {
                 _stateHandle.Handle.Complete();
                 _dynamicAreaScheduler.ForceComplete(_goalUpdateRequestedPathList);
-                _flowCalculationScheduler.ForceComplete();
+                _flowCalculationScheduler.ForceComplete(_flowRequestedPathList.AsArray());
             }
 
         }
