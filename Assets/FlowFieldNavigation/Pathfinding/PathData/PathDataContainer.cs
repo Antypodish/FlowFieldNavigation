@@ -124,7 +124,6 @@ namespace FlowFieldNavigation
                         SectorStartIndexListToCalculateIntegration = internalData.SectorIndiciesToCalculateIntegration,
                         NotActivePortalList = internalData.NotActivePortalList,
                         NewPickedSectorStartIndex = portalTraversalData.NewPickedSectorStartIndex,
-                        FlowFieldLength = internalData.FlowFieldLength,
                         PathAdditionSequenceBorderStartIndex = portalTraversalData.PathAdditionSequenceSliceStartIndex,
                         DynamicAreaIntegrationField = internalData.DynamicArea.IntegrationField,
                         DynamicAreaFlowFieldCalculationBuffer = internalData.DynamicArea.FlowFieldCalculationBuffer,
@@ -172,7 +171,6 @@ namespace FlowFieldNavigation
             PathfindingInternalData internalData = new PathfindingInternalData()
             {
                 PickedSectorList = preallocations.PickedToSector,
-                FlowFieldLength = preallocations.FlowFieldLength,
                 PortalTraversalQueue = preallocations.PortalTraversalFastMarchingQueue,
                 NotActivePortalList = preallocations.NotActivePortalList,
                 SectorIndiciesToCalculateIntegration = preallocations.SectorStartIndexListToCalculateIntegration,

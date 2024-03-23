@@ -11,7 +11,6 @@ namespace FlowFieldNavigation
         internal DynamicArea DynamicArea;
         internal NativeList<int> PickedSectorList;
         internal NativeList<IntegrationTile> IntegrationField;
-        internal NativeReference<int> FlowFieldLength;
         internal NativeQueue<int> PortalTraversalQueue;
         internal NativeParallelMultiHashMap<int, ActiveWaveFront> SectorToWaveFrontsMap;
         internal NativeList<NotActivePortalRecord> NotActivePortalList;

@@ -23,9 +23,9 @@ namespace FlowFieldNavigation
         internal NativeList<Slice> PortalSequenceSlices;
         internal UnsafeList<PathSectorState> SectorStateTable;
         internal NativeList<int> PickedSectorIndicies;
-        internal NativeReference<int> FlowFieldLength;
         internal NativeList<PortalTraversalDataRecord> PortalDataRecords;
         internal NativeReference<SectorsWihinLOSArgument> SectorWithinLOSState;
+        internal NativeList<IntegrationTile> IntegrationField;
 
         [ReadOnly] internal NativeArray<SectorNode> SectorNodes;
         [ReadOnly] internal NativeArray<WindowNode> WindowNodes;
@@ -62,6 +62,7 @@ namespace FlowFieldNavigation
                 SectorWithinLOSState.Value = argument;
             }
             AddTargetSector();
+            SetNewIntegrationFieldLength();
             SubmitPortalDataRecords();
             ResetPortalDataArray();
         }
@@ -225,7 +226,19 @@ namespace FlowFieldNavigation
                 PickedSectorIndicies.Add(_targetSectorIndex1d);
                 SectorStateTable[_targetSectorIndex1d] |= PathSectorState.Included;
             }
-            FlowFieldLength.Value = PickedSectorIndicies.Length * sectorTileAmount + 1;
+            
+        }
+        void SetNewIntegrationFieldLength()
+        {
+            int oldIntegrationFieldLength = IntegrationField.Length;
+            int newIntegrationFieldLength = PickedSectorIndicies.Length * SectorTileAmount + 1;
+            IntegrationField.Length = newIntegrationFieldLength;
+            for(int i = oldIntegrationFieldLength; i < newIntegrationFieldLength; i++)
+            {
+                IntegrationTile tile = IntegrationField[i];
+                tile.Reset();
+                IntegrationField[i] = tile;
+            }
         }
         void PickSectorsFromPortalSequence()
         {

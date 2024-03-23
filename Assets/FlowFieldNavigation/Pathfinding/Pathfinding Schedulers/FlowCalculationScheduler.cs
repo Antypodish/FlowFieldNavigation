@@ -14,17 +14,14 @@ namespace FlowFieldNavigation
         PathDataContainer _pathContainer;
         LOSIntegrationScheduler _losIntegrationScheduler;
 
-        NativeList<int> _flowFieldResizedPaths;
         internal FlowCalculationScheduler(FlowFieldNavigationManager navigationManager, LOSIntegrationScheduler losIntegrationScheduler)
         {
             _navigationManager = navigationManager;
             _pathContainer = navigationManager.PathDataContainer;
             _losIntegrationScheduler = losIntegrationScheduler;
-            _flowFieldResizedPaths = new NativeList<int>(Allocator.Persistent);
         }
         internal void DisposeAll()
         {
-            if (_flowFieldResizedPaths.IsCreated) { _flowFieldResizedPaths.Dispose(); }
             _losIntegrationScheduler.DisposeAll();
             _losIntegrationScheduler = null;
         }
@@ -40,15 +37,6 @@ namespace FlowFieldNavigation
                 PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathIndex];
                 CostField pickedCostField = _navigationManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset);
                 int2 targetIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition);
-
-                //RESET NEW INT FIELD INDICIES
-                int lastIntegrationFieldLength = pathInternalData.IntegrationField.Length;
-                int curIntegrationFieldLength = pathInternalData.FlowFieldLength.Value;
-                if (lastIntegrationFieldLength != curIntegrationFieldLength)
-                {
-                    pathInternalData.IntegrationField.Length = curIntegrationFieldLength;
-                    _flowFieldResizedPaths.Add(pathIndex);
-                }
 
                 //SCHEDULE INTEGRATION FIELDS
                 NativeArray<int> sectorIndiciesToCalculateIntegration = pathInternalData.SectorIndiciesToCalculateIntegration.AsArray();
@@ -96,9 +84,9 @@ namespace FlowFieldNavigation
             }
             return JobHandle.CombineDependencies(tempHandleArray);
         }
-        internal void ForceComplete(NativeArray<FlowRequest> flowRequests)
+        internal void ForceComplete(NativeArray<FlowRequest> flowRequests, NativeArray<PortalTraversalRequest> portalTraversalRequests)
         {
-            RefreshResizedFlowFieldLengths();
+            RefreshResizedFlowFieldLengths(portalTraversalRequests);
             _losIntegrationScheduler.ScheduleLOSTransfers();
             ScheduleFlowTransfers(flowRequests);
             _losIntegrationScheduler.CompleteLOSTransfers();
@@ -132,27 +120,27 @@ namespace FlowFieldNavigation
                 }
             }
         }
-        void RefreshResizedFlowFieldLengths()
+        void RefreshResizedFlowFieldLengths(NativeArray<PortalTraversalRequest> portalTraversalRequestedPaths)
         {
             List<PathfindingInternalData> pathfindingInternalDataList = _pathContainer.PathfindingInternalDataList;
             NativeList<PathFlowData> flowDataList = _pathContainer.PathFlowDataList;
-            for (int i = 0; i < _flowFieldResizedPaths.Length; i++)
+            for (int i = 0; i < portalTraversalRequestedPaths.Length; i++)
             {
-                int pathIndex = _flowFieldResizedPaths[i];
+                PortalTraversalRequest request = portalTraversalRequestedPaths[i];
+                int pathIndex = request.PathIndex;
                 PathfindingInternalData pathInternalData = pathfindingInternalDataList[pathIndex];
                 PathFlowData flowData = flowDataList[pathIndex];
 
                 UnsafeList<FlowData> flowfield = flowData.FlowField;
-                flowfield.Resize(pathInternalData.FlowFieldLength.Value, NativeArrayOptions.ClearMemory);
+                flowfield.Resize(pathInternalData.IntegrationField.Length, NativeArrayOptions.ClearMemory);
                 flowData.FlowField = flowfield;
 
                 UnsafeLOSBitmap losmap = flowData.LOSMap;
-                losmap.Resize(pathInternalData.FlowFieldLength.Value, NativeArrayOptions.ClearMemory);
+                losmap.Resize(pathInternalData.IntegrationField.Length, NativeArrayOptions.ClearMemory);
                 flowData.LOSMap = losmap;
 
                 flowDataList[pathIndex] = flowData;
             }
-            _flowFieldResizedPaths.Clear();
         }
     }
 

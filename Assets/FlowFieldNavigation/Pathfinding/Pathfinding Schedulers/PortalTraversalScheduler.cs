@@ -108,7 +108,7 @@ namespace FlowFieldNavigation
                     PorPtrs = pickedFieldGraph.PorToPorPtrs,
                     SectorNodes = pickedFieldGraph.SectorNodes,
                     PortalSequence = portalTraversalData.PortalSequence,
-                    FlowFieldLength = pathInternalData.FlowFieldLength,
+                    IntegrationField = pathInternalData.IntegrationField, 
                     PortalTraversalDataArray = porTravDataArray,
                     SectorStateTable = sectorStateTable,
                     SourcePortalIndexList = portalTraversalData.SourcePortalIndexList,

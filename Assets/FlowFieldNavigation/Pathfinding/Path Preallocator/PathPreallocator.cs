@@ -63,7 +63,6 @@ namespace FlowFieldNavigation
                 NotActivePortalList = new NativeList<NotActivePortalRecord>(Allocator.Persistent),
                 NewPickedSectorStartIndex = _nativeReferanceIntFactory.GetNativeReferanceInt(),
                 PathAdditionSequenceBorderStartIndex = _nativeReferanceIntFactory.GetNativeReferanceInt(),
-                FlowFieldLength = _nativeReferanceIntFactory.GetNativeReferanceInt(),
                 DynamicAreaFlowFieldCalculationBuffer = _flowFieldFactory.GetFlowfield(0),
                 DynamicAreaFlowField = _flowFieldFactory.GetFlowfield(0),
                 DynamicAreaIntegrationField = _integrationFieldFactory.GetIntegrationField(0),
@@ -85,7 +84,6 @@ namespace FlowFieldNavigation
             _nativeIntListFactory.SendNativeIntList(preallocations.SectorStartIndexListToCalculateIntegration);
             _nativeIntListFactory.SendNativeIntList(preallocations.SectorStartIndexListToCalculateFlow);
             preallocations.NotActivePortalList.Dispose();
-            _nativeReferanceIntFactory.SendNativeReferanceInt(preallocations.FlowFieldLength);
             _nativeReferanceIntFactory.SendNativeReferanceInt(preallocations.NewPickedSectorStartIndex);
             _nativeReferanceIntFactory.SendNativeReferanceInt(preallocations.PathAdditionSequenceBorderStartIndex);
             _flowFieldFactory.SendFlowField(preallocations.DynamicAreaFlowFieldCalculationBuffer);

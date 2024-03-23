@@ -41,16 +41,6 @@ namespace FlowFieldNavigation
             int sectorColAmount = SectorColAmount;
             int sectorTileAmount = sectorColAmount * sectorColAmount;
 
-            //Reset
-            const IntegrationMark markResetMask = IntegrationMark.LOSPass | IntegrationMark.LOSBlock | IntegrationMark.LOSC;
-            for (int i = 0; i < integrationFieldSector.Length; i++)
-            {
-                IntegrationTile tile = integrationFieldSector[i];
-                tile.Cost = float.MaxValue;
-                tile.Mark &= markResetMask;
-                integrationFieldSector[i] = tile;
-            }
-
             ///////////LOOKUP TABLE////////////////
             ///////////////////////////////////////
             int nLocal1d;

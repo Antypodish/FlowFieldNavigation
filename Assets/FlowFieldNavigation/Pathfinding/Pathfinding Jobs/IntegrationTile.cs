@@ -12,6 +12,11 @@ namespace FlowFieldNavigation
             Cost = cost;
             Mark = mark;
         }
+        internal void Reset()
+        {
+            Cost = float.MaxValue;
+            Mark = IntegrationMark.None;
+        }
     }
 
 }
