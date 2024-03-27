@@ -110,7 +110,7 @@ namespace FlowFieldNavigation
                 _stateHandle.State = PathfindingPipelineState.Final;
                 _stateHandle.Handle = combinedStepHandle;
             }
-            if(_stateHandle.State == PathfindingPipelineState.Final && (_stateHandle.Handle.IsCompleted || forceComplete))
+            if(_stateHandle.State == PathfindingPipelineState.Final && forceComplete)
             {
                 _stateHandle.Handle.Complete();
                 _dynamicAreaScheduler.ForceComplete(_goalUpdateRequestedPathList);

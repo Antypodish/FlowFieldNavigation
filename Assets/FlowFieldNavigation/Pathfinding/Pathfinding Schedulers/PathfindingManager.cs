@@ -145,7 +145,7 @@ namespace FlowFieldNavigation
             NativeArray<SectorBitArray> pathSectorBitArrays = _pathContainer.PathSectorBitArrays.AsArray();
             NativeArray<int> pathFlockIndexArray = _pathContainer.PathFlockIndicies.AsArray();
             NativeArray<int> pathSubscriberCountArray = _pathContainer.PathSubscriberCounts.AsArray();
-
+            PathSectorToFlowStartMapper flowStartMap = _pathContainer.PathSectorToFlowStartMapper;
             //Copy agent positions from transforms
             _agentPositions.Length = agentTransforms.length;
             AgentPositionGetJob agentPathfindingPositionGet = new AgentPositionGetJob()
@@ -297,8 +297,8 @@ namespace FlowFieldNavigation
                 AgentPathTasks = _agentPathTaskList.AsArray(),
                 PathSectorStateTableArray = pathSectorStateTables,
                 PathFlowDataArray = pathFlowDataArray,
-                PathLocationDataArray = pathLocationDataArray,
                 PathRoutineDataArray = pathRoutineDataArray,
+                FlowStartMap = flowStartMap,
             };
             JobHandle updateDeterminationHandle = updateDetermination.Schedule(reconstructionDeterminationHandle);
             if (FlowFieldUtilities.DebugMode) { updateDeterminationHandle.Complete(); }

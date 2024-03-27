@@ -14,11 +14,11 @@ namespace FlowFieldNavigation
         internal int SectorMatrixColAmount;
         internal float2 FieldGridStartPos;
         [ReadOnly] internal NativeArray<UnsafeList<PathSectorState>> PathSectorStateTableArray;
-        [ReadOnly] internal NativeArray<PathLocationData> PathLocationDataArray;
         [ReadOnly] internal NativeArray<PathFlowData> PathFlowDataArray;
         [ReadOnly] internal NativeArray<int> AgentNewPathIndicies;
         [ReadOnly] internal NativeArray<int> AgentCurrentPathIndicies;
         [ReadOnly] internal NativeArray<float3> AgentPositions;
+        [ReadOnly] internal PathSectorToFlowStartMapper FlowStartMap;
         [WriteOnly] internal NativeReference<int> CurrentPathSourceCount;
         internal NativeArray<PathRoutineData> PathRoutineDataArray;
         internal NativeArray<PathTask> AgentPathTasks;
@@ -34,7 +34,6 @@ namespace FlowFieldNavigation
                 if (newPathIndex != -1 || curPathIndex == -1) { continue; }
 
                 UnsafeList<PathSectorState> curSectorStateTable = PathSectorStateTableArray[curPathIndex];
-                PathLocationData curLocationData = PathLocationDataArray[curPathIndex];
                 PathFlowData curFlowData = PathFlowDataArray[curPathIndex];
                 PathRoutineData curRoutineData = PathRoutineDataArray[curPathIndex];
                 int2 agentGeneral2d = FlowFieldUtilities.PosTo2D(agentPosition2d, TileSize, FieldGridStartPos);
@@ -42,8 +41,12 @@ namespace FlowFieldNavigation
                 int agentSector1d = FlowFieldUtilities.To1D(agentSector2d, SectorMatrixColAmount);
                 int2 agentSectorStart2d = FlowFieldUtilities.GetSectorStartIndex(agentSector2d, SectorColAmount);
                 int agentLocal1d = FlowFieldUtilities.GetLocal1D(agentGeneral2d, agentSectorStart2d, SectorColAmount);
-                int sectorFlowStartIndex = curLocationData.SectorToPicked[agentSector1d];
-                FlowData flow = curFlowData.FlowField[sectorFlowStartIndex + agentLocal1d];
+                bool succesfull = FlowStartMap.TryGet(curPathIndex, agentSector1d, out int sectorFlowStartIndex);
+                FlowData flow = new FlowData();
+                if (succesfull)
+                {
+                    flow = curFlowData.FlowField[sectorFlowStartIndex + agentLocal1d];
+                }
                 PathSectorState sectorState = curSectorStateTable[agentSector1d];
                 bool sectorIncluded = sectorState != 0;
                 bool sectorSource = (sectorState & PathSectorState.Source) == PathSectorState.Source;

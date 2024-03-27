@@ -24,7 +24,7 @@ namespace FlowFieldNavigation
         [ReadOnly] internal NativeArray<PathFlowData> ExposedPathFlowDataArray;
         [ReadOnly] internal NativeArray<float2> ExposedPathDestinationArray;
         [ReadOnly] internal NativeArray<int> HashedToNormal;
-
+        [ReadOnly] internal PathSectorToFlowStartMapper FlowStartMap;
         internal NativeArray<AgentMovementData> AgentMovementData;
         public void Execute(int index)
         {
@@ -60,12 +60,9 @@ namespace FlowFieldNavigation
             float2 pathDestination = ExposedPathDestinationArray[agentCurPathIndex];
             PathLocationData pathLocationData = ExposedPathLocationDataArray[agentCurPathIndex];
             PathFlowData pathFlowData = ExposedPathFlowDataArray[agentCurPathIndex];
-            UnsafeList<FlowData> flowField = pathFlowData.FlowField;
             UnsafeLOSBitmap losMap = pathFlowData.LOSMap;
-            UnsafeList<int> sectorFlowStarts = pathLocationData.SectorToPicked;
-            int agentSectorFlowStart = sectorFlowStarts[agentSector1d];
-
-            if (agentSectorFlowStart == 0 || agentSectorFlowStart >= flowField.Length || agentSectorFlowStart >= losMap.BitLength)
+            bool succesfull = FlowStartMap.TryGet(agentCurPathIndex, agentSector1d, out int agentSectorFlowStart);
+            if (!succesfull)
             {
                 data.PathId = agentCurPathIndex;
                 data.Destination = pathDestination;
