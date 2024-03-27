@@ -58,7 +58,7 @@ namespace FlowFieldNavigation
                 };
                 JobHandle integrationHandle = integrationJob.Schedule();
 
-                NewFlowFieldJob flowFieldJob = new NewFlowFieldJob()
+                FlowFieldJob flowFieldJob = new FlowFieldJob()
                 {
                     SectorColAmount = FlowFieldUtilities.SectorColAmount,
                     SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,

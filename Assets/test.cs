@@ -12,7 +12,7 @@ using UnityEditor;
 using UnityEngine.UIElements;
 using System;
 using UnityEngine.Jobs;
-
+using FlowFieldNavigation;
 namespace Assets
 {
 

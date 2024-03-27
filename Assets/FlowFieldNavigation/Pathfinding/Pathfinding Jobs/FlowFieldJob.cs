@@ -1,4 +1,4 @@
-﻿using Unity.Burst;
+using Unity.Burst;
 using Unity.Mathematics;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -10,7 +10,7 @@ using System;
 namespace FlowFieldNavigation
 {
     [BurstCompile]
-    internal struct FlowFieldJob : IJobParallelFor
+    internal struct FlowFieldJob : IJob
     {
         internal int SectorMatrixColAmount;
         internal int SectorMatrixRowAmount;
@@ -20,37 +20,51 @@ namespace FlowFieldNavigation
         internal int SectorTileAmount;
         internal int FieldColAmount;
         internal int FieldTileAmount;
-        internal int SectorStartIndex;
         internal float TileSize;
         internal float2 FieldGridStartPos;
         [ReadOnly] internal UnsafeList<int> SectorToPicked;
         [ReadOnly] internal NativeArray<int> PickedToSector;
         [ReadOnly] internal NativeArray<IntegrationTile> IntegrationField;
-        [WriteOnly] internal UnsafeList<FlowData> FlowFieldCalculationBuffer;
         [ReadOnly] internal NativeArray<byte> Costs;
+        [ReadOnly] internal NativeArray<int> SectorIndiciesToCalculateFlow;
+        internal NativeList<FlowData> FlowFieldCalculationBuffer;
 
-        public void Execute(int index)
+        public void Execute()
+        {
+            FlowFieldCalculationBuffer.Length = SectorIndiciesToCalculateFlow.Length * SectorTileAmount;
+            NativeArray<FlowData> flowFieldCalculationBufferAsArray = FlowFieldCalculationBuffer.AsArray();
+            for(int i = 0; i< SectorIndiciesToCalculateFlow.Length; i++)
+            {
+                int sectorIndex = SectorIndiciesToCalculateFlow[i];
+                int sectorIntegrationFlowStartIndex = SectorToPicked[sectorIndex];
+                NativeSlice<FlowData> bufferSlice = new NativeSlice<FlowData>(flowFieldCalculationBufferAsArray, i * SectorTileAmount, SectorTileAmount);
+                for(int j = 0; j < bufferSlice.Length; j++)
+                {
+                    bufferSlice[j] = CalculateFlow(sectorIndex, j, sectorIntegrationFlowStartIndex);
+                }
+            }
+        }
+        FlowData CalculateFlow(int sectorIndex, int localIndex, int sectorIntegrationStartIndex)
         {
             //START DATA
             float sectorSize = SectorColAmount * TileSize;
-            int flowFieldStridedIndex = SectorStartIndex + index;
-            int startLocalIndex = (flowFieldStridedIndex - 1) % SectorTileAmount;
+            int flowFieldStridedIndex = sectorIntegrationStartIndex + localIndex;
             int startPickedSector1d = PickedToSector[(flowFieldStridedIndex - 1) / SectorTileAmount];
-            int2 startLocal2d = FlowFieldUtilities.To2D(startLocalIndex, SectorColAmount);
+            int2 startLocal2d = FlowFieldUtilities.To2D(localIndex, SectorColAmount);
             int2 startSector2d = FlowFieldUtilities.To2D(startPickedSector1d, SectorMatrixColAmount);
             int2 startGeneral2d = FlowFieldUtilities.GetGeneral2d(startLocal2d, startSector2d, SectorColAmount, FieldColAmount);
 
             //LOOP DATA
             int curFlowFieldIndex = flowFieldStridedIndex;
-            int curLocalIndex = startLocalIndex;
+            int curLocalIndex = localIndex;
             int curPickedSector1d = startPickedSector1d;
             float curIntCost = IntegrationField[curFlowFieldIndex].Cost;
             int verDif = 0;
             int horDif = 0;
-            int bestLocal1d = startLocalIndex;
+            int bestLocal1d = localIndex;
             int bestSector1d = startPickedSector1d;
             float bestIntCost = curIntCost;
-            float2 startPos = FlowFieldUtilities.LocalIndexToPos(startLocalIndex, startPickedSector1d, SectorMatrixColAmount, SectorColAmount, TileSize, sectorSize, FieldGridStartPos);
+            float2 startPos = FlowFieldUtilities.LocalIndexToPos(localIndex, startPickedSector1d, SectorMatrixColAmount, SectorColAmount, TileSize, sectorSize, FieldGridStartPos);
             float2 lastCornerPos = 0;
             CornerBlockDirection lastCornerBlockDirection = CornerBlockDirection.None;
             //LOOP
@@ -122,9 +136,8 @@ namespace FlowFieldNavigation
             int endGeneral1d = FlowFieldUtilities.GetGeneral1d(endLocal2d, endSector2d, SectorColAmount, FieldColAmount);
             FlowData flow = new FlowData();
             flow.SetFlow(startGeneral1d, endGeneral1d, FieldColAmount);
-            FlowFieldCalculationBuffer[index] = flow;
+            return flow;
         }
-
         NewIndexData GetNextIndex(int localIndex, int pickedSector1d, int originalSector1d, float curIntCost, int horizontalDif, int verticalDif, int2 startGeneral2d, float2 startPos)
         {
             int2 curLocal2d = FlowFieldUtilities.To2D(localIndex, SectorColAmount);
