@@ -33,8 +33,8 @@ namespace FlowFieldNavigation
                 FlowRequest req = flowRequestsUnique[i];
                 int pathIndex = req.PathIndex;
                 PathfindingInternalData pathInternalData = _pathContainer.PathfindingInternalDataList[pathIndex];
-                PathLocationData locationData = _pathContainer.PathLocationDataList[pathIndex];
                 PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathIndex];
+                NativeArray<int> sectorToFlowStartTable = _pathContainer.SectorToFlowStartTables[pathIndex];
                 CostField pickedCostField = _navigationManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset);
                 int2 targetIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition);
 
@@ -50,7 +50,7 @@ namespace FlowFieldNavigation
                     SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
                     FieldColAmount = FlowFieldUtilities.FieldColAmount,
                     FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
-                    SectorFlowStartTable = locationData.SectorToPicked,
+                    SectorFlowStartTable = sectorToFlowStartTable,
                     SectorIndiciesToCalculateIntegration = sectorIndiciesToCalculateIntegration,
                     CostField = pickedCostField.Costs,
                     IntegrationField = pathInternalData.IntegrationField.AsArray(),
@@ -71,7 +71,7 @@ namespace FlowFieldNavigation
                     FieldColAmount = FlowFieldUtilities.FieldColAmount,
                     FieldTileAmount = FlowFieldUtilities.FieldTileAmount,
                     SectorIndiciesToCalculateFlow = sectorIndiciesToCalculateFlow,
-                    SectorToPicked = locationData.SectorToPicked,
+                    SectorToPicked = sectorToFlowStartTable,
                     PickedToSector = pathInternalData.PickedSectorList.AsArray(),
                     Costs = pickedCostField.Costs,
                     IntegrationField = pathInternalData.IntegrationField.AsArray(),
@@ -99,15 +99,14 @@ namespace FlowFieldNavigation
             {
                 FlowRequest req = flowRequests[i];
                 PathfindingInternalData pathInternalData = _pathContainer.PathfindingInternalDataList[req.PathIndex];
-                PathLocationData pathLocationData = _pathContainer.PathLocationDataList[req.PathIndex];
                 PathFlowData pathFlowData = _pathContainer.PathFlowDataList[req.PathIndex];
                 NativeArray<int> flowCalculatedSectorIndicies = pathInternalData.SectorIndiciesToCalculateFlow.AsArray();
-                UnsafeList<int> sectorToPicked = pathLocationData.SectorToPicked;
+                NativeArray<int> sectorToFlowStartTable = _pathContainer.SectorToFlowStartTables[req.PathIndex];
                 NativeArray<FlowData> calculationBuffer = pathInternalData.FlowFieldCalculationBuffer.AsArray();
                 for(int j = 0; j < flowCalculatedSectorIndicies.Length; j++)
                 {
                     int sectorIndex = flowCalculatedSectorIndicies[j];
-                    int sectorFlowStartIndex = sectorToPicked[sectorIndex];
+                    int sectorFlowStartIndex = sectorToFlowStartTable[sectorIndex];
                     NativeSlice<FlowData> fromSlice = new NativeSlice<FlowData>(calculationBuffer, j * sectorTileAmount, sectorTileAmount);
                     Transfer(fromSlice, pathFlowData.FlowField, sectorFlowStartIndex);
                     sectorToFlowMapper.TryAdd(req.PathIndex, sectorIndex, sectorFlowStartIndex);

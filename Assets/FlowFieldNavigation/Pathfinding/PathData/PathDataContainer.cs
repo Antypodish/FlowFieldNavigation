@@ -16,6 +16,7 @@ namespace FlowFieldNavigation
         internal NativeList<float> ExposedPathReachDistanceCheckRanges;
         internal NativeList<PathState> ExposedPathStateList;
         internal NativeList<bool> ExposedPathAgentStopFlagList;
+        internal List<NativeArray<int>> SectorToFlowStartTables;
         internal List<PathfindingInternalData> PathfindingInternalDataList;
         internal NativeList<PathLocationData> PathLocationDataList;
         internal NativeList<PathFlowData> PathFlowDataList;
@@ -49,6 +50,7 @@ namespace FlowFieldNavigation
             PathRoutineDataList = new NativeList<PathRoutineData>(Allocator.Persistent);
             PathSectorBitArrays = new NativeList<SectorBitArray>(Allocator.Persistent);
             PathSectorToFlowStartMapper = new PathSectorToFlowStartMapper(0, Allocator.Persistent);
+            SectorToFlowStartTables = new List<NativeArray<int>>();
 
             ExposedPathDestinations = new NativeList<float2>(Allocator.Persistent);
             ExposedPathFlowData = new NativeList<PathFlowData>(Allocator.Persistent);
@@ -100,6 +102,7 @@ namespace FlowFieldNavigation
                     PathDestinationData destinationData = PathDestinationDataList[i];
                     SectorBitArray sectorBitArray = PathSectorBitArrays[i];
                     NativeArray<OverlappingDirection> sectorOverlappingDirections = SectorOverlappingDirectionTableList[i];
+                    NativeArray<int> sectorToFlowStartTable = SectorToFlowStartTables[i];
                     RemoveFromPathSectorToFlowStartMapper(internalData.PickedSectorList.AsArray(), i);
                     sectorOverlappingDirections.Dispose();
                     flowData.Dispose();
@@ -111,11 +114,11 @@ namespace FlowFieldNavigation
                     portalTraversalData.PortalDataRecords.Dispose();
                     internalData.LOSCalculatedFlag.Dispose();
                     internalData.FlowFieldCalculationBuffer.Dispose();
+                    sectorToFlowStartTable.Dispose();
                     ExposedPathStateList[i] = PathState.Removed;
                     _removedPathIndicies.Push(i);
                     PreallocationPack preallocations = new PreallocationPack()
                     {
-                        SectorToPicked = locationData.SectorToPicked,
                         PickedToSector = internalData.PickedSectorList,
                         PortalSequence = portalTraversalData.PortalSequence,
                         TargetSectorCosts = targetSectorIntegration,
@@ -210,7 +213,6 @@ namespace FlowFieldNavigation
 
             PathLocationData locationData = new PathLocationData()
             {
-                SectorToPicked = preallocations.SectorToPicked,
                 DynamicAreaPickedSectorFlowStarts = preallocations.DynamicAreaSectorFlowStartList,
             };
 
@@ -250,6 +252,7 @@ namespace FlowFieldNavigation
                 PathSubscriberCounts.Add(request.SourceCount);
                 PathFlockIndicies.Add(request.FlockIndex);
                 SectorOverlappingDirectionTableList.Add(sectorOverlappingDirections);
+                SectorToFlowStartTables.Add(new NativeArray<int>(FlowFieldUtilities.SectorMatrixTileAmount, Allocator.Persistent));
             }
             else
             {
@@ -265,6 +268,7 @@ namespace FlowFieldNavigation
                 PathSubscriberCounts[pathIndex] = request.SourceCount;
                 PathFlockIndicies[pathIndex] = request.FlockIndex;
                 SectorOverlappingDirectionTableList[pathIndex] = sectorOverlappingDirections;
+                SectorToFlowStartTables[pathIndex] = new NativeArray<int>(FlowFieldUtilities.SectorMatrixTileAmount, Allocator.Persistent);
             }
 
             return pathIndex;

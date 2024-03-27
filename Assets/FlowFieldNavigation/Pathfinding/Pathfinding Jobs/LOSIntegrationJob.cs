@@ -24,7 +24,7 @@ namespace FlowFieldNavigation
         internal int SectorTileAmount;
 
         [ReadOnly] internal NativeArray<byte> Costs;
-        internal UnsafeList<int> SectorToPicked;
+        internal NativeArray<int> SectorToPicked;
         internal NativeArray<IntegrationTile> IntegrationField;
         public void Execute()
         {
@@ -33,7 +33,7 @@ namespace FlowFieldNavigation
             int sectorMatrixColAmount = SectorMatrixColAmount;
             float maxLosRange = MaxLOSRange;
             int2 targetGeneral2d = Target;
-            UnsafeList<int> sectorToPickedTable = SectorToPicked;
+            NativeArray<int> sectorToPickedTable = SectorToPicked;
             NativeQueue<LocalIndex1d> integrationQueue = new NativeQueue<LocalIndex1d>(Allocator.Temp);
             NativeArray<byte> costs = Costs;
             NativeArray<IntegrationTile> integrationField = IntegrationField;

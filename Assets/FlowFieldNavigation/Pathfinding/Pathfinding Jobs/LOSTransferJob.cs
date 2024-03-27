@@ -18,7 +18,7 @@ namespace FlowFieldNavigation
         internal int SectorTileAmount;
 
         [ReadOnly] internal NativeArray<IntegrationTile> IntegrationField;
-        [ReadOnly] internal UnsafeList<int> SectorToPickedTable;
+        [ReadOnly] internal NativeArray<int> SectorToPickedTable;
         internal UnsafeLOSBitmap LOSBitmap;
         public void Execute()
         {

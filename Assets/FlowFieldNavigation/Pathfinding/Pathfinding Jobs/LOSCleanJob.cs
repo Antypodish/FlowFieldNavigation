@@ -19,7 +19,7 @@ namespace FlowFieldNavigation
         internal int SectorTileAmount;
 
         internal NativeArray<IntegrationTile> IntegrationField;
-        [ReadOnly] internal UnsafeList<int> SectorToPickedTable;
+        [ReadOnly] internal NativeArray<int> SectorToPickedTable;
         public void Execute()
         {
             int2 targetSector2d = FlowFieldUtilities.GetSector2D(Target, SectorColAmount);

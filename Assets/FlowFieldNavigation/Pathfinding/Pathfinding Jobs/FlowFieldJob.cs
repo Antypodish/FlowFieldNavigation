@@ -22,7 +22,7 @@ namespace FlowFieldNavigation
         internal int FieldTileAmount;
         internal float TileSize;
         internal float2 FieldGridStartPos;
-        [ReadOnly] internal UnsafeList<int> SectorToPicked;
+        [ReadOnly] internal NativeArray<int> SectorToPicked;
         [ReadOnly] internal NativeArray<int> PickedToSector;
         [ReadOnly] internal NativeArray<IntegrationTile> IntegrationField;
         [ReadOnly] internal NativeArray<byte> Costs;

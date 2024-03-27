@@ -23,7 +23,6 @@ namespace FlowFieldNavigation
         internal float FieldMaxYExcluding;
         internal float2 FieldGridStartPos;
         [ReadOnly] internal NativeArray<UnsafeList<float>> TargetSectorIntegrations;
-        [ReadOnly] internal NativeArray<PathLocationData> PathLocationDataArray;
         [ReadOnly] internal NativeArray<PathFlowData> PathFlowDataArray;
         [ReadOnly] internal NativeArray<PathState> PathStateArray;
         [ReadOnly] internal NativeArray<float3> AgentPositions;

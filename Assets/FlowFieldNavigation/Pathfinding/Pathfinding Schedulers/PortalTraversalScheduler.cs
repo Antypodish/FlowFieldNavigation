@@ -42,6 +42,7 @@ namespace FlowFieldNavigation
                 UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathIndex];
                 NativeArray<OverlappingDirection> sectorOverlappingDirectionTable = _pathContainer.SectorOverlappingDirectionTableList[pathIndex];
                 SectorBitArray sectorBitArray = _pathContainer.PathSectorBitArrays[pathIndex];
+                NativeArray<int> sectorToFlowStartTable = _pathContainer.SectorToFlowStartTables[pathIndex];
                 int2 destinationIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition);
                 CostField pickedCostField = _navigationManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset);
                 FieldGraph pickedFieldGraph = _navigationManager.FieldDataContainer.GetFieldGraphWithOffset(destinationData.Offset);
@@ -132,7 +133,7 @@ namespace FlowFieldNavigation
                     SequenceSliceListStartIndex = portalTraversalData.PathAdditionSequenceSliceStartIndex.Value,
 
                     PortalEdges = pickedFieldGraph.PorToPorPtrs,
-                    SectorToPicked = locationData.SectorToPicked,
+                    SectorToPicked = sectorToFlowStartTable,
                     PickedSectorIndicies = pathInternalData.PickedSectorList,
                     PortalSequence = portalTraversalData.PortalSequence,
                     PortalSequenceSlices = portalTraversalData.PortalSequenceSlices,

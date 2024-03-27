@@ -336,23 +336,22 @@ namespace FlowFieldNavigation
             int pathIndex = agent.GetPathIndex();
             if (pathIndex == -1) { return; }
 
-            PathLocationData locationData = _navigationManager.PathDataContainer.PathLocationDataList[pathIndex];
+            NativeArray<int> sectorFlowStartTable = _navigationManager.PathDataContainer.SectorToFlowStartTables[pathIndex];
             PathDestinationData destinationData = _navigationManager.PathDataContainer.PathDestinationDataList[pathIndex];
             SectorBitArray sectorBitArray = _navigationManager.PathDataContainer.PathSectorBitArrays[pathIndex];
             Gizmos.color = Color.black;
             FieldGraph fg = _fieldProducer.GetFieldGraphWithOffset(destinationData.Offset);
             NativeArray<SectorNode> sectorNodes = fg.SectorNodes;
-            UnsafeList<int> sectorMarks = locationData.SectorToPicked;
 
-            for (int i = 0; i < sectorMarks.Length; i++)
+            for (int i = 0; i < sectorFlowStartTable.Length; i++)
             {
-                if (sectorMarks[i] == 0 && sectorBitArray.HasBit(i)) { UnityEngine.Debug.Log("woooo"); }
-                if (sectorMarks[i] != 0 && !sectorBitArray.HasBit(i)) { UnityEngine.Debug.Log("woooo"); }
+                if (sectorFlowStartTable[i] == 0 && sectorBitArray.HasBit(i)) { UnityEngine.Debug.Log("woooo"); }
+                if (sectorFlowStartTable[i] != 0 && !sectorBitArray.HasBit(i)) { UnityEngine.Debug.Log("woooo"); }
             }
 
-            for (int i = 0; i < sectorMarks.Length; i++)
+            for (int i = 0; i < sectorFlowStartTable.Length; i++)
             {
-                if (sectorMarks[i] == 0) { continue; }
+                if (sectorFlowStartTable[i] == 0) { continue; }
                 int2 sector2d = FlowFieldUtilities.To2D(i, FlowFieldUtilities.SectorMatrixColAmount);
                 float sectorSize = FlowFieldUtilities.SectorColAmount * FlowFieldUtilities.TileSize;
                 float2 sectorPos = FlowFieldUtilities.IndexToPos(sector2d, sectorSize, FlowFieldUtilities.FieldGridStartPosition);
@@ -379,17 +378,14 @@ namespace FlowFieldNavigation
 
             PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathIndex];
 
-            PathLocationData locationData = _navigationManager.PathDataContainer.PathLocationDataList[pathIndex];
-            PathDestinationData destinationData = _navigationManager.PathDataContainer.PathDestinationDataList[pathIndex];
+            NativeArray<int> sectorFlowStartTable = _navigationManager.PathDataContainer.SectorToFlowStartTables[pathIndex];
             int sectorColAmount = FlowFieldUtilities.SectorColAmount;
             int sectorTileAmount = sectorColAmount * sectorColAmount;
-            int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
-            UnsafeList<int> sectorMarks = locationData.SectorToPicked;
             NativeArray<IntegrationTile> integrationField = internalData.IntegrationField.AsArray();
-            for (int i = 0; i < sectorMarks.Length; i++)
+            for (int i = 0; i < sectorFlowStartTable.Length; i++)
             {
-                if (sectorMarks[i] == 0) { continue; }
-                int pickedStartIndex = sectorMarks[i];
+                if (sectorFlowStartTable[i] == 0) { continue; }
+                int pickedStartIndex = sectorFlowStartTable[i];
                 for (int j = pickedStartIndex; j < pickedStartIndex + sectorTileAmount; j++)
                 {
                     int local1d = (j - 1) % sectorTileAmount;
@@ -414,17 +410,14 @@ namespace FlowFieldNavigation
             if (pathIndex == -1) { return; }
 
             PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathIndex];
-
-            PathLocationData locationData = _navigationManager.PathDataContainer.PathLocationDataList[pathIndex];
-            PathDestinationData destinationData = _navigationManager.PathDataContainer.PathDestinationDataList[pathIndex];
-            UnsafeList<int> sectorMarks = locationData.SectorToPicked;
+            NativeArray<int> sectorFlowStartTable = _navigationManager.PathDataContainer.SectorToFlowStartTables[pathIndex];
             NativeArray<IntegrationTile> integrationField = internalData.IntegrationField.AsArray();
             int sectorColAmount = FlowFieldUtilities.SectorColAmount;
             int sectorTileAmount = sectorColAmount * sectorColAmount;
-            for (int i = 0; i < sectorMarks.Length; i++)
+            for (int i = 0; i < sectorFlowStartTable.Length; i++)
             {
-                if (sectorMarks[i] == 0) { continue; }
-                int pickedStartIndex = sectorMarks[i];
+                if (sectorFlowStartTable[i] == 0) { continue; }
+                int pickedStartIndex = sectorFlowStartTable[i];
                 for (int j = pickedStartIndex; j < pickedStartIndex + sectorTileAmount; j++)
                 {
                     if ((integrationField[j].Mark & IntegrationMark.LOSBlock) == IntegrationMark.LOSBlock)
@@ -455,23 +448,22 @@ namespace FlowFieldNavigation
             int pathIndex = agent.GetPathIndex();
             if (pathIndex == -1) { return; }
 
-            PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathIndex];
-
+            PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathIndex];   
             PathDestinationData destinationData = _navigationManager.PathDataContainer.PathDestinationDataList[pathIndex];
             PathLocationData locationData = _navigationManager.PathDataContainer.PathLocationDataList[pathIndex];
             PathFlowData pathFlowData = _navigationManager.PathDataContainer.PathFlowDataList[pathIndex];
+            NativeArray<int> sectorFlowStartTable = _navigationManager.PathDataContainer.SectorToFlowStartTables[pathIndex];
             float yOffset = 0.2f;
-            UnsafeList<int> sectorMarks = locationData.SectorToPicked;
             UnsafeList<FlowData> flowField = pathFlowData.FlowField;
             UnsafeLOSBitmap losmap = pathFlowData.LOSMap;
             UnsafeList<SectorFlowStart> dynamicAreaFlowStarts = locationData.DynamicAreaPickedSectorFlowStarts;
             UnsafeList<FlowData> dynamicAreaFlowField = internalData.DynamicArea.FlowFieldCalculationBuffer;
             int sectorColAmount = FlowFieldUtilities.SectorColAmount;
             int sectorTileAmount = sectorColAmount * sectorColAmount;
-            for (int i = 0; i < sectorMarks.Length; i++)
+            for (int i = 0; i < sectorFlowStartTable.Length; i++)
             {
-                if (sectorMarks[i] == 0) { continue; }
-                int pickedStartIndex = sectorMarks[i];
+                if (sectorFlowStartTable[i] == 0) { continue; }
+                int pickedStartIndex = sectorFlowStartTable[i];
                 for (int j = pickedStartIndex; j < pickedStartIndex + sectorTileAmount; j++)
                 {
                     int local1d = (j - 1) % sectorTileAmount;
@@ -506,7 +498,7 @@ namespace FlowFieldNavigation
             }
             bool HasLOS(int sectorIndex, int localIndex)
             {
-                return losmap.IsLOS(sectorMarks[sectorIndex] + localIndex);
+                return losmap.IsLOS(sectorFlowStartTable[sectorIndex] + localIndex);
             }
             bool HasDynamicFlow(int sectorIndex, int localIndex)
             {
@@ -523,7 +515,7 @@ namespace FlowFieldNavigation
 
             FlowData GetFlow(int sectorIndex, int localIndex)
             {
-                return flowField[sectorMarks[sectorIndex] + localIndex];
+                return flowField[sectorFlowStartTable[sectorIndex] + localIndex];
             }
 
             FlowData GetDynamicFlow(int sectorIndex, int localIndex)

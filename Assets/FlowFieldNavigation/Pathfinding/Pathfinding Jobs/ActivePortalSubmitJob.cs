@@ -28,7 +28,7 @@ namespace FlowFieldNavigation
         [ReadOnly] internal NativeList<Slice> PortalSequenceSlices;
         [ReadOnly] internal NativeReference<int> NewSectorStartIndex;
 
-        internal UnsafeList<int> SectorToPicked;
+        internal NativeArray<int> SectorToPicked;
         internal SectorBitArray SectorBitArray;
         internal NativeParallelMultiHashMap<int, ActiveWaveFront> SectorToWaveFrontsMap;
         internal NativeList<NotActivePortalRecord> NotActivatedPortals;

@@ -37,7 +37,7 @@ namespace FlowFieldNavigation
                 DynamicDestinationState destinationState = req.DestinationState;
                 PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathIndex];
                 PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathIndex];
-                PathLocationData locationData = _pathContainer.PathLocationDataList[pathIndex];
+                NativeArray<int> sectorToFlowStartTable = _pathContainer.SectorToFlowStartTables[pathIndex];
                 int2 targetIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition);
                 CostField pickedCostField = _navigationManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset);
 
@@ -57,7 +57,7 @@ namespace FlowFieldNavigation
                         LOSRange = FlowFieldUtilities.LOSRange,
                         Target = targetIndex,
 
-                        SectorToPickedTable = locationData.SectorToPicked,
+                        SectorToPickedTable = sectorToFlowStartTable,
                         IntegrationField = internalData.IntegrationField.AsArray(),
                     };
                     JobHandle loscleanHandle = losClean.Schedule(dependency);
@@ -74,7 +74,7 @@ namespace FlowFieldNavigation
                         FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
 
                         Costs = pickedCostField.Costs,
-                        SectorToPicked = locationData.SectorToPicked,
+                        SectorToPicked = sectorToFlowStartTable,
                         IntegrationField = internalData.IntegrationField.AsArray(),
                         Target = targetIndex,
                     };
@@ -95,7 +95,7 @@ namespace FlowFieldNavigation
                         FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
 
                         Costs = pickedCostField.Costs,
-                        SectorToPicked = locationData.SectorToPicked,
+                        SectorToPicked = sectorToFlowStartTable,
                         IntegrationField = internalData.IntegrationField.AsArray(),
                         Target = targetIndex,
                     };
@@ -120,8 +120,8 @@ namespace FlowFieldNavigation
                 int pathIndex = _losCalculatedPaths[i];
                 PathfindingInternalData internalData = internalDataList[pathIndex];
                 PathDestinationData destinationData = pathDestinationDataList[pathIndex];
-                PathLocationData locationData = pathLocationDataList[pathIndex];
                 PathFlowData flowData = pathFlowDataList[pathIndex];
+                NativeArray<int> sectorToFlowStartTable = _pathContainer.SectorToFlowStartTables[pathIndex];
                 LOSTransferJob losTransfer = new LOSTransferJob()
                 {
                     SectorColAmount = FlowFieldUtilities.SectorColAmount,
@@ -129,7 +129,7 @@ namespace FlowFieldNavigation
                     SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
                     SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
                     LOSRange = FlowFieldUtilities.LOSRange,
-                    SectorToPickedTable = locationData.SectorToPicked,
+                    SectorToPickedTable = sectorToFlowStartTable,
                     LOSBitmap = flowData.LOSMap,
                     IntegrationField = internalData.IntegrationField.AsArray(),
                     Target = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition),

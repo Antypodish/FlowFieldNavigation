@@ -42,7 +42,6 @@ namespace FlowFieldNavigation
         internal void CheckForDeallocations()
         {
             _porTravDataArrayFactory.CheckForCleaningHandles();
-            _sectorTransformationFactory.CheckForCleaningHandles();
         }
         internal PreallocationPack GetPreallocations()
         {
@@ -52,7 +51,6 @@ namespace FlowFieldNavigation
             {
                 PortalSequence = _portalSequenceFactory.GetPortalSequenceList(),
                 TargetSectorCosts = targetSectorCosts,
-                SectorToPicked = _sectorTransformationFactory.GetSectorToPickedArray(),
                 PickedToSector = _sectorTransformationFactory.GetPickedToSectorList(),
                 SourcePortalIndexList = _nativeIntListFactory.GetNativeIntList(),
                 TargetSectorPortalIndexList = _nativeIntListFactory.GetNativeIntList(),
@@ -76,7 +74,7 @@ namespace FlowFieldNavigation
         internal void SendPreallocationsBack(ref PreallocationPack preallocations)
         {
             preallocations.TargetSectorCosts.Dispose();
-            _sectorTransformationFactory.SendSectorTransformationsBack(preallocations.SectorToPicked, preallocations.PickedToSector);
+            _sectorTransformationFactory.SendSectorTransformationsBack(preallocations.PickedToSector);
             _nativeIntListFactory.SendNativeIntList(preallocations.TargetSectorPortalIndexList);
             _nativeIntListFactory.SendNativeIntList(preallocations.SourcePortalIndexList);
             _nativeIntQueueFactory.SendNativeIntQueue(preallocations.PortalTraversalFastMarchingQueue);

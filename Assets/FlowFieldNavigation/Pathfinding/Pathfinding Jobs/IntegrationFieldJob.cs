@@ -21,7 +21,7 @@ namespace FlowFieldNavigation
         [ReadOnly] internal NativeArray<int> SectorIndiciesToCalculateIntegration;
         [ReadOnly] internal NativeArray<byte> CostField;
         [ReadOnly] internal NativeParallelMultiHashMap<int, ActiveWaveFront> SectorToWaveFrontsMap;
-        [ReadOnly] internal UnsafeList<int> SectorFlowStartTable;
+        [ReadOnly] internal NativeArray<int> SectorFlowStartTable;
 
         internal NativeArray<IntegrationTile> IntegrationField;
         public void Execute()
