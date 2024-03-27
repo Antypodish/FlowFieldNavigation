@@ -9,6 +9,7 @@ namespace FlowFieldNavigation
     internal class PathDataContainer
     {
         internal NativeList<PathFlowData> ExposedPathFlowData;
+        internal PathSectorToFlowStartMapper PathSectorToFlowStartMapper;
         internal NativeList<PathLocationData> ExposedPathLocationData;
         internal NativeList<float2> ExposedPathDestinations;
         internal NativeList<int> ExposedPathFlockIndicies;
@@ -47,6 +48,7 @@ namespace FlowFieldNavigation
             TargetSectorIntegrationList = new NativeList<UnsafeList<float>>(Allocator.Persistent);
             PathRoutineDataList = new NativeList<PathRoutineData>(Allocator.Persistent);
             PathSectorBitArrays = new NativeList<SectorBitArray>(Allocator.Persistent);
+            PathSectorToFlowStartMapper = new PathSectorToFlowStartMapper(0, Allocator.Persistent);
 
             ExposedPathDestinations = new NativeList<float2>(Allocator.Persistent);
             ExposedPathFlowData = new NativeList<PathFlowData>(Allocator.Persistent);
@@ -98,6 +100,7 @@ namespace FlowFieldNavigation
                     PathDestinationData destinationData = PathDestinationDataList[i];
                     SectorBitArray sectorBitArray = PathSectorBitArrays[i];
                     NativeArray<OverlappingDirection> sectorOverlappingDirections = SectorOverlappingDirectionTableList[i];
+                    RemoveFromPathSectorToFlowStartMapper(internalData.PickedSectorList.AsArray(), i);
                     sectorOverlappingDirections.Dispose();
                     flowData.Dispose();
                     flowData.FlowField.Dispose();
@@ -138,6 +141,14 @@ namespace FlowFieldNavigation
                 }
             }
             _preallocator.CheckForDeallocations();
+        }
+        void RemoveFromPathSectorToFlowStartMapper(NativeArray<int> pickedSectorList, int pathIndex)
+        {
+            for(int i = 0; i < pickedSectorList.Length; i++)
+            {
+                int sector = pickedSectorList[i];
+                PathSectorToFlowStartMapper.TryRemove(pathIndex, sector);
+            }
         }
         internal void ExposeBuffers(NativeArray<int> destinationUpdatedPathIndicies, NativeArray<int> newPathIndicies, NativeArray<int> expandedPathIndicies)
         {

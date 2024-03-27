@@ -94,6 +94,7 @@ namespace FlowFieldNavigation
         void ScheduleFlowTransfers(NativeArray<FlowRequest> flowRequests)
         {
             int sectorTileAmount = FlowFieldUtilities.SectorTileAmount;
+            PathSectorToFlowStartMapper sectorToFlowMapper = _pathContainer.PathSectorToFlowStartMapper;
             for(int i = 0; i< flowRequests.Length; i++)
             {
                 FlowRequest req = flowRequests[i];
@@ -109,6 +110,7 @@ namespace FlowFieldNavigation
                     int sectorFlowStartIndex = sectorToPicked[sectorIndex];
                     NativeSlice<FlowData> fromSlice = new NativeSlice<FlowData>(calculationBuffer, j * sectorTileAmount, sectorTileAmount);
                     Transfer(fromSlice, pathFlowData.FlowField, sectorFlowStartIndex);
+                    sectorToFlowMapper.TryAdd(req.PathIndex, sectorIndex, sectorFlowStartIndex);
                 }
             }
 

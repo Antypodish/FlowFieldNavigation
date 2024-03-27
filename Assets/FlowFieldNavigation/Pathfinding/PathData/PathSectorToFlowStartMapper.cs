@@ -14,13 +14,13 @@ namespace FlowFieldNavigation
         {
             Map.Dispose();
         }
-        internal void Add(int pathIndex, int sectorIndex, int flowIndex)
+        internal bool TryAdd(int pathIndex, int sectorIndex, int flowIndex)
         {
             ulong key = 0;
             key |= (ulong)pathIndex;
             key <<= 32;
             key |= (ulong)sectorIndex;
-            Map.Add(key, flowIndex);
+            return Map.TryAdd(key, flowIndex);
         }
         internal bool TryGet(int pathIndex, int sectorIndex, out int sectorFlowStartIndex)
         {
@@ -28,8 +28,7 @@ namespace FlowFieldNavigation
             key |= (ulong)pathIndex;
             key <<= 32;
             key |= (ulong)sectorIndex;
-            bool succesfull = Map.TryGetValue(key, out sectorFlowStartIndex);
-            return succesfull;
+            return Map.TryGetValue(key, out sectorFlowStartIndex);
         }
         internal bool Contains(int pathIndex, int sectorIndex)
         {
@@ -38,6 +37,14 @@ namespace FlowFieldNavigation
             key <<= 32;
             key |= (ulong)sectorIndex;
             return Map.ContainsKey(key);
+        }
+        internal bool TryRemove(int pathIndex, int sectorIndex)
+        {
+            ulong key = 0;
+            key |= (ulong)pathIndex;
+            key <<= 32;
+            key |= (ulong)sectorIndex;
+            return Map.Remove(key);
         }
     }
 }
