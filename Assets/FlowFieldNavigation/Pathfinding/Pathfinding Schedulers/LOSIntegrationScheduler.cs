@@ -11,7 +11,7 @@ namespace FlowFieldNavigation
         FlowFieldNavigationManager _navigationManager;
         PathDataContainer _pathContainer;
 
-        NativeList<int> _losCalculatedPaths;
+        internal NativeList<int> _losCalculatedPaths;
         NativeList<JobHandle> _transferHandles;
 
         internal LOSIntegrationScheduler(FlowFieldNavigationManager navigationManager)
@@ -108,43 +108,6 @@ namespace FlowFieldNavigation
                 tempHandleArray[i] = losHandle;
             }
             return JobHandle.CombineDependencies(tempHandleArray);
-        }
-        internal void ScheduleLOSTransfers()
-        {
-            List<PathfindingInternalData> internalDataList = _pathContainer.PathfindingInternalDataList;
-            NativeList<PathLocationData> pathLocationDataList = _pathContainer.PathLocationDataList;
-            NativeList<PathFlowData> pathFlowDataList = _pathContainer.PathFlowDataList;
-            NativeList<PathDestinationData> pathDestinationDataList = _pathContainer.PathDestinationDataList;
-            for (int i = 0; i < _losCalculatedPaths.Length; i++)
-            {
-                int pathIndex = _losCalculatedPaths[i];
-                PathfindingInternalData internalData = internalDataList[pathIndex];
-                PathDestinationData destinationData = pathDestinationDataList[pathIndex];
-                PathFlowData flowData = pathFlowDataList[pathIndex];
-                NativeArray<int> sectorToFlowStartTable = _pathContainer.SectorToFlowStartTables[pathIndex];
-                LOSTransferJob losTransfer = new LOSTransferJob()
-                {
-                    SectorColAmount = FlowFieldUtilities.SectorColAmount,
-                    SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
-                    SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
-                    SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
-                    LOSRange = FlowFieldUtilities.LOSRange,
-                    SectorToPickedTable = sectorToFlowStartTable,
-                    LOSBitmap = flowData.LOSMap,
-                    IntegrationField = internalData.IntegrationField.AsArray(),
-                    Target = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition),
-                };
-                _transferHandles.Add(losTransfer.Schedule());
-            }
-            _losCalculatedPaths.Clear();
-        }
-        internal void CompleteLOSTransfers()
-        {
-            for (int i = 0; i < _transferHandles.Length; i++)
-            {
-                _transferHandles[i].Complete();
-            }
-            _transferHandles.Clear();
         }
     }
 

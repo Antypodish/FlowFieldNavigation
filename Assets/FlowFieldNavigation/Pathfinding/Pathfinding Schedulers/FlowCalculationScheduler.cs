@@ -84,65 +84,6 @@ namespace FlowFieldNavigation
             }
             return JobHandle.CombineDependencies(tempHandleArray);
         }
-        internal void ForceComplete(NativeArray<FlowRequest> flowRequests, NativeArray<PortalTraversalRequest> portalTraversalRequests)
-        {
-            RefreshResizedFlowFieldLengths(portalTraversalRequests);
-            _losIntegrationScheduler.ScheduleLOSTransfers();
-            ScheduleFlowTransfers(flowRequests);
-            _losIntegrationScheduler.CompleteLOSTransfers();
-        }
-        void ScheduleFlowTransfers(NativeArray<FlowRequest> flowRequests)
-        {
-            int sectorTileAmount = FlowFieldUtilities.SectorTileAmount;
-            PathSectorToFlowStartMapper sectorToFlowMapper = _pathContainer.PathSectorToFlowStartMapper;
-            for(int i = 0; i< flowRequests.Length; i++)
-            {
-                FlowRequest req = flowRequests[i];
-                PathfindingInternalData pathInternalData = _pathContainer.PathfindingInternalDataList[req.PathIndex];
-                PathFlowData pathFlowData = _pathContainer.PathFlowDataList[req.PathIndex];
-                NativeArray<int> flowCalculatedSectorIndicies = pathInternalData.SectorIndiciesToCalculateFlow.AsArray();
-                NativeArray<int> sectorToFlowStartTable = _pathContainer.SectorToFlowStartTables[req.PathIndex];
-                NativeArray<FlowData> calculationBuffer = pathInternalData.FlowFieldCalculationBuffer.AsArray();
-                for(int j = 0; j < flowCalculatedSectorIndicies.Length; j++)
-                {
-                    int sectorIndex = flowCalculatedSectorIndicies[j];
-                    int sectorFlowStartIndex = sectorToFlowStartTable[sectorIndex];
-                    NativeSlice<FlowData> fromSlice = new NativeSlice<FlowData>(calculationBuffer, j * sectorTileAmount, sectorTileAmount);
-                    Transfer(fromSlice, pathFlowData.FlowField, sectorFlowStartIndex);
-                    sectorToFlowMapper.TryAdd(req.PathIndex, sectorIndex, sectorFlowStartIndex);
-                }
-            }
-
-            void Transfer(NativeSlice<FlowData> fromSlice, UnsafeList<FlowData> toList, int listStartIndex)
-            {
-                for(int i = 0; i < fromSlice.Length; i++)
-                {
-                    toList[listStartIndex + i] = fromSlice[i];
-                }
-            }
-        }
-        void RefreshResizedFlowFieldLengths(NativeArray<PortalTraversalRequest> portalTraversalRequestedPaths)
-        {
-            List<PathfindingInternalData> pathfindingInternalDataList = _pathContainer.PathfindingInternalDataList;
-            NativeList<PathFlowData> flowDataList = _pathContainer.PathFlowDataList;
-            for (int i = 0; i < portalTraversalRequestedPaths.Length; i++)
-            {
-                PortalTraversalRequest request = portalTraversalRequestedPaths[i];
-                int pathIndex = request.PathIndex;
-                PathfindingInternalData pathInternalData = pathfindingInternalDataList[pathIndex];
-                PathFlowData flowData = flowDataList[pathIndex];
-
-                UnsafeList<FlowData> flowfield = flowData.FlowField;
-                flowfield.Resize(pathInternalData.IntegrationField.Length, NativeArrayOptions.ClearMemory);
-                flowData.FlowField = flowfield;
-
-                UnsafeLOSBitmap losmap = flowData.LOSMap;
-                losmap.Resize(pathInternalData.IntegrationField.Length, NativeArrayOptions.ClearMemory);
-                flowData.LOSMap = losmap;
-
-                flowDataList[pathIndex] = flowData;
-            }
-        }
     }
 
 

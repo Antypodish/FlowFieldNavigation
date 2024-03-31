@@ -122,45 +122,5 @@ namespace FlowFieldNavigation
                 return sectorIndex.x < FlowFieldUtilities.SectorMatrixColAmount && sectorIndex.x >= 0 && sectorIndex.y < FlowFieldUtilities.SectorMatrixRowAmount && sectorIndex.y >= 0;
             }
         }
-
-        internal void ForceComplete(NativeList<int> pathIndiciesOfScheduledDynamicAreas)
-        {
-            List<PathfindingInternalData> pathfindingInternalDataList = _pathContainer.PathfindingInternalDataList;
-            NativeList<PathLocationData> pathLocationDataList = _pathContainer.PathLocationDataList;
-            NativeList<PathFlowData> pathFlowDataList = _pathContainer.PathFlowDataList;
-            NativeList<JobHandle> handles = new NativeList<JobHandle>(Allocator.Temp);
-            for (int i = 0; i < pathIndiciesOfScheduledDynamicAreas.Length; i++)
-            {
-                int pathIndex = pathIndiciesOfScheduledDynamicAreas[i];
-                PathfindingInternalData pathInternalData = pathfindingInternalDataList[pathIndex];
-                PathFlowData pathFlowData = pathFlowDataList[pathIndex];
-                PathLocationData pathLocationData = pathLocationDataList[pathIndex];
-
-                //COPY FLOW FIELD
-                UnsafeList<FlowData> flowField = pathFlowData.DynamicAreaFlowField;
-                UnsafeList<FlowData> flowCalculationBuffer = pathInternalData.DynamicArea.FlowFieldCalculationBuffer;
-                flowField.Resize(flowCalculationBuffer.Length, NativeArrayOptions.UninitializedMemory);
-                flowField.Length = flowCalculationBuffer.Length;
-                UnsafeListCopyJob<FlowData> copyJob = new UnsafeListCopyJob<FlowData>()
-                {
-                    Destination = flowField,
-                    Source = flowCalculationBuffer,
-                };
-                handles.Add(copyJob.Schedule());
-
-                //COPY SECTOR FLOW STARTS
-                UnsafeList<SectorFlowStart> sectorFlowStarts = pathLocationData.DynamicAreaPickedSectorFlowStarts;
-                UnsafeList<SectorFlowStart> sectorFlowStartCalculationBuffer = pathInternalData.DynamicArea.SectorFlowStartCalculationBuffer;
-                sectorFlowStarts.Length = sectorFlowStartCalculationBuffer.Length;
-                sectorFlowStarts.CopyFrom(sectorFlowStartCalculationBuffer);
-
-                //SEND DATA BACK
-                pathLocationData.DynamicAreaPickedSectorFlowStarts = sectorFlowStarts;
-                pathLocationDataList[pathIndex] = pathLocationData;
-                pathFlowData.DynamicAreaFlowField = flowField;
-                pathFlowDataList[pathIndex] = pathFlowData;
-            }
-            JobHandle.CompleteAll(handles.AsArray());
-        }
     }
 }

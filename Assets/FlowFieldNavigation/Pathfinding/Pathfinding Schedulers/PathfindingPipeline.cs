@@ -13,6 +13,7 @@ namespace FlowFieldNavigation
         LOSIntegrationScheduler _losIntegrationScheduler;
         DynamicAreaScheduler _dynamicAreaScheduler;
         FlowCalculationScheduler _flowCalculationScheduler;
+        PathfindingDataExposer _pathfindingDataExposer;
         NativeArray<float2> _sources;
         NativeList<PortalTraversalRequest> _porTravRequestedPathList;
         NativeList<FlowRequest> _flowRequestedPathList;
@@ -27,6 +28,7 @@ namespace FlowFieldNavigation
             _dynamicAreaScheduler = new DynamicAreaScheduler(navManager);
             _portalTraversalScheduler = new PortalTraversalScheduler(navManager, _requestedSectorCalculationScheduler);
             _flowCalculationScheduler = new FlowCalculationScheduler(navManager, _losIntegrationScheduler);
+            _pathfindingDataExposer = new PathfindingDataExposer(_navManager.PathDataContainer);
             _porTravRequestedPathList = new NativeList<PortalTraversalRequest>(Allocator.Persistent);
             _flowRequestedPathList = new NativeList<FlowRequest>(Allocator.Persistent);
             _losRequestedPathList = new NativeList<LosRequest>(Allocator.Persistent);
@@ -91,9 +93,18 @@ namespace FlowFieldNavigation
         {
             Complete(false);
         }
-        internal void ForceComplete()
+        internal void ForceComplete(NativeArray<int> destinationUpdatedPathIndicies, NativeArray<int> newPathIndicies, NativeArray<int> expandedPathIndicies)
         {
             Complete(true);
+            _pathfindingDataExposer.Expose(_goalUpdateRequestedPathList.AsArray(),
+                _porTravRequestedPathList.AsArray(),
+                _losIntegrationScheduler._losCalculatedPaths.AsArray(),
+                _flowRequestedPathList.AsArray(),
+                destinationUpdatedPathIndicies,
+                newPathIndicies,
+                expandedPathIndicies
+                );
+            _losIntegrationScheduler._losCalculatedPaths.Clear();
         }
 
         void Complete(bool forceComplete)
@@ -113,10 +124,7 @@ namespace FlowFieldNavigation
             if(_stateHandle.State == PathfindingPipelineState.Final && forceComplete)
             {
                 _stateHandle.Handle.Complete();
-                _dynamicAreaScheduler.ForceComplete(_goalUpdateRequestedPathList);
-                _flowCalculationScheduler.ForceComplete(_flowRequestedPathList.AsArray(), _porTravRequestedPathList.AsArray());
             }
-
         }
     }
 }

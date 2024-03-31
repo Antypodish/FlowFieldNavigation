@@ -510,8 +510,7 @@ namespace FlowFieldNavigation
                 CompletePathEvaluation();
                 _pathfindingTaskOrganizationHandle.Clear();
             }
-            _pathfindingPipeline.ForceComplete();
-            _pathContainer.ExposeBuffers(_destinationUpdatedPathIndicies.AsArray(), _newPathIndicies.AsArray(), _expandedPathIndicies.AsArray());
+            _pathfindingPipeline.ForceComplete(_destinationUpdatedPathIndicies.AsArray(), _newPathIndicies.AsArray(), _expandedPathIndicies.AsArray());
         }
         internal void TransferNewPathsToCurPaths()
         {
