@@ -9,10 +9,10 @@ namespace FlowFieldNavigation
     internal class PathDataContainer
     {
         internal NativeList<FlowData> ExposedFlowData;
-        internal PathSectorToFlowStartMapper NewSectorFlowStartMap;
+        internal NativeList<bool> ExposedLosData;
+        internal PathSectorToFlowStartMapper SectorFlowStartMap;
 
         internal NativeList<PathFlowData> ExposedPathFlowData;
-        internal PathSectorToFlowStartMapper PathSectorToFlowStartMapper;
         internal NativeList<PathLocationData> ExposedPathLocationData;
         internal NativeList<float2> ExposedPathDestinations;
         internal NativeList<int> ExposedPathFlockIndicies;
@@ -52,7 +52,6 @@ namespace FlowFieldNavigation
             TargetSectorIntegrationList = new NativeList<UnsafeList<float>>(Allocator.Persistent);
             PathRoutineDataList = new NativeList<PathRoutineData>(Allocator.Persistent);
             PathSectorBitArrays = new NativeList<SectorBitArray>(Allocator.Persistent);
-            PathSectorToFlowStartMapper = new PathSectorToFlowStartMapper(0, Allocator.Persistent);
             SectorToFlowStartTables = new List<NativeArray<int>>();
 
             ExposedPathDestinations = new NativeList<float2>(Allocator.Persistent);
@@ -65,7 +64,8 @@ namespace FlowFieldNavigation
             SectorOverlappingDirectionTableList = new List<NativeArray<OverlappingDirection>>();
 
             ExposedFlowData = new NativeList<FlowData>(Allocator.Persistent);
-            NewSectorFlowStartMap = new PathSectorToFlowStartMapper(0, Allocator.Persistent);
+            SectorFlowStartMap = new PathSectorToFlowStartMapper(0, Allocator.Persistent);
+            ExposedLosData = new NativeList<bool>(Allocator.Persistent);
         }
         internal void DisposeAll()
         {
@@ -105,13 +105,11 @@ namespace FlowFieldNavigation
                     UnsafeList<PathSectorState> sectorStateTable = PathSectorStateTableList[i];
                     PathPortalTraversalData portalTraversalData = PathPortalTraversalDataList[i];
                     UnsafeList<float> targetSectorIntegration = TargetSectorIntegrationList[i];
-                    PathDestinationData destinationData = PathDestinationDataList[i];
                     SectorBitArray sectorBitArray = PathSectorBitArrays[i];
                     NativeArray<OverlappingDirection> sectorOverlappingDirections = SectorOverlappingDirectionTableList[i];
                     NativeArray<int> sectorToFlowStartTable = SectorToFlowStartTables[i];
                     RemoveFromPathSectorToFlowStartMapper(internalData.PickedSectorList.AsArray(), i);
                     sectorOverlappingDirections.Dispose();
-                    flowData.Dispose();
                     portalTraversalData.GoalDataList.Dispose();
                     internalData.SectorToWaveFrontsMap.Dispose();
                     internalData.IntegrationField.Dispose();
@@ -155,8 +153,7 @@ namespace FlowFieldNavigation
             for(int i = 0; i < pickedSectorList.Length; i++)
             {
                 int sector = pickedSectorList[i];
-                PathSectorToFlowStartMapper.TryRemove(pathIndex, sector);
-                NewSectorFlowStartMap.TryRemove(pathIndex, sector);
+                SectorFlowStartMap.TryRemove(pathIndex, sector);
             }
         }
         internal void ExposeBuffers(NativeArray<int> destinationUpdatedPathIndicies, NativeArray<int> newPathIndicies, NativeArray<int> expandedPathIndicies)
@@ -224,7 +221,6 @@ namespace FlowFieldNavigation
 
             PathFlowData flowData = new PathFlowData()
             {
-                LOSMap = new UnsafeLOSBitmap(0, Allocator.Persistent, NativeArrayOptions.ClearMemory),
                 DynamicAreaFlowField = preallocations.DynamicAreaFlowField,
             };
 

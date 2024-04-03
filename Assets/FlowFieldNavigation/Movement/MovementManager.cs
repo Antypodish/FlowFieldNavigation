@@ -87,9 +87,9 @@ namespace FlowFieldNavigation
             NativeArray<int> exposedPathFlockIndicies = _navigationManager.PathDataContainer.ExposedPathFlockIndicies.AsArray();
             NativeArray<PathState> exposedPathStateList = _navigationManager.PathDataContainer.ExposedPathStateList.AsArray();
             NativeArray<bool> exposedPathAgentStopFlagList = _navigationManager.PathDataContainer.ExposedPathAgentStopFlagList.AsArray();
-            PathSectorToFlowStartMapper flowStartMap = _navigationManager.PathDataContainer.PathSectorToFlowStartMapper;
             NativeArray<FlowData> exposedFlowData = _navigationManager.PathDataContainer.ExposedFlowData.AsArray();
-            PathSectorToFlowStartMapper newFlowStartMap = _navigationManager.PathDataContainer.NewSectorFlowStartMap;
+            PathSectorToFlowStartMapper newFlowStartMap = _navigationManager.PathDataContainer.SectorFlowStartMap;
+            NativeArray<bool> exposedLosData = _navigationManager.PathDataContainer.ExposedLosData.AsArray();
             //CLEAR
             AgentMovementDataList.Clear();
             AgentPositionChangeBuffer.Clear();
@@ -168,7 +168,7 @@ namespace FlowFieldNavigation
                 SectorColAmount = FlowFieldUtilities.SectorColAmount,
                 AgentMovementData = AgentMovementDataList.AsArray(),
                 FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
-                FlowStartMap = flowStartMap,
+                ExposedLosData = exposedLosData,
                 NewFlowStartMap = newFlowStartMap,
                 ExposedFlowData = exposedFlowData,
             };

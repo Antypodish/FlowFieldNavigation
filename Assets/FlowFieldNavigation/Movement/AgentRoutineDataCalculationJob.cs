@@ -24,10 +24,10 @@ namespace FlowFieldNavigation
         [ReadOnly] internal NativeArray<PathFlowData> ExposedPathFlowDataArray;
         [ReadOnly] internal NativeArray<float2> ExposedPathDestinationArray;
         [ReadOnly] internal NativeArray<int> HashedToNormal;
-        [ReadOnly] internal PathSectorToFlowStartMapper FlowStartMap;
         internal NativeArray<AgentMovementData> AgentMovementData;
 
         [ReadOnly] internal NativeArray<FlowData> ExposedFlowData;
+        [ReadOnly] internal NativeArray<bool> ExposedLosData;
         [ReadOnly] internal PathSectorToFlowStartMapper NewFlowStartMap;
         public void Execute(int index)
         {
@@ -63,8 +63,7 @@ namespace FlowFieldNavigation
             float2 pathDestination = ExposedPathDestinationArray[agentCurPathIndex];
             PathLocationData pathLocationData = ExposedPathLocationDataArray[agentCurPathIndex];
             PathFlowData pathFlowData = ExposedPathFlowDataArray[agentCurPathIndex];
-            UnsafeLOSBitmap losMap = pathFlowData.LOSMap;
-            bool succesfull = FlowStartMap.TryGet(agentCurPathIndex, agentSector1d, out int agentSectorFlowStart);
+            bool succesfull = NewFlowStartMap.TryGet(agentCurPathIndex, agentSector1d, out int agentSectorFlowStart);
             if (!succesfull)
             {
                 data.PathId = agentCurPathIndex;
@@ -76,7 +75,7 @@ namespace FlowFieldNavigation
 
             float2 flow = float2.zero;
             data.AlignmentMultiplierPercentage = 1f;
-            if (losMap.IsLOS(agentSectorFlowStart + local1d))
+            if (ExposedLosData[agentSectorFlowStart + local1d])
             {
                 float2 posToDestination = pathDestination - agentPos;
                 float distanceBetweenDestination = math.length(posToDestination);
@@ -91,9 +90,9 @@ namespace FlowFieldNavigation
                 FlowData flowData = pathFlowData.DynamicAreaFlowField[dynamicSectorFlowStart + local1d];
                 flow = math.select(data.DesiredDirection, flowData.GetFlow(TileSize), flowData.IsValid());
             }
-            else if(NewFlowStartMap.TryGet(agentCurPathIndex, agentSector1d, out int newAgentSectorFlowStart))
+            else
             {
-                FlowData flowData = ExposedFlowData[newAgentSectorFlowStart + local1d];
+                FlowData flowData = ExposedFlowData[agentSectorFlowStart + local1d];
                 flow = math.select(data.DesiredDirection, flowData.GetFlow(TileSize), flowData.IsValid());
             }
 

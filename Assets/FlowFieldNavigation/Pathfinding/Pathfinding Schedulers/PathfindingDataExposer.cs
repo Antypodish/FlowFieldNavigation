@@ -32,8 +32,7 @@ namespace FlowFieldNavigation
         void ScheduleFlowTransfers(NativeArray<FlowRequest> flowRequests)
         {
             int sectorTileAmount = FlowFieldUtilities.SectorTileAmount;
-            PathSectorToFlowStartMapper sectorToFlowMapper = _pathContainer.PathSectorToFlowStartMapper;
-            PathSectorToFlowStartMapper newFlowStartMap = _pathContainer.NewSectorFlowStartMap;
+            PathSectorToFlowStartMapper newFlowStartMap = _pathContainer.SectorFlowStartMap;
             NativeList<FlowData> exposedFlowData = _pathContainer.ExposedFlowData;
             for (int i = 0; i < flowRequests.Length; i++)
             {
@@ -48,8 +47,6 @@ namespace FlowFieldNavigation
                     newFlowStartMap.TryGet(req.PathIndex, sectorIndex, out int newSectorFlowStartIndex);
                     NativeSlice<FlowData> fromSlice = new NativeSlice<FlowData>(calculationBuffer, j * sectorTileAmount, sectorTileAmount);
                     Transfer(fromSlice, exposedFlowData.AsArray(), newSectorFlowStartIndex);
-                    int sectorFlowStartIndex = sectorToFlowStartTable[sectorIndex];
-                    sectorToFlowMapper.TryAdd(req.PathIndex, sectorIndex, sectorFlowStartIndex);
                 }
             }
 
@@ -64,14 +61,14 @@ namespace FlowFieldNavigation
         internal void ScheduleLOSTransfers(NativeArray<int> _losCalculatedPaths)
         {
             List<PathfindingInternalData> internalDataList = _pathContainer.PathfindingInternalDataList;
-            NativeList<PathFlowData> pathFlowDataList = _pathContainer.PathFlowDataList;
             NativeList<PathDestinationData> pathDestinationDataList = _pathContainer.PathDestinationDataList;
+            PathSectorToFlowStartMapper newFlowStartMap = _pathContainer.SectorFlowStartMap;
+            NativeArray<bool> exposedLosData = _pathContainer.ExposedLosData.AsArray();
             for (int i = 0; i < _losCalculatedPaths.Length; i++)
             {
                 int pathIndex = _losCalculatedPaths[i];
                 PathfindingInternalData internalData = internalDataList[pathIndex];
                 PathDestinationData destinationData = pathDestinationDataList[pathIndex];
-                PathFlowData flowData = pathFlowDataList[pathIndex];
                 NativeArray<int> sectorToFlowStartTable = _pathContainer.SectorToFlowStartTables[pathIndex];
                 LOSTransferJob losTransfer = new LOSTransferJob()
                 {
@@ -80,8 +77,10 @@ namespace FlowFieldNavigation
                     SectorMatrixRowAmount = FlowFieldUtilities.SectorMatrixRowAmount,
                     SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
                     LOSRange = FlowFieldUtilities.LOSRange,
-                    SectorToPickedTable = sectorToFlowStartTable,
-                    LOSBitmap = flowData.LOSMap,
+                    PathIndex = pathIndex,
+                    SectorFlowStartTable = sectorToFlowStartTable,
+                    FlowStartMap = newFlowStartMap,
+                    LosArray = exposedLosData,
                     IntegrationField = internalData.IntegrationField.AsArray(),
                     Target = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition),
                 };
@@ -91,11 +90,10 @@ namespace FlowFieldNavigation
         void RefreshResizedFlowFieldLengths(NativeArray<PortalTraversalRequest> portalTraversalRequestedPaths)
         {
             List<PathfindingInternalData> pathfindingInternalDataList = _pathContainer.PathfindingInternalDataList;
-            NativeList<PathFlowData> flowDataList = _pathContainer.PathFlowDataList;
-
             List<PathPortalTraversalData> pathPorTravDataList = _pathContainer.PathPortalTraversalDataList;
-            PathSectorToFlowStartMapper newFlowStartMap = _pathContainer.NewSectorFlowStartMap;
+            PathSectorToFlowStartMapper newFlowStartMap = _pathContainer.SectorFlowStartMap;
             NativeList<FlowData> exposedFlowData = _pathContainer.ExposedFlowData;
+            NativeList<bool> exposedLosData = _pathContainer.ExposedLosData;
             for (int i = 0; i < portalTraversalRequestedPaths.Length; i++)
             {
                 PortalTraversalRequest request = portalTraversalRequestedPaths[i];
@@ -107,22 +105,9 @@ namespace FlowFieldNavigation
                     if(newFlowStartMap.TryAdd(pathIndex, allPickedSectors[j], exposedFlowData.Length))
                     {
                         exposedFlowData.Length += FlowFieldUtilities.SectorTileAmount;
+                        exposedLosData.Length += FlowFieldUtilities.SectorTileAmount;
                     }
                 }
-            }
-
-            for (int i = 0; i < portalTraversalRequestedPaths.Length; i++)
-            {
-                PortalTraversalRequest request = portalTraversalRequestedPaths[i];
-                int pathIndex = request.PathIndex;
-                PathfindingInternalData pathInternalData = pathfindingInternalDataList[pathIndex];
-                PathFlowData flowData = flowDataList[pathIndex];
-
-                UnsafeLOSBitmap losmap = flowData.LOSMap;
-                losmap.Resize(pathInternalData.IntegrationField.Length, NativeArrayOptions.ClearMemory);
-                flowData.LOSMap = losmap;
-
-                flowDataList[pathIndex] = flowData;
             }
         }
         void ExposeDynamicArea(NativeArray<int> pathIndiciesOfScheduledDynamicAreas)

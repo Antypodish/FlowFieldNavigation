@@ -448,17 +448,12 @@ namespace FlowFieldNavigation
             int pathIndex = agent.GetPathIndex();
             if (pathIndex == -1) { return; }
 
-            PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathIndex];   
-            PathDestinationData destinationData = _navigationManager.PathDataContainer.PathDestinationDataList[pathIndex];
-            PathLocationData locationData = _navigationManager.PathDataContainer.PathLocationDataList[pathIndex];
-            PathFlowData pathFlowData = _navigationManager.PathDataContainer.PathFlowDataList[pathIndex];
-            NativeArray<int> sectorFlowStartTable = _navigationManager.PathDataContainer.SectorToFlowStartTables[pathIndex];
-            UnsafeLOSBitmap losmap = pathFlowData.LOSMap;
-            UnsafeList<SectorFlowStart> dynamicAreaFlowStarts = locationData.DynamicAreaPickedSectorFlowStarts;
-            UnsafeList<FlowData> dynamicAreaFlowField = internalData.DynamicArea.FlowFieldCalculationBuffer;
-
+            float2 destination = _navigationManager.PathDataContainer.PathDestinationDataList[pathIndex].Destination;
+            UnsafeList<SectorFlowStart> dynamicAreaFlowStarts = _navigationManager.PathDataContainer.PathLocationDataList[pathIndex].DynamicAreaPickedSectorFlowStarts;
+            UnsafeList<FlowData> dynamicAreaFlowField = _pathContainer.PathfindingInternalDataList[pathIndex].DynamicArea.FlowFieldCalculationBuffer;
             NativeArray<FlowData> exposedFlowData = _pathContainer.ExposedFlowData.AsArray();
-            PathSectorToFlowStartMapper newFlowStartMap = _pathContainer.NewSectorFlowStartMap;
+            NativeArray<bool> exposedLosData = _pathContainer.ExposedLosData.AsArray();
+            PathSectorToFlowStartMapper newFlowStartMap = _pathContainer.SectorFlowStartMap;
             NativeArray<ulong> keys = newFlowStartMap.Map.GetKeyArray(Allocator.Temp);
             int sectorColAmount = FlowFieldUtilities.SectorColAmount;
             int sectorTileAmount = sectorColAmount * sectorColAmount;
@@ -476,11 +471,11 @@ namespace FlowFieldNavigation
                     float2 debugPos2 = FlowFieldUtilities.IndexToPos(general2d, _tileSize, FlowFieldUtilities.FieldGridStartPosition);
                     int general1d = FlowFieldUtilities.To1D(general2d, FlowFieldUtilities.FieldColAmount);
                     float3 debugPos = new float3(debugPos2.x, tileCenterHeights[general1d], debugPos2.y);
-                    if (HasLOS(sectorIndex, local1d))
+                    if (HasLOS(newSectorFlowStart, local1d))
                     {
                         Gizmos.color = Color.white;
                         DrawSquare(debugPos, 0.2f);
-                        DrawLOS(debugPos, destinationData.Destination);
+                        DrawLOS(debugPos, destination);
                     }
                     else if (HasDynamicFlow(sectorIndex, local1d))
                     {
@@ -500,9 +495,9 @@ namespace FlowFieldNavigation
                     }
                 }
             }
-            bool HasLOS(int sectorIndex, int localIndex)
+            bool HasLOS(int sectorLosStart, int localIndex)
             {
-                return losmap.IsLOS(sectorFlowStartTable[sectorIndex] + localIndex);
+                return exposedLosData[sectorLosStart + localIndex];
             }
             bool HasDynamicFlow(int sectorIndex, int localIndex)
             {

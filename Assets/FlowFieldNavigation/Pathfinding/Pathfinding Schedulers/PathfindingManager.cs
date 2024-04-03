@@ -145,7 +145,7 @@ namespace FlowFieldNavigation
             NativeArray<int> pathFlockIndexArray = _pathContainer.PathFlockIndicies.AsArray();
             NativeArray<int> pathSubscriberCountArray = _pathContainer.PathSubscriberCounts.AsArray();
             NativeArray<FlowData> exposedFlowData = _pathContainer.ExposedFlowData.AsArray();
-            PathSectorToFlowStartMapper flowStartMap = _pathContainer.NewSectorFlowStartMap;
+            PathSectorToFlowStartMapper flowStartMap = _pathContainer.SectorFlowStartMap;
 
             //Copy agent positions from transforms
             _agentPositions.Length = agentTransforms.length;
