@@ -33,25 +33,27 @@ namespace FlowFieldNavigation
         {
             int sectorTileAmount = FlowFieldUtilities.SectorTileAmount;
             PathSectorToFlowStartMapper sectorToFlowMapper = _pathContainer.PathSectorToFlowStartMapper;
+            PathSectorToFlowStartMapper newFlowStartMap = _pathContainer.NewSectorFlowStartMap;
+            NativeList<FlowData> exposedFlowData = _pathContainer.ExposedFlowData;
             for (int i = 0; i < flowRequests.Length; i++)
             {
                 FlowRequest req = flowRequests[i];
                 PathfindingInternalData pathInternalData = _pathContainer.PathfindingInternalDataList[req.PathIndex];
-                PathFlowData pathFlowData = _pathContainer.PathFlowDataList[req.PathIndex];
                 NativeArray<int> flowCalculatedSectorIndicies = pathInternalData.SectorIndiciesToCalculateFlow.AsArray();
                 NativeArray<int> sectorToFlowStartTable = _pathContainer.SectorToFlowStartTables[req.PathIndex];
                 NativeArray<FlowData> calculationBuffer = pathInternalData.FlowFieldCalculationBuffer.AsArray();
                 for (int j = 0; j < flowCalculatedSectorIndicies.Length; j++)
                 {
                     int sectorIndex = flowCalculatedSectorIndicies[j];
-                    int sectorFlowStartIndex = sectorToFlowStartTable[sectorIndex];
+                    newFlowStartMap.TryGet(req.PathIndex, sectorIndex, out int newSectorFlowStartIndex);
                     NativeSlice<FlowData> fromSlice = new NativeSlice<FlowData>(calculationBuffer, j * sectorTileAmount, sectorTileAmount);
-                    Transfer(fromSlice, pathFlowData.FlowField, sectorFlowStartIndex);
+                    Transfer(fromSlice, exposedFlowData.AsArray(), newSectorFlowStartIndex);
+                    int sectorFlowStartIndex = sectorToFlowStartTable[sectorIndex];
                     sectorToFlowMapper.TryAdd(req.PathIndex, sectorIndex, sectorFlowStartIndex);
                 }
             }
 
-            void Transfer(NativeSlice<FlowData> fromSlice, UnsafeList<FlowData> toList, int listStartIndex)
+            void Transfer(NativeSlice<FlowData> fromSlice, NativeArray<FlowData> toList, int listStartIndex)
             {
                 for (int i = 0; i < fromSlice.Length; i++)
                 {
@@ -90,16 +92,31 @@ namespace FlowFieldNavigation
         {
             List<PathfindingInternalData> pathfindingInternalDataList = _pathContainer.PathfindingInternalDataList;
             NativeList<PathFlowData> flowDataList = _pathContainer.PathFlowDataList;
+
+            List<PathPortalTraversalData> pathPorTravDataList = _pathContainer.PathPortalTraversalDataList;
+            PathSectorToFlowStartMapper newFlowStartMap = _pathContainer.NewSectorFlowStartMap;
+            NativeList<FlowData> exposedFlowData = _pathContainer.ExposedFlowData;
+            for (int i = 0; i < portalTraversalRequestedPaths.Length; i++)
+            {
+                PortalTraversalRequest request = portalTraversalRequestedPaths[i];
+                int pathIndex = request.PathIndex;
+                NativeArray<int> allPickedSectors = pathfindingInternalDataList[pathIndex].PickedSectorList.AsArray();
+                int newPickedSectorStartIndex = pathPorTravDataList[pathIndex].NewPickedSectorStartIndex.Value;
+                for(int j = newPickedSectorStartIndex; j < allPickedSectors.Length; j++)
+                {
+                    if(newFlowStartMap.TryAdd(pathIndex, allPickedSectors[j], exposedFlowData.Length))
+                    {
+                        exposedFlowData.Length += FlowFieldUtilities.SectorTileAmount;
+                    }
+                }
+            }
+
             for (int i = 0; i < portalTraversalRequestedPaths.Length; i++)
             {
                 PortalTraversalRequest request = portalTraversalRequestedPaths[i];
                 int pathIndex = request.PathIndex;
                 PathfindingInternalData pathInternalData = pathfindingInternalDataList[pathIndex];
                 PathFlowData flowData = flowDataList[pathIndex];
-
-                UnsafeList<FlowData> flowfield = flowData.FlowField;
-                flowfield.Resize(pathInternalData.IntegrationField.Length, NativeArrayOptions.ClearMemory);
-                flowData.FlowField = flowfield;
 
                 UnsafeLOSBitmap losmap = flowData.LOSMap;
                 losmap.Resize(pathInternalData.IntegrationField.Length, NativeArrayOptions.ClearMemory);

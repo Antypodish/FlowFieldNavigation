@@ -26,6 +26,9 @@ namespace FlowFieldNavigation
         [ReadOnly] internal NativeArray<int> HashedToNormal;
         [ReadOnly] internal PathSectorToFlowStartMapper FlowStartMap;
         internal NativeArray<AgentMovementData> AgentMovementData;
+
+        [ReadOnly] internal NativeArray<FlowData> ExposedFlowData;
+        [ReadOnly] internal PathSectorToFlowStartMapper NewFlowStartMap;
         public void Execute(int index)
         {
             //FIRST
@@ -71,7 +74,7 @@ namespace FlowFieldNavigation
                 return;
             }
 
-            float2 flow;
+            float2 flow = float2.zero;
             data.AlignmentMultiplierPercentage = 1f;
             if (losMap.IsLOS(agentSectorFlowStart + local1d))
             {
@@ -88,9 +91,9 @@ namespace FlowFieldNavigation
                 FlowData flowData = pathFlowData.DynamicAreaFlowField[dynamicSectorFlowStart + local1d];
                 flow = math.select(data.DesiredDirection, flowData.GetFlow(TileSize), flowData.IsValid());
             }
-            else
+            else if(NewFlowStartMap.TryGet(agentCurPathIndex, agentSector1d, out int newAgentSectorFlowStart))
             {
-                FlowData flowData = pathFlowData.FlowField[agentSectorFlowStart + local1d];
+                FlowData flowData = ExposedFlowData[newAgentSectorFlowStart + local1d];
                 flow = math.select(data.DesiredDirection, flowData.GetFlow(TileSize), flowData.IsValid());
             }
 

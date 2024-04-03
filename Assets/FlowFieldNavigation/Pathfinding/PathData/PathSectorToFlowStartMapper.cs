@@ -46,5 +46,18 @@ namespace FlowFieldNavigation
             key |= (ulong)sectorIndex;
             return Map.Remove(key);
         }
+        internal static void KeyToPathSector(ulong key, out int pathIndex, out int sectorIndex)
+        {
+            sectorIndex = (int) key;
+            pathIndex = (int) (key >> 32);
+        }
+        internal static ulong PathSectorToKey(int pathIndex, int sectorIndex)
+        {
+            ulong key = 0;
+            key |= (ulong)pathIndex;
+            key <<= 32;
+            key |= (ulong)sectorIndex;
+            return key;
+        }
     }
 }

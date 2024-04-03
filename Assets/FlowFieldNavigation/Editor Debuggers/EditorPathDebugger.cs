@@ -453,41 +453,45 @@ namespace FlowFieldNavigation
             PathLocationData locationData = _navigationManager.PathDataContainer.PathLocationDataList[pathIndex];
             PathFlowData pathFlowData = _navigationManager.PathDataContainer.PathFlowDataList[pathIndex];
             NativeArray<int> sectorFlowStartTable = _navigationManager.PathDataContainer.SectorToFlowStartTables[pathIndex];
-            float yOffset = 0.2f;
-            UnsafeList<FlowData> flowField = pathFlowData.FlowField;
             UnsafeLOSBitmap losmap = pathFlowData.LOSMap;
             UnsafeList<SectorFlowStart> dynamicAreaFlowStarts = locationData.DynamicAreaPickedSectorFlowStarts;
             UnsafeList<FlowData> dynamicAreaFlowField = internalData.DynamicArea.FlowFieldCalculationBuffer;
+
+            NativeArray<FlowData> exposedFlowData = _pathContainer.ExposedFlowData.AsArray();
+            PathSectorToFlowStartMapper newFlowStartMap = _pathContainer.NewSectorFlowStartMap;
+            NativeArray<ulong> keys = newFlowStartMap.Map.GetKeyArray(Allocator.Temp);
             int sectorColAmount = FlowFieldUtilities.SectorColAmount;
             int sectorTileAmount = sectorColAmount * sectorColAmount;
-            for (int i = 0; i < sectorFlowStartTable.Length; i++)
+
+            for(int i = 0; i < keys.Length; i++)
             {
-                if (sectorFlowStartTable[i] == 0) { continue; }
-                int pickedStartIndex = sectorFlowStartTable[i];
-                for (int j = pickedStartIndex; j < pickedStartIndex + sectorTileAmount; j++)
+                ulong key = keys[i];
+                PathSectorToFlowStartMapper.KeyToPathSector(key, out int curPathIndex, out int sectorIndex);
+                if(curPathIndex != pathIndex) { continue; }
+                newFlowStartMap.TryGet(curPathIndex, sectorIndex, out int newSectorFlowStart);
+                for (int j = newSectorFlowStart; j < newSectorFlowStart + sectorTileAmount; j++)
                 {
-                    int local1d = (j - 1) % sectorTileAmount;
-                    int2 general2d = FlowFieldUtilities.GetGeneral2d(local1d, i, FlowFieldUtilities.SectorMatrixColAmount, sectorColAmount);
+                    int local1d = j % sectorTileAmount;
+                    int2 general2d = FlowFieldUtilities.GetGeneral2d(local1d, sectorIndex, FlowFieldUtilities.SectorMatrixColAmount, sectorColAmount);
                     float2 debugPos2 = FlowFieldUtilities.IndexToPos(general2d, _tileSize, FlowFieldUtilities.FieldGridStartPosition);
                     int general1d = FlowFieldUtilities.To1D(general2d, FlowFieldUtilities.FieldColAmount);
                     float3 debugPos = new float3(debugPos2.x, tileCenterHeights[general1d], debugPos2.y);
-                    if (j >= flowField.Length) { continue; }
-                    if (HasLOS(i, local1d))
+                    if (HasLOS(sectorIndex, local1d))
                     {
                         Gizmos.color = Color.white;
                         DrawSquare(debugPos, 0.2f);
                         DrawLOS(debugPos, destinationData.Destination);
                     }
-                    else if (HasDynamicFlow(i, local1d))
+                    else if (HasDynamicFlow(sectorIndex, local1d))
                     {
                         Gizmos.color = Color.blue;
                         DrawSquare(debugPos, 0.2f);
-                        DrawFlow(GetDynamicFlow(i, local1d), debugPos);
+                        DrawFlow(GetDynamicFlow(sectorIndex, local1d), debugPos);
                     }
                     else
                     {
                         Gizmos.color = Color.black;
-                        FlowData flowData = GetFlow(i, local1d);
+                        FlowData flowData = GetFlow(newSectorFlowStart, local1d);
                         if (flowData.IsValid())
                         {
                             DrawSquare(debugPos, 0.2f);
@@ -513,9 +517,9 @@ namespace FlowFieldNavigation
                 return dynamicAreaFlowField[sectorFlowStart + localIndex].IsValid();
             }
 
-            FlowData GetFlow(int sectorIndex, int localIndex)
+            FlowData GetFlow(int sectorFlowStart, int localIndex)
             {
-                return flowField[sectorFlowStartTable[sectorIndex] + localIndex];
+                return exposedFlowData[sectorFlowStart + localIndex];
             }
 
             FlowData GetDynamicFlow(int sectorIndex, int localIndex)

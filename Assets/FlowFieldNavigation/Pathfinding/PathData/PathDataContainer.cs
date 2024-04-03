@@ -8,6 +8,9 @@ namespace FlowFieldNavigation
 {
     internal class PathDataContainer
     {
+        internal NativeList<FlowData> ExposedFlowData;
+        internal PathSectorToFlowStartMapper NewSectorFlowStartMap;
+
         internal NativeList<PathFlowData> ExposedPathFlowData;
         internal PathSectorToFlowStartMapper PathSectorToFlowStartMapper;
         internal NativeList<PathLocationData> ExposedPathLocationData;
@@ -60,6 +63,9 @@ namespace FlowFieldNavigation
             ExposedPathReachDistanceCheckRanges = new NativeList<float>(Allocator.Persistent);
             ExposedPathAgentStopFlagList = new NativeList<bool>(Allocator.Persistent);
             SectorOverlappingDirectionTableList = new List<NativeArray<OverlappingDirection>>();
+
+            ExposedFlowData = new NativeList<FlowData>(Allocator.Persistent);
+            NewSectorFlowStartMap = new PathSectorToFlowStartMapper(0, Allocator.Persistent);
         }
         internal void DisposeAll()
         {
@@ -106,7 +112,6 @@ namespace FlowFieldNavigation
                     RemoveFromPathSectorToFlowStartMapper(internalData.PickedSectorList.AsArray(), i);
                     sectorOverlappingDirections.Dispose();
                     flowData.Dispose();
-                    flowData.FlowField.Dispose();
                     portalTraversalData.GoalDataList.Dispose();
                     internalData.SectorToWaveFrontsMap.Dispose();
                     internalData.IntegrationField.Dispose();
@@ -151,6 +156,7 @@ namespace FlowFieldNavigation
             {
                 int sector = pickedSectorList[i];
                 PathSectorToFlowStartMapper.TryRemove(pathIndex, sector);
+                NewSectorFlowStartMap.TryRemove(pathIndex, sector);
             }
         }
         internal void ExposeBuffers(NativeArray<int> destinationUpdatedPathIndicies, NativeArray<int> newPathIndicies, NativeArray<int> expandedPathIndicies)
@@ -219,7 +225,6 @@ namespace FlowFieldNavigation
             PathFlowData flowData = new PathFlowData()
             {
                 LOSMap = new UnsafeLOSBitmap(0, Allocator.Persistent, NativeArrayOptions.ClearMemory),
-                FlowField = new UnsafeList<FlowData>(0, Allocator.Persistent),
                 DynamicAreaFlowField = preallocations.DynamicAreaFlowField,
             };
 

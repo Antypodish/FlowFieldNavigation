@@ -88,6 +88,8 @@ namespace FlowFieldNavigation
             NativeArray<PathState> exposedPathStateList = _navigationManager.PathDataContainer.ExposedPathStateList.AsArray();
             NativeArray<bool> exposedPathAgentStopFlagList = _navigationManager.PathDataContainer.ExposedPathAgentStopFlagList.AsArray();
             PathSectorToFlowStartMapper flowStartMap = _navigationManager.PathDataContainer.PathSectorToFlowStartMapper;
+            NativeArray<FlowData> exposedFlowData = _navigationManager.PathDataContainer.ExposedFlowData.AsArray();
+            PathSectorToFlowStartMapper newFlowStartMap = _navigationManager.PathDataContainer.NewSectorFlowStartMap;
             //CLEAR
             AgentMovementDataList.Clear();
             AgentPositionChangeBuffer.Clear();
@@ -167,6 +169,8 @@ namespace FlowFieldNavigation
                 AgentMovementData = AgentMovementDataList.AsArray(),
                 FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
                 FlowStartMap = flowStartMap,
+                NewFlowStartMap = newFlowStartMap,
+                ExposedFlowData = exposedFlowData,
             };
             JobHandle movDataHandle = routineDataCalcJob.Schedule(routineDataCalcJob.AgentMovementData.Length, 64, spatialHasherHandle);
 
