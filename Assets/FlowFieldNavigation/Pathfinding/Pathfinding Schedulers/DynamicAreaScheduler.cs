@@ -27,8 +27,8 @@ namespace FlowFieldNavigation
                 PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathIndex];
                 DynamicArea dynamicArea = internalData.DynamicArea;
                 NativeList<IntegrationTile> integrationField = dynamicArea.IntegrationField;
-                UnsafeList<SectorFlowStart> pickedSectorFlowStarts = dynamicArea.SectorFlowStartCalculationBuffer;
-                UnsafeList<FlowData> flowFieldCalculationBuffer = dynamicArea.FlowFieldCalculationBuffer;
+                NativeList<SectorFlowStart> pickedSectorFlowStarts = dynamicArea.SectorFlowStartCalculationBuffer;
+                NativeList<FlowData> flowFieldCalculationBuffer = dynamicArea.FlowFieldCalculationBuffer;
 
                 int2 targetIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition);
                 int2 targetSectorIndex = FlowFieldUtilities.GetSector2D(targetIndex, FlowFieldUtilities.SectorColAmount);
@@ -64,19 +64,12 @@ namespace FlowFieldNavigation
 
                 integrationField.Resize(fieldLength, NativeArrayOptions.UninitializedMemory);
                 flowFieldCalculationBuffer.Resize(fieldLength, NativeArrayOptions.ClearMemory);
-                integrationField.Length = fieldLength;
-                flowFieldCalculationBuffer.Length = fieldLength;
 
-                dynamicArea = new DynamicArea()
-                {
-                    IntegrationField = integrationField,
-                    FlowFieldCalculationBuffer = flowFieldCalculationBuffer,
-                    SectorFlowStartCalculationBuffer = pickedSectorFlowStarts,
-                };
-                internalData.DynamicArea = dynamicArea;
                 _pathContainer.PathfindingInternalDataList[pathIndex] = internalData;
 
-
+                NativeArray<SectorFlowStart> pickedSectorFlowStartsAsArray = pickedSectorFlowStarts.AsArray();
+                NativeArray<FlowData> flowFieldCalculationBufferAsArray = flowFieldCalculationBuffer.AsArray();
+                NativeArray<IntegrationTile> integrationFieldAsArray = integrationField.AsArray();
                 DynamicAreaIntegrationJob integration = new DynamicAreaIntegrationJob()
                 {
                     SectorColAmount = FlowFieldUtilities.SectorColAmount,
@@ -85,8 +78,8 @@ namespace FlowFieldNavigation
                     FieldColAmount = FlowFieldUtilities.FieldColAmount,
                     TargetIndex = targetIndex,
                     Costs = _navigationManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset).Costs,
-                    PickedSectorFlowStarts = pickedSectorFlowStarts,
-                    IntegrationField = integrationField.AsArray(),
+                    PickedSectorFlowStarts = pickedSectorFlowStartsAsArray,
+                    IntegrationField = integrationFieldAsArray,
                 };
                 JobHandle integrationHandle = integration.Schedule();
 
@@ -104,9 +97,9 @@ namespace FlowFieldNavigation
                     FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
                     CombinedDynamicAreaFieldReader = new CombinedDynamicAreaFieldReader()
                     {
-                        SectorFlowStartIndicies = pickedSectorFlowStarts,
-                        FlowField = flowFieldCalculationBuffer,
-                        IntegrationField = integrationField.AsArray(),
+                        SectorFlowStartIndicies = pickedSectorFlowStartsAsArray,
+                        FlowField = flowFieldCalculationBufferAsArray,
+                        IntegrationField = integrationFieldAsArray,
                     },
                     Costs = _navigationManager.FieldDataContainer.GetCostFieldWithOffset(destinationData.Offset).Costs,
                 };

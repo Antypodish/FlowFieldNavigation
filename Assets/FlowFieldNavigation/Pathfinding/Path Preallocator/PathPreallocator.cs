@@ -61,9 +61,7 @@ namespace FlowFieldNavigation
                 NotActivePortalList = new NativeList<NotActivePortalRecord>(Allocator.Persistent),
                 NewPickedSectorStartIndex = _nativeReferanceIntFactory.GetNativeReferanceInt(),
                 PathAdditionSequenceBorderStartIndex = _nativeReferanceIntFactory.GetNativeReferanceInt(),
-                DynamicAreaFlowFieldCalculationBuffer = _flowFieldFactory.GetFlowfield(0),
                 DynamicAreaIntegrationField = _integrationFieldFactory.GetIntegrationField(0),
-                DynamicAreaSectorFlowStartCalculationList = _sectorFlowStartListFactory.GetSectorFlowStartList(),
                 SectorsWithinLOSState = _sectorWithinLOSStateReferanceFactory.GetNativeReferance(),
                 SectorBitArray = _sectorBitArrayFactory.GetSectorBitArray(),
                 DijkstraStartIndicies = _nativeIntListFactory.GetNativeIntList(),
@@ -82,9 +80,7 @@ namespace FlowFieldNavigation
             preallocations.NotActivePortalList.Dispose();
             _nativeReferanceIntFactory.SendNativeReferanceInt(preallocations.NewPickedSectorStartIndex);
             _nativeReferanceIntFactory.SendNativeReferanceInt(preallocations.PathAdditionSequenceBorderStartIndex);
-            _flowFieldFactory.SendFlowField(preallocations.DynamicAreaFlowFieldCalculationBuffer);
             _integrationFieldFactory.SendIntegrationField(preallocations.DynamicAreaIntegrationField);
-            _sectorFlowStartListFactory.SendSectorFlowStartList(preallocations.DynamicAreaSectorFlowStartCalculationList);
             _sectorWithinLOSStateReferanceFactory.SendNativeReferance(preallocations.SectorsWithinLOSState);
             _sectorBitArrayFactory.SendSectorBitArray(preallocations.SectorBitArray);
             _nativeIntListFactory.SendNativeIntList(preallocations.DijkstraStartIndicies);

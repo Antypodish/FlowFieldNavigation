@@ -9,8 +9,8 @@ namespace FlowFieldNavigation
     internal struct DynamicArea
     {
         internal NativeList<IntegrationTile> IntegrationField;
-        internal UnsafeList<FlowData> FlowFieldCalculationBuffer;
-        internal UnsafeList<SectorFlowStart> SectorFlowStartCalculationBuffer;
+        internal NativeList<FlowData> FlowFieldCalculationBuffer;
+        internal NativeList<SectorFlowStart> SectorFlowStartCalculationBuffer;
     }
 
 }

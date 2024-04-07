@@ -104,7 +104,7 @@ namespace FlowFieldNavigation
             if (pathIndex == -1) { return; }
 
             PathfindingInternalData internalData = _pathContainer.PathfindingInternalDataList[pathIndex];
-            UnsafeList<SectorFlowStart> pickedSectorFlowStarts = internalData.DynamicArea.SectorFlowStartCalculationBuffer;
+            NativeArray<SectorFlowStart> pickedSectorFlowStarts = internalData.DynamicArea.SectorFlowStartCalculationBuffer.AsArray();
             NativeArray<IntegrationTile> integrationField = internalData.DynamicArea.IntegrationField.AsArray();
             int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
             int sectorColAmount = FlowFieldUtilities.SectorColAmount;
@@ -142,8 +142,8 @@ namespace FlowFieldNavigation
             float yOffset = 0.2f;
             PathDestinationData destinationData = _navigationManager.PathDataContainer.PathDestinationDataList[pathIndex];
             PathfindingInternalData internalData = _navigationManager.PathDataContainer.PathfindingInternalDataList[pathIndex];
-            UnsafeList<SectorFlowStart> pickedSectorFlowStarts = internalData.DynamicArea.SectorFlowStartCalculationBuffer;
-            UnsafeList<FlowData> flowField = internalData.DynamicArea.FlowFieldCalculationBuffer;
+            NativeArray<SectorFlowStart> pickedSectorFlowStarts = internalData.DynamicArea.SectorFlowStartCalculationBuffer.AsArray();
+            NativeArray<FlowData> flowField = internalData.DynamicArea.FlowFieldCalculationBuffer.AsArray();
             Gizmos.color = Color.blue;
             int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
             int sectorColAmount = FlowFieldUtilities.SectorColAmount;
@@ -447,8 +447,8 @@ namespace FlowFieldNavigation
             if (pathIndex == -1) { return; }
 
             float2 destination = _navigationManager.PathDataContainer.PathDestinationDataList[pathIndex].Destination;
-            UnsafeList<SectorFlowStart> dynamicAreaFlowStarts = _navigationManager.PathDataContainer.PathfindingInternalDataList[pathIndex].DynamicArea.SectorFlowStartCalculationBuffer;
-            UnsafeList<FlowData> dynamicAreaFlowField = _pathContainer.PathfindingInternalDataList[pathIndex].DynamicArea.FlowFieldCalculationBuffer;
+            NativeArray<SectorFlowStart> dynamicAreaFlowStarts = _navigationManager.PathDataContainer.PathfindingInternalDataList[pathIndex].DynamicArea.SectorFlowStartCalculationBuffer.AsArray();
+            NativeArray<FlowData> dynamicAreaFlowField = _pathContainer.PathfindingInternalDataList[pathIndex].DynamicArea.FlowFieldCalculationBuffer.AsArray();
             NativeArray<FlowData> exposedFlowData = _pathContainer.ExposedFlowData.AsArray();
             NativeArray<bool> exposedLosData = _pathContainer.ExposedLosData.AsArray();
             PathSectorToFlowStartMapper newFlowStartMap = _pathContainer.SectorFlowStartMap;

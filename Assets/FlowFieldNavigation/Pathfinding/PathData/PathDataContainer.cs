@@ -94,6 +94,8 @@ namespace FlowFieldNavigation
                     NativeArray<OverlappingDirection> sectorOverlappingDirections = SectorOverlappingDirectionTableList[i];
                     NativeArray<int> sectorToFlowStartTable = SectorToFlowStartTables[i];
                     RemoveFromPathSectorToFlowStartMapper(internalData.PickedSectorList.AsArray(), i);
+                    internalData.DynamicArea.SectorFlowStartCalculationBuffer.Dispose();
+                    internalData.DynamicArea.FlowFieldCalculationBuffer.Dispose();
                     sectorOverlappingDirections.Dispose();
                     portalTraversalData.GoalDataList.Dispose();
                     internalData.SectorToWaveFrontsMap.Dispose();
@@ -120,8 +122,6 @@ namespace FlowFieldNavigation
                         NewPickedSectorStartIndex = portalTraversalData.NewPickedSectorStartIndex,
                         PathAdditionSequenceBorderStartIndex = portalTraversalData.PathAdditionSequenceSliceStartIndex,
                         DynamicAreaIntegrationField = internalData.DynamicArea.IntegrationField,
-                        DynamicAreaFlowFieldCalculationBuffer = internalData.DynamicArea.FlowFieldCalculationBuffer,
-                        DynamicAreaSectorFlowStartCalculationList = internalData.DynamicArea.SectorFlowStartCalculationBuffer,
                         SectorsWithinLOSState = internalData.SectorWithinLOSState,
                         SectorBitArray = sectorBitArray,
                         DijkstraStartIndicies = portalTraversalData.DiskstraStartIndicies,
@@ -178,9 +178,9 @@ namespace FlowFieldNavigation
                 FlowFieldCalculationBuffer = new NativeList<FlowData>(Allocator.Persistent),
                 DynamicArea = new DynamicArea()
                 {
-                    FlowFieldCalculationBuffer = preallocations.DynamicAreaFlowFieldCalculationBuffer,
+                    FlowFieldCalculationBuffer = new NativeList<FlowData>(Allocator.Persistent),
                     IntegrationField = preallocations.DynamicAreaIntegrationField,
-                    SectorFlowStartCalculationBuffer = preallocations.DynamicAreaSectorFlowStartCalculationList,
+                    SectorFlowStartCalculationBuffer = new NativeList<SectorFlowStart>(Allocator.Persistent),
                 }
             };
 

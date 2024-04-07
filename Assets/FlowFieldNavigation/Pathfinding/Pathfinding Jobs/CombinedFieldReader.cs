@@ -7,11 +7,11 @@ namespace FlowFieldNavigation
 
     internal struct CombinedDynamicAreaFieldReader
     {
-        [ReadOnly] internal UnsafeList<SectorFlowStart> SectorFlowStartIndicies;
-        [WriteOnly] internal UnsafeList<FlowData> FlowField;
+        [ReadOnly] internal NativeArray<SectorFlowStart> SectorFlowStartIndicies;
+        [WriteOnly] internal NativeArray<FlowData> FlowField;
         [ReadOnly] internal NativeArray<IntegrationTile> IntegrationField;
 
-        internal CombinedDynamicAreaFieldReader(UnsafeList<SectorFlowStart> sectorFlowStartIndicies, UnsafeList<FlowData> flowField, NativeArray<IntegrationTile> ıntegrationField)
+        internal CombinedDynamicAreaFieldReader(NativeArray<SectorFlowStart> sectorFlowStartIndicies, NativeArray<FlowData> flowField, NativeArray<IntegrationTile> ıntegrationField)
         {
             SectorFlowStartIndicies = sectorFlowStartIndicies;
             FlowField = flowField;

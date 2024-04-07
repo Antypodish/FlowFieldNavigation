@@ -19,7 +19,7 @@ namespace FlowFieldNavigation
         internal int FieldColAmount;
 
         [ReadOnly] internal NativeArray<byte> Costs;
-        [ReadOnly] internal UnsafeList<SectorFlowStart> PickedSectorFlowStarts;
+        [ReadOnly] internal NativeArray<SectorFlowStart> PickedSectorFlowStarts;
         internal NativeArray<IntegrationTile> IntegrationField;
         public void Execute()
         {
@@ -40,7 +40,7 @@ namespace FlowFieldNavigation
             int sectorColAmount = SectorColAmount;
             int sectorMatrixColAmount = SectorMatrixColAmount;
             int sectorTileAmount = SectorTileAmount;
-            UnsafeList<SectorFlowStart> pickedSectorFlowStarts = PickedSectorFlowStarts;
+            NativeArray<SectorFlowStart> pickedSectorFlowStarts = PickedSectorFlowStarts;
 
             //LOOKUP TABLE
             int nLocal1d;

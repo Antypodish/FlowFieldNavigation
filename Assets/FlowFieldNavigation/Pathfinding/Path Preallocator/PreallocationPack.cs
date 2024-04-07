@@ -18,9 +18,7 @@ namespace FlowFieldNavigation
         internal NativeList<NotActivePortalRecord> NotActivePortalList;
         internal NativeReference<int> NewPickedSectorStartIndex;
         internal NativeReference<int> PathAdditionSequenceBorderStartIndex;
-        internal UnsafeList<FlowData> DynamicAreaFlowFieldCalculationBuffer;
         internal NativeList<IntegrationTile> DynamicAreaIntegrationField;
-        internal UnsafeList<SectorFlowStart> DynamicAreaSectorFlowStartCalculationList;
         internal NativeReference<SectorsWihinLOSArgument> SectorsWithinLOSState;
         internal SectorBitArray SectorBitArray;
         internal NativeList<int> DijkstraStartIndicies;
