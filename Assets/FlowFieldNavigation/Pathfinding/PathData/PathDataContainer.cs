@@ -11,9 +11,6 @@ namespace FlowFieldNavigation
         internal NativeList<FlowData> ExposedFlowData;
         internal NativeList<bool> ExposedLosData;
         internal PathSectorToFlowStartMapper SectorFlowStartMap;
-
-        internal NativeList<PathFlowData> ExposedPathFlowData;
-        internal NativeList<PathLocationData> ExposedPathLocationData;
         internal NativeList<float2> ExposedPathDestinations;
         internal NativeList<int> ExposedPathFlockIndicies;
         internal NativeList<float> ExposedPathReachDistanceCheckRanges;
@@ -21,8 +18,6 @@ namespace FlowFieldNavigation
         internal NativeList<bool> ExposedPathAgentStopFlagList;
         internal List<NativeArray<int>> SectorToFlowStartTables;
         internal List<PathfindingInternalData> PathfindingInternalDataList;
-        internal NativeList<PathLocationData> PathLocationDataList;
-        internal NativeList<PathFlowData> PathFlowDataList;
         internal NativeList<UnsafeList<PathSectorState>> PathSectorStateTableList;
         internal NativeList<PathDestinationData> PathDestinationDataList;
         internal NativeList<UnsafeList<float>> TargetSectorIntegrationList;
@@ -43,8 +38,6 @@ namespace FlowFieldNavigation
             _preallocator = new PathPreallocator(_fieldProducer, FlowFieldUtilities.SectorTileAmount, FlowFieldUtilities.SectorMatrixTileAmount);
             _removedPathIndicies = new Stack<int>();
             PathSubscriberCounts = new NativeList<int>(Allocator.Persistent);
-            PathLocationDataList = new NativeList<PathLocationData>(1, Allocator.Persistent);
-            PathFlowDataList = new NativeList<PathFlowData>(Allocator.Persistent);
             PathSectorStateTableList = new NativeList<UnsafeList<PathSectorState>>(Allocator.Persistent);
             PathPortalTraversalDataList = new List<PathPortalTraversalData>();
             PathDestinationDataList = new NativeList<PathDestinationData>(Allocator.Persistent);
@@ -55,8 +48,6 @@ namespace FlowFieldNavigation
             SectorToFlowStartTables = new List<NativeArray<int>>();
 
             ExposedPathDestinations = new NativeList<float2>(Allocator.Persistent);
-            ExposedPathFlowData = new NativeList<PathFlowData>(Allocator.Persistent);
-            ExposedPathLocationData = new NativeList<PathLocationData>(Allocator.Persistent);
             PathFlockIndicies = new NativeList<int>(Allocator.Persistent);
             ExposedPathFlockIndicies = new NativeList<int>(Allocator.Persistent);
             ExposedPathReachDistanceCheckRanges = new NativeList<float>(Allocator.Persistent);
@@ -69,15 +60,11 @@ namespace FlowFieldNavigation
         }
         internal void DisposeAll()
         {
-            if (ExposedPathFlowData.IsCreated) { ExposedPathFlowData.Dispose(); }
-            if (ExposedPathLocationData.IsCreated) { ExposedPathLocationData.Dispose(); }
             if (ExposedPathDestinations.IsCreated) { ExposedPathDestinations.Dispose(); }
             if (ExposedPathFlockIndicies.IsCreated) { ExposedPathFlockIndicies.Dispose(); }
             if (ExposedPathReachDistanceCheckRanges.IsCreated) { ExposedPathReachDistanceCheckRanges.Dispose(); }
             if (ExposedPathStateList.IsCreated) { ExposedPathStateList.Dispose(); }
             if (ExposedPathAgentStopFlagList.IsCreated) { ExposedPathAgentStopFlagList.Dispose(); }
-            if (PathLocationDataList.IsCreated) { PathLocationDataList.Dispose(); }
-            if (PathFlowDataList.IsCreated) { PathFlowDataList.Dispose(); }
             if (PathSectorStateTableList.IsCreated) { PathSectorStateTableList.Dispose(); }
             if (PathDestinationDataList.IsCreated) { PathDestinationDataList.Dispose(); }
             if (TargetSectorIntegrationList.IsCreated) { TargetSectorIntegrationList.Dispose(); }
@@ -100,8 +87,6 @@ namespace FlowFieldNavigation
                 {
                     if(deallcoated >= maxDeallocationPerFrame) { break; }
                     deallcoated++;
-                    PathLocationData locationData = PathLocationDataList[i];
-                    PathFlowData flowData = PathFlowDataList[i];
                     UnsafeList<PathSectorState> sectorStateTable = PathSectorStateTableList[i];
                     PathPortalTraversalData portalTraversalData = PathPortalTraversalDataList[i];
                     UnsafeList<float> targetSectorIntegration = TargetSectorIntegrationList[i];
@@ -137,8 +122,6 @@ namespace FlowFieldNavigation
                         DynamicAreaIntegrationField = internalData.DynamicArea.IntegrationField,
                         DynamicAreaFlowFieldCalculationBuffer = internalData.DynamicArea.FlowFieldCalculationBuffer,
                         DynamicAreaSectorFlowStartCalculationList = internalData.DynamicArea.SectorFlowStartCalculationBuffer,
-                        DynamicAreaSectorFlowStartList = locationData.DynamicAreaPickedSectorFlowStarts,
-                        DynamicAreaFlowField = flowData.DynamicAreaFlowField,
                         SectorsWithinLOSState = internalData.SectorWithinLOSState,
                         SectorBitArray = sectorBitArray,
                         DijkstraStartIndicies = portalTraversalData.DiskstraStartIndicies,
@@ -164,15 +147,11 @@ namespace FlowFieldNavigation
                 NewPathIndicies = newPathIndicies,
                 ExpandedPathIndicies = expandedPathIndicies,
                 ExposedPathDestinationList = ExposedPathDestinations,
-                ExposedPathFlowDataList = ExposedPathFlowData,
-                ExposedPathLocationList = ExposedPathLocationData,
                 ExposedPathFlockIndicies = ExposedPathFlockIndicies,
                 ExposedPathReachDistanceCheckRange = ExposedPathReachDistanceCheckRanges,
                 PathStopFlagList = ExposedPathAgentStopFlagList,
                 PathStateList = ExposedPathStateList,
                 PathDestinationDataArray = PathDestinationDataList.AsArray(),
-                PathFlowDataArray = PathFlowDataList.AsArray(),
-                PathLocationDataArray = PathLocationDataList.AsArray(),
                 PathFlockIndicies = PathFlockIndicies.AsArray(),
             };
             dataExposeJob.Schedule().Complete();
@@ -213,17 +192,6 @@ namespace FlowFieldNavigation
                 DesiredDestination = request.DesiredDestination,
                 Offset = request.Offset,
             };
-
-            PathLocationData locationData = new PathLocationData()
-            {
-                DynamicAreaPickedSectorFlowStarts = preallocations.DynamicAreaSectorFlowStartList,
-            };
-
-            PathFlowData flowData = new PathFlowData()
-            {
-                DynamicAreaFlowField = preallocations.DynamicAreaFlowField,
-            };
-
             PathPortalTraversalData portalTraversalData = new PathPortalTraversalData()
             {
                 PortalSequenceSlices = new NativeList<Slice>(Allocator.Persistent),
@@ -242,8 +210,6 @@ namespace FlowFieldNavigation
             if (PathfindingInternalDataList.Count == pathIndex)
             {
                 PathfindingInternalDataList.Add(internalData);
-                PathLocationDataList.Add(locationData);
-                PathFlowDataList.Add(flowData);
                 PathSectorStateTableList.Add(preallocations.SectorStateTable);
                 PathPortalTraversalDataList.Add(portalTraversalData);
                 PathDestinationDataList.Add(destinationData);
@@ -258,8 +224,6 @@ namespace FlowFieldNavigation
             else
             {
                 PathfindingInternalDataList[pathIndex] = internalData;
-                PathLocationDataList[pathIndex] = locationData;
-                PathFlowDataList[pathIndex] = flowData;
                 PathSectorStateTableList[pathIndex] = preallocations.SectorStateTable;
                 PathPortalTraversalDataList[pathIndex] = portalTraversalData;
                 PathDestinationDataList[pathIndex] = destinationData;

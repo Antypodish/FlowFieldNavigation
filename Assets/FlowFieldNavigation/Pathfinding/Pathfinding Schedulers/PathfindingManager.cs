@@ -136,7 +136,6 @@ namespace FlowFieldNavigation
             NativeList<Flock> flockList = _navigationManager.FlockDataContainer.FlockList;
             _islandFieldProcessors = islandFieldProcessors;
             NativeArray<UnsafeList<float>> targetSectorIntegrations = _pathContainer.TargetSectorIntegrationList.AsArray();
-            NativeArray<PathFlowData> pathFlowDataArray = _pathContainer.PathFlowDataList.AsArray();
             NativeArray<PathState> pathStateArray = _pathContainer.ExposedPathStateList.AsArray();
             NativeArray<PathDestinationData> pathDestinationDataArray = _pathContainer.PathDestinationDataList.AsArray();
             NativeArray<PathRoutineData> pathRoutineDataArray = _pathContainer.PathRoutineDataList.AsArray();
@@ -259,7 +258,6 @@ namespace FlowFieldNavigation
                 TargetSectorIntegrations = targetSectorIntegrations,
                 AgentPositions = _agentPositions.AsArray(),
                 PathDestinationDataArray = pathDestinationDataArray,
-                PathFlowDataArray = pathFlowDataArray,
                 PathOrganizationDataArray = pathRoutineDataArray,
                 IslandFieldProcessors = _islandFieldProcessors,
                 CostFields = _costFieldCosts.AsArray(),

@@ -79,8 +79,6 @@ namespace FlowFieldNavigation
             NativeArray<AgentData> agentDataArray = _agentDataContainer.AgentDataList.AsArray();
             NativeArray<float> agentRadii = _agentDataContainer.AgentRadii.AsArray();
             NativeArray<int> agentCurPathIndexArray = _agentDataContainer.AgentCurPathIndicies.AsArray();
-            NativeArray<PathLocationData> exposedPathLocationDataArray = _navigationManager.PathDataContainer.ExposedPathLocationData.AsArray();
-            NativeArray<PathFlowData> exposedPathFlowDataArray = _navigationManager.PathDataContainer.ExposedPathFlowData.AsArray();
             NativeArray<float2> exposedPathDestinationArray = _navigationManager.PathDataContainer.ExposedPathDestinations.AsArray();
             NativeArray<int> agentFlockIndexArray = _navigationManager.AgentDataContainer.AgentFlockIndicies.AsArray();
             NativeArray<float> exposedPathReachDistanceCheckRanges = _navigationManager.PathDataContainer.ExposedPathReachDistanceCheckRanges.AsArray();
@@ -159,8 +157,6 @@ namespace FlowFieldNavigation
                 AgentCurPathIndicies = agentCurPathIndexArray,
                 AgentDataArray = agentDataArray,
                 ExposedPathDestinationArray = exposedPathDestinationArray,
-                ExposedPathFlowDataArray = exposedPathFlowDataArray,
-                ExposedPathLocationDataArray = exposedPathLocationDataArray,
                 HashedToNormal = HashedToNormal.AsArray(),
 
                 FieldColAmount = FlowFieldUtilities.FieldColAmount,

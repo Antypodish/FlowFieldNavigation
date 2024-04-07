@@ -38,7 +38,6 @@ namespace FlowFieldNavigation
                 PathfindingInternalData pathInternalData = _navigationManager.PathDataContainer.PathfindingInternalDataList[pathIndex];
                 PathDestinationData destinationData = _pathContainer.PathDestinationDataList[pathIndex];
                 PathPortalTraversalData portalTraversalData = _pathContainer.PathPortalTraversalDataList[pathIndex];
-                PathLocationData locationData = _pathContainer.PathLocationDataList[pathIndex];
                 UnsafeList<PathSectorState> sectorStateTable = _pathContainer.PathSectorStateTableList[pathIndex];
                 NativeArray<OverlappingDirection> sectorOverlappingDirectionTable = _pathContainer.SectorOverlappingDirectionTableList[pathIndex];
                 SectorBitArray sectorBitArray = _pathContainer.PathSectorBitArrays[pathIndex];

@@ -2,13 +2,13 @@ using System.Collections.Generic;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Collections;
 using Unity.Jobs;
+using Unity.Mathematics;
 
 namespace FlowFieldNavigation
 {
     internal class PathfindingDataExposer
     {
         PathDataContainer _pathContainer;
-
         internal PathfindingDataExposer(PathDataContainer pathDataContainer)
         {
             _pathContainer = pathDataContainer;
@@ -23,39 +23,84 @@ namespace FlowFieldNavigation
             NativeArray<int> expandedPathIndicies
             )
         {
-            ExposeDynamicArea(pathIndiciesOfScheduledDynamicAreas);
             RefreshResizedFlowFieldLengths(portalTraversalRequestedPaths);
             ScheduleLOSTransfers(_losCalculatedPaths);
             ScheduleFlowTransfers(flowRequests);
+            UpdateDynamicArea(pathIndiciesOfScheduledDynamicAreas);
             _pathContainer.ExposeBuffers(destinationUpdatedPathIndicies, newPathIndicies, expandedPathIndicies);
         }
         void ScheduleFlowTransfers(NativeArray<FlowRequest> flowRequests)
         {
+            float tileSize = FlowFieldUtilities.TileSize;
+            float2 fieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition;
             int sectorTileAmount = FlowFieldUtilities.SectorTileAmount;
+            int sectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount;
             PathSectorToFlowStartMapper newFlowStartMap = _pathContainer.SectorFlowStartMap;
             NativeList<FlowData> exposedFlowData = _pathContainer.ExposedFlowData;
+            NativeArray<PathDestinationData> pathDestinationDataArray = _pathContainer.PathDestinationDataList.AsArray();
             for (int i = 0; i < flowRequests.Length; i++)
             {
                 FlowRequest req = flowRequests[i];
                 PathfindingInternalData pathInternalData = _pathContainer.PathfindingInternalDataList[req.PathIndex];
+                PathDestinationData destinationData = pathDestinationDataArray[req.PathIndex];
                 NativeArray<int> flowCalculatedSectorIndicies = pathInternalData.SectorIndiciesToCalculateFlow.AsArray();
-                NativeArray<int> sectorToFlowStartTable = _pathContainer.SectorToFlowStartTables[req.PathIndex];
                 NativeArray<FlowData> calculationBuffer = pathInternalData.FlowFieldCalculationBuffer.AsArray();
                 for (int j = 0; j < flowCalculatedSectorIndicies.Length; j++)
                 {
                     int sectorIndex = flowCalculatedSectorIndicies[j];
                     newFlowStartMap.TryGet(req.PathIndex, sectorIndex, out int newSectorFlowStartIndex);
                     NativeSlice<FlowData> fromSlice = new NativeSlice<FlowData>(calculationBuffer, j * sectorTileAmount, sectorTileAmount);
-                    Transfer(fromSlice, exposedFlowData.AsArray(), newSectorFlowStartIndex);
+                    TransferFlow(fromSlice, exposedFlowData.AsArray(), newSectorFlowStartIndex);
+
+                    //if sector is within dynamic area, also transfer dynamic area
+                    if(destinationData.DestinationType != DestinationType.DynamicDestination) { continue; }
+                    int2 destinationIndex = FlowFieldUtilities.PosTo2D(destinationData.Destination, tileSize, fieldGridStartPos);
+                    int2 destinationSector = FlowFieldUtilities.GetSector2D(destinationIndex, sectorMatrixColAmount);
+                    int2 min = destinationSector - 1;
+                    int2 max = destinationSector + 1;
+                    bool2 greaterThanOrEquelToMin = destinationSector >= min;
+                    bool2 lessThanOrEqualToMax = destinationSector <= max;
+                    bool withinBounds = greaterThanOrEquelToMin.x & greaterThanOrEquelToMin.y & lessThanOrEqualToMax.x & lessThanOrEqualToMax.y;
+                    if (withinBounds)
+                    {
+                        bool successfull = GetSectorStartForDynamicAreaSector(pathInternalData.DynamicArea.SectorFlowStartCalculationBuffer, sectorIndex, out int dynamicAreaSectorFlowStart);
+                        if (!successfull) { continue; }
+                        TransferDynamicArea(exposedFlowData.AsArray(), pathInternalData.DynamicArea.FlowFieldCalculationBuffer, newSectorFlowStartIndex, dynamicAreaSectorFlowStart);
+                    }
                 }
             }
 
-            void Transfer(NativeSlice<FlowData> fromSlice, NativeArray<FlowData> toList, int listStartIndex)
+            void TransferFlow(NativeSlice<FlowData> fromSlice, NativeArray<FlowData> toList, int listStartIndex)
             {
                 for (int i = 0; i < fromSlice.Length; i++)
                 {
                     toList[listStartIndex + i] = fromSlice[i];
                 }
+            }
+            void TransferDynamicArea(NativeArray<FlowData> toArray, UnsafeList<FlowData> fromArray, int toArrayStart, int fromArrayStart)
+            {
+                for(int i = 0; i < FlowFieldUtilities.SectorTileAmount; i++)
+                {
+                    int fromIndex = fromArrayStart + i;
+                    int toIndex = toArrayStart + i;
+                    FlowData flow = fromArray[fromIndex];
+                    if (!flow.IsValid()) { continue; }
+                    toArray[toIndex] =  flow;
+                }
+            }
+            bool GetSectorStartForDynamicAreaSector(UnsafeList<SectorFlowStart> sectorFlowStartPairs, int sectorToLookup, out int flowStart)
+            {
+                for (int i = 0; i < sectorFlowStartPairs.Length; i++)
+                {
+                    SectorFlowStart pair = sectorFlowStartPairs[i];
+                    if (pair.SectorIndex == sectorToLookup)
+                    {
+                        flowStart = pair.FlowStartIndex;
+                        return true;
+                    }
+                }
+                flowStart = 0;
+                return false;
             }
         }
         internal void ScheduleLOSTransfers(NativeArray<int> _losCalculatedPaths)
@@ -110,45 +155,43 @@ namespace FlowFieldNavigation
                 }
             }
         }
-        void ExposeDynamicArea(NativeArray<int> pathIndiciesOfScheduledDynamicAreas)
+        void UpdateDynamicArea(NativeArray<int> pathIndiciesOfScheduledDynamicAreas)
         {
             List<PathfindingInternalData> pathfindingInternalDataList = _pathContainer.PathfindingInternalDataList;
-            NativeList<PathLocationData> pathLocationDataList = _pathContainer.PathLocationDataList;
-            NativeList<PathFlowData> pathFlowDataList = _pathContainer.PathFlowDataList;
             NativeList<JobHandle> handles = new NativeList<JobHandle>(Allocator.Temp);
+            NativeList<UnsafeList<PathSectorState>> sectorStateTabelList = _pathContainer.PathSectorStateTableList;
+            NativeArray<FlowData> exposedFlowData = _pathContainer.ExposedFlowData.AsArray();
+            PathSectorToFlowStartMapper exposedFlowStartMap = _pathContainer.SectorFlowStartMap;
             for (int i = 0; i < pathIndiciesOfScheduledDynamicAreas.Length; i++)
             {
                 int pathIndex = pathIndiciesOfScheduledDynamicAreas[i];
                 PathfindingInternalData pathInternalData = pathfindingInternalDataList[pathIndex];
-                PathFlowData pathFlowData = pathFlowDataList[pathIndex];
-                PathLocationData pathLocationData = pathLocationDataList[pathIndex];
-
-                //COPY FLOW FIELD
-                UnsafeList<FlowData> flowField = pathFlowData.DynamicAreaFlowField;
                 UnsafeList<FlowData> flowCalculationBuffer = pathInternalData.DynamicArea.FlowFieldCalculationBuffer;
-                flowField.Resize(flowCalculationBuffer.Length, NativeArrayOptions.UninitializedMemory);
-                flowField.Length = flowCalculationBuffer.Length;
-                UnsafeListCopyJob<FlowData> copyJob = new UnsafeListCopyJob<FlowData>()
-                {
-                    Destination = flowField,
-                    Source = flowCalculationBuffer,
-                };
-                handles.Add(copyJob.Schedule());
-
-                //COPY SECTOR FLOW STARTS
-                UnsafeList<SectorFlowStart> sectorFlowStarts = pathLocationData.DynamicAreaPickedSectorFlowStarts;
                 UnsafeList<SectorFlowStart> sectorFlowStartCalculationBuffer = pathInternalData.DynamicArea.SectorFlowStartCalculationBuffer;
-                sectorFlowStarts.Length = sectorFlowStartCalculationBuffer.Length;
-                sectorFlowStarts.CopyFrom(sectorFlowStartCalculationBuffer);
-
-                //SEND DATA BACK
-                pathLocationData.DynamicAreaPickedSectorFlowStarts = sectorFlowStarts;
-                pathLocationDataList[pathIndex] = pathLocationData;
-                pathFlowData.DynamicAreaFlowField = flowField;
-                pathFlowDataList[pathIndex] = pathFlowData;
+                UnsafeList<PathSectorState> sectorStateTable = sectorStateTabelList[pathIndex];
+                for(int j = 0; j < sectorFlowStartCalculationBuffer.Length; j++)
+                {
+                    SectorFlowStart pair = sectorFlowStartCalculationBuffer[j];
+                    int sectorIndex = pair.SectorIndex;
+                    int flowStart = pair.FlowStartIndex;
+                    if ((sectorStateTable[sectorIndex] & PathSectorState.FlowCalculated) != PathSectorState.FlowCalculated) { continue; }
+                    exposedFlowStartMap.TryGet(pathIndex, sectorIndex, out int exposedFlowStart);
+                    TransferDynamicArea(exposedFlowData, flowCalculationBuffer, exposedFlowStart, flowStart);
+                }
             }
             JobHandle.CompleteAll(handles.AsArray());
-
+            
+            void TransferDynamicArea(NativeArray<FlowData> toArray, UnsafeList<FlowData> fromArray, int toArrayStart, int fromArrayStart)
+            {
+                for (int i = 0; i < FlowFieldUtilities.SectorTileAmount; i++)
+                {
+                    int fromIndex = fromArrayStart + i;
+                    int toIndex = toArrayStart + i;
+                    FlowData flow = fromArray[fromIndex];
+                    if (!flow.IsValid()) { continue; }
+                    toArray[toIndex] = flow;
+                }
+            }
         }
     }
 }

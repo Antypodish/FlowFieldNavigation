@@ -20,8 +20,6 @@ namespace FlowFieldNavigation
         internal float2 FieldGridStartPos;
         [ReadOnly] internal NativeArray<AgentData> AgentDataArray;
         [ReadOnly] internal NativeArray<int> AgentCurPathIndicies;
-        [ReadOnly] internal NativeArray<PathLocationData> ExposedPathLocationDataArray;
-        [ReadOnly] internal NativeArray<PathFlowData> ExposedPathFlowDataArray;
         [ReadOnly] internal NativeArray<float2> ExposedPathDestinationArray;
         [ReadOnly] internal NativeArray<int> HashedToNormal;
         internal NativeArray<AgentMovementData> AgentMovementData;
@@ -61,8 +59,6 @@ namespace FlowFieldNavigation
 
             //FLOW CALCULATION
             float2 pathDestination = ExposedPathDestinationArray[agentCurPathIndex];
-            PathLocationData pathLocationData = ExposedPathLocationDataArray[agentCurPathIndex];
-            PathFlowData pathFlowData = ExposedPathFlowDataArray[agentCurPathIndex];
             bool succesfull = NewFlowStartMap.TryGet(agentCurPathIndex, agentSector1d, out int agentSectorFlowStart);
             if (!succesfull)
             {
@@ -84,11 +80,6 @@ namespace FlowFieldNavigation
                 alignmentMultiplierPercentage = math.select(alignmentMultiplierPercentage, 0, alignmentMultiplierPercentage < 0);
                 alignmentMultiplierPercentage = math.select(alignmentMultiplierPercentage, 1f, alignmentMultiplierPercentage > 1f);
                 data.AlignmentMultiplierPercentage = alignmentMultiplierPercentage;
-            }
-            else if (GetSectorDynamicFlowStartIfExists(pathLocationData.DynamicAreaPickedSectorFlowStarts, agentSector1d, out int dynamicSectorFlowStart))
-            {
-                FlowData flowData = pathFlowData.DynamicAreaFlowField[dynamicSectorFlowStart + local1d];
-                flow = math.select(data.DesiredDirection, flowData.GetFlow(TileSize), flowData.IsValid());
             }
             else
             {
