@@ -36,6 +36,23 @@ namespace FlowFieldNavigation
             _fieldProducer = navigationManager.FieldDataContainer;
             _tileSize = FlowFieldUtilities.TileSize;
         }
+        internal void DebugPathUpdateSeeds(FlowFieldAgent agent)
+        {
+            int pathIndex = agent.GetPathIndex();
+            if(pathIndex == -1) { return; }
+            NativeArray<PathUpdateSeed> seeds = _navigationManager.PathUpdateSeedContainer.UpdateSeeds.AsArray();
+            Gizmos.color = Color.white;
+            for(int i = 0; i < seeds.Length; i++)
+            {
+                PathUpdateSeed seed = seeds[i];
+                if(seed.PathIndex !=  pathIndex) { continue; }
+
+                int2 goal2d = FlowFieldUtilities.To2D(seed.TileIndex, FlowFieldUtilities.FieldColAmount);
+                float2 goalpos2d = FlowFieldUtilities.IndexToPos(goal2d, FlowFieldUtilities.TileSize, FlowFieldUtilities.FieldGridStartPosition);
+                float3 goalpos3d = new float3(goalpos2d.x, 0f, goalpos2d.y);
+                Gizmos.DrawCube(goalpos3d, Vector3.one / 2);
+            }
+        }
         internal void DebugOverlappingSectors(FlowFieldAgent agent)
         {
             if (_pathContainer == null) { return; }

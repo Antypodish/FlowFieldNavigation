@@ -15,6 +15,7 @@ namespace FlowFieldNavigation
         internal NativeList<int> DiskstraStartIndicies;
         internal NativeList<int> NewReducedPortalIndicies;
         internal NativeList<PortalTraversalDataRecord> PortalDataRecords;
+        internal NativeList<int> NewPathUpdateSeedIndicies;
     }
 
 

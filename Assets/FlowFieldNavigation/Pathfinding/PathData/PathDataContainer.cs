@@ -27,14 +27,17 @@ namespace FlowFieldNavigation
         internal NativeList<int> PathFlockIndicies;
         internal NativeList<int> PathSubscriberCounts;
         internal List<NativeArray<OverlappingDirection>> SectorOverlappingDirectionTableList;
+        internal NativeList<int> RemovedExposedFlowAndLosIndicies;
         Stack<int> _removedPathIndicies;
 
         FieldDataContainer _fieldProducer;
         PathPreallocator _preallocator;
+        PathUpdateSeedContainer _pathUpdateSeedContainer;
         internal PathDataContainer(FlowFieldNavigationManager navigationManager)
         {
             _fieldProducer = navigationManager.FieldDataContainer;
             PathfindingInternalDataList = new List<PathfindingInternalData>(1);
+            _pathUpdateSeedContainer = navigationManager.PathUpdateSeedContainer;
             _preallocator = new PathPreallocator(_fieldProducer, FlowFieldUtilities.SectorTileAmount, FlowFieldUtilities.SectorMatrixTileAmount);
             _removedPathIndicies = new Stack<int>();
             PathSubscriberCounts = new NativeList<int>(Allocator.Persistent);
@@ -54,6 +57,7 @@ namespace FlowFieldNavigation
             ExposedPathAgentStopFlagList = new NativeList<bool>(Allocator.Persistent);
             SectorOverlappingDirectionTableList = new List<NativeArray<OverlappingDirection>>();
 
+            RemovedExposedFlowAndLosIndicies = new NativeList<int>(Allocator.Persistent);
             ExposedFlowData = new NativeList<FlowData>(Allocator.Persistent);
             SectorFlowStartMap = new PathSectorToFlowStartMapper(0, Allocator.Persistent);
             ExposedLosData = new NativeList<bool>(Allocator.Persistent);
@@ -75,7 +79,7 @@ namespace FlowFieldNavigation
         }
         internal void Update()
         {
-            const int maxDeallocationPerFrame = 10;
+            const int maxDeallocationPerFrame = int.MaxValue;
             int deallcoated = 0;
             for (int i = 0; i < PathfindingInternalDataList.Count; i++)
             {
@@ -105,6 +109,7 @@ namespace FlowFieldNavigation
                     internalData.LOSCalculatedFlag.Dispose();
                     internalData.FlowFieldCalculationBuffer.Dispose();
                     sectorToFlowStartTable.Dispose();
+                    portalTraversalData.NewPathUpdateSeedIndicies.Dispose();
                     ExposedPathStateList[i] = PathState.Removed;
                     _removedPathIndicies.Push(i);
                     PreallocationPack preallocations = new PreallocationPack()
@@ -130,13 +135,35 @@ namespace FlowFieldNavigation
                 }
             }
             _preallocator.CheckForDeallocations();
+
+            if(deallcoated != 0)
+            {
+                RemoveUnusedPathUpdateSeeds();
+            }
+        }
+        void RemoveUnusedPathUpdateSeeds()
+        {
+            NativeList<PathUpdateSeed> pathUpdateSeeds = _pathUpdateSeedContainer.UpdateSeeds;
+            for(int i = pathUpdateSeeds.Length - 1; i >= 0; i--)
+            {
+                int seedPathIndex = pathUpdateSeeds[i].PathIndex;
+                if (ExposedPathStateList[seedPathIndex] == PathState.Removed)
+                {
+                    pathUpdateSeeds.RemoveAtSwapBack(i);
+                }
+            }
         }
         void RemoveFromPathSectorToFlowStartMapper(NativeArray<int> pickedSectorList, int pathIndex)
         {
             for(int i = 0; i < pickedSectorList.Length; i++)
             {
                 int sector = pickedSectorList[i];
-                SectorFlowStartMap.TryRemove(pathIndex, sector);
+                if(SectorFlowStartMap.TryGet(pathIndex, sector, out var flowStart))
+                {
+                    RemovedExposedFlowAndLosIndicies.Add(flowStart);
+                    SectorFlowStartMap.TryRemove(pathIndex, sector);
+                }
+                
             }
         }
         internal void ExposeBuffers(NativeArray<int> destinationUpdatedPathIndicies, NativeArray<int> newPathIndicies, NativeArray<int> expandedPathIndicies)
@@ -204,6 +231,7 @@ namespace FlowFieldNavigation
                 GoalDataList = new NativeList<PortalTraversalData>(Allocator.Persistent),
                 NewReducedPortalIndicies = new NativeList<int>(Allocator.Persistent),
                 PortalDataRecords = new NativeList<PortalTraversalDataRecord>(Allocator.Persistent),
+                NewPathUpdateSeedIndicies = new NativeList<int>(Allocator.Persistent),
             };
 
             NativeArray<OverlappingDirection> sectorOverlappingDirections = new NativeArray<OverlappingDirection>(FlowFieldUtilities.SectorMatrixTileAmount, Allocator.Persistent);

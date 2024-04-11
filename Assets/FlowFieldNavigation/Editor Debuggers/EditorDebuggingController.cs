@@ -30,6 +30,7 @@ namespace FlowFieldNavigation
         [SerializeField] bool _debugHeightMesh;
         [SerializeField] bool _debugGridBorders;
         [Header("PathDebugger")]
+        [SerializeField] bool _debugPathUpdateSeed;
         [SerializeField] bool _debugDestination;
         [SerializeField] bool _debugActiveWaveFronts;
         [SerializeField] bool _debugPortalTraversalMarks;
@@ -141,6 +142,7 @@ namespace FlowFieldNavigation
                 if (_debugPickedSectors) { _pathDebugger.DebugPickedSectors(AgentToDebug, _sectorCornerHeightBuilder.GetSectorCornerHeights()); }
                 if (_debugOverlappingSectors) { _pathDebugger.DebugOverlappingSectors(AgentToDebug); }
                 if (_debugActiveWaveFronts) { _pathDebugger.DebugActiveWaveFronts(AgentToDebug); }
+                if (_debugPathUpdateSeed) { _pathDebugger.DebugPathUpdateSeeds(AgentToDebug); }
             }
 
         }

@@ -9,9 +9,11 @@ namespace FlowFieldNavigation
     internal class PathfindingDataExposer
     {
         PathDataContainer _pathContainer;
-        internal PathfindingDataExposer(PathDataContainer pathDataContainer)
+        PathUpdateSeedContainer _pathUpdateSeedContainer;
+        internal PathfindingDataExposer(PathDataContainer pathDataContainer, PathUpdateSeedContainer pathUpdateSeedContainer)
         {
             _pathContainer = pathDataContainer;
+            _pathUpdateSeedContainer = pathUpdateSeedContainer;
         }
         internal void Expose(
             NativeArray<int> pathIndiciesOfScheduledDynamicAreas,
@@ -28,6 +30,32 @@ namespace FlowFieldNavigation
             ScheduleFlowTransfers(flowRequests);
             UpdateDynamicArea(pathIndiciesOfScheduledDynamicAreas);
             _pathContainer.ExposeBuffers(destinationUpdatedPathIndicies, newPathIndicies, expandedPathIndicies);
+            SubmitPathUpdateSeeds(portalTraversalRequestedPaths);
+        }
+        void SubmitPathUpdateSeeds(NativeArray<PortalTraversalRequest> portalTraversalRequestedPaths)
+        {
+            List<PathPortalTraversalData> pathPortalTraversalDataArray = _pathContainer.PathPortalTraversalDataList;
+            NativeArray<PathDestinationData> pathDestinationDataArray = _pathContainer.PathDestinationDataList.AsArray();
+            NativeList<PathUpdateSeed> pathUpdateSeedList = _pathUpdateSeedContainer.UpdateSeeds;
+            for(int i = 0; i < portalTraversalRequestedPaths.Length; i++)
+            {
+                int pathIndex = portalTraversalRequestedPaths[i].PathIndex;
+                PathDestinationData destinationData = pathDestinationDataArray[pathIndex];
+                if(destinationData.DestinationType != DestinationType.DynamicDestination) { continue; }
+                NativeList<int> newPathUpdateSeedIndicies = pathPortalTraversalDataArray[pathIndex].NewPathUpdateSeedIndicies;
+                int offset = destinationData.Offset;
+                for(int j = 0; j < newPathUpdateSeedIndicies.Length; j++)
+                {
+                    PathUpdateSeed seed = new PathUpdateSeed()
+                    {
+                        CostFieldOffset = offset,
+                        PathIndex = pathIndex,
+                        TileIndex = newPathUpdateSeedIndicies[j]
+                    };
+                    pathUpdateSeedList.Add(seed);
+                }
+                newPathUpdateSeedIndicies.Clear();
+            }
         }
         void ScheduleFlowTransfers(NativeArray<FlowRequest> flowRequests)
         {
@@ -139,6 +167,7 @@ namespace FlowFieldNavigation
             PathSectorToFlowStartMapper newFlowStartMap = _pathContainer.SectorFlowStartMap;
             NativeList<FlowData> exposedFlowData = _pathContainer.ExposedFlowData;
             NativeList<bool> exposedLosData = _pathContainer.ExposedLosData;
+            NativeList<int> removedFlowAndLosStartIndicies = _pathContainer.RemovedExposedFlowAndLosIndicies;
             for (int i = 0; i < portalTraversalRequestedPaths.Length; i++)
             {
                 PortalTraversalRequest request = portalTraversalRequestedPaths[i];
@@ -147,11 +176,21 @@ namespace FlowFieldNavigation
                 int newPickedSectorStartIndex = pathPorTravDataList[pathIndex].NewPickedSectorStartIndex.Value;
                 for(int j = newPickedSectorStartIndex; j < allPickedSectors.Length; j++)
                 {
-                    if(newFlowStartMap.TryAdd(pathIndex, allPickedSectors[j], exposedFlowData.Length))
+                    int sectorIndex = allPickedSectors[j];
+                    if(newFlowStartMap.Contains(pathIndex, sectorIndex)) { continue; }
+                    int losAndFlowStartIndex;
+                    if (removedFlowAndLosStartIndicies.IsEmpty)
                     {
+                        losAndFlowStartIndex = exposedFlowData.Length;
                         exposedFlowData.Length += FlowFieldUtilities.SectorTileAmount;
                         exposedLosData.Length += FlowFieldUtilities.SectorTileAmount;
                     }
+                    else
+                    {
+                        losAndFlowStartIndex = removedFlowAndLosStartIndicies[0];
+                        removedFlowAndLosStartIndicies.RemoveAtSwapBack(0);
+                    }
+                    newFlowStartMap.TryAdd(pathIndex, sectorIndex, losAndFlowStartIndex);
                 }
             }
         }

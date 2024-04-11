@@ -42,7 +42,7 @@ public class TerrainGenerator : MonoBehaviour
             FlowFieldStaticObstacle[] obstacleBehaviors = FindObjectsByType<FlowFieldStaticObstacle>(FindObjectsSortMode.None);
             FlowFieldSurface[] flowFieldSurfaces = FindObjectsByType<FlowFieldSurface>(FindObjectsSortMode.None);
 
-            SimulationStartParametersStandard simParam = new SimulationStartParametersStandard(flowFieldSurfaces, obstacleBehaviors, 0.5f, 0.25f, 5f, 0.1f, 1f, 0.1f, 30);
+            SimulationStartParametersStandard simParam = new SimulationStartParametersStandard(flowFieldSurfaces, obstacleBehaviors, 0.5f, 0.25f, 5f, 0.1f, 1f, 0.1f, 0);
             _navigationManager.Interface.StartSimulation(simParam);
 
             for (int i = 0; i < obstacleBehaviors.Length; i++)

@@ -55,7 +55,7 @@ namespace FlowFieldNavigation
                 PortalReductionJob reductionJob = new PortalReductionJob()
                 {
                     TileSize = FlowFieldUtilities.TileSize,
-                    TargetIndex = destinationIndex,
+                    GoalIndex = destinationIndex,
                     FieldColAmount = FlowFieldUtilities.FieldColAmount,
                     FieldRowAmount = FlowFieldUtilities.FieldRowAmount,
                     FieldTileSize = FlowFieldUtilities.TileSize,
@@ -82,6 +82,7 @@ namespace FlowFieldNavigation
                     GoalTraversalDataList = portalTraversalData.GoalDataList,
                     NewReducedNodeIndicies = portalTraversalData.NewReducedPortalIndicies,
                     PortalDataRecords = portalTraversalData.PortalDataRecords.AsArray(),
+                    NewPathUpdateSeedIndicies = portalTraversalData.NewPathUpdateSeedIndicies,
                 };
                 JobHandle reductHandle = reductionJob.Schedule(dependency);
                 if (FlowFieldUtilities.DebugMode) { reductHandle.Complete(); }

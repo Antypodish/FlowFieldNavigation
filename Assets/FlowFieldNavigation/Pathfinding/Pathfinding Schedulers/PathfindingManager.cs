@@ -161,12 +161,7 @@ namespace FlowFieldNavigation
             //Copy requested paths for parallel usage
             _requestedPaths.Length = inputPathRequests.Length;
             NativeArray<PathRequest> requestedPathsAsArray = _requestedPaths.AsArray();
-            NativeArrayCopyJob<PathRequest> requestCopyForParallelUse = new NativeArrayCopyJob<PathRequest>()
-            {
-                Source = inputPathRequests,
-                Destination = requestedPathsAsArray,
-            };
-            requestCopyForParallelUse.Schedule().Complete();
+            requestedPathsAsArray.CopyFrom(inputPathRequests);
 
             //Get cost field costs
             UnsafeListReadOnly<byte>[] costFielCosts = _navigationManager.GetAllCostFieldCostsAsUnsafeListReadonly();
