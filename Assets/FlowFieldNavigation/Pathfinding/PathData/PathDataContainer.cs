@@ -162,6 +162,12 @@ namespace FlowFieldNavigation
                 {
                     RemovedExposedFlowAndLosIndicies.Add(flowStart);
                     SectorFlowStartMap.TryRemove(pathIndex, sector);
+
+                    for(int j = 0; j < FlowFieldUtilities.SectorTileAmount; j++)
+                    {
+                        ExposedFlowData[flowStart + j] = new FlowData();
+                        ExposedLosData[flowStart + j] = false;
+                    }
                 }
                 
             }

@@ -465,7 +465,6 @@ namespace FlowFieldNavigation
 
             float2 destination = _navigationManager.PathDataContainer.PathDestinationDataList[pathIndex].Destination;
             NativeArray<SectorFlowStart> dynamicAreaFlowStarts = _navigationManager.PathDataContainer.PathfindingInternalDataList[pathIndex].DynamicArea.SectorFlowStartCalculationBuffer.AsArray();
-            NativeArray<FlowData> dynamicAreaFlowField = _pathContainer.PathfindingInternalDataList[pathIndex].DynamicArea.FlowFieldCalculationBuffer.AsArray();
             NativeArray<FlowData> exposedFlowData = _pathContainer.ExposedFlowData.AsArray();
             NativeArray<bool> exposedLosData = _pathContainer.ExposedLosData.AsArray();
             PathSectorToFlowStartMapper newFlowStartMap = _pathContainer.SectorFlowStartMap;
@@ -492,12 +491,6 @@ namespace FlowFieldNavigation
                         DrawSquare(debugPos, 0.2f);
                         DrawLOS(debugPos, destination);
                     }
-                    else if (HasDynamicFlow(sectorIndex, local1d))
-                    {
-                        Gizmos.color = Color.blue;
-                        DrawSquare(debugPos, 0.2f);
-                        DrawFlow(GetDynamicFlow(sectorIndex, local1d), debugPos);
-                    }
                     else
                     {
                         Gizmos.color = Color.black;
@@ -514,33 +507,10 @@ namespace FlowFieldNavigation
             {
                 return exposedLosData[sectorLosStart + localIndex];
             }
-            bool HasDynamicFlow(int sectorIndex, int localIndex)
-            {
-                int sectorFlowStart = 0;
-                for (int i = 0; i < dynamicAreaFlowStarts.Length; i++)
-                {
-                    SectorFlowStart flowStart = dynamicAreaFlowStarts[i];
-                    sectorFlowStart = math.select(sectorFlowStart, flowStart.FlowStartIndex, flowStart.SectorIndex == sectorIndex);
-                }
-                if (sectorFlowStart == 0) { return false; }
-
-                return dynamicAreaFlowField[sectorFlowStart + localIndex].IsValid();
-            }
 
             FlowData GetFlow(int sectorFlowStart, int localIndex)
             {
                 return exposedFlowData[sectorFlowStart + localIndex];
-            }
-
-            FlowData GetDynamicFlow(int sectorIndex, int localIndex)
-            {
-                int sectorFlowStart = 0;
-                for (int i = 0; i < dynamicAreaFlowStarts.Length; i++)
-                {
-                    SectorFlowStart flowStart = dynamicAreaFlowStarts[i];
-                    sectorFlowStart = math.select(sectorFlowStart, flowStart.FlowStartIndex, flowStart.SectorIndex == sectorIndex);
-                }
-                return dynamicAreaFlowField[sectorFlowStart + localIndex];
             }
 
             void DrawSquare(Vector3 pos, float size)
