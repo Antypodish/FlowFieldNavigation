@@ -24,7 +24,6 @@ namespace FlowFieldNavigation
         internal NativeList<PortalTraversalData> GoalTraversalDataList;
         internal UnsafeList<PathSectorState> SectorStateTable;
         internal NativeList<int> PickedToSector;
-        internal UnsafeList<float> TargetSectorCosts;
 
         [ReadOnly] internal NativeSlice<float2> SourcePositions;
         [ReadOnly] internal NativeArray<SectorNode> SectorNodes;
@@ -319,13 +318,14 @@ namespace FlowFieldNavigation
             int sector1 = FlowFieldUtilities.GetSector1D(portalFieldIndex1, SectorColAmount, SectorMatrixColAmount);
             int sector2 = FlowFieldUtilities.GetSector1D(portalFieldIndex2, SectorColAmount, SectorMatrixColAmount);
             if((sector1 == _targetSectorIndex1d || sector2 == _targetSectorIndex1d) && GoalTraversalDataList.Length == 0)
-            { 
-                SetTargetSectorCosts();
+            {
+                NativeArray<float> targetSectorCostsGrid = new NativeArray<float>(SectorTileAmount, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
+                SetTargetSectorCosts(targetSectorCostsGrid);
                 PortalTraversalData destinationData = new PortalTraversalData();
                 destinationData.Reset();
                 destinationData.DistanceFromTarget = 0;
                 GoalTraversalDataList.Add(destinationData);
-                SetTargetNeighbourPortalDataAndAddToList(goalNeighbourPortalIndicies);
+                SetTargetNeighbourPortalDataAndAddToList(goalNeighbourPortalIndicies, targetSectorCostsGrid);
                 curTravData = PortalTraversalDataArray[curPortalIndex];
                 int goalIndex1d = FlowFieldUtilities.To1D(GoalIndex, FieldColAmount);
                 NewPathUpdateSeedIndicies.Add(goalIndex1d);
@@ -373,7 +373,7 @@ namespace FlowFieldNavigation
                 }
             }
         }
-        void SetTargetNeighbourPortalDataAndAddToList(NativeList<int> targetNeighbourPortalIndicies)
+        void SetTargetNeighbourPortalDataAndAddToList(NativeList<int> targetNeighbourPortalIndicies, NativeArray<float> targetSectorCostGrid)
         {
             SectorNode sectorNode = SectorNodes[_targetSectorIndex1d];
             int winPtr = sectorNode.SecToWinPtr;
@@ -387,7 +387,7 @@ namespace FlowFieldNavigation
                 {
                     int portalNodeIndex = j;
                     int portalLocalIndexAtSector = FlowFieldUtilities.GetLocal1dInSector(PortalNodes[portalNodeIndex], _targetSectorIndex1d, SectorMatrixColAmount, SectorColAmount);
-                    float integratedCost = TargetSectorCosts[portalLocalIndexAtSector];
+                    float integratedCost = targetSectorCostGrid[portalLocalIndexAtSector];
                     if (integratedCost == float.MaxValue) { continue; }
                     PortalTraversalData portalData = PortalTraversalDataArray[portalNodeIndex];
                     portalData.DistanceFromTarget = integratedCost;
@@ -397,16 +397,15 @@ namespace FlowFieldNavigation
                 }
             }
         }
-        void SetTargetSectorCosts()
+        void SetTargetSectorCosts(NativeArray<float> targetSectorCostsGrid)
         {
             int sectorColAmount = SectorColAmount;
             int sectorTileAmount = SectorTileAmount;
-            UnsafeList<float> targetSectorCostsNew = TargetSectorCosts;
             NativeSlice<byte> costs = new NativeSlice<byte>(Costs, _targetSectorIndex1d * SectorTileAmount, SectorTileAmount);
             NativeBitArray isBlocked = new NativeBitArray(SectorTileAmount, Allocator.Temp);
-            for(int i = 0; i < TargetSectorCosts.Length; i++)
+            for(int i = 0; i < targetSectorCostsGrid.Length; i++)
             {
-                TargetSectorCosts[i] = float.MaxValue;
+                targetSectorCostsGrid[i] = float.MaxValue;
                 isBlocked.Set(i, costs[i] == byte.MaxValue);
             }
             NativeQueue<int> fastMarchingQueue = new NativeQueue<int>(Allocator.Temp);
@@ -414,7 +413,7 @@ namespace FlowFieldNavigation
             int4 directions_NE_SE_SW_NW;
             bool4 isBlocked_N_E_S_W;
             int targetLocal1d = FlowFieldUtilities.GetLocal1D(GoalIndex, SectorColAmount);
-            TargetSectorCosts[targetLocal1d] = 0;
+            targetSectorCostsGrid[targetLocal1d] = 0;
             isBlocked.Set(targetLocal1d, true);
             SetNeighbourData(targetLocal1d);
             EnqueueNeighbours();
@@ -422,7 +421,7 @@ namespace FlowFieldNavigation
             {
                 int curIndex = fastMarchingQueue.Dequeue();
                 SetNeighbourData(curIndex);
-                TargetSectorCosts[curIndex] = GetCost();
+                targetSectorCostsGrid[curIndex] = GetCost();
                 EnqueueNeighbours();
             }
 
@@ -473,18 +472,18 @@ namespace FlowFieldNavigation
             {
                 float4 costs_N_E_S_W = new float4()
                 {
-                    x = targetSectorCostsNew[directions_N_E_S_W.x],
-                    y = targetSectorCostsNew[directions_N_E_S_W.y],
-                    z = targetSectorCostsNew[directions_N_E_S_W.z],
-                    w = targetSectorCostsNew[directions_N_E_S_W.w],
+                    x = targetSectorCostsGrid[directions_N_E_S_W.x],
+                    y = targetSectorCostsGrid[directions_N_E_S_W.y],
+                    z = targetSectorCostsGrid[directions_N_E_S_W.z],
+                    w = targetSectorCostsGrid[directions_N_E_S_W.w],
                 };
                 costs_N_E_S_W += 1f;
                 float4 costs_NE_SE_SW_NW = new float4()
                 {
-                    x = targetSectorCostsNew[directions_NE_SE_SW_NW.x],
-                    y = targetSectorCostsNew[directions_NE_SE_SW_NW.y],
-                    z = targetSectorCostsNew[directions_NE_SE_SW_NW.z],
-                    w = targetSectorCostsNew[directions_NE_SE_SW_NW.w],
+                    x = targetSectorCostsGrid[directions_NE_SE_SW_NW.x],
+                    y = targetSectorCostsGrid[directions_NE_SE_SW_NW.y],
+                    z = targetSectorCostsGrid[directions_NE_SE_SW_NW.z],
+                    w = targetSectorCostsGrid[directions_NE_SE_SW_NW.w],
                 };
                 costs_NE_SE_SW_NW += 1.4f;
                 float4 min4 = math.min(costs_N_E_S_W, costs_NE_SE_SW_NW);

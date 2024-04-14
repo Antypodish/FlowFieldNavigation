@@ -16,7 +16,6 @@ namespace FlowFieldNavigation
 
         FlowFieldNavigationManager _navigationManager;
         PathDataContainer _pathContainer;
-        PathConstructionTester _pathConstructionTester;
         PathfindingPipeline _pathfindingPipeline;
         NativeList<float3> _agentPositions;
         NativeList<float2> _sourcePositions;
@@ -47,7 +46,6 @@ namespace FlowFieldNavigation
             _navigationManager = navigationManager;
             _pathContainer = navigationManager.PathDataContainer;
             _pathfindingPipeline = new PathfindingPipeline(navigationManager);
-
             _sourcePositions = new NativeList<float2>(Allocator.Persistent);
             _pathfindingTaskOrganizationHandle = new List<JobHandle>(1);
             _offsetDerivedPathRequests = new NativeList<OffsetDerivedPathRequest>(Allocator.Persistent);
@@ -58,7 +56,6 @@ namespace FlowFieldNavigation
             _newPathIndicies = new NativeList<int>(Allocator.Persistent);
             _destinationUpdatedPathIndicies = new NativeList<int>(Allocator.Persistent);
             _expandedPathIndicies = new NativeList<int>(Allocator.Persistent);
-            _pathConstructionTester = new PathConstructionTester();
             _agentIndiciesToStartMoving = new NativeList<int>(Allocator.Persistent);
             _newPathRequestedAgentIndicies = new NativeList<int>(Allocator.Persistent);
             _agentIndiciesToUnsubCurPath = new NativeList<int>(Allocator.Persistent);
@@ -135,7 +132,6 @@ namespace FlowFieldNavigation
             NativeList<int> unusedFlockIndexList = _navigationManager.FlockDataContainer.UnusedFlockIndexList;
             NativeList<Flock> flockList = _navigationManager.FlockDataContainer.FlockList;
             _islandFieldProcessors = islandFieldProcessors;
-            NativeArray<UnsafeList<float>> targetSectorIntegrations = _pathContainer.TargetSectorIntegrationList.AsArray();
             NativeArray<PathState> pathStateArray = _pathContainer.ExposedPathStateList.AsArray();
             NativeArray<PathDestinationData> pathDestinationDataArray = _pathContainer.PathDestinationDataList.AsArray();
             NativeArray<PathRoutineData> pathRoutineDataArray = _pathContainer.PathRoutineDataList.AsArray();

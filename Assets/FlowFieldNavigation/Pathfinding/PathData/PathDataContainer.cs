@@ -20,7 +20,6 @@ namespace FlowFieldNavigation
         internal List<PathfindingInternalData> PathfindingInternalDataList;
         internal NativeList<UnsafeList<PathSectorState>> PathSectorStateTableList;
         internal NativeList<PathDestinationData> PathDestinationDataList;
-        internal NativeList<UnsafeList<float>> TargetSectorIntegrationList;
         internal NativeList<PathRoutineData> PathRoutineDataList;
         internal NativeList<SectorBitArray> PathSectorBitArrays;
         internal List<PathPortalTraversalData> PathPortalTraversalDataList;
@@ -45,7 +44,6 @@ namespace FlowFieldNavigation
             PathPortalTraversalDataList = new List<PathPortalTraversalData>();
             PathDestinationDataList = new NativeList<PathDestinationData>(Allocator.Persistent);
             ExposedPathStateList = new NativeList<PathState>(Allocator.Persistent);
-            TargetSectorIntegrationList = new NativeList<UnsafeList<float>>(Allocator.Persistent);
             PathRoutineDataList = new NativeList<PathRoutineData>(Allocator.Persistent);
             PathSectorBitArrays = new NativeList<SectorBitArray>(Allocator.Persistent);
             SectorToFlowStartTables = new List<NativeArray<int>>();
@@ -71,7 +69,6 @@ namespace FlowFieldNavigation
             if (ExposedPathAgentStopFlagList.IsCreated) { ExposedPathAgentStopFlagList.Dispose(); }
             if (PathSectorStateTableList.IsCreated) { PathSectorStateTableList.Dispose(); }
             if (PathDestinationDataList.IsCreated) { PathDestinationDataList.Dispose(); }
-            if (TargetSectorIntegrationList.IsCreated) { TargetSectorIntegrationList.Dispose(); }
             if (PathRoutineDataList.IsCreated) { PathRoutineDataList.Dispose(); }
             if (PathSectorBitArrays.IsCreated) { PathSectorBitArrays.Dispose(); }
             if (PathFlockIndicies.IsCreated) { PathFlockIndicies.Dispose(); }
@@ -93,7 +90,6 @@ namespace FlowFieldNavigation
                     deallcoated++;
                     UnsafeList<PathSectorState> sectorStateTable = PathSectorStateTableList[i];
                     PathPortalTraversalData portalTraversalData = PathPortalTraversalDataList[i];
-                    UnsafeList<float> targetSectorIntegration = TargetSectorIntegrationList[i];
                     SectorBitArray sectorBitArray = PathSectorBitArrays[i];
                     NativeArray<OverlappingDirection> sectorOverlappingDirections = SectorOverlappingDirectionTableList[i];
                     NativeArray<int> sectorToFlowStartTable = SectorToFlowStartTables[i];
@@ -116,7 +112,6 @@ namespace FlowFieldNavigation
                     {
                         PickedToSector = internalData.PickedSectorList,
                         PortalSequence = portalTraversalData.PortalSequence,
-                        TargetSectorCosts = targetSectorIntegration,
                         SourcePortalIndexList = portalTraversalData.SourcePortalIndexList,
                         TargetSectorPortalIndexList = portalTraversalData.TargetSectorPortalIndexList,
                         PortalTraversalFastMarchingQueue = internalData.PortalTraversalQueue,
@@ -247,7 +242,6 @@ namespace FlowFieldNavigation
                 PathSectorStateTableList.Add(preallocations.SectorStateTable);
                 PathPortalTraversalDataList.Add(portalTraversalData);
                 PathDestinationDataList.Add(destinationData);
-                TargetSectorIntegrationList.Add(preallocations.TargetSectorCosts);
                 PathRoutineDataList.Add(new PathRoutineData());
                 PathSectorBitArrays.Add(preallocations.SectorBitArray);
                 PathSubscriberCounts.Add(request.SourceCount);
@@ -261,7 +255,6 @@ namespace FlowFieldNavigation
                 PathSectorStateTableList[pathIndex] = preallocations.SectorStateTable;
                 PathPortalTraversalDataList[pathIndex] = portalTraversalData;
                 PathDestinationDataList[pathIndex] = destinationData;
-                TargetSectorIntegrationList[pathIndex] = preallocations.TargetSectorCosts;
                 PathRoutineDataList[pathIndex] = new PathRoutineData();
                 PathSectorBitArrays[pathIndex] = preallocations.SectorBitArray;
                 PathSubscriberCounts[pathIndex] = request.SourceCount;

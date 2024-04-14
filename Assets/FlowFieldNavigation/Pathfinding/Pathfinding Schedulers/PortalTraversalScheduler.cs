@@ -64,7 +64,6 @@ namespace FlowFieldNavigation
                     SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
                     FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
                     PickedToSector = pathInternalData.PickedSectorList,
-                    TargetSectorCosts = _pathContainer.TargetSectorIntegrationList[pathIndex],
                     PortalNodes = pickedFieldGraph.PortalNodes,
                     SecToWinPtrs = pickedFieldGraph.SecToWinPtrs,
                     WindowNodes = pickedFieldGraph.WindowNodes,
