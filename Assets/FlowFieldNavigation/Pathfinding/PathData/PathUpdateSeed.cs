@@ -5,5 +5,6 @@ namespace FlowFieldNavigation
         internal int TileIndex;
         internal int PathIndex;
         internal int CostFieldOffset;
+        internal bool UpdateFlag;
     }
 }

@@ -50,7 +50,8 @@ namespace FlowFieldNavigation
                     {
                         CostFieldOffset = offset,
                         PathIndex = pathIndex,
-                        TileIndex = newPathUpdateSeedIndicies[j]
+                        TileIndex = newPathUpdateSeedIndicies[j],
+                        UpdateFlag = false,
                     };
                     pathUpdateSeedList.Add(seed);
                 }

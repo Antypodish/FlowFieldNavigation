@@ -145,6 +145,7 @@ namespace FlowFieldNavigation
             NativeArray<int> pathSubscriberCountArray = _pathContainer.PathSubscriberCounts.AsArray();
             NativeArray<FlowData> exposedFlowData = _pathContainer.ExposedFlowData.AsArray();
             PathSectorToFlowStartMapper flowStartMap = _pathContainer.SectorFlowStartMap;
+            NativeArray<PathUpdateSeed> pathUpdateSeeds = _navigationManager.PathUpdateSeedContainer.UpdateSeeds.AsArray();
 
             //Copy agent positions from transforms
             _agentPositions.Length = agentTransforms.length;
@@ -234,8 +235,7 @@ namespace FlowFieldNavigation
                 if (FlowFieldUtilities.DebugMode) { sectorEditCheckHandle.Complete(); }
             }
 
-            //Routine data setting
-            PathRoutineDataCalculationJob routineDataCalculation = new PathRoutineDataCalculationJob()
+            DynamicGoalUpdateJob dynamicGoalUpdate = new DynamicGoalUpdateJob()
             {
                 SectorColAmount = FlowFieldUtilities.SectorColAmount,
                 SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
@@ -250,15 +250,38 @@ namespace FlowFieldNavigation
                 FieldMinXIncluding = FlowFieldUtilities.FieldMinXIncluding,
                 FieldMinYIncluding = FlowFieldUtilities.FieldMinYIncluding,
                 PathStateArray = pathStateArray,
-                TargetSectorIntegrations = targetSectorIntegrations,
                 AgentPositions = _agentPositions.AsArray(),
                 PathDestinationDataArray = pathDestinationDataArray,
                 PathOrganizationDataArray = pathRoutineDataArray,
                 IslandFieldProcessors = _islandFieldProcessors,
                 CostFields = _costFieldCosts.AsArray(),
             };
-            JobHandle routineDataCalculationHandle = routineDataCalculation.Schedule(pathRoutineDataArray.Length, 64, sectorEditCheckHandle);
-            if (FlowFieldUtilities.DebugMode) { routineDataCalculationHandle.Complete(); _pathConstructionTester.RoutineDataCalculationTest(routineDataCalculation); }
+            JobHandle dynamicGoalUpdateHandle = dynamicGoalUpdate.Schedule(pathRoutineDataArray.Length, 64, sectorEditCheckHandle);
+            if (FlowFieldUtilities.DebugMode) { dynamicGoalUpdateHandle.Complete(); }
+
+            DynamicGoalPathReconstructionDeterminationJob dynamicGoalPathReconstructionDetermination = new DynamicGoalPathReconstructionDeterminationJob()
+            {
+                SectorColAmount = FlowFieldUtilities.SectorColAmount,
+                SectorMatrixColAmount = FlowFieldUtilities.SectorMatrixColAmount,
+                TileSize = FlowFieldUtilities.TileSize,
+                SectorTileAmount = FlowFieldUtilities.SectorTileAmount,
+                FieldColAmount = FlowFieldUtilities.FieldColAmount,
+                FieldGridStartPos = FlowFieldUtilities.FieldGridStartPosition,
+                PathDestinationDataArray = pathDestinationDataArray,
+                CostFields = _costFieldCosts.AsArray(),
+                PathRoutineDataArray = pathRoutineDataArray,
+                UpdateSeeds = pathUpdateSeeds,
+            };
+            JobHandle dynamicGoalReconstructionHandle = dynamicGoalPathReconstructionDetermination.Schedule(pathUpdateSeeds.Length, 100, dynamicGoalUpdateHandle);
+            if (FlowFieldUtilities.DebugMode) { dynamicGoalReconstructionHandle.Complete(); }
+
+            DynamicGoalReconstructionFlagReadJob dynamicGoalReconstructionFlagRead = new DynamicGoalReconstructionFlagReadJob()
+            {
+                Seeds = pathUpdateSeeds,
+                PathRoutineDataArray = pathRoutineDataArray,
+            };
+            JobHandle dynamicGoalReconstructionFlagReadJob = dynamicGoalReconstructionFlagRead.Schedule(dynamicGoalReconstructionHandle);
+            if (FlowFieldUtilities.DebugMode) { dynamicGoalReconstructionFlagReadJob.Complete(); }
 
             //Current path reconstruction submission
             CurrentPathReconstructionDeterminationJob reconstructionDetermination = new CurrentPathReconstructionDeterminationJob()
@@ -273,9 +296,9 @@ namespace FlowFieldNavigation
                 PathRoutineDataArray = pathRoutineDataArray,
                 FlockIndexToPathRequestIndex = _flockIndexToPathRequestIndex,
             };
-            JobHandle reconstructionDeterminationHandle = reconstructionDetermination.Schedule(JobHandle.CombineDependencies(routineDataCalculationHandle, agentTaskCleaningHandle, selfTargetingFixHandle));
+            JobHandle reconstructionDeterminationHandle = reconstructionDetermination.Schedule(JobHandle.CombineDependencies(dynamicGoalReconstructionFlagReadJob, agentTaskCleaningHandle, selfTargetingFixHandle));
             if (FlowFieldUtilities.DebugMode) { reconstructionDeterminationHandle.Complete(); }
-
+            
             //Current path update submission
             CurrentPathUpdateDeterminationJob updateDetermination = new CurrentPathUpdateDeterminationJob()
             {

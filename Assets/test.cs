@@ -18,7 +18,9 @@ namespace Assets
 
     public class test : MonoBehaviour
     {
+
         [SerializeField] int size;
+        [SerializeField] int batch;
         private void Start()
         {
         }

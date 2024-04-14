@@ -1,14 +1,12 @@
-﻿using Unity.Jobs;
-using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
+using Unity.Jobs;
 using Unity.Burst;
+using Unity.Collections;
 using Unity.Mathematics;
-
+using Unity.Collections.LowLevel.Unsafe;
 namespace FlowFieldNavigation
 {
-
     [BurstCompile]
-    internal struct PathRoutineDataCalculationJob : IJobParallelFor
+    internal struct DynamicGoalUpdateJob : IJobParallelFor
     {
         internal float TileSize;
         internal int SectorColAmount;
@@ -22,14 +20,12 @@ namespace FlowFieldNavigation
         internal float FieldMaxXExcluding;
         internal float FieldMaxYExcluding;
         internal float2 FieldGridStartPos;
-        [ReadOnly] internal NativeArray<UnsafeList<float>> TargetSectorIntegrations;
         [ReadOnly] internal NativeArray<PathState> PathStateArray;
         [ReadOnly] internal NativeArray<float3> AgentPositions;
         [ReadOnly] internal NativeArray<IslandFieldProcessor> IslandFieldProcessors;
         [ReadOnly] internal NativeArray<UnsafeListReadOnly<byte>> CostFields;
-        internal NativeArray<PathDestinationData> PathDestinationDataArray;
         internal NativeArray<PathRoutineData> PathOrganizationDataArray;
-
+        internal NativeArray<PathDestinationData> PathDestinationDataArray;
         public void Execute(int index)
         {
             PathState pathState = PathStateArray[index];
@@ -38,7 +34,6 @@ namespace FlowFieldNavigation
             {
                 return;
             }
-            UnsafeList<float> targetSectorIntegration = TargetSectorIntegrations[index];
             PathDestinationData destinationData = PathDestinationDataArray[index];
             if (destinationData.DestinationType == DestinationType.DynamicDestination)
             {
@@ -72,21 +67,15 @@ namespace FlowFieldNavigation
                     int desiredIsland = oldDestinationIsland;
                     bool succesfull = TryGetExtendedPosition(newDestination, desiredIsland, islandFieldProcessor, costs, out float2 extendedPos);
                     newDestination = math.select(oldDestination, extendedPos, succesfull);
-                    newDestinationIndex = FlowFieldUtilities.PosTo2D(newDestination, TileSize, FieldGridStartPos);
-                    newDestinationLocal = FlowFieldUtilities.GetLocal1D(newDestinationIndex, SectorColAmount, SectorMatrixColAmount);
                 }
-                int oldSector = FlowFieldUtilities.GetSector1D(oldDestinationIndex, SectorColAmount, SectorMatrixColAmount);
-                bool outOfReach = oldSector != newDestinationLocal.sector;
-                outOfReach = outOfReach || targetSectorIntegration[newDestinationLocal.index] == float.MaxValue;
 
                 //Output
-                DynamicDestinationState destinationState = oldDestinationIndex.Equals(newDestinationIndex) ? DynamicDestinationState.None : DynamicDestinationState.Moved;
-                destinationState = outOfReach ? DynamicDestinationState.OutOfReach : destinationState;
                 destinationData.DesiredDestination = targetAgentPos2;
                 destinationData.Destination = newDestination;
                 PathDestinationDataArray[index] = destinationData;
+
                 PathRoutineData organizationData = PathOrganizationDataArray[index];
-                organizationData.DestinationState = destinationState;
+                organizationData.DestinationState = oldDestinationIndex.Equals(newDestinationIndex) ? DynamicDestinationState.None : DynamicDestinationState.Moved;
                 PathOrganizationDataArray[index] = organizationData;
             }
         }
@@ -315,6 +304,4 @@ namespace FlowFieldNavigation
             }
         }
     }
-
-
 }

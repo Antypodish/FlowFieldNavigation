@@ -1052,6 +1052,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   size: 200
+  batch: 10
 --- !u!4 &1675766696
 Transform:
   m_ObjectHideFlags: 0

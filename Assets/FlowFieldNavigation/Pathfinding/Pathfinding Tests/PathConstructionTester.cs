@@ -4,7 +4,7 @@ using Unity.Jobs;
 namespace FlowFieldNavigation
 {
     internal class PathConstructionTester
-    {
+    {/*
         public void RoutineDataCalculationTest(PathRoutineDataCalculationJob routineDataCalculationJob)
         {
             PathRoutineDataCalculationTest routineDataTest = new PathRoutineDataCalculationTest()
@@ -100,7 +100,7 @@ namespace FlowFieldNavigation
             routineDataTest.DestinationOutsideFieldBoundsIndicies.Dispose();
             routineDataTest.PathBotReconstructedAndUpdatedIndicies.Dispose();
             routineDataTest.RemovedPathUpdatedOrReconstructedIndicies.Dispose();
-        }
+        }*/
     }
 
 

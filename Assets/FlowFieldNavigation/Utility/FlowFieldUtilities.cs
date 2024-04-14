@@ -1,5 +1,6 @@
 ﻿using Unity.Mathematics;
 using Unity.Burst;
+using System;
 namespace FlowFieldNavigation
 {
     internal static class FlowFieldUtilities
@@ -115,10 +116,22 @@ namespace FlowFieldNavigation
             return local2d.y * sectorColAmount + local2d.x;
         }
         internal static LocalIndex1d GetLocal1D(int2 general2d, int sectorColAmount, int sectorMatrixColAmount)
-        {//1000,995
-            int2 sector2d = general2d / sectorColAmount;//100,99
-            int2 local2d = general2d - (sector2d * sectorColAmount);//0,5
-            int sector1d = sector2d.y * sectorMatrixColAmount + sector2d.x;//10000
+        {
+            int2 sector2d = general2d / sectorColAmount;
+            int2 local2d = general2d - (sector2d * sectorColAmount);
+            int sector1d = sector2d.y * sectorMatrixColAmount + sector2d.x;
+            return new LocalIndex1d()
+            {
+                sector = sector1d,
+                index = local2d.y * sectorColAmount + local2d.x,
+            };
+        }
+        internal static LocalIndex1d GetLocal1D(int general1d, int fieldColAmount, int sectorColAmount, int sectorMatrixColAmount)
+        {
+            int2 general2d = new int2(general1d % fieldColAmount, general1d / fieldColAmount);
+            int2 sector2d = general2d / sectorColAmount;
+            int2 local2d = general2d - (sector2d * sectorColAmount);
+            int sector1d = sector2d.y * sectorMatrixColAmount + sector2d.x;
             return new LocalIndex1d()
             {
                 sector = sector1d,
