@@ -28,21 +28,21 @@ namespace FlowFieldNavigation
             _navigationManager.StartSimulation(simulationStartInputs);
             simulationStartInputs.Dispose();
         }
-        public void SetDestination(List<FlowFieldAgent> agents, Vector3 target)
+        public void SetDestination(List<FlowFieldAgent> agents, Vector3 target, float range = 0)
         {
             if (!_navigationManager.SimulationStarted) { return; }
             if (agents.Count == 0) { return; }
             GetAgentReferances(agents, _extracedAgentReferances);
             if(_extracedAgentReferances.Length == 0) { return; }
-            _navigationManager.RequestAccumulator.RequestPath(_extracedAgentReferances.AsArray(), target);
+            _navigationManager.RequestAccumulator.RequestPath(_extracedAgentReferances.AsArray(), target, range);
         }
-        public void SetDestination(List<FlowFieldAgent> agents, FlowFieldAgent targetAgent)
+        public void SetDestination(List<FlowFieldAgent> agents, FlowFieldAgent targetAgent, float range = 0)
         {
             if (!_navigationManager.SimulationStarted || agents.Count == 0 || targetAgent == null) { return; }
             GetAgentReferances(agents, _extracedAgentReferances);
             AgentReferance targetAgentRef = targetAgent.AgentReferance;
             if (_extracedAgentReferances.Length == 0 || !targetAgentRef.IsValid()) { return; }
-            _navigationManager.RequestAccumulator.RequestPath(_extracedAgentReferances.AsArray(), targetAgentRef);
+            _navigationManager.RequestAccumulator.RequestPath(_extracedAgentReferances.AsArray(), targetAgentRef, range);
         }
         public int GetPathIndex(FlowFieldAgent agent)
         {

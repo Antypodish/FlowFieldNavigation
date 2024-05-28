@@ -13,10 +13,12 @@ namespace FlowFieldNavigation
         internal ushort OffsetMask;
         internal int FlockIndex;
         internal bool ReconstructionFlag;
-        internal PathRequest(float2 destination)
+        internal float Range;
+        internal PathRequest(float2 destination, float range)
         {
             Destination = destination;
             Type = DestinationType.StaticDestination;
+            Range = range;
             TargetAgentIndex = 0;
             DerivedRequestCount = 0;
             DerivedRequestStartIndex = 0;
@@ -25,10 +27,11 @@ namespace FlowFieldNavigation
             ReconstructionFlag = false;
         }
 
-        internal PathRequest(int targetAgentIndex)
+        internal PathRequest(int targetAgentIndex, float range)
         {
             TargetAgentIndex = targetAgentIndex;
             Type = DestinationType.DynamicDestination;
+            Range = range;
             Destination = 0;
             DerivedRequestCount = 0;
             DerivedRequestStartIndex = 0;
@@ -41,6 +44,7 @@ namespace FlowFieldNavigation
             Destination = requestRecord.Destination;
             Type = requestRecord.Type;
             TargetAgentIndex = requestRecord.TargetAgent;
+            Range = requestRecord.Range;
             DerivedRequestCount = 0;
             DerivedRequestStartIndex = 0;
             OffsetMask = 0;
@@ -59,6 +63,7 @@ namespace FlowFieldNavigation
         internal DestinationType Type;
         internal int FlockIndex;
         internal bool ReconstructionFlag;
+        internal float Range;
 
         internal OffsetDerivedPathRequest(PathRequest initialPathRequest, int offset)
         {
@@ -70,6 +75,7 @@ namespace FlowFieldNavigation
             DerivedFinalRequestCount = 0;
             FlockIndex = initialPathRequest.FlockIndex;
             ReconstructionFlag = initialPathRequest.ReconstructionFlag;
+            Range = initialPathRequest.Range;
         }
 
         internal bool IsCreated()
@@ -91,6 +97,7 @@ namespace FlowFieldNavigation
         internal DestinationType Type;
         internal int FlockIndex;
         internal bool ReconstructionFlag;
+        internal float Range;
 
         internal FinalPathRequest(OffsetDerivedPathRequest derivedReq, int sourceIsland)
         {
@@ -102,6 +109,7 @@ namespace FlowFieldNavigation
             SourceIsland = sourceIsland;
             FlockIndex = derivedReq.FlockIndex;
             ReconstructionFlag = derivedReq.ReconstructionFlag;
+            Range = derivedReq.Range;
 
             SourceCount = 0;
             SourcePositionStartIndex = 0;

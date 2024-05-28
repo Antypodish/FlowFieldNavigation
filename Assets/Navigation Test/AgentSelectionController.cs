@@ -26,6 +26,9 @@ public class AgentSelectionController : MonoBehaviour
     ControllerState _state;
 
     int _agentsToCreate = 0;
+    [Range(0, float.MaxValue)]
+    [SerializeField]
+    float _currentRange = 0;
     private void Start()
     {
         _agentsToCreate = _startingAgentCount;
@@ -184,7 +187,7 @@ public class AgentSelectionController : MonoBehaviour
             if (Physics.Raycast(ray, out hit, float.PositiveInfinity, 8))
             {
                 Vector3 destination = hit.point;
-                _navigationManager.Interface.SetDestination(agents, destination);
+                _navigationManager.Interface.SetDestination(agents, destination, _currentRange);
             }
             return;
         }
@@ -194,7 +197,7 @@ public class AgentSelectionController : MonoBehaviour
             if (agent == null)
             {
                 Vector3 destination = hit.point;
-                _navigationManager.Interface.SetDestination(agents, destination);
+                _navigationManager.Interface.SetDestination(agents, destination, _currentRange);
                 return;
             }
             _navigationManager.Interface.SetDestination(agents, agent);

@@ -142,6 +142,7 @@ namespace FlowFieldNavigation
             NativeArray<FlowData> exposedFlowData = _pathContainer.ExposedFlowData.AsArray();
             PathSectorToFlowStartMapper flowStartMap = _pathContainer.SectorFlowStartMap;
             NativeArray<PathUpdateSeed> pathUpdateSeeds = _navigationManager.PathUpdateSeedContainer.UpdateSeeds.AsArray();
+            NativeArray<float> PathDesiredRanges = _pathContainer.PathDesiredRanges.AsArray();
 
             //Copy agent positions from transforms
             _agentPositions.Length = agentTransforms.length;
@@ -282,6 +283,7 @@ namespace FlowFieldNavigation
             //Current path reconstruction submission
             CurrentPathReconstructionDeterminationJob reconstructionDetermination = new CurrentPathReconstructionDeterminationJob()
             {
+                PathDesiredRanges = PathDesiredRanges,
                 PathFlockIndexArray = pathFlockIndexArray,
                 AgentCurPathIndicies = agentCurPathIndicies,
                 AgentNewPathIndicies = agentNewPathIndicies,

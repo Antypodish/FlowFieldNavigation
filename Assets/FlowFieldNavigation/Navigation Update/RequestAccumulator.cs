@@ -44,18 +44,18 @@ namespace FlowFieldNavigation
             if (dataRefState == AgentDataReferanceState.BeingAdded) { return; }
             AgentReferanceIndiciesToRemove.Add(agentDataReferanceIndex);
         }
-        internal void RequestPath(NativeArray<AgentReferance> sourceAgentReferances, Vector3 target)
+        internal void RequestPath(NativeArray<AgentReferance> sourceAgentReferances, Vector3 target, float range)
         {
             int newPathIndex = PathRequests.Length;
             float2 target2d = new float2(target.x, target.z);
-            PathRequests.Add(new PathRequest(target2d));
+            PathRequests.Add(new PathRequest(target2d, range));
             SetAgentRequestedPaths(sourceAgentReferances, newPathIndex);
         }
-        internal void RequestPath(NativeArray<AgentReferance> sourceAgentReferances, AgentReferance targetAgentRef)
+        internal void RequestPath(NativeArray<AgentReferance> sourceAgentReferances, AgentReferance targetAgentRef, float range)
         {
             int newPathIndex = PathRequests.Length;
             int targetAgentIndex = _navigationManager.AgentReferanceManager.AgentDataReferanceIndexToAgentDataIndex(targetAgentRef.GetIndexNonchecked());
-            PathRequest request = new PathRequest(targetAgentIndex);
+            PathRequest request = new PathRequest(targetAgentIndex, range);
             PathRequests.Add(request);
             SetAgentRequestedPaths(sourceAgentReferances, newPathIndex);
         }

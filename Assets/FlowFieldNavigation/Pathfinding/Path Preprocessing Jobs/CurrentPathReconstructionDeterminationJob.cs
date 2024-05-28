@@ -13,6 +13,7 @@ namespace FlowFieldNavigation
         [ReadOnly] internal NativeArray<PathDestinationData> PathDestinationDataArray;
         [ReadOnly] internal NativeArray<int> PathFlockIndexArray;
         [ReadOnly] internal NativeArray<int> AgentCurPathIndicies;
+        [ReadOnly] internal NativeArray<float> PathDesiredRanges;
         [WriteOnly] internal NativeArray<int> AgentNewPathIndicies;
         internal NativeArray<PathRoutineData> PathRoutineDataArray;
         internal NativeList<PathRequest> PathRequests;
@@ -36,7 +37,7 @@ namespace FlowFieldNavigation
                 FlockIndexToPathRequestIndex.Add(pathFlockIndex, PathRequests.Length);
                 if (curDestinationData.DestinationType == DestinationType.DynamicDestination)
                 {
-                    PathRequest reconReq = new PathRequest(curDestinationData.TargetAgentIndex);
+                    PathRequest reconReq = new PathRequest(curDestinationData.TargetAgentIndex, PathDesiredRanges[i]);
                     float3 targetAgentPos = AgentPositions[reconReq.TargetAgentIndex];
                     float2 targetAgentPos2 = new float2(targetAgentPos.x, targetAgentPos.z);
                     reconReq.Destination = targetAgentPos2;
@@ -46,7 +47,7 @@ namespace FlowFieldNavigation
                 }
                 else
                 {
-                    PathRequest reconReq = new PathRequest(curDestinationData.DesiredDestination);
+                    PathRequest reconReq = new PathRequest(curDestinationData.DesiredDestination, PathDesiredRanges[i]);
                     reconReq.FlockIndex = PathFlockIndexArray[i];
                     reconReq.ReconstructionFlag = true;
                     PathRequests.Add(reconReq);

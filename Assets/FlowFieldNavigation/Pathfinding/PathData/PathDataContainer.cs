@@ -8,6 +8,8 @@ namespace FlowFieldNavigation
 {
     internal class PathDataContainer
     {
+        internal NativeList<float> PathRanges;
+        internal NativeList<float> PathDesiredRanges;
         internal NativeList<FlowData> ExposedFlowData;
         internal NativeList<bool> ExposedLosData;
         internal PathSectorToFlowStartMapper SectorFlowStartMap;
@@ -59,6 +61,8 @@ namespace FlowFieldNavigation
             ExposedFlowData = new NativeList<FlowData>(Allocator.Persistent);
             SectorFlowStartMap = new PathSectorToFlowStartMapper(0, Allocator.Persistent);
             ExposedLosData = new NativeList<bool>(Allocator.Persistent);
+            PathRanges = new NativeList<float>(Allocator.Persistent);
+            PathDesiredRanges = new NativeList<float>(Allocator.Persistent);
         }
         internal void DisposeAll()
         {
@@ -248,6 +252,8 @@ namespace FlowFieldNavigation
                 PathFlockIndicies.Add(request.FlockIndex);
                 SectorOverlappingDirectionTableList.Add(sectorOverlappingDirections);
                 SectorToFlowStartTables.Add(new NativeArray<int>(FlowFieldUtilities.SectorMatrixTileAmount, Allocator.Persistent));
+                PathRanges.Add(request.Range);
+                PathDesiredRanges.Add(request.Range);
             }
             else
             {
@@ -261,6 +267,8 @@ namespace FlowFieldNavigation
                 PathFlockIndicies[pathIndex] = request.FlockIndex;
                 SectorOverlappingDirectionTableList[pathIndex] = sectorOverlappingDirections;
                 SectorToFlowStartTables[pathIndex] = new NativeArray<int>(FlowFieldUtilities.SectorMatrixTileAmount, Allocator.Persistent);
+                PathRanges[pathIndex] = request.Range;
+                PathDesiredRanges[pathIndex] = request.Range;
             }
 
             return pathIndex;
